@@ -26,8 +26,8 @@ use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-$oauthDefaultSuccess = App::getEnv('_APP_HOME') . '/auth/oauth2/success';
-$oauthDefaultFailure = App::getEnv('_APP_HOME') . '/auth/oauth2/failure';
+$oauthDefaultSuccess = '/v1/auth/oauth2/success';
+$oauthDefaultFailure = '/v1/auth/oauth2/failure';
 
 App::post('/v1/account')
     ->desc('Create Account')
@@ -256,14 +256,14 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->label('sdk.methodType', 'webAuth')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('providers'), function ($node) {return (!$node['mock']);}))) . '.')
-    ->param('success', $oauthDefaultSuccess, function ($clients) {return new Host($clients);}, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
-    ->param('failure', $oauthDefaultFailure, function ($clients) {return new Host($clients);}, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('providers'), function($node) {return (!$node['mock']);}))).'.')
+    ->param('success', '', function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('failure', '', function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('scopes', [], new ArrayList(new Text(128)), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->action(function ($provider, $success, $failure, $scopes, $request, $response, $project) {
+    ->action(function ($provider, $success, $failure, $scopes, $request, $response, $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
@@ -286,6 +286,14 @@ App::get('/v1/account/sessions/oauth2/:provider')
 
         if (!\class_exists($className)) {
             throw new Exception('Provider is not supported', 501);
+        }
+
+        if(empty($success)) {
+            $success = $protocol . '://' . $request->getHostname() . $oauthDefaultSuccess;
+        }
+
+        if(empty($failure)) {
+            $failure = $protocol . '://' . $request->getHostname() . $oauthDefaultFailure;
         }
 
         $oauth2 = new $className($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure], $scopes);
@@ -571,7 +579,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         // Add keys for non-web platforms - TODO - add verification phase to aviod session sniffing
-        if (parse_url($state['success'], PHP_URL_PATH) === parse_url($oauthDefaultSuccess, PHP_URL_PATH)) {
+        if (parse_url($state['success'], PHP_URL_PATH) === $oauthDefaultSuccess) {
             $state['success'] = URLParser::parse($state['success']);
             $query = URLParser::parseQuery($state['success']['query']);
             $query['project'] = $project->getId();
@@ -589,6 +597,291 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->redirect($state['success'])
         ;
+    });
+
+
+App::post('/v1/account/sessions/magic-url')
+    ->desc('Create Magic URL session')
+    ->groups(['api', 'account'])
+    ->label('scope', 'public')
+    ->label('auth.type', 'magic-url')
+    ->label('sdk.auth', [])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createMagicURLSession')
+    ->label('sdk.description', '/docs/references/account/create-magic-url-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TOKEN)
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('projectDB')
+    ->inject('locale')
+    ->inject('audits')
+    ->inject('events')
+    ->inject('mails')
+    ->action(function ($email, $url, $request, $response, $project, $projectDB, $locale, $audits, $events, $mails) {
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Document $project */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
+        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $events */
+        /** @var Appwrite\Event\Event $mails */
+
+        if(empty(App::getEnv('_APP_SMTP_HOST'))) {
+            throw new Exception('SMTP Disabled', 503);
+        }
+
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
+        $isAppUser = Auth::isAppUser(Authorization::$roles);
+
+        $user = $projectDB->getCollectionFirst([ // Get user by email address
+            'limit' => 1,
+            'filters' => [
+                '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                'email='.$email,
+            ],
+        ]);
+
+        if (empty($user)) {
+            $limit = $project->getAttribute('usersAuthLimit', 0);
+
+            if ($limit !== 0) {
+                $projectDB->getCollection([ // Count users
+                    'filters' => [
+                        '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    ],
+                ]);
+
+                $sum = $projectDB->getSum();
+
+                if($sum >= $limit) {
+                    throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+                }
+            }
+
+            Authorization::disable();
+
+            $user = $projectDB->createDocument([
+                '$collection' => Database::SYSTEM_COLLECTION_USERS,
+                '$permissions' => [
+                    'read' => ['*'],
+                    'write' => ['user:{self}'],
+                ],
+                'email' => $email,
+                'emailVerification' => false,
+                'status' => true,
+                'password' => null,
+                'passwordUpdate' => \time(),
+                'registration' => \time(),
+                'reset' => false,
+                'name' => null,
+            ], ['email' => $email]);
+
+            Authorization::reset();
+            $mails->setParam('event', 'users.create');
+            $audits->setParam('event', 'users.create');
+        }
+
+        $loginSecret = Auth::tokenGenerator();
+
+        $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
+        
+        $token = new Document([
+            '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+            '$permissions' => ['read' => ['user:'.$user->getId()], 'write' => ['user:'.$user->getId()]],
+            'userId' => $user->getId(),
+            'type' => Auth::TOKEN_TYPE_MAGIC_URL,
+            'secret' => Auth::hash($loginSecret), // One way hash encryption to protect DB leak
+            'expire' => $expire,
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
+            'ip' => $request->getIP(),
+        ]);
+            
+        Authorization::setRole('user:'.$user->getId());
+
+        $token = $projectDB->createDocument($token->getArrayCopy());
+
+        if (false === $token) {
+            throw new Exception('Failed saving token to DB', 500);
+        }
+
+        $user->setAttribute('tokens', $token, Document::SET_TYPE_APPEND);
+
+        $user = $projectDB->updateDocument($user->getArrayCopy());
+
+        if (false === $user) {
+            throw new Exception('Failed to save user to DB', 500);
+        }
+
+        if(empty($url)) {
+            $url = $request->getProtocol().'://'.$request->getHostname().'/auth/magic-url';
+        }
+
+        $url = Template::parseURL($url);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $loginSecret, 'expire' => $expire, 'project' => $project->getId()]);
+        $url = Template::unParseURL($url);
+
+        $mails
+            ->setParam('from', $project->getId())
+            ->setParam('recipient', $user->getAttribute('email'))
+            ->setParam('url', $url)
+            ->setParam('locale', $locale->default)
+            ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))
+            ->setParam('type', MAIL_TYPE_MAGIC_SESSION)
+            ->trigger()
+        ;
+
+        $events
+            ->setParam('eventData',
+                $response->output($token->setAttribute('secret', $loginSecret),
+                Response::MODEL_TOKEN
+            ))
+        ;
+
+        $token  // Hide secret for clients
+            ->setAttribute('secret',
+                ($isPrivilegedUser || $isAppUser) ? $loginSecret : '');
+
+        $audits
+            ->setParam('userId', $user->getId())
+            ->setParam('resource', 'users/'.$user->getId())
+        ;
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($token, Response::MODEL_TOKEN)
+        ;
+    });
+
+App::put('/v1/account/sessions/magic-url')
+    ->desc('Create Magic URL session (confirmation)')
+    ->groups(['api', 'account'])
+    ->label('scope', 'public')
+    ->label('event', 'account.sessions.create')
+    ->label('sdk.auth', [])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updateMagicURLSession')
+    ->label('sdk.description', '/docs/references/account/update-magic-url-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},userId:{param-userId}')
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('secret', '', new Text(256), 'Valid verification token.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('locale')
+    ->inject('geodb')
+    ->inject('audits')
+    ->action(function ($userId, $secret, $request, $response, $projectDB, $locale, $geodb, $audits) {
+        /** @var string $userId */
+        /** @var string $secret */
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
+        /** @var MaxMind\Db\Reader $geodb */
+        /** @var Appwrite\Event\Event $audits */
+
+        $profile = $projectDB->getCollectionFirst([ // Get user by user ID
+            'limit' => 1,
+            'filters' => [
+                '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                '$id='.$userId,
+            ],
+        ]);
+
+        if (empty($profile)) {
+            throw new Exception('User not found', 404);
+        }
+
+        $token = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_MAGIC_URL, $secret);
+
+        if (!$token) {
+            throw new Exception('Invalid login token', 401);
+        }
+
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $record = $geodb->get($request->getIP());
+        $secret = Auth::tokenGenerator();
+        $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $session = new Document(array_merge(
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
+                '$permissions' => ['read' => ['user:' . $profile->getId()], 'write' => ['user:' . $profile->getId()]],
+                'userId' => $profile->getId(),
+                'provider' => Auth::SESSION_PROVIDER_MAGIC_URL,
+                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'expire' => $expiry,
+                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'ip' => $request->getIP(),
+                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            ],
+            $detector->getOS(),
+            $detector->getClient(),
+            $detector->getDevice()
+        ));
+
+        Authorization::setRole('user:'.$profile->getId());
+
+        $session = $projectDB->createDocument($session->getArrayCopy());
+
+        if (false === $session) {
+            throw new Exception('Failed saving session to DB', 500);
+        }
+
+        $profile->setAttribute('emailVerification', true);
+        $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
+
+        $user = $projectDB->updateDocument($profile->getArrayCopy());
+
+        if (false === $user) {
+            throw new Exception('Failed saving user to DB', 500);
+        }
+
+        if (!$projectDB->deleteDocument($token)) {
+            throw new Exception('Failed to remove login token from DB', 500);
+        }
+
+        $audits
+            ->setParam('userId', $user->getId())
+            ->setParam('event', 'account.sessions.create')
+            ->setParam('resource', 'users/'.$user->getId())
+        ;
+
+        if (!Config::getParam('domainVerification')) {
+            $response
+                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
+            ;
+        }
+
+        $protocol = $request->getProtocol();
+
+        $response
+            ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ;
+
+        $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
+        ? $countries[strtoupper($session->getAttribute('countryCode'))]
+        : $locale->getText('locale.country.unknown');
+
+        $session
+            ->setAttribute('current', true)
+            ->setAttribute('countryName', $countryName)
+        ;
+
+        $response->dynamic($session, Response::MODEL_SESSION);
     });
 
 App::post('/v1/account/sessions/anonymous')
@@ -1459,6 +1752,10 @@ App::post('/v1/account/recovery')
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
 
+        if(empty(App::getEnv('_APP_SMTP_HOST'))) {
+            throw new Exception('SMTP Disabled', 503);
+        }
+
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
@@ -1533,7 +1830,7 @@ App::post('/v1/account/recovery')
     });
 
 App::put('/v1/account/recovery')
-    ->desc('Complete Password Recovery')
+    ->desc('Create Password Recovery (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'account.recovery.update')
@@ -1648,6 +1945,10 @@ App::post('/v1/account/verification')
         /** @var Appwrite\Event\Event $mails */
         /** @var Appwrite\Stats\Stats $usage */
 
+        if(empty(App::getEnv('_APP_SMTP_HOST'))) {
+            throw new Exception('SMTP Disabled', 503);
+        }
+        
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
@@ -1712,7 +2013,7 @@ App::post('/v1/account/verification')
     });
 
 App::put('/v1/account/verification')
-    ->desc('Complete Email Verification')
+    ->desc('Create Email Verification (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'account.verification.update')

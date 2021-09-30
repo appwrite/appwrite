@@ -5,8 +5,13 @@ function rejected(value){try{step(generator["throw"](value));}catch(e){reject(e)
 function step(result){result.done?resolve(result.value):adopt(result.value).then(fulfilled,rejected);}
 step((generator=generator.apply(thisArg,_arguments||[])).next());});}
 class AppwriteException extends Error{constructor(message,code=0,response=''){super(message);this.name='AppwriteException';this.message=message;this.code=code;this.response=response;}}
-class Appwrite{constructor(){this.config={endpoint:'https://appwrite.io/v1',project:'',key:'',jwt:'',locale:'',mode:'',};this.headers={'x-sdk-version':'appwrite:web:2.1.0','X-Appwrite-Response-Format':'0.9.0',};this.account={get:()=>__awaiter(this,void 0,void 0,function*(){let path='/account';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),create:(userId,email,password,name)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
-if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+class Appwrite{constructor(){this.config={endpoint:'https://appwrite.io/v1',endpointRealtime:'',project:'',key:'',jwt:'',locale:'',mode:'',};this.headers={'x-sdk-version':'appwrite:web:4.0.1','X-Appwrite-Response-Format':'0.10.0',};this.realtime={socket:undefined,timeout:undefined,channels:{},lastMessage:undefined,createSocket:()=>{var _a,_b;const channels=new URLSearchParams();channels.set('project',this.config.project);for(const property in this.realtime.channels){channels.append('channels[]',property);}
+if(((_a=this.realtime.socket)===null||_a===void 0?void 0:_a.readyState)===WebSocket.OPEN){this.realtime.socket.close();}
+this.realtime.socket=new WebSocket(this.config.endpointRealtime+'/realtime?'+channels.toString());(_b=this.realtime.socket)===null||_b===void 0?void 0:_b.addEventListener('message',this.realtime.authenticate);for(const channel in this.realtime.channels){this.realtime.channels[channel].forEach(callback=>{var _a;(_a=this.realtime.socket)===null||_a===void 0?void 0:_a.addEventListener('message',callback);});}
+this.realtime.socket.addEventListener('close',event=>{var _a,_b,_c;if(((_b=(_a=this.realtime)===null||_a===void 0?void 0:_a.lastMessage)===null||_b===void 0?void 0:_b.type)==='error'&&((_c=this.realtime)===null||_c===void 0?void 0:_c.lastMessage.data).code===1008){return;}
+console.error('Realtime got disconnected. Reconnect will be attempted in 1 second.',event.reason);setTimeout(()=>{this.realtime.createSocket();},1000);});},authenticate:(event)=>{var _a,_b,_c;const message=JSON.parse(event.data);if(message.type==='connected'&&((_a=this.realtime.socket)===null||_a===void 0?void 0:_a.readyState)===WebSocket.OPEN){const cookie=JSON.parse((_b=window.localStorage.getItem('cookieFallback'))!==null&&_b!==void 0?_b:"{}");const session=cookie===null||cookie===void 0?void 0:cookie[`a_session_${this.config.project}`];const data=message.data;if(session&&!data.user){(_c=this.realtime.socket)===null||_c===void 0?void 0:_c.send(JSON.stringify({type:"authentication",data:{session}}));}}},onMessage:(channel,callback)=>(event)=>{try{const message=JSON.parse(event.data);this.realtime.lastMessage=message;if(message.type==='event'){let data=message.data;if(data.channels&&data.channels.includes(channel)){callback(data);}}
+else if(message.type==='error'){throw message.data;}}
+catch(e){console.error(e);}}};this.account={get:()=>__awaiter(this,void 0,void 0,function*(){let path='/account';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),create:(email,password,name)=>__awaiter(this,void 0,void 0,function*(){if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
 if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
 let path='/account';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
 if(typeof email!=='undefined'){payload['email']=email;}
@@ -39,7 +44,14 @@ const uri=new URL(this.config.endpoint+path);return yield this.call('put',uri,{'
 if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
 let path='/account/sessions';let payload={};if(typeof email!=='undefined'){payload['email']=email;}
 if(typeof password!=='undefined'){payload['password']=password;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),deleteSessions:()=>__awaiter(this,void 0,void 0,function*(){let path='/account/sessions';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),createAnonymousSession:()=>__awaiter(this,void 0,void 0,function*(){let path='/account/sessions/anonymous';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),createOAuth2Session:(provider,success,failure,scopes)=>{if(typeof provider==='undefined'){throw new AppwriteException('Missing required parameter: "provider"');}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),deleteSessions:()=>__awaiter(this,void 0,void 0,function*(){let path='/account/sessions';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),createAnonymousSession:()=>__awaiter(this,void 0,void 0,function*(){let path='/account/sessions/anonymous';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),createMagicURLSession:(email,url)=>__awaiter(this,void 0,void 0,function*(){if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+let path='/account/sessions/magic-url';let payload={};if(typeof email!=='undefined'){payload['email']=email;}
+if(typeof url!=='undefined'){payload['url']=url;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),updateMagicURLSession:(userId,secret)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+if(typeof secret==='undefined'){throw new AppwriteException('Missing required parameter: "secret"');}
+let path='/account/sessions/magic-url';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
+if(typeof secret!=='undefined'){payload['secret']=secret;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('put',uri,{'content-type':'application/json',},payload);}),createOAuth2Session:(provider,success,failure,scopes)=>{if(typeof provider==='undefined'){throw new AppwriteException('Missing required parameter: "provider"');}
 let path='/account/sessions/oauth2/{provider}'.replace('{provider}',provider);let payload={};if(typeof success!=='undefined'){payload['success']=success;}
 if(typeof failure!=='undefined'){payload['failure']=failure;}
 if(typeof scopes!=='undefined'){payload['scopes']=scopes;}
@@ -512,23 +524,26 @@ const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,
 if(typeof emailVerification==='undefined'){throw new AppwriteException('Missing required parameter: "emailVerification"');}
 let path='/users/{userId}/verification'.replace('{userId}',userId);let payload={};if(typeof emailVerification!=='undefined'){payload['emailVerification']=emailVerification;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);})};}
-setEndpoint(endpoint){this.config.endpoint=endpoint;return this;}
+setEndpoint(endpoint){this.config.endpoint=endpoint;this.config.endpointRealtime=this.config.endpointRealtime||this.config.endpoint.replace("https://","wss://").replace("http://","ws://");return this;}
+setEndpointRealtime(endpointRealtime){this.config.endpointRealtime=endpointRealtime;return this;}
 setProject(value){this.headers['X-Appwrite-Project']=value;this.config.project=value;return this;}
 setKey(value){this.headers['X-Appwrite-Key']=value;this.config.key=value;return this;}
 setJWT(value){this.headers['X-Appwrite-JWT']=value;this.config.jwt=value;return this;}
 setLocale(value){this.headers['X-Appwrite-Locale']=value;this.config.locale=value;return this;}
 setMode(value){this.headers['X-Appwrite-Mode']=value;this.config.mode=value;return this;}
+subscribe(channels,callback){let channelArray=typeof channels==='string'?[channels]:channels;let savedChannels=[];channelArray.forEach((channel,index)=>{if(!(channel in this.realtime.channels)){this.realtime.channels[channel]=[];}
+savedChannels[index]={name:channel,index:(this.realtime.channels[channel].push(this.realtime.onMessage(channel,callback))-1)};clearTimeout(this.realtime.timeout);this.realtime.timeout=window===null||window===void 0?void 0:window.setTimeout(()=>{this.realtime.createSocket();},1);});return()=>{savedChannels.forEach(channel=>{var _a;(_a=this.realtime.socket)===null||_a===void 0?void 0:_a.removeEventListener('message',this.realtime.channels[channel.name][channel.index]);this.realtime.channels[channel.name].splice(channel.index,1);});};}
 call(method,url,headers={},params={}){var _a,_b;return __awaiter(this,void 0,void 0,function*(){method=method.toUpperCase();headers=Object.assign(Object.assign({},headers),this.headers);let options={method,headers,credentials:'include'};if(typeof window!=='undefined'&&window.localStorage){headers['X-Fallback-Cookies']=(_a=window.localStorage.getItem('cookieFallback'))!==null&&_a!==void 0?_a:"";}
 if(method==='GET'){for(const[key,value]of Object.entries(this.flatten(params))){url.searchParams.append(key,value);}}
-else{switch(headers['content-type']){case'application/json':options.body=JSON.stringify(params);break;case'multipart/form-data':let formData=new FormData();for(const key in params){if(Array.isArray(params[key])){formData.append(key+'[]',params[key].join(','));}
-else{formData.append(key,params[key]);}}
+else{switch(headers['content-type']){case'application/json':options.body=JSON.stringify(params);break;case'multipart/form-data':let formData=new FormData();for(const key in params){if(Array.isArray(params[key])){params[key].forEach((value)=>{formData.append(key+'[]',value);})}else{formData.append(key,params[key]);}}
 options.body=formData;delete headers['content-type'];break;}}
 try{let data=null;const response=yield crossFetch.fetch(url.toString(),options);if((_b=response.headers.get("content-type"))===null||_b===void 0?void 0:_b.includes("application/json")){data=yield response.json();}
 else{data={message:yield response.text()};}
 if(400<=response.status){throw new AppwriteException(data===null||data===void 0?void 0:data.message,response.status,data);}
 const cookieFallback=response.headers.get('X-Fallback-Cookies');if(typeof window!=='undefined'&&window.localStorage&&cookieFallback){window.console.warn('Appwrite is using localStorage for session management. Increase your security by adding a custom domain as your API endpoint.');window.localStorage.setItem('cookieFallback',cookieFallback);}
 return data;}
-catch(e){throw new AppwriteException(e.message);}});}
+catch(e){if(e instanceof AppwriteException){throw e;}
+throw new AppwriteException(e.message);}});}
 flatten(data,prefix=''){let output={};for(const key in data){let value=data[key];let finalKey=prefix?`${prefix}[${key}]`:key;if(Array.isArray(value)){output=Object.assign(output,this.flatten(value,finalKey));}
 else{output[finalKey]=value;}}
 return output;}}

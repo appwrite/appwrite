@@ -471,6 +471,33 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => 'DOCKERHUB_PULL_USERNAME',
+                'description' => 'The username for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'introduction' => '0.10.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => 'DOCKERHUB_PULL_PASSWORD',
+                'description' => 'The password for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'introduction' => '0.10.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => 'DOCKERHUB_PULL_EMAIL',
+                'description' => 'The email for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'introduction' => '0.10.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
         [
             'category' => 'Maintenance',

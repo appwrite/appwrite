@@ -39,10 +39,12 @@ App::post('/v1/teams')
     ->inject('response')
     ->inject('user')
     ->inject('dbForInternal')
-    ->action(function ($teamId, $name, $roles, $response, $user, $dbForInternal) {
+    ->inject('events')
+    ->action(function ($teamId, $name, $roles, $response, $user, $dbForInternal, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Event\Event $events */
 
         Authorization::disable();
 
@@ -79,6 +81,10 @@ App::post('/v1/teams')
             // Attach user to team
             $user->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND);
             $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
+        }
+
+        if (!empty($user->getId())) {
+            $events->setParam('userId', $user->getId());
         }
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -273,6 +279,10 @@ App::post('/v1/teams/:teamId/memberships')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $mails */
 
+        if(empty(App::getEnv('_APP_SMTP_HOST'))) {
+            throw new Exception('SMTP Disabled', 503);
+        }
+        
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
         
@@ -377,7 +387,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
         $url = Template::unParseURL($url);
 
         if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode

@@ -1,7 +1,9 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Utopia\Database\Validator\Authorization;
+use Appwrite\Database\Document;
+use Appwrite\Database\Validator\Authorization;
+use Appwrite\Messaging\Adapter\Realtime;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Abuse\Abuse;
@@ -141,6 +143,12 @@ App::init(function ($utopia, $request, $project) {
             }
             break;
 
+        case 'magic-url':
+            if($project->getAttribute('usersAuthMagicURL', true) === false) {
+                throw new Exception('Magic URL authentication is disabled for this project', 501);
+            }
+            break;
+
         case 'anonymous':
             if(($auths['anonymous'] ?? true) === false) {
                 throw new Exception('Anonymous authentication is disabled for this project', 501);
@@ -166,7 +174,7 @@ App::init(function ($utopia, $request, $project) {
 
 }, ['utopia', 'request', 'project'], 'auth');
 
-App::shutdown(function ($utopia, $request, $response, $project, $register, $events, $audits, $usage, $deletes, $database, $mode) {
+App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $database, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
@@ -176,7 +184,6 @@ App::shutdown(function ($utopia, $request, $response, $project, $register, $even
     /** @var Appwrite\Stats\Stats $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $database */
-    /** @var Appwrite\Event\Event $functions */
     /** @var bool $mode */
 
     if (!empty($events->getParam('event'))) {
@@ -196,6 +203,23 @@ App::shutdown(function ($utopia, $request, $response, $project, $register, $even
             ->setQueue('v1-functions')
             ->setClass('FunctionsV1')
             ->trigger();
+
+        if ($project->getId() !== 'console') {
+            $payload = new Document($response->getPayload());
+            $target = Realtime::fromPayload($events->getParam('event'), $payload);
+
+            Realtime::send(
+                $project->getId(), 
+                $response->getPayload(), 
+                $events->getParam('event'), 
+                $target['channels'], 
+                $target['roles'], 
+                [
+                    'permissionsChanged' => $target['permissionsChanged'], 
+                    'userId' => $events->getParam('userId')
+                ]
+            );
+        }
     }
     
     if (!empty($audits->getParam('event'))) {
@@ -223,4 +247,4 @@ App::shutdown(function ($utopia, $request, $response, $project, $register, $even
         ;
     }
 
-}, ['utopia', 'request', 'response', 'project', 'register', 'events', 'audits', 'usage', 'deletes', 'database', 'mode'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'database', 'mode'], 'api');

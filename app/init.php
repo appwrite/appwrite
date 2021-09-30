@@ -28,6 +28,7 @@ use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
+use Appwrite\Event\Realtime;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Stats\Stats;
 use Utopia\App;
@@ -61,8 +62,8 @@ const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
-const APP_CACHE_BUSTER = 151;
-const APP_VERSION_STABLE = '0.9.4';
+const APP_CACHE_BUSTER = 160;
+const APP_VERSION_STABLE = '0.10.4';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -90,8 +91,10 @@ const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_CERTIFICATES = 'certificates';
 const DELETE_TYPE_USAGE = 'usage';
-// Mail Worker Types
+const DELETE_TYPE_REALTIME = 'realtime';
+// Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
+const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
 const MAIL_TYPE_RECOVERY = 'recovery';
 const MAIL_TYPE_INVITATION = 'invitation';
 // Auth Types
@@ -541,10 +544,10 @@ App::setResource('user', function($mode, $project, $console, $request, $response
             $request->getCookie(Auth::$cookieName.'_legacy', '')));// Get fallback session from old clients (no SameSite support)
 
     // Get fallback session from clients who block 3rd-party cookies
-    $response->addHeader('X-Debug-Fallback', 'false');
+    if($response) $response->addHeader('X-Debug-Fallback', 'false');
 
     if(empty($session['id']) && empty($session['secret'])) {
-        $response->addHeader('X-Debug-Fallback', 'true');
+        if($response) $response->addHeader('X-Debug-Fallback', 'true');
         $fallback = $request->getHeader('x-fallback-cookies', '');
         $fallback = \json_decode($fallback, true);
         $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
@@ -588,7 +591,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         } catch (JWTException $error) {
             throw new Exception('Failed to verify JWT. '.$error->getMessage(), 401);
         }
-        
+
         $jwtUserId = $payload['userId'] ?? '';
         $jwtSessionId = $payload['sessionId'] ?? '';
 
