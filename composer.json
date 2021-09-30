@@ -68,7 +68,7 @@
         "phpunit/phpunit": "9.5.6",
         "swoole/ide-helper": "4.6.7",
         "textalk/websocket": "1.5.2",
-        "vimeo/psalm": "4.7.2"
+        "vimeo/psalm": "4.10.0"
     },
     "provide": {
         "ext-phpiredis": "*"
