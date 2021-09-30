@@ -6,7 +6,7 @@ updates:
       interval: "daily"
     # Try to remove the PR limit
     open-pull-requests-limit: 999
-updates:
+
   - package-ecosystem: "composer"
     directory: "/"
     schedule:
