@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "984640c83bc02c3253a0f38b5f772011",
+    "content-hash": "6cdbc8a1b18f6c80e431509e53e5a8e6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -115,16 +115,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.4.0",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/php-runtimes.git",
-                "reference": "cc7090a67d8824c779190b38873f0f8154f906b2"
+                "reference": "c55c657053ab62ad3d30a5d0102dcb235319e258"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/php-runtimes/zipball/cc7090a67d8824c779190b38873f0f8154f906b2",
-                "reference": "cc7090a67d8824c779190b38873f0f8154f906b2",
+                "url": "https://api.github.com/repos/appwrite/php-runtimes/zipball/c55c657053ab62ad3d30a5d0102dcb235319e258",
+                "reference": "c55c657053ab62ad3d30a5d0102dcb235319e258",
                 "shasum": ""
             },
             "require": {
@@ -164,9 +164,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/php-runtimes/issues",
-                "source": "https://github.com/appwrite/php-runtimes/tree/0.4.0"
+                "source": "https://github.com/appwrite/php-runtimes/tree/0.5.0"
             },
-            "time": "2021-06-23T07:17:12+00:00"
+            "time": "2021-07-05T08:49:10+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -6252,5 +6252,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.0.0"
+    "plugin-api-version": "2.1.0"
 }
