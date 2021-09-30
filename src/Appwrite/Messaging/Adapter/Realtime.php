@@ -2,9 +2,8 @@
 
 namespace Appwrite\Messaging\Adapter;
 
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter;
-use Redis;
 use Utopia\App;
 
 class Realtime extends Adapter

@@ -2,7 +2,7 @@
 
 namespace Appwrite\Auth;
 
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 
 class Auth
