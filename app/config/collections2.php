@@ -1620,6 +1620,16 @@ $collections = [
                 'array' => false,
             ],
             [
+                '$id' => 'permission',
+                'type' => Database::VAR_STRING,
+                'size' => 64,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => 'adapter',
                 'type' => Database::VAR_STRING,
                 'signed' => true,
