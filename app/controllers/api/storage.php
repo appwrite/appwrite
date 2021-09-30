@@ -402,7 +402,7 @@ App::put('/v1/storage/buckets/:bucketId')
         }
 
         $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
-        $write??=$bucket->getAttribute('$write', []); // By default inherit write permissions
+        $write ??= $bucket->getAttribute('$write', []); // By default inherit write permissions
         $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
         $write ??= $bucket->getAttribute('$write',[]); // By default inherit write permissions
         $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
