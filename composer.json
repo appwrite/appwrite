@@ -61,7 +61,8 @@
         "phpmailer/phpmailer": "6.5.0",
         "chillerlan/php-qrcode": "4.3.0",
         "adhocore/jwt": "1.1.2",
-        "slickdeals/statsd": "3.1.0"
+        "slickdeals/statsd": "3.1.0",
+        "maxmind-db/reader": "1.10.1"
     },
     "require-dev": {
         "appwrite/sdk-generator": "0.15.2",
