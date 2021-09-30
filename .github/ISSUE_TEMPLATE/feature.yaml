@@ -1,4 +1,4 @@
-name: 🚀 Feature"
+name: "🚀 Feature"
 description: "Submit a proposal for a new feature"
 title: "🚀 Feature: "
 labels: [feature]
@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out our bug report form 🙏
+        Thanks for taking the time to fill out our feature request form 🙏
   - type: textarea
     id: feature-description
     validations:
