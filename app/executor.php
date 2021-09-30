@@ -495,6 +495,11 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
             'buildStderr' => $buildStderr,
         ]));
         Authorization::enable();
+
+        // also remove the container if it exists
+        if ($id) {
+            $orchestration->remove($id, true);
+        }
     }
 
     return $tag;
@@ -557,6 +562,11 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
         }
 
         $activeFunctions->del($container);
+    }
+
+    // Check if tag hasn't failed
+    if ($tag->getAttribute('status') == 'failed') {
+        throw new Exception('Tag build failed, please check your logs.', 500);
     }
 
     // Check if tag is built yet.
@@ -788,6 +798,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
     $executionStart = \microtime(true);
 
     $exitCode = 0;
+    $statusCode = 200;
 
     $errNo = -1;
     $attempts = 0;
@@ -823,6 +834,8 @@ function execute(string $trigger, string $projectId, string $executionId, string
         ]);
 
         $executorResponse = \curl_exec($ch);
+
+        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         $error = \curl_error($ch);
 
