@@ -18,6 +18,7 @@ use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\Kotlin;
 use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Swift;
+use Appwrite\SDK\Language\HTTP;
 
 $cli
     ->task('sdks')
@@ -148,6 +149,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'kotlin':
                         $config = new Kotlin();
                         $warning = $warning."\n\n > This is the Kotlin SDK for integrating with Appwrite from your Kotlin server-side code. If you're looking for the Android SDK you should check [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android)";
+                        break;
+                    case 'http':
+                        $config = new HTTP();
                         break;
                     default:
                         throw new Exception('Language "'.$language['key'].'" not supported');
