@@ -1192,31 +1192,24 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         $size = $file->getAttribute('sizeOriginal', 0);
 
         $rangeHeader = $request->getHeader('range');
-        if(!empty($rangeHeader)) {  
-            list($unit, $range) = explode('=', $rangeHeader);
-            if($unit == 'bytes' && !empty($range)) {
-                list($rangeStart, $rangeEnd) = explode('-', $range);
-                if(strlen($rangeStart) == 0 || strstr($range, '-') === false) {
-                    throw new Exception('Invalid range', 416);
-                }
-                $rangeStart = (int) $rangeStart;
-                if(strlen($rangeEnd) == 0) {
-                    $rangeEnd =  min(($rangeStart + 2000000-1), ($size - 1));
-                } else {
-                    $rangeEnd = (int) $rangeEnd;
-                }
-                if(($rangeStart >= $rangeEnd) || $rangeEnd >= $size) {
-                    throw new Exception('Invalid range', 416);
-                }
-                
-                $response
-                    ->addHeader('Accept-Ranges', 'bytes')
-                    ->addHeader('Content-Range', 'bytes ' . $rangeStart . '-' . $rangeEnd . '/' . $size)
-                    ->addHeader('Content-Length', $rangeEnd - $rangeStart + 1)
-                    ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
-            } else {
+        if(!empty($rangeHeader)) { 
+            $start = $request->getRangeStart();
+            $end = $request->getRangeEnd();
+            $unit = $request->getRangeUnit();
+
+            if($end == null) {
+                $end =  min(($start + 2000000-1), ($size - 1));
+            }
+
+            if($unit != 'bytes' || $start >= $end || $end >= $size) {
                 throw new Exception('Invalid range', 416);
             }
+
+            $response
+                ->addHeader('Accept-Ranges', 'bytes')
+                ->addHeader('Content-Range', 'bytes ' . $start . '-' . $end . '/' . $size)
+                ->addHeader('Content-Length', $end - $start + 1)
+                ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
         }
 
         $source = '';
@@ -1247,13 +1240,13 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
 
         if(!empty($source)) {
             if(!empty($rangeHeader)) {
-                $response->send(substr($source, $rangeStart, ($rangeEnd - $rangeStart + 1)));
+                $response->send(substr($source, $start, ($end - $start + 1)));
             }
             $response->send($source);
         }
 
         if(!empty($rangeHeader)) {
-            $response->send($device->read($path, $rangeStart, ($rangeEnd - $rangeStart + 1)));
+            $response->send($device->read($path, $start, ($end - $start + 1)));
         }
 
         $size = $device->getFileSize($path);
