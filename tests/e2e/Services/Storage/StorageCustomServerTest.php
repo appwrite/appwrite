@@ -24,6 +24,7 @@ class StorageCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'bucketId' => 'unique()',
             'name' => 'Test Bucket',
+            'permission' => 'file',
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
@@ -47,6 +48,7 @@ class StorageCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'bucketId' => 'bucket1',
             'name' => 'Test Bucket',
+            'permission' => 'file',
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $this->assertEquals('bucket1', $bucket['body']['$id']);
@@ -60,6 +62,7 @@ class StorageCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'bucketId' => 'unique()',
             'name' => '',
+            'permission' => 'file',
         ]);
         $this->assertEquals(400, $bucket['headers']['status-code']);
 

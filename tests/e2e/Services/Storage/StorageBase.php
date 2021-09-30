@@ -19,6 +19,7 @@ trait StorageBase
         ], $this->getHeaders()), [
             'bucketId' => 'unique()',
             'name' => 'Test Bucket',
+            'permission' => 'file',
             'maximumFileSize' => 2000000, //2MB
             'allowedFileExtensions' => ["jpg", "png"],
             'read' => ['role:all'],
@@ -58,6 +59,7 @@ trait StorageBase
         ], $this->getHeaders()), [
             'bucketId' => 'unique()',
             'name' => 'Test Bucket 2',
+            'permission' => 'file',
             'read' => ['role:all'],
             'write' => ['role:all'],
         ]);
