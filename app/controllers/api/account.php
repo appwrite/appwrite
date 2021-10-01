@@ -892,6 +892,8 @@ App::put('/v1/account/sessions/magic-url')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
+        $countries = $locale->getText('countries');
+
         $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
         ? $countries[strtoupper($session->getAttribute('countryCode'))]
         : $locale->getText('locale.country.unknown');
@@ -1045,6 +1047,8 @@ App::post('/v1/account/sessions/anonymous')
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
+
+        $countries = $locale->getText('countries');
 
         $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
         ? $countries[strtoupper($session->getAttribute('countryCode'))]
@@ -1294,7 +1298,9 @@ App::get('/v1/account/sessions/:sessionId')
         if ($session->isEmpty() || Database::SYSTEM_COLLECTION_SESSIONS != $session->getCollection()) {
             throw new Exception('Session not found', 404);
         };
-        
+
+        $countries = $locale->getText('countries');
+
         $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
         ? $countries[strtoupper($session->getAttribute('countryCode'))]
         : $locale->getText('locale.country.unknown');
