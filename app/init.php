@@ -2,10 +2,10 @@
 
 /**
  * Init
- * 
+ *
  * Initializes both Appwrite API entry point, queue workers, and CLI tasks.
  * Set configuration, framework resources & app constants
- * 
+ *
  */
 if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
     require_once __DIR__.'/../vendor/autoload.php';
@@ -64,7 +64,7 @@ const APP_SOCIAL_GITHUB = 'https://github.com/appwrite';
 const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
 const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
-const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
+const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 // Deletion Types
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_EXECUTIONS = 'executions';
@@ -100,20 +100,20 @@ Config::load('roles', __DIR__.'/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__.'/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__.'/config/services.php');  // List of services
 Config::load('variables', __DIR__.'/config/variables.php');  // List of env variables
-Config::load('avatar-browsers', __DIR__.'/config/avatars/browsers.php'); 
-Config::load('avatar-credit-cards', __DIR__.'/config/avatars/credit-cards.php'); 
-Config::load('avatar-flags', __DIR__.'/config/avatars/flags.php'); 
-Config::load('locale-codes', __DIR__.'/config/locale/codes.php'); 
-Config::load('locale-currencies', __DIR__.'/config/locale/currencies.php'); 
-Config::load('locale-eu', __DIR__.'/config/locale/eu.php'); 
-Config::load('locale-languages', __DIR__.'/config/locale/languages.php'); 
-Config::load('locale-phones', __DIR__.'/config/locale/phones.php'); 
+Config::load('avatar-browsers', __DIR__.'/config/avatars/browsers.php');
+Config::load('avatar-credit-cards', __DIR__.'/config/avatars/credit-cards.php');
+Config::load('avatar-flags', __DIR__.'/config/avatars/flags.php');
+Config::load('locale-codes', __DIR__.'/config/locale/codes.php');
+Config::load('locale-currencies', __DIR__.'/config/locale/currencies.php');
+Config::load('locale-eu', __DIR__.'/config/locale/eu.php');
+Config::load('locale-languages', __DIR__.'/config/locale/languages.php');
+Config::load('locale-phones', __DIR__.'/config/locale/phones.php');
 Config::load('locale-countries', __DIR__.'/config/locale/countries.php');
 Config::load('locale-continents', __DIR__.'/config/locale/continents.php');
-Config::load('storage-logos', __DIR__.'/config/storage/logos.php'); 
-Config::load('storage-mimes', __DIR__.'/config/storage/mimes.php'); 
-Config::load('storage-inputs', __DIR__.'/config/storage/inputs.php'); 
-Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php'); 
+Config::load('storage-logos', __DIR__.'/config/storage/logos.php');
+Config::load('storage-mimes', __DIR__.'/config/storage/mimes.php');
+Config::load('storage-inputs', __DIR__.'/config/storage/inputs.php');
+Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php');
 
 $user = App::getEnv('_APP_REDIS_USER','');
 $pass = App::getEnv('_APP_REDIS_PASS','');
@@ -142,7 +142,7 @@ Database::addFilter('encrypt',
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
-        
+
         return json_encode([
             'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
             'method' => OpenSSL::CIPHER_AES_128_GCM,
@@ -374,7 +374,7 @@ App::setResource('clients', function($request, $console, $project) {
         'type' => 'web',
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
-    
+
     /**
      * Get All verified client URLs for both console and current projects
      * + Filter for duplicated entries
