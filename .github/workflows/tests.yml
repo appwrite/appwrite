@@ -1,4 +1,4 @@
-name: "CodeQL"
+name: "Tests"
 
 on: [pull_request]
 
