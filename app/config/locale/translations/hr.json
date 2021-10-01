@@ -9,7 +9,7 @@
     "emails.verification.footer": "Ukoliko niste zatražili potvrdu ove adrese, možete zanemariti ovu poruku.",
     "emails.verification.thanks": "Hvala",
     "emails.verification.signature": "{{project}} tim",
-    "emails.magicSession.subject": "Prijavi se",
+    "emails.magicSession.subject": "Prijavite se",
     "emails.magicSession.hello": "Pozdrav,",
     "emails.magicSession.body": "Slijedite ovu poveznicu za prijavu.",
     "emails.magicSession.footer": "Ako niste zatražili prijavu putem ove e-pošte, možete zanemariti ovu poruku.",
