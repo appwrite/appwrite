@@ -12,6 +12,7 @@ return [
     'de', // German
     'en', // English
     'es', // Spanish
+    'es-la', // Spanish (Latin America)
     'fa', // Farsi/Persian
     'fi', // Finnish
     'fo', // Faroese
