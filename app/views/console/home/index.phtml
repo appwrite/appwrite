@@ -248,6 +248,12 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
             <li>
                 <div class="link macos-new"><img src="/images/clients/macos.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="macOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New macOS App</div>
             </li>
+            <li>
+                <div class="link watchos-new"><img src="/images/clients/watchos.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="watchOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New watchOS App</div>
+            </li>
+            <li>
+                <div class="link tvos-new"><img src="/images/clients/tvos.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="tvOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New tvOS App</div>
+            </li>
             <li class="disabled">
                 <div class="link unity-new"><img src="/images/clients/unity.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Unity Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Unity Game  <span class="text-fade text-size-small">(soon)</span></div>
             </li>
@@ -426,6 +432,78 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="type" data-ls-bind="macos" />
+
+        <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+        <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My macOS App" maxlength="128" />
+
+        <label for="key">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
+        <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="com.company.appname" />
+
+        <hr />
+
+        <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+    </form>
+</div>
+
+<div data-ui-modal class="modal box close" data-button-alias=".watchos-new">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1>Register your watchOS App</h1>
+
+    <form
+            data-analytics
+            data-analytics-activity
+            data-analytics-event="submit"
+            data-analytics-category="console"
+            data-analytics-label="Create Project Platform (watchOS)"
+            data-service="projects.createPlatform"
+            data-scope="console"
+            data-event="submit"
+            data-success="alert,trigger,reset"
+            data-success-param-alert-text="Registered new platform successfully"
+            data-success-param-trigger-events="projects.createPlatform"
+            data-failure="alert"
+            data-failure-param-alert-text="Failed to register platform"
+            data-failure-param-alert-classname="error">
+
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="type" data-ls-bind="watchos" />
+
+        <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+        <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My watchOS App" maxlength="128" />
+
+        <label for="key">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
+        <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="com.company.appname" />
+
+        <hr />
+
+        <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+    </form>
+</div>
+
+<div data-ui-modal class="modal box close" data-button-alias=".tvos-new">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1>Register your tvOS App</h1>
+
+    <form
+            data-analytics
+            data-analytics-activity
+            data-analytics-event="submit"
+            data-analytics-category="console"
+            data-analytics-label="Create Project Platform (tvOS)"
+            data-service="projects.createPlatform"
+            data-scope="console"
+            data-event="submit"
+            data-success="alert,trigger,reset"
+            data-success-param-alert-text="Registered new platform successfully"
+            data-success-param-trigger-events="projects.createPlatform"
+            data-failure="alert"
+            data-failure-param-alert-text="Failed to register platform"
+            data-failure-param-alert-classname="error">
+
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="type" data-ls-bind="tvos" />
 
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My macOS App" maxlength="128" />
@@ -620,7 +698,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         data-analytics-activity
         data-analytics-event="submit"
         data-analytics-category="console"
-        data-analytics-label="Update Project Platform (Flutter / iOS)"
+        data-analytics-label="Update Project Platform (iOS)"
         data-service="projects.updatePlatform"
         data-scope="console"
         data-event="submit"
@@ -703,6 +781,70 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         <label data-ls-attrs="for=key-{{platform.$id}}">Package Name <span class="tooltip large" data-tooltip="Your package name is generally the applicationId in your app-level build.gradle file."><i class="icon-question"></i></span></label>
         <input name="key" type="text" class="margin-bottom" autocomplete="off" placeholder="com.company.appname" data-ls-bind="{{platform.key}}" required />
         
+        <hr />
+
+        <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Back</button>
+    </form>
+</script>
+
+<script type="text/html" id="template-watchos-update">
+    <form
+            data-analytics
+            data-analytics-activity
+            data-analytics-event="submit"
+            data-analytics-category="console"
+            data-analytics-label="Update Project Platform (watchOS)"
+            data-service="projects.updatePlatform"
+            data-scope="console"
+            data-event="submit"
+            data-success="alert,trigger"
+            data-success-param-alert-text="Updated platform successfully"
+            data-success-param-trigger-events="projects.updatePlatform"
+            data-failure="alert"
+            data-failure-param-alert-text="Failed to update platform"
+            data-failure-param-alert-classname="error">
+
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
+
+        <label data-ls-attrs="for=name-{{platform.$id}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+        <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" placeholder="My watchOS App" maxlength="128" />
+
+        <label data-ls-attrs="for=key-{{platform.$id}}">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
+        <input name="key" type="text" class="margin-bottom" autocomplete="off" placeholder="com.company.appname" data-ls-bind="{{platform.key}}" required />
+
+        <hr />
+
+        <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Back</button>
+    </form>
+</script>
+
+<script type="text/html" id="template-tvos-update">
+    <form
+            data-analytics
+            data-analytics-activity
+            data-analytics-event="submit"
+            data-analytics-category="console"
+            data-analytics-label="Update Project Platform (tvOS)"
+            data-service="projects.updatePlatform"
+            data-scope="console"
+            data-event="submit"
+            data-success="alert,trigger"
+            data-success-param-alert-text="Updated platform successfully"
+            data-success-param-trigger-events="projects.updatePlatform"
+            data-failure="alert"
+            data-failure-param-alert-text="Failed to update platform"
+            data-failure-param-alert-classname="error">
+
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
+
+        <label data-ls-attrs="for=name-{{platform.$id}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+        <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" placeholder="My tvOS App" maxlength="128" />
+
+        <label data-ls-attrs="for=key-{{platform.$id}}">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
+        <input name="key" type="text" class="margin-bottom" autocomplete="off" placeholder="com.company.appname" data-ls-bind="{{platform.key}}" required />
+
         <hr />
 
         <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Back</button>
