@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out our bug report form 🙏
+        Thanks for taking the time to fill out our documentation update request form 🙏
   - type: textarea
     id: issue-description
     validations:
@@ -26,7 +26,8 @@ body:
   - type: checkboxes
     id: read-code-of-conduct
     attributes:
-      label: "🏢 Have you read the [Code of Conduct](https://github.com/appwrite/appwrite/blob/master/CODE_OF_CONDUCT.md)?"
+      description: "This is our [Code of Conduct](https://github.com/appwrite/appwrite/blob/master/CODE_OF_CONDUCT.md)."
+      label: "🏢 Have you read the Code of Conduct?"
       options:
         - label: "I read the Code of Conduct"
           required: true
