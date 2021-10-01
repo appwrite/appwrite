@@ -6,6 +6,7 @@ use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use stdClass;
 use Utopia\Validator;
+use function gettype;
 
 class OpenAPI3 extends Format
 {
@@ -25,21 +26,27 @@ class OpenAPI3 extends Format
      * Get Used Models
      *
      * Recursively get all used models
-     * 
+     *
      * @param object $model
      * @param array $models
      *
      * @return void
      */
     protected function getUsedModels($model, array &$usedModels)
-    {   
-        if (is_string($model) && !in_array($model, ['string', 'integer', 'boolean', 'json', 'float'])) {
+    {
+        if (is_string($model) && !in_array($model, ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
             $usedModels[] = $model;
             return;
         }
         if (!is_object($model)) return;
         foreach ($model->getRules() as $rule) {
-            $this->getUsedModels($rule['type'], $usedModels);
+            if(\is_array($rule['type'])) {
+                foreach ($rule['type'] as $type) {
+                    $this->getUsedModels($type, $usedModels);
+                }
+            } else {
+                $this->getUsedModels($rule['type'], $usedModels);
+            }
         }
     }
 
@@ -93,7 +100,7 @@ class OpenAPI3 extends Format
         if (isset($output['components']['securitySchemes']['Project'])) {
             $output['components']['securitySchemes']['Project']['x-appwrite'] = ['demo' => '5df5acd0d48c2'];
         }
-        
+
         if (isset($output['components']['securitySchemes']['Key'])) {
             $output['components']['securitySchemes']['Key']['x-appwrite'] = ['demo' => '919c2d18fb5d4...a2ae413da83346ad2'];
         }
@@ -101,7 +108,7 @@ class OpenAPI3 extends Format
         if (isset($output['securityDefinitions']['JWT'])) {
             $output['securityDefinitions']['JWT']['x-appwrite'] = ['demo' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...'];
         }
-        
+
         if (isset($output['components']['securitySchemes']['Locale'])) {
             $output['components']['securitySchemes']['Locale']['x-appwrite'] = ['demo' => 'en'];
         }
@@ -125,7 +132,7 @@ class OpenAPI3 extends Format
             $id = $route->getLabel('sdk.method', \uniqid());
             $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__.'/../../../../'.$route->getLabel('sdk.description', '')) : null;
             $produces = $route->getLabel('sdk.response.type', null);
-            $model = $route->getLabel('sdk.response.model', 'none'); 
+            $model = $route->getLabel('sdk.response.model', 'none');
             $routeSecurity = $route->getLabel('sdk.auth', []);
             $sdkPlatofrms = [];
 
@@ -149,7 +156,7 @@ class OpenAPI3 extends Format
             if(empty($routeSecurity)) {
                 $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
             }
-            
+
             $temp = [
                 'summary' => $route->getDesc(),
                 'operationId' => $route->getLabel('sdk.namespace', 'default').ucfirst($id),
@@ -175,13 +182,24 @@ class OpenAPI3 extends Format
             ];
 
             foreach ($this->models as $key => $value) {
-                if($value->getType() === $model) {
-                    $model = $value;
-                    break;
+                if(\is_array($model)) {
+                    $model = \array_map(function($m) use($value) {
+                        if($m === $value->getType()) {
+                            return $value;
+                        }
+
+                        return $m;
+                    }, $model);
+                } else {
+                    if($value->getType() === $model) {
+                        $model = $value;
+                        break;
+                    }
                 }
+
             }
 
-            if($model->isNone()) {
+            if(!(\is_array($model)) &&  $model->isNone()) {
                 $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
                     'description' => (in_array($produces, [
                         'image/*',
@@ -198,17 +216,43 @@ class OpenAPI3 extends Format
                     // ],
                 ];
             } else {
-                $usedModels[] = $model->getType();
-                $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
-                    'description' => $model->getName(),
-                    'content' => [
-                        $produces => [
-                            'schema' => [
-                                '$ref' => '#/components/schemas/'.$model->getType(),
+                if(\is_array($model)) {
+                    $modelDescription = \join(', or ', \array_map(function ($m) {
+                        return $m->getName();
+                    }, $model));
+
+                    // model has multiple possible responses, we will use oneOf
+                    foreach ($model as $m) {
+                        $usedModels[] = $m->getType();
+                    }
+
+                    $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
+                        'description' => $modelDescription,
+                        'content' => [
+                            $produces => [
+                                'schema' => [
+                                    'oneOf' => \array_map(function($m) {
+                                        return ['$ref' => '#/components/schemas/'.$m->getType()];
+                                    }, $model)
+                                ],
                             ],
                         ],
-                    ],
-                ];
+                    ];
+                } else {
+                    // Response definition using one type
+                    $usedModels[] = $model->getType();
+                    $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
+                        'description' => $model->getName(),
+                        'content' => [
+                            $produces => [
+                                'schema' => [
+                                    '$ref' => '#/components/schemas/'.$model->getType(),
+                                ],
+                            ],
+                        ],
+                    ];
+                }
+
             }
 
             if($route->getLabel('sdk.response.code', 500) === 204) {
@@ -218,7 +262,7 @@ class OpenAPI3 extends Format
 
             if ((!empty($scope))) { //  && 'public' != $scope
                 $securities = ['Project' => []];
-                
+
                 foreach($route->getLabel('sdk.auth', []) as $security) {
                     if(array_key_exists($security, $this->keys)) {
                         $securities[$security] = [];
@@ -396,7 +440,7 @@ class OpenAPI3 extends Format
             if($model->isAny()) {
                 $output['components']['schemas'][$model->getType()]['additionalProperties'] = true;
             }
-            
+
             if(!empty($required)) {
                 $output['components']['schemas'][$model->getType()]['required'] = $required;
             }
@@ -411,7 +455,7 @@ class OpenAPI3 extends Format
                     case 'json':
                         $type = 'string';
                         break;
-                    
+
                     case 'integer':
                         $type = 'integer';
                         $format = 'int32';
@@ -421,18 +465,39 @@ class OpenAPI3 extends Format
                         $type = 'number';
                         $format = 'float';
                         break;
-                    
+
+                    case 'double':
+                        $type = 'number';
+                        $format = 'double';
+                        break;
+
                     case 'boolean':
                         $type = 'boolean';
                         break;
-                    
+
                     default:
                         $type = 'object';
                         $rule['type'] = ($rule['type']) ? $rule['type'] : 'none';
 
-                        $items = [
-                            '$ref' => '#/components/schemas/'.$rule['type'],
-                        ];
+                        if(\is_array($rule['type'])) {
+                            if($rule['array']) {
+                                $items = [
+                                    'anyOf' => \array_map(function($type) {
+                                        return ['$ref' => '#/components/schemas/'.$type];
+                                    }, $rule['type'])
+                                ];
+                            } else {
+                                $items = [
+                                    'oneOf' => \array_map(function($type) {
+                                        return ['$ref' => '#/components/schemas/'.$type];
+                                    }, $rule['type'])
+                                ];
+                            }
+                        } else {
+                            $items = [
+                                '$ref' => '#/components/schemas/'.$rule['type'],
+                            ];
+                        }
                         break;
                 }
 
