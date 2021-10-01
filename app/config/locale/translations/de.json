@@ -24,7 +24,7 @@
     "emails.invitation.subject": "Einladung zum %s-Team auf %s",
     "emails.invitation.hello": "Hello",
     "emails.invitation.body": "Du erhälst diese E-Mail, weil {{owner}} dich in das Team {{team}} auf {{project}} eingeladen hat.",
-    "emails.invitation.footer": "Wenn du nicht interessiert bist, kannst Sie diese Nachricht ignorieren.",
+    "emails.invitation.footer": "Wenn du nicht interessiert bist, kannst du diese Nachricht ignorieren.",
     "emails.invitation.thanks": "Danke",
     "emails.invitation.signature": "{{project}}-Team",
     "locale.country.unknown": "Unbekannt",
