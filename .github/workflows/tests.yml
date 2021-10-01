@@ -3,8 +3,8 @@ name: "Tests"
 on: [pull_request]
 
 jobs:
-  analyze:
-    name: Analyze
+  tests:
+    name: Unit & E2E
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +20,7 @@ jobs:
     - run: git checkout HEAD^2
       if: ${{ github.event_name == 'pull_request' }}
 
-    - name: Start Appwrite
+    - name: Build Appwrite
       # Upstream bug causes buildkit pulls to fail so prefetch base images
       # https://github.com/moby/moby/issues/41864
       run:  |
@@ -32,10 +32,10 @@ jobs:
         sleep 10
 
     - name: Doctor
-      run: docker-compose exec appwrite doctor
+      run: docker-compose exec -T appwrite doctor
 
     - name: Environment Variables
-      run:  docker-compose exec appwrite vars
+      run:  docker-compose exec -T appwrite vars
 
     - name: Run Tests
-      run: docker-compose exec appwrite test --debug
+      run: docker-compose exec -T appwrite test --debug
