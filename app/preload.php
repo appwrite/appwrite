@@ -25,6 +25,7 @@ $preloader = new Preloader();
 foreach ([
     realpath(__DIR__ . '/../vendor/composer'),
     realpath(__DIR__ . '/../vendor/amphp'),
+    realpath(__DIR__ . '/../vendor/maxmind-db'),
     realpath(__DIR__ . '/../vendor/felixfbecker'),
     realpath(__DIR__ . '/../vendor/twig/twig'),
     realpath(__DIR__ . '/../vendor/guzzlehttp/guzzle'),

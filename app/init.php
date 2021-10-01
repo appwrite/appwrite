@@ -26,7 +26,6 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
-use Appwrite\Event\Realtime;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
 use Utopia\View;
