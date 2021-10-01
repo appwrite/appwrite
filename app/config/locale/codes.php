@@ -45,6 +45,7 @@ return [
     'pa', //Punjabi
     'ro', // Romanian
     'ru', // Russian
+    'sd', // Sindhi
     'si', // Sinhala
     'sl', // Slovenian
     'sq', // Albanian
