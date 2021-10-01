@@ -6,7 +6,7 @@
     "emails.verification.subject": "تأكيد الحساب",
     "emails.verification.hello": "مرحبا {{name}}",
     "emails.verification.body": "برجاء اتباع الرابط التالي لتأكيد بريدك الإلكتروني",
-    "emails.verification.footer": "لو لم تطلب تأكيد هذا البريد الإلكتروني ، يمكنك تجاهل هذه الرسالة",
+    "emails.verification.footer": "لو لم تطلب تأكيد هذا البريد الإلكتروني، يمكنك تجاهل هذه الرسالة",
     "emails.verification.thanks": "شكرا",
     "emails.verification.signature": "فريق {{project}}",
     "emails.magicSession.subject": "تسجيل الدخول",
