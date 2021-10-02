@@ -44,8 +44,8 @@ Table of Contents:
 - [Follow Us](#follow-us)
 - [License](#license)
       
-## Installation
-
+Installation
+-----------
 Appwrite backend server is designed to run in a container environment. Running your server is as easy as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool like Kubernetes, Docker Swarm, or Rancher.
 
 The easiest way to start running your Appwrite server is by running our docker-compose file. Before running the installation command make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine:
@@ -99,8 +99,8 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 * [Getting Started for Flutter](https://appwrite.io/docs/getting-started-for-flutter)
 * [Getting Started for Server](https://appwrite.io/docs/getting-started-for-server)
 * [Getting Started for CLI](https://appwrite.io/docs/command-line)
-* Getting Started for Android (Coming soon...)
-* Getting Started for iOS (Coming soon...)
+* Getting Started for Android (`Coming soon...`)
+* Getting Started for iOS (`Coming soon...`)
 
 ### Services
 
