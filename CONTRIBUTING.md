@@ -12,7 +12,7 @@ Help us keep Appwrite open and inclusive. Please read and follow our [Code of Co
 
 ## Submit a Pull Request 🚀
 
-Branch naming convention is as following 
+Branch naming convention is as following: 
 
 `TYPE-ISSUE_ID-DESCRIPTION`
 
@@ -29,7 +29,7 @@ When `TYPE` can be:
 - **fix** - a bug fix
 - **refactor** - code change that neither fixes a bug nor adds a feature
 
-**All PRs must include a commit message with the changes description!** 
+**All PRs must include a commit message with the change's description!** 
 
 For the initial start, fork the project and use git clone command to download the repository to your computer. A standard procedure for working on an issue would be to:
 
@@ -190,11 +190,11 @@ Although the Appwrite API is a monolithic app, it has a very clear separation of
 
 Each container in Appwrite is a microservice on its own. Each service is an independent process that can scale without regard to any of the other services.
 
-Currently, all of the Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443, who, by default, are used to expose the Appwrite HTTP API.
+Currently, all Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443, who, by default, are used to expose the Appwrite HTTP API.
 
 ## Ports
 
-Appwrite dev version uses ports 80 and 443 as an entry point to the Appwrite API and console. We also expose multiple ports in the range of 9500-9504 for debugging some of the Appwrite containers on dev mode. If you have any conflicts with the ports running on your system, you can easily replace them by editing Appwrite's docker-compose.yml file and executing `docker-compose up -d` command.
+Appwrite dev version uses ports 80 and 443 as an entry point to the Appwrite API and console. We also expose multiple ports in the range of 9500-9504 for debugging some Appwrite containers on dev mode. If you have any conflicts with the ports running on your system, you can easily replace them by editing Appwrite's docker-compose.yml file and executing `docker-compose up -d` command.
 
 ## Technology Stack
 
@@ -288,7 +288,7 @@ The Runtimes for all supported cloud functions (multicore builds) can be found a
 
 Appwrite uses [yasd](https://github.com/swoole/yasd) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension or if you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection.
 
-First, you need to create an init file. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php** and there change the IP address to your development machine's IP. Without the proper IP address debugger wont connect. And you also need to set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
+First, you need to create an init file. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php** and there change the IP address to your development machine's IP. Without the proper IP address debugger won't connect. And you also need to set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
 
 ### VS Code Launch Configuration
 
