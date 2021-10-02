@@ -263,6 +263,7 @@ $register->set('geodb', function () {
 Locale::$exceptions = false;
 Locale::setLanguageFromJSON('af', __DIR__.'/config/locale/translations/af.json');
 Locale::setLanguageFromJSON('ar', __DIR__.'/config/locale/translations/ar.json');
+Locale::setLanguageFromJSON('as', __DIR__.'/config/locale/translations/as.json');
 Locale::setLanguageFromJSON('be', __DIR__.'/config/locale/translations/be.json');
 Locale::setLanguageFromJSON('bg', __DIR__.'/config/locale/translations/bg.json');
 Locale::setLanguageFromJSON('bn', __DIR__.'/config/locale/translations/bn.json');
