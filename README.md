@@ -123,6 +123,7 @@ Below is a list of currently supported platforms and languages. If you wish to h
 * ✅  &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Android](https://github.com/appwrite/sdk-for-android) (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Appcelerator Titanium](https://github.com/m1ga/ti.appwrite) (Maintained by [Michael Gangolf](https://github.com/m1ga/))    
 
 #### Server
 * ✅  &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node) (Maintained by the Appwrite Team)
