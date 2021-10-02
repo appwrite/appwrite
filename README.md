@@ -82,6 +82,12 @@ docker run -it --rm ,
     appwrite/appwrite:0.10.4
 ```
 
+### Stop The Running Docker Containers (Windows/Unix)
+
+```bash
+docker-compose -f docker-compose.yml down
+```
+
 Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-linux native hosts, the server might take a few minutes to start after installation completes.
 
 
