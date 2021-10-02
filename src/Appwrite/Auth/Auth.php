@@ -170,7 +170,7 @@ class Auth
      *
      * @throws \Exception
      */
-    public static function passwordGenerator(int $length = 20):string
+    public static function passwordGenerator(int $length = 20): string
     {
         return \bin2hex(\random_bytes($length));
     }
@@ -186,7 +186,7 @@ class Auth
      *
      * @throws \Exception
      */
-    public static function tokenGenerator(int $length = 128):string
+    public static function tokenGenerator(int $length = 128): string
     {
         return \bin2hex(\random_bytes($length));
     }
@@ -202,13 +202,16 @@ class Auth
      */
     public static function tokenVerify(array $tokens, int $type, string $secret)
     {
-        foreach ($tokens as $token) { /** @var Document $token */
-            if ($token->isSet('type') &&
+        foreach ($tokens as $token) {
+            /** @var Document $token */
+            if (
+                $token->isSet('type') &&
                 $token->isSet('secret') &&
                 $token->isSet('expire') &&
                 $token->getAttribute('type') == $type &&
                 $token->getAttribute('secret') === self::hash($secret) &&
-                $token->getAttribute('expire') >= \time()) {
+                $token->getAttribute('expire') >= \time()
+            ) {
                 return (string)$token->getId();
             }
         }
@@ -226,12 +229,15 @@ class Auth
      */
     public static function sessionVerify(array $sessions, string $secret)
     {
-        foreach ($sessions as $session) { /** @var Document $session */
-            if ($session->isSet('secret') &&
+        foreach ($sessions as $session) {
+            /** @var Document $session */
+            if (
+                $session->isSet('secret') &&
                 $session->isSet('expire') &&
                 $session->isSet('provider') &&
                 $session->getAttribute('secret') === self::hash($secret) &&
-                $session->getAttribute('expire') >= \time()) {
+                $session->getAttribute('expire') >= \time()
+            ) {
                 return (string)$session->getId();
             }
         }
@@ -248,10 +254,10 @@ class Auth
      */
     public static function isPrivilegedUser(array $roles): bool
     {
-        if(
-            array_key_exists('role:'.self::USER_ROLE_OWNER, $roles) ||
-            array_key_exists('role:'.self::USER_ROLE_DEVELOPER, $roles) ||
-            array_key_exists('role:'.self::USER_ROLE_ADMIN, $roles)
+        if (
+            array_key_exists('role:' . self::USER_ROLE_OWNER, $roles) ||
+            array_key_exists('role:' . self::USER_ROLE_DEVELOPER, $roles) ||
+            array_key_exists('role:' . self::USER_ROLE_ADMIN, $roles)
         ) {
             return true;
         }
@@ -268,7 +274,7 @@ class Auth
      */
     public static function isAppUser(array $roles): bool
     {
-        if(array_key_exists('role:'.self::USER_ROLE_APP, $roles)) {
+        if (array_key_exists('role:' . self::USER_ROLE_APP, $roles)) {
             return true;
         }
 
@@ -287,10 +293,10 @@ class Auth
 
         if (!self::isPrivilegedUser(Authorization::$roles) && !self::isAppUser(Authorization::$roles)) {
             if ($user->getId()) {
-                $roles[] = 'user:'.$user->getId();
-                $roles[] = 'role:'.Auth::USER_ROLE_MEMBER;
+                $roles[] = 'user:' . $user->getId();
+                $roles[] = 'role:' . Auth::USER_ROLE_MEMBER;
             } else {
-                return ['role:'.Auth::USER_ROLE_GUEST];
+                return ['role:' . Auth::USER_ROLE_GUEST];
             }
         }
 
