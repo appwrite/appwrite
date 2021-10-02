@@ -1,5 +1,5 @@
 {
-    "settings.inspire": "\"बुद्धिमान होवे की वह कला बा जॉन जानने की कला होला कि का अनदेखा किया जाए। \"",
+    "settings.inspire": "\"बुद्धिमान होइत क कला ई जाने क कला अछि जे की अनदेखा कर्मा चाहि| \"",
     "settings.locale": "bh",
     "settings.direction": "ltr",
     "emails.sender": "%s टीम",
@@ -27,7 +27,7 @@
     "emails.invitation.footer": "",
     "emails.invitation.thanks": "",
     "emails.invitation.signature": "",
-    "locale.country.unknown": "अज्ञात",
+    "locale.country.unknown": "अनजान",
     "countries.af": "अफ़ग़ानिस्तान",
     "countries.ao": "अंगोला",
     "countries.al": "अल्बानिया",
