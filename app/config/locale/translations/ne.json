@@ -23,7 +23,7 @@
     "emails.recovery.signature": "{{project}} समूह",
     "emails.invitation.subject": "%s समूहको लागि %s मा निमन्त्रणा",
     "emails.invitation.hello": "नमस्ते",
-    "emails.invitation.body": "{{owner}}ले तपाइँलाई {{project}}मा {{team}}को सदस्य बन्न आमन्त्रित गर्नु भएको छ। तेसैले तपाइँलाई यो सन्देश पठाइएको हो।",
+    "emails.invitation.body": "{{owner}}ले तपाइँलाई {{project}}मा {{team}}को सदस्य बन्न आमन्त्रित गर्न चाहनु भएको छ। त्येसैले तपाइँलाई यो सन्देश पठाइएको हो।",
     "emails.invitation.footer": "यदि तपाइँ इच्छुक हुनुहुन्न भने, तपाइँले यो सन्देशलाई बेवास्ता गर्न सक्नुहुन्छ।",
     "emails.invitation.thanks": "धन्यवाद",
     "emails.invitation.signature": "{{project}} समूह",
