@@ -1,0 +1,434 @@
+version: '3'
+
+services:
+  traefik:
+    image: traefik:2.5
+    container_name: appwrite-traefik
+    command:
+      - --providers.file.directory=/storage/config
+      - --providers.file.watch=true
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
+      - --entrypoints.appwrite_web.address=:80
+      - --entrypoints.appwrite_websecure.address=:443
+    restart: unless-stopped
+    ports:
+      - 9999:80
+      - 9998:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - appwrite-config:/storage/config:ro
+      - appwrite-certificates:/storage/certificates:ro
+    depends_on:
+      - appwrite
+    networks:
+      - gateway
+      - appwrite
+  
+  appwrite:
+    image: appwrite/appwrite:0.10.4
+    container_name: appwrite
+    restart: unless-stopped
+    networks:
+      - appwrite
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label-stack=appwrite
+      - traefik.docker.network=appwrite
+      - traefik.http.services.appwrite_api.loadbalancer.server.port=80
+      #http
+      - traefik.http.routers.appwrite_api_http.entrypoints=appwrite_web
+      - traefik.http.routers.appwrite_api_http.rule=PathPrefix(`/`)
+      - traefik.http.routers.appwrite_api_http.service=appwrite_api
+      # https
+      - traefik.http.routers.appwrite_api_https.entrypoints=appwrite_websecure
+      - traefik.http.routers.appwrite_api_https.rule=PathPrefix(`/`)
+      - traefik.http.routers.appwrite_api_https.service=appwrite_api
+      - traefik.http.routers.appwrite_api_https.tls=true
+    volumes:
+      - appwrite-uploads:/storage/uploads:rw
+      - appwrite-cache:/storage/cache:rw
+      - appwrite-config:/storage/config:rw
+      - appwrite-certificates:/storage/certificates:rw
+      - appwrite-functions:/storage/functions:rw
+    depends_on:
+      - mariadb
+      - redis
+#      - clamav
+      - influxdb
+    environment:
+      - _APP_ENV
+      - _APP_LOCALE
+      - _APP_CONSOLE_WHITELIST_ROOT
+      - _APP_CONSOLE_WHITELIST_EMAILS
+      - _APP_CONSOLE_WHITELIST_IPS
+      - _APP_SYSTEM_EMAIL_NAME
+      - _APP_SYSTEM_EMAIL_ADDRESS
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_SYSTEM_RESPONSE_FORMAT
+      - _APP_OPTIONS_ABUSE
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_OPENSSL_KEY_V1
+      - _APP_DOMAIN
+      - _APP_DOMAIN_TARGET
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_SMTP_HOST
+      - _APP_SMTP_PORT
+      - _APP_SMTP_SECURE
+      - _APP_SMTP_USERNAME
+      - _APP_SMTP_PASSWORD
+      - _APP_USAGE_STATS
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
+      - _APP_STORAGE_LIMIT
+      - _APP_STORAGE_ANTIVIRUS
+      - _APP_STORAGE_ANTIVIRUS_HOST
+      - _APP_STORAGE_ANTIVIRUS_PORT
+      - _APP_FUNCTIONS_TIMEOUT
+      - _APP_FUNCTIONS_CONTAINERS
+      - _APP_FUNCTIONS_CPUS
+      - _APP_FUNCTIONS_MEMORY
+      - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_FUNCTIONS_RUNTIMES
+
+  appwrite-realtime:
+    image: appwrite/appwrite:0.10.4
+    entrypoint: realtime
+    container_name: appwrite-realtime
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.constraint-label-stack=appwrite"
+      - "traefik.docker.network=appwrite"
+      - "traefik.http.services.appwrite_realtime.loadbalancer.server.port=80"
+      #ws
+      - traefik.http.routers.appwrite_realtime_ws.entrypoints=appwrite_web
+      - traefik.http.routers.appwrite_realtime_ws.rule=PathPrefix(`/v1/realtime`)
+      - traefik.http.routers.appwrite_realtime_ws.service=appwrite_realtime
+      # wss
+      - traefik.http.routers.appwrite_realtime_wss.entrypoints=appwrite_websecure
+      - traefik.http.routers.appwrite_realtime_wss.rule=PathPrefix(`/v1/realtime`)
+      - traefik.http.routers.appwrite_realtime_wss.service=appwrite_realtime
+      - traefik.http.routers.appwrite_realtime_wss.tls=true
+      - traefik.http.routers.appwrite_realtime_wss.tls.certresolver=dns
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_OPTIONS_ABUSE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_USAGE_STATS
+
+  appwrite-worker-usage:
+    image: appwrite/appwrite:0.10.4
+    entrypoint: worker-usage
+    container_name: appwrite-worker-usage
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - telegraf
+    environment:
+      - _APP_ENV
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_STATSD_HOST
+      - _APP_STATSD_PORT
+
+  appwrite-worker-audits:
+    image: appwrite/appwrite:0.10.4
+    entrypoint: worker-audits
+    container_name: appwrite-worker-audits
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
+  appwrite-worker-webhooks:
+    image: appwrite/appwrite:0.10.4
+    entrypoint: worker-webhooks
+    container_name: appwrite-worker-webhooks
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+
+  appwrite-worker-tasks:
+    image: appwrite/appwrite:0.10.4
+    entrypoint: worker-tasks
+    container_name: appwrite-worker-tasks
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
+  appwrite-worker-deletes:
+    image: appwrite/appwrite:0.10.4
+    entrypoint: worker-deletes
+    container_name: appwrite-worker-deletes
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - mariadb
+    volumes: 
+      - appwrite-uploads:/storage/uploads:rw
+      - appwrite-cache:/storage/cache:rw
+      - appwrite-certificates:/storage/certificates:rw
+    environment:
+      - _APP_ENV
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
+  appwrite-worker-certificates:
+    image: appwrite/appwrite:0.10.4
+    entrypoint: worker-certificates
+    container_name: appwrite-worker-certificates
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - mariadb
+    volumes: 
+      - appwrite-config:/storage/config:rw
+      - appwrite-certificates:/storage/certificates:rw
+    environment:
+      - _APP_ENV
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DOMAIN_TARGET
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
+  appwrite-worker-functions:
+    image: appwrite/appwrite:0.10.4
+    entrypoint: worker-functions
+    container_name: appwrite-worker-functions
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - mariadb
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - appwrite-functions:/storage/functions:rw
+      - /tmp:/tmp:rw
+    environment:
+      - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_FUNCTIONS_TIMEOUT
+      - _APP_FUNCTIONS_CONTAINERS
+      - _APP_FUNCTIONS_CPUS
+      - _APP_FUNCTIONS_MEMORY
+      - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_FUNCTIONS_RUNTIMES
+      - _APP_USAGE_STATS
+
+  appwrite-worker-mails:
+    image: appwrite/appwrite:0.10.4
+    entrypoint: worker-mails
+    container_name: appwrite-worker-mails
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_SYSTEM_EMAIL_NAME
+      - _APP_SYSTEM_EMAIL_ADDRESS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_SMTP_HOST
+      - _APP_SMTP_PORT
+      - _APP_SMTP_SECURE
+      - _APP_SMTP_USERNAME
+      - _APP_SMTP_PASSWORD
+      
+  appwrite-maintenance:
+    image: appwrite/appwrite:0.10.4
+    entrypoint: maintenance
+    container_name: appwrite-maintenance
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_MAINTENANCE_INTERVAL
+      - _APP_MAINTENANCE_RETENTION_EXECUTION
+      - _APP_MAINTENANCE_RETENTION_ABUSE
+      - _APP_MAINTENANCE_RETENTION_AUDIT
+
+
+  appwrite-schedule:
+    image: appwrite/appwrite:0.10.4
+    entrypoint: schedule
+    container_name: appwrite-schedule
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+
+  mariadb:
+    image: appwrite/mariadb:1.2.0 # fix issues when upgrading using: mysql_upgrade -u root -p
+    container_name: appwrite-mariadb
+    restart: unless-stopped
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-mariadb:/var/lib/mysql:rw
+    environment:
+      - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
+      - MYSQL_DATABASE=${_APP_DB_SCHEMA}
+      - MYSQL_USER=${_APP_DB_USER}
+      - MYSQL_PASSWORD=${_APP_DB_PASS}
+    command: 'mysqld --innodb-flush-method=fsync'
+
+  redis:
+    image: redis:6.0-alpine3.12
+    container_name: appwrite-redis
+    restart: unless-stopped
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-redis:/data:rw
+
+#  clamav:
+#    image: appwrite/clamav:1.2.0
+#    container_name: appwrite-clamav
+#    restart: unless-stopped
+#    networks:
+#      - appwrite
+#    volumes:
+#      - appwrite-uploads:/storage/uploads
+
+  influxdb:
+    image: appwrite/influxdb:1.0.0
+    container_name: appwrite-influxdb
+    restart: unless-stopped
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-influxdb:/var/lib/influxdb:rw
+
+  telegraf:
+    image: appwrite/telegraf:1.2.0
+    container_name: appwrite-telegraf
+    restart: unless-stopped
+    networks:
+      - appwrite
+    environment: 
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
+
+networks:
+  gateway:
+  appwrite:
+
+volumes:
+  appwrite-mariadb:
+  appwrite-redis:
+  appwrite-cache:
+  appwrite-uploads:
+  appwrite-certificates:
+  appwrite-functions:
+  appwrite-influxdb:
+  appwrite-config:

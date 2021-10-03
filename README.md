@@ -85,6 +85,12 @@ docker run -it --rm ,
 ### Stop The Running Docker Containers (Windows/Unix)
 
 ```bash
+docker container stop $(docker ps | grep "appwrite*" | cut -d " " -f 1)
+```
+
+### For Manual Installation Using Docker-Compose (Windows/Unix)
+
+```bash
 docker-compose -f docker-compose.yml down
 ```
 
