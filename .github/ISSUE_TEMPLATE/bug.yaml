@@ -73,3 +73,4 @@ body:
       options:
         - label: "I checked and didn't find similar issue"
           required: true
+

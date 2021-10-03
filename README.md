@@ -8,7 +8,7 @@
     <br />
 </p>
 
-[![Hacktoberfest](https://badgen.net/badge/hacktoberfest/friendly/pink)](https://hacktoberfest.appwrite.io)
+[![Hacktoberfest](https://img.shields.io/static/v1?label=hacktoberfest&message=friendly&color=90a88b&style=flat-square)](https://hacktoberfest.appwrite.io)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord&style=flat-square)](https://appwrite.io/discord)
 [![Docker Pulls](https://img.shields.io/docker/pulls/appwrite/appwrite?color=f02e65&style=flat-square)](https://hub.docker.com/r/appwrite/appwrite)
 [![Build Status](https://img.shields.io/travis/com/appwrite/appwrite?style=flat-square)](https://travis-ci.com/appwrite/appwrite)
@@ -39,6 +39,7 @@ Table of Contents:
   - [SDKs](#sdks)
     - [Client](#client)
     - [Server](#server)
+    - [Community](#community)
 - [Contributing](#contributing)
 - [Security](#security)
 - [Follow Us](#follow-us)
@@ -134,6 +135,9 @@ Below is a list of currently supported platforms and languages. If you wish to h
 * ✅  &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) - **Beta** (Maintained by the Appwrite Team)
 * ✅  &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **Experimental** (Maintained by the Appwrite Team)
 
+#### Community
+* ✅  &nbsp; [Appcelerator Titanium](https://github.com/m1ga/ti.appwrite) (Maintained by [Michael Gangolf](https://github.com/m1ga/))    
+    
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 
 ## Contributing
