@@ -74,5 +74,6 @@
 	"YNS": "YunOs",
 	"IOS": "iOS",
 	"POS": "palmOS",
-	"WOS": "webOS"
+	"WOS": "webOS", 
+        "ZOS": "zorin os"
 }
