@@ -23,7 +23,7 @@
     "emails.recovery.signature": "Equipa {{project}}",
     "emails.invitation.subject": "Convite à equipa de %s às %s",
     "emails.invitation.hello": "Olá",
-    "emails.invitation.body": "Este correio foi-lhe enviado porque {{{owner}} queria convidá-lo a tornar-se membro da equipa {{{team}} da {{project}}.",
+    "emails.invitation.body": "Este correio foi-lhe enviado porque {{owner}} queria convidá-lo a tornar-se membro da equipa {{team}} da {{project}}.",
     "emails.invitation.footer": "Se não estiver interessado, pode ignorar esta mensagem.",
     "emails.invitation.thanks": "Obrigado",
     "emails.invitation.signature": "Equipa {{project}}",
