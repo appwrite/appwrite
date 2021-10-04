@@ -46,9 +46,9 @@ class UsersCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'userId' => 'meldiron',
-            'email' => 'matej@appwrite.io',
-            'password' => 'my-superstr0ng-password',
-            'name' => 'Matej Bačo'
+            'email' => 'matej2@appwrite.io',
+            'password' => 'someones-superstr0ng-password',
+            'name' => 'Matej Bačo Second'
         ]);
 
         $this->assertEquals(409, $response1['headers']['status-code']);
