@@ -6,9 +6,9 @@ This document is part of the Appwrite contributors' guide. Before you continue r
 
 ### Agenda
 
-Storage providers help us use various storage services to store our Appwrite data. As of the writing of these lines we already support Local storage, [AWS S3](https://aws.amazon.com/s3/) storage and [Digitalocean Spaces](https://www.digitalocean.com/products/spaces/) storage.
+Storage providers help us use various storage services to store our Appwrite data. As of the writing of these lines, we already support Local storage, [AWS S3](https://aws.amazon.com/s3/) storage and [Digitalocean Spaces](https://www.digitalocean.com/products/spaces/) storage.
 
-As the storage library is separated into [utopia-php/storage](https://github.com/utopia-php/storage), adding new storage adapter will consist of two phases. First adding and implementing the new adapter in the [utopia-php/storage](https://github.com/utopia-php/storage) and then adding support to the new storage adapter in Appwrite.
+As the storage library is separated into [utopia-php/storage](https://github.com/utopia-php/storage), adding a new storage adapter will consist of two phases. First adding and implementing the new adapter in the [utopia-php/storage](https://github.com/utopia-php/storage) and then adding support to the new storage adapter in Appwrite.
 
 ### Phase 1
 In phase 1, we will introduce and implement the new device adapter in [utopia-php/storage](https://github.com/utopia-php/storage) library.
@@ -32,7 +32,7 @@ Run tests using `vendor/bin/phpunit --configuration phpunit.xml` and verify that
 If everything goes well, create a new pull request in [utopia-php/storage](https://github.com/utopia-php/storage) library.
 
 ### Phase 2
-In this phase we will add support to the new storage adapter in Appwrite.
+In this phase, we will add support to the new storage adapter in Appwrite.
 
 * Note for this to happen, your PR in the first phase should have been merged and new version of [utopia-php/storage](https://github.com/utopia-php/storage) library released.
 
@@ -40,12 +40,12 @@ In this phase we will add support to the new storage adapter in Appwrite.
 Upgrade the utopia-php/storage dependency in `composer.json` file.
 
 ### Introduce new environment variables
-If required for the new adapter, may be for credentials, introduce new environment variables. The storage envorinment variables are prefixed as `_APP_STORAGE_DEVICE`. Please read [Adding Environment Variables]() guidelines in order to properly introduce new environment variables.
+If required for the new adapter, maybe for credentials, introduce new environment variables. The storage environnment variables are prefixed as `_APP_STORAGE_DEVICE`. Please read [Adding Environment Variables]() guidelines in order to properly introduce new environment variables.
 
 ### Implement the device case
 In `app/controllers/shared/api.php` inside init function, there is a `switch/case` statements for each supported storage device. Implement the instantiation of your device type for your device case. The device cases are the devices constants listed in the `uptopa-php/storage/Storage` class.
 
 ### Test and verify everything works
-To test you can switch to your newly added device using `_APP_STORAGE_DEVICE` environment variable. Then run `docker-compose build && docker-compose up -d` in order to build the containers with updated changes. Once the containers are running, login to Appwrite console and create a project. Then in storage section, try to upload, preview, delete files.
+To test you can switch to your newly added device using `_APP_STORAGE_DEVICE` environment variable. Then run `docker-compose build && docker-compose up -d` in order to build the containers with updated changes. Once the containers are running, login to Appwrite console and create a project. Then in the storage section, try to upload, preview, delete files.
 
 If everything goes well, initiate a pull request to appwrite repository.
