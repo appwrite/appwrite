@@ -21,7 +21,7 @@
     "emails.recovery.footer": "જો તમે તમારો પાસવર્ડ ફરીથી સેટ કરવાનું ન કહ્યું હોય, તો તમે આ સંદેશને અવગણી શકો છો.",
     "emails.recovery.thanks": "આભાર",
     "emails.recovery.signature": "{{project}} ટીમ",
-    "emails.invitation.subject": "%S ટીમને %s પર આમંત્રણ",
+    "emails.invitation.subject": "%s ટીમને %s પર આમંત્રણ",
     "emails.invitation.hello": "નમસ્કાર",
     "emails.invitation.body": "આ મેઇલ તમને મોકલવામાં આવ્યો હતો કારણ કે {{owner}} તમને {{project}} માં {{team}} ટીમના સભ્ય બનવા માટે આમંત્રિત કરવા માંગતા હતો.",
     "emails.invitation.footer": "જો તમને રસ નથી, તો તમે આ સંદેશને અવગણી શકો છો.",
