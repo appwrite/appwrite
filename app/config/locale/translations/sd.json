@@ -3,7 +3,7 @@
     "settings.locale": "sd",
     "settings.direction": "ltr",
     "emails.sender": "%s ٽيم",
-    "emails.verification.subject": "اڪائونٽ جي تصديق",
+    "emails.verification.subject": " ا ڪائونٽ جي تصديق",
     "emails.verification.hello": "هي {{نالو}}",
     "emails.verification.body": "پنھنجي اي ميل ايڊريس جي تصديق ڪرڻ لاءِ ھن لنڪ تي عمل ڪريو.",
     "emails.verification.footer": "جيڪڏھن توھان نه پ askيا ھئا ھن ايڊريس جي تصديق ڪرڻ لاءِ ، توھان نظر انداز ڪري سگھوٿا ھن پيغام کي.",
