@@ -1735,7 +1735,7 @@ $collections = [
                 '$id' => '_fulltext_search',
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
-                'lengths' => [1024],
+                'lengths' => [16384],
                 'orders' => [Database::ORDER_ASC],
             ],
         ],
