@@ -405,10 +405,6 @@ App::put('/v1/storage/buckets/:bucketId')
 
         $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
         $write ??= $bucket->getAttribute('$write', []); // By default inherit write permissions
-        $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
-        $write ??= $bucket->getAttribute('$write',[]); // By default inherit write permissions
-        $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
-        $write ??= $bucket->getAttribute('$write', []); // By default inherit write permissions
         $maximumFileSize ??= $bucket->getAttribute('maximumFileSize', (int)App::getEnv('_APP_STORAGE_LIMIT', 0));
         $allowedFileExtensions ??= $bucket->getAttribute('allowedFileExtensions', []);
         $enabled ??= $bucket->getAttribute('enabled', true);
