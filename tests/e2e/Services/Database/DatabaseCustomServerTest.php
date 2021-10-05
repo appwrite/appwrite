@@ -307,6 +307,101 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 404);
     }
 
+    public function testAttributeCountLimit()
+    {
+        $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'unique()',
+            'name' => 'attributeCountLimit',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+            'permission' => 'document',
+        ]);
+
+        $collectionId = $collection['body']['$id'];
+
+        // load the collection up to the limit
+        for ($i=0; $i < 1012; $i++) {
+            $attribute = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'attributeId' => "attribute{$i}",
+                'required' => false,
+            ]);
+
+            $this->assertEquals(201, $attribute['headers']['status-code']);
+        }
+
+        sleep(5);
+
+        $tooMany = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => "tooMany",
+            'required' => false,
+        ]);
+
+        $this->assertEquals(400, $tooMany['headers']['status-code']);
+        $this->assertEquals('Attribute limit exceeded', $tooMany['body']['message']);
+    }
+
+    public function testAttributeRowWidthLimit()
+    {
+        $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'attributeRowWidthLimit',
+            'name' => 'attributeRowWidthLimit',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+            'permission' => 'document',
+        ]);
+
+        $this->assertEquals($collection['headers']['status-code'], 201);
+        $this->assertEquals($collection['body']['name'], 'attributeRowWidthLimit');
+
+        $collectionId = $collection['body']['$id'];
+
+        // Add wide string attributes to approach row width limit
+        for ($i=0; $i < 15; $i++) {
+            $attribute = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'attributeId' => "attribute{$i}",
+                'size' => 1024,
+                'required' => true,
+            ]);
+
+            $this->assertEquals($attribute['headers']['status-code'], 201);
+        }
+
+        sleep(5);
+
+        $tooWide = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'tooWide',
+            'size' => 1024,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(400, $tooWide['headers']['status-code']);
+        $this->assertEquals('Attribute limit exceeded', $tooWide['body']['message']);
+    }
+
     public function testIndexLimitException()
     {
         $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([

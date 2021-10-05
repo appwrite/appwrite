@@ -77,7 +77,7 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
     }
 
     try {
-        $attribute = $dbForInternal->createDocument('attributes', new Document([
+        $attribute = new Document([
             '$id' => $collectionId.'_'.$attributeId,
             'key' => $attributeId,
             'collectionId' => $collectionId,
@@ -90,10 +90,16 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
             'array' => $array,
             'format' => $format,
             'formatOptions' => $formatOptions,
-            'filters' => $filters,
-        ]));
-    } catch (DuplicateException $th) {
+        ]);
+
+        $dbForInternal->checkAttribute($collection, $attribute);
+        $attribute = $dbForInternal->createDocument('attributes', $attribute);
+    }
+    catch (DuplicateException $exception) {
         throw new Exception('Attribute already exists', 409);
+    }
+    catch (LimitException $exception) {
+        throw new Exception('Attribute limit exceeded', 400);
     }
 
     $dbForInternal->deleteCachedDocument('collections', $collectionId);
