@@ -186,11 +186,11 @@ Appwrite's main API container is designed as a monolithic app. This is a decisio
 
 Although the Appwrite API is a monolithic app, it has a very clear separation of concern as each internal service or worker is separated by its container, which will allow us as we grow to start breaking services for better maintenance and scalability.
 
-### The Microservice Part
+### The Micro service Part
 
-Each container in Appwrite is a microservice on its own. Each service is an independent process that can scale without regard to any of the other services.
+Each container in Appwrite is a micro service on its own. Each service is an independent process that can scale without regard to any of the other services.
 
-Currently, all Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443, who, by default, are used to expose the Appwrite HTTP API.
+Currently, all the Appwrite micro services are intended to communicate using the TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443, who, by default, are used to expose the Appwrite HTTP API.
 
 ## Ports
 
