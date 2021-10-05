@@ -1217,7 +1217,6 @@ App::post('/v1/database/collections/:collectionId/indexes')
         // lengths hidden by default
         $lengths = [];
 
-        // set attribute size as length for strings, null otherwise
         foreach ($attributes as $key => $attribute) {
             // find attribute metadata in collection document
             $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
@@ -1226,10 +1225,16 @@ App::post('/v1/database/collections/:collectionId/indexes')
                 throw new Exception('Unknown attribute: ' . $attribute, 400);
             }
 
+            $attributeStatus = $oldAttributes[$attributeIndex]['status'];
             $attributeType = $oldAttributes[$attributeIndex]['type'];
             $attributeSize = $oldAttributes[$attributeIndex]['size'];
 
-            // Only set length for indexes on strings
+            // ensure attribute is available
+            if ($attributeStatus !== 'available') {
+                throw new Exception ('Attribute not available: ' . $oldAttributes[$attributeIndex]['key'], 400);
+            }
+
+            // set attribute size as index length only for strings
             $lengths[$key] = ($attributeType === Database::VAR_STRING) ? $attributeSize : null;
         }
 
