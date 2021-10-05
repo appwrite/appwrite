@@ -5,7 +5,7 @@
     "emails.sender": "%s Team",
     "emails.verification.subject": "Kontobekreftelse",
     "emails.verification.hello": "Hallo {{name}}",
-    "emails.verification.body": "Følg denne lengken for å bekrefte din e-post adresse.",
+    "emails.verification.body": "Følg denne lenken for å bekrefte din e-post adresse.",
     "emails.verification.footer": "Dersom du ikke ba om å bekrefte e-post adressen, kan du se bort fra denne meldingen.",
     "emails.verification.thanks": "Takk",
     "emails.verification.signature": "{{project}} team",
