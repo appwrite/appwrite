@@ -719,26 +719,31 @@ App::delete('/v1/users/:userId')
             throw new Exception('User not found', 404);
         }
 
-        $emptyUser = clone $user;
-        $emptyUser->setAttribute("name", null);
-        $emptyUser->setAttribute("email", null);
-        $emptyUser->setAttribute("password", null);
-        $emptyUser->setAttribute("deleted", true);
+        // clone user object to send to workers
+        $clone = clone $user;
 
-        $dbForInternal->updateDocument('users', $userId, $emptyUser);
+        $user
+            ->setAttribute("name", null)
+            ->setAttribute("email", null);
+            ->setAttribute("password", null);
+            ->setAttribute("deleted", true)
+        ;
+
+        $dbForInternal->updateDocument('users', $userId, $user);
 
         $deletes
             ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $user)
+            ->setParam('document', $clone)
         ;
 
         $events
-            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+            ->setParam('eventData', $response->output($clone, Response::MODEL_USER))
         ;
 
         $usage
             ->setParam('users.delete', 1)
         ;
+
         $response->noContent();
     });
 
