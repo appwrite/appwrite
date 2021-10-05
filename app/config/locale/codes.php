@@ -19,7 +19,8 @@ return [
     'el', // Greek
     'gu', //Gujrati
     'he', // Hebrew
-    'hi', // Hindi
+    'hi', // Hindi,
+    'hr', // Croatian
     'hu', // Hungarian
     'hy', // Armenian
     'id', // Indonesian
