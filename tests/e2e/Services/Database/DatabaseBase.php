@@ -422,13 +422,13 @@ trait DatabaseBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $base['body']['documents'][3]['$id'],
+            'cursor' => $base['body']['documents'][2]['$id'],
             'cursorDirection' => Database::CURSOR_BEFORE
         ]);
 
         $this->assertEquals($documents['headers']['status-code'], 200);
-        $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['documents'][0]['$id']);
-        $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['documents'][1]['$id']);
+        $this->assertEquals($base['body']['documents'][0]['$id'], $documents['body']['documents'][0]['$id']);
+        $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['documents'][1]['$id']);
         $this->assertCount(2, $documents['body']['documents']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([

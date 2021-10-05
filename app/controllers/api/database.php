@@ -93,7 +93,7 @@ $attributesCallback = function ($collectionId, $attribute, $response, $dbForInte
         throw new Exception('Attribute already exists', 409);
     }
 
-    $dbForInternal->deleteCachedCollection($collectionId);
+    $dbForInternal->deleteCachedDocument('collections', $collectionId);
 
     $database
         ->setParam('type', DATABASE_TYPE_CREATE_ATTRIBUTE)
@@ -1061,7 +1061,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
         }
 
         $attribute = $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
-        $dbForInternal->deleteCachedCollection($collectionId);
+        $dbForInternal->deleteCachedDocument('collections', $collectionId);
 
         $database
             ->setParam('type', DATABASE_TYPE_DELETE_ATTRIBUTE)
@@ -1168,7 +1168,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
             throw new Exception('Index already exists', 409);
         }
 
-        $dbForInternal->deleteCachedCollection($collectionId);
+        $dbForInternal->deleteCachedDocument('collections', $collectionId);
 
         $database
             ->setParam('type', DATABASE_TYPE_CREATE_INDEX)
@@ -1313,7 +1313,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
         }
 
         $index = $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
-        $dbForInternal->deleteCachedCollection($collectionId);
+        $dbForInternal->deleteCachedDocument('collections', $collectionId);
 
         $database
             ->setParam('type', DATABASE_TYPE_DELETE_INDEX)
