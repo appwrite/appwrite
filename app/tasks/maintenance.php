@@ -42,7 +42,7 @@ $cli
         function notifyDeleteUsageStats(int $interval30m, int $interval1d) 
         {
             Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
-                'type' => DELETE_TYPE_USAGE_STATS,
+                'type' => DELETE_TYPE_USAGE,
                 'timestamp1d' => time() - $interval1d,
                 'timestamp30m' => time() - $interval30m,
             ]);

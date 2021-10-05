@@ -28,12 +28,6 @@ class Attribute extends Model
                 'default' => '',
                 'example' => 'available',
             ])
-            ->addRule('size', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Attribute size.',
-                'default' => 0,
-                'example' => 128,
-            ])
             ->addRule('required', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Is attribute required?',
@@ -45,10 +39,12 @@ class Attribute extends Model
                 'description' => 'Is attribute an array?',
                 'default' => false,
                 'example' => false,
-                'required' => false
+                'require' => false
             ])
         ;
     }
+
+    public array $conditions = [];
 
     /**
      * Get Name
