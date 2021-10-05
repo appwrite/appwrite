@@ -94,7 +94,7 @@ class DatabaseV1 extends Worker
             $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));
         }
 
-        //$dbForInternal->deleteCachedCollection($collectionId);
+        $dbForInternal->deleteCachedCollection($collectionId);
     }
 
     /**
