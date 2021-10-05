@@ -113,21 +113,18 @@ App::get('/v1/users')
         }
       
         $queries = [];
-        
+
         if (!empty($search)) {
             $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
-
-        $results = $dbForInternal->find('users', $queries, $limit, $offset, [], [$orderType], $afterUser ?? null);
-        $sum = $dbForInternal->count('users', $queries, APP_LIMIT_COUNT);
 
         $usage
             ->setParam('users.read', 1)
         ;
 
         $response->dynamic(new Document([
-            'users' => $results,
-            'sum' => $sum,
+            'users' => $dbForInternal->find('users', $queries, $limit, $offset, [], [$orderType], $afterUser ?? null),
+            'sum' => $dbForInternal->count('users', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_USER_LIST);
     });
 
