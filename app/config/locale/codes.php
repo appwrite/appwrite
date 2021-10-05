@@ -13,6 +13,7 @@ return [
     'de', // German
     'en', // English
     'es', // Spanish
+    'esp',// Esperanto
     'fa', // Farsi/Persian
     'fi', // Finnish
     'fo', // Faroese
