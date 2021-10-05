@@ -319,7 +319,7 @@ class OpenAPI3 extends Format
                     case 'Utopia\Validator\JSON':
                     case 'Utopia\Validator\Mock':
                     case 'Utopia\Validator\Assoc':
-                        $param['default'] = (empty($param['default'])) ? new stdClass() : $param['default'];
+                        $param['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['type'] = 'object';
                         $node['schema']['x-example'] = '{}';
                         //$node['schema']['format'] = 'json';
