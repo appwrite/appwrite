@@ -94,7 +94,7 @@ App::post('/v1/projects')
             'legalCity' => $legalCity,
             'legalAddress' => $legalAddress,
             'legalTaxId' => $legalTaxId,
-            'services' => new stdClass(),
+            'services' => new \stdClass(),
             'platforms' => [],
             'webhooks' => [],
             'keys' => [],
