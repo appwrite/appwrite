@@ -47,16 +47,26 @@ return [
     'pa', // Punjabi
     'ro', // Romanian
     'ru', // Russian
+    'sa', // Sanskrit
+    'sc', // Sardinian
+    'sd', // Sindhi
+    'se', // Nothern Sami
     'si', // Sinhala
+    'sk', // Slovak
     'sl', // Slovenian
     'sq', // Albanian
+    'su', // Sundanese
     'sv', // Swedish
     'ta', // Tamil
+    'te', // Telgu
+    'tg', // Tajik
     'th', // Thai
+    'ty', // Tahitian
     'tr', // Turkish
     'uk', // Ukrainian
     'ur', // Urdu
     'vi', // Vietnamese
     'zh-cn', // Chinese - China
+    'zu', // Zulu
     'zh-tw', // Chinese - Taiwan
 ];
