@@ -48,6 +48,7 @@ return [
     'ro', // Romanian
     'ru', // Russian
     'si', // Sinhala
+    'sk', // Slovakia
     'sl', // Slovenian
     'sq', // Albanian
     'sv', // Swedish
