@@ -5,7 +5,7 @@ sdk
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-let promise = sdk.functions.create('', '[NAME]', [], 'dotnet-5.0');
+let promise = sdk.database.getUsage();
 
 promise.then(function (response) {
     console.log(response); // Success
