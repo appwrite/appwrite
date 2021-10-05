@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Storage;
 
 use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Database\Database;
 use Utopia\Image\Image;
 
 trait StorageBase
@@ -190,16 +191,37 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'limit' => 1,
-            'after' => $files['body']['files'][0]['$id']
+            'cursor' => $files['body']['files'][0]['$id']
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($files['body']['files'][1]['$id'], $response['body']['files'][0]['$id']);
         $this->assertCount(1, $response['body']['files']);
 
+        $response = $this->client->call(Client::METHOD_GET, '/storage/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 1,
+            'cursor' => $files['body']['files'][1]['$id'],
+            'cursorDirection' => Database::CURSOR_BEFORE
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($files['body']['files'][0]['$id'], $response['body']['files'][0]['$id']);
+        $this->assertCount(1, $response['body']['files']);
+
         /**
          * Test for FAILURE
          */
+        $response = $this->client->call(Client::METHOD_GET, '/storage/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => 'unknown'
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;
     }

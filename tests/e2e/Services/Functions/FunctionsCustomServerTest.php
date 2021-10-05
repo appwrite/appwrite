@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\Database;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -115,13 +116,36 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'after' => $functions['body']['functions'][0]['$id']
+            'cursor' => $functions['body']['functions'][0]['$id']
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertCount(1, $response['body']['functions']);
         $this->assertEquals($response['body']['functions'][0]['name'], 'Test 2');
 
+        $response = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => $functions['body']['functions'][1]['$id'],
+            'cursorDirection' => Database::CURSOR_BEFORE
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertCount(1, $response['body']['functions']);
+        $this->assertEquals($response['body']['functions'][0]['name'], 'Test');
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => 'unknown',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
 
         return $data;
     }

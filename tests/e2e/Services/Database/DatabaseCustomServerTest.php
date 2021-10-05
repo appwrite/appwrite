@@ -6,6 +6,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Client;
+use Utopia\Database\Database;
 
 class DatabaseCustomServerTest extends Scope
 {
@@ -78,7 +79,7 @@ class DatabaseCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'after' => $base['body']['collections'][0]['$id']
+            'cursor' => $base['body']['collections'][0]['$id']
         ]);
 
         $this->assertCount(1, $collections['body']['collections']);
@@ -88,11 +89,53 @@ class DatabaseCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'after' => $base['body']['collections'][1]['$id']
+            'cursor' => $base['body']['collections'][1]['$id']
         ]);
 
         $this->assertCount(0, $collections['body']['collections']);
         $this->assertEmpty($collections['body']['collections']);
+
+        /**
+         * Test for Before
+         */
+        $base = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => $base['body']['collections'][1]['$id'],
+            'cursorDirection' => Database::CURSOR_BEFORE
+        ]);
+
+        $this->assertCount(1, $collections['body']['collections']);
+        $this->assertEquals($base['body']['collections'][0]['$id'], $collections['body']['collections'][0]['$id']);
+
+        $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => $base['body']['collections'][0]['$id'],
+            'cursorDirection' => Database::CURSOR_BEFORE
+        ]);
+
+        $this->assertCount(0, $collections['body']['collections']);
+        $this->assertEmpty($collections['body']['collections']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => 'unknown',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
     }
 
     public function testDeleteAttribute(): array
