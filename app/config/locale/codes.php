@@ -35,7 +35,6 @@ return [
     'mr', // Marathi
     'ms', // Malay
     'nl', // Dutch
-    'nb', // Norwegian Bokmål
     'no', // Norwegian
     'ne', // Nepali
     'or', // Oriya
