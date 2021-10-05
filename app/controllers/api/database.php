@@ -81,7 +81,7 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
             'key' => $attributeId,
             'collectionId' => $collectionId,
             'type' => $type,
-            'status' => 'processing', // processing, available, failed, deleting
+            'status' => 'processing', // processing, available, failed, deleting, stuck
             'size' => $size,
             'required' => $required,
             'signed' => $signed,
@@ -1136,7 +1136,11 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
             throw new Exception('Attribute not found', 404);
         }
 
-        $attribute = $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
+        // Only update status if removing available attribute
+        if ($attribute->getAttribute('status' === 'available')) {
+            $attribute = $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
+        }
+
         $dbForInternal->purgeDocument('collections', $collectionId);
 
         $database
@@ -1233,7 +1237,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
             $index = $dbForInternal->createDocument('indexes', new Document([
                 '$id' => $collectionId.'_'.$indexId,
                 'key' => $indexId,
-                'status' => 'processing', // processing, available, failed, deleting
+                'status' => 'processing', // processing, available, failed, deleting, stuck
                 'collectionId' => $collectionId,
                 'type' => $type,
                 'attributes' => $attributes,
@@ -1388,7 +1392,11 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
             throw new Exception('Index not found', 404);
         }
 
-        $index = $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
+        // Only update status if removing available index
+        if ($index->getAttribute('status') === 'available') {
+            $index = $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
+        }
+
         $dbForInternal->purgeDocument('collections', $collectionId);
 
         $database

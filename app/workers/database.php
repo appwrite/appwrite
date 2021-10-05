@@ -110,14 +110,14 @@ class DatabaseV1 extends Worker
         $key = $attribute->getAttribute('key', '');
 
         try {
-            if(!$dbForExternal->deleteAttribute($collectionId, $key)) {
+            if(!$dbForExternal->deleteAttribute($collectionId, $key) && $attribute->getAttribute('status') !== 'failed') {
                 throw new Exception('Failed to delete Attribute');
             }
 
             $dbForInternal->deleteDocument('attributes', $attribute->getId());
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
-            $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));
+            $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'stuck'));
         }
 
         $dbForInternal->purgeDocument('collections', $collectionId);
@@ -167,14 +167,14 @@ class DatabaseV1 extends Worker
         $key = $index->getAttribute('key');
 
         try {
-            if(!$dbForExternal->deleteIndex($collectionId, $key)) {
+            if(!$dbForExternal->deleteIndex($collectionId, $key) && $index->getAttribute('status') !== 'failed') {
                 throw new Exception('Failed to delete Attribute');
             }
 
             $dbForInternal->deleteDocument('indexes', $index->getId());
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
-            $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'failed'));
+            $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'stuck'));
         }
 
         $dbForInternal->purgeDocument('collections', $collectionId);
