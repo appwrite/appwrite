@@ -1140,7 +1140,7 @@ App::patch('/v1/account/email')
         $profile = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
         if ($profile) {
-            throw new Exception('User already registered', 400);
+            throw new Exception('User already registered', 409);
         }
 
         try {
