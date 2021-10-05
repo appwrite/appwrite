@@ -14,9 +14,9 @@ use Utopia\Validator;
  */
 class IP extends Validator
 {
-    const ALL = 'all';
-    const V4 = 'ipv4';
-    const V6 = 'ipv6';
+    public const ALL = 'all';
+    public const V4 = 'ipv4';
+    public const V6 = 'ipv6';
 
     /**
      * @var string
@@ -67,24 +67,24 @@ class IP extends Validator
                     return true;
                 }
             break;
-            
+
             case self::V4:
                 if (\filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
                     return true;
                 }
                 break;
-            
+
             case self::V6:
                 if (\filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
                     return true;
                 }
                 break;
-            
+
             default:
                 return false;
             break;
         }
-        
+
         return false;
     }
 
