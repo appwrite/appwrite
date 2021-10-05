@@ -406,7 +406,7 @@
     },
     {
         "term": "countries.fr",
-        "comment": "Ces noms de pays sont utilisés dans l'API Locale d'Appwrite. Pour en savoir plus, consultez le site https://appwrite.io/docs/client/locale#localeGetCountries.",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
         "reference": ""
     },
     {
