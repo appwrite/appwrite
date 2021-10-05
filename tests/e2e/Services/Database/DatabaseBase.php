@@ -654,8 +654,6 @@ trait DatabaseBase
             'required' => false,
         ]);
 
-        sleep(2);
-
         $ip = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/ip', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -664,8 +662,6 @@ trait DatabaseBase
             'attributeId' => 'ip',
             'required' => false,
         ]);
-
-        sleep(2);
 
         $url = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/url', array_merge([
             'content-type' => 'application/json',
@@ -676,8 +672,6 @@ trait DatabaseBase
             'size' => 256,
             'required' => false,
         ]);
-
-        sleep(2);
 
         $range = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
             'content-type' => 'application/json',
@@ -690,8 +684,6 @@ trait DatabaseBase
             'max' => 10,
         ]);
 
-        sleep(2);
-
         // TODO@kodumbeats min and max are rounded in error message
         $floatRange = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/float', array_merge([
             'content-type' => 'application/json',
@@ -703,8 +695,6 @@ trait DatabaseBase
             'min' => 1.1,
             'max' => 1.4,
         ]);
-
-        sleep(2);
 
         // TODO@kodumbeats float validator rejects 0.0 and 1.0 as floats
         // $probability = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/float', array_merge([
@@ -727,8 +717,6 @@ trait DatabaseBase
             'required' => false,
             'max' => 10,
         ]);
-
-        sleep(2);
 
         $lowerBound = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
             'content-type' => 'application/json',
@@ -766,7 +754,7 @@ trait DatabaseBase
         // $this->assertEquals('Minimum value must be lesser than maximum value', $invalidRange['body']['message']);
 
         // wait for worker to add attributes
-        sleep(2);
+        sleep(3);
 
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
