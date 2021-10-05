@@ -111,7 +111,7 @@ App::get('/v1/users')
                 throw new Exception("User '{$after}' for the 'after' value not found.", 400);
             }
         }
-      
+
         $queries = [];
 
         if (!empty($search)) {
