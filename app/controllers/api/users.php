@@ -724,8 +724,8 @@ App::delete('/v1/users/:userId')
 
         $user
             ->setAttribute("name", null)
-            ->setAttribute("email", null);
-            ->setAttribute("password", null);
+            ->setAttribute("email", null)
+            ->setAttribute("password", null)
             ->setAttribute("deleted", true)
         ;
 
