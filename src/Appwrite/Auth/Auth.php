@@ -241,14 +241,14 @@ class Auth
 
     /**
      * Is Previligged User?
-     * 
+     *
      * @param array $roles
-     * 
+     *
      * @return bool
      */
     public static function isPrivilegedUser(array $roles): bool
     {
-        if(
+        if (
             array_key_exists('role:'.self::USER_ROLE_OWNER, $roles) ||
             array_key_exists('role:'.self::USER_ROLE_DEVELOPER, $roles) ||
             array_key_exists('role:'.self::USER_ROLE_ADMIN, $roles)
@@ -261,14 +261,14 @@ class Auth
 
     /**
      * Is App User?
-     * 
+     *
      * @param array $roles
-     * 
+     *
      * @return bool
      */
     public static function isAppUser(array $roles): bool
     {
-        if(array_key_exists('role:'.self::USER_ROLE_APP, $roles)) {
+        if (array_key_exists('role:'.self::USER_ROLE_APP, $roles)) {
             return true;
         }
 
@@ -277,9 +277,9 @@ class Auth
 
     /**
      * Returns all roles for a user.
-     * 
-     * @param Document $user 
-     * @return array 
+     *
+     * @param Document $user
+     * @return array
      */
     public static function getRoles(Document $user): array
     {
