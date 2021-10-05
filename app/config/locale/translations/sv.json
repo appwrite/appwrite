@@ -12,7 +12,7 @@
     "emails.magicSession.subject": "Logga in",
     "emails.magicSession.hello": "Hej,",
     "emails.magicSession.body": "Klicka på denna länk för att logga in.",
-		"emails.magicSession.footer": "Om du inte bad om att logga in med denna e-postadress kan du ignorera detta mail.",
+    "emails.magicSession.footer": "Om du inte bad om att logga in med denna e-postadress kan du ignorera detta mail.",
     "emails.magicSession.thanks": "Tack",
     "emails.magicSession.signature": "{{project}} teamet",
     "emails.recovery.subject": "Återställ lösenord",
