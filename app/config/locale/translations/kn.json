@@ -21,7 +21,7 @@
     "emails.recovery.footer": "ನೀವು ಗುಪ್ತಪದವನ್ನು ಮರುಹೊಂದಿಸಲು ಕೇಳದಿದ್ದರೆ, ಈ ಸಂದೇಶವನ್ನು ನಿರ್ಲಕ್ಷಿಸಿ",
     "emails.recovery.thanks": "ಧನ್ಯವಾದಗಳು",
     "emails.recovery.signature": "{{project}} ತಂಡ",
-    "emails.invitation.subject": "%s ತಂಡಕ್ಕೆ %sರಲ್ಲಿ ಆಹ್ವಾನ",
+    "emails.invitation.subject": "%s ತಂಡಕ್ಕೆ %s ರಲ್ಲಿ ಆಹ್ವಾನ",
     "emails.invitation.hello": "ನಮಸ್ಕಾರ",
     "emails.invitation.body": "ಈ ಇಮೇಲ್ ನಿಮಗೆ ಬಂದಿದೆ ಏಕೆಂದರೆ {{owner}} ನಿಮ್ಮನ್ನು {{team}} ತಂಡದ {{project}}ರಲ್ಲಿ ಸದಸ್ಯ ಆಗಲಿಕ್ಕೆ ಆಹ್ವಾನಿಸಿದ್ದಾರೆ",
     "emails.invitation.footer": "ನಿಮಗೆ ಆಸಕ್ತಿಯಿಲ್ಲದಿದ್ದರೆ, ಈ ಸಂದೇಶವನ್ನು ನಿರ್ಲಕ್ಷಿಸಿ",
