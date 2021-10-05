@@ -10,7 +10,7 @@
     "emails.verification.thanks": "Merci",
     "emails.verification.signature": "Équipe {{project}}",
     "emails.magicSession.subject": "Connexion",
-    "emails.magicSession.hello": "Bonjour",
+    "emails.magicSession.hello": "Bonjour,",
     "emails.magicSession.body": "Suivez ce lien pour vous connecter.",
     "emails.magicSession.footer": "Si vous n'avez pas demandé à vous connecter en utilisant cet e-mail, vous pouvez ignorer ce message.",
     "emails.magicSession.thanks": "Merci",
