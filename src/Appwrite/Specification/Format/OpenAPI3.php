@@ -4,9 +4,7 @@ namespace Appwrite\Specification\Format;
 
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
-use stdClass;
 use Utopia\Validator;
-use function gettype;
 
 class OpenAPI3 extends Format
 {
