@@ -387,11 +387,10 @@ App::get('/specs/:format')
                 }
 
                 $routes[] = $route;
-                $model = $response->getModel($route->getLabel('sdk.response.model', 'none'));
-                
-                if($model) {
-                    $models[$model->getType()] = $model;
-                }
+                $modelLabel = $route->getLabel('sdk.response.model', 'none');
+                $model = \is_array($modelLabel) ? \array_map(function($m) use($response) {
+                    return $response->getModel($m);
+                }, $modelLabel) : $response->getModel($modelLabel);
             }
         }
 

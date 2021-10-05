@@ -174,7 +174,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['casting'],
             ],
             [
                 '$id' => 'signed',
@@ -214,7 +214,7 @@ $collections = [
                 'required' => false,
                 'default' => new stdClass,
                 'array' => false,
-                'filters' => ['json'],
+                'filters' => ['json', 'range'],
             ],
             [
                 '$id' => 'filters',
