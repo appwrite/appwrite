@@ -77,7 +77,7 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
     }
 
     try {
-        $attribute = $dbForInternal->createDocument('attributes', new Document([
+        $attribute = new Document([
             '$id' => $collectionId.'_'.$attributeId,
             'key' => $attributeId,
             'collectionId' => $collectionId,
@@ -90,9 +90,8 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
             'array' => $array,
             'format' => $format,
             'formatOptions' => $formatOptions,
-    ]);
+        ]);
 
-    try {
         $dbForInternal->checkAttribute($collection, $attribute);
         $attribute = $dbForInternal->createDocument('attributes', $attribute);
     }

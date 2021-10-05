@@ -55,14 +55,14 @@ class Collection extends Model
                 ],
                 'description' => 'Collection attributes.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => new \stdClass,
                 'array' => true,
             ])
             ->addRule('indexes', [
                 'type' => Response::MODEL_INDEX,
                 'description' => 'Collection indexes.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => new \stdClass,
                 'array' => true
             ])
         ;
