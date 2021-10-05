@@ -95,7 +95,6 @@ trait UsersBase
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
         $this->assertCount(1, $response['body']['users']);
 
