@@ -17,13 +17,13 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
+use Appwrite\Extend\PDO;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Database;
+use Appwrite\Database\Database as DatabaseOld;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
-use Appwrite\Database\Document;
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
@@ -40,8 +40,8 @@ use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Document as Document2;
-use Utopia\Database\Database as Database2;
+use Utopia\Database\Document;
+use Utopia\Database\Database;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Range;
@@ -49,6 +49,7 @@ use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
+use Utopia\Database\Query;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -61,7 +62,12 @@ const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
 const APP_CACHE_BUSTER = 151;
-const APP_VERSION_STABLE = '0.10.0';
+const APP_VERSION_STABLE = '0.9.4';
+const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
+const APP_DATABASE_ATTRIBUTE_IP = 'ip';
+const APP_DATABASE_ATTRIBUTE_URL = 'url';
+const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
+const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -88,6 +94,7 @@ const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_CERTIFICATES = 'certificates';
+const DELETE_TYPE_USAGE = 'usage';
 // Mail Worker Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_RECOVERY = 'recovery';
@@ -138,10 +145,11 @@ if(!empty($user) || !empty($pass)) {
 } else {
     Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
 }
+
 /**
- * DB Filters
+ * Old DB Filters
  */
-Database::addFilter('json',
+DatabaseOld::addFilter('json',
     function($value) {
         if(!is_array($value)) {
             return $value;
@@ -153,7 +161,7 @@ Database::addFilter('json',
     }
 );
 
-Database::addFilter('encrypt',
+DatabaseOld::addFilter('encrypt',
     function($value) {
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
@@ -175,7 +183,68 @@ Database::addFilter('encrypt',
     }
 );
 
-Database2::addFilter('encrypt',
+/**
+ * New DB Filters
+ */
+Database::addFilter('casting',
+    function($value) {
+        return json_encode(['value' => $value]);
+    },
+    function($value) {
+        if (is_null($value)) {
+            return null;
+        }
+        return json_decode($value, true)['value'];
+    }
+);
+
+Database::addFilter('range',
+    function($value, Document $attribute) {
+        if ($attribute->isSet('min')) {
+            $attribute->removeAttribute('min');
+        }
+        if ($attribute->isSet('max')) {
+            $attribute->removeAttribute('max');
+        }
+        return $value;
+    },
+    function($value, Document $attribute) {
+        $formatOptions = json_decode($attribute->getAttribute('formatOptions', []), true);
+        if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
+            $attribute
+                ->setAttribute('min', $formatOptions['min'])
+                ->setAttribute('max', $formatOptions['max'])
+            ;
+        }
+        return $value;
+    }
+);
+
+Database::addFilter('subQueryAttributes',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('attributes', [
+                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
+            ], 100, 0, []);
+    }
+);
+
+Database::addFilter('subQueryIndexes',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('indexes', [
+                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
+            ], 100, 0, []);
+    }
+);
+
+Database::addFilter('encrypt',
     function($value) {
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
@@ -196,37 +265,32 @@ Database2::addFilter('encrypt',
     }
 );
 
-Structure::addFormat('email', function() {
+/**
+ * DB Formats
+ */
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_EMAIL, function() {
     return new Email();
-}, Database2::VAR_STRING);
+}, Database::VAR_STRING);
 
-Structure::addFormat('ip', function() {
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_IP, function() {
     return new IP();
-}, Database2::VAR_STRING);
+}, Database::VAR_STRING);
 
-Structure::addFormat('url', function() {
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_URL, function() {
     return new URL();
-}, Database2::VAR_STRING);
+}, Database::VAR_STRING);
 
-Structure::addFormat('int-range', function($attribute) {
-    // Format encoded as json string containing name and relevant options
-    // E.g. Range: $format = json_encode(['name'=>$name, 'min'=>$min, 'max'=>$max]);
-    $format = json_decode($attribute['format'], true);
-    $min = $format['min'] ?? -INF;
-    $max = $format['max'] ?? INF;
-    $type = $attribute['type'];
-    return new Range($min, $max, $type);
-}, Database2::VAR_INTEGER);
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_INT_RANGE, function($attribute) {
+    $min = $attribute['formatOptions']['min'] ?? -INF;
+    $max = $attribute['formatOptions']['max'] ?? INF;
+    return new Range($min, $max, Range::TYPE_INTEGER);
+}, Database::VAR_INTEGER);
 
-Structure::addFormat('float-range', function($attribute) {
-    // Format encoded as json string containing name and relevant options
-    // E.g. Range: $format = json_encode(['name'=>$name, 'min'=>$min, 'max'=>$max]);
-    $format = json_decode($attribute['format'], true);
-    $min = $format['min'] ?? -INF;
-    $max = $format['max'] ?? INF;
-    $type = $attribute['type'] ?? '';
-    return new Range($min, $max, $type);
-}, Database2::VAR_FLOAT);
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function($attribute) {
+    $min = $attribute['formatOptions']['min'] ?? -INF;
+    $max = $attribute['formatOptions']['max'] ?? INF;
+    return new Range($min, $max, Range::TYPE_FLOAT);
+}, Database::VAR_FLOAT);
 
 /*
  * Registry
@@ -238,7 +302,6 @@ $register->set('dbPool', function () { // Register DB connection
     $dbPass = App::getEnv('_APP_DB_PASS', '');
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
-
     $pool = new PDOPool((new PDOConfig())
         ->withHost($dbHost)
         ->withPort($dbPort)
@@ -246,6 +309,9 @@ $register->set('dbPool', function () { // Register DB connection
         ->withCharset('utf8mb4')
         ->withUsername($dbUser)
         ->withPassword($dbPass)
+        ->withOptions([
+            PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+        ])
     , 16);
 
     return $pool;
@@ -292,7 +358,6 @@ $register->set('statsd', function () { // Register DB connection
 
     return $statsd;
 });
-
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
@@ -323,6 +388,29 @@ $register->set('smtp', function () {
 });
 $register->set('geodb', function () {
     return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-06.mmdb');
+});
+$register->set('db', function () { // This is usually for our workers or CLI commands scope
+    $dbHost = App::getEnv('_APP_DB_HOST', '');
+    $dbUser = App::getEnv('_APP_DB_USER', '');
+    $dbPass = App::getEnv('_APP_DB_PASS', '');
+    $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
+
+    $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
+        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
+        PDO::ATTR_TIMEOUT => 3, // Seconds
+        PDO::ATTR_PERSISTENT => true,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    ));
+
+    return $pdo;
+});
+$register->set('cache', function () { // This is usually for our workers or CLI commands scope
+    $redis = new Redis();
+    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
+    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+
+    return $redis;
 });
 
 /*
@@ -440,8 +528,8 @@ App::setResource('database', function($register) {
 
 // Test Mock
 App::setResource('clients', function($request, $console, $project) {
-    $console->setAttribute('platforms', [ // Allways allow current host
-        '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+    $console->setAttribute('platforms', [ // Always allow current host
+        '$collection' => 'platforms',
         'name' => 'Current Host',
         'type' => 'web',
         'hostname' => $request->getHostname(),
@@ -509,7 +597,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     if (APP_MODE_ADMIN !== $mode) {
         if ($project->isEmpty()) {
-            $user = new Document2(['$id' => '', '$collection' => 'users']);
+            $user = new Document(['$id' => '', '$collection' => 'users']);
         }
         else {
             $user = $dbForInternal->getDocument('users', Auth::$unique);
@@ -521,14 +609,14 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     if ($user->isEmpty() // Check a document has been found in the DB
         || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)) { // Validate user has valid login token
-        $user = new Document2(['$id' => '', '$collection' => 'users']);
+        $user = new Document(['$id' => '', '$collection' => 'users']);
     }
 
     if (APP_MODE_ADMIN === $mode) {
         if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
-            $user = new Document2(['$id' => '', '$collection' => 'users']);
+            $user = new Document(['$id' => '', '$collection' => 'users']);
         }
     }
 
@@ -551,7 +639,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         }
 
         if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-            $user = new Document2(['$id' => '', '$collection' => 'users']);
+            $user = new Document(['$id' => '', '$collection' => 'users']);
         }
     }
 
@@ -580,7 +668,7 @@ App::setResource('project', function($dbForConsole, $request, $console) {
 }, ['dbForConsole', 'request', 'console']);
 
 App::setResource('console', function() {
-    return new Document2([
+    return new Document([
         '$id' => 'console',
         'name' => 'Appwrite',
         '$collection' => 'projects',
@@ -591,19 +679,19 @@ App::setResource('console', function() {
         'keys' => [],
         'platforms' => [
             [
-                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                '$collection' => 'platforms',
                 'name' => 'Production',
                 'type' => 'web',
                 'hostname' => 'appwrite.io',
             ],
             [
-                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                '$collection' => 'platforms',
                 'name' => 'Development',
                 'type' => 'web',
                 'hostname' => 'appwrite.test',
             ],
             [
-                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                '$collection' => 'platforms',
                 'name' => 'Localhost',
                 'type' => 'web',
                 'hostname' => 'localhost',
@@ -624,7 +712,7 @@ App::setResource('console', function() {
 }, []);
 
 App::setResource('consoleDB', function($db, $cache) {
-    $consoleDB = new Database();
+    $consoleDB = new DatabaseOld();
     $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
     $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
     $consoleDB->setMocks(Config::getParam('collections', []));
@@ -633,7 +721,7 @@ App::setResource('consoleDB', function($db, $cache) {
 }, ['db', 'cache']);
 
 App::setResource('projectDB', function($db, $cache, $project) {
-    $projectDB = new Database();
+    $projectDB = new DatabaseOld();
     $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
     $projectDB->setNamespace('app_'.$project->getId());
     $projectDB->setMocks(Config::getParam('collections', []));
@@ -644,7 +732,7 @@ App::setResource('projectDB', function($db, $cache, $project) {
 App::setResource('dbForInternal', function($db, $cache, $project) {
     $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database2(new MariaDB($db), $cache);
+    $database = new Database(new MariaDB($db), $cache);
     $database->setNamespace('project_'.$project->getId().'_internal');
 
     return $database;
@@ -653,7 +741,7 @@ App::setResource('dbForInternal', function($db, $cache, $project) {
 App::setResource('dbForExternal', function($db, $cache, $project) {
     $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database2(new MariaDB($db), $cache);
+    $database = new Database(new MariaDB($db), $cache);
     $database->setNamespace('project_'.$project->getId().'_external');
 
     return $database;
@@ -662,7 +750,7 @@ App::setResource('dbForExternal', function($db, $cache, $project) {
 App::setResource('dbForConsole', function($db, $cache) {
     $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database2(new MariaDB($db), $cache);
+    $database = new Database(new MariaDB($db), $cache);
     $database->setNamespace('project_console_internal');
 
     return $database;

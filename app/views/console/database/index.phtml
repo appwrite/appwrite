@@ -107,9 +107,9 @@
                         <label for="collection-name">Name</label>
                         <input type="text" class="full-width" id="collection-name" name="name" required autocomplete="off" maxlength="128" />
 
+                        <input type="hidden" id="collection-permission" name="permission" required value="document" />
                         <input type="hidden" id="collection-read" name="read" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
                         <input type="hidden" id="collection-write" name="write" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
-                        <input type="hidden" id="collection-rules" name="rules" required data-cast-to="json" value="{}" />
 
                         <hr />
 

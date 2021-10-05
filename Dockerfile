@@ -19,8 +19,8 @@ ENV DEBUG=$DEBUG
 
 ENV PHP_REDIS_VERSION=5.3.4 \
     PHP_MONGODB_VERSION=1.9.1 \
-    PHP_SWOOLE_VERSION=v4.6.7 \
-    PHP_IMAGICK_VERSION=3.5.0 \
+    PHP_SWOOLE_VERSION=v4.7.0 \
+    PHP_IMAGICK_VERSION=3.5.1 \
     PHP_YAML_VERSION=2.2.1 \
     PHP_MAXMINDDB_VERSION=v1.10.1
 
@@ -225,6 +225,7 @@ RUN mkdir -p /storage/uploads && \
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/maintenance && \
+    chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/schedule && \

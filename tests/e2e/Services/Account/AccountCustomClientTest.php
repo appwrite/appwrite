@@ -342,7 +342,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals($response['headers']['status-code'], 409);
 
         /**
          * Test for SUCCESS

@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use stdClass;
+use Utopia\Database\Document;
 
 class Collection extends Model
 {
@@ -35,32 +35,32 @@ class Collection extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection name.',
                 'default' => '',
-                'example' => '',
+                'example' => 'My Collection',
+            ])
+            ->addRule('permission', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Collection permission model. Possible values: `document` or `collection`',
+                'default' => '',
+                'example' => 'document',
             ])
             ->addRule('attributes', [
-                'type' => Response::MODEL_ATTRIBUTE,
+                'type' => [
+                    Response::MODEL_ATTRIBUTE_BOOLEAN,
+                    Response::MODEL_ATTRIBUTE_INTEGER,
+                    Response::MODEL_ATTRIBUTE_FLOAT,
+                    Response::MODEL_ATTRIBUTE_EMAIL,
+                    Response::MODEL_ATTRIBUTE_URL,
+                    Response::MODEL_ATTRIBUTE_IP,
+                    Response::MODEL_ATTRIBUTE_STRING, // needs to be last, since its condition would dominate any other string attribute
+                ],
                 'description' => 'Collection attributes.',
                 'default' => [],
                 'example' => new stdClass,
-                'array' => true
+                'array' => true,
             ])
             ->addRule('indexes', [
                 'type' => Response::MODEL_INDEX,
                 'description' => 'Collection indexes.',
-                'default' => [],
-                'example' => new stdClass,
-                'array' => true
-            ])
-            ->addRule('attributesInQueue', [
-                'type' => Response::MODEL_ATTRIBUTE,
-                'description' => 'Collection attributes in creation queue.',
-                'default' => [],
-                'example' => new stdClass,
-                'array' => true
-            ])
-            ->addRule('indexesInQueue', [
-                'type' => Response::MODEL_INDEX,
-                'description' => 'Collection indexes in creation queue.',
                 'default' => [],
                 'example' => new stdClass,
                 'array' => true
