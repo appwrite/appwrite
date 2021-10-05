@@ -94,7 +94,7 @@ class DatabaseV1 extends Worker
             $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));
         }
 
-        $dbForInternal->purgeDocument('collections', $collectionId);
+        $dbForInternal->deleteCachedDocument('collections', $collectionId);
     }
 
     /**
@@ -120,7 +120,7 @@ class DatabaseV1 extends Worker
             $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));
         }
 
-        $dbForInternal->purgeDocument('collections', $collectionId);
+        $dbForInternal->deleteCachedDocument('collections', $collectionId);
     }
 
     /**
@@ -150,7 +150,7 @@ class DatabaseV1 extends Worker
             $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'failed'));
         }
 
-        $dbForInternal->purgeDocument('collections', $collectionId);
+        $dbForInternal->deleteCachedDocument('collections', $collectionId);
     }
 
     /**
@@ -177,6 +177,6 @@ class DatabaseV1 extends Worker
             $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'failed'));
         }
 
-        $dbForInternal->purgeDocument('collections', $collectionId);
+        $dbForInternal->deleteCachedDocument('collections', $collectionId);
     }
 }
