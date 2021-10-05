@@ -1,4 +1,5 @@
-  "settings.locale": "esp",
+{  
+     "settings.locale": "esp",
      "settings.direction": "ltr",
      "emails.sender": "Teamo %s",
      "emails.verification.subject": "Konta Konfirmo",
