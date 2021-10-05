@@ -59,7 +59,6 @@ use Appwrite\Utopia\Response\Model\UsageFunctions;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
-use stdClass;
 
 /**
  * @method Response public function setStatusCode(int $code = 200)
@@ -328,7 +327,7 @@ class Response extends SwooleResponse
             $output = self::getFilter()->parse($output, $model);
         }
 
-        $this->json(!empty($output) ? $output : new stdClass());
+        $this->json(!empty($output) ? $output : new \stdClass());
     }
 
     /**

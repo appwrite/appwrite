@@ -4,7 +4,6 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use stdClass;
 
 class UsageBuckets extends Model
 {
@@ -21,35 +20,35 @@ class UsageBuckets extends Model
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for total number of files in this bucket.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => new \stdClass,
                 'array' => true 
             ])
             ->addRule('files.create', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files created.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => new \stdClass,
                 'array' => true 
             ])
             ->addRule('files.read', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files read.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => new \stdClass,
                 'array' => true 
             ])
             ->addRule('files.update', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files updated.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => new \stdClass,
                 'array' => true 
             ])
             ->addRule('files.delete', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files deleted.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => new \stdClass,
                 'array' => true 
             ])
         ;
