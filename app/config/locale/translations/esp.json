@@ -4,7 +4,7 @@
      "emails.sender": "Teamo %s",
      "emails.verification.subject": "Konta Konfirmo",
      "emails.verification.hello": "Saluton {{name}}",
-     "emails.verification.body": "Alklaku ĉi tiun ligon por kontroli vian retpoŝtan adreson.”,
+     "emails.verification.body": "Alklaku ĉi tiun ligon por kontroli vian retpoŝtan adreson.",
      "emails.verification.footer": "Se vi ne petis ĉi tiun konfirmon de ĉi tiu retpoŝto, vi povas ignori ĉi tiun mesaĝon.”,
      "emails.verification.thanks": "Dankegon.",
      "emails.verification.signature": "Teamo {{project}}",
