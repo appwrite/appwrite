@@ -58,7 +58,7 @@ body:
     validations:
       required: true
   - type: textarea
-    id: enviromnemt
+    id: environment
     validations:
       required: false
     attributes:
