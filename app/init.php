@@ -63,6 +63,11 @@ const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
 const APP_CACHE_BUSTER = 151;
 const APP_VERSION_STABLE = '0.11.0';
+const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
+const APP_DATABASE_ATTRIBUTE_IP = 'ip';
+const APP_DATABASE_ATTRIBUTE_URL = 'url';
+const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
+const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -142,7 +147,7 @@ if(!empty($user) || !empty($pass)) {
 }
 
 /**
- * DB Filters
+ * Old DB Filters
  */
 DatabaseOld::addFilter('json',
     function($value) {
@@ -175,6 +180,43 @@ DatabaseOld::addFilter('encrypt',
         $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
 
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+    }
+);
+
+/**
+ * New DB Filters
+ */
+Database::addFilter('casting',
+    function($value) {
+        return json_encode(['value' => $value]);
+    },
+    function($value) {
+        if (is_null($value)) {
+            return null;
+        }
+        return json_decode($value, true)['value'];
+    }
+);
+
+Database::addFilter('range',
+    function($value, Document $attribute) {
+        if ($attribute->isSet('min')) {
+            $attribute->removeAttribute('min');
+        }
+        if ($attribute->isSet('max')) {
+            $attribute->removeAttribute('max');
+        }
+        return $value;
+    },
+    function($value, Document $attribute) {
+        $formatOptions = json_decode($attribute->getAttribute('formatOptions', []), true);
+        if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
+            $attribute
+                ->setAttribute('min', $formatOptions['min'])
+                ->setAttribute('max', $formatOptions['max'])
+            ;
+        }
+        return $value;
     }
 );
 
@@ -226,25 +268,25 @@ Database::addFilter('encrypt',
 /**
  * DB Formats
  */
-Structure::addFormat('email', function() {
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_EMAIL, function() {
     return new Email();
 }, Database::VAR_STRING);
 
-Structure::addFormat('ip', function() {
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_IP, function() {
     return new IP();
 }, Database::VAR_STRING);
 
-Structure::addFormat('url', function() {
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_URL, function() {
     return new URL();
 }, Database::VAR_STRING);
 
-Structure::addFormat('int-range', function($attribute) {
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_INT_RANGE, function($attribute) {
     $min = $attribute['formatOptions']['min'] ?? -INF;
     $max = $attribute['formatOptions']['max'] ?? INF;
     return new Range($min, $max, Range::TYPE_INTEGER);
 }, Database::VAR_INTEGER);
 
-Structure::addFormat('float-range', function($attribute) {
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function($attribute) {
     $min = $attribute['formatOptions']['min'] ?? -INF;
     $max = $attribute['formatOptions']['max'] ?? INF;
     return new Range($min, $max, Range::TYPE_FLOAT);
