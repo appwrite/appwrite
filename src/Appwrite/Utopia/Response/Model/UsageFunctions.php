@@ -4,7 +4,6 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use stdClass;
 
 class UsageFunctions extends Model
 {
@@ -21,21 +20,21 @@ class UsageFunctions extends Model
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for function executions.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => new \stdClass,
                 'array' => true 
             ])
             ->addRule('functions.failures', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for function execution failures.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => new \stdClass,
                 'array' => true 
             ])
             ->addRule('functions.compute', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for function execution duration.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => new \stdClass,
                 'array' => true 
             ])
         ;
