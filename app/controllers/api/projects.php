@@ -79,6 +79,7 @@ App::post('/v1/projects')
             $auths[$method['key'] ?? ''] = true;
         }
 
+        $projectId = ($projectId == 'unique()') ? $dbForConsole->getId() : $projectId;
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId == 'unique()' ? $dbForConsole->getId() : $projectId,
             '$read' => ['team:' . $teamId],
@@ -101,7 +102,8 @@ App::post('/v1/projects')
             'webhooks' => null,
             'keys' => null,
             'domains' => null,
-            'auths' => $auths
+            'auths' => $auths,
+            'search' => implode(' ', [$projectId, $name]),
         ]));
 
         $collections = Config::getParam('collections2', []); /** @var array $collections */
@@ -173,14 +175,18 @@ App::get('/v1/projects')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
-        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
-
         if (!empty($after)) {
             $afterProject = $dbForConsole->getDocument('projects', $after);
 
             if ($afterProject->isEmpty()) {
                 throw new Exception("Project '{$after}' for the 'after' value not found.", 400);
             }
+        }
+
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
         $results = $dbForConsole->find('projects', $queries, $limit, $offset, [], [$orderType], $afterProject ?? null);
@@ -358,6 +364,7 @@ App::patch('/v1/projects/:projectId')
                 ->setAttribute('legalCity', $legalCity)
                 ->setAttribute('legalAddress', $legalAddress)
                 ->setAttribute('legalTaxId', $legalTaxId)
+                ->setAttribute('search', implode(' ', [$projectId, $name]))
         );
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -460,7 +467,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
         $auths['limit'] = $limit;
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('auths', $auths)
+            ->setAttribute('auths', $auths)
         );
 
         $response->dynamic($project, Response::MODEL_PROJECT);

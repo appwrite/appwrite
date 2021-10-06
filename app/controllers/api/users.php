@@ -66,6 +66,7 @@ App::post('/v1/users')
                 'sessions' => [],
                 'tokens' => [],
                 'memberships' => [],
+                'search' => implode(' ', [$userId, $email, $name]),
                 'deleted' => false
             ]));
         } catch (Duplicate $th) {
@@ -107,25 +108,26 @@ App::get('/v1/users')
         if (!empty($after)) {
             $afterUser = $dbForInternal->getDocument('users', $after);
 
-            if ($afterUser->isEmpty() || $afterUser->getAttribute('deleted')) {
-                throw new Exception('User for after not found', 400);
+            if ($afterUser->isEmpty()) {
+                throw new Exception("User '{$after}' for the 'after' value not found.", 400);
             }
         }
 
-        $results = $dbForInternal->find('users', [
-            new Query('deleted', Query::TYPE_EQUAL, [false]),
-        ], $limit, $offset, [], [$orderType], $afterUser ?? null);
-        $sum = $dbForInternal->count('users', [
-            new Query('deleted', Query::TYPE_EQUAL, [false]),
-        ], APP_LIMIT_COUNT);
-        
+        $queries = [
+            new Query('deleted', Query::TYPE_EQUAL, [false])
+        ];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
+
         $usage
             ->setParam('users.read', 1)
         ;
 
         $response->dynamic(new Document([
-            'users' => $results,
-            'sum' => $sum,
+            'users' => $dbForInternal->find('users', $queries, $limit, $offset, [], [$orderType], $afterUser ?? null),
+            'sum' => $dbForInternal->count('users', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_USER_LIST);
     });
 
