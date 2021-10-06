@@ -23,7 +23,7 @@
   "emails.recovery.signature": "{{project}} team",
   "emails.invitation.subject": "Invitatio pro% s in quadrigis% s",
   "emails.invitation.hello": "Salve ibi",
-  "emails.invitation.body": "Haec inscriptio ad te missa est quia dominus incepto te invitare vult ut membrum {{team}} quadrigis fias ad {{project}}",
+  "emails.invitation.body": "Haec inscriptio ad te missa est quia dominus incepto {{owner}} te invitare vult ut membrum {{team}} quadrigis fias ad {{project}}",
   "emails.invitation.footer": "Si non quaero, potes hunc nuntium ignorare",
   "emails.invitation.thanks": "Gratias",
   "emails.invitation.signature": "{{project}} team",
