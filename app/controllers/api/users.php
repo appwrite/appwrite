@@ -108,10 +108,10 @@ App::get('/v1/users')
             $afterUser = $dbForInternal->getDocument('users', $after);
 
             if ($afterUser->isEmpty()) {
-                throw new Exception('User for after not found', 400);
+                throw new Exception("User '{$after}' for the 'after' value not found.", 400);
             }
         }
-      
+
         $queries = [];
 
         if (!empty($search)) {
@@ -123,8 +123,8 @@ App::get('/v1/users')
         ;
 
         $response->dynamic(new Document([
-            'users' => $dbForInternal->find('users', [], $limit, $offset, [], [$orderType], $afterUser ?? null),
-            'sum' => $dbForInternal->count('users', [], APP_LIMIT_COUNT),
+            'users' => $dbForInternal->find('users', $queries, $limit, $offset, [], [$orderType], $afterUser ?? null),
+            'sum' => $dbForInternal->count('users', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_USER_LIST);
     });
 
