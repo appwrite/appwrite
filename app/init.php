@@ -17,6 +17,7 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
+use Appwrite\Extend\PDO;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
@@ -63,6 +64,11 @@ const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
 const APP_CACHE_BUSTER = 151;
 const APP_VERSION_STABLE = '0.9.4';
+const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
+const APP_DATABASE_ATTRIBUTE_IP = 'ip';
+const APP_DATABASE_ATTRIBUTE_URL = 'url';
+const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
+const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -89,6 +95,7 @@ const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_CERTIFICATES = 'certificates';
+const DELETE_TYPE_USAGE = 'usage';
 // Mail Worker Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_RECOVERY = 'recovery';
@@ -141,9 +148,7 @@ if(!empty($user) || !empty($pass)) {
 }
 
 /**
- * DB Filters
- *
- * Make sure the value of an attribute that uses sub-query filters is set to 'null' otherwise the filters might not work properly
+ * Old DB Filters
  */
 DatabaseOld::addFilter('json',
     function($value) {
@@ -179,6 +184,43 @@ DatabaseOld::addFilter('encrypt',
     }
 );
 
+/**
+ * New DB Filters
+ */
+Database::addFilter('casting',
+    function($value) {
+        return json_encode(['value' => $value]);
+    },
+    function($value) {
+        if (is_null($value)) {
+            return null;
+        }
+        return json_decode($value, true)['value'];
+    }
+);
+
+Database::addFilter('range',
+    function($value, Document $attribute) {
+        if ($attribute->isSet('min')) {
+            $attribute->removeAttribute('min');
+        }
+        if ($attribute->isSet('max')) {
+            $attribute->removeAttribute('max');
+        }
+        return $value;
+    },
+    function($value, Document $attribute) {
+        $formatOptions = json_decode($attribute->getAttribute('formatOptions', []), true);
+        if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
+            $attribute
+                ->setAttribute('min', $formatOptions['min'])
+                ->setAttribute('max', $formatOptions['max'])
+            ;
+        }
+        return $value;
+    }
+);
+
 Database::addFilter('subQueryAttributes',
     function($value) {
         return null;
@@ -187,7 +229,7 @@ Database::addFilter('subQueryAttributes',
         return $database
             ->find('attributes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 1017, 0, []);
+            ], $database->getAttributeLimit(), 0, []);
     }
 );
 
@@ -211,7 +253,7 @@ Database::addFilter('subQueryPlatforms',
         return $database
             ->find('platforms', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 5000, 0, []);
+            ], $database->getIndexLimit(), 0, []);
     }
 );
 
@@ -223,7 +265,7 @@ Database::addFilter('subQueryDomains',
         return $database
             ->find('domains', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 5000, 0, []);
+            ], $database->getIndexLimit(), 0, []);
     }
 );
 
@@ -235,7 +277,7 @@ Database::addFilter('subQueryKeys',
         return $database
             ->find('keys', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 5000, 0, []);
+            ], $database->getIndexLimit(), 0, []);
     }
 );
 
@@ -247,7 +289,7 @@ Database::addFilter('subQueryWebhooks',
         return $database
             ->find('webhooks', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 5000, 0, []);
+            ], $database->getIndexLimit(), 0, []);
     }
 );
 
@@ -275,25 +317,25 @@ Database::addFilter('encrypt',
 /**
  * DB Formats
  */
-Structure::addFormat('email', function() {
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_EMAIL, function() {
     return new Email();
 }, Database::VAR_STRING);
 
-Structure::addFormat('ip', function() {
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_IP, function() {
     return new IP();
 }, Database::VAR_STRING);
 
-Structure::addFormat('url', function() {
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_URL, function() {
     return new URL();
 }, Database::VAR_STRING);
 
-Structure::addFormat('int-range', function($attribute) {
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_INT_RANGE, function($attribute) {
     $min = $attribute['formatOptions']['min'] ?? -INF;
     $max = $attribute['formatOptions']['max'] ?? INF;
     return new Range($min, $max, Range::TYPE_INTEGER);
 }, Database::VAR_INTEGER);
 
-Structure::addFormat('float-range', function($attribute) {
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function($attribute) {
     $min = $attribute['formatOptions']['min'] ?? -INF;
     $max = $attribute['formatOptions']['max'] ?? INF;
     return new Range($min, $max, Range::TYPE_FLOAT);
@@ -395,6 +437,29 @@ $register->set('smtp', function () {
 });
 $register->set('geodb', function () {
     return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-06.mmdb');
+});
+$register->set('db', function () { // This is usually for our workers or CLI commands scope
+    $dbHost = App::getEnv('_APP_DB_HOST', '');
+    $dbUser = App::getEnv('_APP_DB_USER', '');
+    $dbPass = App::getEnv('_APP_DB_PASS', '');
+    $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
+
+    $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
+        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
+        PDO::ATTR_TIMEOUT => 3, // Seconds
+        PDO::ATTR_PERSISTENT => true,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    ));
+
+    return $pdo;
+});
+$register->set('cache', function () { // This is usually for our workers or CLI commands scope
+    $redis = new Redis();
+    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
+    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+
+    return $redis;
 });
 
 /*

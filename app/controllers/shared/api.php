@@ -104,6 +104,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
         ->setParam('httpRequest', 1)
         ->setParam('httpUrl', $request->getHostname().$request->getURI())
         ->setParam('httpMethod', $request->getMethod())
+        ->setParam('httpPath', $route->getPath())
         ->setParam('networkRequestSize', 0)
         ->setParam('networkResponseSize', 0)
         ->setParam('storage', 0)
