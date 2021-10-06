@@ -66,6 +66,7 @@ App::post('/v1/users')
                 'sessions' => [],
                 'tokens' => [],
                 'memberships' => [],
+                'deleted' => false
             ]));
         } catch (Duplicate $th) {
             throw new Exception('Account already exists', 409);
@@ -106,13 +107,17 @@ App::get('/v1/users')
         if (!empty($after)) {
             $afterUser = $dbForInternal->getDocument('users', $after);
 
-            if ($afterUser->isEmpty()) {
+            if ($afterUser->isEmpty() || $afterUser->getAttribute('deleted')) {
                 throw new Exception('User for after not found', 400);
             }
         }
 
-        $results = $dbForInternal->find('users', [], $limit, $offset, [], [$orderType], $afterUser ?? null);
-        $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
+        $results = $dbForInternal->find('users', [
+            new Query('deleted', Query::TYPE_EQUAL, [false]),
+        ], $limit, $offset, [], [$orderType], $afterUser ?? null);
+        $sum = $dbForInternal->count('users', [
+            new Query('deleted', Query::TYPE_EQUAL, [false]),
+        ], APP_LIMIT_COUNT);
         
         $usage
             ->setParam('users.read', 1)
@@ -146,7 +151,7 @@ App::get('/v1/users/:userId')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -178,7 +183,7 @@ App::get('/v1/users/:userId/prefs')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -214,7 +219,7 @@ App::get('/v1/users/:userId/sessions')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -266,7 +271,7 @@ App::get('/v1/users/:userId/logs')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -374,7 +379,7 @@ App::patch('/v1/users/:userId/status')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -410,7 +415,7 @@ App::patch('/v1/users/:userId/verification')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -446,7 +451,7 @@ App::patch('/v1/users/:userId/name')
         
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -485,7 +490,7 @@ App::patch('/v1/users/:userId/password')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -525,7 +530,7 @@ App::patch('/v1/users/:userId/email')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -569,7 +574,7 @@ App::patch('/v1/users/:userId/prefs')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -606,7 +611,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -661,7 +666,7 @@ App::delete('/v1/users/:userId/sessions')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -710,26 +715,35 @@ App::delete('/v1/users/:userId')
         
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
-        if (!$dbForInternal->deleteDocument('users', $userId)) {
-            throw new Exception('Failed to remove user from DB', 500);
-        }
+        // clone user object to send to workers
+        $clone = clone $user;
+
+        $user
+            ->setAttribute("name", null)
+            ->setAttribute("email", null)
+            ->setAttribute("password", null)
+            ->setAttribute("deleted", true)
+        ;
+
+        $dbForInternal->updateDocument('users', $userId, $user);
 
         $deletes
             ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $user)
+            ->setParam('document', $clone)
         ;
 
         $events
-            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+            ->setParam('eventData', $response->output($clone, Response::MODEL_USER))
         ;
 
         $usage
             ->setParam('users.delete', 1)
         ;
+
         $response->noContent();
     });
 
