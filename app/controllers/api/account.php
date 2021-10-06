@@ -78,7 +78,9 @@ App::post('/v1/account')
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
         if ($limit !== 0) {
-            $sum = $dbForInternal->count('users', [], APP_LIMIT_USERS);
+            $sum = $dbForInternal->count('users', [
+                new Query('deleted', Query::TYPE_EQUAL, [false]),
+            ], APP_LIMIT_USERS);
 
             if ($sum >= $limit) {
                 throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
@@ -106,6 +108,7 @@ App::post('/v1/account')
                 'tokens' => [],
                 'memberships' => [],
                 'search' => implode(' ', [$userId, $email, $name]),
+                'deleted' => false
             ]));
         } catch (Duplicate $th) {
             throw new Exception('Account already exists', 409);
@@ -166,7 +169,7 @@ App::post('/v1/account/sessions')
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
-        $profile = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+        $profile = $dbForInternal->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
         if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
             $audits
@@ -463,13 +466,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $name = $oauth2->getUserName($accessToken);
             $email = $oauth2->getUserEmail($accessToken);
 
-            $user = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+            $user = $dbForInternal->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
             if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
                 if ($limit !== 0) {
-                    $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
+                    $sum = $dbForInternal->count('users', [ new Query('deleted', Query::TYPE_EQUAL, [false]),], APP_LIMIT_COUNT);
 
                     if ($sum >= $limit) {
                         throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
@@ -497,6 +500,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'tokens' => [],
                         'memberships' => [],
                         'search' => implode(' ', [$userId, $email, $name]),
+                        'deleted' => false
                     ]));
                 } catch (Duplicate $th) {
                     throw new Exception('Account already exists', 409);
@@ -641,7 +645,9 @@ App::post('/v1/account/sessions/anonymous')
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
         if ($limit !== 0) {
-            $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
+            $sum = $dbForInternal->count('users', [
+                new Query('deleted', Query::TYPE_EQUAL, [false]),
+            ], APP_LIMIT_COUNT);
 
             if ($sum >= $limit) {
                 throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
@@ -668,6 +674,7 @@ App::post('/v1/account/sessions/anonymous')
             'tokens' => [],
             'memberships' => [],
             'search' => $userId,
+            'deleted' => false
         ]));
 
         Authorization::reset();
@@ -1234,6 +1241,8 @@ App::delete('/v1/account')
         $protocol = $request->getProtocol();
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('status', false));
 
+        // TODO Seems to be related to users.php/App::delete('/v1/users/:userId'). Can we share code between these two? Do todos below apply to users.php?
+
         // TODO delete all tokens or only current session?
         // TODO delete all user data according to GDPR. Make sure everything is backed up and backups are deleted later
         /*
@@ -1476,7 +1485,7 @@ App::post('/v1/account/recovery')
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $email = \strtolower($email);
-        $profile = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+        $profile = $dbForInternal->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
         if (!$profile) {
             throw new Exception('User not found', 404);
@@ -1579,7 +1588,7 @@ App::put('/v1/account/recovery')
 
         $profile = $dbForInternal->getDocument('users', $userId);
 
-        if ($profile->isEmpty()) {
+        if ($profile->isEmpty() || $profile->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
