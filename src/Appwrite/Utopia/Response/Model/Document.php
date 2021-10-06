@@ -8,7 +8,7 @@ class Document extends Any
 {
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName(): string
@@ -18,7 +18,7 @@ class Document extends Any
 
     /**
      * Get Collection
-     * 
+     *
      * @return string
      */
     public function getType(): string
