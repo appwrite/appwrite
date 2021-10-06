@@ -317,7 +317,7 @@ Locale::setLanguageFromJSON('ur', __DIR__.'/config/locale/translations/ur.json')
 Locale::setLanguageFromJSON('vi', __DIR__.'/config/locale/translations/vi.json');
 Locale::setLanguageFromJSON('zh-cn', __DIR__.'/config/locale/translations/zh-cn.json');
 Locale::setLanguageFromJSON('zh-tw', __DIR__.'/config/locale/translations/zh-tw.json');
-Locale::setLanguageFromJSON('es-la', __DIR__.'/config/locale/translations/la.json');
+Locale::setLanguageFromJSON('la', __DIR__.'/config/locale/translations/la.json');
 
 \stream_context_set_default([ // Set global user agent and http settings
     'http' => [
