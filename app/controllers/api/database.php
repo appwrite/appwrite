@@ -210,12 +210,6 @@ App::get('/v1/database/collections')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $queries = [];
-
-        if (!empty($search)) {
-            $queries[] = new Query('name', Query::TYPE_SEARCH, [$search]);
-        }
-
         if (!empty($cursor)) {
             $cursorCollection = $dbForInternal->getDocument('collections', $cursor);
 
