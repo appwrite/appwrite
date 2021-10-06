@@ -1422,6 +1422,17 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/platforms/error', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Flutter App (Android) 2',
+            'key' => 'com.example.android2',
+            'store' => '',
+            'hostname' => '',
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
 
         return $data;
     }
