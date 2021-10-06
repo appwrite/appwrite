@@ -113,7 +113,9 @@ App::get('/v1/users')
             }
         }
 
-        $queries = [];
+        $queries = [
+            new Query('deleted', Query::TYPE_EQUAL, [false])
+        ];
 
         if (!empty($search)) {
             $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
