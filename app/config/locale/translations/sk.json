@@ -23,7 +23,7 @@
     "emails.recovery.signature": "{{project}} tím",
     "emails.invitation.subject": "Pozvánka do %s Tímu v %s",
     "emails.invitation.hello": "Ahoj",
-    "emails.invitation.body": "Tento email ti bol zaslaný, pretože {{owner}} ťa chce pozvať aby si sa stal členom {{team}} tímu v {{project}}.",
+    "emails.invitation.body": "Tento email ti bol zaslaný, pretože {{owner}} ťa pozval, aby si sa stal členom {{team}} tímu v projekte {{project}}.",
     "emails.invitation.footer": "Ak nemáš záujem, môžeš túto správu ignorovať.",
     "emails.invitation.thanks": "Ďakujeme",
     "emails.invitation.signature": "{{project}} tím",
