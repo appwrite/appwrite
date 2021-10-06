@@ -31,6 +31,7 @@ return [
     'km', // Khmer
     'ko', // Korean
     'lt', // Lithuanian
+    'la', // Latin
     'ml', // Malayalam
     'mr', // Marathi
     'ms', // Malay
@@ -57,5 +58,4 @@ return [
     'vi', // Vietnamese
     'zh-cn', // Chinese - China
     'zh-tw', // Chinese - Taiwan
-    'la', // Latin
 ];
