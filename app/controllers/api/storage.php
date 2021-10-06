@@ -125,13 +125,14 @@ App::post('/v1/storage/files')
 
         $sizeActual = $device->getFileSize($path);
         
+        $fileId = ($fileId == 'unique()') ? $dbForInternal->getId() : $fileId;
         $file = $dbForInternal->createDocument('files', new Document([
-            '$id' => $fileId == 'unique()' ? $dbForInternal->getId() : $fileId,
+            '$id' => $fileId,
             '$read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], // By default set read permissions for user
             '$write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], // By default set write permissions for user
             'dateCreated' => \time(),
             'bucketId' => '',
-            'name' => $file['name'],
+            'name' => $file['name'] ?? '',
             'path' => $path,
             'signature' => $device->getFileHash($path),
             'mimeType' => $mimeType,
@@ -143,6 +144,7 @@ App::post('/v1/storage/files')
             'openSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
             'openSSLTag' => \bin2hex($tag),
             'openSSLIV' => \bin2hex($iv),
+            'search' => implode(' ', [$fileId, $file['name'] ?? '',]),
         ]));
 
         $audits
@@ -186,14 +188,18 @@ App::get('/v1/storage/files')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, $search)] : [];
-
         if (!empty($cursor)) {
             $cursorFile = $dbForInternal->getDocument('files', $cursor);
 
             if ($cursorFile->isEmpty()) {
                 throw new Exception("File '{$cursor}' for the 'cursor' value not found.", 400);
             }
+        }
+
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
         $usage

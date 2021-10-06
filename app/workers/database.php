@@ -120,6 +120,57 @@ class DatabaseV1 extends Worker
             $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));
         }
 
+        // The underlying database removes/rebuilds indexes when attribute is removed
+        // Update indexes table with changes
+        /** @var Document[] $indexes */
+        $indexes = $collection->getAttribute('indexes', []);
+
+        foreach ($indexes as $index) {
+            /** @var string[] $attributes */
+            $attributes = $index->getAttribute('attributes');
+            $lengths = $index->getAttribute('lengths');
+            $orders = $index->getAttribute('orders');
+
+            $found = \array_search($key, $attributes);
+
+            if ($found !== false) {
+                // If found, remove entry from attributes, lengths, and orders
+                // array_values wraps array_diff to reindex array keys 
+                // when found attribute is removed from array
+                $attributes = \array_values(\array_diff($attributes, [$attributes[$found]]));
+                $lengths = \array_values(\array_diff($lengths, [$lengths[$found]]));
+                $orders = \array_values(\array_diff($orders, [$orders[$found]]));
+
+                if (empty($attributes)) {
+                    $dbForInternal->deleteDocument('indexes', $index->getId());
+                } else {
+                    $index
+                        ->setAttribute('attributes', $attributes, Document::SET_TYPE_ASSIGN)
+                        ->setAttribute('lengths', $lengths, Document::SET_TYPE_ASSIGN)
+                        ->setAttribute('orders', $orders, Document::SET_TYPE_ASSIGN)
+                    ;
+
+                    // Check if an index exists with the same attributes and orders
+                    $exists = false;
+                    foreach ($indexes as $existing) {
+                        if ($existing->getAttribute('key') !== $index->getAttribute('key') // Ignore itself
+                            && $existing->getAttribute('attributes') === $index->getAttribute('attributes')
+                            && $existing->getAttribute('orders') === $index->getAttribute('orders')
+                        ) {
+                            $exists = true;
+                            break;
+                        }
+                    }
+
+                    if ($exists) { // Delete the duplicate if created, else update in db 
+                        $this->deleteIndex($collection, $index, $projectId);
+                    } else {
+                        $dbForInternal->updateDocument('indexes', $index->getId(), $index);
+                    }
+                }
+            }
+        }
+
         $dbForInternal->deleteCachedDocument('collections', $collectionId);
     }
 
@@ -168,7 +219,7 @@ class DatabaseV1 extends Worker
 
         try {
             if(!$dbForExternal->deleteIndex($collectionId, $key)) {
-                throw new Exception('Failed to delete Attribute');
+                throw new Exception('Failed to delete index');
             }
 
             $dbForInternal->deleteDocument('indexes', $index->getId());

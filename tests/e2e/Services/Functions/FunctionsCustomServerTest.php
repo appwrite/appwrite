@@ -79,6 +79,45 @@ class FunctionsCustomServerTest extends Scope
          * Test for SUCCESS
          */
 
+        /**
+         * Test search queries
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $data['functionId']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertCount(1, $response['body']['functions']);
+        $this->assertEquals($response['body']['functions'][0]['name'], 'Test');
+
+        $response = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'Test'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertCount(1, $response['body']['functions']);
+        $this->assertEquals($response['body']['functions'][0]['$id'], $data['functionId']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'php-8.0'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertCount(1, $response['body']['functions']);
+        $this->assertEquals($response['body']['functions'][0]['$id'], $data['functionId']);
+
+        /**
+         * Test pagination
+         */
         $response = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -307,6 +346,48 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsArray($function['body']['tags']);
         $this->assertCount(1, $function['body']['tags']);
 
+        /**
+         * Test search queries
+         */
+        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/tags', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders(), [
+            'search' => $data['functionId']
+        ]));
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals($function['body']['sum'], 1);
+        $this->assertIsArray($function['body']['tags']);
+        $this->assertCount(1, $function['body']['tags']);
+        $this->assertEquals($function['body']['tags'][0]['$id'], $data['tagId']);
+
+        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/tags', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders(), [
+            'search' => 'Test'
+        ]));
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals($function['body']['sum'], 1);
+        $this->assertIsArray($function['body']['tags']);
+        $this->assertCount(1, $function['body']['tags']);
+        $this->assertEquals($function['body']['tags'][0]['$id'], $data['tagId']);
+
+        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/tags', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders(), [
+            'search' => 'php-8.0'
+        ]));
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals($function['body']['sum'], 1);
+        $this->assertIsArray($function['body']['tags']);
+        $this->assertCount(1, $function['body']['tags']);
+        $this->assertEquals($function['body']['tags'][0]['$id'], $data['tagId']);
+
         return $data;
     }
 
@@ -417,6 +498,36 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsArray($function['body']['executions']);
         $this->assertCount(1, $function['body']['executions']);
         $this->assertEquals($function['body']['executions'][0]['$id'], $data['executionId']);
+
+        /**
+         * Test search queries
+         */
+
+        $response = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $data['executionId'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertCount(1, $response['body']['executions']);
+        $this->assertEquals($data['functionId'], $response['body']['executions'][0]['functionId']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $data['functionId'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertCount(1, $response['body']['executions']);
+        $this->assertEquals($data['executionId'], $response['body']['executions'][0]['$id']);
 
         return $data;
     }

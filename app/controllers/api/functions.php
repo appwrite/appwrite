@@ -53,8 +53,9 @@ App::post('/v1/functions')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
+        $functionId = ($functionId == 'unique()') ? $dbForInternal->getId() : $functionId;
         $function = $dbForInternal->createDocument('functions', new Document([
-            '$id' => $functionId == 'unique()' ? $dbForInternal->getId() : $functionId,
+            '$id' => $functionId,
             'execute' => $execute,
             'dateCreated' => time(),
             'dateUpdated' => time(),
@@ -68,6 +69,7 @@ App::post('/v1/functions')
             'schedulePrevious' => 0,
             'scheduleNext' => 0,
             'timeout' => $timeout,
+            'search' => implode(' ', [$functionId, $name, $runtime]),
         ]));
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -97,14 +99,18 @@ App::get('/v1/functions')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
-
         if (!empty($cursor)) {
             $cursorFunction = $dbForInternal->getDocument('functions', $cursor);
 
             if ($cursorFunction->isEmpty()) {
                 throw new Exception("Function '{$cursor}' for the 'cursor' value not found.", 400);
             }
+        }
+
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
         $response->dynamic(new Document([
@@ -272,6 +278,7 @@ App::put('/v1/functions/:functionId')
             'schedule' => $schedule,
             'scheduleNext' => (int)$next,
             'timeout' => $timeout,
+            'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
         if ($next && $schedule !== $original) {
@@ -448,8 +455,9 @@ App::post('/v1/functions/:functionId/tags')
             throw new Exception('Failed moving file', 500);
         }
         
+        $tagId = $dbForInternal->getId();
         $tag = $dbForInternal->createDocument('tags', new Document([
-            '$id' => $dbForInternal->getId(),
+            '$id' => $tagId,
             '$read' => [],
             '$write' => [],
             'functionId' => $function->getId(),
@@ -457,6 +465,7 @@ App::post('/v1/functions/:functionId/tags')
             'command' => $command,
             'path' => $path,
             'size' => $size,
+            'search' => implode(' ', [$tagId, $command]),
         ]));
 
         $usage
@@ -497,8 +506,6 @@ App::get('/v1/functions/:functionId/tags')
             throw new Exception('Function not found', 404);
         }
 
-        $queries[] = new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]);
-
         if (!empty($cursor)) {
             $cursorTag = $dbForInternal->getDocument('tags', $cursor);
 
@@ -506,6 +513,14 @@ App::get('/v1/functions/:functionId/tags')
                 throw new Exception("Tag '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
+
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
+
+        $queries[] = new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]);
 
         $results = $dbForInternal->find('tags', $queries, $limit, $offset, [], [$orderType], $cursorTag ?? null, $cursorDirection);
         $sum = $dbForInternal->count('tags', $queries, APP_LIMIT_COUNT);
@@ -667,8 +682,10 @@ App::post('/v1/functions/:functionId/executions')
 
         Authorization::disable();
 
+        $executionId = $dbForInternal->getId();
+
         $execution = $dbForInternal->createDocument('executions', new Document([
-            '$id' => $dbForInternal->getId(),
+            '$id' => $executionId,
             '$read' => (!$user->isEmpty()) ? ['user:' . $user->getId()] : [],
             '$write' => [],
             'dateCreated' => time(),
@@ -680,6 +697,7 @@ App::post('/v1/functions/:functionId/executions')
             'stdout' => '',
             'stderr' => '',
             'time' => 0.0,
+            'search' => implode(' ', [$functionId, $executionId]),
         ]));
 
         Authorization::reset();
@@ -734,17 +752,18 @@ App::get('/v1/functions/:functionId/executions')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('cursor', '', new UID(), 'ID of the execution used as the starting point for the query, excluding the execution itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($functionId, $limit, $offset, $cursor, $cursorDirection, $response, $dbForInternal) {
+    ->action(function ($functionId, $limit, $offset, $search, $cursor, $cursorDirection, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        Authorization::disable();
-        $function = $dbForInternal->getDocument('functions', $functionId);
-        Authorization::reset();
+        $function = Authorization::skip(function() use ($dbForInternal, $functionId) {
+            return $dbForInternal->getDocument('functions', $functionId);
+        });
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
@@ -758,13 +777,16 @@ App::get('/v1/functions/:functionId/executions')
             }
         }
 
-        $results = $dbForInternal->find('executions', [
-            new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
-        ], $limit, $offset, [], [Database::ORDER_DESC], $cursorExecution ?? null, $cursorDirection);
+        $queries = [
+            new Query('functionId', Query::TYPE_EQUAL, [$function->getId()])
+        ];
 
-        $sum = $dbForInternal->count('executions', [
-            new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
-        ], APP_LIMIT_COUNT);
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
+
+        $results = $dbForInternal->find('executions', $queries, $limit, $offset, [], [Database::ORDER_DESC], $cursorExecution ?? null, $cursorDirection);
+        $sum = $dbForInternal->count('executions', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'executions' => $results,

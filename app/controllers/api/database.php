@@ -15,6 +15,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\QueryValidator;
@@ -31,7 +32,6 @@ use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Response;
 use DeviceDetector\DeviceDetector;
-use Utopia\Database\Validator\Authorization;
 
 /**
  * Create attribute of varying type
@@ -77,7 +77,7 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
     }
 
     try {
-        $attribute = $dbForInternal->createDocument('attributes', new Document([
+        $attribute = new Document([
             '$id' => $collectionId.'_'.$attributeId,
             'key' => $attributeId,
             'collectionId' => $collectionId,
@@ -90,10 +90,16 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
             'array' => $array,
             'format' => $format,
             'formatOptions' => $formatOptions,
-            'filters' => $filters,
-        ]));
-    } catch (DuplicateException $th) {
+        ]);
+
+        $dbForInternal->checkAttribute($collection, $attribute);
+        $attribute = $dbForInternal->createDocument('attributes', $attribute);
+    }
+    catch (DuplicateException $exception) {
         throw new Exception('Attribute already exists', 409);
+    }
+    catch (LimitException $exception) {
+        throw new Exception('Attribute limit exceeded', 400);
     }
 
     $dbForInternal->deleteCachedDocument('collections', $collectionId);
@@ -216,6 +222,12 @@ App::get('/v1/database/collections')
             if ($cursorCollection->isEmpty()) {
                 throw new Exception("Collection '{$cursor}' for the 'cursor' value not found.", 400);
             }
+        }
+
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('name', Query::TYPE_SEARCH, [$search]);
         }
 
         $usage->setParam('database.collections.read', 1);
@@ -1454,13 +1466,28 @@ App::post('/v1/database/collections/:collectionId/documents')
             throw new Exception('Collection not found', 404);
         }
 
+        // Check collection permissions when enforced
+        if ($collection->getAttribute('permission') === 'collection') {
+            $validator = new Authorization('write');
+            if (!$validator->isValid($collection->getWrite())) {
+                throw new Exception('Unauthorized permissions', 401);
+            }
+        }
+
         $data['$collection'] = $collection->getId(); // Adding this param to make API easier for developers
         $data['$id'] = $documentId == 'unique()' ? $dbForExternal->getId() : $documentId;
         $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
         $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
 
         try {
-            $document = $dbForExternal->createDocument($collectionId, new Document($data));
+            if ($collection->getAttribute('permission') === 'collection') {
+                /** @var Document $document */
+                $document = Authorization::skip(function() use ($dbForExternal, $collectionId, $data) {
+                    return $dbForExternal->createDocument($collectionId, new Document($data));
+                });
+            } else {
+                $document = $dbForExternal->createDocument($collectionId, new Document($data));
+            }
         }
         catch (StructureException $exception) {
             throw new Exception($exception->getMessage(), 400);
@@ -1519,6 +1546,14 @@ App::get('/v1/database/collections/:collectionId/documents')
             throw new Exception('Collection not found', 404);
         }
 
+        // Check collection permissions when enforced
+        if ($collection->getAttribute('permission') === 'collection') {
+            $validator = new Authorization('read');
+            if (!$validator->isValid($collection->getRead())) {
+                throw new Exception('Unauthorized permissions', 401);
+            }
+        }
+
         $queries = \array_map(function ($query) {
             return Query::parse($query);
         }, $queries);
@@ -1538,6 +1573,15 @@ App::get('/v1/database/collections/:collectionId/documents')
             }
         }
 
+        if ($collection->getAttribute('permission') === 'collection') {
+            /** @var Document[] $documents */
+            $documents = Authorization::skip(function() use ($dbForExternal, $collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument, $cursorDirection) {
+                return $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
+            });
+        } else {
+            $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
+        }
+
         $usage
             ->setParam('database.documents.read', 1)
             ->setParam('collectionId', $collectionId)
@@ -1545,7 +1589,7 @@ App::get('/v1/database/collections/:collectionId/documents')
 
         $response->dynamic(new Document([
             'sum' => $dbForExternal->count($collectionId, $queries, APP_LIMIT_COUNT),
-            'documents' => $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection),
+            'documents' => $documents,
         ]), Response::MODEL_DOCUMENT_LIST);
     });
 
@@ -1577,7 +1621,22 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('Collection not found', 404);
         }
 
-        $document = $dbForExternal->getDocument($collectionId, $documentId);
+        // Check collection permissions when enforced
+        if ($collection->getAttribute('permission') === 'collection') {
+            $validator = new Authorization('read');
+            if (!$validator->isValid($collection->getRead())) {
+                throw new Exception('Unauthorized permissions', 401);
+            }
+        }
+
+        if ($collection->getAttribute('permission') === 'collection') {
+            /** @var Document $document */
+            $document = Authorization::skip(function() use ($dbForExternal, $collectionId, $documentId) {
+                return $dbForExternal->getDocument($collectionId, $documentId);
+            });
+        } else {
+            $document = $dbForExternal->getDocument($collectionId, $documentId);
+        }
 
         if ($document->isEmpty()) {
             throw new Exception('No document found', 404);
@@ -1626,6 +1685,14 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('Collection not found', 404);
         }
 
+        // Check collection permissions when enforced
+        if ($collection->getAttribute('permission') === 'collection') {
+            $validator = new Authorization('write');
+            if (!$validator->isValid($collection->getWrite())) {
+                throw new Exception('Unauthorized permissions', 401);
+            }
+        }
+
         $document = $dbForExternal->getDocument($collectionId, $documentId);
 
         if ($document->isEmpty()) {
@@ -1650,7 +1717,14 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $data['$write'] = (is_null($write)) ? ($document->getWrite() ?? []) : $write; // By default inherit write permissions
 
         try {
-            $document = $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data));
+            if ($collection->getAttribute('permission') === 'collection') {
+                /** @var Document $document */
+                $document = Authorization::skip(function() use ($dbForExternal, $collection, $document, $data) {
+                    return $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data));
+                });
+            } else {
+                $document = $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data));
+            }
         }
         catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401);
@@ -1708,7 +1782,22 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('Collection not found', 404);
         }
 
-        $document = $dbForExternal->getDocument($collectionId, $documentId);
+        // Check collection permissions when enforced
+        if ($collection->getAttribute('permission') === 'collection') {
+            $validator = new Authorization('write');
+            if (!$validator->isValid($collection->getWrite())) {
+                throw new Exception('Unauthorized permissions', 401);
+            }
+        }
+
+        if ($collection->getAttribute('permission') === 'collection') {
+            /** @var Document $document */
+            $document = Authorization::skip(function() use ($dbForExternal, $collectionId, $documentId) {
+                return $dbForExternal->getDocument($collectionId, $documentId);
+            });
+        } else {
+            $document = $dbForExternal->getDocument($collectionId, $documentId);
+        }
 
         if ($document->isEmpty()) {
             throw new Exception('No document found', 404);
