@@ -30,17 +30,17 @@ class Microsoft extends OAuth2
     {
         return 'microsoft';
     }
-    
+
     /**
      * @return string
      */
     public function getLoginURL(): string
     {
-        return 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?'.\http_build_query([
+        return 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
-            'state'=> \json_encode($this->state),
-            'scope'=> \implode(' ', $this->getScopes()),
+            'state' => \json_encode($this->state),
+            'scope' => \implode(' ', $this->getScopes()),
             'response_type' => 'code',
             'response_mode' => 'query'
         ]);
@@ -134,7 +134,7 @@ class Microsoft extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $headers = ['Authorization: Bearer '. \urlencode($accessToken)];
+            $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
             $user = $this->request('GET', 'https://graph.microsoft.com/v1.0/me', $headers);
             $this->user = \json_decode($user, true);
         }

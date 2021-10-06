@@ -21,7 +21,7 @@ class Github extends OAuth2
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'github';
     }
@@ -29,9 +29,9 @@ class Github extends OAuth2
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return 'https://github.com/login/oauth/authorize?'. \http_build_query([
+        return 'https://github.com/login/oauth/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'scope' => \implode(' ', $this->getScopes()),
@@ -44,7 +44,7 @@ class Github extends OAuth2
      *
      * @return string
      */
-    public function getAccessToken(string $code):string
+    public function getAccessToken(string $code): string
     {
         $accessToken = $this->request(
             'POST',
@@ -74,7 +74,7 @@ class Github extends OAuth2
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -90,9 +90,9 @@ class Github extends OAuth2
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
-        $emails = \json_decode($this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token '.\urlencode($accessToken)]), true);
+        $emails = \json_decode($this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token ' . \urlencode($accessToken)]), true);
 
         foreach ($emails as $email) {
             if ($email['primary'] && $email['verified']) {
@@ -108,7 +108,7 @@ class Github extends OAuth2
      *
      * @return string
      */
-    public function getUserName(string $accessToken):string
+    public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -127,7 +127,7 @@ class Github extends OAuth2
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: token '.\urlencode($accessToken)]), true);
+            $this->user = \json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: token ' . \urlencode($accessToken)]), true);
         }
 
         return $this->user;

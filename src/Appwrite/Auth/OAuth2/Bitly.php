@@ -33,7 +33,7 @@ class Bitly extends OAuth2
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'bitly';
     }
@@ -41,9 +41,9 @@ class Bitly extends OAuth2
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return $this->endpoint . 'authorize?'.
+        return $this->endpoint . 'authorize?' .
             \http_build_query([
                 'client_id' => $this->appID,
                 'redirect_uri' => $this->callback,
@@ -56,7 +56,7 @@ class Bitly extends OAuth2
      *
      * @return string
      */
-    public function getAccessToken(string $code):string
+    public function getAccessToken(string $code): string
     {
         $response = $this->request(
             'POST',
@@ -86,7 +86,7 @@ class Bitly extends OAuth2
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -102,7 +102,7 @@ class Bitly extends OAuth2
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -118,7 +118,7 @@ class Bitly extends OAuth2
      *
      * @return string
      */
-    public function getUserName(string $accessToken):string
+    public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -137,7 +137,7 @@ class Bitly extends OAuth2
     protected function getUser(string $accessToken)
     {
         $headers = [
-            'Authorization: Bearer '. \urlencode($accessToken),
+            'Authorization: Bearer ' . \urlencode($accessToken),
             "Accept: application/json"
         ];
 

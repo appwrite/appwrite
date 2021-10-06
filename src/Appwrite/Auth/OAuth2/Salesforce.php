@@ -47,13 +47,13 @@ class Salesforce extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://login.salesforce.com/services/oauth2/authorize?'.\http_build_query([
-                'response_type' => 'code',
-                'client_id' => $this->appID,
-                'redirect_uri'=> $this->callback,
-                'scope'=> \implode(' ', $this->getScopes()),
-                'state' => \json_encode($this->state)
-            ]);
+        return 'https://login.salesforce.com/services/oauth2/authorize?' . \http_build_query([
+            'response_type' => 'code',
+            'client_id' => $this->appID,
+            'redirect_uri' => $this->callback,
+            'scope' => \implode(' ', $this->getScopes()),
+            'state' => \json_encode($this->state)
+        ]);
     }
 
     /**
@@ -74,7 +74,7 @@ class Salesforce extends OAuth2
             $headers,
             \http_build_query([
                 'code' => $code,
-                'redirect_uri' => $this->callback ,
+                'redirect_uri' => $this->callback,
                 'grant_type' => 'authorization_code'
             ])
         );
@@ -143,7 +143,7 @@ class Salesforce extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://login.salesforce.com/services/oauth2/userinfo?access_token='.\urlencode($accessToken));
+            $user = $this->request('GET', 'https://login.salesforce.com/services/oauth2/userinfo?access_token=' . \urlencode($accessToken));
             $this->user = \json_decode($user, true);
         }
         return $this->user;

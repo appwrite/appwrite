@@ -24,7 +24,7 @@ class WordPress extends OAuth2
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'wordpress';
     }
@@ -32,9 +32,9 @@ class WordPress extends OAuth2
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return 'https://public-api.wordpress.com/oauth2/authorize?'. \http_build_query([
+        return 'https://public-api.wordpress.com/oauth2/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'response_type' => 'code',
@@ -48,7 +48,7 @@ class WordPress extends OAuth2
      *
      * @return string
      */
-    public function getAccessToken(string $code):string
+    public function getAccessToken(string $code): string
     {
         $accessToken = $this->request(
             'POST',
@@ -77,7 +77,7 @@ class WordPress extends OAuth2
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -93,7 +93,7 @@ class WordPress extends OAuth2
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -109,7 +109,7 @@ class WordPress extends OAuth2
      *
      * @return string
      */
-    public function getUserName(string $accessToken):string
+    public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -128,7 +128,7 @@ class WordPress extends OAuth2
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', 'https://public-api.wordpress.com/rest/v1/me', ['Authorization: Bearer '.$accessToken]), true);
+            $this->user = \json_decode($this->request('GET', 'https://public-api.wordpress.com/rest/v1/me', ['Authorization: Bearer ' . $accessToken]), true);
         }
 
         return $this->user;
