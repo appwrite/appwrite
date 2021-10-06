@@ -115,7 +115,7 @@ abstract class Worker
                     throw new \Exception("Table does not exist: {$database->getNamespace()}");
                 }
                 break; // leave loop if successful
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
                 if ($attempts >= self::MAX_ATTEMPTS) {
                     throw new \Exception('Failed to connect to database: '. $e->getMessage());
