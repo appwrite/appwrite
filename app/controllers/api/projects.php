@@ -597,7 +597,7 @@ App::post('/v1/projects/:projectId/webhooks')
 
         $webhook = $dbForConsole->createDocument('webhooks', $webhook);
 
-        $dbForConsole->purgeDocument('projects', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
@@ -724,7 +724,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
 
         $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
 
-        $dbForConsole->purgeDocument('projects', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
@@ -763,7 +763,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
 
         $dbForConsole->deleteDocument('webhooks', $webhook->getId());
 
-        $dbForConsole->purgeDocument('projects', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->noContent();
     });
@@ -807,7 +807,7 @@ App::post('/v1/projects/:projectId/keys')
 
         $key = $dbForConsole->createDocument('keys', $key);
 
-        $dbForConsole->purgeDocument('projects', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($key, Response::MODEL_KEY);
@@ -924,7 +924,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
 
         $dbForConsole->updateDocument('keys', $key->getId(), $key);
 
-        $dbForConsole->purgeDocument('projects', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->dynamic($key, Response::MODEL_KEY);
     });
@@ -963,7 +963,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
         $dbForConsole->deleteDocument('keys', $key->getId());
 
-        $dbForConsole->purgeDocument('projects', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->noContent();
     });
@@ -1014,7 +1014,7 @@ App::post('/v1/projects/:projectId/platforms')
 
         $platform = $dbForConsole->createDocument('platforms', $platform);
 
-        $dbForConsole->purgeDocument('projects', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($platform, Response::MODEL_PLATFORM);
@@ -1136,7 +1136,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
 
         $dbForConsole->updateDocument('platforms', $platform->getId(), $platform);
 
-        $dbForConsole->purgeDocument('projects', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
@@ -1175,7 +1175,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 
         $dbForConsole->deleteDocument('platforms', $platformId);
 
-        $dbForConsole->purgeDocument('projects', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->noContent();
     });
@@ -1238,7 +1238,7 @@ App::post('/v1/projects/:projectId/domains')
 
         $domain = $dbForConsole->createDocument('domains', $domain);
 
-        $dbForConsole->purgeDocument('projects', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($domain, Response::MODEL_DOMAIN);
@@ -1364,7 +1364,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
 
 
         $dbForConsole->updateDocument('domains', $domain->getId(), $domain->setAttribute('verification', true));
-        $dbForConsole->purgeDocument('projects', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         // Issue a TLS certificate when domain is verified
         Resque::enqueue('v1-certificates', 'CertificatesV1', [
@@ -1410,7 +1410,7 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
 
         $dbForConsole->deleteDocument('domains', $domain->getId());
 
-        $dbForConsole->purgeDocument('projects', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $deletes
             ->setParam('type', DELETE_TYPE_CERTIFICATES)
