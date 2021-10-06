@@ -38,7 +38,8 @@ return [
     'mr', // Marathi
     'ms', // Malay
     'nl', // Dutch
-    'no', // Norwegian
+    'nn', // Norwegian (nynorsk)
+    'no', // Norwegian (bokmål)
     'ne', // Nepali
     'or', // Oriya
     'tl', // Filipino
