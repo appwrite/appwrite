@@ -1,0 +1,41 @@
+name: "Tests"
+
+on: [pull_request]
+
+jobs:
+  tests:
+    name: Unit & E2E
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        # We must fetch at least the immediate parents so that if this is
+        # a pull request then we can checkout the head.
+        fetch-depth: 2
+
+    # If this run was triggered by a pull request event, then checkout
+    # the head of the pull request instead of the merge commit.
+    - run: git checkout HEAD^2
+      if: ${{ github.event_name == 'pull_request' }}
+
+    - name: Build Appwrite
+      # Upstream bug causes buildkit pulls to fail so prefetch base images
+      # https://github.com/moby/moby/issues/41864
+      run:  |
+        echo "_APP_FUNCTIONS_RUNTIMES=php-8.0" >> .env
+        docker pull composer:2.0
+        docker pull php:8.0-cli-alpine
+        docker-compose build
+        docker-compose up -d
+        sleep 10
+
+    - name: Doctor
+      run: docker-compose exec -T appwrite doctor
+
+    - name: Environment Variables
+      run:  docker-compose exec -T appwrite vars
+
+    - name: Run Tests
+      run: docker-compose exec -T appwrite test --debug
