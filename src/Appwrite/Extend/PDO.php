@@ -49,7 +49,7 @@ class PDO extends PDONative
         return $this->pdo->setAttribute($attribute, $value);
     }
 
-    public function prepare($statement, $driver_options = NULL)
+    public function prepare($statement, $driver_options = null)
     {
         return new PDOStatement($this, $this->pdo->prepare($statement, []));
     }
@@ -100,7 +100,7 @@ class PDO extends PDONative
         $this->pdo = new PDONative($this->dsn, $this->username, $this->passwd, $this->options);
 
         echo '[PDO] MySQL connection restarted'.PHP_EOL;
-        
+
         // Connection settings
         $this->pdo->setAttribute(PDONative::ATTR_DEFAULT_FETCH_MODE, PDONative::FETCH_ASSOC);   // Return arrays
         $this->pdo->setAttribute(PDONative::ATTR_ERRMODE, PDONative::ERRMODE_EXCEPTION);        // Handle all errors with exceptions
