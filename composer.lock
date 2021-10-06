@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "097f65580ec4701183436e6cbec01895",
+    "content-hash": "984640c83bc02c3253a0f38b5f772011",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -115,16 +115,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "dev-main",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/php-runtimes.git",
-                "reference": "1b4caf08eaaca5dca781874a615e967db2670d53"
+                "reference": "cc7090a67d8824c779190b38873f0f8154f906b2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/php-runtimes/zipball/1b4caf08eaaca5dca781874a615e967db2670d53",
-                "reference": "1b4caf08eaaca5dca781874a615e967db2670d53",
+                "url": "https://api.github.com/repos/appwrite/php-runtimes/zipball/cc7090a67d8824c779190b38873f0f8154f906b2",
+                "reference": "cc7090a67d8824c779190b38873f0f8154f906b2",
                 "shasum": ""
             },
             "require": {
@@ -136,7 +136,6 @@
                 "utopia-php/cli": "0.11.*",
                 "vimeo/psalm": "4.0.1"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -165,9 +164,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/php-runtimes/issues",
-                "source": "https://github.com/appwrite/php-runtimes/tree/main"
+                "source": "https://github.com/appwrite/php-runtimes/tree/0.4.0"
             },
-            "time": "2021-10-05T11:14:21+00:00"
+            "time": "2021-06-23T07:17:12+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -3560,16 +3559,16 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.5.1",
+            "version": "1.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "a12f7e301eb7258bb68acd89d4aefa05c2906cae"
+                "reference": "30f38bffc6f24293dadd1823936372dfa9e86e2f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/a12f7e301eb7258bb68acd89d4aefa05c2906cae",
-                "reference": "a12f7e301eb7258bb68acd89d4aefa05c2906cae",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/30f38bffc6f24293dadd1823936372dfa9e86e2f",
+                "reference": "30f38bffc6f24293dadd1823936372dfa9e86e2f",
                 "shasum": ""
             },
             "require": {
@@ -3604,9 +3603,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.5.1"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.5.0"
             },
-            "time": "2021-10-02T14:08:47+00:00"
+            "time": "2021-09-17T15:28:14+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -6231,9 +6230,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "appwrite/php-runtimes": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -6255,5 +6252,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.0.0"
 }
