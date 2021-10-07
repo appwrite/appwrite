@@ -222,7 +222,6 @@ trait DatabaseBase
         $this->assertEquals('email', $email['body']['key']);
         $this->assertEquals('string', $email['body']['type']);
         $this->assertEquals('processing', $email['body']['status']);
-        $this->assertEquals('processing', $email['body']['status']);
         $this->assertEquals(false, $email['body']['required']);
         $this->assertEquals(false, $email['body']['array']);
         $this->assertEquals('email', $email['body']['format']);
