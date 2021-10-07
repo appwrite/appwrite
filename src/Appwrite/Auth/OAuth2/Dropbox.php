@@ -27,17 +27,17 @@ class Dropbox extends OAuth2
     {
         return 'dropbox';
     }
-    
+
     /**
      * @return string
      */
     public function getLoginURL(): string
     {
-        return 'https://www.dropbox.com/oauth2/authorize?'.\http_build_query([
-                'client_id' => $this->appID,
-                'redirect_uri' => $this->callback,
-                'state' => \json_encode($this->state),
-                'response_type' => 'code'
+        return 'https://www.dropbox.com/oauth2/authorize?' . \http_build_query([
+            'client_id' => $this->appID,
+            'redirect_uri' => $this->callback,
+            'state' => \json_encode($this->state),
+            'response_type' => 'code'
         ]);
     }
 
@@ -127,7 +127,7 @@ class Dropbox extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $headers = ['Authorization: Bearer '. \urlencode($accessToken)];
+            $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
             $user = $this->request('POST', 'https://api.dropboxapi.com/2/users/get_current_account', $headers);
             $this->user = \json_decode($user, true);
         }

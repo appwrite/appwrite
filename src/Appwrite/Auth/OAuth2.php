@@ -52,47 +52,47 @@ abstract class OAuth2
     /**
      * @return string
      */
-    abstract public function getName():string;
+    abstract public function getName(): string;
 
     /**
      * @return string
      */
-    abstract public function getLoginURL():string;
+    abstract public function getLoginURL(): string;
 
     /**
      * @param string $code
      *
      * @return string
      */
-    abstract public function getAccessToken(string $code):string;
+    abstract public function getAccessToken(string $code): string;
 
     /**
      * @param $accessToken
      *
      * @return string
      */
-    abstract public function getUserID(string $accessToken):string;
+    abstract public function getUserID(string $accessToken): string;
 
     /**
      * @param $accessToken
      *
      * @return string
      */
-    abstract public function getUserEmail(string $accessToken):string;
+    abstract public function getUserEmail(string $accessToken): string;
 
     /**
      * @param $accessToken
      *
      * @return string
      */
-    abstract public function getUserName(string $accessToken):string;
+    abstract public function getUserName(string $accessToken): string;
 
     /**
      * @param $scope
      *
      * @return $this
      */
-    protected function addScope(string $scope):OAuth2
+    protected function addScope(string $scope): OAuth2
     {
         // Add a scope to the scopes array if it isn't already present
         if (!\in_array($scope, $this->scopes)) {
@@ -104,11 +104,10 @@ abstract class OAuth2
     /**
      * @return array
      */
-    protected function getScopes():array
+    protected function getScopes(): array
     {
         return $this->scopes;
     }
-
 
     // The parseState function was designed specifically for Amazon OAuth2 Adapter to override.
     // The response from Amazon is html encoded and hence it needs to be html_decoded before
@@ -131,7 +130,7 @@ abstract class OAuth2
      *
      * @return string
      */
-    protected function request(string $method, string $url = '', array $headers = [], string $payload = ''):string
+    protected function request(string $method, string $url = '', array $headers = [], string $payload = ''): string
     {
         $ch = \curl_init($url);
 
@@ -144,7 +143,7 @@ abstract class OAuth2
             \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         }
 
-        $headers[] = 'Content-length: '.\strlen($payload);
+        $headers[] = 'Content-length: ' . \strlen($payload);
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         // Send the request & save response to $response

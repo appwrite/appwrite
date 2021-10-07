@@ -35,7 +35,7 @@ class Twitch extends OAuth2
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'twitch';
     }
@@ -43,9 +43,9 @@ class Twitch extends OAuth2
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return $this->endpoint . 'authorize?'.
+        return $this->endpoint . 'authorize?' .
             \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
@@ -61,11 +61,11 @@ class Twitch extends OAuth2
      *
      * @return string
      */
-    public function getAccessToken(string $code):string
+    public function getAccessToken(string $code): string
     {
         $result = \json_decode($this->request(
             'POST',
-            $this->endpoint . 'token?'. \http_build_query([
+            $this->endpoint . 'token?' . \http_build_query([
                 "client_id" => $this->appID,
                 "client_secret" => $this->appSecret,
                 "code" => $code,
@@ -86,7 +86,7 @@ class Twitch extends OAuth2
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -102,7 +102,7 @@ class Twitch extends OAuth2
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -118,7 +118,7 @@ class Twitch extends OAuth2
      *
      * @return string
      */
-    public function getUserName(string $accessToken):string
+    public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -139,9 +139,10 @@ class Twitch extends OAuth2
         if (empty($this->user)) {
             $response = \json_decode($this->request(
                 'GET',
-                $this->resourceEndpoint , [
-                    'Authorization: Bearer '.\urlencode($accessToken),
-                    'Client-Id: '. \urlencode($this->appID)
+                $this->resourceEndpoint,
+                [
+                    'Authorization: Bearer ' . \urlencode($accessToken),
+                    'Client-Id: ' . \urlencode($this->appID)
                 ]
             ), true);
 

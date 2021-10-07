@@ -30,7 +30,6 @@ class Vk extends OAuth2
      */
     protected $version = '5.101';
 
-
     /**
      * @return string
      */
@@ -147,15 +146,15 @@ class Vk extends OAuth2
         if (empty($this->user['name'])) {
             $user = $this->request(
                 'GET',
-                'https://api.vk.com/method/users.get?'. \http_build_query([
+                'https://api.vk.com/method/users.get?' . \http_build_query([
                     'v' => $this->version,
                     'fields' => 'id,name,email,first_name,last_name',
                     'access_token' => $accessToken
                 ])
             );
-            
+
             $user = \json_decode($user, true);
-            $this->user['name'] = $user['response'][0]['first_name'] ." ".$user['response'][0]['last_name'];
+            $this->user['name'] = $user['response'][0]['first_name'] . " " . $user['response'][0]['last_name'];
         }
         return $this->user;
     }

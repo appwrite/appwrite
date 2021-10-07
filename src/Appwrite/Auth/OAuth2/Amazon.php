@@ -41,19 +41,18 @@ class Amazon extends OAuth2
         return \json_decode(\html_entity_decode($state), true);
     }
 
-
     /**
      * @return string
      */
     public function getLoginURL(): string
     {
-        return 'https://www.amazon.com/ap/oa?'.\http_build_query([
-                'response_type' => 'code',
-                'client_id' => $this->appID,
-                'scope' => \implode(' ', $this->getScopes()),
-                'state' => \json_encode($this->state),
-                'redirect_uri' => $this->callback
-            ]);
+        return 'https://www.amazon.com/ap/oa?' . \http_build_query([
+            'response_type' => 'code',
+            'client_id' => $this->appID,
+            'scope' => \implode(' ', $this->getScopes()),
+            'state' => \json_encode($this->state),
+            'redirect_uri' => $this->callback
+        ]);
     }
 
     /**
@@ -70,13 +69,13 @@ class Amazon extends OAuth2
             $headers,
             \http_build_query([
                 'code' => $code,
-                'client_id' => $this->appID ,
+                'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
-                'redirect_uri' => $this->callback ,
+                'redirect_uri' => $this->callback,
                 'grant_type' => 'authorization_code'
             ])
         );
-        
+
         $accessToken = \json_decode($accessToken, true);
 
         if (isset($accessToken['access_token'])) {
@@ -142,7 +141,7 @@ class Amazon extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://api.amazon.com/user/profile?access_token='.\urlencode($accessToken));
+            $user = $this->request('GET', 'https://api.amazon.com/user/profile?access_token=' . \urlencode($accessToken));
             $this->user = \json_decode($user, true);
         }
         return $this->user;

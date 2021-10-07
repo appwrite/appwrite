@@ -36,11 +36,10 @@ class Yahoo extends OAuth2
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'yahoo';
     }
-
 
     /**
      * @param $state
@@ -55,9 +54,9 @@ class Yahoo extends OAuth2
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return $this->endpoint . 'request_auth?'.
+        return $this->endpoint . 'request_auth?' .
             \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
@@ -72,7 +71,7 @@ class Yahoo extends OAuth2
      *
      * @return string
      */
-    public function getAccessToken(string $code):string
+    public function getAccessToken(string $code): string
     {
         $header = [
             "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret),
@@ -102,7 +101,7 @@ class Yahoo extends OAuth2
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -118,7 +117,7 @@ class Yahoo extends OAuth2
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -134,7 +133,7 @@ class Yahoo extends OAuth2
      *
      * @return string
      */
-    public function getUserName(string $accessToken):string
+    public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -156,7 +155,7 @@ class Yahoo extends OAuth2
             $this->user = \json_decode($this->request(
                 'GET',
                 $this->resourceEndpoint,
-                ['Authorization: Bearer '.\urlencode($accessToken)]
+                ['Authorization: Bearer ' . \urlencode($accessToken)]
             ), true);
         }
 

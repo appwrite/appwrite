@@ -34,7 +34,6 @@ class Tradeshift extends OAuth2
      */
     protected $user = [];
 
-
     protected $scopes = [
         'openid',
         'offline',

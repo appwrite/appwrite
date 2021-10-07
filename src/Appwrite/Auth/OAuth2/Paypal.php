@@ -57,7 +57,7 @@ class Paypal extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $url = $this->endpoint[$this->environment] . 'connect/?'.
+        $url = $this->endpoint[$this->environment] . 'connect/?' .
             \http_build_query([
                 'flowEntry' => 'static',
                 'response_type' => 'code',
@@ -88,9 +88,7 @@ class Paypal extends OAuth2
             ])
         );
 
-
         $accessToken = \json_decode($accessToken, true);
-
 
         if (isset($accessToken['access_token'])) {
             return $accessToken['access_token'];
@@ -156,7 +154,7 @@ class Paypal extends OAuth2
     {
         $header = [
             'Content-Type: application/json',
-            'Authorization: Bearer '.\urlencode($accessToken),
+            'Authorization: Bearer ' . \urlencode($accessToken),
         ];
         if (empty($this->user)) {
             $user = $this->request(

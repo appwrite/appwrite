@@ -35,7 +35,7 @@ class Spotify extends OAuth2
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'spotify';
     }
@@ -43,9 +43,9 @@ class Spotify extends OAuth2
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return $this->endpoint . 'authorize?'.
+        return $this->endpoint . 'authorize?' .
             \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
@@ -60,7 +60,7 @@ class Spotify extends OAuth2
      *
      * @return string
      */
-    public function getAccessToken(string $code):string
+    public function getAccessToken(string $code): string
     {
         $header = "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret);
         $result = \json_decode($this->request(
@@ -86,7 +86,7 @@ class Spotify extends OAuth2
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -102,7 +102,7 @@ class Spotify extends OAuth2
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -118,7 +118,7 @@ class Spotify extends OAuth2
      *
      * @return string
      */
-    public function getUserName(string $accessToken):string
+    public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -140,7 +140,7 @@ class Spotify extends OAuth2
             $this->user = \json_decode($this->request(
                 'GET',
                 $this->resourceEndpoint . "me",
-                ['Authorization: Bearer '.\urlencode($accessToken)]
+                ['Authorization: Bearer ' . \urlencode($accessToken)]
             ), true);
         }
 

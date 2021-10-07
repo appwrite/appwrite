@@ -23,8 +23,8 @@ class Discord extends OAuth2
      * @var array
      */
     protected $scopes = [
-            'identify',
-            'email'
+        'identify',
+        'email'
     ];
 
     /**
@@ -40,7 +40,7 @@ class Discord extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $url = $this->endpoint . '/oauth2/authorize?'.
+        $url = $this->endpoint . '/oauth2/authorize?' .
             \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
@@ -141,7 +141,7 @@ class Discord extends OAuth2
             $user = $this->request(
                 'GET',
                 $this->endpoint . '/users/@me',
-                ['Authorization: Bearer '.\urlencode($accessToken)]
+                ['Authorization: Bearer ' . \urlencode($accessToken)]
             );
             $this->user = \json_decode($user, true);
         }
