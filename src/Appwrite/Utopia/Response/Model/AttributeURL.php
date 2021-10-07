@@ -38,7 +38,7 @@ class AttributeURL extends Attribute
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -48,7 +48,7 @@ class AttributeURL extends Attribute
 
     /**
      * Get Type
-     * 
+     *
      * @return string
      */
     public function getType():string
