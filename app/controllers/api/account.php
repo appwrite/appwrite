@@ -620,21 +620,22 @@ App::post('/v1/account/sessions/magic-url')
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('locale')
     ->inject('audits')
     ->inject('events')
     ->inject('mails')
-    ->action(function ($email, $url, $request, $response, $project, $projectDB, $locale, $audits, $events, $mails) {
+    ->action(function ($userId, $email, $url, $request, $response, $project, $dbForInternal, $locale, $audits, $events, $mails) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $project */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Document $project */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
@@ -647,50 +648,44 @@ App::post('/v1/account/sessions/magic-url')
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
-        $user = $projectDB->getCollectionFirst([ // Get user by email address
-            'limit' => 1,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                'email='.$email,
-            ],
-        ]);
+        $user = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]);
 
-        if (empty($user)) {
-            $limit = $project->getAttribute('usersAuthLimit', 0);
+        if (!$user) {
+            $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if ($limit !== 0) {
-                $projectDB->getCollection([ // Count users
-                    'filters' => [
-                        '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                    ],
-                ]);
+                $sum = $dbForInternal->count('users', [
+                    new Query('deleted', Query::TYPE_EQUAL, [false]),
+                ], APP_LIMIT_COUNT);
 
-                $sum = $projectDB->getSum();
-
-                if($sum >= $limit) {
+                if ($sum >= $limit) {
                     throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
                 }
             }
 
-            Authorization::disable();
+            $userId = $userId == 'unique()' ? $dbForInternal->getId() : $userId;
 
-            $user = $projectDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_USERS,
-                '$permissions' => [
-                    'read' => ['*'],
-                    'write' => ['user:{self}'],
-                ],
-                'email' => $email,
-                'emailVerification' => false,
-                'status' => true,
-                'password' => null,
-                'passwordUpdate' => \time(),
-                'registration' => \time(),
-                'reset' => false,
-                'name' => null,
-            ], ['email' => $email]);
+            $user = Authorization::skip(function () use ($dbForInternal, $userId, $email) {
+                return $dbForInternal->createDocument('users', new Document([
+                    '$id' => $userId,
+                    '$read' => ['role:all'],
+                    '$write' => ['user:' . $userId],
+                    'email' => $email,
+                    'emailVerification' => false,
+                    'status' => true,
+                    'password' => null,
+                    'passwordUpdate' => \time(),
+                    'registration' => \time(),
+                    'reset' => false,
+                    'prefs' => [],
+                    'sessions' => [],
+                    'tokens' => [],
+                    'memberships' => [],
+                    'search' => implode(' ', [$userId, $email]),
+                    'deleted' => false
+                ]));
+            });
 
-            Authorization::reset();
             $mails->setParam('event', 'users.create');
             $audits->setParam('event', 'users.create');
         }
@@ -698,10 +693,9 @@ App::post('/v1/account/sessions/magic-url')
         $loginSecret = Auth::tokenGenerator();
 
         $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
-        
+
         $token = new Document([
-            '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-            '$permissions' => ['read' => ['user:'.$user->getId()], 'write' => ['user:'.$user->getId()]],
+            '$id' => $dbForInternal->getId(),
             'userId' => $user->getId(),
             'type' => Auth::TOKEN_TYPE_MAGIC_URL,
             'secret' => Auth::hash($loginSecret), // One way hash encryption to protect DB leak
@@ -709,18 +703,12 @@ App::post('/v1/account/sessions/magic-url')
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
-            
+
         Authorization::setRole('user:'.$user->getId());
-
-        $token = $projectDB->createDocument($token->getArrayCopy());
-
-        if (false === $token) {
-            throw new Exception('Failed saving token to DB', 500);
-        }
 
         $user->setAttribute('tokens', $token, Document::SET_TYPE_APPEND);
 
-        $user = $projectDB->updateDocument($user->getArrayCopy());
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
 
         if (false === $user) {
             throw new Exception('Failed to save user to DB', 500);
@@ -780,37 +768,31 @@ App::put('/v1/account/sessions/magic-url')
     ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
-    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('userId', '', new CustomId(), 'User unique ID.')
     ->param('secret', '', new Text(256), 'Valid verification token.')
     ->inject('request')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('locale')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($userId, $secret, $request, $response, $projectDB, $locale, $geodb, $audits) {
+    ->action(function ($userId, $secret, $request, $response, $dbForInternal, $locale, $geodb, $audits) {
         /** @var string $userId */
         /** @var string $secret */
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
 
-        $profile = $projectDB->getCollectionFirst([ // Get user by user ID
-            'limit' => 1,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                '$id='.$userId,
-            ],
-        ]);
+        $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($profile)) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
-        $token = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_MAGIC_URL, $secret);
+        $token = Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_MAGIC_URL, $secret);
 
         if (!$token) {
             throw new Exception('Invalid login token', 401);
@@ -822,9 +804,8 @@ App::put('/v1/account/sessions/magic-url')
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $session = new Document(array_merge(
             [
-                '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
-                '$permissions' => ['read' => ['user:' . $profile->getId()], 'write' => ['user:' . $profile->getId()]],
-                'userId' => $profile->getId(),
+                '$id' => $dbForInternal->getId(),
+                'userId' => $user->getId(),
                 'provider' => Auth::SESSION_PROVIDER_MAGIC_URL,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expiry,
@@ -837,25 +818,34 @@ App::put('/v1/account/sessions/magic-url')
             $detector->getDevice()
         ));
 
-        Authorization::setRole('user:'.$profile->getId());
+        Authorization::setRole('user:' . $user->getId());
 
-        $session = $projectDB->createDocument($session->getArrayCopy());
+        $session = $dbForInternal->createDocument('sessions', $session
+                ->setAttribute('$read', ['user:' . $user->getId()])
+                ->setAttribute('$write', ['user:' . $user->getId()])
+        );
 
-        if (false === $session) {
-            throw new Exception('Failed saving session to DB', 500);
+        $tokens = $user->getAttribute('tokens', []);
+
+        /**
+         * We act like we're updating and validating
+         *  the recovery token but actually we don't need it anymore.
+         */
+        foreach ($tokens as $key => $singleToken) {
+            if ($token === $singleToken->getId()) {
+                unset($tokens[$key]);
+            }
         }
 
-        $profile->setAttribute('emailVerification', true);
-        $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
+        $user
+            ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND)
+            ->setAttribute('tokens', $tokens);
 
-        $user = $projectDB->updateDocument($profile->getArrayCopy());
+
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
 
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
-        }
-
-        if (!$projectDB->deleteDocument($token)) {
-            throw new Exception('Failed to remove login token from DB', 500);
         }
 
         $audits
