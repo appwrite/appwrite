@@ -1142,7 +1142,6 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
             $attribute = $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
         }
 
-        $dbForInternal->purgeDocument('collections', $collectionId);
         $dbForInternal->deleteCachedDocument('collections', $collectionId);
 
         $database
