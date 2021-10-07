@@ -33,6 +33,7 @@ return [
     'kn', // Kannada
     'km', // Khmer
     'ko', // Korean
+    'lb', // Luxembourgish
     'lt', // Lithuanian
     'ml', // Malayalam
     'mr', // Marathi
