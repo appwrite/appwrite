@@ -21,42 +21,42 @@ class UsageBuckets extends Model
                 'description' => 'Aggregated stats for total number of files in this bucket.',
                 'default' => [],
                 'example' => new \stdClass,
-                'array' => true 
+                'array' => true
             ])
             ->addRule('files.create', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files created.',
                 'default' => [],
                 'example' => new \stdClass,
-                'array' => true 
+                'array' => true
             ])
             ->addRule('files.read', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files read.',
                 'default' => [],
                 'example' => new \stdClass,
-                'array' => true 
+                'array' => true
             ])
             ->addRule('files.update', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files updated.',
                 'default' => [],
                 'example' => new \stdClass,
-                'array' => true 
+                'array' => true
             ])
             ->addRule('files.delete', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files deleted.',
                 'default' => [],
                 'example' => new \stdClass,
-                'array' => true 
+                'array' => true
             ])
         ;
     }
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -66,7 +66,7 @@ class UsageBuckets extends Model
 
     /**
      * Get Type
-     * 
+     *
      * @return string
      */
     public function getType():string
