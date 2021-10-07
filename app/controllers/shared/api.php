@@ -1,13 +1,13 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Messaging\Adapter\Realtime;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Database\Document;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 
@@ -209,11 +209,11 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
             $target = Realtime::fromPayload($events->getParam('event'), $payload);
 
             Realtime::send(
-                $project->getId(), 
-                $response->getPayload(), 
-                $events->getParam('event'), 
-                $target['channels'], 
-                $target['roles'], 
+                $project->getId(),
+                $response->getPayload(),
+                $events->getParam('event'),
+                $target['channels'],
+                $target['roles'],
                 [
                     'permissionsChanged' => $target['permissionsChanged'], 
                     'userId' => $events->getParam('userId')
@@ -221,11 +221,11 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
             );
         }
     }
-    
+
     if (!empty($audits->getParam('event'))) {
         $audits->trigger();
     }
-    
+
     if (!empty($deletes->getParam('type')) && !empty($deletes->getParam('document'))) {
         $deletes->trigger();
     }
@@ -233,13 +233,13 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     if (!empty($database->getParam('type')) && !empty($database->getParam('document'))) {
         $database->trigger();
     }
-    
+
     $route = $utopia->match($request);
     if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled' 
         && $project->getId()
         && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
         && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
-        
+
         $usage
             ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
             ->setParam('networkResponseSize', $response->getSize())
