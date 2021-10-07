@@ -759,7 +759,7 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
     ->label('sdk.description', '/docs/references/database/create-attribute-enum.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_ENUM)
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->param('elements', [], new ArrayList(new Text(0)), 'Array of elements in enumerated type. Uses length of longest element to determine size.')
@@ -770,11 +770,13 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
     ->inject('dbForInternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $elements, $required, $default, $array, $response, $dbForInternal, $database, $audits) {
+    ->inject('usage')
+    ->action(function ($collectionId, $attributeId, $elements, $required, $default, $array, $response, $dbForInternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Stats\Stats $usage */
 
         // use length of longest string as attribute size
         $size = 0;
@@ -792,7 +794,7 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_ENUM,
             'formatOptions' => ['elements' => $elements],
-        ]), $response, $dbForInternal, $database, $audits);
+        ]), $response, $dbForInternal, $database, $audits, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
     });
@@ -1100,6 +1102,7 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
         Response::MODEL_ATTRIBUTE_INTEGER,
         Response::MODEL_ATTRIBUTE_FLOAT,
         Response::MODEL_ATTRIBUTE_EMAIL,
+        Response::MODEL_ATTRIBUTE_ENUM,
         Response::MODEL_ATTRIBUTE_URL,
         Response::MODEL_ATTRIBUTE_IP,
         Response::MODEL_ATTRIBUTE_STRING,])// needs to be last, since its condition would dominate any other string attribute
@@ -1607,6 +1610,7 @@ App::get('/v1/database/collections/:collectionId/documents')
             throw new Exception($validator->getDescription(), 400);
         }
 
+        $afterDocument = null;
         if (!empty($after)) {
             $afterDocument = $dbForExternal->getDocument($collectionId, $after);
 
