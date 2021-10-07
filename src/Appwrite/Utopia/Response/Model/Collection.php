@@ -4,8 +4,6 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use Utopia\Database\Document;
-use stdClass;
 
 class Collection extends Model
 {
@@ -56,14 +54,14 @@ class Collection extends Model
                 ],
                 'description' => 'Collection attributes.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => new \stdClass,
                 'array' => true,
             ])
             ->addRule('indexes', [
                 'type' => Response::MODEL_INDEX,
                 'description' => 'Collection indexes.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => new \stdClass,
                 'array' => true
             ])
         ;

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ffd14884e3b377752bdb699c5693cb0d",
+    "content-hash": "59d828599adbf037148a36d34233dea9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1984,11 +1984,17 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-feat-get-limit-methods-on-database",
+            "version": "0.10.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/database",
-                "reference": "4cc9d5eb9c6be1a9116a4d9dc2e6bd9db4e8e9c0"
+                "url": "https://github.com/utopia-php/database.git",
+                "reference": "b7c60b0ec769a9050dd2b939b78ff1f5d4fa27e8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/b7c60b0ec769a9050dd2b939b78ff1f5d4fa27e8",
+                "reference": "b7c60b0ec769a9050dd2b939b78ff1f5d4fa27e8",
+                "shasum": ""
             },
             "require": {
                 "ext-mongodb": "*",
@@ -2011,11 +2017,7 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/Database"
-                }
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2037,7 +2039,11 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2021-09-17T01:44:11+00:00"
+            "support": {
+                "issues": "https://github.com/utopia-php/database/issues",
+                "source": "https://github.com/utopia-php/database/tree/0.10.0"
+            },
+            "time": "2021-10-04T17:23:25+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3712,16 +3718,16 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.5.0",
+            "version": "1.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "30f38bffc6f24293dadd1823936372dfa9e86e2f"
+                "reference": "a12f7e301eb7258bb68acd89d4aefa05c2906cae"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/30f38bffc6f24293dadd1823936372dfa9e86e2f",
-                "reference": "30f38bffc6f24293dadd1823936372dfa9e86e2f",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/a12f7e301eb7258bb68acd89d4aefa05c2906cae",
+                "reference": "a12f7e301eb7258bb68acd89d4aefa05c2906cae",
                 "shasum": ""
             },
             "require": {
@@ -3756,9 +3762,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.5.0"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.5.1"
             },
-            "time": "2021-09-17T15:28:14+00:00"
+            "time": "2021-10-02T14:08:47+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -6249,18 +6255,9 @@
             "time": "2015-12-17T08:42:14+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-feat-get-limit-methods-on-database",
-            "alias": "0.10.0",
-            "alias_normalized": "0.10.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -6282,5 +6279,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.0.0"
 }

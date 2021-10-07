@@ -66,6 +66,8 @@ App::post('/v1/users')
                 'sessions' => [],
                 'tokens' => [],
                 'memberships' => [],
+                'search' => implode(' ', [$userId, $email, $name]),
+                'deleted' => false
             ]));
         } catch (Duplicate $th) {
             throw new Exception('Account already exists', 409);
@@ -93,34 +95,40 @@ App::get('/v1/users')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('after', '', new UID(), 'ID of the user used as the starting point for the query, excluding the user itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursor', '', new UID(), 'ID of the user used as the starting point for the query, excluding the user itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForInternal, $usage) {
+    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
 
-        if (!empty($after)) {
-            $afterUser = $dbForInternal->getDocument('users', $after);
+        if (!empty($cursor)) {
+            $cursorUser = $dbForInternal->getDocument('users', $cursor);
 
-            if ($afterUser->isEmpty()) {
-                throw new Exception('User for after not found', 400);
+            if ($cursorUser->isEmpty()) {
+                throw new Exception("User '{$cursor}' for the 'after' value not found.", 400);
             }
         }
 
-        $results = $dbForInternal->find('users', [], $limit, $offset, [], [$orderType], $afterUser ?? null);
-        $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
-        
+        $queries = [
+            new Query('deleted', Query::TYPE_EQUAL, [false])
+        ];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
+
         $usage
             ->setParam('users.read', 1)
         ;
 
         $response->dynamic(new Document([
-            'users' => $results,
-            'sum' => $sum,
+            'users' => $dbForInternal->find('users', $queries, $limit, $offset, [], [$orderType], $cursorUser ?? null, $cursorDirection),
+            'sum' => $dbForInternal->count('users', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_USER_LIST);
     });
 
@@ -146,7 +154,7 @@ App::get('/v1/users/:userId')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -178,7 +186,7 @@ App::get('/v1/users/:userId/prefs')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -214,7 +222,7 @@ App::get('/v1/users/:userId/sessions')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -266,7 +274,7 @@ App::get('/v1/users/:userId/logs')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -374,7 +382,7 @@ App::patch('/v1/users/:userId/status')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -410,7 +418,7 @@ App::patch('/v1/users/:userId/verification')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -446,7 +454,7 @@ App::patch('/v1/users/:userId/name')
         
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -485,7 +493,7 @@ App::patch('/v1/users/:userId/password')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -525,7 +533,7 @@ App::patch('/v1/users/:userId/email')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -569,7 +577,7 @@ App::patch('/v1/users/:userId/prefs')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -606,7 +614,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -661,7 +669,7 @@ App::delete('/v1/users/:userId/sessions')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
@@ -710,26 +718,35 @@ App::delete('/v1/users/:userId')
         
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
-        if (!$dbForInternal->deleteDocument('users', $userId)) {
-            throw new Exception('Failed to remove user from DB', 500);
-        }
+        // clone user object to send to workers
+        $clone = clone $user;
+
+        $user
+            ->setAttribute("name", null)
+            ->setAttribute("email", null)
+            ->setAttribute("password", null)
+            ->setAttribute("deleted", true)
+        ;
+
+        $dbForInternal->updateDocument('users', $userId, $user);
 
         $deletes
             ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $user)
+            ->setParam('document', $clone)
         ;
 
         $events
-            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+            ->setParam('eventData', $response->output($clone, Response::MODEL_USER))
         ;
 
         $usage
             ->setParam('users.delete', 1)
         ;
+
         $response->noContent();
     });
 

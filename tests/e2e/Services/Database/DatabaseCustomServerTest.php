@@ -6,6 +6,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Client;
+use Utopia\Database\Database;
 
 class DatabaseCustomServerTest extends Scope
 {
@@ -78,7 +79,7 @@ class DatabaseCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'after' => $base['body']['collections'][0]['$id']
+            'cursor' => $base['body']['collections'][0]['$id']
         ]);
 
         $this->assertCount(1, $collections['body']['collections']);
@@ -88,11 +89,53 @@ class DatabaseCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'after' => $base['body']['collections'][1]['$id']
+            'cursor' => $base['body']['collections'][1]['$id']
         ]);
 
         $this->assertCount(0, $collections['body']['collections']);
         $this->assertEmpty($collections['body']['collections']);
+
+        /**
+         * Test for Before
+         */
+        $base = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => $base['body']['collections'][1]['$id'],
+            'cursorDirection' => Database::CURSOR_BEFORE
+        ]);
+
+        $this->assertCount(1, $collections['body']['collections']);
+        $this->assertEquals($base['body']['collections'][0]['$id'], $collections['body']['collections'][0]['$id']);
+
+        $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => $base['body']['collections'][0]['$id'],
+            'cursorDirection' => Database::CURSOR_BEFORE
+        ]);
+
+        $this->assertCount(0, $collections['body']['collections']);
+        $this->assertEmpty($collections['body']['collections']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => 'unknown',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
     }
 
     public function testDeleteAttribute(): array
@@ -240,6 +283,214 @@ class DatabaseCustomServerTest extends Scope
 
     /**
      * @depends testDeleteIndex
+     */
+    public function testDeleteIndexOnDeleteAttribute($data)
+    {
+        $attribute1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['collectionId'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'attribute1',
+            'size' => 16,
+            'required' => true,
+        ]);
+
+        $attribute2 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['collectionId'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'attribute2',
+            'size' => 16,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(201, $attribute1['headers']['status-code']);
+        $this->assertEquals(201, $attribute2['headers']['status-code']);
+        $this->assertEquals('attribute1', $attribute1['body']['key']);
+        $this->assertEquals('attribute2', $attribute2['body']['key']);
+
+        sleep(2);
+
+        $index1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['collectionId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'indexId' => 'index1',
+            'type' => 'key',
+            'attributes' => ['attribute1', 'attribute2'],
+            'orders' => ['ASC', 'ASC'],
+        ]);
+
+        $index2 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['collectionId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'indexId' => 'index2',
+            'type' => 'key',
+            'attributes' => ['attribute2'],
+        ]);
+
+        $this->assertEquals(201, $index1['headers']['status-code']);
+        $this->assertEquals(201, $index2['headers']['status-code']);
+        $this->assertEquals('index1', $index1['body']['key']);
+        $this->assertEquals('index2', $index2['body']['key']);
+
+        sleep(2);
+
+        // Expected behavior: deleting attribute2 will cause index2 to be dropped, and index1 rebuilt with a single key
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['collectionId'] . '/attributes/'. $attribute2['body']['key'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals($deleted['headers']['status-code'], 204);
+
+        // wait for database worker to complete
+        sleep(2);
+
+        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['collectionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(200, $collection['headers']['status-code']);
+        $this->assertIsArray($collection['body']['indexes']);
+        $this->assertCount(1, $collection['body']['indexes']);
+        $this->assertEquals($index1['body']['key'], $collection['body']['indexes'][0]['key']);
+        $this->assertIsArray($collection['body']['indexes'][0]['attributes']);
+        $this->assertCount(1, $collection['body']['indexes'][0]['attributes']);
+        $this->assertEquals($attribute1['body']['key'], $collection['body']['indexes'][0]['attributes'][0]);
+
+        // Delete attribute
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['collectionId'] . '/attributes/' . $attribute1['body']['key'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals($deleted['headers']['status-code'], 204);
+
+        return $data;
+    }
+
+    public function testCleanupDuplicateIndexOnDeleteAttribute()
+    {
+        $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'unique()',
+            'name' => 'TestCleanupDuplicateIndexOnDeleteAttribute',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+            'permission' => 'document',
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertNotEmpty($collection['body']['$id']);
+
+        $collectionId = $collection['body']['$id'];
+
+        $attribute1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'attribute1',
+            'size' => 16,
+            'required' => true,
+        ]);
+
+        $attribute2 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'attribute2',
+            'size' => 16,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(201, $attribute1['headers']['status-code']);
+        $this->assertEquals(201, $attribute2['headers']['status-code']);
+        $this->assertEquals('attribute1', $attribute1['body']['key']);
+        $this->assertEquals('attribute2', $attribute2['body']['key']);
+
+        sleep(2);
+
+        $index1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'indexId' => 'index1',
+            'type' => 'key',
+            'attributes' => ['attribute1', 'attribute2'],
+            'orders' => ['ASC', 'ASC'],
+        ]);
+
+        $index2 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'indexId' => 'index2',
+            'type' => 'key',
+            'attributes' => ['attribute2'],
+        ]);
+
+        $this->assertEquals(201, $index1['headers']['status-code']);
+        $this->assertEquals(201, $index2['headers']['status-code']);
+        $this->assertEquals('index1', $index1['body']['key']);
+        $this->assertEquals('index2', $index2['body']['key']);
+
+        sleep(2);
+
+        // Expected behavior: deleting attribute1 would cause index1 to be a duplicate of index2 and automatically removed
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $collectionId . '/attributes/'. $attribute1['body']['key'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals($deleted['headers']['status-code'], 204);
+
+        // wait for database worker to complete
+        sleep(2);
+
+        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(200, $collection['headers']['status-code']);
+        $this->assertIsArray($collection['body']['indexes']);
+        $this->assertCount(1, $collection['body']['indexes']);
+        $this->assertEquals($index2['body']['key'], $collection['body']['indexes'][0]['key']);
+        $this->assertIsArray($collection['body']['indexes'][0]['attributes']);
+        $this->assertCount(1, $collection['body']['indexes'][0]['attributes']);
+        $this->assertEquals($attribute2['body']['key'], $collection['body']['indexes'][0]['attributes'][0]);
+
+        // Delete attribute
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $collectionId . '/attributes/' . $attribute2['body']['key'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals($deleted['headers']['status-code'], 204);
+    }
+
+    /**
+     * @depends testDeleteIndexOnDeleteAttribute
      */
     public function testDeleteCollection($data)
     {

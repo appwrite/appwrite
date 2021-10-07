@@ -31,6 +31,7 @@ use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Stats\Stats;
 use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
@@ -62,7 +63,7 @@ const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
 const APP_CACHE_BUSTER = 151;
-const APP_VERSION_STABLE = '0.9.4';
+const APP_VERSION_STABLE = '0.11.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
 const APP_DATABASE_ATTRIBUTE_URL = 'url';
@@ -240,6 +241,54 @@ Database::addFilter('subQueryIndexes',
         return $database
             ->find('indexes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
+            ], 64, 0, []);
+    }
+);
+
+Database::addFilter('subQueryPlatforms',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('platforms', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []);
+    }
+);
+
+Database::addFilter('subQueryDomains',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('domains', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []);
+    }
+);
+
+Database::addFilter('subQueryKeys',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('keys', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []);
+    }
+);
+
+Database::addFilter('subQueryWebhooks',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('webhooks', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
             ], $database->getIndexLimit(), 0, []);
     }
 );
