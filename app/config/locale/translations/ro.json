@@ -10,7 +10,7 @@
     "emails.verification.thanks": "Mulțumim",
     "emails.verification.signature": "Echipa {{project}}",
     "emails.magicSession.subject": "Login",
-    "emails.magicSession.hello": "Bună ziua",
+    "emails.magicSession.hello": "Bună ziua,",
     "emails.magicSession.body": "Urmează acest link pentru logare.",
     "emails.magicSession.footer": "Dacă nu ai incercat să te loghezi folosing această adresa de email, poți ignora acest mesaj.",
     "emails.magicSession.thanks": "Mulțumim",
