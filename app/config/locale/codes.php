@@ -51,6 +51,7 @@ return [
     'ru', // Russian
     'sa', //Sanskrit
     'si', // Sinhala
+    'sk', // Slovakia
     'sl', // Slovenian
     'sq', // Albanian
     'sv', // Swedish

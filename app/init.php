@@ -310,6 +310,7 @@ Locale::setLanguageFromJSON('ro', __DIR__.'/config/locale/translations/ro.json')
 Locale::setLanguageFromJSON('ru', __DIR__ . '/config/locale/translations/ru.json');
 Locale::setLanguageFromJSON('sa', __DIR__ . '/config/locale/translations/sa.json');
 Locale::setLanguageFromJSON('si', __DIR__ . '/config/locale/translations/si.json');
+Locale::setLanguageFromJSON('sk', __DIR__ . '/config/locale/translations/sk.json');
 Locale::setLanguageFromJSON('sl', __DIR__ . '/config/locale/translations/sl.json');
 Locale::setLanguageFromJSON('sq', __DIR__ . '/config/locale/translations/sq.json');
 Locale::setLanguageFromJSON('sv', __DIR__ . '/config/locale/translations/sv.json');
