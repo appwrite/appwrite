@@ -67,7 +67,7 @@ class Platform extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -77,7 +77,7 @@ class Platform extends Model
 
     /**
      * Get Collection
-     * 
+     *
      * @return string
      */
     public function getType():string
