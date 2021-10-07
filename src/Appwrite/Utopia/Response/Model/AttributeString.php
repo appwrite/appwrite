@@ -35,7 +35,7 @@ class AttributeString extends Attribute
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -45,7 +45,7 @@ class AttributeString extends Attribute
 
     /**
      * Get Type
-     * 
+     *
      * @return string
      */
     public function getType():string
