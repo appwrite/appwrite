@@ -783,6 +783,10 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
         $size = 0;
         foreach ($elements as $element) {
             $length = \strlen($element);
+            if ($length === 0) {
+                throw new Exception('Each enum element must not be empty', 400);
+
+            }
             $size = ($length > $size) ? $length : $size;
         }
 

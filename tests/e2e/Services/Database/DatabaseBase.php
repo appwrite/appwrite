@@ -568,6 +568,23 @@ trait DatabaseBase
         $this->assertEquals($booleanResponse['body']['array'], $attributes[7]['array']);
         $this->assertEquals($booleanResponse['body']['default'], $attributes[7]['default']);
 
+        /**
+         * Test for FAILURE
+         */
+        $badEnum = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/enum', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'enum',
+            'elements' => ['yes', 'no', ''],
+            'required' => false,
+            'default' => 'maybe',
+        ]);
+
+        $this->assertEquals(400, $badEnum['headers']['status-code']);
+        $this->assertEquals('Each enum element must not be empty', $badEnum['body']['message']);
+
         return $data;
     }
 
