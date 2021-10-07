@@ -4,7 +4,7 @@ namespace Appwrite\Tests;
 
 use Appwrite\Auth\Auth;
 use Utopia\Database\Document;
-use Appwrite\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization;
 use PHPUnit\Framework\TestCase;
 
 class AuthTest extends TestCase

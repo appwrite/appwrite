@@ -3,7 +3,7 @@
 namespace Appwrite\Auth;
 
 use Utopia\Database\Document;
-use Appwrite\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization;
 
 class Auth
 {
