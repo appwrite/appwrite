@@ -111,7 +111,7 @@ Continue with the rest of the process until you arrive at your dashboard.
 
 ![Dashboard](images/dashboard.png)
 
-Your request might be pending, so you can ping us on Discord and we'll make the process faster 😀 . Once your request has been accepeted, you can proceed.
+Your request might be pending, so you can ping us on Discord and we'll make the process faster 😀 . Once your request has been accepted, you can proceed.
 
 ![Get Started](images/guide.png)
 
