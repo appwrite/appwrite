@@ -4,6 +4,7 @@ return [
     'af', // Afrikaans
     'ar', // Arabic
     'as', // Assamese
+    'az', // Azerbaijani
     'be', // Belarusian
     'bg', // Bulgarian
     'bh', // Bihari

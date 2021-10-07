@@ -264,6 +264,7 @@ Locale::$exceptions = false;
 Locale::setLanguageFromJSON('af', __DIR__.'/config/locale/translations/af.json');
 Locale::setLanguageFromJSON('ar', __DIR__.'/config/locale/translations/ar.json');
 Locale::setLanguageFromJSON('as', __DIR__.'/config/locale/translations/as.json');
+Locale::setLanguageFromJSON('az', __DIR__.'/config/locale/translations/az.json');
 Locale::setLanguageFromJSON('be', __DIR__.'/config/locale/translations/be.json');
 Locale::setLanguageFromJSON('bg', __DIR__.'/config/locale/translations/bg.json');
 Locale::setLanguageFromJSON('bh', __DIR__.'/config/locale/translations/bh.json');
