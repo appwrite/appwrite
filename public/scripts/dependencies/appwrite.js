@@ -47,7 +47,7 @@
             };
             this.headers = {
                 'x-sdk-version': 'appwrite:web:2.1.0',
-                'X-Appwrite-Response-Format': '0.9.0',
+                'X-Appwrite-Response-Format': '0.11.0',
             };
             this.account = {
                 /**
@@ -906,12 +906,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listCollections: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
+                listCollections: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/database/collections';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -923,8 +924,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -1456,13 +1460,14 @@
                  * @param {string[]} queries
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string[]} orderAttributes
                  * @param {string[]} orderTypes
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listDocuments: (collectionId, queries, limit, offset, after, orderAttributes, orderTypes) => __awaiter(this, void 0, void 0, function* () {
+                listDocuments: (collectionId, queries, limit, offset, cursor, cursorDirection, orderAttributes, orderTypes) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
@@ -1477,8 +1482,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderAttributes !== 'undefined') {
                         payload['orderAttributes'] = orderAttributes;
@@ -1755,6 +1763,48 @@
                     return yield this.call('get', uri, {
                         'content-type': 'application/json',
                     }, payload);
+                }),
+                /**
+                 * Get usage stats for the database
+                 *
+                 *
+                 * @param {string} range
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getUsage: (range) => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/database/usage';
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Get usage stats for a collection
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} range
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getCollectionUsage: (collectionId, range) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    let path = '/database/{collectionId}/usage'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
                 })
             };
             this.functions = {
@@ -1767,12 +1817,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/functions';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -1784,8 +1835,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -1958,11 +2012,12 @@
                  * @param {string} functionId
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listExecutions: (functionId, limit, offset, after) => __awaiter(this, void 0, void 0, function* () {
+                listExecutions: (functionId, limit, offset, cursor, cursorDirection) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -1974,8 +2029,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
@@ -2072,12 +2130,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listTags: (functionId, search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
+                listTags: (functionId, search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -2092,8 +2151,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -2541,12 +2603,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/projects';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -2558,8 +2621,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -3273,7 +3339,7 @@
                     }, payload);
                 }),
                 /**
-                 * Get Project
+                 * Get usage stats for a project
                  *
                  *
                  * @param {string} projectId
@@ -3486,12 +3552,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listFiles: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
+                listFiles: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/storage/files';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -3503,8 +3570,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -3747,7 +3817,49 @@
                         uri.searchParams.append(key, value);
                     }
                     return uri;
-                }
+                },
+                /**
+                 * Get usage stats for storage
+                 *
+                 *
+                 * @param {string} range
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getUsage: (range) => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/storage/usage';
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Get usage stats for a storage bucket
+                 *
+                 *
+                 * @param {string} bucketId
+                 * @param {string} range
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getBucketUsage: (bucketId, range) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof bucketId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "bucketId"');
+                    }
+                    let path = '/storage/{bucketId}/usage'.replace('{bucketId}', bucketId);
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                })
             };
             this.teams = {
                 /**
@@ -3761,12 +3873,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/teams';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -3778,8 +3891,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -3906,12 +4022,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getMemberships: (teamId, search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
+                getMemberships: (teamId, search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof teamId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "teamId"');
                     }
@@ -3926,8 +4043,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -4129,12 +4249,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/users';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -4146,8 +4267,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -4199,6 +4323,29 @@
                     }, payload);
                 }),
                 /**
+                 * Get usage stats for the users API
+                 *
+                 *
+                 * @param {string} range
+                 * @param {string} provider
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getUsage: (range, provider) => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/users/usage';
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
+                    }
+                    if (typeof provider !== 'undefined') {
+                        payload['provider'] = provider;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Get User
                  *
                  * Get a user by its unique ID.
@@ -4241,7 +4388,6 @@
                 /**
                  * Update Email
                  *
-                 * Update the user email by its unique ID.
                  *
                  * @param {string} userId
                  * @param {string} email
@@ -4288,7 +4434,6 @@
                 /**
                  * Update Name
                  *
-                 * Update the user name by its unique ID.
                  *
                  * @param {string} userId
                  * @param {string} name
@@ -4315,7 +4460,6 @@
                 /**
                  * Update Password
                  *
-                 * Update the user password by its unique ID.
                  *
                  * @param {string} userId
                  * @param {string} password
@@ -4670,4 +4814,4 @@
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
-}(this.window = this.window || {}, null, window));
+})(this.window = this.window || {}, null, window);

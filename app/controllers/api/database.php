@@ -200,20 +200,21 @@ App::get('/v1/database/collections')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 40000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('after', '', new UID(), 'ID of the collection used as the starting point for the query, excluding the collection itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursor', '', new UID(), 'ID of the collection used as the starting point for the query, excluding the collection itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForInternal, $usage) {
+    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        if (!empty($after)) {
-            $afterCollection = $dbForInternal->getDocument('collections', $after);
+        if (!empty($cursor)) {
+            $cursorCollection = $dbForInternal->getDocument('collections', $cursor);
 
-            if ($afterCollection->isEmpty()) {
-                throw new Exception("Collection '{$after}' for the 'after' value not found.", 400);
+            if ($cursorCollection->isEmpty()) {
+                throw new Exception("Collection '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
 
@@ -226,7 +227,7 @@ App::get('/v1/database/collections')
         $usage->setParam('database.collections.read', 1);
 
         $response->dynamic(new Document([
-            'collections' => $dbForInternal->find('collections', $queries, $limit, $offset, [], [$orderType], $afterCollection ?? null),
+            'collections' => $dbForInternal->find('collections', $queries, $limit, $offset, [], [$orderType], $cursorCollection ?? null, $cursorDirection),
             'sum' => $dbForInternal->count('collections', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_COLLECTION_LIST);
     });
@@ -1495,7 +1496,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
-    
+
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data)) {
@@ -1505,7 +1506,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         if (isset($data['$id'])) {
             throw new Exception('$id is not allowed for creating new documents, try update instead', 400);
         }
-        
+
         $collection = $dbForInternal->getDocument('collections', $collectionId);
 
         if ($collection->isEmpty()) {
@@ -1572,14 +1573,15 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->param('queries', [], new ArrayList(new Text(128)), 'Array of query strings.', true)
     ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
-    ->param('after', '', new UID(), 'ID of the document used as the starting point for the query, excluding the document itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursor', '', new UID(), 'ID of the document used as the starting point for the query, excluding the document itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderAttributes', [], new ArrayList(new Text(128)), 'Array of attributes used to sort results.', true)
     ->param('orderTypes', [], new ArrayList(new WhiteList(['DESC', 'ASC'], true)), 'Array of order directions for sorting attribtues. Possible values are DESC for descending order, or ASC for ascending order.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->inject('usage')
-    ->action(function ($collectionId, $queries, $limit, $offset, $after, $orderAttributes, $orderTypes, $response, $dbForInternal, $dbForExternal, $usage) {
+    ->action(function ($collectionId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderAttributes, $orderTypes, $response, $dbForInternal, $dbForExternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
@@ -1610,29 +1612,29 @@ App::get('/v1/database/collections/:collectionId/documents')
             throw new Exception($validator->getDescription(), 400);
         }
 
-        $afterDocument = null;
-        if (!empty($after)) {
-            $afterDocument = $dbForExternal->getDocument($collectionId, $after);
+        $cursorDocument = null;
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForExternal->getDocument($collectionId, $cursor);
 
-            if ($afterDocument->isEmpty()) {
-                throw new Exception("Document '{$after}' for the 'after' value not found.", 400);
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
 
         if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document[] $documents */
-            $documents = Authorization::skip(function() use ($dbForExternal, $collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $afterDocument) {
-                return $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $afterDocument ?? null);
+            $documents = Authorization::skip(function() use ($dbForExternal, $collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument, $cursorDirection) {
+                return $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
             });
         } else {
-            $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $afterDocument ?? null);
+            $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
         }
 
         $usage
             ->setParam('database.documents.read', 1)
             ->setParam('collectionId', $collectionId)
-            ;
-        
+        ;
+
         $response->dynamic(new Document([
             'sum' => $dbForExternal->count($collectionId, $queries, APP_LIMIT_COUNT),
             'documents' => $documents,
