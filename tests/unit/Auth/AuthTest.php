@@ -13,8 +13,13 @@ class AuthTest extends TestCase
     {
     }
 
+    /**
+     * Reset Roles
+     */
     public function tearDown(): void
     {
+        Authorization::cleanRoles();
+        Authorization::setRole('role:all');
     }
 
     public function testCookieName()
@@ -274,8 +279,6 @@ class AuthTest extends TestCase
         $this->assertContains('team:abc/moderator', $roles);
         $this->assertContains('team:def', $roles);
         $this->assertContains('team:def/guest', $roles);
-
-        Authorization::reset();
     }
 
     public function testAppUserRoles()
@@ -310,7 +313,5 @@ class AuthTest extends TestCase
         $this->assertContains('team:abc/moderator', $roles);
         $this->assertContains('team:def', $roles);
         $this->assertContains('team:def/guest', $roles);
-
-        Authorization::reset();
     }
 }

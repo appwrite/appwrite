@@ -129,7 +129,7 @@ class MessagingChannelsTest extends TestCase
          *  - Guests
          */
         $this->assertCount($this->connectionsTotal, $this->realtime->connections);
-        
+
         $this->realtime->unsubscribe(-1);
 
         $this->assertCount($this->connectionsTotal, $this->realtime->connections);

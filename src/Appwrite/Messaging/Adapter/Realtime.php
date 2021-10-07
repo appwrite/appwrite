@@ -294,7 +294,6 @@ class Realtime extends Adapter
 
                 break;
             case strpos($event, 'functions.executions.') === 0:
-                \var_dump($payload->getArrayCopy());
                 if (!empty($payload->getRead())) {
                     $channels[] = 'executions';
                     $channels[] = 'executions.' . $payload->getId();
