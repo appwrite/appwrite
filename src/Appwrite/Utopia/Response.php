@@ -11,6 +11,14 @@ use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Any;
 use Appwrite\Utopia\Response\Model\Attribute;
+use Appwrite\Utopia\Response\Model\AttributeList;
+use Appwrite\Utopia\Response\Model\AttributeString;
+use Appwrite\Utopia\Response\Model\AttributeInteger;
+use Appwrite\Utopia\Response\Model\AttributeFloat;
+use Appwrite\Utopia\Response\Model\AttributeBoolean;
+use Appwrite\Utopia\Response\Model\AttributeEmail;
+use Appwrite\Utopia\Response\Model\AttributeIP;
+use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\Continent;
@@ -51,7 +59,6 @@ use Appwrite\Utopia\Response\Model\UsageFunctions;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
-use stdClass;
 
 /**
  * @method Response public function setStatusCode(int $code = 200)
@@ -79,12 +86,21 @@ class Response extends SwooleResponse
     // Database
     const MODEL_COLLECTION = 'collection';
     const MODEL_COLLECTION_LIST = 'collectionList';
-    const MODEL_ATTRIBUTE = 'attribute';
-    const MODEL_ATTRIBUTE_LIST = 'attributeList';
     const MODEL_INDEX = 'index';
     const MODEL_INDEX_LIST = 'indexList';
     const MODEL_DOCUMENT = 'document';
     const MODEL_DOCUMENT_LIST = 'documentList';
+
+    // Database Attributes
+    const MODEL_ATTRIBUTE = 'attribute';
+    const MODEL_ATTRIBUTE_LIST = 'attributeList';
+    const MODEL_ATTRIBUTE_STRING = 'attributeString';
+    const MODEL_ATTRIBUTE_INTEGER= 'attributeInteger';
+    const MODEL_ATTRIBUTE_FLOAT= 'attributeFloat';
+    const MODEL_ATTRIBUTE_BOOLEAN= 'attributeBoolean';
+    const MODEL_ATTRIBUTE_EMAIL= 'attributeEmail';
+    const MODEL_ATTRIBUTE_IP= 'attributeIp';
+    const MODEL_ATTRIBUTE_URL= 'attributeUrl';
 
     // Users
     const MODEL_USER = 'user';
@@ -172,7 +188,6 @@ class Response extends SwooleResponse
             ->setModel(new ErrorDev())
             // Lists
             ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
-            ->setModel(new BaseList('Attributes List', self::MODEL_ATTRIBUTE_LIST, 'attributes', self::MODEL_ATTRIBUTE))
             ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
             ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
             ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
@@ -198,6 +213,14 @@ class Response extends SwooleResponse
             // Entities
             ->setModel(new Collection())
             ->setModel(new Attribute())
+            ->setModel(new AttributeList())
+            ->setModel(new AttributeString())
+            ->setModel(new AttributeInteger())
+            ->setModel(new AttributeFloat())
+            ->setModel(new AttributeBoolean())
+            ->setModel(new AttributeEmail())
+            ->setModel(new AttributeIP())
+            ->setModel(new AttributeURL())
             ->setModel(new Index())
             ->setModel(new ModelDocument())
             ->setModel(new Log())
@@ -304,7 +327,7 @@ class Response extends SwooleResponse
             $output = self::getFilter()->parse($output, $model);
         }
 
-        $this->json(!empty($output) ? $output : new stdClass());
+        $this->json(!empty($output) ? $output : new \stdClass());
     }
 
     /**
@@ -329,7 +352,7 @@ class Response extends SwooleResponse
         $document = $model->filter($document);
 
         foreach ($model->getRules() as $key => $rule) {
-            if (!$document->isSet($key)) {
+            if (!$document->isSet($key) && $rule['require']) { // do not set attribute in response if not required
                 if (!is_null($rule['default'])) {
                     $document->setAttribute($key, $rule['default']);
                 } else {
@@ -344,15 +367,33 @@ class Response extends SwooleResponse
 
                 foreach ($data[$key] as &$item) {
                     if ($item instanceof Document) {
-                        if (!array_key_exists($rule['type'], $this->models)) {
-                            throw new Exception('Missing model for rule: '. $rule['type']);
+                        if (\is_array($rule['type'])) {
+                            foreach ($rule['type'] as $type) {
+                                $condition = false;
+                                foreach ($this->getModel($type)->conditions as $attribute => $val) {
+                                    $condition = $item->getAttribute($attribute) === $val;
+                                    if(!$condition) {
+                                        break;
+                                    }
+                                }
+                                if ($condition) {
+                                    $ruleType = $type;
+                                    break;
+                                }
+                            }
+                        } else {
+                            $ruleType = $rule['type'];
                         }
 
-                        $item = $this->output($item, $rule['type']);
+                        if (!array_key_exists($ruleType, $this->models)) {
+                            throw new Exception('Missing model for rule: '. $ruleType);
+                        }
+
+                        $item = $this->output($item, $ruleType);
                     }
                 }
             }
-            
+
             $output[$key] = $data[$key];
         }
 

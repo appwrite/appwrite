@@ -4,7 +4,6 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use stdClass;
 
 class Collection extends Model
 {
@@ -44,17 +43,25 @@ class Collection extends Model
                 'example' => 'document',
             ])
             ->addRule('attributes', [
-                'type' => Response::MODEL_ATTRIBUTE,
+                'type' => [
+                    Response::MODEL_ATTRIBUTE_BOOLEAN,
+                    Response::MODEL_ATTRIBUTE_INTEGER,
+                    Response::MODEL_ATTRIBUTE_FLOAT,
+                    Response::MODEL_ATTRIBUTE_EMAIL,
+                    Response::MODEL_ATTRIBUTE_URL,
+                    Response::MODEL_ATTRIBUTE_IP,
+                    Response::MODEL_ATTRIBUTE_STRING, // needs to be last, since its condition would dominate any other string attribute
+                ],
                 'description' => 'Collection attributes.',
                 'default' => [],
-                'example' => new stdClass,
-                'array' => true
+                'example' => new \stdClass,
+                'array' => true,
             ])
             ->addRule('indexes', [
                 'type' => Response::MODEL_INDEX,
                 'description' => 'Collection indexes.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => new \stdClass,
                 'array' => true
             ])
         ;
