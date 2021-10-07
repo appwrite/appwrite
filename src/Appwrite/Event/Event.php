@@ -6,7 +6,6 @@ use Resque;
 
 class Event
 {
-
     const DELETE_QUEUE_NAME = 'v1-deletes';
     const DELETE_CLASS_NAME = 'DeletesV1';
 
