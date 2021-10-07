@@ -2,11 +2,11 @@
 
 namespace Appwrite\Migration\Version;
 
-use Appwrite\Migration\Migration;
-use Utopia\Config\Config;
-use Utopia\CLI\Console;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
+use Appwrite\Migration\Migration;
+use Utopia\CLI\Console;
+use Utopia\Config\Config;
 
 class V05 extends Migration
 {
@@ -14,7 +14,7 @@ class V05 extends Migration
     {
         $db = $this->db;
         $project = $this->project;
-        Console::log('Migrating project: ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
+        Console::log('Migrating project: '.$project->getAttribute('name').' ('.$project->getId().')');
 
         // Update all documents $uid -> $id
 
@@ -42,7 +42,7 @@ class V05 extends Migration
 
             $statement->execute();
         } catch (\Exception $e) {
-            Console::error('Failed to alter table for project: ' . $project->getId() . ' with message: ' . $e->getMessage() . '/');
+            Console::error('Failed to alter table for project: '.$project->getId().' with message: '.$e->getMessage().'/');
         }
     }
 
@@ -53,59 +53,70 @@ class V05 extends Migration
         switch ($document->getAttribute('$collection')) {
             case Database::SYSTEM_COLLECTION_PROJECTS:
                 foreach ($providers as $key => $provider) {
-                    if (!empty($document->getAttribute('usersOauth' . \ucfirst($key) . 'Appid'))) {
+                    if (!empty($document->getAttribute('usersOauth'.\ucfirst($key).'Appid'))) {
                         $document
-                            ->setAttribute('usersOauth2' . \ucfirst($key) . 'Appid', $document->getAttribute('usersOauth' . \ucfirst($key) . 'Appid', ''))
-                            ->removeAttribute('usersOauth' . \ucfirst($key) . 'Appid');
+                            ->setAttribute('usersOauth2'.\ucfirst($key).'Appid', $document->getAttribute('usersOauth'.\ucfirst($key).'Appid', ''))
+                            ->removeAttribute('usersOauth'.\ucfirst($key).'Appid')
+                        ;
                     }
 
-                    if (!empty($document->getAttribute('usersOauth' . \ucfirst($key) . 'Secret'))) {
+                    if (!empty($document->getAttribute('usersOauth'.\ucfirst($key).'Secret'))) {
                         $document
-                            ->setAttribute('usersOauth2' . \ucfirst($key) . 'Secret', $document->getAttribute('usersOauth' . \ucfirst($key) . 'Secret', ''))
-                            ->removeAttribute('usersOauth' . \ucfirst($key) . 'Secret');
+                            ->setAttribute('usersOauth2'.\ucfirst($key).'Secret', $document->getAttribute('usersOauth'.\ucfirst($key).'Secret', ''))
+                            ->removeAttribute('usersOauth'.\ucfirst($key).'Secret')
+                        ;
                     }
                 }
                 $document->setAttribute('security', $document->getAttribute('security') ? true : false);
+
                 break;
 
             case Database::SYSTEM_COLLECTION_TASKS:
                 $document->setAttribute('security', $document->getAttribute('security') ? true : false);
+
                 break;
 
             case Database::SYSTEM_COLLECTION_USERS:
                 foreach ($providers as $key => $provider) {
-                    if (!empty($document->getAttribute('oauth' . \ucfirst($key)))) {
+                    if (!empty($document->getAttribute('oauth'.\ucfirst($key)))) {
                         $document
-                            ->setAttribute('oauth2' . \ucfirst($key), $document->getAttribute('oauth' . \ucfirst($key), ''))
-                            ->removeAttribute('oauth' . \ucfirst($key));
+                            ->setAttribute('oauth2'.\ucfirst($key), $document->getAttribute('oauth'.\ucfirst($key), ''))
+                            ->removeAttribute('oauth'.\ucfirst($key))
+                        ;
                     }
 
-                    if (!empty($document->getAttribute('oauth' . \ucfirst($key) . 'AccessToken'))) {
+                    if (!empty($document->getAttribute('oauth'.\ucfirst($key).'AccessToken'))) {
                         $document
-                            ->setAttribute('oauth2' . \ucfirst($key) . 'AccessToken', $document->getAttribute('oauth' . \ucfirst($key) . 'AccessToken', ''))
-                            ->removeAttribute('oauth' . \ucfirst($key) . 'AccessToken');
+                            ->setAttribute('oauth2'.\ucfirst($key).'AccessToken', $document->getAttribute('oauth'.\ucfirst($key).'AccessToken', ''))
+                            ->removeAttribute('oauth'.\ucfirst($key).'AccessToken')
+                        ;
                     }
                 }
 
-                if ($document->getAttribute('confirm', null) !== null) {
+                if (null !== $document->getAttribute('confirm', null)) {
                     $document
                         ->setAttribute('emailVerification', $document->getAttribute('confirm', $document->getAttribute('emailVerification', false)))
-                        ->removeAttribute('confirm');
+                        ->removeAttribute('confirm')
+                    ;
                 }
+
                 break;
 
             case Database::SYSTEM_COLLECTION_PLATFORMS:
-                if ($document->getAttribute('url', null) !== null) {
+                if (null !== $document->getAttribute('url', null)) {
                     $document
                         ->setAttribute('hostname', \parse_url($document->getAttribute('url', $document->getAttribute('hostname', '')), PHP_URL_HOST))
-                        ->removeAttribute('url');
+                        ->removeAttribute('url')
+                    ;
                 }
+
                 break;
         }
 
         $document
             ->setAttribute('$id', $document->getAttribute('$uid', $document->getAttribute('$id')))
-            ->removeAttribute('$uid');
+            ->removeAttribute('$uid')
+        ;
 
         foreach ($document as &$attr) { // Handle child documents
             if ($attr instanceof Document) {

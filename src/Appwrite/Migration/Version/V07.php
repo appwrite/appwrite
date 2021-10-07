@@ -2,19 +2,19 @@
 
 namespace Appwrite\Migration\Version;
 
-use Appwrite\Migration\Migration;
-use Utopia\Config\Config;
-use Utopia\CLI\Console;
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
+use Appwrite\Migration\Migration;
+use Utopia\CLI\Console;
+use Utopia\Config\Config;
 
 class V07 extends Migration
 {
     public function execute(): void
     {
         $project = $this->project;
-        Console::log('Migrating project: ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
+        Console::log('Migrating project: '.$project->getAttribute('name').' ('.$project->getId().')');
 
         $this->forEachDocument([$this, 'fixDocument']);
     }
@@ -25,16 +25,14 @@ class V07 extends Migration
 
         switch ($document->getAttribute('$collection')) {
             case Database::SYSTEM_COLLECTION_USERS:
-                /**
-                 * Remove deprecated OAuth2 properties in the Users Documents.
-                 */
+                // Remove deprecated OAuth2 properties in the Users Documents.
                 foreach ($providers as $key => $provider) {
-                    if (!empty($document->getAttribute('oauth2' . \ucfirst($key)))) {
-                        $document->removeAttribute('oauth2' . \ucfirst($key));
+                    if (!empty($document->getAttribute('oauth2'.\ucfirst($key)))) {
+                        $document->removeAttribute('oauth2'.\ucfirst($key));
                     }
 
-                    if (!empty($document->getAttribute('oauth2' . \ucfirst($key) . 'AccessToken'))) {
-                        $document->removeAttribute('oauth2' . \ucfirst($key) . 'AccessToken');
+                    if (!empty($document->getAttribute('oauth2'.\ucfirst($key).'AccessToken'))) {
+                        $document->removeAttribute('oauth2'.\ucfirst($key).'AccessToken');
                     }
                 }
                 /**
@@ -42,7 +40,7 @@ class V07 extends Migration
                  * Reason for it is the missing distinction between E-Mail and OAuth2 tokens.
                  */
                 $tokens = array_filter($document->getAttribute('tokens', []), function ($token) {
-                    return ($token->getAttribute('type') != Auth::TOKEN_TYPE_LOGIN);
+                    return Auth::TOKEN_TYPE_LOGIN != $token->getAttribute('type');
                 });
                 $document->setAttribute('tokens', array_values($tokens));
 

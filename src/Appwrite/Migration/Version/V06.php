@@ -2,20 +2,19 @@
 
 namespace Appwrite\Migration\Version;
 
-
-use Utopia\App;
-use Utopia\CLI\Console;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Migration\Migration;
 use Appwrite\OpenSSL\OpenSSL;
+use Utopia\App;
+use Utopia\CLI\Console;
 
 class V06 extends Migration
 {
     public function execute(): void
     {
         $project = $this->project;
-        Console::log('Migrating project: ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
+        Console::log('Migrating project: '.$project->getAttribute('name').' ('.$project->getId().')');
 
         $this->projectDB->disableFilters();
         $this->forEachDocument([$this, 'fixDocument']);
@@ -29,15 +28,18 @@ class V06 extends Migration
                 if ($document->isSet('password-update')) {
                     $document
                         ->setAttribute('passwordUpdate', $document->getAttribute('password-update', $document->getAttribute('passwordUpdate', '')))
-                        ->removeAttribute('password-update');
+                        ->removeAttribute('password-update')
+                    ;
                 }
+
                 break;
+
             case Database::SYSTEM_COLLECTION_KEYS:
                 if ($document->getAttribute('secret', null)) {
                     $json = \json_decode($document->getAttribute('secret'), true);
-                    if (is_array($json))
-                    {
-                        Console::log('Secret already encrypted. Skipped: ' . $document->getId());
+                    if (is_array($json)) {
+                        Console::log('Secret already encrypted. Skipped: '.$document->getId());
+
                         break;
                     }
 
@@ -53,8 +55,10 @@ class V06 extends Migration
                         'version' => '1',
                     ]));
                 }
+
                 break;
         }
+
         return $document;
     }
 }
