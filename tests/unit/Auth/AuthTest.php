@@ -3,7 +3,7 @@
 namespace Appwrite\Tests;
 
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use PHPUnit\Framework\TestCase;
 
