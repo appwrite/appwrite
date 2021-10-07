@@ -103,7 +103,7 @@ abstract class Worker
 
         do {
             try {
-                ++$attempts;
+                $attempts++;
                 $cache = new Cache(new RedisCache($register->get('cache')));
                 $database = new Database(new MariaDB($register->get('db')), $cache);
                 $database->setNamespace($namespace); // Main DB
