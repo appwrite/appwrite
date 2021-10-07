@@ -536,7 +536,13 @@ App::patch('/v1/users/:userId/email')
             throw new Exception('User not found', 404);
         }
 
-        $email = \strtolower($email);        
+        $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
+        if (!$isAnonymousUser) {
+            // Remove previous unique ID.
+        }
+
+        $email = \strtolower($email);
+
         try {
             $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('email', $email));
         } catch(Duplicate $th) {
@@ -545,7 +551,7 @@ App::patch('/v1/users/:userId/email')
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'account.update.email')
+            ->setParam('event', 'users.update.email')
             ->setParam('resource', 'user/'.$user->getId())
         ;
 
@@ -567,31 +573,25 @@ App::patch('/v1/users/:userId/name')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($userId, $name, $response, $projectDB, $audits) {
+    ->action(function ($userId, $name, $response, $dbForInternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
-        
-        $user = $projectDB->getDocument($userId);
 
-        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+        $user = $dbForInternal->getDocument('users', $userId);
+
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'name' => $name,
-        ]));
-
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('name', $name));
 
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'users.update.name')
-            ->setParam('resource', 'users/'.$user->getId())
+            ->setParam('resource', 'user/'.$user->getId())
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -612,98 +612,29 @@ App::patch('/v1/users/:userId/password')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('password', '', new Password(), 'New user password. Must be between 6 to 32 chars.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($userId, $password, $response, $projectDB, $audits) {
+    ->action(function ($userId, $password, $response, $dbForInternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
 
-        $user = $projectDB->getDocument($userId);
+        $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'password' => Auth::passwordHash($password),
-            'passwordUpdate' => \time(),
-        ]));
+        $user
+            ->setAttribute('password', $password)
+            ->setAttribute('passwordUpdate', \time());
 
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
 
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'users.update.password')
-            ->setParam('resource', 'users/'.$user->getId())
-        ;
-
-        $response->dynamic($user, Response::MODEL_USER);
-    });
-
-App::patch('/v1/users/:userId/email')
-    ->desc('Update Email')
-    ->groups(['api', 'users'])
-    ->label('event', 'users.update.email')
-    ->label('scope', 'users.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updateEmail')
-    ->label('sdk.description', '/docs/references/users/update-user-email.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('userId', '', new UID(), 'User unique ID.')
-    ->param('email', '', new Email(), 'User email.')
-    ->inject('response')
-    ->inject('projectDB')
-    ->inject('audits')
-    ->action(function ($userId, $email, $response, $projectDB, $audits) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $audits */
-
-        $user = $projectDB->getDocument($userId);
-        
-        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception('User not found', 404);
-        }
-        
-        $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
-        $email = \strtolower($email);
-        $profile = $projectDB->getCollectionFirst([ // Get user by email address
-            'limit' => 1,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                'email='.$email,
-            ],
-        ]);
-
-        if (!empty($profile)) {
-            throw new Exception('User already registered', 400);
-        }
-
-        if (!$isAnonymousUser) {
-            // Remove previous unique ID.
-            $projectDB->deleteUniqueKey(\md5($user->getArrayCopy()['$collection'].':'.'email'.'='.$user->getAttribute('email')));
-        }
-
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'email' => $email,
-        ]));
-
-        $projectDB->addUniqueKey(\md5($user['$collection'].':'.'email'.'='.$email));
-
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
-        
-        $audits
-            ->setParam('userId', $user->getId())
-            ->setParam('event', 'account.update.email')
-            ->setParam('resource', 'users/'.$user->getId())
+            ->setParam('resource', 'user/'.$user->getId())
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -784,7 +715,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
                 $dbForInternal->deleteDocument('sessions', $session->getId());
 
                 $user->setAttribute('sessions', $sessions);
-                
+
                 $events
                     ->setParam('eventData', $response->output($user, Response::MODEL_USER))
                 ;
