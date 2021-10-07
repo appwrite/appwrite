@@ -44,7 +44,7 @@ class AttributeInteger extends Attribute
     ];
 
     /**
-     * Get Name * 
+     * Get Name *
      * @return string
      */
     public function getName():string
@@ -54,7 +54,7 @@ class AttributeInteger extends Attribute
 
     /**
      * Get Type
-     * 
+     *
      * @return string
      */
     public function getType():string
