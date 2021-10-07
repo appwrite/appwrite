@@ -48,8 +48,8 @@ return [
     'pa', // Punjabi
     'ro', // Romanian
     'ru', // Russian
-    'sd', // Sindhi
     'sa', //Sanskrit
+    'sd', // Sindhi
     'si', // Sinhala
     'sl', // Slovenian
     'sq', // Albanian
