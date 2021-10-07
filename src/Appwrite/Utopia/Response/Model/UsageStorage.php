@@ -21,21 +21,21 @@ class UsageStorage extends Model
                 'description' => 'Aggregated stats for the occupied storage size (in bytes).',
                 'default' => [],
                 'example' => new \stdClass,
-                'array' => true 
+                'array' => true
             ])
             ->addRule('files', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for total number of files.',
                 'default' => [],
                 'example' => new \stdClass,
-                'array' => true 
+                'array' => true
             ])
         ;
     }
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -45,7 +45,7 @@ class UsageStorage extends Model
 
     /**
      * Get Type
-     * 
+     *
      * @return string
      */
     public function getType():string
