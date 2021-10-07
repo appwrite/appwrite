@@ -21,28 +21,28 @@ class UsageFunctions extends Model
                 'description' => 'Aggregated stats for function executions.',
                 'default' => [],
                 'example' => new \stdClass,
-                'array' => true 
+                'array' => true
             ])
             ->addRule('functions.failures', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for function execution failures.',
                 'default' => [],
                 'example' => new \stdClass,
-                'array' => true 
+                'array' => true
             ])
             ->addRule('functions.compute', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for function execution duration.',
                 'default' => [],
                 'example' => new \stdClass,
-                'array' => true 
+                'array' => true
             ])
         ;
     }
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -52,7 +52,7 @@ class UsageFunctions extends Model
 
     /**
      * Get Type
-     * 
+     *
      * @return string
      */
     public function getType():string
