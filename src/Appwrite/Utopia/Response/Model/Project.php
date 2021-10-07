@@ -167,7 +167,7 @@ class Project extends Model
         }
 
         foreach ($services as $service) {
-            if(!$service['optional']) {
+            if (!$service['optional']) {
                 continue;
             }
 
@@ -187,7 +187,7 @@ class Project extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -197,7 +197,7 @@ class Project extends Model
 
     /**
      * Get Collection
-     * 
+     *
      * @return string
      */
     public function getType():string
@@ -207,7 +207,7 @@ class Project extends Model
 
     /**
      * Get Collection
-     * 
+     *
      * @return string
      */
     public function filter(Document $document): Document
@@ -215,8 +215,8 @@ class Project extends Model
         $values = $document->getAttribute('services', []);
         $services = Config::getParam('services', []);
 
-        foreach($services as $service) {
-            if(!$service['optional']) {
+        foreach ($services as $service) {
+            if (!$service['optional']) {
                 continue;
             }
             $key = $service['key'] ?? '';
@@ -224,7 +224,7 @@ class Project extends Model
             $document->setAttribute('serviceStatusFor'.ucfirst($key), $value);
         }
 
-        $authValues = $document->getAttribute('auths',[]);
+        $authValues = $document->getAttribute('auths', []);
         $auth = Config::getParam('auth', []);
 
         $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
