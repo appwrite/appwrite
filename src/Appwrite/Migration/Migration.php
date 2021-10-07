@@ -44,6 +44,7 @@ abstract class Migration
         '0.9.3' => 'V08',
         '0.9.4' => 'V08',
         '0.10.0' => 'V08', // TODO Eldad: `I need this to pass the tests`
+        '0.11.0' => 'V08', // TODO Eldad: `I need this to pass the tests`
     ];
 
     /**
