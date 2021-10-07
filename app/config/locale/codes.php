@@ -12,8 +12,8 @@ return [
     'da', // Danish
     'de', // German
     'en', // English
+    'eo', // Esperanto
     'es', // Spanish
-    'esp',// Esperanto
     'fa', // Farsi/Persian
     'fi', // Finnish
     'fo', // Faroese
