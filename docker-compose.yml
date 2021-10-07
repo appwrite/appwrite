@@ -63,7 +63,7 @@ services:
       - ./psalm.xml:/usr/src/code/psalm.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
-      # - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
+      # - ./vendor:/usr/src/code/vendor
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
@@ -73,7 +73,6 @@ services:
       - mariadb
       - redis
       # - clamav
-      - influxdb
     entrypoint: 
       - php
       - -e
@@ -112,8 +111,6 @@ services:
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
       - _APP_USAGE_STATS
-      - _APP_INFLUXDB_HOST
-      - _APP_INFLUXDB_PORT
       - _APP_STORAGE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
@@ -348,6 +345,37 @@ services:
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+
+  appwrite-usage:
+    entrypoint:
+     - php
+     - -e
+     - /usr/src/code/app/cli.php
+     - usage
+    container_name: appwrite-usage
+    build:
+      context: .
+      args:
+        - DEBUG=false
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./dev:/usr/local/dev
+    depends_on:
+      - influxdb
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
+      - _APP_USAGE_SYNC_INTERVAL
 
   appwrite-schedule:
     entrypoint: schedule

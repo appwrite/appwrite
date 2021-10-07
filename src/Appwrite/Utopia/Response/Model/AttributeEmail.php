@@ -31,6 +31,11 @@ class AttributeEmail extends Attribute
         ;
     }
 
+    public array $conditions = [
+        'type' => self::TYPE_STRING,
+        'format' => \APP_DATABASE_ATTRIBUTE_EMAIL
+    ];
+
     /**
      * Get Name
      * 
@@ -42,7 +47,7 @@ class AttributeEmail extends Attribute
     }
 
     /**
-     * Get Collection
+     * Get Type
      * 
      * @return string
      */

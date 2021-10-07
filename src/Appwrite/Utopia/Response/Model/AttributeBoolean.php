@@ -23,6 +23,10 @@ class AttributeBoolean extends Attribute
         ;
     }
 
+    public array $conditions = [
+        'type' => self::TYPE_BOOLEAN
+    ];
+
     /**
      * Get Name
      * 
@@ -34,7 +38,7 @@ class AttributeBoolean extends Attribute
     }
 
     /**
-     * Get Collection
+     * Get Type
      * 
      * @return string
      */

@@ -57,6 +57,7 @@ App::post('/v1/teams')
             'name' => $name,
             'sum' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
             'dateCreated' => \time(),
+            'search' => implode(' ', [$teamId, $name]),
         ]));
 
         Authorization::reset();
@@ -107,8 +108,6 @@ App::get('/v1/teams')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
-
         if (!empty($after)) {
             $afterTeam = $dbForInternal->getDocument('teams', $after);
 
@@ -117,6 +116,12 @@ App::get('/v1/teams')
             }
         }
 
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
+        
         $results = $dbForInternal->find('teams', $queries, $limit, $offset, [], [$orderType], $afterTeam ?? null);
         $sum = $dbForInternal->count('teams', $queries, APP_LIMIT_COUNT);
 
@@ -179,7 +184,10 @@ App::put('/v1/teams/:teamId')
             throw new Exception('Team not found', 404);
         }
 
-        $team = $dbForInternal->updateDocument('teams', $team->getId(), $team->setAttribute('name', $name));
+        $team = $dbForInternal->updateDocument('teams', $team->getId(),$team
+            ->setAttribute('name', $name)
+            ->setAttribute('search', implode(' ', [$teamId, $name]))
+        );
 
         $response->dynamic($team, Response::MODEL_TEAM);
     });
@@ -323,6 +331,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'sessions' => [],
                     'tokens' => [],
                     'memberships' => [],
+                    'search' => implode(' ', [$userId, $email, $name]),
                 ]));
             } catch (Duplicate $th) {
                 throw new Exception('Account already exists', 409);

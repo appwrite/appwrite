@@ -39,6 +39,10 @@ class AttributeInteger extends Attribute
         ;
     }
 
+    public array $conditions = [
+        'type' => self::TYPE_INTEGER,
+    ];
+
     /**
      * Get Name * 
      * @return string
@@ -49,7 +53,7 @@ class AttributeInteger extends Attribute
     }
 
     /**
-     * Get Collection
+     * Get Type
      * 
      * @return string
      */

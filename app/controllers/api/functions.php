@@ -53,8 +53,9 @@ App::post('/v1/functions')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
+        $functionId = ($functionId == 'unique()') ? $dbForInternal->getId() : $functionId;
         $function = $dbForInternal->createDocument('functions', new Document([
-            '$id' => $functionId == 'unique()' ? $dbForInternal->getId() : $functionId,
+            '$id' => $functionId,
             'execute' => $execute,
             'dateCreated' => time(),
             'dateUpdated' => time(),
@@ -68,6 +69,7 @@ App::post('/v1/functions')
             'schedulePrevious' => 0,
             'scheduleNext' => 0,
             'timeout' => $timeout,
+            'search' => implode(' ', [$functionId, $name, $runtime]),
         ]));
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -96,14 +98,18 @@ App::get('/v1/functions')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
-
         if (!empty($after)) {
             $afterFunction = $dbForInternal->getDocument('functions', $after);
 
             if ($afterFunction->isEmpty()) {
                 throw new Exception("Function '{$after}' for the 'after' value not found.", 400);
             }
+        }
+        
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
         $response->dynamic(new Document([
@@ -146,6 +152,9 @@ App::get('/v1/functions/:functionId/usage')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTIONS)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
     ->inject('response')
@@ -164,99 +173,62 @@ App::get('/v1/functions/:functionId/usage')
             throw new Exception('Function not found', 404);
         }
         
+        $usage = [];
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $period = [
                 '24h' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
-                    'group' => '30m',
+                    'period' => '30m',
+                    'limit' => 48,
                 ],
                 '7d' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                    'group' => '1d',
+                    'period' => '1d',
+                    'limit' => 7,
                 ],
                 '30d' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                    'group' => '1d',
+                    'period' => '1d',
+                    'limit' => 30,
                 ],
                 '90d' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                    'group' => '1d',
+                    'period' => '1d',
+                    'limit' => 90,
                 ],
             ];
+            
+            $metrics = [
+                "functions.$functionId.executions", 
+                "functions.$functionId.failures", 
+                "functions.$functionId.compute"
+            ];
+
+            $stats = [];
+
+            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $requestDocs = $dbForInternal->find('stats', [
+                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
     
-            $client = $register->get('influxdb');
-    
-            $executions = [];
-            $failures = [];
-            $compute = [];
-    
-            if ($client) {
-                $start = $period[$range]['start']->format(DateTime::RFC3339);
-                $end = $period[$range]['end']->format(DateTime::RFC3339);
-                $database = $client->selectDB('telegraf');
-    
-                // Executions
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-                $points = $result->getPoints();
-    
-                foreach ($points as $point) {
-                    $executions[] = [
-                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                        'date' => \strtotime($point['time']),
-                    ];
-                }
-    
-                // Failures
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' AND "functionStatus"=\'failed\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-                $points = $result->getPoints();
-    
-                foreach ($points as $point) {
-                    $failures[] = [
-                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                        'date' => \strtotime($point['time']),
-                    ];
-                }
-    
-                // Compute
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_time" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-                $points = $result->getPoints();
-    
-                foreach ($points as $point) {
-                    $compute[] = [
-                        'value' => round((!empty($point['value'])) ? $point['value'] / 1000 : 0, 2), // minutes
-                        'date' => \strtotime($point['time']),
-                    ];
-                }
-            }
-    
-            $response->json([
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
+                }    
+            });
+
+            $usage = new Document([
                 'range' => $range,
-                'executions' => [
-                    'data' => $executions,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $executions)),
-                ],
-                'failures' => [
-                    'data' => $failures,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $failures)),
-                ],
-                'compute' => [
-                    'data' => $compute,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $compute)),
-                ],
+                'functions.executions' => $stats["functions.$functionId.executions"],
+                'functions.failures' => $stats["functions.$functionId.failures"],
+                'functions.compute' => $stats["functions.$functionId.compute"]
             ]);
-        } else {
-            $response->json([]);
         }
+
+        $response->dynamic($usage, Response::MODEL_USAGE_FUNCTIONS);
     });
 
 App::put('/v1/functions/:functionId')
@@ -305,6 +277,7 @@ App::put('/v1/functions/:functionId')
             'schedule' => $schedule,
             'scheduleNext' => (int)$next,
             'timeout' => $timeout,
+            'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
         if ($next && $schedule !== $original) {
@@ -481,8 +454,9 @@ App::post('/v1/functions/:functionId/tags')
             throw new Exception('Failed moving file', 500);
         }
         
+        $tagId = $dbForInternal->getId();
         $tag = $dbForInternal->createDocument('tags', new Document([
-            '$id' => $dbForInternal->getId(),
+            '$id' => $tagId,
             '$read' => [],
             '$write' => [],
             'functionId' => $function->getId(),
@@ -490,6 +464,7 @@ App::post('/v1/functions/:functionId/tags')
             'command' => $command,
             'path' => $path,
             'size' => $size,
+            'search' => implode(' ', [$tagId, $command]),
         ]));
 
         $usage
@@ -529,8 +504,6 @@ App::get('/v1/functions/:functionId/tags')
             throw new Exception('Function not found', 404);
         }
 
-        $queries[] = new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]);
-
         if (!empty($after)) {
             $afterTag = $dbForInternal->getDocument('tags', $after);
 
@@ -538,6 +511,14 @@ App::get('/v1/functions/:functionId/tags')
                 throw new Exception("Tag '{$after}' for the 'after' value not found.", 400);
             }
         }
+
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
+
+        $queries[] = new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]);
 
         $results = $dbForInternal->find('tags', $queries, $limit, $offset, [], [$orderType], $afterTag ?? null);
         $sum = $dbForInternal->count('tags', $queries, APP_LIMIT_COUNT);
@@ -699,8 +680,10 @@ App::post('/v1/functions/:functionId/executions')
 
         Authorization::disable();
 
+        $executionId = $dbForInternal->getId();
+
         $execution = $dbForInternal->createDocument('executions', new Document([
-            '$id' => $dbForInternal->getId(),
+            '$id' => $executionId,
             '$read' => (!$user->isEmpty()) ? ['user:' . $user->getId()] : [],
             '$write' => [],
             'dateCreated' => time(),
@@ -712,6 +695,7 @@ App::post('/v1/functions/:functionId/executions')
             'stdout' => '',
             'stderr' => '',
             'time' => 0.0,
+            'search' => implode(' ', [$functionId, $executionId]),
         ]));
 
         Authorization::reset();
@@ -766,10 +750,11 @@ App::get('/v1/functions/:functionId/executions')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('after', '', new UID(), 'ID of the execution used as the starting point for the query, excluding the execution itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($functionId, $limit, $offset, $after, $response, $dbForInternal) {
+    ->action(function ($functionId, $limit, $offset, $search, $after, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
@@ -789,13 +774,17 @@ App::get('/v1/functions/:functionId/executions')
             }
         }
 
-        $results = $dbForInternal->find('executions', [
-            new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
-        ], $limit, $offset, [], [Database::ORDER_DESC], $afterExecution ?? null);
+        $queries = [
+            new Query('functionId', Query::TYPE_EQUAL, [$function->getId()])
+        ];
 
-        $sum = $dbForInternal->count('executions', [
-            new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
-        ], APP_LIMIT_COUNT);
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
+
+        $results = $dbForInternal->find('executions', $queries, $limit, $offset, [], [Database::ORDER_DESC], $afterExecution ?? null);
+
+        $sum = $dbForInternal->count('executions', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'executions' => $results,

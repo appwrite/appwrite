@@ -17,6 +17,7 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
+use Appwrite\Extend\PDO;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
@@ -30,6 +31,7 @@ use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Stats\Stats;
 use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
@@ -95,6 +97,7 @@ const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_CERTIFICATES = 'certificates';
+const DELETE_TYPE_USAGE = 'usage';
 // Mail Worker Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_RECOVERY = 'recovery';
@@ -244,7 +247,7 @@ Database::addFilter('subQueryAttributes',
         return $database
             ->find('attributes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 100, 0, []);
+            ], $database->getAttributeLimit(), 0, []);
     }
 );
 
@@ -256,7 +259,55 @@ Database::addFilter('subQueryIndexes',
         return $database
             ->find('indexes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 100, 0, []);
+            ], 64, 0, []);
+    }
+);
+
+Database::addFilter('subQueryPlatforms',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('platforms', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []);
+    }
+);
+
+Database::addFilter('subQueryDomains',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('domains', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []);
+    }
+);
+
+Database::addFilter('subQueryKeys',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('keys', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []);
+    }
+);
+
+Database::addFilter('subQueryWebhooks',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('webhooks', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []);
     }
 );
 
@@ -409,6 +460,29 @@ $register->set('smtp', function () {
 });
 $register->set('geodb', function () {
     return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-06.mmdb');
+});
+$register->set('db', function () { // This is usually for our workers or CLI commands scope
+    $dbHost = App::getEnv('_APP_DB_HOST', '');
+    $dbUser = App::getEnv('_APP_DB_USER', '');
+    $dbPass = App::getEnv('_APP_DB_PASS', '');
+    $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
+
+    $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
+        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
+        PDO::ATTR_TIMEOUT => 3, // Seconds
+        PDO::ATTR_PERSISTENT => true,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    ));
+
+    return $pdo;
+});
+$register->set('cache', function () { // This is usually for our workers or CLI commands scope
+    $redis = new Redis();
+    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
+    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+
+    return $redis;
 });
 
 /*
