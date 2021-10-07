@@ -14,6 +14,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
@@ -106,19 +107,20 @@ App::get('/v1/teams')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('after', '', new UID(), 'ID of the team used as the starting point for the query, excluding the team itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursor', '', new UID(), 'ID of the team used as the starting point for the query, excluding the team itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForInternal) {
+    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        if (!empty($after)) {
-            $afterTeam = $dbForInternal->getDocument('teams', $after);
+        if (!empty($cursor)) {
+            $cursorTeam = $dbForInternal->getDocument('teams', $cursor);
 
-            if ($afterTeam->isEmpty()) {
-                throw new Exception("Team '{$after}' for the 'after' value not found.", 400);
+            if ($cursorTeam->isEmpty()) {
+                throw new Exception("Team '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
 
@@ -127,8 +129,8 @@ App::get('/v1/teams')
         if (!empty($search)) {
             $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
-        
-        $results = $dbForInternal->find('teams', $queries, $limit, $offset, [], [$orderType], $afterTeam ?? null);
+
+        $results = $dbForInternal->find('teams', $queries, $limit, $offset, [], [$orderType], $cursorTeam ?? null, $cursorDirection);
         $sum = $dbForInternal->count('teams', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
@@ -443,11 +445,12 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('after', '', new UID(), 'ID of the membership used as the starting point for the query, excluding the membership itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursor', '', new UID(), 'ID of the membership used as the starting point for the query, excluding the membership itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($teamId, $search, $limit, $offset, $after, $orderType, $response, $dbForInternal) {
+    ->action(function ($teamId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
@@ -457,15 +460,15 @@ App::get('/v1/teams/:teamId/memberships')
             throw new Exception('Team not found', 404);
         }
 
-        if (!empty($after)) {
-            $afterMembership = $dbForInternal->getDocument('memberships', $after);
+        if (!empty($cursor)) {
+            $cursorMembership = $dbForInternal->getDocument('memberships', $cursor);
 
-            if ($afterMembership->isEmpty()) {
-                throw new Exception("Membership '{$after}' for the 'after' value not found.", 400);
+            if ($cursorMembership->isEmpty()) {
+                throw new Exception("Membership '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
 
-        $memberships = $dbForInternal->find('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], $limit, $offset, [], [$orderType], $afterMembership ?? null);
+        $memberships = $dbForInternal->find('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], $limit, $offset, [], [$orderType], $cursorMembership ?? null, $cursorDirection);
         $sum = $dbForInternal->count('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], APP_LIMIT_COUNT);
         $users = [];
 

@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\Database;
 
 class FunctionsCustomClientTest extends Scope
 {
@@ -253,11 +254,35 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
-            'after' => $base['body']['executions'][0]['$id']
+            'cursor' => $base['body']['executions'][0]['$id']
         ]);
 
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($base['body']['executions'][1]['$id'], $executions['body']['executions'][0]['$id']);
 
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apikey,
+        ], [
+            'cursor' => $base['body']['executions'][1]['$id'],
+            'cursorDirection' => Database::CURSOR_BEFORE
+        ]);
+
+        $this->assertCount(1, $executions['body']['executions']);
+        $this->assertEquals($base['body']['executions'][0]['$id'], $executions['body']['executions'][0]['$id']);
+
+        /**
+         * Test for FAILURE
+         */
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apikey,
+        ], [
+            'cursor' => 'unknown'
+        ]);
+
+        $this->assertEquals(400, $executions['headers']['status-code']);
     }
 }
