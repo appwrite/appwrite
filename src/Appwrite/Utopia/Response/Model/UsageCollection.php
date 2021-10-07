@@ -21,42 +21,42 @@ class UsageCollection extends Model
                 'description' => 'Aggregated stats for total number of documents.',
                 'default' => [],
                 'example' => new \stdClass,
-                'array' => true 
+                'array' => true
             ])
             ->addRule('documents.create', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for documents created.',
                 'default' => [],
                 'example' => new \stdClass,
-                'array' => true 
+                'array' => true
             ])
             ->addRule('documents.read', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for documents read.',
                 'default' => [],
                 'example' => new \stdClass,
-                'array' => true 
+                'array' => true
             ])
             ->addRule('documents.update', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for documents updated.',
                 'default' => [],
                 'example' => new \stdClass,
-                'array' => true 
+                'array' => true
             ])
             ->addRule('documents.delete', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for documents deleted.',
                 'default' => [],
                 'example' => new \stdClass,
-                'array' => true 
+                'array' => true
             ])
         ;
     }
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -66,7 +66,7 @@ class UsageCollection extends Model
 
     /**
      * Get Type
-     * 
+     *
      * @return string
      */
     public function getType():string
