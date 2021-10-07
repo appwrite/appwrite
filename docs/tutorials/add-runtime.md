@@ -177,3 +177,60 @@ The third line simply adds the new runtime to the main list.
 
 ## 5. Adding tests
 
+### 5.1 Writing your test execution script
+Adding tests for your runtime is simple, go into the `/tests/resources` folder and create a folder for the language you are creating then within the folder create a source code file for the language you are writing a runtime for, as if you were creating a user function for your runtime. Within this user function you are writing all you need to do is return some JSON with the following schema:
+```json
+{
+	"normal": "Hello World!",
+	"env1": request.env['ENV1'], // ENV1 from the request environment variable
+	"payload": request.payload, // Payload from the request
+}
+```
+### 5.2 Creating the test packaging script for your runtime
+With your test execution written you can move on to writing the script used to package your test execution script into a tarball for later use by the test system. Move into `/test/resources` again and notice how we have shell scripts for all runtimes we have made tests for. 
+
+Go ahead and create a shell script yourself with your language name. As an example the shell script name for dart would be `package-dart.sh`
+
+Within this newly created script copy paste this script and replace all the `LANGUAGE_NAME` parts with your language's name
+```
+echo  'LANGUAGE_NAME Packaging...'
+rm $(pwd)/tests/resources/LANGUAGE_NAME.tar.gz
+tar -zcvf $(pwd)/tests/resources/LANGUAGE_NAME.tar.gz -C $(pwd)/tests/resources/LANGUAGE_NAME .
+```
+go ahead and save this folder then `cd` into the root of the `php-runtimes` project in a terminal. Go ahead and run the following command replacing the `LANGUAGE_NAME` with your language's name:
+```
+chmod +x ./tests/resources/package-LANGUAGE_NAME.sh && ./tests/resources/package-LANGUAGE_NAME.sh
+```
+The first section changes the permissions of your script so you can execute it, while the second part actually executes the script and packages up your function.
+
+NOTE: If you ever want to repackage your script you can simply run: `./tests/resources/package-LANGUAGE_NAME.sh` in the root of the `php-runtimes` project since you don't have to change permissions more than once.
+
+### 5.3 Adding your runtime to the main testing script
+Now you have created your test execution script and have packaged it up for your runtime to execute you can now add it to the main testing script. Go ahead and open up the `./tests/Runtimes/RuntimesTest.php` file and find the part where we are defining `$this->tests` as of the time of writing this tutorial this is on line 27.
+
+Once you have find this go ahead and add your own entry into this array like so:
+```php
+'LANGUAGE_NAME-VERSION'  =>  [
+	'code'  =>  $functionsDir .  ' /LANGUAGE_NAME.tar.gz',
+	'entrypoint'  =>  'Test file', // Replace with the name of the test file you wrote in ./tests/resources/LANGUAGE_NAME
+	'timeout'  =>  15,
+	'runtime'  =>  'LANGUAGE_NAME-VERSION',
+	'tarname'  =>  'LANGUAGE_NAME-VERSION.tar.gz', // Note: If your version has a point in it replace it with a dash instead for this value.
+	'filename'  =>  'Test file' // Replace with the name of the test file you wrote in ./tests/resources/LANGUAGE_NAME
+],
+```
+Make sure to replace all instances of `LANGUAGE_NAME` with your language's name and `VERSION` with your runtime's version.
+
+Once you have done this and saved it, it is finally time to move onto one of the final steps.
+
+### 5.4 Running the tests.
+Running the tests is easy, simply run `docker-compose up` in the root of the `php-runtimes` folder. This will launch a docker container with the test script and start running going through all the runtimes making sure to test them thoroughly.
+
+If all tests pass then congratulations! You can now go ahead and file a PR against the `php-runtimes` repo, make sure your ready to respond to any feedback which can arise during our code review.
+
+## 6. Raise a pull request
+First of all, commit the changes with the message `Added XXX Runtime` and push it. This will publish a new branch to your forked version of Appwrite. If you visit it at `github.com/YOUR_USERNAME/php-runtimes`, you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
+
+## ![face_with_head_bandage](https://github.githubassets.com/images/icons/emoji/unicode/1f915.png) Stuck ?
+
+If you need any help with the contribution, feel free to head over to [our discord channel](https://appwrite.io/discord) and we'll be happy to help you out.
