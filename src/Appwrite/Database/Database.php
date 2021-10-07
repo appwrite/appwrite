@@ -580,7 +580,7 @@ class Database
     {
         if (!isset(self::$filters[$name])) {
             return $value;
-            throw new Exception('Filter not found');
+            throw new Exception("Filter '{$name}' not found");
         }
 
         try {
@@ -602,7 +602,7 @@ class Database
     {
         if (!isset(self::$filters[$name])) {
             return $value;
-            throw new Exception('Filter not found');
+            throw new Exception("Filter '{$name}' not found");
         }
 
         try {
