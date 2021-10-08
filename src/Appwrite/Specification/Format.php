@@ -99,7 +99,7 @@ abstract class Format
      *
      * @param string $key
      * @param string $value
-     * 
+     *
      * @return self
      */
     public function setParam(string $key, string $value): self
@@ -116,16 +116,15 @@ abstract class Format
      *
      * @param string $key
      * @param string $default
-     * 
+     *
      * @return string
      */
     public function getParam(string $key, string $default = ''): string
     {
-        if(!isset($this->params[$key])) {
+        if (!isset($this->params[$key])) {
             return $default;
         }
 
         return $this->params[$key];
     }
-
 }
