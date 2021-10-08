@@ -2,25 +2,25 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
-use Appwrite\Utopia\Response;
-use Utopia\App;
-use Utopia\Exception;
-use Utopia\Validator\Assoc;
-use Utopia\Validator\WhiteList;
 use Appwrite\Network\Validator\Email;
-use Utopia\Validator\Text;
-use Utopia\Validator\Range;
-use Utopia\Validator\Boolean;
+use Appwrite\Utopia\Response;
+use DeviceDetector\DeviceDetector;
+use Utopia\App;
 use Utopia\Audit\Audit;
+use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Validator\UID;
-use DeviceDetector\DeviceDetector;
-use Appwrite\Database\Validator\CustomId;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\CustomId;
+use Utopia\Exception;
+use Utopia\Validator\Assoc;
+use Utopia\Validator\WhiteList;
+use Utopia\Validator\Text;
+use Utopia\Validator\Range;
+use Utopia\Validator\Boolean;
 
 App::post('/v1/users')
     ->desc('Create User')

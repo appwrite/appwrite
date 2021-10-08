@@ -1,20 +1,19 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Validator\CustomId;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
-use Utopia\CLI\CLI;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\CustomId;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Exception;
@@ -59,13 +58,11 @@ App::post('/v1/projects')
     ->inject('dbForConsole')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
-    ->inject('consoleDB')
-    ->action(function ($projectId, $name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForInternal, $dbForExternal, $consoleDB) {
+    ->action(function ($projectId, $name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForInternal, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
-        /** @var Appwrite\Database\Database $consoleDB */
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -147,8 +144,6 @@ App::post('/v1/projects')
 
             $dbForInternal->createCollection($key, $attributes, $indexes);
         }
-
-        $consoleDB->createNamespace($project->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -527,7 +522,7 @@ App::delete('/v1/projects/:projectId')
     ->inject('deletes')
     ->action(function ($projectId, $password, $response, $user, $dbForConsole, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForConsole */
         /** @var Appwrite\Event\Event $deletes */
 

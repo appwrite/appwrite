@@ -3,7 +3,6 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
-use Appwrite\Database\Validator\CustomId;
 use Appwrite\Detector\Detector;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Host;
@@ -19,6 +18,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\CustomId;
 use Utopia\Database\Validator\UID;
 use Utopia\Exception;
 use Utopia\Validator\ArrayList;

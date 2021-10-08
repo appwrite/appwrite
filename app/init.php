@@ -21,9 +21,6 @@ use Appwrite\Extend\PDO;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Database as DatabaseOld;
-use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
-use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
@@ -149,43 +146,6 @@ if(!empty($user) || !empty($pass)) {
 } else {
     Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
 }
-
-/**
- * Old DB Filters
- */
-DatabaseOld::addFilter('json',
-    function($value) {
-        if(!is_array($value)) {
-            return $value;
-        }
-        return json_encode($value);
-    },
-    function($value) {
-        return json_decode($value, true);
-    }
-);
-
-DatabaseOld::addFilter('encrypt',
-    function($value) {
-        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
-        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-        $tag = null;
-        
-        return json_encode([
-            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-            'method' => OpenSSL::CIPHER_AES_128_GCM,
-            'iv' => bin2hex($iv),
-            'tag' => bin2hex($tag),
-            'version' => '1',
-        ]);
-    },
-    function($value) {
-        $value = json_decode($value, true);
-        $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
-
-        return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
-    }
-);
 
 /**
  * New DB Filters
@@ -789,24 +749,6 @@ App::setResource('console', function() {
         'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
     ]);
 }, []);
-
-App::setResource('consoleDB', function($db, $cache) {
-    $consoleDB = new DatabaseOld();
-    $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-    $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
-    $consoleDB->setMocks(Config::getParam('collections', []));
-
-    return $consoleDB;
-}, ['db', 'cache']);
-
-App::setResource('projectDB', function($db, $cache, $project) {
-    $projectDB = new DatabaseOld();
-    $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-    $projectDB->setNamespace('app_'.$project->getId());
-    $projectDB->setMocks(Config::getParam('collections', []));
-
-    return $projectDB;
-}, ['db', 'cache', 'project']);
 
 App::setResource('dbForInternal', function($db, $cache, $project) {
     $cache = new Cache(new RedisCache($cache));

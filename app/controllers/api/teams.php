@@ -1,7 +1,6 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Validator\CustomId;
 use Appwrite\Detector\Detector;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response;
@@ -19,6 +18,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\CustomId;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 
