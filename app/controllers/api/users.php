@@ -110,7 +110,7 @@ App::get('/v1/users')
             $cursorUser = $dbForInternal->getDocument('users', $cursor);
 
             if ($cursorUser->isEmpty()) {
-                throw new Exception("User '{$cursor}' for the 'after' value not found.", 400);
+                throw new Exception("User '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
 
@@ -451,7 +451,7 @@ App::patch('/v1/users/:userId/name')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
-        
+
         $user = $dbForInternal->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
@@ -497,8 +497,11 @@ App::patch('/v1/users/:userId/password')
             throw new Exception('User not found', 404);
         }
 
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('password', Auth::passwordHash($password))
-            ->setAttribute('passwordUpdate', \time()));
+        $user
+            ->setAttribute('password', Auth::passwordHash($password))
+            ->setAttribute('passwordUpdate', \time());
+
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
 
         $audits
             ->setParam('userId', $user->getId())
@@ -537,7 +540,13 @@ App::patch('/v1/users/:userId/email')
             throw new Exception('User not found', 404);
         }
 
-        $email = \strtolower($email);        
+        $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
+        if (!$isAnonymousUser) {
+            //TODO: Remove previous unique ID.
+        }
+
+        $email = \strtolower($email);
+
         try {
             $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('email', $email));
         } catch(Duplicate $th) {
@@ -546,7 +555,7 @@ App::patch('/v1/users/:userId/email')
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'account.update.email')
+            ->setParam('event', 'users.update.email')
             ->setParam('resource', 'user/'.$user->getId())
         ;
 
@@ -628,7 +637,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
                 $dbForInternal->deleteDocument('sessions', $session->getId());
 
                 $user->setAttribute('sessions', $sessions);
-                
+
                 $events
                     ->setParam('eventData', $response->output($user, Response::MODEL_USER))
                 ;

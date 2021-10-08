@@ -94,7 +94,7 @@ App::post('/v1/storage/files')
         // Save to storage
         $size = $device->getFileSize($file['tmp_name']);
         $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
-        
+
         if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
             throw new Exception('Failed moving file', 500);
         }
@@ -124,7 +124,7 @@ App::post('/v1/storage/files')
         }
 
         $sizeActual = $device->getFileSize($path);
-        
+
         $fileId = ($fileId == 'unique()') ? $dbForInternal->getId() : $fileId;
         $file = $dbForInternal->createDocument('files', new Document([
             '$id' => $fileId,

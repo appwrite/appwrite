@@ -21,30 +21,11 @@ class MigrationV09Test extends MigrationTest
     public function testMigration()
     {
         $document = $this->fixDocument(new Document([
-            '$id' => uniqid(),
-            '$collection' => Database::SYSTEM_COLLECTION_USERS,
-            'status' => 0
+            '$id' => 'project',
+            '$collection' => Database::SYSTEM_COLLECTION_PROJECTS,
+            'version' => '0.9.0'
         ]));
 
-        $this->assertIsBool($document->getAttribute('status'));
-        $this->assertEquals(true, $document->getAttribute('status', false));
-
-        $document = $this->fixDocument(new Document([
-            '$id' => uniqid(),
-            '$collection' => Database::SYSTEM_COLLECTION_USERS,
-            'status' => 1
-        ]));
-
-        $this->assertIsBool($document->getAttribute('status'));
-        $this->assertEquals(true, $document->getAttribute('status', false));
-
-        $document = $this->fixDocument(new Document([
-            '$id' => uniqid(),
-            '$collection' => Database::SYSTEM_COLLECTION_USERS,
-            'status' => 2
-        ]));
-
-        $this->assertIsBool($document->getAttribute('status'));
-        $this->assertEquals(false, $document->getAttribute('status', false));
+        $this->assertEquals($document->getAttribute('version', '0.9.0'), '0.10.0');
     }
 }

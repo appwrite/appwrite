@@ -12,8 +12,6 @@ Console::success(APP_NAME.' database worker v1 has started'."\n");
 
 class DatabaseV1 extends Worker
 {
-    public $args = [];
-
     public function init(): void
     {
     }
