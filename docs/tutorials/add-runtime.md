@@ -43,7 +43,7 @@ README.md - A readme file explaining the runtime and any special notes for the r
 ```
 
 ### 2.2 Differences between compiled and interpreted runtimes
-Runtimes within Appwrite are created differently depending on if they are compiled or interpreted. This is due to the fundamental differences between the two ways of running the code.
+Runtimes within Appwrite are created differently depending on whether they are compiled or interpreted. This is due to the fundamental differences between the two ways of running the code.
 
 Interpreted languages have both a `build.sh` file and a `launch.sh` file.
 The `build.sh` file for a interpreted runtime is normally used for installing any dependencies for both the server itself and the user's code then to copy it to the `/usr/code` folder which is packaged up and can be used later for running the server.
