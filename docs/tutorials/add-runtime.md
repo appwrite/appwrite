@@ -67,8 +67,8 @@ Initialize a web server which runs on port 3000 and uses any IP Address (0.0.0.0
 2. Decode the executor's JSON POST request. This normally looks like so:
 ```json
 {
- "path": "/usr/code", // Disregard for Compiled Languages
- "file": "index.js", // Disregard for Compiled Languages
+ "path": "/usr/code",
+ "file": "index.js",
  "env": {
 		 "hello":"world!"
 	},
@@ -76,7 +76,7 @@ Initialize a web server which runs on port 3000 and uses any IP Address (0.0.0.0
  "timeout": 10
 }
 ```
-For a compiled language you can disregard the `path` and `file` attribute if you like, 
+For a compiled language you can disregard the `path` and `file` attribute if you like,
 
 `timeout` is also an optional parameter to deal with, if you can handle it please do. Otherwise it doesn't matter since the connection will simply be dropped by the executor.
 
