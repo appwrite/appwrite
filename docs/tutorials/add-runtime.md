@@ -29,7 +29,7 @@ $ git clone COPIED_URL
 
 > To fork a repository, you will need a basic understanding of CLI and git-cli binaries installed. If you are a beginner, we recommend you to use `Github Desktop`. It is a really clean and simple visual Git client.
 
-Finally, you will need to create a `feat-XXX-YYY-runtime` branch based on the `master` branch and switch to it. The `XXX` should represent the issue ID and `YYY` the runtime name.
+Finally, you will need to create a `feat-XXX-YYY-runtime` branch based on the `refactor` branch and switch to it. The `XXX` should represent the issue ID and `YYY` the runtime name.
 
 ## 2. Implement new runtime
 
@@ -225,7 +225,7 @@ Once you have done this and saved it, it is finally time to move onto one of the
 ### 5.4 Running the tests.
 Running the tests is easy, simply run `docker-compose up` in the root of the `php-runtimes` folder. This will launch a Docker container with the test script and start running through all the runtimes making sure to test them thoroughly.
 
-If all tests pass then congratulations! You can now go ahead and file a PR against the `php-runtimes` repo, make sure you're ready to respond to any feedback which can arise during our code review.
+If all tests pass then congratulations! You can now go ahead and file a PR against the `php-runtimes` repo making sure to target the `refactor` branch, make sure you're ready to respond to any feedback which can arise during our code review.
 
 ## 6. Raise a pull request
 First of all, commit the changes with the message `Added XXX Runtime` and push it. This will publish a new branch to your forked version of Appwrite. If you visit it at `github.com/YOUR_USERNAME/php-runtimes`, you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
