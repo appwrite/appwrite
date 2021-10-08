@@ -46,7 +46,7 @@ README.md - A readme file explaining the runtime and any special notes for the r
 Runtimes within Appwrite are created differently depending on whether they are compiled or interpreted. This is due to the fundamental differences between the two ways of running the code.
 
 Interpreted languages have both a `build.sh` file and a `launch.sh` file.
-The `build.sh` file for a interpreted runtime is normally used for installing any dependencies for both the server itself and the user's code then to copy it to the `/usr/code` folder which is packaged up and can be used later for running the server.
+The `build.sh` file for an interpreted runtime is normally used for installing any dependencies for both the server itself and the user's code and then to copy it to the `/usr/code` folder which is then packaged and can be used later for running the server.
 The build script is always executed during the build stage of tag deployment.
 
 The `launch.sh` file for a interpreted runtime should extract the `/tmp/code.tar.gz` file that contains both the user's code and the dependencies. This tarball was created by Appwrite from the `/usr/code` folder and should install the dependencies that were pre-installed by the build stage and move them into the relevant locations for that runtime. It will then run the server ready for execution.
