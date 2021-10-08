@@ -46,6 +46,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Range;
+use Utopia\Validator\WhiteList;
 use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
@@ -65,6 +66,7 @@ const APP_LIMIT_USERS = 10000;
 const APP_CACHE_BUSTER = 151;
 const APP_VERSION_STABLE = '0.11.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
+const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
 const APP_DATABASE_ATTRIBUTE_URL = 'url';
 const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
@@ -199,6 +201,22 @@ Database::addFilter('casting',
     }
 );
 
+Database::addFilter('enum',
+    function($value, Document $attribute) {
+        if ($attribute->isSet('elements')) {
+            $attribute->removeAttribute('elements');
+        }
+        return $value;
+    },
+    function($value, Document $attribute) {
+        $formatOptions = json_decode($attribute->getAttribute('formatOptions', []), true);
+        if (isset($formatOptions['elements'])) {
+            $attribute->setAttribute('elements', $formatOptions['elements']);
+        }
+        return $value;
+    }
+);
+
 Database::addFilter('range',
     function($value, Document $attribute) {
         if ($attribute->isSet('min')) {
@@ -319,6 +337,11 @@ Database::addFilter('encrypt',
  */
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_EMAIL, function() {
     return new Email();
+}, Database::VAR_STRING);
+
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_ENUM, function($attribute) {
+    $elements = $attribute['formatOptions']['elements'];
+    return new WhiteList($elements);
 }, Database::VAR_STRING);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_IP, function() {
