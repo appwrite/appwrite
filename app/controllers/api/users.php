@@ -110,7 +110,7 @@ App::get('/v1/users')
             $cursorUser = $dbForInternal->getDocument('users', $cursor);
 
             if ($cursorUser->isEmpty()) {
-                throw new Exception("User '{$cursor}' for the 'after' value not found.", 400);
+                throw new Exception("User '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
 
