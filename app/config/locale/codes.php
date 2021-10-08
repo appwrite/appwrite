@@ -3,6 +3,7 @@
 return [
     'af', // Afrikaans
     'ar', // Arabic
+    'as', // Assamese
     'be', // Belarusian
     'bg', // Bulgarian
     'bh', // Bihari
