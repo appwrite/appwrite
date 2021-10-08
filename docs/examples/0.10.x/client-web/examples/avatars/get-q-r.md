@@ -1,3 +1,4 @@
+```js
 const sdk = new Appwrite();
 
 sdk
@@ -8,3 +9,4 @@ sdk
 let result = sdk.avatars.getQR('[TEXT]');
 
 console.log(result); // Resource URL
+```
