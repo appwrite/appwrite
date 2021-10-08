@@ -2,8 +2,8 @@
 
 namespace Appwrite\Tests;
 
-use Appwrite\Database\Document;
 use Appwrite\Messaging\Adapter\Realtime;
+use Utopia\Database\Document;
 use PHPUnit\Framework\TestCase;
 
 class MessagingTest extends TestCase
