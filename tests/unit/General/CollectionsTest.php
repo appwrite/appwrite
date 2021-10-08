@@ -17,14 +17,14 @@ class CollectionsTest extends TestCase
     {
     }
 
-    public function testDuplicateRules()
+    public function testDuplicateAttributes()
     {
         foreach ($this->collections as $key => $collection) {
             if (array_key_exists('attributes', $collection)) {
                 foreach ($collection['attributes'] as $check) {
                     $occurences = 0;
-                    foreach ($collection['attributes'] as $rule) {
-                        if ($rule['$id'] == $check['$id']) {
+                    foreach ($collection['attributes'] as $attribute) {
+                        if ($attribute['$id'] == $check['$id']) {
                             $occurences++;
                         }
                     }
