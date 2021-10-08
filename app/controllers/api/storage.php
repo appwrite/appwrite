@@ -2,6 +2,7 @@
 
 use Appwrite\ClamAV\Network;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Exception;
@@ -13,7 +14,6 @@ use Utopia\Validator\HexColor;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\CustomId;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;

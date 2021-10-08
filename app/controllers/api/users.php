@@ -3,6 +3,7 @@
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Network\Validator\Email;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use DeviceDetector\DeviceDetector;
 use Utopia\App;
@@ -14,7 +15,6 @@ use Utopia\Database\Validator\UID;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\CustomId;
 use Utopia\Exception;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\WhiteList;

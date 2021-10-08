@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\URL;
@@ -13,7 +14,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\CustomId;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Exception;
@@ -103,7 +103,7 @@ App::post('/v1/projects')
             'search' => implode(' ', [$projectId, $name]),
         ]));
 
-        $collections = Config::getParam('collections2', []); /** @var array $collections */
+        $collections = Config::getParam('collections', []); /** @var array $collections */
 
         $dbForInternal->setNamespace('project_' . $project->getId() . '_internal');
         $dbForInternal->create();

@@ -4,6 +4,9 @@ use Appwrite\Auth\Auth;
 use Appwrite\Detector\Detector;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Key;
+use Appwrite\Utopia\Database\Validator\UID;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Host;
 use Utopia\App;
@@ -15,12 +18,10 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\CustomId;
-use Utopia\Database\Validator\Key;
-use Utopia\Database\Validator\UID;
+
 
 App::post('/v1/teams')
     ->desc('Create Team')

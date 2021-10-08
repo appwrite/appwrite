@@ -2,7 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use PHPUnit\Framework\TestCase;
 
 class CustomIdTest extends TestCase
