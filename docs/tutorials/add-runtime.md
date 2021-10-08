@@ -39,7 +39,7 @@ The first step to writing a new runtime is to create a folder within `/runtimes`
 Within that folder you will need to create a few basic files that all Appwrite runtimes require:
 ```
 Dockerfile - Dockerfile that explains how the container will be built.
-README.md - A readme file explaining the runtime and any special notes for the runtime. A good example of this is the PHP 8.0 one.
+README.md - A readme file explaining the runtime and any special notes for the runtime. A good example of this is the PHP 8.0 runtime.
 ```
 
 ### 2.2 Differences between compiled and interpreted runtimes
