@@ -2,7 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Utopia\Database\Validator\UID;
+use Appwrite\Utopia\Database\Validator\UID;
 use PHPUnit\Framework\TestCase;
 
 class UIDTest extends TestCase

@@ -20,11 +20,11 @@ class CollectionsTest extends TestCase
     public function testDuplicateRules()
     {
         foreach ($this->collections as $key => $collection) {
-            if (array_key_exists('rules', $collection)) {
-                foreach ($collection['rules'] as $check) {
+            if (array_key_exists('attributes', $collection)) {
+                foreach ($collection['attributes'] as $check) {
                     $occurences = 0;
-                    foreach ($collection['rules'] as $rule) {
-                        if ($rule['key'] == $check['key']) {
+                    foreach ($collection['attributes'] as $rule) {
+                        if ($rule['$id'] == $check['$id']) {
                             $occurences++;
                         }
                     }
