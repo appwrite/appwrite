@@ -103,7 +103,7 @@ class OpenAPI3 extends Format
             $id = $route->getLabel('sdk.method', \uniqid());
             $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__.'/../../../../'.$route->getLabel('sdk.description', '')) : null;
             $produces = $route->getLabel('sdk.response.type', null);
-            $model = $route->getLabel('sdk.response.model', 'none'); 
+            $model = $route->getLabel('sdk.response.model', 'none');
             $routeSecurity = $route->getLabel('sdk.auth', []);
             $sdkPlatofrms = [];
 
@@ -124,7 +124,7 @@ class OpenAPI3 extends Format
                 }
             }
 
-            if(empty($routeSecurity)) {
+            if (empty($routeSecurity)) {
                 $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
             }
             
@@ -153,13 +153,13 @@ class OpenAPI3 extends Format
             ];
 
             foreach ($this->models as $key => $value) {
-                if($value->getType() === $model) {
+                if ($value->getType() === $model) {
                     $model = $value;
                     break;
                 }
             }
 
-            if($model->isNone()) {
+            if ($model->isNone()) {
                 $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
                     'description' => (in_array($produces, [
                         'image/*',
@@ -189,7 +189,7 @@ class OpenAPI3 extends Format
                 ];
             }
 
-            if($route->getLabel('sdk.response.code', 500) === 204) {
+            if ($route->getLabel('sdk.response.code', 500) === 204) {
                 $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['description'] = 'No content';
                 unset($temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['schema']);
             }
@@ -197,8 +197,8 @@ class OpenAPI3 extends Format
             if ((!empty($scope))) { //  && 'public' != $scope
                 $securities = ['Project' => []];
                 
-                foreach($route->getLabel('sdk.auth', []) as $security) {
-                    if(array_key_exists($security, $this->keys)) {
+                foreach ($route->getLabel('sdk.auth', []) as $security) {
+                    if (array_key_exists($security, $this->keys)) {
                         $securities[$security] = [];
                     }
                 }
@@ -317,7 +317,7 @@ class OpenAPI3 extends Format
                     $node['in'] = 'query';
                     $temp['parameters'][] = $node;
                 } else { // Param is in payload
-                    if(!$param['optional']) {
+                    if (!$param['optional']) {
                         $bodyRequired[] = $name;
                     }
 
@@ -327,11 +327,11 @@ class OpenAPI3 extends Format
                         'x-example' => $node['x-example'] ?? null,
                     ];
 
-                    if(isset($node['default'])) {
+                    if (isset($node['default'])) {
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['default'] = $node['default'];
                     }
 
-                    if(\array_key_exists('items', $node['schema'])) {
+                    if (\array_key_exists('items', $node['schema'])) {
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['items'] = $node['schema']['items'];
                     }
                 }
@@ -339,11 +339,11 @@ class OpenAPI3 extends Format
                 $url = \str_replace(':'.$name, '{'.$name.'}', $url);
             }
 
-            if(!empty($bodyRequired)) {
+            if (!empty($bodyRequired)) {
                 $body['content'][$consumes[0]]['schema']['required'] = $bodyRequired;
             }
 
-            if(!empty($body['content'][$consumes[0]]['schema']['properties'])) {
+            if (!empty($body['content'][$consumes[0]]['schema']['properties'])) {
                 $temp['requestBody'] = $body;
             }
 
@@ -371,19 +371,19 @@ class OpenAPI3 extends Format
                 'type' => 'object',
             ];
 
-            if(!empty($rules)) {
+            if (!empty($rules)) {
                 $output['components']['schemas'][$model->getType()]['properties'] = [];
             }
 
-            if($model->isAny()) {
+            if ($model->isAny()) {
                 $output['components']['schemas'][$model->getType()]['additionalProperties'] = true;
             }
             
-            if(!empty($required)) {
+            if (!empty($required)) {
                 $output['components']['schemas'][$model->getType()]['required'] = $required;
             }
 
-            foreach($model->getRules() as $name => $rule) {
+            foreach ($model->getRules() as $name => $rule) {
                 $type = '';
                 $format = null;
                 $items = null;
@@ -418,7 +418,7 @@ class OpenAPI3 extends Format
                         break;
                 }
 
-                if($rule['array']) {
+                if ($rule['array']) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name] = [
                         'type' => 'array',
                         'description' => $rule['description'] ?? '',
@@ -428,11 +428,11 @@ class OpenAPI3 extends Format
                         'x-example' => $rule['example'] ?? null,
                     ];
 
-                    if($format) {
+                    if ($format) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['format'] = $format;
                     }
 
-                    if($items) {
+                    if ($items) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
                     }
                 } else {
@@ -443,11 +443,11 @@ class OpenAPI3 extends Format
                         'x-example' => $rule['example'] ?? null,
                     ];
 
-                    if($format) {
+                    if ($format) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['format'] = $format;
                     }
 
-                    if($items) {
+                    if ($items) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
                     }
                 }
