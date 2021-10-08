@@ -40,6 +40,7 @@ return [
     'ms', // Malay
     'nl', // Dutch
     'no', // Norwegian
+    'nn', // Norwegian nynorsk
     'ne', // Nepali
     'or', // Oriya
     'tl', // Filipino
