@@ -481,18 +481,16 @@ class FunctionsV1 extends Worker
 
         Console::info('Function executed in ' . ($executionEnd - $executionStart) . ' seconds, status: ' . $functionStatus);
 
-        Authorization::disable();
-        
-        $execution = $database->updateDocument('executions', $execution->getId(), new Document(array_merge($execution->getArrayCopy(), [
-            'tagId' => $tag->getId(),
-            'status' => $functionStatus,
-            'exitCode' => $exitCode,
-            'stdout' => \mb_substr($stdout, -8000), // log last 8000 chars output
-            'stderr' => \mb_substr($stderr, -8000), // log last 8000 chars output
-            'time' => (float)$executionTime,
-        ])));
-        
-        Authorization::reset();
+        $execution = Authorization::skip(function() use ($database, $execution, $tag, $functionStatus, $exitCode, $stdout, $stderr, $executionTime) {
+            return $database->updateDocument('executions', $execution->getId(), new Document(array_merge($execution->getArrayCopy(), [
+                'tagId' => $tag->getId(),
+                'status' => $functionStatus,
+                'exitCode' => $exitCode,
+                'stdout' => \utf8_encode(\mb_substr($stdout, -8000)), // log last 8000 chars output
+                'stderr' => \utf8_encode(\mb_substr($stderr, -8000)), // log last 8000 chars output
+                'time' => (float)$executionTime,
+            ])));
+        });
 
         $executionModel = new Execution();
         $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
