@@ -197,7 +197,7 @@ echo  'LANGUAGE_NAME Packaging...'
 rm $(pwd)/tests/resources/LANGUAGE_NAME.tar.gz
 tar -zcvf $(pwd)/tests/resources/LANGUAGE_NAME.tar.gz -C $(pwd)/tests/resources/LANGUAGE_NAME .
 ```
-go ahead and save this folder then `cd` into the root of the `php-runtimes` project in a terminal. Go ahead and run the following command replacing the `LANGUAGE_NAME` with your language's name:
+Go ahead and save this file. Then `cd` into the root of the `php-runtimes` project in a terminal. Go ahead and run the following command replacing the `LANGUAGE_NAME` with your language's name:
 ```
 chmod +x ./tests/resources/package-LANGUAGE_NAME.sh && ./tests/resources/package-LANGUAGE_NAME.sh
 ```
