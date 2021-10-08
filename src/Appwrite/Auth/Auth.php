@@ -240,7 +240,7 @@ class Auth
     }
 
     /**
-     * Is Previligged User?
+     * Is Privileged User?
      * 
      * @param array $roles
      * 
