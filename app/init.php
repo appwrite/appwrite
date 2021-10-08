@@ -471,10 +471,12 @@ Locale::setLanguageFromJSON('af', __DIR__.'/config/locale/translations/af.json')
 Locale::setLanguageFromJSON('ar', __DIR__.'/config/locale/translations/ar.json');
 Locale::setLanguageFromJSON('be', __DIR__.'/config/locale/translations/be.json');
 Locale::setLanguageFromJSON('bg', __DIR__.'/config/locale/translations/bg.json');
+Locale::setLanguageFromJSON('bh', __DIR__.'/config/locale/translations/bh.json');
 Locale::setLanguageFromJSON('bn', __DIR__.'/config/locale/translations/bn.json');
 Locale::setLanguageFromJSON('bs', __DIR__.'/config/locale/translations/bs.json');
 Locale::setLanguageFromJSON('ca', __DIR__.'/config/locale/translations/ca.json');
 Locale::setLanguageFromJSON('cs', __DIR__.'/config/locale/translations/cs.json');
+Locale::setLanguageFromJSON('da', __DIR__.'/config/locale/translations/da.json');
 Locale::setLanguageFromJSON('de', __DIR__.'/config/locale/translations/de.json');
 Locale::setLanguageFromJSON('el', __DIR__.'/config/locale/translations/el.json');
 Locale::setLanguageFromJSON('en', __DIR__.'/config/locale/translations/en.json');
@@ -486,6 +488,7 @@ Locale::setLanguageFromJSON('fr', __DIR__.'/config/locale/translations/fr.json')
 Locale::setLanguageFromJSON('gu', __DIR__.'/config/locale/translations/gu.json');
 Locale::setLanguageFromJSON('he', __DIR__.'/config/locale/translations/he.json');
 Locale::setLanguageFromJSON('hi', __DIR__.'/config/locale/translations/hi.json');
+Locale::setLanguageFromJSON('hr', __DIR__.'/config/locale/translations/hr.json');
 Locale::setLanguageFromJSON('hu', __DIR__.'/config/locale/translations/hu.json');
 Locale::setLanguageFromJSON('hy', __DIR__.'/config/locale/translations/hy.json');
 Locale::setLanguageFromJSON('id', __DIR__.'/config/locale/translations/id.json');
@@ -496,6 +499,7 @@ Locale::setLanguageFromJSON('jv', __DIR__.'/config/locale/translations/jv.json')
 Locale::setLanguageFromJSON('kn', __DIR__.'/config/locale/translations/kn.json');
 Locale::setLanguageFromJSON('km', __DIR__.'/config/locale/translations/km.json');
 Locale::setLanguageFromJSON('ko', __DIR__.'/config/locale/translations/ko.json');
+Locale::setLanguageFromJSON('lb', __DIR__.'/config/locale/translations/lb.json');
 Locale::setLanguageFromJSON('lt', __DIR__.'/config/locale/translations/lt.json');
 Locale::setLanguageFromJSON('ml', __DIR__.'/config/locale/translations/ml.json');
 Locale::setLanguageFromJSON('mr', __DIR__.'/config/locale/translations/mr.json');
@@ -510,7 +514,9 @@ Locale::setLanguageFromJSON('pt-br', __DIR__.'/config/locale/translations/pt-br.
 Locale::setLanguageFromJSON('pt-pt', __DIR__.'/config/locale/translations/pt-pt.json');
 Locale::setLanguageFromJSON('ro', __DIR__.'/config/locale/translations/ro.json');
 Locale::setLanguageFromJSON('ru', __DIR__ . '/config/locale/translations/ru.json');
+Locale::setLanguageFromJSON('sa', __DIR__ . '/config/locale/translations/sa.json');
 Locale::setLanguageFromJSON('si', __DIR__ . '/config/locale/translations/si.json');
+Locale::setLanguageFromJSON('sk', __DIR__ . '/config/locale/translations/sk.json');
 Locale::setLanguageFromJSON('sl', __DIR__ . '/config/locale/translations/sl.json');
 Locale::setLanguageFromJSON('sq', __DIR__ . '/config/locale/translations/sq.json');
 Locale::setLanguageFromJSON('sv', __DIR__ . '/config/locale/translations/sv.json');

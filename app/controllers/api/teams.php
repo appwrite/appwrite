@@ -271,9 +271,9 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('abuse-limit', 10)
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('email', '', new Email(), 'New team member email.')
-    ->param('name', '', new Text(128), 'New team member name. Max length: 128 chars.', true)
     ->param('roles', [], new ArrayList(new Key()), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
-    ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
+    ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
+    ->param('name', '', new Text(128), 'New team member name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
     ->inject('user')
@@ -281,7 +281,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('locale')
     ->inject('audits')
     ->inject('mails')
-    ->action(function ($teamId, $email, $name, $roles, $url, $response, $project, $user, $dbForInternal, $locale, $audits, $mails) {
+    ->action(function ($teamId, $email, $roles, $url, $name, $response, $project, $user, $dbForInternal, $locale, $audits, $mails) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Document $user */
@@ -292,10 +292,10 @@ App::post('/v1/teams/:teamId/memberships')
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception('SMTP Disabled', 503);
         }
-        
+
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
-        
+
         $email = \strtolower($email);
         $name = (empty($name)) ? $email : $name;
         $team = $dbForInternal->getDocument('teams', $teamId);
@@ -309,10 +309,10 @@ App::post('/v1/teams/:teamId/memberships')
         if (empty($invitee)) { // Create new user if no user with same email found
 
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
-        
+
             if ($limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
                 $sum = $dbForInternal->count('users', [], APP_LIMIT_USERS);
-    
+
                 if($sum >= $limit) {
                     throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
                 }
