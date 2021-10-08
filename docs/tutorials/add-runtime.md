@@ -3,7 +3,7 @@
 This document is part of the Appwrite contributors' guide. Before you continue reading this document make sure you have read the [Code of Conduct](https://github.com/appwrite/appwrite/blob/master/CODE_OF_CONDUCT.md) and the [Contributing Guide](https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md).
 
 ## Getting started
-Function Runtimes allow you to execute code written for any language as apart of the Appwrite Stack as serverless functions! Appwrite's Goal is to support as many function runtimes as possible.
+Function Runtimes allow you to execute code written in any language and form the basis of Appwrite's serverless functions! Appwrite's goal is to support as many function runtimes as possible.
 
 ## 1. Prerequisites
 In order for a function runtime to work two prerequisites **must** be met due to the way that Appwrite's Runtime Execution Model works. Theses are as followed:
