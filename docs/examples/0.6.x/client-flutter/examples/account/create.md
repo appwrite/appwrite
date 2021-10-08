@@ -1,3 +1,6 @@
+## Create account
+
+```
 import 'package:appwrite/appwrite.dart';
 
 void main() { // Init SDK
@@ -20,4 +23,4 @@ void main() { // Init SDK
     }).catchError((error) {
       print(error.response);
   });
-}
+}```
