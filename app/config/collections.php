@@ -2,7 +2,6 @@
 
 use Utopia\App;
 use Utopia\Config\Config;
-use Appwrite\Database\Database;
 
 $providers = Config::getParam('providers', []);
 $auth = Config::getParam('auth', []);
