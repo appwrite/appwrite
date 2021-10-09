@@ -1,9 +1,9 @@
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import io.appwrite.Client
-import io.appwrite.services.Account
+import androidx.appcompat.app.AppCompatActivity<br/>
+import android.os.Bundle<br/>
+import kotlinx.coroutines.GlobalScope<br/>
+import kotlinx.coroutines.launch<br/>
+import io.appwrite.Client<br/>
+import io.appwrite.services.Account<br/>
 
 public class MainActivity extends AppCompatActivity {
 
