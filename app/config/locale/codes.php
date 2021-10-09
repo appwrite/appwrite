@@ -65,4 +65,5 @@ return [
     'vi', // Vietnamese
     'zh-cn', // Chinese - China
     'zh-tw', // Chinese - Taiwan
+    'zu', //Shona
 ];
