@@ -10,9 +10,16 @@
     "gulp:build": "gulp build"
   },
   "devDependencies": {
+<<<<<<< HEAD
     "gulp": "^4.0.2",
     "gulp-clean-css": "^4.3.0",
     "gulp-concat": "^2.6.1",
+=======
+    "appwrite": "^1.2.0",
+    "gulp": "^4.0.0",
+    "gulp-clean-css": "^4.0.0",
+    "gulp-concat": "2.5.2",
+>>>>>>> 25865a3d (Create Code Of Conduct file for Appwrite.)
     "gulp-jsmin": "^0.1.5",
     "gulp-less": "^5.0.0"
   }
