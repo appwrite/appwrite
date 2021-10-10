@@ -21,6 +21,7 @@ return [
     'fo', // Faroese
     'fr', // French
     'el', // Greek
+    'ga', // Irish
     'gu', // Gujrati
     'he', // Hebrew
     'hi', // Hindi,
