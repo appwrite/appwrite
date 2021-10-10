@@ -73,7 +73,7 @@ class Origin extends Validator
                 case self::CLIENT_TYPE_FLUTTER_WINDOWS:
                 case self::CLIENT_TYPE_FLUTTER_LINUX:
                 case self::CLIENT_TYPE_ANDROID:
-                case self::CLIENT_TYPE_IOS: 
+                case self::CLIENT_TYPE_IOS:
                     $this->clients[] = (isset($platform['key'])) ? $platform['key'] : '';
                     break;
                 
