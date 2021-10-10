@@ -5,8 +5,7 @@ namespace Appwrite\Task\Validator;
 use Cron\CronExpression;
 use Utopia\Validator;
 
-class Cron extends Validator
-{
+class Cron extends Validator {
     /**
      * Get Description.
      *
