@@ -158,7 +158,7 @@ If you are lost in the Appwrite dashboard, check out our [Article about Appwrite
 
 Now, let's send the request. We will be editing headers of the request, so you will need a tool to do that, such as Postman or Insomnia.
 
-First, let's see English translations. Let's set request type to `GET`, URL to `https://localhost/v1/locale/countries/eu` and add `X-Appwrite-Project` header.
+First, let's see English translations. Let's set request type to `GET`, URL to `http://localhost/v1/locale/countries/eu` and add `X-Appwrite-Project` header.
 
 ![English test](images/test-en.png)
 
