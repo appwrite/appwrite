@@ -24,7 +24,7 @@
     "emails.invitation.subject": "Kukokwa kuchikwata che%s ku%s",
     "emails.invitation.hello": "Mhoro",
     "emails.invitation.body": "Tsamba iyi yatumirwa kwauri nekuti {{owner}} anga achida kuti uve nhengo yechikwata che{{team}} pachirongwa che{{project}}.",
-    "emails.invitation.footer": "Kana usiri kufarira kuve nhengo yechikwata ichi, unogona kufuratira iyi meseji.",
+    "emails.invitation.footer": "Kana usiri kufarira kuve nhengo yechikwata ichi, unogona kufuratira meseji iyi.",
     "emails.invitation.thanks": "Ndatenda",
     "emails.invitation.signature": "Chikwata che{{project}}",
     "locale.country.unknown": "Haizivikanwe",
