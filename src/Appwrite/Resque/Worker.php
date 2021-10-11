@@ -2,11 +2,11 @@
 
 namespace Appwrite\Resque;
 
-use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Database;
 
 abstract class Worker
 {
@@ -39,10 +39,9 @@ abstract class Worker
     {
         $this->shutdown();
     }
+
     /**
-     * Get internal project database
-     * @param string $projectId
-     * @return Database
+     * Get internal project database.
      */
     protected function getInternalDB(string $projectId): Database
     {
@@ -50,9 +49,7 @@ abstract class Worker
     }
 
     /**
-     * Get external project database
-     * @param string $projectId
-     * @return Database
+     * Get external project database.
      */
     protected function getExternalDB(string $projectId): Database
     {
@@ -60,8 +57,7 @@ abstract class Worker
     }
 
     /**
-     * Get console database
-     * @return Database
+     * Get console database.
      */
     protected function getConsoleDB(): Database
     {
@@ -69,10 +65,10 @@ abstract class Worker
     }
 
     /**
-     * Get console database
-     * @param string $type One of (internal, external, console)
+     * Get console database.
+     *
+     * @param string $type      One of (internal, external, console)
      * @param string $projectId of internal or external DB
-     * @return Database
      */
     private function getDB($type, $projectId = ''): Database
     {
@@ -95,11 +91,11 @@ abstract class Worker
                 $namespace = "project_{$projectId}_external";
                 break;
             case self::DATABASE_CONSOLE:
-                $namespace = "project_console_internal";
+                $namespace = 'project_console_internal';
                 $sleep = 5; // ConsoleDB needs extra sleep time to ensure tables are created
                 break;
             default:
-                throw new \Exception('Unknown database type: ' . $type);
+                throw new \Exception('Unknown database type: '.$type);
                 break;
         }
 
@@ -115,10 +111,10 @@ abstract class Worker
                     throw new \Exception("Table does not exist: {$database->getNamespace()}");
                 }
                 break; // leave loop if successful
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
                 if ($attempts >= self::MAX_ATTEMPTS) {
-                    throw new \Exception('Failed to connect to database: '. $e->getMessage());
+                    throw new \Exception('Failed to connect to database: '.$e->getMessage());
                 }
                 sleep($sleep);
             }
