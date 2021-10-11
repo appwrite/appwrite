@@ -264,6 +264,7 @@ Locale::$exceptions = false;
 Locale::setLanguageFromJSON('af', __DIR__.'/config/locale/translations/af.json');
 Locale::setLanguageFromJSON('ar', __DIR__.'/config/locale/translations/ar.json');
 Locale::setLanguageFromJSON('as', __DIR__.'/config/locale/translations/as.json');
+Locale::setLanguageFromJSON('az', __DIR__.'/config/locale/translations/az.json');
 Locale::setLanguageFromJSON('be', __DIR__.'/config/locale/translations/be.json');
 Locale::setLanguageFromJSON('bg', __DIR__.'/config/locale/translations/bg.json');
 Locale::setLanguageFromJSON('bh', __DIR__.'/config/locale/translations/bh.json');
@@ -281,6 +282,7 @@ Locale::setLanguageFromJSON('fa', __DIR__.'/config/locale/translations/fa.json')
 Locale::setLanguageFromJSON('fi', __DIR__.'/config/locale/translations/fi.json');
 Locale::setLanguageFromJSON('fo', __DIR__.'/config/locale/translations/fo.json');
 Locale::setLanguageFromJSON('fr', __DIR__.'/config/locale/translations/fr.json');
+Locale::setLanguageFromJSON('ga', __DIR__.'/config/locale/translations/ga.json');
 Locale::setLanguageFromJSON('gu', __DIR__.'/config/locale/translations/gu.json');
 Locale::setLanguageFromJSON('he', __DIR__.'/config/locale/translations/he.json');
 Locale::setLanguageFromJSON('hi', __DIR__.'/config/locale/translations/hi.json');
@@ -297,9 +299,11 @@ Locale::setLanguageFromJSON('km', __DIR__.'/config/locale/translations/km.json')
 Locale::setLanguageFromJSON('ko', __DIR__.'/config/locale/translations/ko.json');
 Locale::setLanguageFromJSON('lb', __DIR__.'/config/locale/translations/lb.json');
 Locale::setLanguageFromJSON('lt', __DIR__.'/config/locale/translations/lt.json');
+Locale::setLanguageFromJSON('lv', __DIR__.'/config/locale/translations/lv.json');
 Locale::setLanguageFromJSON('ml', __DIR__.'/config/locale/translations/ml.json');
 Locale::setLanguageFromJSON('mr', __DIR__.'/config/locale/translations/mr.json');
 Locale::setLanguageFromJSON('ms', __DIR__.'/config/locale/translations/ms.json');
+Locale::setLanguageFromJSON('nb', __DIR__.'/config/locale/translations/nb.json');
 Locale::setLanguageFromJSON('ne', __DIR__.'/config/locale/translations/ne.json');
 Locale::setLanguageFromJSON('nl', __DIR__.'/config/locale/translations/nl.json');
 Locale::setLanguageFromJSON('no', __DIR__.'/config/locale/translations/no.json');
