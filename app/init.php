@@ -281,6 +281,7 @@ Locale::setLanguageFromJSON('fa', __DIR__.'/config/locale/translations/fa.json')
 Locale::setLanguageFromJSON('fi', __DIR__.'/config/locale/translations/fi.json');
 Locale::setLanguageFromJSON('fo', __DIR__.'/config/locale/translations/fo.json');
 Locale::setLanguageFromJSON('fr', __DIR__.'/config/locale/translations/fr.json');
+Locale::setLanguageFromJSON('ga', __DIR__.'/config/locale/translations/ga.json');
 Locale::setLanguageFromJSON('gu', __DIR__.'/config/locale/translations/gu.json');
 Locale::setLanguageFromJSON('he', __DIR__.'/config/locale/translations/he.json');
 Locale::setLanguageFromJSON('hi', __DIR__.'/config/locale/translations/hi.json');
