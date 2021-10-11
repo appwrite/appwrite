@@ -43,7 +43,7 @@ Upgrade the utopia-php/storage dependency in `composer.json` file.
 If required for the new adapter, may be for credentials, introduce new environment variables. The storage environment variables are prefixed as `_APP_STORAGE_DEVICE`. Please read [Adding Environment Variables]() guidelines in order to properly introduce new environment variables.
 
 ### Implement the device case
-In `app/controllers/shared/api.php` inside init function, there is a `switch/case` statements for each supported storage device. Implement the instantiation of your device type for your device case. The device cases are the devices constants listed in the `uptopa-php/storage/Storage` class.
+In `app/controllers/shared/api.php` inside init function, there is a `switch/case` statement for each supported storage device. Implement the instantiation of your device type for your device case. The device cases are the devices constants listed in the `uptopa-php/storage/Storage` class.
 
 ### Test and verify everything works
 To test you can switch to your newly added device using `_APP_STORAGE_DEVICE` environment variable. Then run `docker-compose build && docker-compose up -d` in order to build the containers with updated changes. Once the containers are running, login to Appwrite console and create a project. Then in storage section, try to upload, preview, delete files.
