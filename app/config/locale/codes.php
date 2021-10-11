@@ -43,6 +43,7 @@ return [
     'ml', // Malayalam
     'mr', // Marathi
     'ms', // Malay
+    'nb', // Norwegian - Bokmål
     'nl', // Dutch
     'no', // Norwegian
     'ne', // Nepali
