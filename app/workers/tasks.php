@@ -37,13 +37,13 @@ class TasksV1 extends Worker
          * 1. Get Original Task
          * 2. Check for updates
          *  If has updates skip task and don't reschedule
-         *  If status not equal to play skip task
+         *  If status not equal to play skip a task
          * 3. Check next run date, update task and add new job at the given date
          * 4. Execute task (set optional timeout)
-         * 5. Update task response to log
+         * 5. Update task response to the log
          *      On success reset error count
          *      On failure add error count
-         *      If error count bigger than allowed change status to pause
+         *      If error count is bigger than allowed change status to pause
          */
 
         $taskId = $this->args['$id'] ?? null;
@@ -196,7 +196,7 @@ class TasksV1 extends Worker
 
         // ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());  // Sync task rescheduale
 
-        // Send alert if needed (use SMTP as default for now)
+        // Send an alert if needed (use SMTP as default for now)
 
         return;
     }
