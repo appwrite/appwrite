@@ -299,6 +299,7 @@ Locale::setLanguageFromJSON('km', __DIR__.'/config/locale/translations/km.json')
 Locale::setLanguageFromJSON('ko', __DIR__.'/config/locale/translations/ko.json');
 Locale::setLanguageFromJSON('lb', __DIR__.'/config/locale/translations/lb.json');
 Locale::setLanguageFromJSON('lt', __DIR__.'/config/locale/translations/lt.json');
+Locale::setLanguageFromJSON('lv', __DIR__.'/config/locale/translations/lv.json');
 Locale::setLanguageFromJSON('ml', __DIR__.'/config/locale/translations/ml.json');
 Locale::setLanguageFromJSON('mr', __DIR__.'/config/locale/translations/mr.json');
 Locale::setLanguageFromJSON('ms', __DIR__.'/config/locale/translations/ms.json');

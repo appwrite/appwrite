@@ -39,6 +39,7 @@ return [
     'ko', // Korean
     'lb', // Luxembourgish
     'lt', // Lithuanian
+    'lv', // Latvian
     'ml', // Malayalam
     'mr', // Marathi
     'ms', // Malay
