@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Storage;
 
 use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Database\Database;
 use Utopia\Image\Image;
 
 trait StorageBase
@@ -17,10 +18,10 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-            'read' => ['*'],
-            'write' => ['*'],
-            'folderId' => 'xyz',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 201);
@@ -35,7 +36,7 @@ trait StorageBase
          */
         return ['fileId' => $file['body']['$id']];
     }
-    
+
     /**
      * @depends testCreateFile
      */
@@ -61,10 +62,10 @@ trait StorageBase
         //$this->assertEquals('aes-128-gcm', $file1['body']['fileOpenSSLCipher']);
         //$this->assertNotEmpty($file1['body']['fileOpenSSLTag']);
         //$this->assertNotEmpty($file1['body']['fileOpenSSLIV']);
-        $this->assertIsArray($file1['body']['$permissions']['read']);
-        $this->assertIsArray($file1['body']['$permissions']['write']);
-        $this->assertCount(1, $file1['body']['$permissions']['read']);
-        $this->assertCount(1, $file1['body']['$permissions']['write']);
+        $this->assertIsArray($file1['body']['$read']);
+        $this->assertIsArray($file1['body']['$write']);
+        $this->assertCount(1, $file1['body']['$read']);
+        $this->assertCount(1, $file1['body']['$write']);
 
         $file2 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
@@ -100,7 +101,6 @@ trait StorageBase
         $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
         $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
-
 
         $file4 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
@@ -159,19 +159,96 @@ trait StorageBase
         /**
          * Test for SUCCESS
          */
+        $file = $this->client->call(Client::METHOD_POST, '/storage/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => 'unique()',
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/file.png'), 'image/png', 'file.png'),
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+
+        $this->assertEquals($file['headers']['status-code'], 201);
+        $this->assertNotEmpty($file['body']['$id']);
+        $this->assertIsInt($file['body']['dateCreated']);
+        $this->assertEquals('file.png', $file['body']['name']);
+        $this->assertEquals('image/jpeg', $file['body']['mimeType']);
+        $this->assertEquals(16804, $file['body']['sizeOriginal']);
+
         $files = $this->client->call(Client::METHOD_GET, '/storage/files', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'limit' => 2
+        ]);
 
         $this->assertEquals(200, $files['headers']['status-code']);
-        $this->assertGreaterThan(0, $files['body']['sum']);
-        $this->assertGreaterThan(0, count($files['body']['files']));
+        $this->assertCount(2, $files['body']['files']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 1,
+            'cursor' => $files['body']['files'][0]['$id']
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($files['body']['files'][1]['$id'], $response['body']['files'][0]['$id']);
+        $this->assertCount(1, $response['body']['files']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 1,
+            'cursor' => $files['body']['files'][1]['$id'],
+            'cursorDirection' => Database::CURSOR_BEFORE
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($files['body']['files'][0]['$id'], $response['body']['files'][0]['$id']);
+        $this->assertCount(1, $response['body']['files']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $data['fileId'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertCount(1, $response['body']['files']);
+        $this->assertEquals('logo.png', $response['body']['files'][0]['name']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'logo',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertCount(1, $response['body']['files']);
+        $this->assertEquals($data['fileId'], $response['body']['files'][0]['$id']);
 
         /**
          * Test for FAILURE
          */
-        
+        $response = $this->client->call(Client::METHOD_GET, '/storage/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => 'unknown'
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
         return $data;
     }
 
@@ -187,8 +264,8 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'read' => ['*'],
-            'write' => ['*'],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
         ]);
 
         $this->assertEquals(200, $file['headers']['status-code']);
@@ -203,10 +280,10 @@ trait StorageBase
         //$this->assertEquals('aes-128-gcm', $file['body']['fileOpenSSLCipher']);
         //$this->assertNotEmpty($file['body']['fileOpenSSLTag']);
         //$this->assertNotEmpty($file['body']['fileOpenSSLIV']);
-        $this->assertIsArray($file['body']['$permissions']['read']);
-        $this->assertIsArray($file['body']['$permissions']['write']);
-        $this->assertCount(1, $file['body']['$permissions']['read']);
-        $this->assertCount(1, $file['body']['$permissions']['write']);
+        $this->assertIsArray($file['body']['$read']);
+        $this->assertIsArray($file['body']['$write']);
+        $this->assertCount(1, $file['body']['$read']);
+        $this->assertCount(1, $file['body']['$write']);
         
         /**
          * Test for FAILURE

@@ -1,3 +1,16 @@
+## 2.0.1
+- Fix realtime close and reconnect working only 1 out of two times due to future returning too early
+- Add dart doc comments to newly added response models
+
+## 2.0.0
+- BREAKING All services and methods now return proper response objects instead of `Response` object
+
+## 1.0.4
+- Fix user agent by using `packageName` instead of `appName`
+
+## 1.0.3
+- Upgrade `flutter_web_auth` to `0.3.1`
+
 ## 1.0.2
 - Fix timestamp in Realtime Response to Integer
 

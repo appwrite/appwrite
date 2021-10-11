@@ -1,6 +1,6 @@
 <?php
 
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;

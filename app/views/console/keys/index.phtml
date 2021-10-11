@@ -57,24 +57,24 @@ $scopes = $this->getParam('scopes', []);
                         <section data-forms-select-all>
                             <label data-ls-attrs="for=scopes-{{key.$id}}">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener">Learn more</a>)</label>
                             <div class="row responsive thin">
-                                <?php foreach ($scopes as $i => $scope) : ?>
+                                <?php foreach ($scopes as $i => $scope): ?>
                                     <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $scope; ?>">
                                         <input data-ls-attrs="id=scope-<?php echo $scope; ?>" type="checkbox" name="scopes" data-ls-bind="{{key.scopes}}" value="<?php echo $scope; ?>" />
                                         &nbsp;
                                         <label class="inline" for="scope-<?php echo $scope; ?>"><?php echo $scope; ?></label>
                                     </div>
-                                    <?php if (($i + 1) % 2 === 0) : ?>
+                                    <?php if (($i + 1) % 2 === 0): ?>
                                     </div>
                                     <div class="row responsive thin">
-                                    <?php endif; ?>
-    
-                                <?php endforeach; ?>
+                                    <?php endif;?>
+
+                                <?php endforeach;?>
                             </div>
                         </section>
 
                         <hr class="margin-top-no" />
 
-                        <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                        <button type="submit">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                     </form>
                 </div>
 
@@ -114,7 +114,7 @@ $scopes = $this->getParam('scopes', []);
                             <div class="input-copy">
                                 <textarea disabled style="height: 130px; line-height: 26px" data-forms-copy data-ls-bind="{{key.secret}}"></textarea>
                             </div>
-                            
+
                             <hr />
 
                             <div>
@@ -160,18 +160,18 @@ $scopes = $this->getParam('scopes', []);
                 <section data-forms-select-all>
                     <label for="scopes">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener">Learn more</a>)</label>
                     <div class="row responsive thin">
-                        <?php foreach ($scopes as $i => $scope) : ?>
+                        <?php foreach ($scopes as $i => $scope): ?>
                             <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $scope; ?>">
-                                <input type="checkbox" name="scopes" id="<?php echo $scope; ?>" value="<?php echo $scope; ?>" /> 
-                                &nbsp; 
+                                <input type="checkbox" name="scopes" id="<?php echo $scope; ?>" value="<?php echo $scope; ?>" />
+                                &nbsp;
                                 <label class="inline" for="<?php echo $scope; ?>"><?php echo $scope; ?></label>
                             </div>
-                            <?php if (($i + 1) % 2 === 0) : ?>
+                            <?php if (($i + 1) % 2 === 0): ?>
                             </div>
                             <div class="row responsive thin">
-                            <?php endif; ?>
+                            <?php endif;?>
 
-                        <?php endforeach; ?>
+                        <?php endforeach;?>
                     </div>
                 </section>
 

@@ -2,9 +2,8 @@
 
 namespace Appwrite\Messaging\Adapter;
 
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter;
-use Redis;
 use Utopia\App;
 
 class Realtime extends Adapter
@@ -185,7 +184,7 @@ class Realtime extends Adapter
                      */
                     if (
                         \array_key_exists($channel, $this->subscriptions[$event['project']][$role])
-                        && (\in_array($role, $event['roles']) || \in_array('*', $event['roles']))
+                        && (\in_array($role, $event['roles']) || \in_array('role:all', $event['roles']))
                     ) {
                         /**
                          * Saving all connections that are allowed to receive this event.
@@ -278,28 +277,28 @@ class Realtime extends Adapter
             case strpos($event, 'database.collections.') === 0:
                 $channels[] = 'collections';
                 $channels[] = 'collections.' . $payload->getId();
-                $roles = $payload->getAttribute('$permissions.read');
+                $roles = $payload->getRead();
 
                 break;
             case strpos($event, 'database.documents.') === 0:
                 $channels[] = 'documents';
                 $channels[] = 'collections.' . $payload->getAttribute('$collection') . '.documents';
                 $channels[] = 'documents.' . $payload->getId();
-                $roles = $payload->getAttribute('$permissions.read');
+                $roles = $payload->getRead();
 
                 break;
             case strpos($event, 'storage.') === 0:
                 $channels[] = 'files';
                 $channels[] = 'files.' . $payload->getId();
-                $roles = $payload->getAttribute('$permissions.read');
+                $roles = $payload->getRead();
 
                 break;
             case strpos($event, 'functions.executions.') === 0:
-                if (!empty($payload->getAttribute('$permissions.read'))) {
+                if (!empty($payload->getRead())) {
                     $channels[] = 'executions';
                     $channels[] = 'executions.' . $payload->getId();
                     $channels[] = 'functions.' . $payload->getAttribute('functionId');
-                    $roles = $payload->getAttribute('$permissions.read');
+                    $roles = $payload->getRead();
                 }
                 break;
         }

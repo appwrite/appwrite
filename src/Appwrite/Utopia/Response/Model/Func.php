@@ -16,12 +16,12 @@ class Func extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('$permissions', [
-                'type' => Response::MODEL_PERMISSIONS,
-                'description' => 'Function permissions.',
-                'default' => new \stdClass,
-                'example' => new \stdClass,
-                'array' => false,
+            ->addRule('execute', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Document execute permissions.',
+                'default' => '',
+                'example' => 'role:all',
+                'array' => true,
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
@@ -43,7 +43,7 @@ class Func extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function status. Possible values: disabled, enabled',
+                'description' => 'Function status. Possible values: `disabled`, `enabled`',
                 'default' => '',
                 'example' => 'enabled',
             ])

@@ -1,6 +1,25 @@
-# Unreleased Version 0.11.0
+
+# Unreleased Version 1.1.0
 - Added ability to create syncronous function executions
 - Introduced new execution model for functions
+
+# Version 1.0.0
+
+## Features
+
+- Grouped auth related attributes in project collection. Introduced new attribute `auths` and removed all attributes related to auth methods and `usersAuthLimit` as well, all these are grouped under `auths` attribute
+- Grouped oAuth related attributes in project collection. Introduced new attribute `providers` and removed all attributes related to OAuth2 providers. All OAuth2 attributes are grouped under `providers`
+- Project model changed, `userAuth<AuthMethod>` => `auth<AuthMethod>` example `userAuthEmailPassword` => `authEmailPassword`, also `userOauth2<Provider>...` => `provider<Provider>...` example `userOauth2GithubAppid` => `providerGithubAppid`
+# Version 0.10.4
+
+## Bugs
+- Fixed another memory leak in realtime service (#1627)
+
+# Version 0.10.3
+
+## Bugs
+- Fixed memory leak in realtime service (#1606)
+- Fixed function execution output now being UTF-8 encoded before saved (#1607)
 # Version 0.10.2
 
 ## Bugs

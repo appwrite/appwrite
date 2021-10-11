@@ -20,6 +20,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -42,6 +43,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -54,6 +56,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => '',
             'password' => '',
         ]);
@@ -65,6 +68,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => '',
         ]);
@@ -76,6 +80,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => '',
             'password' => $password,
         ]);
@@ -379,7 +384,7 @@ trait AccountBase
         return $data;
     }
 
-    //TODO Add tests for OAuth2 session creation
+    // TODO Add tests for OAuth2 session creation
 
     /**
      * @depends testCreateAccountSession
@@ -601,6 +606,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' =>  $data['email'],
             'password' =>  $data['password'],
             'name' =>  $data['name'],
@@ -1170,6 +1176,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             // 'url' => 'http://localhost/magiclogin',
         ]);
@@ -1207,6 +1214,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'url' => 'localhost/magiclogin',
         ]);
@@ -1218,8 +1226,19 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'url' => 'http://remotehost/magiclogin',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -1237,7 +1256,7 @@ trait AccountBase
     {
         $id = $data['id'] ?? '';
         $token = $data['token'] ?? '';
-        
+
         /**
          * Test for SUCCESS
          */
@@ -1255,7 +1274,7 @@ trait AccountBase
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
-        
+
         /**
          * Test for FAILURE
          */
@@ -1280,7 +1299,7 @@ trait AccountBase
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-        
+
         return $data;
     }
 }

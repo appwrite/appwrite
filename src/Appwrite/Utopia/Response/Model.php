@@ -2,11 +2,13 @@
 
 namespace Appwrite\Utopia\Response;
 
+use Utopia\Database\Document;
+
 abstract class Model
 {
     const TYPE_STRING = 'string';
     const TYPE_INTEGER = 'integer';
-    const TYPE_FLOAT = 'float';
+    const TYPE_FLOAT = 'double';
     const TYPE_BOOLEAN = 'boolean';
     const TYPE_JSON = 'json';
 
@@ -31,18 +33,28 @@ abstract class Model
     protected $rules = [];
 
     /**
+     * Filter Document Structure
+     * 
+     * @return Document
+     */
+    public function filter(Document $document): Document
+    {
+        return $document;
+    }
+
+    /**
      * Get Name
      * 
      * @return string
      */
-    abstract public function getName():string;
+    abstract public function getName(): string;
 
     /**
      * Get Collection
      * 
      * @return string
      */
-    abstract public function getType():string;
+    abstract public function getType(): string;
 
     /**
      * Get Rules
@@ -56,6 +68,10 @@ abstract class Model
 
     /**
      * Add a New Rule
+     * If rule is an array of documents with varying models
+     *
+     * @param string $key
+     * @param array $options
      */
     protected function addRule(string $key, array $options): self
     {
@@ -65,7 +81,7 @@ abstract class Model
             'description' => '',
             'default' => null,
             'example' => '',
-            'array' => false,
+            'array' => false
         ], $options);
 
         return $this;

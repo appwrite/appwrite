@@ -3,7 +3,7 @@
 namespace Appwrite\Tests;
 
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter\Realtime;
 use PHPUnit\Framework\TestCase;
 
@@ -129,7 +129,7 @@ class MessagingChannelsTest extends TestCase
          *  - Guests
          */
         $this->assertCount($this->connectionsTotal, $this->realtime->connections);
-        
+
         $this->realtime->unsubscribe(-1);
 
         $this->assertCount($this->connectionsTotal, $this->realtime->connections);
@@ -146,14 +146,14 @@ class MessagingChannelsTest extends TestCase
     }
 
     /**
-     * Tests Wildcard (*) Permissions on every channel.
+     * Tests Wildcard (role:all) Permissions on every channel.
      */
     public function testWildcardPermission()
     {
         foreach ($this->allChannels as $index => $channel) {
             $event = [
                 'project' => '1',
-                'roles' => ['*'],
+                'roles' => ['role:all'],
                 'data' => [
                     'channels' => [
                         0 => $channel,

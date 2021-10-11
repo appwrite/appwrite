@@ -133,21 +133,6 @@ App::get('/v1/health/queue/webhooks')
         $response->json(['size' => Resque::size(Event::WEBHOOK_QUEUE_NAME)]);
     }, ['response']);
 
-App::get('/v1/health/queue/tasks')
-    ->desc('Get Tasks Queue')
-    ->groups(['api', 'health'])
-    ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueTasks')
-    ->label('sdk.description', '/docs/references/health/get-queue-tasks.md')
-    ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
-
-        $response->json(['size' => Resque::size(Event::TASK_QUEUE_NAME)]);
-    }, ['response']);
-
 App::get('/v1/health/queue/logs')
     ->desc('Get Logs Queue')
     ->groups(['api', 'health'])
@@ -266,7 +251,7 @@ App::get('/v1/health/anti-virus')
                 'status' => (@$antiVirus->ping()) ? 'online' : 'offline',
                 'version' => @$antiVirus->version(),
             ]);
-        } catch( \Exception $e) {
+        } catch (Throwable $e) {
             $response->json([
                 'status' => 'offline',
                 'version' => '',

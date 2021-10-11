@@ -190,7 +190,6 @@ trait RealtimeBase
         $user = $this->getUser();
         $userId = $user['$id'] ?? '';
         $session = $user['session'] ?? '';
-        $projectId = $this->getProject()['$id'];
 
         /**
          * Test for SUCCESS
@@ -617,27 +616,11 @@ trait RealtimeBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
+            'collectionId' => 'unique()',
             'name' => 'Actors',
-            'read' => ['*'],
-            'write' => ['*'],
-            'rules' => [
-                [
-                    'label' => 'First Name',
-                    'key' => 'firstName',
-                    'type' => 'text',
-                    'default' => '',
-                    'required' => true,
-                    'array' => false
-                ],
-                [
-                    'label' => 'Last Name',
-                    'key' => 'lastName',
-                    'type' => 'text',
-                    'default' => '',
-                    'required' => true,
-                    'array' => false
-                ],
-            ],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+            'permission' => 'collection'
         ]);
 
         $response = json_decode($client->receive(), true);
@@ -655,6 +638,24 @@ trait RealtimeBase
 
         $data = ['actorsId' => $actors['body']['$id']];
 
+        $name = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEquals($name['headers']['status-code'], 201);
+        $this->assertEquals($name['body']['key'], 'name');
+        $this->assertEquals($name['body']['type'], 'string');
+        $this->assertEquals($name['body']['size'], 256);
+        $this->assertEquals($name['body']['required'], true);
+
+        sleep(2);
+
         /**
          * Test Document Create
          */
@@ -662,12 +663,12 @@ trait RealtimeBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'documentId' => 'unique()',
             'data' => [
-                'firstName' => 'Chris',
-                'lastName' => 'Evans',
+                'name' => 'Chris Evans'
             ],
-            'read' => ['*'],
-            'write' => ['*'],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
         ]);
 
         $response = json_decode($client->receive(), true);
@@ -683,6 +684,7 @@ trait RealtimeBase
         $this->assertContains('collections.' . $actors['body']['$id'] . '.documents', $response['data']['channels']);
         $this->assertEquals('database.documents.create', $response['data']['event']);
         $this->assertNotEmpty($response['data']['payload']);
+        $this->assertEquals($response['data']['payload']['name'], 'Chris Evans');
 
         $data['documentId'] = $document['body']['$id'];
 
@@ -693,12 +695,12 @@ trait RealtimeBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'documentId' => 'unique()',
             'data' => [
-                'firstName' => 'Chris1',
-                'lastName' => 'Evans2',
+                'name' => 'Chris Evans 2'
             ],
-            'read' => ['*'],
-            'write' => ['*'],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
         ]);
 
         $response = json_decode($client->receive(), true);
@@ -715,8 +717,8 @@ trait RealtimeBase
         $this->assertEquals('database.documents.update', $response['data']['event']);
         $this->assertNotEmpty($response['data']['payload']);
 
-        $this->assertEquals($response['data']['payload']['firstName'], 'Chris1');
-        $this->assertEquals($response['data']['payload']['lastName'], 'Evans2');
+        $this->assertEquals($response['data']['payload']['name'], 'Chris Evans 2');
+
 
         /**
          * Test Document Delete
@@ -725,13 +727,12 @@ trait RealtimeBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'documentId' => 'unique()',
             'data' => [
-                'firstName' => 'Bradly',
-                'lastName' => 'Cooper',
-
+                'name' => 'Bradley Cooper'
             ],
-            'read' => ['*'],
-            'write' => ['*'],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
         ]);
 
         $client->receive();
@@ -754,6 +755,7 @@ trait RealtimeBase
         $this->assertContains('collections.' . $data['actorsId'] . '.documents', $response['data']['channels']);
         $this->assertEquals('database.documents.delete', $response['data']['event']);
         $this->assertNotEmpty($response['data']['payload']);
+        $this->assertEquals($response['data']['payload']['name'], 'Bradley Cooper');
 
         $client->close();
     }
@@ -786,9 +788,10 @@ trait RealtimeBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-            'read' => ['*'],
-            'write' => ['*'],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
             'folderId' => 'xyz',
         ]);
 
@@ -814,8 +817,8 @@ trait RealtimeBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'read' => ['*'],
-            'write' => ['*'],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
         ]);
 
         $response = json_decode($client->receive(), true);
@@ -878,16 +881,17 @@ trait RealtimeBase
         $this->assertEquals($user['$id'], $response['data']['user']['$id']);
 
         /**
-         * Test File Create
+         * Test Functions Create
          */
-        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+        $function = $this->client->call(Client::METHOD_POST, '/functions', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+        ], [
+            'functionId' => 'unique()',
             'name' => 'Test',
+            'execute' => ['role:member'],
             'runtime' => 'php-8.0',
-            'execute' => ['*'],
             'timeout' => 10,
         ]);
 
@@ -991,6 +995,7 @@ trait RealtimeBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
+            'teamId' => 'unique()',
             'name' => 'Arsenal'
         ]);
 

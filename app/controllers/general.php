@@ -10,27 +10,27 @@ use Utopia\Exception;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Database;
-use Appwrite\Database\Document;
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V06;
 use Appwrite\Utopia\Response\Filters\V07;
 use Appwrite\Utopia\Response\Filters\V08;
 use Utopia\CLI\Console;
+use Utopia\Database\Document;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-App::init(function ($utopia, $request, $response, $console, $project, $consoleDB, $user, $locale, $clients) {
+App::init(function ($utopia, $request, $response, $console, $project, $dbForConsole, $user, $locale, $clients) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
-    /** @var Appwrite\Database\Document $console */
-    /** @var Appwrite\Database\Document $project */
-    /** @var Appwrite\Database\Database $consoleDB */
-    /** @var Appwrite\Database\Document $user */
+    /** @var Utopia\Database\Document $console */
+    /** @var Utopia\Database\Document $project */
+    /** @var Utopia\Database\Database $dbForConsole */
+    /** @var Utopia\Database\Document $user */
     /** @var Utopia\Locale\Locale $locale */
     /** @var array $clients */
 
@@ -46,37 +46,30 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
             Console::warning('Skipping SSL certificates generation on ACME challenge.');
         } else {
             Authorization::disable();
-            $dbDomain = $consoleDB->getCollectionFirst([
-                'limit' => 1,
-                'offset' => 0,
-                'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_CERTIFICATES,
-                    'domain=' . $domain->get(),
-                ],
+
+            $certificate = $dbForConsole->findOne('certificates', [
+                new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
             ]);
 
-            if (empty($dbDomain)) {
-                $dbDomain = [
-                    '$collection' => Database::SYSTEM_COLLECTION_CERTIFICATES,
-                    '$permissions' => [
-                        'read' => [],
-                        'write' => [],
-                    ],
+            if (empty($certificate)) {
+                $certificate = new Document([
                     'domain' => $domain->get(),
-                ];
-                $dbDomain = $consoleDB->createDocument($dbDomain);
-                Authorization::enable();
+                ]);
+                $certificate = $dbForConsole->createDocument('certificates', $certificate);
 
-                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...'); // TODO move this to installation script
+                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...');
 
                 Resque::enqueue('v1-certificates', 'CertificatesV1', [
-                    'document' => $dbDomain,
+                    'document' => $certificate,
                     'domain' => $domain->get(),
                     'validateTarget' => false,
                     'validateCNAME' => false,
                 ]);
             }
+
             $domains[$domain->get()] = true;
+
+            Authorization::reset(); // ensure authorization is re-enabled
         }
         Config::setParam('domains', $domains);
     }
@@ -89,7 +82,11 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
 
     $route = $utopia->match($request);
 
-    if (!empty($route->getLabel('sdk.auth', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
+    if ($project->isEmpty()) {
+        throw new Exception('Project not found', 404);
+    }
+
+    if (!empty($route->getLabel('sdk.auth', [])) && $project->isEmpty() && ($route->getLabel('scope', '') !== 'public')) {
         throw new Exception('Missing or unknown project ID', 400);
     }
 
@@ -132,8 +129,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
     );
 
     /* 
-    * Response format
-    */
+     * Response format
+     */
     $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
     if ($responseFormat) {
         switch($responseFormat) {
@@ -198,10 +195,10 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
     $role = ($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER;
 
     // Add user roles
-    $membership = $user->search('teamId', $project->getAttribute('teamId', null), $user->getAttribute('memberships', []));
+    $memberships = $user->find('teamId', $project->getAttribute('teamId', null), 'memberships');
 
-    if ($membership) {
-        foreach ($membership->getAttribute('roles', []) as $memberRole) {
+    if ($memberships) {
+        foreach ($memberships->getAttribute('roles', []) as $memberRole) {
             switch ($memberRole) {
                 case 'owner':
                     $role = Auth::USER_ROLE_OWNER;
@@ -224,7 +221,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
 
     if (!empty($authKey)) { // API Key authentication
         // Check if given key match project API keys
-        $key = $project->search('secret', $authKey, $project->getAttribute('keys', []));
+        $key = $project->find('secret', $authKey, 'keys');
 
         /*
          * Try app auth when we have project key and no user
@@ -233,7 +230,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         if ($key && $user->isEmpty()) {
             $user = new Document([
                 '$id' => '',
-                'status' => Auth::USER_STATUS_ACTIVATED,
+                'status' => true,
                 'email' => 'app.'.$project->getId().'@service.'.$request->getHostname(),
                 'password' => '',
                 'name' => $project->getAttribute('name', 'Untitled'),
@@ -253,25 +250,32 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         Authorization::setRole($authRole);
     }
 
-    // TDOO Check if user is root
+    $service = $route->getLabel('sdk.namespace','');
+    if(!empty($service)) {
+        if(array_key_exists($service, $project->getAttribute('services',[]))
+            && !$project->getAttribute('services',[])[$service]
+            && !Auth::isPrivilegedUser(Authorization::$roles)) {
+            throw new Exception('Service is disabled', 503);
+        }
+    }
 
     if (!\in_array($scope, $scopes)) {
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) { // Check if permission is denied because project is missing
+        if ($project->isEmpty()) { // Check if permission is denied because project is missing
             throw new Exception('Project not found', 404);
         }
 
         throw new Exception($user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401);
     }
 
-    if (Auth::USER_STATUS_BLOCKED == $user->getAttribute('status')) { // Account has not been activated
-        throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
+    if (false === $user->getAttribute('status')) { // Account is blocked
+        throw new Exception('Invalid credentials. User is blocked', 401);
     }
 
     if ($user->getAttribute('reset')) {
         throw new Exception('Password reset is required', 412);
     }
 
-}, ['utopia', 'request', 'response', 'console', 'project', 'consoleDB', 'user', 'locale', 'clients']);
+}, ['utopia', 'request', 'response', 'console', 'project', 'dbForConsole', 'user', 'locale', 'clients']);
 
 App::options(function ($request, $response) {
     /** @var Utopia\Swoole\Request $request */
@@ -295,7 +299,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\View $layout */
-    /** @var Appwrite\Database\Document $project */
+    /** @var Utopia\Database\Document $project */
 
     if ($error instanceof PDOException) {
         throw $error;
@@ -365,10 +369,12 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         $comp = new View($template);
 
         $comp
+            ->setParam('development', App::isDevelopment())
             ->setParam('projectName', $project->getAttribute('name'))
             ->setParam('projectURL', $project->getAttribute('url'))
             ->setParam('message', $error->getMessage())
             ->setParam('code', $code)
+            ->setParam('trace', $error->getTrace())
         ;
 
         $layout

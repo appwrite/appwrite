@@ -3,8 +3,8 @@
 namespace Appwrite\Tests;
 
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Document;
-use Appwrite\Database\Validator\Authorization;
+use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use PHPUnit\Framework\TestCase;
 
 class AuthTest extends TestCase
@@ -13,8 +13,13 @@ class AuthTest extends TestCase
     {
     }
 
+    /**
+     * Reset Roles
+     */
     public function tearDown(): void
     {
+        Authorization::cleanRoles();
+        Authorization::setRole('role:all');
     }
 
     public function testCookieName()
@@ -274,8 +279,6 @@ class AuthTest extends TestCase
         $this->assertContains('team:abc/moderator', $roles);
         $this->assertContains('team:def', $roles);
         $this->assertContains('team:def/guest', $roles);
-
-        Authorization::reset();
     }
 
     public function testAppUserRoles()
@@ -310,7 +313,5 @@ class AuthTest extends TestCase
         $this->assertContains('team:abc/moderator', $roles);
         $this->assertContains('team:def', $roles);
         $this->assertContains('team:def/guest', $roles);
-
-        Authorization::reset();
     }
 }

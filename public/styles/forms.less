@@ -624,6 +624,19 @@ input[type=checkbox], input[type=radio] {
 .input-copy {
   position: relative;
 
+  &::before {
+    content: '';
+    display: block;
+    position: absolute;
+    height: 50px;
+    background: var(--config-color-fade-light);
+    width: 50px;
+    right: 0;
+    border-radius: 8px;
+    z-index: 1;
+    margin: 1px;
+  }
+
   input,
   textarea {
     .func-padding-end(65px);
@@ -633,22 +646,24 @@ input[type=checkbox], input[type=radio] {
 
   .copy {
     position: absolute;
+    z-index: 2;
     top: 0;
     .func-end(0);
-    .func-border-start(1px);
+    // border: solid 1px var(--config-color-fade-light);
+    .func-border-start(1px, var(--config-color-fade-light));
     height: ~"calc(100% - 2px)";
     width: 50px;
     line-height: 50px;
     text-align: center;
     background: var(--config-color-background-focus);
     margin: 1px;
-    border-radius: 0 10px 10px 0;
+    border-radius: 0 9px 9px 0;
   }
 }
 
 .paging {
   color: var(--config-color-fade);
-  padding: 5px 15px;
+  padding: 0;
   font-size: 12px;
   
   form {
@@ -1193,6 +1208,12 @@ ol {
         height: 30px;
         .func-margin-end(10px);
         .pull-start;
+      }
+
+      i.avatar {
+        text-align: center;
+        background: var(--config-color-dark);
+        color: var(--config-color-background-fade);
       }
 
       &:last-child {

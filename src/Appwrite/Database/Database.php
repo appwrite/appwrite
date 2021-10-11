@@ -20,7 +20,7 @@ class Database
     const SYSTEM_COLLECTION_KEYS = 'keys';
     const SYSTEM_COLLECTION_TASKS = 'tasks';
     const SYSTEM_COLLECTION_PLATFORMS = 'platforms';
-    const SYSTEM_COLLECTION_USAGES = 'usages'; //TODO add structure
+    const SYSTEM_COLLECTION_USAGES = 'usages'; // TODO add structure
     const SYSTEM_COLLECTION_DOMAINS = 'domains';
     const SYSTEM_COLLECTION_CERTIFICATES = 'certificates';
     const SYSTEM_COLLECTION_RESERVED = 'reserved';
@@ -580,7 +580,7 @@ class Database
     {
         if (!isset(self::$filters[$name])) {
             return $value;
-            throw new Exception('Filter not found');
+            throw new Exception("Filter '{$name}' not found");
         }
 
         try {
@@ -602,7 +602,7 @@ class Database
     {
         if (!isset(self::$filters[$name])) {
             return $value;
-            throw new Exception('Filter not found');
+            throw new Exception("Filter '{$name}' not found");
         }
 
         try {

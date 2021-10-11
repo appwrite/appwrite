@@ -11,7 +11,7 @@ $collections = [
     'console' => [
         '$id' => 'console',
         '$collection' => 'projects',
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Appwrite',
         'description' => 'Appwrite core engine',
         'logo' => '',
@@ -51,7 +51,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_COLLECTIONS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Collections',
         'structure' => true,
         'rules' => [
@@ -106,7 +106,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_RULES => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_RULES,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Collections Rule',
         'structure' => true,
         'rules' => [
@@ -186,7 +186,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_USERS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_USERS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'User',
         'structure' => true,
         'rules' => [
@@ -212,7 +212,7 @@ $collections = [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Status',
                 'key' => 'status',
-                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
+                'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
                 'default' => '',
                 'required' => true,
                 'array' => false,
@@ -307,7 +307,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_SESSIONS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_SESSIONS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Session',
         'structure' => true,
         'rules' => [
@@ -505,7 +505,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_TOKENS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_TOKENS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Token',
         'structure' => true,
         'rules' => [
@@ -568,7 +568,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_MEMBERSHIPS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Membership',
         'structure' => true,
         'rules' => [
@@ -640,7 +640,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_TEAMS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_TEAMS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Team',
         'structure' => true,
         'rules' => [
@@ -676,7 +676,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_PROJECTS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_PROJECTS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Project',
         'structure' => true,
         'rules' => [
@@ -809,16 +809,6 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Tasks',
-                'key' => 'tasks',
-                'type' => Database::SYSTEM_VAR_TYPE_DOCUMENT,
-                'default' => [],
-                'required' => false,
-                'array' => true,
-                'list' => [Database::SYSTEM_COLLECTION_TASKS],
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Platforms',
                 'key' => 'platforms',
                 'type' => Database::SYSTEM_VAR_TYPE_DOCUMENT,
@@ -842,7 +832,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_WEBHOOKS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_WEBHOOKS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Webhook',
         'structure' => true,
         'rules' => [
@@ -906,7 +896,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_KEYS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_KEYS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Key',
         'structure' => true,
         'rules' => [
@@ -939,164 +929,10 @@ $collections = [
             ],
         ],
     ],
-    Database::SYSTEM_COLLECTION_TASKS => [
-        '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$id' => Database::SYSTEM_COLLECTION_TASKS,
-        '$permissions' => ['read' => ['*']],
-        'name' => 'Task',
-        'structure' => true,
-        'rules' => [
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Name',
-                'key' => 'name',
-                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
-                'default' => null,
-                'required' => true,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Status',
-                'key' => 'status',
-                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
-                'default' => '',
-                'required' => false,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Updated',
-                'key' => 'updated',
-                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
-                'default' => '',
-                'required' => false,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Schedule',
-                'key' => 'schedule',
-                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
-                'default' => '',
-                'required' => false,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Previous',
-                'key' => 'previous',
-                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
-                'default' => '',
-                'required' => false,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Next',
-                'key' => 'next',
-                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
-                'default' => '',
-                'required' => false,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Duration',
-                'key' => 'duration',
-                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
-                'default' => '',
-                'required' => false,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Delay',
-                'key' => 'delay',
-                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
-                'default' => '',
-                'required' => false,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Security',
-                'key' => 'security',
-                'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
-                'default' => '',
-                'required' => false,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'HTTP Method',
-                'key' => 'httpMethod',
-                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
-                'default' => '',
-                'required' => false,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'HTTP URL',
-                'key' => 'httpUrl',
-                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
-                'default' => '',
-                'required' => false,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'HTTP Headers',
-                'key' => 'httpHeaders',
-                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
-                'default' => null,
-                'required' => false,
-                'array' => true,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'HTTP User',
-                'key' => 'httpUser',
-                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
-                'default' => '',
-                'required' => false,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'HTTP Password',
-                'key' => 'httpPass',
-                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
-                'default' => '',
-                'required' => false,
-                'array' => false,
-                'filter' => ['encrypt'],
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Log',
-                'key' => 'log',
-                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
-                'default' => '',
-                'required' => false,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Failures',
-                'key' => 'failures',
-                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
-                'default' => '',
-                'required' => false,
-                'array' => false,
-            ],
-        ],
-    ],
     Database::SYSTEM_COLLECTION_PLATFORMS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_PLATFORMS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Platform',
         'structure' => true,
         'rules' => [
@@ -1168,7 +1004,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_DOMAINS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_DOMAINS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Domains',
         'structure' => true,
         'rules' => [
@@ -1231,7 +1067,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_CERTIFICATES => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_CERTIFICATES,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Certificates',
         'structure' => true,
         'rules' => [
@@ -1303,7 +1139,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_FILES => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_FILES,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'File',
         'structure' => true,
         'rules' => [
@@ -1447,7 +1283,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_FUNCTIONS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_FUNCTIONS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Functions',
         'structure' => true,
         'rules' => [
@@ -1574,7 +1410,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_TAGS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_TAGS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Tags',
         'structure' => true,
         'rules' => [
@@ -1664,7 +1500,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_EXECUTIONS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_EXECUTIONS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Executions',
         'structure' => true,
         'rules' => [
@@ -1787,7 +1623,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_RESERVED => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_RESERVED,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Reserved',
         'structure' => true,
     ],

@@ -2,7 +2,7 @@
 
 global $utopia, $request, $response;
 
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
 use Appwrite\Network\Validator\Host;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -523,7 +523,7 @@ App::shutdown(function($utopia, $response, $request) {
     $tests = \array_merge($tests, $result);
 
     if (!\file_put_contents($path, \json_encode($tests), LOCK_EX)) {
-        throw new Exception('Failed to save resutls', 500);
+        throw new Exception('Failed to save results', 500);
     }
 
     $response->dynamic(new Document(['result' => $route->getMethod() . ':' . $route->getPath() . ':passed']), Response::MODEL_MOCK);

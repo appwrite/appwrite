@@ -1,17 +1,15 @@
 <?php
 
-use Appwrite\Database\Database;
-use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
-use Appwrite\Database\Adapter\Redis as RedisAdapter;
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Resque\Worker;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
+use Utopia\Database\Document;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 
-require_once __DIR__ . '/../workers.php';
+require_once __DIR__.'/../init.php';
 
 Console::title('Certificates V1 Worker');
 Console::success(APP_NAME . ' certificates worker v1 has started');
@@ -24,15 +22,7 @@ class CertificatesV1 extends Worker
 
     public function run(): void
     {
-        global $register;
-
-        $db = $register->get('db');
-        $cache = $register->get('cache');
-
-        $consoleDB = new Database();
-        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-        $consoleDB->setNamespace('app_console'); // Main DB
-        $consoleDB->setMocks(Config::getParam('collections', []));
+        $dbForConsole = $this->getConsoleDB();
 
         /**
          * 1. Get new domain document - DONE
@@ -73,26 +63,21 @@ class CertificatesV1 extends Worker
         if ($validateTarget) {
             $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
-            if (!$target->isKnown() || $target->isTest()) {
-                throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
+            if(!$target->isKnown() || $target->isTest()) {
+                throw new Exception('Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.');
             }
         }
 
         if ($validateCNAME) {
             $validator = new CNAME($target->get()); // Verify Domain with DNS records
 
-            if (!$validator->isValid($domain->get())) {
+            if(!$validator->isValid($domain->get())) {
                 throw new Exception('Failed to verify domain DNS records');
             }
         }
 
-        $certificate = $consoleDB->getCollectionFirst([
-            'limit' => 1,
-            'offset' => 0,
-            'filters' => [
-                '$collection=' . Database::SYSTEM_COLLECTION_CERTIFICATES,
-                'domain=' . $domain->get(),
-            ],
+        $certificate = $dbForConsole->findOne('certificates', [
+            new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
         ]);
 
         // $condition = ($certificate
@@ -139,8 +124,8 @@ class CertificatesV1 extends Worker
             }
         }
 
-        if (!@\rename('/etc/letsencrypt/live/' . $domain->get() . '/cert.pem', APP_STORAGE_CERTIFICATES . '/' . $domain->get() . '/cert.pem')) {
-            throw new Exception('Failed to rename certificate cert.pem: ' . \json_encode($stdout));
+        if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/cert.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/cert.pem')) {
+            throw new Exception('Failed to rename certificate cert.pem: '.\json_encode($stdout));
         }
 
         if (!@\rename('/etc/letsencrypt/live/' . $domain->get() . '/chain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain->get() . '/chain.pem')) {
@@ -155,40 +140,35 @@ class CertificatesV1 extends Worker
             throw new Exception('Failed to rename certificate privkey.pem: ' . \json_encode($stdout));
         }
 
-        $certificate = \array_merge($certificate, [
-            '$collection' => Database::SYSTEM_COLLECTION_CERTIFICATES,
-            '$permissions' => [
-                'read' => [],
-                'write' => [],
-            ],
+        $certificate = new Document(\array_merge($certificate, [
             'domain' => $domain->get(),
             'issueDate' => \time(),
             'renewDate' => $renew,
             'attempts' => 0,
             'log' => \json_encode($stdout),
-        ]);
+        ]));
 
-        $certificate = $consoleDB->createDocument($certificate);
+        $certificate = $dbForConsole->createDocument('certificates', $certificate);
 
         if (!$certificate) {
             throw new Exception('Failed saving certificate to DB');
         }
 
-        if (!empty($document)) {
-            $document = \array_merge($document, [
+        if(!empty($document)) {
+            $certificate = new Document(\array_merge($document, [
                 'updated' => \time(),
                 'certificateId' => $certificate->getId(),
-            ]);
+            ]));
 
-            $document = $consoleDB->updateDocument($document);
+            $certificate = $dbForConsole->updateDocument('certificates', $certificate->getId(), $certificate);
 
-            if (!$document) {
+            if(!$certificate) {
                 throw new Exception('Failed saving domain to DB');
             }
         }
 
         $config =
-            "tls:
+"tls:
   certificates:
     - certFile: /storage/certificates/{$domain->get()}/fullchain.pem
       keyFile: /storage/certificates/{$domain->get()}/privkey.pem";

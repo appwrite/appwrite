@@ -5,10 +5,12 @@ return [
     'ar', // Arabic
     'be', // Belarusian
     'bg', // Bulgarian
+    'bh', // Bihari
     'bn', // Bengali
-    'bs', //Bosnian
+    'bs', // Bosnian
     'ca', // Catalan
     'cs', // Czech
+    'da', // Danish
     'de', // German
     'en', // English
     'es', // Spanish
@@ -17,9 +19,10 @@ return [
     'fo', // Faroese
     'fr', // French
     'el', // Greek
-    'gu', //Gujrati
+    'gu', // Gujrati
     'he', // Hebrew
-    'hi', // Hindi
+    'hi', // Hindi,
+    'hr', // Croatian
     'hu', // Hungarian
     'hy', // Armenian
     'id', // Indonesian
@@ -30,6 +33,7 @@ return [
     'kn', // Kannada
     'km', // Khmer
     'ko', // Korean
+    'lb', // Luxembourgish
     'lt', // Lithuanian
     'ml', // Malayalam
     'mr', // Marathi
@@ -42,10 +46,12 @@ return [
     'pl', // Polish
     'pt-br', // Portuguese - Brazil	
     'pt-pt', // Portuguese - Portugal
-    'pa', //Punjabi
+    'pa', // Punjabi
     'ro', // Romanian
     'ru', // Russian
+    'sa', //Sanskrit
     'si', // Sinhala
+    'sk', // Slovakia
     'sl', // Slovenian
     'sq', // Albanian
     'sv', // Swedish
@@ -53,7 +59,7 @@ return [
     'th', // Thai
     'tr', // Turkish
     'uk', // Ukrainian
-    'ur', //Urdu
+    'ur', // Urdu
     'vi', // Vietnamese
     'zh-cn', // Chinese - China
     'zh-tw', // Chinese - Taiwan

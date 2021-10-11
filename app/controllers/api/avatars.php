@@ -424,7 +424,7 @@ App::get('/v1/avatars/initials')
     ->inject('user')
     ->action(function ($name, $width, $height, $color, $background, $response, $user) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Document $user */
 
         $themes = [
             ['color' => '#27005e', 'background' => '#e1d2f6'], // VIOLET
@@ -443,6 +443,9 @@ App::get('/v1/avatars/initials')
 
         $name = (!empty($name)) ? $name : $user->getAttribute('name', $user->getAttribute('email', ''));
         $words = \explode(' ', \strtoupper($name));
+        // if there is no space, try to split by `_` underscore
+        $words = (count($words) == 1 ) ? \explode('_', \strtoupper($name)) : $words;
+        
         $initials = null;
         $code = 0;
 
@@ -455,7 +458,6 @@ App::get('/v1/avatars/initials')
             }
         }
 
-        $length = \count($words);
         $rand = \substr($code, -1);
         $background = (!empty($background)) ? '#' . $background : $themes[$rand]['background'];
         $color = (!empty($color)) ? '#' . $color : $themes[$rand]['color'];

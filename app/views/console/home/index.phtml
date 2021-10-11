@@ -1,6 +1,6 @@
 <?php
 $graph = $this->getParam('graph', false);
-$usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
+$usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 ?>
 
 <div class="cover margin-bottom-small">
@@ -18,7 +18,6 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/settings?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-cog"></i> &nbsp;Settings</a> &nbsp;&nbsp;</li>
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/keys?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-key-inv"></i> &nbsp;API Keys</a> &nbsp;&nbsp;</li>
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/webhooks?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-link"></i> &nbsp;Webhooks</a> &nbsp;&nbsp;</li>
-            <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/tasks?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-clock"></i> &nbsp;Tasks</a> &nbsp;&nbsp;</li>
         </ul>
 
         <div class="margin-bottom phones-only">&nbsp;</div>
@@ -37,6 +36,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     data-analytics-label="Usage 24h"
                     data-service="projects.getUsage"
                     data-event="submit"
+                    data-scope="console"
                     data-name="usage"
                     data-param-project-id="{{router.params.project}}"
                     data-param-range="24h"
@@ -53,6 +53,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     data-analytics-label="Usage 30d"
                     data-service="projects.getUsage"
                     data-event="submit"
+                    data-scope="console"
                     data-name="usage"
                     data-param-project-id="{{router.params.project}}"
                     data-scope="console">
@@ -68,6 +69,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     data-analytics-label="Usage 90d"
                     data-service="projects.getUsage"
                     data-event="submit"
+                    data-scope="console"
                     data-name="usage"
                     data-param-project-id="{{router.params.project}}"
                     data-param-range="90d"
@@ -77,7 +79,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                 <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
             </div>
-        <?php endif; ?>
+        <?php endif;?>
     </div>
     <div
         data-service="projects.getUsage"
@@ -181,11 +183,11 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                 <div>
                     <div class="pull-start margin-end avatar-container">
                         <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Platform Logo" class="avatar" loading="lazy" width="60" height="60" />
-                        
+
                         <div data-ls-if="{{platform.type}} === 'flutter-ios'" class="corner">
                             <img src="" data-ls-attrs="src=/images/clients/flutter.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="iOS Logo" class="avatar xs" loading="lazy" width="30" height="30" />
                         </div>
-                        
+
                         <div data-ls-if="{{platform.type}} === 'flutter-android'" class="corner">
                             <img src="" data-ls-attrs="src=/images/clients/flutter.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Android Logo" class="avatar xs" loading="lazy" width="30" height="30" />
                         </div>
@@ -237,7 +239,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                 <div class="link web-new"><img src="/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Web Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Web App</div>
             </li>
             <li>
-                <div class="link flutter-new"><img src="/images/clients/flutter.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Flutter Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Flutter App &nbsp;<span class="text-size-tiny">(beta)</span></div>
+                <div class="link flutter-new"><img src="/images/clients/flutter.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Flutter Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Flutter App</div>
             </li>
             <li>
                 <div class="link android-new"><img src="/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Android Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Android App</div>
@@ -281,7 +283,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
         <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments. No port number required."><i class="icon-question"></i></span></label>
         <input name="hostname" type="text" class="margin-bottom" autocomplete="off" placeholder="localhost" required>
-        
+
         <div class="info margin-top margin-bottom">
             <div class="text-bold margin-bottom-small">Next Steps</div>
 
@@ -292,7 +294,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
             </div>
         </div>
 
-        <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+        <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
     </form>
 </div>
 
@@ -321,10 +323,10 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
         <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments. No port number required."><i class="icon-question"></i></span></label>
         <input name="hostname" type="text" class="margin-bottom" autocomplete="off" placeholder="localhost" data-ls-bind="{{platform.hostname}}" required />
-        
+
         <hr />
 
-        <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Back</button>
+        <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Cancel</button>
     </form>
 </script>
 
@@ -360,7 +362,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
         <hr />
 
-        <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+        <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
     </form>
 </div>
 
@@ -400,7 +402,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                 <hr />
 
-                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </form>
 
         </li>
@@ -434,7 +436,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                 <hr />
 
-                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </form>
         </li>
         <li>
@@ -467,7 +469,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                 <hr />
 
-                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </form>
         </li>
         <li>
@@ -500,7 +502,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                 <hr />
 
-                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </form>
         </li>
         <li>
@@ -533,7 +535,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                 <hr />
 
-                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </form>
         </li>
     </ul>
@@ -564,10 +566,10 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
         <label data-ls-attrs="for=key-{{platform.$id}}">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
         <input name="key" type="text" class="margin-bottom" autocomplete="off" placeholder="com.cpmpany.appname" data-ls-bind="{{platform.key}}" required />
-        
+
         <hr />
 
-        <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Back</button>
+        <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Cancel</button>
     </form>
 </script>
 
@@ -595,10 +597,42 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
         <label data-ls-attrs="for=key-{{platform.$id}}">Package Name <span class="tooltip large" data-tooltip="Your package name is generally the applicationId in your app-level build.gradle file."><i class="icon-question"></i></span></label>
         <input name="key" type="text" class="margin-bottom" autocomplete="off" placeholder="com.cpmpany.appname" data-ls-bind="{{platform.key}}" required />
-        
+
         <hr />
 
-        <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Back</button>
+        <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Cancel</button>
+    </form>
+</script>
+
+<script type="text/html" id="template-desktop-update">
+    <form
+        data-analytics
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Update Project Platform (Flutter / Desktop)"
+        data-service="projects.updatePlatform"
+        data-scope="console"
+        data-event="submit"
+        data-success="alert,trigger"
+        data-success-param-alert-text="Updated platform successfully"
+        data-success-param-trigger-events="projects.updatePlatform"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to update platform"
+        data-failure-param-alert-classname="error">
+
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+
+        <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
+
+        <label data-ls-attrs="for=name-{{platform.$id}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+        <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" placeholder="My desktop app" maxlength="128" />
+
+        <label data-ls-attrs="for=key-{{platform.$id}}">App Name <span class="tooltip large" data-tooltip="Your application name"><i class="icon-question"></i></span></label>
+        <input name="key" type="text" class="margin-bottom" autocomplete="off" placeholder="appname" data-ls-bind="{{platform.key}}" required />
+
+        <hr />
+
+        <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Cancel</button>
     </form>
 </script>
 
@@ -610,6 +644,14 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
     <div data-ls-template="template-android-update" data-type="script"></div>
 </script>
 
+<script type="text/html" id="template-flutter-linux-update">
+    <div data-ls-template="template-desktop-update" data-type="script"></div>
+</script>
+
 <script type="text/html" id="template-flutter-macos-update">
-    <div data-ls-template="template-macos-update" data-type="script"></div>
+    <div data-ls-template="template-ios-update" data-type="script"></div>
+</script>
+
+<script type="text/html" id="template-flutter-windows-update">
+    <div data-ls-template="template-desktop-update" data-type="script"></div>
 </script>

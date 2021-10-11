@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Database\Database;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
@@ -8,7 +7,6 @@ use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Exception;
-use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 
@@ -44,12 +42,12 @@ App::get('/')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('response')
-    ->inject('consoleDB')
+    ->inject('dbForConsole')
     ->inject('project')
-    ->action(function ($response, $consoleDB, $project) {
+    ->action(function ($response, $dbForConsole, $project) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $consoleDB */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Database\Database $dbForConsole */
+        /** @var Utopia\Database\Document $project */
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -58,18 +56,12 @@ App::get('/')
         ;
 
         if ('console' === $project->getId() || $project->isEmpty()) {
-            $whitlistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled');
+            $whitelistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled');
 
-            if($whitlistRoot !== 'disabled') {
-                $consoleDB->getCollection([ // Count users
-                    'filters' => [
-                        '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                    ],
-                ]);
-                    
-                $sum = $consoleDB->getSum();
+            if($whitelistRoot !== 'disabled') {
+                $count = $dbForConsole->count('users', [], 1);
 
-                if($sum !== 0) {
+                if($count !== 0) {
                     return $response->redirect('/auth/signin');
                 }
             }
@@ -257,6 +249,7 @@ App::get('/specs/:format')
     ->groups(['web', 'home'])
     ->label('scope', 'public')
     ->label('docs', false)
+    ->label('origin', '*')
     ->param('format', 'swagger2', new WhiteList(['swagger2', 'open-api3'], true), 'Spec format.', true)
     ->param('platform', APP_PLATFORM_CLIENT, new WhiteList([APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER, APP_PLATFORM_CONSOLE], true), 'Choose target platform.', true)
     ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)
@@ -412,15 +405,14 @@ App::get('/specs/:format')
                 }
 
                 $routes[] = $route;
-                $model = $response->getModel($route->getLabel('sdk.response.model', 'none'));
-                
-                if($model) {
-                    $models[$model->getType()] = $model;
-                }
+                $modelLabel = $route->getLabel('sdk.response.model', 'none');
+                $model = \is_array($modelLabel) ? \array_map(function($m) use($response) {
+                    return $response->getModel($m);
+                }, $modelLabel) : $response->getModel($modelLabel);
             }
         }
 
-        foreach (Config::getParam('services', []) as $key => $service) {
+        foreach (Config::getParam('services', []) as $service) {
             if(!isset($service['docs']) // Skip service if not part of the public API
                 || !isset($service['sdk'])
                 || !$service['docs']

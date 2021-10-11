@@ -284,6 +284,17 @@ docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7
 
 The Runtimes for all supported cloud functions (multicore builds) can be found at the [appwrite/php-runtimes](https://github.com/appwrite/php-runtimes) repository.
 
+## Generate SDK
+
+For generating a new console SDK follow the next steps:
+
+1. Update the console spec file located at `app/config/specs/0.10.x.console.json` from the dynamic version located at `https://localhost/specs/swagger2?platform=console`
+2. Generate a new SDK using the command `php app/cli.php sdks`
+3. Change your working dir using `cd app/sdks/console-web`
+4. Build the new SDK `npm run build`
+5. Copy `iife/sdk.js` to `appwrite.js`
+6. Go back to the root of the project `run npm run build`
+
 ## Debug
 
 Appwrite uses [yasd](https://github.com/swoole/yasd) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension or if you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection.

@@ -23,19 +23,17 @@ class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'fileId' => 'unique()',
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
             'folderId' => 'xyz',
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 201);
         $this->assertNotEmpty($file['body']['$id']);
-        $this->assertNotEmpty($file['body']['$permissions']);
-        $this->assertArrayHasKey('write', $file['body']['$permissions']);
-        $this->assertArrayHasKey('read', $file['body']['$permissions']);
-        $this->assertContains('user:'.$this->getUser()['$id'], $file['body']['$permissions']['read']);
-        $this->assertContains('user:'.$this->getUser()['$id'], $file['body']['$permissions']['write']);
+        $this->assertContains('user:'.$this->getUser()['$id'], $file['body']['$read']);
+        $this->assertContains('user:'.$this->getUser()['$id'], $file['body']['$write']);
         $this->assertIsInt($file['body']['dateCreated']);
-        $this->assertEquals('logo.png', $file['body']['name']);
+        $this->assertEquals('permissions.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
     }

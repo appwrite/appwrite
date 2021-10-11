@@ -4,7 +4,6 @@ namespace Appwrite\Specification\Format;
 
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
-use stdClass;
 use Utopia\Validator;
 
 class Swagger2 extends Format
@@ -19,6 +18,34 @@ class Swagger2 extends Format
     public function getName():string
     {
         return 'Swagger 2';
+    }
+
+    /**
+     * Get Used Models
+     *
+     * Recursively get all used models
+     * 
+     * @param object $model
+     * @param array $models
+     *
+     * @return void
+     */
+    protected function getUsedModels($model, array &$usedModels)
+    {   
+        if (is_string($model) && !in_array($model, ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
+            $usedModels[] = $model;
+            return;
+        }
+        if (!is_object($model)) return;
+        foreach ($model->getRules() as $rule) {
+            if(\is_array($rule['type'])) {
+                foreach ($rule['type'] as $type) {
+                    $this->getUsedModels($type, $usedModels);
+                }
+            } else {
+                $this->getUsedModels($rule['type'], $usedModels);
+            }
+        }
     }
 
     /**
@@ -69,15 +96,15 @@ class Swagger2 extends Format
         if (isset($output['securityDefinitions']['Project'])) {
             $output['securityDefinitions']['Project']['x-appwrite'] = ['demo' => '5df5acd0d48c2'];
         }
-        
+
         if (isset($output['securityDefinitions']['Key'])) {
             $output['securityDefinitions']['Key']['x-appwrite'] = ['demo' => '919c2d18fb5d4...a2ae413da83346ad2'];
         }
-        
+
         if (isset($output['securityDefinitions']['JWT'])) {
             $output['securityDefinitions']['JWT']['x-appwrite'] = ['demo' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...'];
         }
-        
+
         if (isset($output['securityDefinitions']['Locale'])) {
             $output['securityDefinitions']['Locale']['x-appwrite'] = ['demo' => 'en'];
         }
@@ -125,7 +152,7 @@ class Swagger2 extends Format
             if(empty($routeSecurity)) {
                 $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
             }
-            
+
             $temp = [
                 'summary' => $route->getDesc(),
                 'operationId' => $route->getLabel('sdk.namespace', 'default').ucfirst($id),
@@ -155,13 +182,22 @@ class Swagger2 extends Format
             }
 
             foreach ($this->models as $key => $value) {
-                if($value->getType() === $model) {
-                    $model = $value;
-                    break;
+                if(\is_array($model)) {
+                    $model = \array_map(function($m) use($value) {
+                        if($m === $value->getType()) {
+                            return $value;
+                        }
+                        return $m;
+                    }, $model);
+                } else {
+                    if($value->getType() === $model) {
+                        $model = $value;
+                        break;
+                    }
                 }
             }
 
-            if($model->isNone()) {
+            if(!(\is_array($model)) &&  $model->isNone()) {
                 $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
                     'description' => (in_array($produces, [
                         'image/*',
@@ -178,13 +214,41 @@ class Swagger2 extends Format
                     ],
                 ];
             } else {
-                $usedModels[] = $model->getType();
-                $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
-                    'description' => $model->getName(),
-                    'schema' => [
-                        '$ref' => '#/definitions/'.$model->getType(),
-                    ],
-                ];
+
+                if(\is_array($model)) {
+                    $modelDescription = \join(', or ', \array_map(function ($m) {
+                        return $m->getName();
+                    }, $model));
+                    // model has multiple possible responses, we will use oneOf
+                    foreach ($model as $m) {
+                        $usedModels[] = $m->getType();
+                    }
+                    $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
+                        'description' => $modelDescription,
+                        'content' => [
+                            $produces => [
+                                'schema' => [
+                                    'oneOf' => \array_map(function($m) {
+                                        return ['$ref' => '#/definitions/'.$m->getType()];
+                                    }, $model)
+                                ],
+                            ],
+                        ],
+                    ];
+                } else {
+                    // Response definition using one type
+                    $usedModels[] = $model->getType();
+                    $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
+                        'description' => $model->getName(),
+                        'content' => [
+                            $produces => [
+                                'schema' => [
+                                    '$ref' => '#/definitions/'.$model->getType(),
+                                ],
+                            ],
+                        ],
+                    ];
+                }
             }
 
             if(in_array($route->getLabel('sdk.response.code', 500), [204, 301, 302, 308], true)) {
@@ -194,7 +258,7 @@ class Swagger2 extends Format
 
             if ((!empty($scope))) { //  && 'public' != $scope
                 $securities = ['Project' => []];
-                
+
                 foreach($route->getLabel('sdk.auth', []) as $security) {
                     if(array_key_exists($security, $this->keys)) {
                         $securities[$security] = [];
@@ -204,7 +268,7 @@ class Swagger2 extends Format
                 $temp['x-appwrite']['auth'] = array_slice($securities, 0, $this->authCount);
                 $temp['security'][] = $securities;
             }
-       
+
             $body = [
                 'name' => 'payload',
                 'in' => 'body',
@@ -234,7 +298,7 @@ class Swagger2 extends Format
                         $node['type'] = $validator->getType();
                         $node['x-example'] = false;
                         break;
-                    case 'Appwrite\Database\Validator\UID':
+                    case 'Utopia\Database\Validator\UID':
                         $node['type'] = $validator->getType();
                         $node['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
@@ -252,7 +316,7 @@ class Swagger2 extends Format
                     case 'Utopia\Validator\Mock':
                     case 'Utopia\Validator\Assoc':
                         $node['type'] = 'object';
-                        $param['default'] = (empty($param['default'])) ? new stdClass() : $param['default'];
+                        $param['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['x-example'] = '{}';
                         //$node['format'] = 'json';
                         break;
@@ -354,15 +418,9 @@ class Swagger2 extends Format
             $output['paths'][$url][\strtolower($route->getMethod())] = $temp;
         }
         foreach ($this->models as $model) {
-            foreach ($model->getRules() as $rule) {
-                if (
-                    in_array($model->getType(), $usedModels)
-                    && !in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])
-                ) {
-                    $usedModels[] = $rule['type'];
-                }
-            }
+            $this->getUsedModels($model, $usedModels);
         }
+
         foreach ($this->models as $model) {
             if (!in_array($model->getType(), $usedModels)) {
                 continue;
@@ -383,7 +441,7 @@ class Swagger2 extends Format
             if($model->isAny()) {
                 $output['definitions'][$model->getType()]['additionalProperties'] = true;
             }
-            
+
             if(!empty($required)) {
                 $output['definitions'][$model->getType()]['required'] = $required;
             }
@@ -398,7 +456,7 @@ class Swagger2 extends Format
                     case 'json':
                         $type = 'string';
                         break;
-                    
+
                     case 'integer':
                         $type = 'integer';
                         $format = 'int32';
@@ -408,19 +466,40 @@ class Swagger2 extends Format
                         $type = 'number';
                         $format = 'float';
                         break;
-                    
+
+                    case 'double':
+                        $type = 'number';
+                        $format = 'double';
+                        break;
+
                     case 'boolean':
                         $type = 'boolean';
                         break;
-                    
+
                     default:
                         $type = 'object';
                         $rule['type'] = ($rule['type']) ? $rule['type'] : 'none';
 
-                        $items = [
-                            'type' => $type,
-                            '$ref' => '#/definitions/'.$rule['type'],
-                        ];
+                        if(\is_array($rule['type'])) {
+                            if($rule['array']) {
+                                $items = [
+                                    'anyOf' => \array_map(function($type) {
+                                        return ['$ref' => '#/definitions/'.$type];
+                                    }, $rule['type'])
+                                ];
+                            } else {
+                                $items = [
+                                    'oneOf' => \array_map(function($type) {
+                                        return ['$ref' => '#/definitions/'.$type];
+                                    }, $rule['type'])
+                                ];
+                            }
+                        } else {
+                            $items = [
+                                'type' => $type,
+                                '$ref' => '#/definitions/'.$rule['type'],
+                            ];
+                        }
                         break;
                 }
 

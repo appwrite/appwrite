@@ -15,7 +15,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Web',
-                'version' => '4.0.1',
+                'version' => '4.0.3',
                 'url' => 'https://github.com/appwrite/sdk-for-web',
                 'package' => 'https://www.npmjs.com/package/appwrite',
                 'enabled' => true,
@@ -62,11 +62,11 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '1.0.2',
+                'version' => '2.0.1',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
-                'beta' => true,
+                'beta' => false,
                 'dev' => false,
                 'hidden' => false,
                 'family' => APP_PLATFORM_CLIENT,
@@ -152,7 +152,7 @@ return [
         'name' => 'Console',
         'enabled' => false,
         'beta' => false,
-        'languages' => [ // TODO change key to 'sdks'
+        'languages' => [
             [
                 'key' => 'web',
                 'name' => 'Console',
@@ -179,7 +179,7 @@ return [
         'description' => 'Libraries for integrating with Appwrite to build server side integrations. Read the [getting started for server](/docs/getting-started-for-server) tutorial to start building your first server integration.',
         'enabled' => true,
         'beta' => false,
-        'languages' => [ // TODO change key to 'sdks'
+        'languages' => [
             [
                 'key' => 'nodejs',
                 'name' => 'Node.js',
@@ -217,7 +217,7 @@ return [
             [
                 'key' => 'php',
                 'name' => 'PHP',
-                'version' => '2.3.0',
+                'version' => '2.3.1',
                 'url' => 'https://github.com/appwrite/sdk-for-php',
                 'package' => 'https://packagist.org/packages/appwrite/appwrite',
                 'enabled' => true,
@@ -323,7 +323,7 @@ return [
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
                 'package' => 'https://pub.dev/packages/dart_appwrite',
                 'enabled' => true,
-                'beta' => true,
+                'beta' => false,
                 'dev' => false,
                 'hidden' => false,
                 'family' => APP_PLATFORM_SERVER,
