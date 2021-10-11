@@ -3,7 +3,8 @@ namespace Appwrite\Database\Validator;
 
 use Utopia\Database\Validator\Key;
 
-class CustomId extends Key {
+class CustomId extends Key
+{
     /**
      * Is valid.
      *
@@ -15,7 +16,6 @@ class CustomId extends Key {
      */
     public function isValid($value)
     {
-
         return $value == 'unique()' || parent::isValid($value);
     }
 }
