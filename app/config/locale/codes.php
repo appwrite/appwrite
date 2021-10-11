@@ -59,6 +59,7 @@ return [
     'si', // Sinhala
     'sk', // Slovakia
     'sl', // Slovenian
+    'sn',// Shona
     'sq', // Albanian
     'sv', // Swedish
     'ta', // Tamil
