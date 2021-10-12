@@ -201,7 +201,7 @@ Go ahead and save this file. Then `cd` into the root of the `php-runtimes` proje
 ```
 chmod +x ./tests/resources/package-LANGUAGE_NAME.sh && ./tests/resources/package-LANGUAGE_NAME.sh
 ```
-The first section changes the permissions of your script so you can execute it, while the second part actually executes the script and packages up your function.
+This command adds execution permissions to your script and executes it.
 
 NOTE: If you ever want to repackage your script you can simply run: `./tests/resources/package-LANGUAGE_NAME.sh` in the root of the `php-runtimes` project since you don't have to change permissions more than once.
 
