@@ -24,7 +24,6 @@ use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Config\Config;
 use Cron\CronExpression;
-use Utopia\Exception;
 use Utopia\Validator\Boolean;
 
 include_once __DIR__ . '/../shared/api.php';
@@ -446,7 +445,7 @@ App::post('/v1/functions/:functionId/tags')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($functionId, $command, $file, $request, $response, $dbForInternal, $usage) {
+    ->action(function ($functionId, $entrypoint, $file, $request, $response, $dbForInternal, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */

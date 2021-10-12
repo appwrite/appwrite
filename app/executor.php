@@ -9,6 +9,8 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Event\Event;
 use Appwrite\Utopia\Response\Model\Execution;
+use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Stats\Stats;
 use Utopia\App;
 use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
@@ -17,10 +19,9 @@ use Swoole\Process;
 use Swoole\Http\Server;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
-use Utopia\Orchestration\Adapter\DockerAPI;
 use Utopia\Orchestration\Orchestration;
-use Utopia\Orchestration\Container;
-use Utopia\Orchestration\Exception\Timeout as TimeoutException;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Config\Config;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
@@ -29,9 +30,10 @@ use Cron\CronExpression;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Swoole\Coroutine as Co;
+use Utopia\Cache\Cache;
 use Utopia\Orchestration\Adapter\DockerCLI;
 
-require_once __DIR__ . '/workers.php';
+require_once __DIR__ . '/init.php';
 
 $dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
 $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
@@ -100,21 +102,11 @@ App::post('/v1/execute') // Define Route
     ->param('userId', '', new Text(1024), '', true)
     ->param('jwt', '', new Text(1024), '', true)
     ->inject('response')
+    ->inject('dbForInternal')
     ->action(
-        function ($trigger, $projectId, $executionId, $functionId, $event, $eventData, $data, $webhooks, $userId, $jwt, $request, $response) {
-            global $register;
-
-            $db = $register->get('dbPool')->get();
-            $cache = $register->get('redisPool')->get();
-
-            // Create new Database Instance
-            $database = new Database();
-            $database->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-            $database->setNamespace('app_' . $projectId);
-            $database->setMocks(Config::getParam('collections', []));
-
+        function ($trigger, $projectId, $executionId, $functionId, $event, $eventData, $data, $webhooks, $userId, $jwt, $request, $response, $dbForInternal) {
             try {
-                $data = execute($trigger, $projectId, $executionId, $functionId, $database, $event, $eventData, $data, $webhooks, $userId, $jwt);
+                $data = execute($trigger, $projectId, $executionId, $functionId, $dbForInternal, $event, $eventData, $data, $webhooks, $userId, $jwt);
                 $response->json($data);
             } catch (Exception $e) {
                 $response
@@ -122,9 +114,6 @@ App::post('/v1/execute') // Define Route
                     ->addHeader('Expires', '0')
                     ->addHeader('Pragma', 'no-cache')
                     ->json(['error' => $e->getMessage()]);
-            } finally {
-                $register->get('dbPool')->put($db);
-                $register->get('redisPool')->put($cache);
             }
         }
     );
@@ -134,19 +123,19 @@ App::post('/v1/execute') // Define Route
 App::post('/v1/cleanup/function')
     ->param('functionId', '', new UID())
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('projectID')
-    ->action(function ($functionId, $response, $projectDB, $projectID) {
+    ->action(function ($functionId, $response, $dbForInternal, $projectID) {
         /** @var string $functionId */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Database\Database $dbForInternal */
         /** @var string $projectID */
 
         global $orchestration;
 
         try {
             Authorization::disable();
-            $function = $projectDB->getDocument($functionId);
+            $function = $dbForInternal->getDocument($functionId);
             Authorization::reset();
 
             if (\is_null($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -154,7 +143,7 @@ App::post('/v1/cleanup/function')
             }
 
             Authorization::disable();
-            $results = $projectDB->getCollection([
+            $results = $dbForInternal->getCollection([
                 'limit' => 999,
                 'offset' => 0,
                 'orderType' => 'ASC',
@@ -190,19 +179,19 @@ App::post('/v1/cleanup/function')
 App::post('/v1/cleanup/tag')
     ->param('tagId', '', new UID(), 'Tag unique ID.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('projectID')
-    ->action(function ($tagId, $response, $projectDB, $projectID) {
+    ->action(function ($tagId, $response, $dbForInternal, $projectID) {
         /** @var string $tagId */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Database\Database $dbForInternal */
         /** @var string $projectID */
 
         global $orchestration;
 
         try {
             Authorization::disable();
-            $tag = $projectDB->getDocument($tagId);
+            $tag = $dbForInternal->getDocument($tagId);
             Authorization::reset();
 
             if (\is_null($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
@@ -227,13 +216,12 @@ App::post('/v1/tag')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('tagId', '', new UID(), 'Tag unique ID.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('projectID')
-    ->action(function ($functionId, $tagId, $response, $projectDB, $projectID) {
+    ->action(function ($functionId, $tagId, $response, $dbForInternal, $projectID) {
         Authorization::disable();
-        $project = $projectDB->getDocument($projectID);
-        $function = $projectDB->getDocument($functionId);
-        $tag = $projectDB->getDocument($tagId);
+        $function = $dbForInternal->getDocument('functions', $functionId);
+        $tag = $dbForInternal->getDocument('tags', $tagId);
         Authorization::reset();
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -246,33 +234,23 @@ App::post('/v1/tag')
 
         $schedule = $function->getAttribute('schedule', '');
         $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
+        $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
 
         Authorization::disable();
-        $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
+        $function = $dbForInternal->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'tag' => $tag->getId(),
-            'scheduleNext' => $next
-        ]));
+            'scheduleNext' => (int)$next,
+        ])));
         Authorization::reset();
 
         // Build Code
-        go(function () use ($projectDB, $projectID, $function, $tagId, $functionId) {
+        go(function () use ($dbForInternal, $projectID, $function, $tagId, $functionId) {
             // Build Code
-            $tag = runBuildStage($tagId, $function, $projectID, $projectDB);
+            $tag = runBuildStage($tagId, $function, $projectID, $dbForInternal);
 
             // Deploy Runtime Server
-            createRuntimeServer($functionId, $projectID, $tag, $projectDB);
+            createRuntimeServer($functionId, $projectID, $tag, $dbForInternal);
         });
-
-        if ($next) { // Init first schedule
-            ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
-                'projectId' => $projectID,
-                'webhooks' => $project->getAttribute('webhooks', []),
-                'functionId' => $function->getId(),
-                'executionId' => null,
-                'trigger' => 'schedule',
-            ]);  // Async task reschedule
-        }
 
         if (false === $function) {
             throw new Exception('Failed saving function to DB', 500);
@@ -613,8 +591,9 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
         $orchestration->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', '1'));
         $orchestration->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', '256'));
         $orchestration->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '256'));
-        foreach ($vars as &$value) {
-            $value = strval($value);
+
+        foreach ($vars as $key => $value) {
+            $vars[$key] = strval($value);
         }
 
         $id = $orchestration->run(
@@ -654,6 +633,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     global $activeFunctions;
     global $runtimes;
+    global $register;
 
     // Grab Tag Document
     Authorization::disable();
@@ -861,7 +841,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     // 110 is the Swoole error code for timeout, see: https://www.swoole.co.uk/docs/swoole-error-code
     if ($errNo !== 0 && $errNo != CURLE_COULDNT_CONNECT && $errNo != CURLE_OPERATION_TIMEDOUT && $errNo != 110) {
-        Console::error('A internal curl error has occoured within the executor! Error Msg: '. $error);
+        Console::error('A internal curl error has occoured within the executor! Error Msg: ' . $error);
         throw new Exception('Curl error: ' . $error, 500);
     }
 
@@ -885,22 +865,16 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     Console::info('Function executed in ' . ($executionEnd - $executionStart) . ' seconds, status: ' . $functionStatus);
 
-    Authorization::disable();
-
-    $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
-        'tagId' => $tag->getId(),
-        'status' => $functionStatus,
-        'exitCode' => $exitCode,
-        'stdout' => \utf8_encode(\mb_substr($stdout, -4000)), // log last 4000 chars output
-        'stderr' => \utf8_encode(\mb_substr($stderr, -4000)), // log last 4000 chars output
-        'time' => $executionTime
-    ]));
-
-    Authorization::reset();
-
-    if (false === $function) {
-        throw new Exception('Failed saving execution to DB', 500);
-    }
+    $execution = Authorization::skip(function () use ($database, $execution, $tag, $functionStatus, $exitCode, $stdout, $stderr, $executionTime) {
+        return $database->updateDocument('executions', $execution->getId(), new Document(array_merge($execution->getArrayCopy(), [
+            'tagId' => $tag->getId(),
+            'status' => $functionStatus,
+            'exitCode' => $exitCode,
+            'stdout' => \utf8_encode(\mb_substr($stdout, -8000)), // log last 8000 chars output
+            'stderr' => \utf8_encode(\mb_substr($stderr, -8000)), // log last 8000 chars output
+            'time' => (float)$executionTime,
+        ])));
+    });
 
     $executionModel = new Execution();
     $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
@@ -914,16 +888,33 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     $executionUpdate->trigger();
 
-    $usage = new Event('v1-usage', 'UsageV1');
+    $target = Realtime::fromPayload('functions.executions.update', $execution);
 
-    $usage
-        ->setParam('projectId', $projectId)
-        ->setParam('functionId', $function->getId())
-        ->setParam('functionExecution', 1)
-        ->setParam('functionStatus', $functionStatus)
-        ->setParam('functionExecutionTime', $executionTime * 1000) // ms
-        ->setParam('networkRequestSize', 0)
-        ->setParam('networkResponseSize', 0);
+    Realtime::send(
+        projectId: $projectId,
+        payload: $execution->getArrayCopy(),
+        event: 'functions.executions.update',
+        channels: $target['channels'],
+        roles: $target['roles']
+    );
+
+    if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        $statsd = $register->get('statsd');
+
+        $usage = new Stats($statsd);
+
+        $usage
+            ->setParam('projectId', $projectId)
+            ->setParam('functionId', $function->getId())
+            ->setParam('functionExecution', 1)
+            ->setParam('functionStatus', $functionStatus)
+            ->setParam('functionExecutionTime', $executionTime * 1000) // ms
+            ->setParam('networkRequestSize', 0)
+            ->setParam('networkResponseSize', 0)
+            ->submit();
+
+        $usage->submit();
+    }
 
     if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
         $usage->trigger();
@@ -969,18 +960,51 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $response = new Response($swooleResponse);
     $app = new App('UTC');
 
-    $db = $register->get('dbPool')->get();
-    $redis = $register->get('redisPool')->get();
-
     App::setResource('db', function () use (&$db) {
-        return $db;
+        $dbHost = App::getEnv('_APP_DB_HOST', '');
+        $dbUser = App::getEnv('_APP_DB_USER', '');
+        $dbPass = App::getEnv('_APP_DB_PASS', '');
+        $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
+    
+        $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
+            PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
+            PDO::ATTR_TIMEOUT => 3, // Seconds
+            PDO::ATTR_PERSISTENT => true,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        ));
+    
+        return $pdo;
     });
 
     App::setResource('cache', function () use (&$redis) {
+        $redis = new Redis();
+        $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
+        $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+    
         return $redis;
     });
 
+    App::setResource('dbForConsole', function($db, $cache) {
+        $cache = new Cache(new RedisCache($cache));
+    
+        $database = new Database(new MariaDB($db), $cache);
+        $database->setNamespace('project_console_internal');
+    
+        return $database;
+    }, ['db', 'cache']);
+
     $projectId = $request->getHeader('x-appwrite-project', '');
+
+    App::setResource('project', function ($dbForConsole) use ($projectId) {
+        Authorization::disable();
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        Authorization::reset();
+
+        return $project;
+    }, ['dbForConsole']);
 
     Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId));
 
@@ -997,14 +1021,16 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         return $swooleResponse->end('401: Authentication Error');
     }
 
-    App::setResource('projectDB', function ($db, $cache) use ($projectId) {
-        $projectDB = new Database();
-        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-        $projectDB->setNamespace('app_' . $projectId);
-        $projectDB->setMocks(Config::getParam('collections', []));
+    App::setResource('dbForInternal', function ($db, $cache, $project) {
+        $cache = new Cache(new RedisCache($cache));
 
-        return $projectDB;
-    }, ['db', 'cache']);
+        $test = $project->getId();
+
+        $database = new Database(new MariaDB($db), $cache);
+        $database->setNamespace('project_' . $project->getId() . '_internal');
+
+        return $database;
+    }, ['db', 'cache', 'project']);
 
     App::error(function ($error, $utopia, $request, $response) {
         /** @var Exception $error */
