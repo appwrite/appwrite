@@ -170,7 +170,7 @@ The second line adds a new version to the language entry, I'll break down the pa
 2: Build Image - The image used to build the code
 3: Run Image - The image used to run the code. 
 For interpreted languages this is normally the same as the Build Image, but for compiled languages this can be either "appwrite-alpine:3.13.6" or "appwrite-ubuntu:20.04"
-We recommend using Alpine when possible and using ubuntu if the runtime doesn't work on alpine.
+We recommend using Alpine when possible and using Ubuntu if the runtime doesn't work on Alpine.
 4: Platforms Supported - These are the architectures this runtime is available to.
 ```
 The third line simply adds the new runtime to the main list.
