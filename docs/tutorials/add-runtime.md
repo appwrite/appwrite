@@ -11,7 +11,7 @@ In order for a function runtime to work, two prerequisites **must** be met due t
  - [ ] The Language in question must be able to run a web server that can serve JSON and text.
  - [ ] The Runtime must be able to be packaged into a Docker container
  
- Note: Both Compiled and Interpreted languages work with Appwrite's execution model but both are written in slightly different ways.
+ Note: Both Compiled and Interpreted languages work with Appwrite's execution model but are written in slightly different ways.
 
 It's really easy to contribute to an open source project, but when using GitHub, there are a few steps we need to follow. This section will take you step-by-step through the process of preparing your own local version of Appwrite, where you can make any changes without affecting Appwrite right away.
 > If you are experienced with GitHub or have made a pull request before, you can skip to [Implement new runtime](https://github.com/appwrite/appwrite/blob/master/docs/tutorials/add-runtime.md#2-implement-new-runtime).
