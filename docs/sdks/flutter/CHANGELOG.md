@@ -113,7 +113,7 @@
 
 ## 0.2.2
 
-- Fixed an error that happend when the OAuth session creation request was sent before any other API call
+- Fixed an error that happened when the OAuth session creation request was sent before any other API call
 - Fixed a bug in the Avatars service where location URL generation had syntax error
 
 ## 0.2.1
