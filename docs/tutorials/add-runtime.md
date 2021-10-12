@@ -6,7 +6,7 @@ This document is part of the Appwrite contributors' guide. Before you continue r
 Function Runtimes allow you to execute code written in any language and form the basis of Appwrite's serverless functions! Appwrite's goal is to support as many function runtimes as possible.
 
 ## 1. Prerequisites
-In order for a function runtime to work, two prerequisites **must** be met due to the way Appwrite's Runtime Execution Model works. Theses are as follows:
+In order for a function runtime to work, two prerequisites **must** be met due to the way Appwrite's Runtime Execution Model works:
 
  - [ ] The Language in question must be able to run a web server that can serve JSON and text.
  - [ ] The Runtime must be able to be packaged into a Docker container
