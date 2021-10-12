@@ -206,7 +206,7 @@ The first section changes the permissions of your script so you can execute it, 
 NOTE: If you ever want to repackage your script you can simply run: `./tests/resources/package-LANGUAGE_NAME.sh` in the root of the `php-runtimes` project since you don't have to change permissions more than once.
 
 ### 5.3 Adding your runtime to the main testing script
-Now you have created your test execution script and have packaged it up for your runtime to execute you can now add it to the main testing script. Go ahead and open up the `./tests/Runtimes/RuntimesTest.php` file and find the part where we are defining `$this->tests`. As of the time of writing this tutorial this is on `line 27`.
+Now you have created your test execution script and have packaged it up for your runtime to execute you can now add it to the main testing script. Go ahead and open up the `./tests/Runtimes/RuntimesTest.php` file and find the part where we are defining `$this->tests`.
 
 Once you have found this, go ahead and add your own entry into this array like so:
 ```php
