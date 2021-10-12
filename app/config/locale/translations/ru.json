@@ -23,7 +23,7 @@
     "emails.recovery.signature": "команда {{project}}",
     "emails.invitation.subject": "Приглашение в команду %s по проекту %s",
     "emails.invitation.hello": "Здравствуйте",
-    "emails.invitation.body": "Это письмо отправлено вам, потому что {{owner}} приглашает стать членом команды {{team}} в проекте {{project}}.",
+    "emails.invitation.body": "Это письмо отправлено вам, потому что {{owner}} приглашает вас стать членом команды {{team}} в проекте {{project}}.",
     "emails.invitation.footer": "Если вы не заинтересованы, проигнорируйте это сообщение.",
     "emails.invitation.thanks": "Спасибо",
     "emails.invitation.signature": "команда {{project}}",
