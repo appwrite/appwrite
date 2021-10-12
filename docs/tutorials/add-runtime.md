@@ -8,7 +8,7 @@ Function Runtimes allow you to execute code written in any language and form the
 ## 1. Prerequisites
 In order for a function runtime to work, two prerequisites **must** be met due to the way Appwrite's Runtime Execution Model works. Theses are as follows:
 
- - [ ] The Language in question must be able to run a web server that can serve json and text.
+ - [ ] The Language in question must be able to run a web server that can serve JSON and text.
  - [ ] The Runtime must be able to be packaged into a Docker container
  
  Note: Both Compiled and Interpreted languages work with Appwrite's execution model but both are written in slightly different ways.
