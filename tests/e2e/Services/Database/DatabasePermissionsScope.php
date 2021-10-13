@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 trait DatabasePermissionsScope
 {
     public array $users = [];
+    public array $teams = [];
 
     public function createUser(string $id, string $email, string $password = 'test123'): array
     {
@@ -38,7 +39,7 @@ trait DatabasePermissionsScope
             'email' => $user['body']['email'],
             'session' => $session,
         ];
-        $this->users[$email] = $user;
+        $this->users[$id] = $user;
 
         return $user;
     }
@@ -54,8 +55,9 @@ trait DatabasePermissionsScope
             'teamId' => $id,
             'name' => $name
         ]);
+        $this->teams[$id] = $team['body'];
 
-        return $team;
+        return $team['body'];
     }
 
     public function addToTeam(string $user, string $team, array $roles = []): array
