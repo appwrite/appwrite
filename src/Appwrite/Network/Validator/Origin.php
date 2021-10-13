@@ -6,24 +6,24 @@ use Utopia\Validator;
 
 class Origin extends Validator
 {
-    const CLIENT_TYPE_UNKNOWN = 'unknown';
-    const CLIENT_TYPE_WEB = 'web';
-    const CLIENT_TYPE_FLUTTER_IOS = 'flutter-ios';
-    const CLIENT_TYPE_FLUTTER_ANDROID = 'flutter-android';
-    const CLIENT_TYPE_FLUTTER_MACOS = 'flutter-macos';
-    const CLIENT_TYPE_FLUTTER_WINDOWS = 'flutter-windows';
-    const CLIENT_TYPE_FLUTTER_LINUX = 'flutter-linux';
-    const CLIENT_TYPE_ANDROID = 'android';
-    const CLIENT_TYPE_IOS = 'ios';
+    public const CLIENT_TYPE_UNKNOWN = 'unknown';
+    public const CLIENT_TYPE_WEB = 'web';
+    public const CLIENT_TYPE_FLUTTER_IOS = 'flutter-ios';
+    public const CLIENT_TYPE_FLUTTER_ANDROID = 'flutter-android';
+    public const CLIENT_TYPE_FLUTTER_MACOS = 'flutter-macos';
+    public const CLIENT_TYPE_FLUTTER_WINDOWS = 'flutter-windows';
+    public const CLIENT_TYPE_FLUTTER_LINUX = 'flutter-linux';
+    public const CLIENT_TYPE_ANDROID = 'android';
+    public const CLIENT_TYPE_IOS = 'ios';
 
-    
-    const SCHEME_TYPE_HTTP = 'http';
-    const SCHEME_TYPE_HTTPS = 'https';
-    const SCHEME_TYPE_IOS = 'appwrite-ios';
-    const SCHEME_TYPE_ANDROID = 'appwrite-android';
-    const SCHEME_TYPE_MACOS = 'appwrite-macos';
-    const SCHEME_TYPE_WINDOWS = 'appwrite-windows';
-    const SCHEME_TYPE_LINUX = 'appwrite-linux';
+
+    public const SCHEME_TYPE_HTTP = 'http';
+    public const SCHEME_TYPE_HTTPS = 'https';
+    public const SCHEME_TYPE_IOS = 'appwrite-ios';
+    public const SCHEME_TYPE_ANDROID = 'appwrite-android';
+    public const SCHEME_TYPE_MACOS = 'appwrite-macos';
+    public const SCHEME_TYPE_WINDOWS = 'appwrite-windows';
+    public const SCHEME_TYPE_LINUX = 'appwrite-linux';
 
     /**
      * @var array
@@ -61,22 +61,22 @@ class Origin extends Validator
     {
         foreach ($platforms as $platform) {
             $type = (isset($platform['type'])) ? $platform['type'] : '';
-            
+
             switch ($type) {
                 case self::CLIENT_TYPE_WEB:
                     $this->clients[] = (isset($platform['hostname'])) ? $platform['hostname'] : '';
                     break;
-                
+
                 case self::CLIENT_TYPE_FLUTTER_IOS:
                 case self::CLIENT_TYPE_FLUTTER_ANDROID:
                 case self::CLIENT_TYPE_FLUTTER_MACOS:
                 case self::CLIENT_TYPE_FLUTTER_WINDOWS:
                 case self::CLIENT_TYPE_FLUTTER_LINUX:
                 case self::CLIENT_TYPE_ANDROID:
-                case self::CLIENT_TYPE_IOS: 
+                case self::CLIENT_TYPE_IOS:
                     $this->clients[] = (isset($platform['key'])) ? $platform['key'] : '';
                     break;
-                
+
                 default:
                     # code...
                     break;

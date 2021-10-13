@@ -26,3 +26,5 @@ echo $_ENV['APPWRITE_FUNCTION_RUNTIME_VERSION']."\n";
 // echo $result['$id'];
 echo $_ENV['APPWRITE_FUNCTION_EVENT']."\n";
 echo $_ENV['APPWRITE_FUNCTION_EVENT_DATA']."\n";
+// Test unknwon UTF-8 chars
+echo "\xEA\xE4\n";

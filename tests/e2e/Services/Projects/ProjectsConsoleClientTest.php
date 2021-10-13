@@ -7,6 +7,7 @@ use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Services\Projects\ProjectsBase;
 use Tests\E2E\Client;
+use Utopia\Database\Database;
 
 class ProjectsConsoleClientTest extends Scope
 {
@@ -87,6 +88,7 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
+
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -96,6 +98,35 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertNotEmpty($response['body']);
         $this->assertEquals($id, $response['body']['projects'][0]['$id']);
         $this->assertEquals('Project Test', $response['body']['projects'][0]['name']);
+
+        /**
+         * Test search queries
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders(), [
+            'search' => $id
+        ]));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['sum'], 1);
+        $this->assertIsArray($response['body']['projects']);
+        $this->assertCount(1, $response['body']['projects']);
+        $this->assertEquals($response['body']['projects'][0]['name'], 'Project Test');
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders(), [
+            'search' => 'Project Test'
+        ]));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['sum'], 1);
+        $this->assertIsArray($response['body']['projects']);
+        $this->assertCount(1, $response['body']['projects']);
+        $this->assertEquals($response['body']['projects'][0]['$id'], $data['projectId']);
 
         /**
          * Test after pagination
@@ -144,16 +175,38 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()),[
-            'after' => $response['body']['projects'][0]['$id']
+            'cursor' => $response['body']['projects'][0]['$id']
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertCount(1, $response['body']['projects']);
         $this->assertEquals('Project Test 2', $response['body']['projects'][0]['name']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()),[
+            'cursor' => $response['body']['projects'][0]['$id'],
+            'cursorDirection' => Database::CURSOR_BEFORE
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertCount(1, $response['body']['projects']);
+        $this->assertEquals('Project Test', $response['body']['projects'][0]['name']);
+
         /**
          * Test for FAILURE
          */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()),[
+            'cursor' => 'unknown'
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;
     }
@@ -1422,6 +1475,17 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/platforms/error', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Flutter App (Android) 2',
+            'key' => 'com.example.android2',
+            'store' => '',
+            'hostname' => '',
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
 
         return $data;
     }
