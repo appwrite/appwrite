@@ -9,9 +9,9 @@ import Appwrite
 
 func main() {
     let client = Client()
-      .setEndpoint(endPoint: "https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
-      .setProject(value: "5df5acd0d48c2") // Your project ID
-      .setKey(value: "919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
+      .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
+      .setProject("5df5acd0d48c2") // Your project ID
+      .setKey("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
       .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
 }
 ```
@@ -22,15 +22,10 @@ Once your SDK object is set, create any of the Appwrite service objects and choo
 
 ```swift
 let users = Users(client: client)
-users.create(
-    email: "email@example.com",
-    password: "password",
-) { result in
+users.create(email: "email@example.com", password: "password") { result in
     switch result {
-    case .failure(let error): 
-        print(error.localizedDescription)
-    case .success(var response):
-        let json = response.body!.readString(length: response.body!.readableBytes)
+    case .failure(let error): print(error.message)
+    case .success(let user): print(String(describing: user))
     }
 }
 ```
@@ -42,21 +37,16 @@ import Appwrite
 
 func main() {
     let client = Client()
-      .setEndpoint(endPoint: "https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
-      .setProject(value: "5df5acd0d48c2") // Your project ID
-      .setKey(value: "919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
+      .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
+      .setProject("5df5acd0d48c2") // Your project ID
+      .setKey("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
       .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
 
     let users = Users(client: client)
-    users.create(
-        email: "email@example.com",
-        password: "password"
-    ) { result in
+    users.create(email: "email@example.com", password: "password") { result in
         switch result {
-        case .failure(let error): 
-            print(error.localizedDescription)
-        case .success(var response):
-            let json = response.body!.readString(length: response.body!.readableBytes)
+        case .failure(let error): print(error.message)
+        case .success(let user): print(String(describing: user))
         }
     }
 }
@@ -72,10 +62,7 @@ import Appwrite
 func main() {
     let users = Users(client: client)
     
-    users.create(
-        email: "email@example.com",
-        password: "password"
-    ) { result in
+    users.create(email: "email@example.com", password: "password") { result in
         switch result {
         case .failure(let error): 
             print(error.message)
@@ -93,4 +80,4 @@ You can use the following resources to learn more and get help
 - 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)
 - 📜 [Appwrite Docs](https://appwrite.io/docs)
 - 💬 [Discord Community](https://appwrite.io/discord)
-- 🚂 [Appwrite Swift Playground](https://github.com/appwrite/playground-for-swift)
+- 🚂 [Appwrite Swift Playground](https://github.com/appwrite/playground-for-swift-server)
