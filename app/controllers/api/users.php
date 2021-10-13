@@ -95,21 +95,22 @@ App::get('/v1/users')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('after', '', new UID(), 'ID of the user used as the starting point for the query, excluding the user itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursor', '', new UID(), 'ID of the user used as the starting point for the query, excluding the user itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForInternal, $usage) {
+    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
 
-        if (!empty($after)) {
-            $afterUser = $dbForInternal->getDocument('users', $after);
+        if (!empty($cursor)) {
+            $cursorUser = $dbForInternal->getDocument('users', $cursor);
 
-            if ($afterUser->isEmpty()) {
-                throw new Exception("User '{$after}' for the 'after' value not found.", 400);
+            if ($cursorUser->isEmpty()) {
+                throw new Exception("User '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
 
@@ -126,7 +127,7 @@ App::get('/v1/users')
         ;
 
         $response->dynamic(new Document([
-            'users' => $dbForInternal->find('users', $queries, $limit, $offset, [], [$orderType], $afterUser ?? null),
+            'users' => $dbForInternal->find('users', $queries, $limit, $offset, [], [$orderType], $cursorUser ?? null, $cursorDirection),
             'sum' => $dbForInternal->count('users', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_USER_LIST);
     });
@@ -450,7 +451,7 @@ App::patch('/v1/users/:userId/name')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
-        
+
         $user = $dbForInternal->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
@@ -496,8 +497,11 @@ App::patch('/v1/users/:userId/password')
             throw new Exception('User not found', 404);
         }
 
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('password', Auth::passwordHash($password))
-            ->setAttribute('passwordUpdate', \time()));
+        $user
+            ->setAttribute('password', Auth::passwordHash($password))
+            ->setAttribute('passwordUpdate', \time());
+
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
 
         $audits
             ->setParam('userId', $user->getId())
@@ -536,7 +540,13 @@ App::patch('/v1/users/:userId/email')
             throw new Exception('User not found', 404);
         }
 
-        $email = \strtolower($email);        
+        $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
+        if (!$isAnonymousUser) {
+            //TODO: Remove previous unique ID.
+        }
+
+        $email = \strtolower($email);
+
         try {
             $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('email', $email));
         } catch(Duplicate $th) {
@@ -545,7 +555,7 @@ App::patch('/v1/users/:userId/email')
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'account.update.email')
+            ->setParam('event', 'users.update.email')
             ->setParam('resource', 'user/'.$user->getId())
         ;
 
@@ -627,7 +637,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
                 $dbForInternal->deleteDocument('sessions', $session->getId());
 
                 $user->setAttribute('sessions', $sessions);
-                
+
                 $events
                     ->setParam('eventData', $response->output($user, Response::MODEL_USER))
                 ;

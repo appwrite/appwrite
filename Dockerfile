@@ -1,4 +1,4 @@
-FROM composer:2.0 as step0
+FROM composer:2.0 as composer
 
 ARG TESTING=false
 ENV TESTING=$TESTING
@@ -12,7 +12,7 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM php:8.0-cli-alpine as step1
+FROM php:8.0-cli-alpine as compile
 
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
@@ -34,6 +34,7 @@ RUN \
   git \
   zlib-dev \
   brotli-dev \
+  openssl-dev \
   yaml-dev \
   imagemagick \
   imagemagick-dev \
@@ -41,51 +42,24 @@ RUN \
 
 RUN docker-php-ext-install sockets
 
+FROM compile AS redis
 RUN \
   # Redis Extension
   git clone --depth 1 --branch $PHP_REDIS_VERSION https://github.com/phpredis/phpredis.git && \
   cd phpredis && \
   phpize && \
   ./configure && \
-  make && make install && \
-  cd .. && \
-  # Mongodb Extension
-  git clone --depth 1 --branch $PHP_MONGODB_VERSION https://github.com/mongodb/mongo-php-driver.git && \
-  cd mongo-php-driver && \
-  git submodule update --init && \
-  phpize && \
-  ./configure && \
-  make && make install && \
-  cd .. && \
-  ## Swoole Extension
+  make && make install
+
+## Swoole Extension
+FROM compile AS swoole
+RUN \
   git clone --depth 1 --branch $PHP_SWOOLE_VERSION https://github.com/swoole/swoole-src.git && \
   cd swoole-src && \
   phpize && \
-  ./configure --enable-http2 && \
+  ./configure --enable-sockets --enable-http2 --enable-openssl && \
   make && make install && \
-  cd .. && \
-  ## Imagick Extension
-  git clone --depth 1 --branch $PHP_IMAGICK_VERSION https://github.com/imagick/imagick && \
-  cd imagick && \
-  phpize && \
-  ./configure && \
-  make && make install && \
-  cd .. && \
-  ## YAML Extension
-  git clone --depth 1 --branch $PHP_YAML_VERSION https://github.com/php/pecl-file_formats-yaml && \
-  cd pecl-file_formats-yaml && \
-  phpize && \
-  ./configure && \
-  make && make install && \
-  cd .. && \
-  ## Maxminddb extension
-  git clone --depth 1 --branch $PHP_MAXMINDDB_VERSION https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
-  cd MaxMind-DB-Reader-php && \
-  cd ext && \
-  phpize && \
-  ./configure && \
-  make && make install && \
-  cd ../..
+  cd ..
 
 ## Swoole Debugger setup
 RUN if [ "$DEBUG" == "true" ]; then \
@@ -98,6 +72,44 @@ RUN if [ "$DEBUG" == "true" ]; then \
     make && make install && \
     cd ..;\
   fi
+
+## Imagick Extension
+FROM compile AS imagick
+RUN \
+  git clone --depth 1 --branch $PHP_IMAGICK_VERSION https://github.com/imagick/imagick && \
+  cd imagick && \
+  phpize && \
+  ./configure && \
+  make && make install
+
+## YAML Extension
+FROM compile AS yaml
+RUN \
+  git clone --depth 1 --branch $PHP_YAML_VERSION https://github.com/php/pecl-file_formats-yaml && \
+  cd pecl-file_formats-yaml && \
+  phpize && \
+  ./configure && \
+  make && make install
+
+## Maxminddb extension
+FROM compile AS maxmind
+RUN \
+  git clone --depth 1 --branch $PHP_MAXMINDDB_VERSION https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
+  cd MaxMind-DB-Reader-php && \
+  cd ext && \
+  phpize && \
+  ./configure && \
+  make && make install
+
+# Mongodb Extension
+FROM compile as mongodb
+RUN \
+  git clone --depth 1 --branch $PHP_MONGODB_VERSION https://github.com/mongodb/mongo-php-driver.git && \
+  cd mongo-php-driver && \
+  git submodule update --init && \
+  phpize && \
+  ./configure && \
+  make && make install
 
 FROM php:8.0-cli-alpine as final
 
@@ -193,13 +205,13 @@ RUN \
 
 WORKDIR /usr/src/code
 
-COPY --from=step0 /usr/local/src/vendor /usr/src/code/vendor
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yasd.so* /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/ 
+COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
+COPY --from=swoole /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yasd.so* /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=yaml /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=maxmind /usr/local/lib/php/extensions/no-debug-non-zts-20200930/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=mongodb /usr/local/lib/php/extensions/no-debug-non-zts-20200930/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 
 # Add Source Code
 COPY ./app /usr/src/code/app
@@ -228,6 +240,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
+    chmod +x /usr/local/bin/realtime && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/ssl && \
@@ -256,6 +269,7 @@ RUN if [ "$DEBUG" == "true" ]; then echo "opcache.enable=0" >> /usr/local/etc/ph
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/appwrite.ini
+RUN echo "default_socket_timeout=-1" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.jit_buffer_size=100M" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.jit=1235" >> /usr/local/etc/php/conf.d/appwrite.ini
 

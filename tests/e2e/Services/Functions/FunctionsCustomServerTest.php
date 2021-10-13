@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\Database;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -154,12 +155,36 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'after' => $functions['body']['functions'][0]['$id']
+            'cursor' => $functions['body']['functions'][0]['$id']
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertCount(1, $response['body']['functions']);
         $this->assertEquals($response['body']['functions'][0]['name'], 'Test 2');
+
+        $response = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => $functions['body']['functions'][1]['$id'],
+            'cursorDirection' => Database::CURSOR_BEFORE
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertCount(1, $response['body']['functions']);
+        $this->assertEquals($response['body']['functions'][0]['name'], 'Test');
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => 'unknown',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
 
         return $data;
     }
@@ -442,6 +467,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('http', $execution['body']['stdout']);
         $this->assertStringContainsString('PHP', $execution['body']['stdout']);
         $this->assertStringContainsString('8.0', $execution['body']['stdout']);
+        $this->assertStringContainsString('êä', $execution['body']['stdout']); // tests unknown utf-8 chars
         $this->assertEquals('', $execution['body']['stderr']);
         $this->assertGreaterThan(0.05, $execution['body']['time']);
         $this->assertLessThan(0.500, $execution['body']['time']);
@@ -665,7 +691,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
         $this->assertEquals($executions['body']['executions'][0]['status'], 'failed');
-        $this->assertEquals($executions['body']['executions'][0]['exitCode'], 1);
+        $this->assertEquals($executions['body']['executions'][0]['exitCode'], 124);
         $this->assertGreaterThan(2, $executions['body']['executions'][0]['time']);
         $this->assertLessThan(3, $executions['body']['executions'][0]['time']);
         $this->assertEquals($executions['body']['executions'][0]['stdout'], '');
@@ -754,6 +780,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);
         $this->assertEquals('', $output['APPWRITE_FUNCTION_USER_ID']);
         $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
+        $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',

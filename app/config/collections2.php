@@ -214,7 +214,7 @@ $collections = [
                 'required' => false,
                 'default' => new stdClass,
                 'array' => false,
-                'filters' => ['json', 'range'],
+                'filters' => ['json', 'range', 'enum'],
             ],
             [
                 '$id' => 'filters',
@@ -2282,7 +2282,56 @@ $collections = [
                 'orders' => [Database::ORDER_DESC],
             ],
         ],
-    ]
+    ],
+    'realtime' => [
+        '$collection' => Database::METADATA,
+        '$id' => 'realtime',
+        'name' => 'Realtime Connections',
+        'attributes' => [
+            [
+                '$id' => 'container',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'timestamp',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'value',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [], //TODO: use json filter
+            ]
+        ],
+        'indexes' => [
+            [
+                '$id' => '_key_timestamp',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['timestamp'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_DESC],
+            ],
+        ]
+    ],
 ];
 
 return $collections;

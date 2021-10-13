@@ -94,7 +94,7 @@ App::post('/v1/storage/files')
         // Save to storage
         $size = $device->getFileSize($file['tmp_name']);
         $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
-        
+
         if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
             throw new Exception('Failed moving file', 500);
         }
@@ -124,7 +124,7 @@ App::post('/v1/storage/files')
         }
 
         $sizeActual = $device->getFileSize($path);
-        
+
         $fileId = ($fileId == 'unique()') ? $dbForInternal->getId() : $fileId;
         $file = $dbForInternal->createDocument('files', new Document([
             '$id' => $fileId,
@@ -177,21 +177,22 @@ App::get('/v1/storage/files')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('after', '', new UID(), 'ID of the file used as the starting point for the query, excluding the file itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursor', '', new UID(), 'ID of the file used as the starting point for the query, excluding the file itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForInternal, $usage) {
+    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
 
-        if (!empty($after)) {
-            $afterFile = $dbForInternal->getDocument('files', $after);
+        if (!empty($cursor)) {
+            $cursorFile = $dbForInternal->getDocument('files', $cursor);
 
-            if ($afterFile->isEmpty()) {
-                throw new Exception("File '{$after}' for the 'after' value not found.", 400);
+            if ($cursorFile->isEmpty()) {
+                throw new Exception("File '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
 
@@ -207,7 +208,7 @@ App::get('/v1/storage/files')
         ;
 
         $response->dynamic(new Document([
-            'files' => $dbForInternal->find('files', $queries, $limit, $offset, [], [$orderType], $afterFile ?? null),
+            'files' => $dbForInternal->find('files', $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection),
             'sum' => $dbForInternal->count('files', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FILE_LIST);
     });

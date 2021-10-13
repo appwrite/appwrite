@@ -1,11 +1,13 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Utopia\Database\Validator\Authorization;
+use Appwrite\Database\Validator\Authorization;
+use Appwrite\Messaging\Adapter\Realtime;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Database\Document;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 
@@ -141,6 +143,12 @@ App::init(function ($utopia, $request, $project) {
             }
             break;
 
+        case 'magic-url':
+            if($project->getAttribute('usersAuthMagicURL', true) === false) {
+                throw new Exception('Magic URL authentication is disabled for this project', 501);
+            }
+            break;
+
         case 'anonymous':
             if(($auths['anonymous'] ?? true) === false) {
                 throw new Exception('Anonymous authentication is disabled for this project', 501);
@@ -166,7 +174,7 @@ App::init(function ($utopia, $request, $project) {
 
 }, ['utopia', 'request', 'project'], 'auth');
 
-App::shutdown(function ($utopia, $request, $response, $project, $register, $events, $audits, $usage, $deletes, $database, $mode) {
+App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $database, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
@@ -176,7 +184,6 @@ App::shutdown(function ($utopia, $request, $response, $project, $register, $even
     /** @var Appwrite\Stats\Stats $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $database */
-    /** @var Appwrite\Event\Event $functions */
     /** @var bool $mode */
 
     if (!empty($events->getParam('event'))) {
@@ -196,12 +203,29 @@ App::shutdown(function ($utopia, $request, $response, $project, $register, $even
             ->setQueue('v1-functions')
             ->setClass('FunctionsV1')
             ->trigger();
+
+        if ($project->getId() !== 'console') {
+            $payload = new Document($response->getPayload());
+            $target = Realtime::fromPayload($events->getParam('event'), $payload);
+
+            Realtime::send(
+                $project->getId(),
+                $response->getPayload(),
+                $events->getParam('event'),
+                $target['channels'],
+                $target['roles'],
+                [
+                    'permissionsChanged' => $target['permissionsChanged'], 
+                    'userId' => $events->getParam('userId')
+                ]
+            );
+        }
     }
-    
+
     if (!empty($audits->getParam('event'))) {
         $audits->trigger();
     }
-    
+
     if (!empty($deletes->getParam('type')) && !empty($deletes->getParam('document'))) {
         $deletes->trigger();
     }
@@ -209,13 +233,13 @@ App::shutdown(function ($utopia, $request, $response, $project, $register, $even
     if (!empty($database->getParam('type')) && !empty($database->getParam('document'))) {
         $database->trigger();
     }
-    
+
     $route = $utopia->match($request);
     if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled' 
         && $project->getId()
         && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
         && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
-        
+
         $usage
             ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
             ->setParam('networkResponseSize', $response->getSize())
@@ -223,4 +247,4 @@ App::shutdown(function ($utopia, $request, $response, $project, $register, $even
         ;
     }
 
-}, ['utopia', 'request', 'response', 'project', 'register', 'events', 'audits', 'usage', 'deletes', 'database', 'mode'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'database', 'mode'], 'api');

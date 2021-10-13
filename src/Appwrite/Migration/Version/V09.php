@@ -3,7 +3,6 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
-use Utopia\Config\Config;
 use Utopia\CLI\Console;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
@@ -21,16 +20,13 @@ class V09 extends Migration
     protected function fixDocument(Document $document)
     {
         switch ($document->getAttribute('$collection')) {
-            case Database::SYSTEM_COLLECTION_USERS:
-                /**
-                 * Remove deprecated user status 0 and replace with boolean.
-                 */
-                if ($document->getAttribute('status') === 0 || $document->getAttribute('status') === 1) {
-                    $document->setAttribute('status', true);
-                }
-                if ($document->getAttribute('status') === 2) {
-                    $document->setAttribute('status', false);
-                }
+            /**
+             * Add version reference to database.
+             */
+            case Database::SYSTEM_COLLECTION_PROJECTS:
+                    $document->setAttribute('version', '0.10.0');
+
+                break;
         }
 
         foreach ($document as &$attr) {
