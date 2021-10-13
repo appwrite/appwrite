@@ -18,7 +18,7 @@
     "emails.recovery.subject": "രഹസ്യവാക്ക് പുനക്രമീകരണം",
     "emails.recovery.hello": "നമസ്കാരം {{name}}",
     "emails.recovery.body": "നിങ്ങളുടെ {{Project}} രഹസ്യവാക്ക് പുനക്രമീകരിക്കുന്നതിന് ഈ ലിങ്ക് പിന്തുടരുക.",
-    "emails.recovery.footer": "നിങ്ങളുടെ പാസ്‌വേഡ് പുനക്രമീകരിക്കാന്‍ നിങ്ങൾ ആവശ്യപ്പെട്ടില്ലെങ്കിൽ, ഈ സന്ദേശം അവഗണിക്കാവുന്നതാണ്.",
+    "emails.recovery.footer": "നിങ്ങളുടെ രഹസ്യവാക്ക് പുനക്രമീകരിക്കാന്‍ നിങ്ങൾ ആവശ്യപ്പെട്ടില്ലെങ്കിൽ, ഈ സന്ദേശം അവഗണിക്കാവുന്നതാണ്.",
     "emails.recovery.thanks": "നന്ദി",
     "emails.recovery.signature": "{{project}} ടീം",
     "emails.invitation.subject": "%s -ലെ %s ടീമിലേക്കുള്ള ക്ഷണം",
