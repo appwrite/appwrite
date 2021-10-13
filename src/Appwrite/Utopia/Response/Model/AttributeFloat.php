@@ -45,7 +45,7 @@ class AttributeFloat extends Attribute
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -55,7 +55,7 @@ class AttributeFloat extends Attribute
 
     /**
      * Get Type
-     * 
+     *
      * @return string
      */
     public function getType():string
