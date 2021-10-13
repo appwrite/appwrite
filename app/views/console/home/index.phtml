@@ -243,16 +243,16 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                 <div class="link android-new"><img src="/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Android Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Android App</div>
             </li>
             <li>
-                <div class="link ios-new"><img src="/images/clients/ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="iOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New iOS App</div>
+                <div class="link ios-new"><img src="/images/clients/apple-ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="iOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New iOS App</div>
             </li>
             <li>
-                <div class="link macos-new"><img src="/images/clients/macos.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="macOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New macOS App</div>
+                <div class="link macos-new"><img src="/images/clients/apple-macos.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="macOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New macOS App</div>
             </li>
             <li>
-                <div class="link watchos-new"><img src="/images/clients/watchos.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="watchOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New watchOS App</div>
+                <div class="link watchos-new"><img src="/images/clients/apple-watchos.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="watchOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New watchOS App</div>
             </li>
             <li>
-                <div class="link tvos-new"><img src="/images/clients/tvos.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="tvOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New tvOS App</div>
+                <div class="link tvos-new"><img src="/images/clients/apple-tvos.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="tvOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New tvOS App</div>
             </li>
             <li class="disabled">
                 <div class="link unity-new"><img src="/images/clients/unity.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Unity Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Unity Game  <span class="text-fade text-size-small">(soon)</span></div>
@@ -395,7 +395,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
             data-failure-param-alert-classname="error">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-        <input type="hidden" name="type" data-ls-bind="ios" />
+        <input type="hidden" name="type" data-ls-bind="apple-ios" />
 
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My iOS App" maxlength="128" />
@@ -431,7 +431,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
             data-failure-param-alert-classname="error">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-        <input type="hidden" name="type" data-ls-bind="macos" />
+        <input type="hidden" name="type" data-ls-bind="apple-macos" />
 
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My macOS App" maxlength="128" />
@@ -467,7 +467,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
             data-failure-param-alert-classname="error">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-        <input type="hidden" name="type" data-ls-bind="watchos" />
+        <input type="hidden" name="type" data-ls-bind="apple-watchos" />
 
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My watchOS App" maxlength="128" />
@@ -503,7 +503,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
             data-failure-param-alert-classname="error">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-        <input type="hidden" name="type" data-ls-bind="tvos" />
+        <input type="hidden" name="type" data-ls-bind="apple-tvos" />
 
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My tvOS App" maxlength="128" />
@@ -745,7 +745,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
 
         <label data-ls-attrs="for=name-{{platform.$id}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" placeholder="My iOS App" maxlength="128" />
+        <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" placeholder="My macOS App" maxlength="128" />
 
         <label data-ls-attrs="for=key-{{platform.$id}}">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
         <input name="key" type="text" class="margin-bottom" autocomplete="off" placeholder="com.company.appname" data-ls-bind="{{platform.key}}" required />
@@ -787,7 +787,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
     </form>
 </script>
 
-<script type="text/html" id="template-watchos-update">
+<script type="text/html" id="template-apple-watchos-update">
     <form
             data-analytics
             data-analytics-activity
@@ -819,7 +819,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
     </form>
 </script>
 
-<script type="text/html" id="template-tvos-update">
+<script type="text/html" id="template-apple-tvos-update">
     <form
             data-analytics
             data-analytics-activity
@@ -860,5 +860,13 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 </script>
 
 <script type="text/html" id="template-flutter-macos-update">
+    <div data-ls-template="template-macos-update" data-type="script"></div>
+</script>
+
+<script type="text/html" id="template-apple-ios-update">
+    <div data-ls-template="template-ios-update" data-type="script"></div>
+</script>
+
+<script type="text/html" id="template-apple-macos-update">
     <div data-ls-template="template-macos-update" data-type="script"></div>
 </script>
