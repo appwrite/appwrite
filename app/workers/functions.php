@@ -269,7 +269,7 @@ class FunctionsV1 extends Worker
             'executionId' => $executionId,
             'functionId' => $function->getId(),
             'event' => $event,
-            'eventData' => $eventData,
+            'eventData' => json_encode($eventData),
             'data' => $data,
             'webhooks' => $webhooks,
             'userId' => $userId,
@@ -280,6 +280,7 @@ class FunctionsV1 extends Worker
         \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
         \curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
+            'x-appwrite-project: '.$projectId,
             'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
         ]);
 

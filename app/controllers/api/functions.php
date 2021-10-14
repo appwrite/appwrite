@@ -24,7 +24,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Config\Config;
 use Cron\CronExpression;
-use Utopia\Validator\Boolean;
+use Utopia\CLI\Console;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -331,7 +331,7 @@ App::patch('/v1/functions/:functionId/tag')
         \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
         \curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
-            'X-Appwrite-Project: '.$project->getId(),
+            'x-appwrite-project: '.$project->getId(),
             'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
         ]);
 
@@ -369,7 +369,8 @@ App::delete('/v1/functions/:functionId')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('deletes')
-    ->action(function ($functionId, $response, $dbForInternal, $deletes) {
+    ->inject('project')
+    ->action(function ($functionId, $response, $dbForInternal, $deletes, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $deletes */
@@ -388,7 +389,7 @@ App::delete('/v1/functions/:functionId')
         \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
         \curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
-            'X-Appwrite-Project: '.$project->getId(),
+            'x-appwrite-project: '.$project->getId(),
             'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
         ]);
 
@@ -502,9 +503,9 @@ App::post('/v1/functions/:functionId/tags')
             'entrypoint' => $entrypoint,
             'path' => $path,
             'size' => $size,
-            'search' => implode(' ', [$tagId, $command]),
+            'search' => implode(' ', [$tagId, $entrypoint]),
             'status' => 'pending',
-            'builtPath' => '',
+            'buildPath' => '',
             'buildStdout' => '',
             'buildStderr' => ''
         ]));
@@ -626,10 +627,12 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($functionId, $tagId, $response, $dbForInternal, $usage) {
+    ->inject('project')
+    ->action(function ($functionId, $tagId, $response, $dbForInternal, $usage, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $usage */
+        /** @var Utopia\Database\Document $project */
 
         $function = $dbForInternal->getDocument('functions', $functionId);
 
@@ -659,7 +662,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
         \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
         \curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
-            'X-Appwrite-Project: '.$project->getId(),
+            'x-appwrite-project: '.$project->getId(),
             'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
         ]);
 
@@ -831,6 +834,7 @@ App::post('/v1/functions/:functionId/executions')
             \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
             \curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Content-Type: application/json',
+                'x-appwrite-project: '.$project->getId(),
                 'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
             ]);
     

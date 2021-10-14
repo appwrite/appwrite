@@ -1971,7 +1971,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'builtPath',
+                '$id' => 'buildPath',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,

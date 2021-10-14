@@ -1,12 +1,10 @@
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Appwrite\Database\Database;
-use Appwrite\Database\Document;
-use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
-use Appwrite\Database\Adapter\Redis as RedisAdapter;
-use Appwrite\Database\Validator\Authorization;
-use Appwrite\Database\Validator\UID;
+use Utopia\Database\Document;
+use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\UID;
 use Appwrite\Event\Event;
 use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Messaging\Adapter\Realtime;
@@ -96,7 +94,7 @@ App::post('/v1/execute') // Define Route
     ->param('executionId', '', new Text(1024), '', true)
     ->param('functionId', '', new Text(1024))
     ->param('event', '', new Text(1024), '', true)
-    ->param('eventData', '', new Text(1024), '', true)
+    ->param('eventData', '', new Text(10240), '', true)
     ->param('data', '', new Text(1024), '', true)
     ->param('webhooks', [], new ArrayList(new JSON()), [], true)
     ->param('userId', '', new Text(1024), '', true)
@@ -134,25 +132,25 @@ App::post('/v1/cleanup/function')
         global $orchestration;
 
         try {
-            Authorization::disable();
-            $function = $dbForInternal->getDocument($functionId);
-            Authorization::reset();
+            $function = Authorization::skip(function () use ($dbForInternal, $functionId) {
+                return $dbForInternal->getDocument('functions', $functionId);
+            });
 
-            if (\is_null($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+            if ($function->isEmpty()) {
                 throw new Exception('Function not found', 404);
             }
 
-            Authorization::disable();
-            $results = $dbForInternal->getCollection([
-                'limit' => 999,
-                'offset' => 0,
-                'orderType' => 'ASC',
-                'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_TAGS,
-                    'functionId=' . $functionId,
-                ],
-            ]);
-            Authorization::reset();
+            $results = Authorization::skip(function () use ($dbForInternal, $functionId) {
+                return $dbForInternal->getCollection([
+                    'limit' => 999,
+                    'offset' => 0,
+                    'orderType' => 'ASC',
+                    'filters' => [
+                        '$collection=' . 'tags',
+                        'functionId=' . $functionId,
+                    ],
+                ]);
+            });
 
             // If amount is 0 then we simply return true
             if (count($results) === 0) {
@@ -190,11 +188,11 @@ App::post('/v1/cleanup/tag')
         global $orchestration;
 
         try {
-            Authorization::disable();
-            $tag = $dbForInternal->getDocument($tagId);
-            Authorization::reset();
+            $tag = Authorization::skip(function () use ($dbForInternal, $tagId) {
+                return $dbForInternal->getDocument('tags', $tagId);
+            });
 
-            if (\is_null($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
+            if ($tag->isEmpty()) {
                 throw new Exception('Tag not found', 404);
             }
 
@@ -219,16 +217,19 @@ App::post('/v1/tag')
     ->inject('dbForInternal')
     ->inject('projectID')
     ->action(function ($functionId, $tagId, $response, $dbForInternal, $projectID) {
-        Authorization::disable();
-        $function = $dbForInternal->getDocument('functions', $functionId);
-        $tag = $dbForInternal->getDocument('tags', $tagId);
-        Authorization::reset();
+        $function = Authorization::skip(function() use ($functionId, $dbForInternal) {
+            return $dbForInternal->getDocument('functions', $functionId);
+        });
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        $tag = Authorization::skip(function() use ($tagId, $dbForInternal) {
+            return $dbForInternal->getDocument('tags', $tagId);
+        });
+
+        if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
 
-        if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
+        if ($tag->isEmpty()) {
             throw new Exception('Tag not found', 404);
         }
 
@@ -236,12 +237,12 @@ App::post('/v1/tag')
         $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? new CronExpression($schedule) : null;
         $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
 
-        Authorization::disable();
-        $function = $dbForInternal->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
-            'tag' => $tag->getId(),
-            'scheduleNext' => (int)$next,
-        ])));
-        Authorization::reset();
+        $function = Authorization::skip(function() use ($function, $dbForInternal, $tag, $next) {
+            return $function = $dbForInternal->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
+                'tag' => $tag->getId(),
+                'scheduleNext' => (int)$next,
+            ])));
+        });
 
         // Build Code
         go(function () use ($dbForInternal, $projectID, $function, $tagId, $functionId) {
@@ -281,22 +282,22 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
     $buildStderr = '';
 
     // Check if tag is already built
-    Authorization::disable();
-    $tag = $database->getDocument($tagID);
-    Authorization::reset();
+    $tag = Authorization::skip(function () use ($tagID, $database) {
+        return $database->getDocument('tags', $tagID);
+    });
 
     try {
         // If we already have a built package ready there is no need to rebuild.
-        if ($tag->getAttribute('status') === 'ready' && \file_exists($tag->getAttribute('builtPath'))) {
+        if ($tag->getAttribute('status') === 'ready' && \file_exists($tag->getAttribute('buildPath'))) {
             return $tag;
         }
 
         // Update Tag Status
-        Authorization::disable();
-        $tag = $database->updateDocument(array_merge($tag->getArrayCopy(), [
-            'status' => 'building'
-        ]));
-        Authorization::reset();
+        $tag->setAttribute('status', 'building');
+
+        Authorization::skip(function () use ($tag, $database) {
+            $database->updateDocument('tags', $tag->getId(), $tag);
+        });
 
         // Check if runtime is active
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')]))
@@ -353,6 +354,12 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
         foreach ($vars as &$value) {
             $value = strval($value);
         }
+
+        if (!\file_exists('/tmp/project-' . $projectID . '/' . $tag->getId() . '/builtCode')) {
+            if (!\mkdir('/tmp/project-' . $projectID . '/' . $tag->getId() . '/builtCode', 0755, true)) {
+                throw new Exception('Can\'t create directory /tmp/project-' . $projectID . '/' . $tag->getId() . '/builtCode');
+            }
+        };
 
         $id = $orchestration->run(
             image: $runtime['base'],
@@ -451,28 +458,29 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
             throw new Exception('Failed moving file', 500);
         }
 
+        $tag->setAttribute('buildPath', $path)
+        ->setAttribute('status', 'ready')
+        ->setAttribute('buildStdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
+        ->setAttribute('buildStderr', \utf8_encode(\mb_substr($buildStderr, -4096)));
+
         // Update tag with built code attribute
-        Authorization::disable();
-        $tag = $database->updateDocument(array_merge($tag->getArrayCopy(), [
-            'builtPath' => $path,
-            'status' => 'ready',
-            'buildStdout' => $buildStdout,
-            'buildStderr' => $buildStderr
-        ]));
-        Authorization::enable();
+        $tag = Authorization::skip(function () use ($tag, $tagID, $database) {
+            return $database->updateDocument('tags', $tagID, $tag);
+        });
 
         $buildEnd = \microtime(true);
 
         Console::info('Tag Built in ' . ($buildEnd - $buildStart) . ' seconds');
     } catch (Exception $e) {
         Console::error('Tag build failed: ' . $e->getMessage());
-        Authorization::disable();
-        $tag = $database->updateDocument(array_merge($tag->getArrayCopy(), [
-            'status' => 'failed',
-            'buildStdout' => $buildStdout,
-            'buildStderr' => $buildStderr,
-        ]));
-        Authorization::enable();
+
+        $tag->setAttribute('status', 'failed')
+        ->setAttribute('buildStdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
+        ->setAttribute('buildStderr', \utf8_encode(\mb_substr($buildStderr, -4096)));
+
+        Authorization::skip(function () use ($tag, $tagID, $database) {
+            return $database->updateDocument('tags', $tagID, $tag);
+        });
 
         // also remove the container if it exists
         if ($id) {
@@ -491,9 +499,9 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
     global $activeFunctions;
 
     // Grab Tag Document
-    Authorization::disable();
-    $function = $database->getDocument($functionId);
-    Authorization::reset();
+    $function = Authorization::skip(function () use ($database, $functionId) {
+        return $database->getDocument('functions', $functionId);
+    });
 
     // Check if function isn't already created
     $functions = $orchestration->list(['label' => 'appwrite-type=function', 'name' => 'appwrite-function-' . $tag->getId()]);
@@ -553,7 +561,7 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
     }
 
     // Grab Tag Files
-    $tagPath = $tag->getAttribute('builtPath', '');
+    $tagPath = $tag->getAttribute('buildPath', '');
 
     $tagPathTarget = '/tmp/project-' . $projectId . '/' . $tag->getId() . '/builtCode/code.tar.gz';
     $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
@@ -636,51 +644,54 @@ function execute(string $trigger, string $projectId, string $executionId, string
     global $register;
 
     // Grab Tag Document
-    Authorization::disable();
-    $function = $database->getDocument($functionId);
-    $tag = $database->getDocument($function->getAttribute('tag', ''));
-    Authorization::reset();
+    $function = Authorization::skip(function () use ($database, $functionId) {
+        return $database->getDocument('functions', $functionId);
+    });
+
+    $tag = Authorization::skip(function () use ($database, $function) {
+        return $database->getDocument('tags', $function->getAttribute('tag', ''));
+    });
 
     if ($tag->getAttribute('functionId') !== $function->getId()) {
         throw new Exception('Tag not found', 404);
     }
 
-    Authorization::disable();
     // Grab execution document if exists
     // It it doesn't exist, create a new one.
-    $execution = (!empty($executionId)) ? $database->getDocument($executionId) : $database->createDocument([
-        '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
-        '$permissions' => [
-            'read' => [],
-            'write' => [],
-        ],
-        'dateCreated' => time(),
-        'functionId' => $function->getId(),
-        'trigger' => $trigger, // http / schedule / event
-        'status' => 'processing', // waiting / processing / completed / failed
-        'exitCode' => 0,
-        'stdout' => '',
-        'stderr' => '',
-        'time' => 0,
-    ]);
+    $execution = Authorization::skip(function () use ($database, $executionId, $userId, $function, $tag, $trigger, $functionId) {
+        return (!empty($executionId)) ? $database->getDocument('executions', $executionId) : $database->createDocument('executions', new Document([
+            '$id' => $executionId,
+            '$read' => (!$userId == '') ? ['user:' . $userId] : [],
+            '$write' => [],
+            'dateCreated' => time(),
+            'functionId' => $function->getId(),
+            'tagId' => $tag->getId(),
+            'trigger' => $trigger, // http / schedule / event
+            'status' => 'processing', // waiting / processing / completed / failed
+            'exitCode' => 0,
+            'stdout' => '',
+            'stderr' => '',
+            'time' => 0.0,
+            'search' => implode(' ', [$functionId, $executionId]),
+        ]));
+    });
 
     if (false === $execution || ($execution instanceof Document && $execution->isEmpty())) {
         throw new Exception('Failed to create or read execution');
     }
 
-    Authorization::reset();
 
     if ($tag->getAttribute('status') == 'building') {
         Console::error('Execution Failed. Reason: Code was still being built.');
-        Authorization::disable();
-        $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
-            'tagId' => $tag->getId(),
-            'status' => 'failed',
-            'exitCode' => 1,
-            'stderr' => 'Tag is still being built.', // log last 4000 chars output
-            'time' => 0
-        ]));
-        Authorization::reset();
+
+        $execution->setAttribute('status', 'failed')
+            ->setAttribute('exitCode', 1)
+            ->setAttribute('stderr', 'Tag is still being built.')
+            ->setAttribute('time', 0);
+
+        Authorization::skip(function () use ($database, $execution) {
+            return $database->updateDocument('executions', $execution->getId(), $execution);
+        });
         throw new Exception('Tag is still being built.');
     }
 
@@ -718,13 +729,14 @@ function execute(string $trigger, string $projectId, string $executionId, string
         }
     } catch (Exception $e) {
         Console::error('Something went wrong building the code. ' . $e->getMessage());
-        $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
-            'tagId' => $tag->getId(),
-            'status' => 'failed',
-            'exitCode' => 1,
-            'stderr' => \utf8_encode(\mb_substr($e->getMessage(), -4000)), // log last 4000 chars output
-            'time' => 0
-        ]));
+        $execution->setAttribute('status', 'failed')
+            ->setAttribute('exitCode', 1)
+            ->setAttribute('stderr', \utf8_encode(\mb_substr($e->getMessage(), -4000))) // log last 4000 chars output
+            ->setAttribute('time', 0);
+
+        Authorization::skip(function () use ($database, $execution) {
+            return $database->updateDocument('executions', $execution->getId(), $execution);
+        });
     }
 
     try {
@@ -737,15 +749,15 @@ function execute(string $trigger, string $projectId, string $executionId, string
         }
     } catch (Exception $e) {
         Console::error('Something went wrong building the runtime server. ' . $e->getMessage());
-        Authorization::disable();
-        $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
-            'tagId' => $tag->getId(),
-            'status' => 'failed',
-            'exitCode' => 1,
-            'stderr' => \utf8_encode(\mb_substr($e->getMessage(), -4000)), // log last 4000 chars output
-            'time' => 0
-        ]));
-        Authorization::enable();
+
+        $execution->setAttribute('status', 'failed')
+            ->setAttribute('exitCode', 1)
+            ->setAttribute('stderr', \utf8_encode(\mb_substr($e->getMessage(), -4000))) // log last 4000 chars output
+            ->setAttribute('time', 0);
+
+        $execution = Authorization::skip(function () use ($database, $execution) {
+            return $database->updateDocument('executions', $execution->getId(), $execution);
+        });
         return [
             'status' => 'failed',
             'response' => \utf8_encode(\mb_substr($e->getMessage(), -4000)), // log last 4000 chars output
@@ -865,15 +877,15 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     Console::info('Function executed in ' . ($executionEnd - $executionStart) . ' seconds, status: ' . $functionStatus);
 
-    $execution = Authorization::skip(function () use ($database, $execution, $tag, $functionStatus, $exitCode, $stdout, $stderr, $executionTime) {
-        return $database->updateDocument('executions', $execution->getId(), new Document(array_merge($execution->getArrayCopy(), [
-            'tagId' => $tag->getId(),
-            'status' => $functionStatus,
-            'exitCode' => $exitCode,
-            'stdout' => \utf8_encode(\mb_substr($stdout, -8000)), // log last 8000 chars output
-            'stderr' => \utf8_encode(\mb_substr($stderr, -8000)), // log last 8000 chars output
-            'time' => (float)$executionTime,
-        ])));
+    $execution->setAttribute('tagId', $tag->getId())
+        ->setAttribute('status', $functionStatus)
+        ->setAttribute('exitCode', $exitCode)
+        ->setAttribute('stdout', \utf8_encode(\mb_substr($stdout, -8000)))
+        ->setAttribute('stderr', \utf8_encode(\mb_substr($stderr, -8000)))
+        ->setAttribute('time', $executionTime);
+
+    $execution = Authorization::skip(function () use ($database, $execution) {
+        return $database->updateDocument('executions', $execution->getId(), $execution);
     });
 
     $executionModel = new Execution();
@@ -898,7 +910,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
         roles: $target['roles']
     );
 
-    if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+    if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
         $statsd = $register->get('statsd');
 
         $usage = new Stats($statsd);
@@ -911,13 +923,10 @@ function execute(string $trigger, string $projectId, string $executionId, string
             ->setParam('functionExecutionTime', $executionTime * 1000) // ms
             ->setParam('networkRequestSize', 0)
             ->setParam('networkResponseSize', 0)
-            ->submit();
+            ->submit()
+        ;
 
         $usage->submit();
-    }
-
-    if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-        $usage->trigger();
     }
 
     return [
@@ -960,51 +969,19 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $response = new Response($swooleResponse);
     $app = new App('UTC');
 
+    $db = $register->get('dbPool')->get();
+
     App::setResource('db', function () use (&$db) {
-        $dbHost = App::getEnv('_APP_DB_HOST', '');
-        $dbUser = App::getEnv('_APP_DB_USER', '');
-        $dbPass = App::getEnv('_APP_DB_PASS', '');
-        $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
-    
-        $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
-            PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
-            PDO::ATTR_TIMEOUT => 3, // Seconds
-            PDO::ATTR_PERSISTENT => true,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ));
-    
-        return $pdo;
+        return $db;
     });
 
+    $redis = $register->get('redisPool')->get();
+
     App::setResource('cache', function () use (&$redis) {
-        $redis = new Redis();
-        $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
-        $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
-    
         return $redis;
     });
 
-    App::setResource('dbForConsole', function($db, $cache) {
-        $cache = new Cache(new RedisCache($cache));
-    
-        $database = new Database(new MariaDB($db), $cache);
-        $database->setNamespace('project_console_internal');
-    
-        return $database;
-    }, ['db', 'cache']);
-
     $projectId = $request->getHeader('x-appwrite-project', '');
-
-    App::setResource('project', function ($dbForConsole) use ($projectId) {
-        Authorization::disable();
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        Authorization::reset();
-
-        return $project;
-    }, ['dbForConsole']);
 
     Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId));
 
@@ -1021,16 +998,14 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         return $swooleResponse->end('401: Authentication Error');
     }
 
-    App::setResource('dbForInternal', function ($db, $cache, $project) {
+    App::setResource('dbForInternal', function($db, $cache) use ($projectId) {
         $cache = new Cache(new RedisCache($cache));
-
-        $test = $project->getId();
-
+    
         $database = new Database(new MariaDB($db), $cache);
-        $database->setNamespace('project_' . $project->getId() . '_internal');
+        $database->setNamespace('project_'.$projectId.'_internal');
 
         return $database;
-    }, ['db', 'cache', 'project']);
+    }, ['db', 'cache']);
 
     App::error(function ($error, $utopia, $request, $response) {
         /** @var Exception $error */
@@ -1094,6 +1069,14 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     } catch (Exception $e) {
         Console::error('There\'s a problem with ' . $request->getURI());
         $swooleResponse->end('500: Server Error');
+    } finally {
+        /** @var PDOPool $dbPool */
+        $dbPool = $register->get('dbPool');
+        $dbPool->put($db);
+        
+        /** @var RedisPool $redisPool */
+        $redisPool = $register->get('redisPool');
+        $redisPool->put($redis);
     }
 });
 
