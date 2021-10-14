@@ -5,6 +5,7 @@ use Utopia\App;
 use Utopia\Exception;
 use Utopia\Config\Config;
 use Utopia\Validator\Assoc;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Appwrite\Network\Validator\Email;
 use Utopia\Validator\WhiteList;
@@ -161,13 +162,17 @@ App::post('/v1/account/sessions')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
+    // TODO: All ranges with configurable min and max using ENV variable, maybe?
+    // TODO: Update exipry with every request made by the user?
+    // TODO: Maybe rename to duration
+    ->param('expire', 31536000, new Range(86400, 31536000), 'Session duration in seconds. Must be between 1 and 365 days', true)
     ->inject('request')
     ->inject('response')
     ->inject('projectDB')
     ->inject('locale')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($email, $password, $request, $response, $projectDB, $locale, $geodb, $audits) {
+    ->action(function ($email, $password, $expire, $request, $response, $projectDB, $locale, $geodb, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -201,7 +206,7 @@ App::post('/v1/account/sessions')
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $expiry = \time() + $expire;
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge(
             [
@@ -389,6 +394,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
     ->param('code', '', new Text(1024), 'OAuth2 code.')
     ->param('state', '', new Text(2048), 'OAuth2 state params.', true)
+    // TODO: Write 3 tests for:
+    ->param('expire', 31536000, new Range(86400, 31536000), 'Session duration in seconds. Must be between 1 and 365 days', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -397,7 +404,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('geodb')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $geodb, $audits, $events) use ($oauthDefaultSuccess) {
+    ->action(function ($provider, $code, $state, $expire, $request, $response, $project, $user, $projectDB, $geodb, $audits, $events) use ($oauthDefaultSuccess) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -546,7 +553,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $expiry = \time() + $expire;
         $session = new Document(array_merge([
             '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
             '$permissions' => ['read' => ['user:'.$user['$id']], 'write' => ['user:'.$user['$id']]],
@@ -796,13 +803,15 @@ App::put('/v1/account/sessions/magic-url')
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('secret', '', new Text(256), 'Valid verification token.')
+    // TODO: Write 3 tests for
+    ->param('expire', 31536000, new Range(86400, 31536000), 'Session duration in seconds. Must be between 1 and 365 days', true)
     ->inject('request')
     ->inject('response')
     ->inject('projectDB')
     ->inject('locale')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($userId, $secret, $request, $response, $projectDB, $locale, $geodb, $audits) {
+    ->action(function ($userId, $secret, $expire, $request, $response, $projectDB, $locale, $geodb, $audits) {
         /** @var string $userId */
         /** @var string $secret */
         /** @var Utopia\Swoole\Request $request */
@@ -833,7 +842,7 @@ App::put('/v1/account/sessions/magic-url')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $expiry = \time() + $expire;
         $session = new Document(array_merge(
             [
                 '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
@@ -919,6 +928,7 @@ App::post('/v1/account/sessions/anonymous')
     ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
+    ->param('expire', 31536000, new Range(86400, 31536000), 'Session duration in seconds. Must be between 1 and 365 days', true)
     ->inject('request')
     ->inject('response')
     ->inject('locale')
@@ -927,7 +937,7 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('projectDB')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($request, $response, $locale, $user, $project, $projectDB, $geodb, $audits) {
+    ->action(function ($expire, $request, $response, $locale, $user, $project, $projectDB, $geodb, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
@@ -994,7 +1004,7 @@ App::post('/v1/account/sessions/anonymous')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $expiry = \time() + $expire;
         $session = new Document(array_merge(
             [
                 '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,

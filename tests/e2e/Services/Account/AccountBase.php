@@ -115,6 +115,23 @@ trait AccountBase
         $sessionId = $response['body']['$id'];
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+            'expire' => 691200 // 8 days
+        ]);
+
+        $timeNow = \time();
+        $expectedExpireTime = $timeNow + 691200; // 8 days
+        $offset = \abs($response['body']['expire'] - $expectedExpireTime);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertLessThanOrEqual(10, $offset); // Allowed offset is 10 seconds due to HTTP delay
+
         /**
          * Test for FAILURE
          */
@@ -150,6 +167,33 @@ trait AccountBase
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+            'expire' => 1 // 1 second
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals("Invalid expire: Value must be a valid range between 86,400 and 31,536,000", $response['body']['message']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+            'expire' => 500000000 // Way over limit ...
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals("Invalid expire: Value must be a valid range between 86,400 and 31,536,000", $response['body']['message']);
+
 
         return array_merge($data, [
             'sessionId' => $sessionId,
@@ -262,7 +306,7 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertCount(2, $response['body']);
-        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertEquals(2, $response['body']['sum']);
         $this->assertEquals($sessionId, $response['body']['sessions'][0]['$id']);
         
         $this->assertEquals('Windows', $response['body']['sessions'][0]['osName']);
@@ -319,7 +363,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']['logs']);
         $this->assertNotEmpty($response['body']['logs']);
-        $this->assertCount(2, $response['body']['logs']);
+        $this->assertCount(3, $response['body']['logs']);
         
         $this->assertContains($response['body']['logs'][0]['event'], ['account.create', 'account.sessions.create']);
         $this->assertEquals($response['body']['logs'][0]['ip'], filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP));

@@ -248,6 +248,28 @@ class AccountCustomClientTest extends Scope
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         /**
+         * Expire parameter test
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'expire' => 86400 // 1 day
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertIsArray($response['body']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
+
+        $timeNow = \time();
+        $expectedExpireTime = $timeNow + 86400; // 1 day
+        $offset = \abs($response['body']['expire'] - $expectedExpireTime);
+        $this->assertLessThanOrEqual(10, $offset); // Allowed offset is 10 seconds due to HTTP delay
+
+        /**
          * Test for FAILURE
          */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', [
@@ -258,6 +280,31 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
+
+        /**
+         * Expire parameter test
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'expire' => 1 // 1 second
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals("Invalid expire: Value must be a valid range between 86,400 and 31,536,000", $response['body']['message']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'expire' => 500000000 // Way over limit ...
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals("Invalid expire: Value must be a valid range between 86,400 and 31,536,000", $response['body']['message']);
 
         return $session;
     }
