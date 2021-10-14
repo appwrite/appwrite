@@ -1,4 +1,3 @@
-```swift
 import Appwrite
 
 func main() {
@@ -7,7 +6,7 @@ func main() {
       .setProject("5df5acd0d48c2") // Your project ID
       .setJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...") // Your secret JSON Web Token
 
-    let account = Account(client: client)
+    let account = Account(client)
     account.updateEmail(
         email: "email@example.com",
         password: "password"
@@ -20,4 +19,3 @@ func main() {
         }
     }
 }
-```

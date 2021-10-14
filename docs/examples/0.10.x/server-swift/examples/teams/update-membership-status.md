@@ -1,4 +1,3 @@
-```swift
 import Appwrite
 
 func main() {
@@ -7,7 +6,7 @@ func main() {
       .setProject("5df5acd0d48c2") // Your project ID
       .setJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...") // Your secret JSON Web Token
 
-    let teams = Teams(client: client)
+    let teams = Teams(client)
     teams.updateMembershipStatus(
         teamId: "[TEAM_ID]",
         membershipId: "[MEMBERSHIP_ID]",
@@ -22,4 +21,3 @@ func main() {
         }
     }
 }
-```

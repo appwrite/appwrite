@@ -1,4 +1,3 @@
-```swift
 import Appwrite
 
 func main() {
@@ -6,7 +5,7 @@ func main() {
       .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
       .setProject("5df5acd0d48c2") // Your project ID
 
-    let storage = Storage(client: client)
+    let storage = Storage(client)
     storage.updateFile(
         fileId: "[FILE_ID]",
         read: [],
@@ -20,4 +19,3 @@ func main() {
         }
     }
 }
-```

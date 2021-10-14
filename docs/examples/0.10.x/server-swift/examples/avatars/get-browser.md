@@ -1,4 +1,3 @@
-```swift
 import Appwrite
 
 func main() {
@@ -7,7 +6,7 @@ func main() {
       .setProject("5df5acd0d48c2") // Your project ID
       .setKey("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
 
-    let avatars = Avatars(client: client)
+    let avatars = Avatars(client)
     avatars.getBrowser(
         code: "aa"
     ) { result in
@@ -19,4 +18,3 @@ func main() {
         }
     }
 }
-```
