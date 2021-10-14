@@ -2520,12 +2520,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "fc9d0a9125590871f233ebd5cf0441f1b3e387bd"
+                "reference": "50121f485da858fd7ca7c56446b5db82fccac469"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/d6f07d956f1ebfc8c582454be851c79afe76b3f0",
-                "reference": "fc9d0a9125590871f233ebd5cf0441f1b3e387bd",
+                "reference": "50121f485da858fd7ca7c56446b5db82fccac469",
                 "shasum": ""
             },
             "require": {

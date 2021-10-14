@@ -201,6 +201,22 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                         <div data-ls-if="{{platform.type}} === 'flutter-windows'" class="corner">
                             <img src="" data-ls-attrs="src=/images/clients/flutter.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Windows Logo" class="avatar xs" loading="lazy" width="30" height="30" />
                         </div>
+
+                        <div data-ls-if="{{platform.type}} === 'apple-ios'" class="corner">
+                            <img src="" data-ls-attrs="src=/images/clients/apple.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="iOS Logo" class="avatar xs" loading="lazy" width="30" height="30" />
+                        </div>
+
+                        <div data-ls-if="{{platform.type}} === 'apple-macos'" class="corner">
+                            <img src="" data-ls-attrs="src=/images/clients/apple.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="macOS Logo" class="avatar xs" loading="lazy" width="30" height="30" />
+                        </div>
+
+                        <div data-ls-if="{{platform.type}} === 'apple-watchos'" class="corner">
+                            <img src="" data-ls-attrs="src=/images/clients/apple.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="watchOS Logo" class="avatar xs" loading="lazy" width="30" height="30" />
+                        </div>
+
+                        <div data-ls-if="{{platform.type}} === 'apple-tvos'" class="corner">
+                            <img src="" data-ls-attrs="src=/images/clients/apple.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="tvOS Logo" class="avatar xs" loading="lazy" width="30" height="30" />
+                        </div>
                     </div>
                     <span class="text-one-liner" data-ls-bind="{{platform.name}}"></span>
                 </div>
@@ -240,19 +256,10 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                 <div class="link flutter-new"><img src="/images/clients/flutter.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Flutter Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Flutter App</div>
             </li>
             <li>
+                <div class="link apple-new"><img src="/images/clients/apple.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="iOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Apple App</div>
+            </li>
+            <li>
                 <div class="link android-new"><img src="/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Android Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Android App</div>
-            </li>
-            <li>
-                <div class="link ios-new"><img src="/images/clients/apple-ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="iOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New iOS App</div>
-            </li>
-            <li>
-                <div class="link macos-new"><img src="/images/clients/apple-macos.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="macOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New macOS App</div>
-            </li>
-            <li>
-                <div class="link watchos-new"><img src="/images/clients/apple-watchos.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="watchOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New watchOS App</div>
-            </li>
-            <li>
-                <div class="link tvos-new"><img src="/images/clients/apple-tvos.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="tvOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New tvOS App</div>
             </li>
             <li class="disabled">
                 <div class="link unity-new"><img src="/images/clients/unity.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Unity Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Unity Game  <span class="text-fade text-size-small">(soon)</span></div>
@@ -365,150 +372,6 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Android App" maxlength="128" />
 
         <label for="key">Package Name <span class="tooltip large" data-tooltip="Your package name is generally the applicationId in your app-level build.gradle file."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="com.company.appname" />
-
-        <hr />
-
-        <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
-    </form>
-</div>
-
-<div data-ui-modal class="modal box close" data-button-alias=".ios-new">
-    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-    <h1>Register your iOS App</h1>
-
-    <form
-            data-analytics
-            data-analytics-activity
-            data-analytics-event="submit"
-            data-analytics-category="console"
-            data-analytics-label="Create Project Platform (iOS)"
-            data-service="projects.createPlatform"
-            data-scope="console"
-            data-event="submit"
-            data-success="alert,trigger,reset"
-            data-success-param-alert-text="Registered new platform successfully"
-            data-success-param-trigger-events="projects.createPlatform"
-            data-failure="alert"
-            data-failure-param-alert-text="Failed to register platform"
-            data-failure-param-alert-classname="error">
-
-        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-        <input type="hidden" name="type" data-ls-bind="apple-ios" />
-
-        <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My iOS App" maxlength="128" />
-
-        <label for="key">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="com.company.appname" />
-
-        <hr />
-
-        <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
-    </form>
-</div>
-
-<div data-ui-modal class="modal box close" data-button-alias=".macos-new">
-    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-    <h1>Register your macOS App</h1>
-
-    <form
-            data-analytics
-            data-analytics-activity
-            data-analytics-event="submit"
-            data-analytics-category="console"
-            data-analytics-label="Create Project Platform (macOS)"
-            data-service="projects.createPlatform"
-            data-scope="console"
-            data-event="submit"
-            data-success="alert,trigger,reset"
-            data-success-param-alert-text="Registered new platform successfully"
-            data-success-param-trigger-events="projects.createPlatform"
-            data-failure="alert"
-            data-failure-param-alert-text="Failed to register platform"
-            data-failure-param-alert-classname="error">
-
-        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-        <input type="hidden" name="type" data-ls-bind="apple-macos" />
-
-        <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My macOS App" maxlength="128" />
-
-        <label for="key">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="com.company.appname" />
-
-        <hr />
-
-        <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
-    </form>
-</div>
-
-<div data-ui-modal class="modal box close" data-button-alias=".watchos-new">
-    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-    <h1>Register your watchOS App</h1>
-
-    <form
-            data-analytics
-            data-analytics-activity
-            data-analytics-event="submit"
-            data-analytics-category="console"
-            data-analytics-label="Create Project Platform (watchOS)"
-            data-service="projects.createPlatform"
-            data-scope="console"
-            data-event="submit"
-            data-success="alert,trigger,reset"
-            data-success-param-alert-text="Registered new platform successfully"
-            data-success-param-trigger-events="projects.createPlatform"
-            data-failure="alert"
-            data-failure-param-alert-text="Failed to register platform"
-            data-failure-param-alert-classname="error">
-
-        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-        <input type="hidden" name="type" data-ls-bind="apple-watchos" />
-
-        <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My watchOS App" maxlength="128" />
-
-        <label for="key">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="com.company.appname" />
-
-        <hr />
-
-        <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
-    </form>
-</div>
-
-<div data-ui-modal class="modal box close" data-button-alias=".tvos-new">
-    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-    <h1>Register your tvOS App</h1>
-
-    <form
-            data-analytics
-            data-analytics-activity
-            data-analytics-event="submit"
-            data-analytics-category="console"
-            data-analytics-label="Create Project Platform (tvOS)"
-            data-service="projects.createPlatform"
-            data-scope="console"
-            data-event="submit"
-            data-success="alert,trigger,reset"
-            data-success-param-alert-text="Registered new platform successfully"
-            data-success-param-trigger-events="projects.createPlatform"
-            data-failure="alert"
-            data-failure-param-alert-text="Failed to register platform"
-            data-failure-param-alert-classname="error">
-
-        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-        <input type="hidden" name="type" data-ls-bind="apple-tvos" />
-
-        <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My tvOS App" maxlength="128" />
-
-        <label for="key">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="com.company.appname" />
 
         <hr />
@@ -683,6 +546,148 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                 <label for="key">Package Name <span class="tooltip large" data-tooltip="Your application name"><i class="icon-question"></i></span></label>
                 <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="appname" />
+
+                <hr />
+
+                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+            </form>
+        </li>
+    </ul>
+</div>
+
+<div data-ui-modal class="modal box close width-large" data-button-alias=".apple-new">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1 class="margin-bottom-xl">Register your Apple App</h1>
+
+    <ul class="phases clear margin-top-negative-small padding" data-ui-phases>
+        <li>
+            <h2 style="display: none">&nbsp;&nbsp;iOS&nbsp;&nbsp;</h2>
+
+            <form
+                    data-analytics
+                    data-analytics-activity
+                    data-analytics-event="submit"
+                    data-analytics-category="console"
+                    data-analytics-label="Create Project Platform (Apple / iOS)"
+                    data-service="projects.createPlatform"
+                    data-scope="console"
+                    data-event="submit"
+                    data-success="alert,trigger,reset"
+                    data-success-param-alert-text="Registered new platform successfully"
+                    data-success-param-trigger-events="projects.createPlatform"
+                    data-failure="alert"
+                    data-failure-param-alert-text="Failed to register platform"
+                    data-failure-param-alert-classname="error">
+
+                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                <input type="hidden" name="type" data-ls-bind="apple-ios" />
+
+                <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My iOS App" maxlength="128" />
+
+                <label for="key">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="com.company.appname" />
+
+                <hr />
+
+                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+            </form>
+
+        </li>
+        <li>
+            <h2 style="display: none">&nbsp;&nbsp;macOS&nbsp;&nbsp;</h2>
+
+            <form
+                    data-analytics
+                    data-analytics-activity
+                    data-analytics-event="submit"
+                    data-analytics-category="console"
+                    data-analytics-label="Create Project Platform (Apple / macOS)"
+                    data-service="projects.createPlatform"
+                    data-scope="console"
+                    data-event="submit"
+                    data-success="alert,trigger,reset"
+                    data-success-param-alert-text="Registered new platform successfully"
+                    data-success-param-trigger-events="projects.createPlatform"
+                    data-failure="alert"
+                    data-failure-param-alert-text="Failed to register platform"
+                    data-failure-param-alert-classname="error">
+
+                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                <input type="hidden" name="type" data-ls-bind="apple-macos" />
+
+                <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My macOS App" maxlength="128" />
+
+                <label for="key">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="com.company.appname" />
+
+                <hr />
+
+                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+            </form>
+        </li>
+        <li>
+            <h2 style="display: none">&nbsp;&nbsp;watchOS&nbsp;&nbsp;</h2>
+
+            <form
+                    data-analytics
+                    data-analytics-activity
+                    data-analytics-event="submit"
+                    data-analytics-category="console"
+                    data-analytics-label="Create Project Platform (Apple / watchOS)"
+                    data-service="projects.createPlatform"
+                    data-scope="console"
+                    data-event="submit"
+                    data-success="alert,trigger,reset"
+                    data-success-param-alert-text="Registered new platform successfully"
+                    data-success-param-trigger-events="projects.createPlatform"
+                    data-failure="alert"
+                    data-failure-param-alert-text="Failed to register platform"
+                    data-failure-param-alert-classname="error">
+
+                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                <input type="hidden" name="type" data-ls-bind="apple-watchos" />
+
+                <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My watchOS App" maxlength="128" />
+
+                <label for="key">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="com.company.appname" />
+
+                <hr />
+
+                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+            </form>
+        </li>
+        <li>
+            <h2 style="display: none">&nbsp;&nbsp;tvOS&nbsp;&nbsp;</h2>
+
+            <form
+                    data-analytics
+                    data-analytics-activity
+                    data-analytics-event="submit"
+                    data-analytics-category="console"
+                    data-analytics-label="Create Project Platform (Apple / tvOS)"
+                    data-service="projects.createPlatform"
+                    data-scope="console"
+                    data-event="submit"
+                    data-success="alert,trigger,reset"
+                    data-success-param-alert-text="Registered new platform successfully"
+                    data-success-param-trigger-events="projects.createPlatform"
+                    data-failure="alert"
+                    data-failure-param-alert-text="Failed to register platform"
+                    data-failure-param-alert-classname="error">
+
+                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                <input type="hidden" name="type" data-ls-bind="apple-tvos" />
+
+                <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My tvOS App" maxlength="128" />
+
+                <label for="key">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="com.company.appname" />
 
                 <hr />
 
