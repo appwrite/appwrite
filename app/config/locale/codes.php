@@ -43,10 +43,9 @@ return [
     'ml', // Malayalam
     'mr', // Marathi
     'ms', // Malay
-    'nb', // Norwegian - Bokmål
+    'nb', // Norwegian bokmål
     'nl', // Dutch
-    'nn', // Norwegian (nynorsk)
-    'no', // Norwegian (bokmål)
+    'nn', // Norwegian nynorsk
     'ne', // Nepali
     'or', // Oriya
     'tl', // Filipino
