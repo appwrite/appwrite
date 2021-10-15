@@ -3,6 +3,10 @@
 namespace Tests\E2E\Services\Account;
 
 use Tests\E2E\Client;
+use function array_merge;
+use function strpos;
+use function substr;
+use function var_dump;
 
 trait AccountBase
 {
@@ -122,7 +126,7 @@ trait AccountBase
         ]), [
             'email' => $email,
             'password' => $password,
-            'expire' => 691200 // 8 days
+            'duration' => 691200 // 8 days
         ]);
 
         $timeNow = \time();
@@ -175,11 +179,11 @@ trait AccountBase
         ]), [
             'email' => $email,
             'password' => $password,
-            'expire' => 1 // 1 second
+            'duration' => 1 // 1 second
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals("Invalid expire: Value must be a valid range between 86,400 and 31,536,000", $response['body']['message']);
+        $this->assertEquals("Invalid duration: Value must be a valid range between 3,600 and 31,536,000", $response['body']['message']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
             'origin' => 'http://localhost',
@@ -188,11 +192,11 @@ trait AccountBase
         ]), [
             'email' => $email,
             'password' => $password,
-            'expire' => 500000000 // Way over limit ...
+            'duration' => 500000000 // Way over limit ...
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals("Invalid expire: Value must be a valid range between 86,400 and 31,536,000", $response['body']['message']);
+        $this->assertEquals("Invalid duration: Value must be a valid range between 3,600 and 31,536,000", $response['body']['message']);
 
 
         return array_merge($data, [
@@ -1234,7 +1238,42 @@ trait AccountBase
         $expireTime = strpos($lastEmail['text'], 'expire='.$response['body']['expire'], 0);
 
         $this->assertNotFalse($expireTime);
-        
+
+        $secretTest = strpos($lastEmail['text'], 'secret='.$response['body']['secret'], 0);
+
+        $this->assertNotFalse($secretTest);
+
+        $userIDTest = strpos($lastEmail['text'], 'userId='.$response['body']['userId'], 0);
+
+        $this->assertNotFalse($userIDTest);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            // 'url' => 'http://localhost/magiclogin',
+            'duration' => 2073600 // 24 days
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEmpty($response['body']['secret']);
+        $this->assertIsNumeric($response['body']['expire']);
+
+        $timeNow = \time();
+        $expectedExpireTime = $timeNow + 2073600; // 24 days
+        $offset = \abs($response['body']['expire'] - $expectedExpireTime);
+        $this->assertLessThanOrEqual(10, $offset); // Allowed offset is 10 seconds due to HTTP delay
+
+        $lastEmail = $this->getLastEmail();
+        $this->assertEquals($email, $lastEmail['to'][0]['address']);
+        $this->assertEquals('Login', $lastEmail['subject']);
+        $expireTime = strpos($lastEmail['text'], 'expire='.$response['body']['expire'], 0);
+
+        $this->assertNotFalse($expireTime);
+
         $secretTest = strpos($lastEmail['text'], 'secret='.$response['body']['secret'], 0);
 
         $this->assertNotFalse($secretTest);
@@ -1267,6 +1306,32 @@ trait AccountBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            // 'url' => 'http://localhost/magiclogin',
+            'duration' => 1 // 1 second
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals("Invalid duration: Value must be a valid range between 3,600 and 31,536,000", $response['body']['message']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            // 'url' => 'http://localhost/magiclogin',
+            'duration' => 500000000 // Way over limit ...
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals("Invalid duration: Value must be a valid range between 3,600 and 31,536,000", $response['body']['message']);
 
         $data['token'] = $token;
         $data['id'] = $userId;

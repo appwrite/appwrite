@@ -248,14 +248,14 @@ class AccountCustomClientTest extends Scope
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         /**
-         * Expire parameter test
+         * Duration parameter test
          */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'expire' => 86400 // 1 day
+            'duration' => 86400 // 1 day
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -282,29 +282,29 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
 
         /**
-         * Expire parameter test
+         * Duration parameter test
          */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'expire' => 1 // 1 second
+            'duration' => 1 // 1 second
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals("Invalid expire: Value must be a valid range between 86,400 and 31,536,000", $response['body']['message']);
+        $this->assertEquals("Invalid duration: Value must be a valid range between 3,600 and 31,536,000", $response['body']['message']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'expire' => 500000000 // Way over limit ...
+            'duration' => 500000000 // Way over limit ...
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals("Invalid expire: Value must be a valid range between 86,400 and 31,536,000", $response['body']['message']);
+        $this->assertEquals("Invalid duration: Value must be a valid range between 3,600 and 31,536,000", $response['body']['message']);
 
         return $session;
     }

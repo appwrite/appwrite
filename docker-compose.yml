@@ -129,6 +129,9 @@ services:
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_FUNCTIONS_RUNTIMES
+      - _APP_AUTH_DEFAULT_DURATION
+      - _APP_AUTH_MAX_DURATION
+      - _APP_AUTH_MIN_DURATION
 
   appwrite-realtime:
     entrypoint: realtime

@@ -162,17 +162,14 @@ App::post('/v1/account/sessions')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
-    // TODO: All ranges with configurable min and max using ENV variable, maybe?
-    // TODO: Update exipry with every request made by the user?
-    // TODO: Maybe rename to duration
-    ->param('expire', 31536000, new Range(86400, 31536000), 'Session duration in seconds. Must be between 1 and 365 days', true)
+    ->param('duration', App::getEnv('_APP_AUTH_DEFAULT_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG), new Range(App::getEnv('_APP_AUTH_MIN_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_SHORT), App::getEnv('_APP_AUTH_MAX_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG)), 'Session duration in seconds. Must be between 1 and 365 days, if not configured otherwise in .env', true)
     ->inject('request')
     ->inject('response')
     ->inject('projectDB')
     ->inject('locale')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($email, $password, $expire, $request, $response, $projectDB, $locale, $geodb, $audits) {
+    ->action(function ($email, $password, $duration, $request, $response, $projectDB, $locale, $geodb, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -206,7 +203,7 @@ App::post('/v1/account/sessions')
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $expiry = \time() + $expire;
+        $expiry = \time() + $duration;
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge(
             [
@@ -285,10 +282,12 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->param('success', '', function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('failure', '', function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('scopes', [], new ArrayList(new Text(128)), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes.', true)
+    ->param('duration', App::getEnv('_APP_AUTH_DEFAULT_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG), new Range(App::getEnv('_APP_AUTH_MIN_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_SHORT), App::getEnv('_APP_AUTH_MAX_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG)), 'Session duration in seconds. Must be between 1 and 365 days, if not configured otherwise in .env', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->action(function ($provider, $success, $failure, $scopes, $request, $response, $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    // TODO: Meldiron write tests (3)
+    ->action(function ($provider, $success, $failure, $scopes, $duration, $request, $response, $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -321,7 +320,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
             $failure = $protocol . '://' . $request->getHostname() . $oauthDefaultFailure;
         }
 
-        $oauth2 = new $classname($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure], $scopes);
+        $oauth2 = new $classname($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure, 'duration' => $duration], $scopes);
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -394,8 +393,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
     ->param('code', '', new Text(1024), 'OAuth2 code.')
     ->param('state', '', new Text(2048), 'OAuth2 state params.', true)
-    // TODO: Write 3 tests for:
-    ->param('expire', 31536000, new Range(86400, 31536000), 'Session duration in seconds. Must be between 1 and 365 days', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -404,7 +401,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('geodb')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($provider, $code, $state, $expire, $request, $response, $project, $user, $projectDB, $geodb, $audits, $events) use ($oauthDefaultSuccess) {
+    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $geodb, $audits, $events) use ($oauthDefaultSuccess) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -412,6 +409,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
+
+        $durationValidator = new Range(App::getEnv('_APP_AUTH_MIN_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_SHORT), App::getEnv('_APP_AUTH_MAX_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG));
+        if(!$durationValidator->isValid($state['duration'])) {
+            throw new Exception($durationValidator->getDescription(), 400);
+        }
         
         $protocol = $request->getProtocol();
         $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
@@ -550,10 +552,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         // Create session token, verify user account and update OAuth2 ID and Access Token
 
+        $expiry = \time() + $state['duration'];
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expiry = \time() + $expire;
         $session = new Document(array_merge([
             '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
             '$permissions' => ['read' => ['user:'.$user['$id']], 'write' => ['user:'.$user['$id']]],
@@ -643,6 +645,7 @@ App::post('/v1/account/sessions/magic-url')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', new Email(), 'User email.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('duration', App::getEnv('_APP_AUTH_DEFAULT_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG), new Range(App::getEnv('_APP_AUTH_MIN_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_SHORT), App::getEnv('_APP_AUTH_MAX_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG)), 'Session duration in seconds. Must be between 1 and 365 days, if not configured otherwise in .env', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -651,7 +654,7 @@ App::post('/v1/account/sessions/magic-url')
     ->inject('audits')
     ->inject('events')
     ->inject('mails')
-    ->action(function ($email, $url, $request, $response, $project, $projectDB, $locale, $audits, $events, $mails) {
+    ->action(function ($email, $url, $duration, $request, $response, $project, $projectDB, $locale, $audits, $events, $mails) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -718,7 +721,7 @@ App::post('/v1/account/sessions/magic-url')
 
         $loginSecret = Auth::tokenGenerator();
 
-        $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
+        $expiry = \time() + $duration;
         
         $token = new Document([
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
@@ -726,7 +729,7 @@ App::post('/v1/account/sessions/magic-url')
             'userId' => $user->getId(),
             'type' => Auth::TOKEN_TYPE_MAGIC_URL,
             'secret' => Auth::hash($loginSecret), // One way hash encryption to protect DB leak
-            'expire' => $expire,
+            'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
@@ -752,7 +755,7 @@ App::post('/v1/account/sessions/magic-url')
         }
 
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $loginSecret, 'expire' => $expire, 'project' => $project->getId()]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $loginSecret, 'expire' => $expiry, 'project' => $project->getId()]);
         $url = Template::unParseURL($url);
 
         $mails
@@ -803,15 +806,13 @@ App::put('/v1/account/sessions/magic-url')
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('secret', '', new Text(256), 'Valid verification token.')
-    // TODO: Write 3 tests for
-    ->param('expire', 31536000, new Range(86400, 31536000), 'Session duration in seconds. Must be between 1 and 365 days', true)
     ->inject('request')
     ->inject('response')
     ->inject('projectDB')
     ->inject('locale')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($userId, $secret, $expire, $request, $response, $projectDB, $locale, $geodb, $audits) {
+    ->action(function ($userId, $secret, $request, $response, $projectDB, $locale, $geodb, $audits) {
         /** @var string $userId */
         /** @var string $secret */
         /** @var Utopia\Swoole\Request $request */
@@ -833,16 +834,29 @@ App::put('/v1/account/sessions/magic-url')
             throw new Exception('User not found', 404);
         }
 
-        $token = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_MAGIC_URL, $secret);
+        $tokens = $profile->getAttribute('tokens', []);
+        $token = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_MAGIC_URL, $secret);
 
         if (!$token) {
+            throw new Exception('Invalid login token', 401);
+        }
+
+        $tokenDocument = null;
+        foreach ($tokens as $loopToken) {
+            /** @var Document $loopToken */
+            if($loopToken->getId() == $token) {
+                $tokenDocument = $loopToken;
+                break;
+            }
+        }
+
+        if (!$tokenDocument) {
             throw new Exception('Invalid login token', 401);
         }
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expiry = \time() + $expire;
         $session = new Document(array_merge(
             [
                 '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
@@ -850,7 +864,7 @@ App::put('/v1/account/sessions/magic-url')
                 'userId' => $profile->getId(),
                 'provider' => Auth::SESSION_PROVIDER_MAGIC_URL,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-                'expire' => $expiry,
+                'expire' => $tokenDocument->getAttribute("expire"),
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
@@ -928,7 +942,7 @@ App::post('/v1/account/sessions/anonymous')
     ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('expire', 31536000, new Range(86400, 31536000), 'Session duration in seconds. Must be between 1 and 365 days', true)
+    ->param('duration', App::getEnv('_APP_AUTH_DEFAULT_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG), new Range(App::getEnv('_APP_AUTH_MIN_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_SHORT), App::getEnv('_APP_AUTH_MAX_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG)), 'Session duration in seconds. Must be between 1 and 365 days, if not configured otherwise in .env', true)
     ->inject('request')
     ->inject('response')
     ->inject('locale')
@@ -937,7 +951,7 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('projectDB')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($expire, $request, $response, $locale, $user, $project, $projectDB, $geodb, $audits) {
+    ->action(function ($duration, $request, $response, $locale, $user, $project, $projectDB, $geodb, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
@@ -1004,7 +1018,7 @@ App::post('/v1/account/sessions/anonymous')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expiry = \time() + $expire;
+        $expiry = \time() + $duration;
         $session = new Document(array_merge(
             [
                 '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
@@ -1788,7 +1802,7 @@ App::post('/v1/account/recovery')
             throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
         }
 
-        $expire = \time() + Auth::TOKEN_EXPIRATION_RECOVERY;
+        $expiry = \time() + Auth::TOKEN_EXPIRATION_RECOVERY;
 
         $secret = Auth::tokenGenerator();
         $recovery = new Document([
@@ -1797,7 +1811,7 @@ App::post('/v1/account/recovery')
             'userId' => $profile->getId(),
             'type' => Auth::TOKEN_TYPE_RECOVERY,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'expire' => $expire,
+            'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
@@ -1819,7 +1833,7 @@ App::post('/v1/account/recovery')
         }
 
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expiry]);
         $url = Template::unParseURL($url);
 
         $mails
@@ -1980,7 +1994,7 @@ App::post('/v1/account/verification')
 
         $verificationSecret = Auth::tokenGenerator();
 
-        $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
+        $expiry = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
         
         $verification = new Document([
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
@@ -1988,7 +2002,7 @@ App::post('/v1/account/verification')
             'userId' => $user->getId(),
             'type' => Auth::TOKEN_TYPE_VERIFICATION,
             'secret' => Auth::hash($verificationSecret), // One way hash encryption to protect DB leak
-            'expire' => $expire,
+            'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
@@ -2010,7 +2024,7 @@ App::post('/v1/account/verification')
         }
 
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expiry]);
         $url = Template::unParseURL($url);
 
         $mails

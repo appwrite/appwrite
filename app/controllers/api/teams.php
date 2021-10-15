@@ -664,7 +664,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
 
-        // TODO: Not sure what to with this one, server-side expiry... Used to update 1 document? Can I ignore?
+        // TODO: Meldiron Not sure what to with this one, server-side expiry... Used to update 1 document? Can I ignore?
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge([
