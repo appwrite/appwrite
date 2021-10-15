@@ -5,7 +5,6 @@ use Utopia\Exception;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Appwrite\ClamAV\Network;
-use Appwrite\Database\Database;
 use Appwrite\Event\Event;
 
 App::get('/v1/health')
@@ -50,9 +49,7 @@ App::get('/v1/health/db')
         $db = $utopia->getResource('db'); /* @var $db PDO */
 
         // Run a small test to check the connection
-        $statement = $db->prepare("
-            SELECT 1;"
-        );
+        $statement = $db->prepare("SELECT 1;");
 
         $statement->closeCursor();
 
