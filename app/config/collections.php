@@ -547,6 +547,15 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Duration',
+                'key' => 'duration',
+                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
+                'default' => 0,
+                'required' => false,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'User Agent',
                 'key' => 'userAgent',
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,

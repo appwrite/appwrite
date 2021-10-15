@@ -721,7 +721,7 @@ App::post('/v1/account/sessions/magic-url')
 
         $loginSecret = Auth::tokenGenerator();
 
-        $expiry = \time() + $duration;
+        $expiry = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
         
         $token = new Document([
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
@@ -730,6 +730,7 @@ App::post('/v1/account/sessions/magic-url')
             'type' => Auth::TOKEN_TYPE_MAGIC_URL,
             'secret' => Auth::hash($loginSecret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
+            'duration' => $duration,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
@@ -857,7 +858,7 @@ App::put('/v1/account/sessions/magic-url')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expiry = $tokenDocument->getAttribute("expire");
+        $expiry = \time() + $tokenDocument->getAttribute("duration");
         $session = new Document(array_merge(
             [
                 '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
