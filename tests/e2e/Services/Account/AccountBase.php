@@ -3,10 +3,6 @@
 namespace Tests\E2E\Services\Account;
 
 use Tests\E2E\Client;
-use function array_merge;
-use function strpos;
-use function substr;
-use function var_dump;
 
 trait AccountBase
 {
