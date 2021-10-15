@@ -21,7 +21,7 @@
     "emails.recovery.footer": "Ha nem te kezdeményezted a jelszavad visszaállítását, akkor nyugodtan hagyd figyelmen kívül ezt az üzenetet.",
     "emails.recovery.thanks": "Köszönettel",
     "emails.recovery.signature": "a {{project}} csapat",
-    "emails.invitation.subject": "Meghívó a %s csapatba @ %s",
+    "emails.invitation.subject": "Meghívó a(z) %s csapatba, a(z) %s projektbe",
     "emails.invitation.hello": "Szia",
     "emails.invitation.body": "Ezt a levelet azért kaptad, mert {{owner}} meghívott, hogy légy a {{team}} csapat tagja a {{project}} projektben.",
     "emails.invitation.footer": "Ha nem érdekel a lehetőség, nyugodtan hagyd figyelmen kívül ezt az üzenetet.",
