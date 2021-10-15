@@ -9,7 +9,6 @@
   - Deno 1.12
   - Deno 1.13
   - Deno 1.14
-- Add Swift 5.5 Runtime for Cloud Functions
 - Added translations:
   - German `de` by @SoftCreatR in https://github.com/appwrite/appwrite/pull/1790
   - Hebrew `he` by @Kokoden in https://github.com/appwrite/appwrite/pull/1846
