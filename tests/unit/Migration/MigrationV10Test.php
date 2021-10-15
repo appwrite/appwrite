@@ -26,6 +26,6 @@ class MigrationV10Test extends MigrationTest
             'version' => '0.10.0'
         ]));
 
-        $this->assertEquals($document->getAttribute('version', '0.10.0'), '0.110');
+        $this->assertEquals($document->getAttribute('version', '0.10.0'), '0.11.0');
     }
 }
