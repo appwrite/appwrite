@@ -152,7 +152,7 @@ return [
             ],
             [
                 'name' => '_APP_AUTH_MIN_DURATION',
-                'description' => 'This variable allows you configure minimal session duration with server-side validation. This value is set to 60 minutes by default, to change that, provide the duration in seconds.',
+                'description' => 'This variable allows you configure the minimum session duration with server-side validation. This value is set to 60 minutes by default. You can override this by providing the duration in seconds.',
                 'introduction' => '0.11.0',
                 'default' => 3600,
                 'required' => false,
@@ -161,7 +161,7 @@ return [
             ],
             [
                 'name' => '_APP_AUTH_MAX_DURATION',
-                'description' => 'This variable allows you configure maximal session duration with server-side validation. This value is set to 365 days by default, to change that, provide the duration in seconds.',
+                'description' => 'This variable allows you configure the maximum session duration with server-side validation. This value is set to 365 days by default. You can override this by providing the duration in seconds.',
                 'introduction' => '0.11.0',
                 'default' => 31536000,
                 'required' => false,
@@ -170,7 +170,7 @@ return [
             ],
             [
                 'name' => '_APP_AUTH_DEFAULT_DURATION',
-                'description' => 'This variable allows you configure default session duration. The default value is used if developer does not provide any duration when creating a session. This value is set to 365 days by default, to change that, provide the duration in seconds.',
+                'description' => 'This variable allows you configure the default session duration. The default value is used if the developer does not provide any duration when creating a session. This value is set to 365 days by default. You can override this by providing the duration in seconds.',
                 'introduction' => '0.11.0',
                 'default' => 31536000,
                 'required' => false,
