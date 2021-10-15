@@ -254,7 +254,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-06.mmdb');
+    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-10.mmdb');
 });
 
 /*

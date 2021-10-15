@@ -15,7 +15,7 @@ then
       exit 1
 fi
 
-if test $(find "./app/db/DBIP/dbip-country-lite-2021-06.mmdb" -mmin +259200)
+if test $(find "./app/db/DBIP/dbip-country-lite-2021-10.mmdb" -mmin +259200)
 then
     printf "${RED}GEO country DB has not been updated for more than 6 months. Go to https://db-ip.com/db/download/ip-to-country-lite to download a newer version${NC}\n"
 fi
