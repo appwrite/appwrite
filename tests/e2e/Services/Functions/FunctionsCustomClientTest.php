@@ -198,7 +198,6 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $output = json_decode($executions['body']['stdout'], true);
-
         $this->assertEquals(200, $executions['headers']['status-code']);
         $this->assertEquals('completed', $executions['body']['status']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
@@ -212,6 +211,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);
         $this->assertEquals($this->getUser()['$id'], $output['APPWRITE_FUNCTION_USER_ID']);
         $this->assertNotEmpty($output['APPWRITE_FUNCTION_JWT']);
+        $this->assertEquals($projectId, $output['APPWRITE_FUNCTION_PROJECT_ID']);
 
         return [
             'functionId' => $functionId

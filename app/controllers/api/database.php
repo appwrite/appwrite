@@ -749,6 +749,61 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
     });
 
+App::post('/v1/database/collections/:collectionId/attributes/enum')
+    ->desc('Create Enum Attribute')
+    ->groups(['api', 'database'])
+    ->label('event', 'database.attributes.create')
+    ->label('scope', 'collections.write')
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.method', 'createEnumAttribute')
+    ->label('sdk.description', '/docs/references/database/create-attribute-enum.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_ENUM)
+    ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('attributeId', '', new Key(), 'Attribute ID.')
+    ->param('elements', [], new ArrayList(new Text(0)), 'Array of elements in enumerated type. Uses length of longest element to determine size.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->inject('database')
+    ->inject('audits')
+    ->inject('usage')
+    ->action(function ($collectionId, $attributeId, $elements, $required, $default, $array, $response, $dbForInternal, $database, $audits, $usage) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal*/
+        /** @var Appwrite\Event\Event $database */
+        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Stats\Stats $usage */
+
+        // use length of longest string as attribute size
+        $size = 0;
+        foreach ($elements as $element) {
+            $length = \strlen($element);
+            if ($length === 0) {
+                throw new Exception('Each enum element must not be empty', 400);
+
+            }
+            $size = ($length > $size) ? $length : $size;
+        }
+
+        $attribute = createAttribute($collectionId, new Document([
+            '$id' => $attributeId,
+            'type' => Database::VAR_STRING,
+            'size' => $size,
+            'required' => $required,
+            'default' => $default,
+            'array' => $array,
+            'format' => APP_DATABASE_ATTRIBUTE_ENUM,
+            'formatOptions' => ['elements' => $elements],
+        ]), $response, $dbForInternal, $database, $audits, $usage);
+
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
+    });
+
 App::post('/v1/database/collections/:collectionId/attributes/ip')
     ->desc('Create IP Address Attribute')
     ->groups(['api', 'database'])
@@ -1052,6 +1107,7 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
         Response::MODEL_ATTRIBUTE_INTEGER,
         Response::MODEL_ATTRIBUTE_FLOAT,
         Response::MODEL_ATTRIBUTE_EMAIL,
+        Response::MODEL_ATTRIBUTE_ENUM,
         Response::MODEL_ATTRIBUTE_URL,
         Response::MODEL_ATTRIBUTE_IP,
         Response::MODEL_ATTRIBUTE_STRING,])// needs to be last, since its condition would dominate any other string attribute
@@ -1086,6 +1142,7 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
             Database::VAR_STRING => match($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,
+                APP_DATABASE_ATTRIBUTE_ENUM => Response::MODEL_ATTRIBUTE_ENUM,
                 APP_DATABASE_ATTRIBUTE_IP => Response::MODEL_ATTRIBUTE_IP,
                 APP_DATABASE_ATTRIBUTE_URL => Response::MODEL_ATTRIBUTE_URL,
                 default => Response::MODEL_ATTRIBUTE_STRING,
@@ -1572,6 +1629,7 @@ App::get('/v1/database/collections/:collectionId/documents')
             throw new Exception($validator->getDescription(), 400);
         }
 
+        $cursorDocument = null;
         if (!empty($cursor)) {
             $cursorDocument = $dbForExternal->getDocument($collectionId, $cursor);
 

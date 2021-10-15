@@ -7,12 +7,10 @@ use Utopia\CLI\Console;
 require_once __DIR__.'/../init.php';
 
 Console::title('Audits V1 Worker');
-Console::success(APP_NAME.' audits worker v1 has started');
+Console::success(APP_NAME . ' audits worker v1 has started');
 
 class AuditsV1 extends Worker
 {
-    public $args = [];
-
     public function init(): void
     {
     }

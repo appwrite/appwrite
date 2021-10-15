@@ -39,6 +39,7 @@
         constructor() {
             this.config = {
                 endpoint: 'https://appwrite.io/v1',
+                endpointRealtime: '',
                 project: '',
                 key: '',
                 jwt: '',
@@ -46,8 +47,78 @@
                 mode: '',
             };
             this.headers = {
-                'x-sdk-version': 'appwrite:web:2.1.0',
-                'X-Appwrite-Response-Format': '0.11.0',
+                'x-sdk-version': 'appwrite:web:4.0.1',
+                'X-Appwrite-Response-Format': '0.10.0',
+            };
+            this.realtime = {
+                socket: undefined,
+                timeout: undefined,
+                channels: {},
+                lastMessage: undefined,
+                createSocket: () => {
+                    var _a, _b;
+                    const channels = new URLSearchParams();
+                    channels.set('project', this.config.project);
+                    for (const property in this.realtime.channels) {
+                        channels.append('channels[]', property);
+                    }
+                    if (((_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.readyState) === WebSocket.OPEN) {
+                        this.realtime.socket.close();
+                    }
+                    this.realtime.socket = new WebSocket(this.config.endpointRealtime + '/realtime?' + channels.toString());
+                    (_b = this.realtime.socket) === null || _b === void 0 ? void 0 : _b.addEventListener('message', this.realtime.authenticate);
+                    for (const channel in this.realtime.channels) {
+                        this.realtime.channels[channel].forEach(callback => {
+                            var _a;
+                            (_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.addEventListener('message', callback);
+                        });
+                    }
+                    this.realtime.socket.addEventListener('close', event => {
+                        var _a, _b, _c;
+                        if (((_b = (_a = this.realtime) === null || _a === void 0 ? void 0 : _a.lastMessage) === null || _b === void 0 ? void 0 : _b.type) === 'error' && ((_c = this.realtime) === null || _c === void 0 ? void 0 : _c.lastMessage.data).code === 1008) {
+                            return;
+                        }
+                        console.error('Realtime got disconnected. Reconnect will be attempted in 1 second.', event.reason);
+                        setTimeout(() => {
+                            this.realtime.createSocket();
+                        }, 1000);
+                    });
+                },
+                authenticate: (event) => {
+                    var _a, _b, _c;
+                    const message = JSON.parse(event.data);
+                    if (message.type === 'connected' && ((_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.readyState) === WebSocket.OPEN) {
+                        const cookie = JSON.parse((_b = window.localStorage.getItem('cookieFallback')) !== null && _b !== void 0 ? _b : "{}");
+                        const session = cookie === null || cookie === void 0 ? void 0 : cookie[`a_session_${this.config.project}`];
+                        const data = message.data;
+                        if (session && !data.user) {
+                            (_c = this.realtime.socket) === null || _c === void 0 ? void 0 : _c.send(JSON.stringify({
+                                type: "authentication",
+                                data: {
+                                    session
+                                }
+                            }));
+                        }
+                    }
+                },
+                onMessage: (channel, callback) => (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        this.realtime.lastMessage = message;
+                        if (message.type === 'event') {
+                            let data = message.data;
+                            if (data.channels && data.channels.includes(channel)) {
+                                callback(data);
+                            }
+                        }
+                        else if (message.type === 'error') {
+                            throw message.data;
+                        }
+                    }
+                    catch (e) {
+                        console.error(e);
+                    }
+                }
             };
             this.account = {
                 /**
@@ -334,7 +405,7 @@
                     }, payload);
                 }),
                 /**
-                 * Complete Password Recovery
+                 * Create Password Recovery (confirmation)
                  *
                  * Use this endpoint to complete the user account password reset. Both the
                  * **userId** and **secret** arguments will be passed as query parameters to
@@ -472,6 +543,82 @@
                     }, payload);
                 }),
                 /**
+                 * Create Magic URL session
+                 *
+                 * Sends the user an email with a secret key for creating a session. When the
+                 * user clicks the link in the email, the user is redirected back to the URL
+                 * you provided with the secret key and userId values attached to the URL
+                 * query string. Use the query string parameters to submit a request to the
+                 * [PUT
+                 * /account/sessions/magic-url](/docs/client/account#accountUpdateMagicURLSession)
+                 * endpoint to complete the login process. The link sent to the user's email
+                 * address is valid for 1 hour. If you are on a mobile device you can leave
+                 * the URL parameter empty, so that the login completion will be handled by
+                 * your Appwrite instance by default.
+                 *
+                 * @param {string} email
+                 * @param {string} url
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createMagicURLSession: (email, url) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof email === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "email"');
+                    }
+                    let path = '/account/sessions/magic-url';
+                    let payload = {};
+                    if (typeof email !== 'undefined') {
+                        payload['email'] = email;
+                    }
+                    if (typeof url !== 'undefined') {
+                        payload['url'] = url;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Magic URL session (confirmation)
+                 *
+                 * Use this endpoint to complete creating the session with the Magic URL. Both
+                 * the **userId** and **secret** arguments will be passed as query parameters
+                 * to the redirect URL you have provided when sending your request to the
+                 * [POST
+                 * /account/sessions/magic-url](/docs/client/account#accountCreateMagicURLSession)
+                 * endpoint.
+                 *
+                 * Please note that in order to avoid a [Redirect
+                 * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+                 * the only valid redirect URLs are the ones from domains you have set when
+                 * adding your platforms in the console interface.
+                 *
+                 * @param {string} userId
+                 * @param {string} secret
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateMagicURLSession: (userId, secret) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof secret === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "secret"');
+                    }
+                    let path = '/account/sessions/magic-url';
+                    let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
+                    if (typeof secret !== 'undefined') {
+                        payload['secret'] = secret;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('put', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Create Account Session with OAuth2
                  *
                  * Allow the user to login to their account using the OAuth2 provider of their
@@ -602,7 +749,7 @@
                     }, payload);
                 }),
                 /**
-                 * Complete Email Verification
+                 * Create Email Verification (confirmation)
                  *
                  * Use this endpoint to complete the user email verification process. Use both
                  * the **userId** and **secret** parameters that were attached to your app URL
@@ -4662,6 +4809,18 @@
          */
         setEndpoint(endpoint) {
             this.config.endpoint = endpoint;
+            this.config.endpointRealtime = this.config.endpointRealtime || this.config.endpoint.replace("https://", "wss://").replace("http://", "ws://");
+            return this;
+        }
+        /**
+         * Set Realtime Endpoint
+         *
+         * @param {string} endpointRealtime
+         *
+         * @returns {this}
+         */
+        setEndpointRealtime(endpointRealtime) {
+            this.config.endpointRealtime = endpointRealtime;
             return this;
         }
         /**
@@ -4730,6 +4889,55 @@
             this.config.mode = value;
             return this;
         }
+        /**
+         * Subscribes to Appwrite events and passes you the payload in realtime.
+         *
+         * @param {string|string[]} channels
+         * Channel to subscribe - pass a single channel as a string or multiple with an array of strings.
+         *
+         * Possible channels are:
+         * - account
+         * - collections
+         * - collections.[ID]
+         * - collections.[ID].documents
+         * - documents
+         * - documents.[ID]
+         * - files
+         * - files.[ID]
+         * - executions
+         * - executions.[ID]
+         * - functions.[ID]
+         * - teams
+         * - teams.[ID]
+         * - memberships
+         * - memberships.[ID]
+         * @param {(payload: RealtimeMessage) => void} callback Is called on every realtime update.
+         * @returns {() => void} Unsubscribes from events.
+         */
+        subscribe(channels, callback) {
+            let channelArray = typeof channels === 'string' ? [channels] : channels;
+            let savedChannels = [];
+            channelArray.forEach((channel, index) => {
+                if (!(channel in this.realtime.channels)) {
+                    this.realtime.channels[channel] = [];
+                }
+                savedChannels[index] = {
+                    name: channel,
+                    index: (this.realtime.channels[channel].push(this.realtime.onMessage(channel, callback)) - 1)
+                };
+                clearTimeout(this.realtime.timeout);
+                this.realtime.timeout = window === null || window === void 0 ? void 0 : window.setTimeout(() => {
+                    this.realtime.createSocket();
+                }, 1);
+            });
+            return () => {
+                savedChannels.forEach(channel => {
+                    var _a;
+                    (_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.removeEventListener('message', this.realtime.channels[channel.name][channel.index]);
+                    this.realtime.channels[channel.name].splice(channel.index, 1);
+                });
+            };
+        }
         call(method, url, headers = {}, params = {}) {
             var _a, _b;
             return __awaiter(this, void 0, void 0, function* () {
@@ -4757,9 +4965,10 @@
                             let formData = new FormData();
                             for (const key in params) {
                                 if (Array.isArray(params[key])) {
-                                    formData.append(key + '[]', params[key].join(','));
-                                }
-                                else {
+                                    params[key].forEach((value) => {
+                                        formData.append(key + '[]', value);
+                                    })
+                                } else {
                                     formData.append(key, params[key]);
                                 }
                             }
@@ -4790,6 +4999,9 @@
                     return data;
                 }
                 catch (e) {
+                    if (e instanceof AppwriteException) {
+                        throw e;
+                    }
                     throw new AppwriteException(e.message);
                 }
             });
