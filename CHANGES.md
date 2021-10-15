@@ -1,10 +1,15 @@
 # Version 0.11.0 (NOT RELEASED YET)
 
-## Bugs
-- Fixed `sum` description by @eldadfux in https://github.com/appwrite/appwrite/pull/1659
-- Fixed `Add Team Membership` parameter order by @deshankoswatte in https://github.com/appwrite/appwrite/pull/1818
-
 ## Features
+- Add Swift Platform Support
+- New Cloud Functions Runtime:
+  - Swift 5.5
+  - Java 17
+  - Python 3.10
+  - Deno 1.12
+  - Deno 1.13
+  - Deno 1.14
+- Add Swift 5.5 Runtime for Cloud Functions
 - Added translations:
   - German `de` by @SoftCreatR in https://github.com/appwrite/appwrite/pull/1790
   - Hebrew `he` by @Kokoden in https://github.com/appwrite/appwrite/pull/1846
@@ -55,6 +60,9 @@
   - Lithuanian `lt` by @mantasio in https://github.com/appwrite/appwrite/pull/2018
   - Japanese `jp` by @takmar in https://github.com/appwrite/appwrite/pull/2177
 
+## Bugs
+- Fixed `sum` description by @eldadfux in https://github.com/appwrite/appwrite/pull/1659
+- Fixed `Add Team Membership` parameter order by @deshankoswatte in https://github.com/appwrite/appwrite/pull/1818
 
 # Version 0.10.4
 
