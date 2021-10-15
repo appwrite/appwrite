@@ -1,8 +1,8 @@
 # Version 0.11.0 (NOT RELEASED YET)
 
 ## Features
-- Add Swift Platform Support
-- New Cloud Functions Runtime:
+- Added Swift Platform Support
+- Added new Cloud Functions Runtimes:
   - Swift 5.5
   - Java 17
   - Python 3.10
