@@ -427,8 +427,6 @@ trait AccountBase
         return $data;
     }
 
-    //TODO Add tests for OAuth2 session creation
-
     /**
      * @depends testCreateAccountSession
      */

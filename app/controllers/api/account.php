@@ -286,7 +286,6 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    // TODO: Meldiron write tests (3)
     ->action(function ($provider, $success, $failure, $scopes, $duration, $request, $response, $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
@@ -409,15 +408,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
-
-        $durationValidator = new Range(App::getEnv('_APP_AUTH_MIN_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_SHORT), App::getEnv('_APP_AUTH_MAX_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG));
-        if(!$durationValidator->isValid($state['duration'])) {
-            throw new Exception($durationValidator->getDescription(), 400);
-        }
         
         $protocol = $request->getProtocol();
         $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
-        $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
+        $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => '', 'duration' => App::getEnv('_APP_AUTH_DEFAULT_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG)];
         $validateURL = new URL();
 
         $appId = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Appid', '');
@@ -452,6 +446,12 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
             throw new Exception('Invalid redirect URL for failure login', 400);
+        }
+
+        $state['duration'] = (int) $state['duration'];
+        $durationValidator = new Range(App::getEnv('_APP_AUTH_MIN_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_SHORT), App::getEnv('_APP_AUTH_MAX_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG));
+        if(!$durationValidator->isValid($state['duration'])) {
+            throw new Exception($durationValidator->getDescription(), 400);
         }
         
         $state['failure'] = null;
@@ -857,6 +857,7 @@ App::put('/v1/account/sessions/magic-url')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
+        $expiry = $tokenDocument->getAttribute("expire");
         $session = new Document(array_merge(
             [
                 '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
@@ -864,7 +865,7 @@ App::put('/v1/account/sessions/magic-url')
                 'userId' => $profile->getId(),
                 'provider' => Auth::SESSION_PROVIDER_MAGIC_URL,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-                'expire' => $tokenDocument->getAttribute("expire"),
+                'expire' => $expiry,
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
