@@ -439,15 +439,8 @@
             val = l * 255;
             return [val, val, val];
         }
-    
-        if (l < 0.5) {
-            t2 = l * (1 + s);
-        } else {
-            t2 = l + s - l * s;
-        }
-    
+        t2 = l < 0.5 ? l * (1 + s) : l + s - l * s;
         t1 = 2 * l - t2;
-    
         rgb = [0, 0, 0];
         for (var i = 0; i < 3; i++) {
             t3 = h + 1 / 3 * -(i - 1);
@@ -851,12 +844,8 @@
         var chroma = (max - min);
         var grayscale;
         var hue;
-    
-        if (chroma < 1) {
-            grayscale = min / (1 - chroma);
-        } else {
-            grayscale = 0;
-        }
+
+        grayscale = chroma < 1 ? min / (1 - chroma) : 0;
     
         if (chroma <= 0) {
             hue = 0;
@@ -881,12 +870,8 @@
         var l = hsl[2] / 100;
         var c = 1;
         var f = 0;
-    
-        if (l < 0.5) {
-            c = 2.0 * s * l;
-        } else {
-            c = 2.0 * s * (1.0 - l);
-        }
+
+        c = l < 0.5 ? 2.0 * s * l : 2.0 * s * (1.0 - l);
     
         if (c < 1.0) {
             f = (l - 0.5 * c) / (1.0 - c);
@@ -1460,12 +1445,7 @@
        for (var i = 0; i < rgb.length; i++) {
           rgb[i] = scale(rgb[i], 0, 255);
        }
-       if (!a && a != 0) {
-          a = 1;
-       }
-       else {
-          a = scale(a, 0, 1);
-       }
+        a = !a && a != 0 ? 1 : scale(a, 0, 1);
        rgb[3] = a;
        return rgb;
     }
@@ -5072,11 +5052,7 @@
     
             if (minBarLength !== undefined && Math.abs(size) < minBarLength) {
                 size = minBarLength;
-                if (length >= 0 && !isHorizontal || length < 0 && isHorizontal) {
-                    head = base - minBarLength;
-                } else {
-                    head = base + minBarLength;
-                }
+                head = length >= 0 && !isHorizontal || length < 0 && isHorizontal ? base - minBarLength : base + minBarLength;
             }
     
             return {
@@ -8181,11 +8157,7 @@
                     if (label) {
                         label += ': ';
                     }
-                    if (!helpers$1.isNullOrUndef(tooltipItem.value)) {
-                        label += tooltipItem.value;
-                    } else {
-                        label += tooltipItem.yLabel;
-                    }
+                    label += !helpers$1.isNullOrUndef(tooltipItem.value) ? tooltipItem.value : tooltipItem.yLabel;
                     return label;
                 },
                 labelColor: function(tooltipItem, chart) {
@@ -12713,12 +12685,9 @@
     
         numSpaces = (niceMax - niceMin) / spacing;
         // If very close to our rounded value, use it.
-        if (helpers$1.almostEquals(numSpaces, Math.round(numSpaces), spacing / 1000)) {
-            numSpaces = Math.round(numSpaces);
-        } else {
-            numSpaces = Math.ceil(numSpaces);
-        }
-    
+        numSpaces = helpers$1.almostEquals(numSpaces, Math.round(numSpaces), spacing / 1000) ? Math.round(numSpaces) : Math.ceil(numSpaces);
+
+
         niceMin = Math.round(niceMin * factor) / factor;
         niceMax = Math.round(niceMax * factor) / factor;
         ticks.push(isNullOrUndef$2(min) ? niceMin : min);
@@ -14251,17 +14220,9 @@
     
         if (options.offset && ticks.length) {
             first = interpolate$1(table, 'time', ticks[0], 'pos');
-            if (ticks.length === 1) {
-                start = 1 - first;
-            } else {
-                start = (interpolate$1(table, 'time', ticks[1], 'pos') - first) / 2;
-            }
+            start = ticks.length === 1 ? 1 - first : (interpolate$1(table, 'time', ticks[1], 'pos') - first) / 2;
             last = interpolate$1(table, 'time', ticks[ticks.length - 1], 'pos');
-            if (ticks.length === 1) {
-                end = last;
-            } else {
-                end = (last - interpolate$1(table, 'time', ticks[ticks.length - 2], 'pos')) / 2;
-            }
+            end = ticks.length === 1 ? last : (last - interpolate$1(table, 'time', ticks[ticks.length - 2], 'pos')) / 2;
         }
     
         return {start: start, end: end, factor: 1 / (start + 1 + end)};
@@ -15561,19 +15522,17 @@
     
             // Horizontal
             var isHorizontal = me.isHorizontal();
-            if (isHorizontal) {
-                cursor = {
+            cursor = isHorizontal ? {
+
                     x: me.left + alignmentOffset(legendWidth, lineWidths[0]),
                     y: me.top + labelOpts.padding,
                     line: 0
-                };
-            } else {
-                cursor = {
+                } : {
                     x: me.left + labelOpts.padding,
                     y: me.top + alignmentOffset(legendHeight, columnHeights[0]),
                     line: 0
                 };
-            }
+
     
             helpers$1.rtl.overrideTextDirection(me.ctx, opts.textDirection);
     

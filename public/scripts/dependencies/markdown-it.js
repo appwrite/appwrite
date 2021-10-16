@@ -1766,11 +1766,7 @@
             langName = info.split(/\s+/g)[0];
         }
 
-        if (options.highlight) {
-            highlighted = options.highlight(token.content, langName) || escapeHtml(token.content);
-        } else {
-            highlighted = escapeHtml(token.content);
-        }
+        highlighted = options.highlight ? options.highlight(token.content, langName) || escapeHtml(token.content) : escapeHtml(token.content);
 
         if (highlighted.indexOf('<pre') === 0) {
             return highlighted + '\n';
@@ -1986,12 +1982,7 @@
 
         for (var i = 0, len = tokens.length; i < len; i++) {
             type = tokens[i].type;
-
-            if (typeof rules[type] !== 'undefined') {
-                result += rules[type](tokens, i, options, env, this);
-            } else {
-                result += this.renderToken(tokens, i, options);
-            }
+            result += typeof rules[type] !== 'undefined' ? rules[type](tokens, i, options, env, this) : this.renderToken(tokens, i, options);
         }
 
         return result;
@@ -3410,11 +3401,7 @@
         }
 
         // Finalize list
-        if (isOrdered) {
-            token = state.push('ordered_list_close', 'ol', -1);
-        } else {
-            token = state.push('bullet_list_close', 'ul', -1);
-        }
+        token = isOrdered ? state.push('ordered_list_close', 'ol', -1) : state.push('bullet_list_close', 'ul', -1);
         token.markup = String.fromCharCode(markerCharCode);
 
         listLines[1] = nextLine;
@@ -6883,13 +6870,7 @@ module.exports = function text(state, silent) {
 
                     if ((b2 & 0xC0) === 0x80) {
                         chr = ((b1 << 6) & 0x7C0) | (b2 & 0x3F);
-
-                        if (chr < 0x80) {
-                            result += '\ufffd\ufffd';
-                        } else {
-                            result += String.fromCharCode(chr);
-                        }
-
+                        result += chr < 0x80 ? '\ufffd\ufffd' : String.fromCharCode(chr);
                         i += 3;
                         continue;
                     }
@@ -6902,13 +6883,7 @@ module.exports = function text(state, silent) {
 
                     if ((b2 & 0xC0) === 0x80 && (b3 & 0xC0) === 0x80) {
                         chr = ((b1 << 12) & 0xF000) | ((b2 << 6) & 0xFC0) | (b3 & 0x3F);
-
-                        if (chr < 0x800 || (chr >= 0xD800 && chr <= 0xDFFF)) {
-                            result += '\ufffd\ufffd\ufffd';
-                        } else {
-                            result += String.fromCharCode(chr);
-                        }
-
+                        result += chr < 0x800 || (chr >= 0xD800 && chr <= 0xDFFF) ? '\ufffd\ufffd\ufffd' : String.fromCharCode(chr);
                         i += 6;
                         continue;
                     }
