@@ -26,7 +26,7 @@ class Detector
 
     /**
      * Get OS info
-     * 
+     *
      * @return array
      */
     public function getOS(): array
@@ -42,7 +42,7 @@ class Detector
 
     /**
      * Get client info
-     * 
+     *
      * @return array
      */
     public function getClient(): array
@@ -61,7 +61,7 @@ class Detector
 
     /**
      * Get device info
-     * 
+     *
      * @return array
      */
     public function getDevice(): array
@@ -78,7 +78,7 @@ class Detector
      */
     protected function getDetector(): DeviceDetector
     {
-        if(!$this->detctor) {
+        if (!$this->detctor) {
             $this->detctor = new DeviceDetector($this->userAgent);
             $this->detctor->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
             $this->detctor->parse();
