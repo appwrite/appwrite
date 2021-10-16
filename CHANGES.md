@@ -62,6 +62,7 @@
 ## Bugs
 - Fixed `sum` description by @eldadfux in https://github.com/appwrite/appwrite/pull/1659
 - Fixed `Add Team Membership` parameter order by @deshankoswatte in https://github.com/appwrite/appwrite/pull/1818
+- Fixed Storage File Preview on mobile devices by @m1ga in https://github.com/appwrite/appwrite/pull/2230
 
 # Version 0.10.4
 
