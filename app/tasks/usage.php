@@ -359,7 +359,7 @@ $cli
                     do { // list projects
                         try {
                             $attempts++;
-                            $projects = $dbForConsole->find('projects', [], 100, orderAfter:$latestProject);
+                            $projects = $dbForConsole->find('projects', [], 100, cursor:$latestProject);
                             break; // leave the do-while if successful
                         } catch (\Exception $e) {
                             Console::warning("Console DB not ready yet. Retrying ({$attempts})...");
@@ -494,7 +494,7 @@ $cli
 
                                 do { // Loop over all the parent collection document for each sub collection
                                     $dbForProject->setNamespace("project_{$projectId}_{$options['namespace']}");
-                                    $parents = $dbForProject->find($collection, [], 100, orderAfter:$latestParent); // Get all the parents for the sub collections for example for documents, this will get all the collections
+                                    $parents = $dbForProject->find($collection, [], 100, cursor:$latestParent); // Get all the parents for the sub collections for example for documents, this will get all the collections
 
                                     if (empty($parents)) {
                                         continue;

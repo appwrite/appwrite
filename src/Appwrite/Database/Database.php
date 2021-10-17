@@ -42,6 +42,9 @@ class Database
     const SYSTEM_COLLECTION_FUNCTIONS = 'functions';
     const SYSTEM_COLLECTION_TAGS = 'tags';
     const SYSTEM_COLLECTION_EXECUTIONS = 'executions';
+
+    // Realtime
+    const SYSTEM_COLLECTION_CONNECTIONS = 'connections';
     
     // Var Types
     const SYSTEM_VAR_TYPE_TEXT = 'text';
@@ -578,7 +581,7 @@ class Database
     {
         if (!isset(self::$filters[$name])) {
             return $value;
-            throw new Exception('Filter not found');
+            throw new Exception("Filter '{$name}' not found");
         }
 
         try {
@@ -600,7 +603,7 @@ class Database
     {
         if (!isset(self::$filters[$name])) {
             return $value;
-            throw new Exception('Filter not found');
+            throw new Exception("Filter '{$name}' not found");
         }
 
         try {
