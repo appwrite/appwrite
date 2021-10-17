@@ -83,7 +83,7 @@ return [
                 'url' => 'https://github.com/appwrite/sdk-for-apple',
                 'package' => 'https://github.com/appwrite/sdk-for-apple',
                 'enabled' => true,
-                'beta' => false,
+                'beta' => true,
                 'dev' => true,
                 'hidden' => false,
                 'family' => APP_PLATFORM_CLIENT,
