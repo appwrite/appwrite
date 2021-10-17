@@ -222,6 +222,17 @@ App::post('/v1/storage/buckets')
                     'array' => false,
                     'filters' => [],
                 ]),
+                new Document([
+                    '$id' => 'search',
+                    'type' => Database::VAR_STRING,
+                    'format' => '',
+                    'size' => 16384,
+                    'signed' => true,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => [],
+                ]),
             ], [
                 new Document([
                     '$id' => '_key_bucket',
@@ -231,12 +242,12 @@ App::post('/v1/storage/buckets')
                     'orders' => [Database::ORDER_ASC],
                 ]),
                 new Document([
-                    '$id' => '_fulltext_name',
+                    '$id' => '_key_search',
                     'type' => Database::INDEX_FULLTEXT,
-                    'attributes' => ['name'],
-                    'lengths' => [1024],
+                    'attributes' => ['search'],
+                    'lengths' => [2048],
                     'orders' => [Database::ORDER_ASC],
-                ]),
+                ],),
             ]);
 
             $bucket = $dbForInternal->createDocument('buckets', new Document([
