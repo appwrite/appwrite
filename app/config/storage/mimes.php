@@ -21,17 +21,17 @@ return [
 
     'audio/basic', // au RFC 2046
 	'audio/basic', // snd
-	'auido/L24', // Linear PCM RFC 3190
+    'auido/L24', // Linear PCM RFC 3190
     'audio/mid', // mid rmi
-	'audio/mpeg', // mp3 RFC 3003
-	'audio/mp4', // mp4 audio
-	'audio/x-aiff', // aif aifc aiff
+    'audio/mpeg', // mp3 RFC 3003
+    'audio/mp4', // mp4 audio
+    'audio/x-aiff', // aif aifc aiff
     'audio/x-mpegurl', // m3u
     'audio/vnd.rn-realaudio', // ra
-	'audio/vnd.rn-realaudio', // ram
-	'audio/ogg', // Ogg Vorbis RFC 5334
+    'audio/vnd.rn-realaudio', // ram
+    'audio/ogg', // Ogg Vorbis RFC 5334
     'audio/vorbis', // Vorbis RFC 5215
-	'audio/vnd.wav', // wav RFC 2361
+    'audio/vnd.wav', // wav RFC 2361
     
     // Microsoft Word
     'application/msword',
