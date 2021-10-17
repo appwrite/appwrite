@@ -254,6 +254,7 @@ App::post('/v1/storage/buckets')
                 'antiVirus' => $antiVirus,
                 '$read' => $read,
                 '$write' => $write,
+                'search' => implode(' ', [$bucketId, $name]),
             ]));
         } catch (Duplicate $th) {
             throw new Exception('Bucket already exists', 409);
@@ -603,6 +604,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             'sizeActual' => $sizeActual,
             'algorithm' => empty($compressor) ? '' : $compressor->getName(),
             'comment' => '',
+            'search' => implode(' ', [$fileId, $file['name'] ?? '',]),
         ];
 
         if($bucket->getAttribute('encryption', true) && $size <= APP_LIMIT_ENCRYPTION) {
