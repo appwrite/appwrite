@@ -665,7 +665,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($bucketId, $search, $limit, $offset, $after, $orderType, $response, $dbForInternal, $usage) {
+    ->action(function ($bucketId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
@@ -682,11 +682,11 @@ App::get('/v1/storage/buckets/:bucketId/files')
             $queries[] = [new Query('name', Query::TYPE_SEARCH, [$search])];
         }
 
-        if (!empty($after)) {
-            $afterFile = $dbForInternal->getDocument('bucket_' . $bucketId, $after);
+        if (!empty($cursor)) {
+            $cursorFile = $dbForInternal->getDocument('bucket_' . $bucketId, $cursor);
 
-            if ($afterFile->isEmpty()) {
-                throw new Exception("File '{$after}' for the 'after' value not found.", 400);
+            if ($cursorFile->isEmpty()) {
+                throw new Exception("File '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
 
@@ -702,7 +702,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
         ;
 
         $response->dynamic(new Document([
-            'files' => $dbForInternal->find('bucket_' . $bucketId, $queries, $limit, $offset, [], [$orderType], $afterFile ?? null),
+            'files' => $dbForInternal->find('bucket_' . $bucketId, $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection),
             'sum' => $dbForInternal->count('bucket_' . $bucketId, $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FILE_LIST);
     });
