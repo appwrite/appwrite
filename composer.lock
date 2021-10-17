@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5489e56e6ddb6757838eccd5314c8eb8",
+    "content-hash": "6658bcb6a570300242ac1d227052f1bf",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2582,16 +2582,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.15.2",
+            "version": "dev-feat-swift-templates",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "f42e70737d3b63fb8440111022c9509529a16479"
+                "reference": "cb7ed206fb3a63fa764db90d64f5b6316e466b73"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/f42e70737d3b63fb8440111022c9509529a16479",
-                "reference": "f42e70737d3b63fb8440111022c9509529a16479",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/cb7ed206fb3a63fa764db90d64f5b6316e466b73",
+                "reference": "cb7ed206fb3a63fa764db90d64f5b6316e466b73",
                 "shasum": ""
             },
             "require": {
@@ -2625,9 +2625,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.15.2"
+                "source": "https://github.com/appwrite/sdk-generator/tree/feat-swift-templates"
             },
-            "time": "2021-09-24T16:14:17+00:00"
+            "time": "2021-10-15T11:25:15+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
@@ -5062,6 +5062,7 @@
                     "type": "github"
                 }
             ],
+            "abandoned": true,
             "time": "2020-09-28T06:45:17+00:00"
         },
         {
@@ -6296,7 +6297,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "appwrite/sdk-generator": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

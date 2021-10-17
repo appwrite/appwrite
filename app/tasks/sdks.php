@@ -18,6 +18,7 @@ use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\Kotlin;
 use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Swift;
+use Appwrite\SDK\Language\SwiftClient;
 
 $cli
     ->task('sdks')
@@ -137,6 +138,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'swift':
                         $config = new Swift();
+                        $warning = $warning."\n\n > This is the Swift SDK for integrating with Appwrite from your Swift server-side code. If you're looking for the Apple SDK you should check [appwrite/sdk-for-apple](https://github.com/appwrite/sdk-for-apple)";
+                        break;
+                    case 'apple':
+                        $config = new SwiftClient();
                         break;
                     case 'dotnet':
                         $cover = '';
