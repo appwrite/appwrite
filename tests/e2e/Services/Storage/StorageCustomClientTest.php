@@ -19,7 +19,21 @@ class StorageCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $file = $this->client->call(Client::METHOD_POST, '/storage/files', array_merge([
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'bucketId' => 'unique()',
+            'name' => 'Test Bucket',
+            'permission' => 'file',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertNotEmpty($bucket['body']['$id']);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/'. $bucket['body']['$id'] . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
