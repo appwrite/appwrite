@@ -92,7 +92,7 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'after' => $response['body']['buckets'][0]['$id']
+            'cursor' => $response['body']['buckets'][0]['$id']
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);

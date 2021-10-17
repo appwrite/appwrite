@@ -53,6 +53,7 @@ class StorageConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'bucketId' => 'unique()',
             'name' => 'Test Bucket',
+            'permission' => 'file'
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $bucketId = $bucket['body']['$id'];

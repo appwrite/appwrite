@@ -279,7 +279,7 @@ App::post('/v1/storage/buckets')
                 '$collection' => 'buckets',
                 'dateCreated' => \time(),
                 'dateUpdated' => \time(),
-                'name' => $name,
+            'name' => $name,
                 'permission' => $permission,
                 'maximumFileSize' => $maximumFileSize,
                 'allowedFileExtensions' => $allowedFileExtensions,
@@ -287,8 +287,8 @@ App::post('/v1/storage/buckets')
                 'adapter' => $adapter,
                 'encryption' => $encryption,
                 'antiVirus' => $antiVirus,
-                '$read' => $read,
-                '$write' => $write,
+                '$read' => $read ?? [],
+                '$write' => $write ?? [],
                 'search' => implode(' ', [$bucketId, $name]),
             ]));
         } catch (Duplicate $th) {
@@ -321,30 +321,31 @@ App::get('/v1/storage/buckets')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('after', '', new UID(), 'ID of the bucket used as the starting point for the query, excluding the bucket itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursor', '', new UID(), 'ID of the bucket used as the starting point for the query, excluding the bucket itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForInternal, $usage) {
+    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, $search)] : [];
         
-        if (!empty($after)) {
-            $afterBucket = $dbForInternal->getDocument('buckets', $after);
+        if (!empty($cursor)) {
+            $cursorBucket = $dbForInternal->getDocument('buckets', $cursor);
 
-            if ($afterBucket->isEmpty()) {
-                throw new Exception("Bucket '{$after}' for the 'after' value not found.", 400);
+            if ($cursorBucket->isEmpty()) {
+                throw new Exception("Bucket '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
 
         $usage->setParam('storage.buckets.read', 1);
 
         $response->dynamic(new Document([
-            'buckets' => $dbForInternal->find('buckets', $queries, $limit, $offset, [], [$orderType], $afterBucket ?? null),
+            'buckets' => $dbForInternal->find('buckets', $queries, $limit, $offset, [], [$orderType], $cursorBucket ?? null, $cursorDirection),
             'sum' => $dbForInternal->count('buckets', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_BUCKET_LIST);
     });
@@ -777,7 +778,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($bucketId, $search, $limit, $offset, $after, $orderType, $response, $dbForInternal, $usage) {
+    ->action(function ($bucketId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
@@ -794,11 +795,11 @@ App::get('/v1/storage/buckets/:bucketId/files')
             $queries[] = [new Query('name', Query::TYPE_SEARCH, [$search])];
         }
 
-        if (!empty($after)) {
-            $afterFile = $dbForInternal->getDocument('bucket_' . $bucketId, $after);
+        if (!empty($cursor)) {
+            $cursorFile = $dbForInternal->getDocument('bucket_' . $bucketId, $cursor);
 
-            if ($afterFile->isEmpty()) {
-                throw new Exception("File '{$after}' for the 'after' value not found.", 400);
+            if ($cursorFile->isEmpty()) {
+                throw new Exception("File '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
 
@@ -814,7 +815,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
         ;
 
         $response->dynamic(new Document([
-            'files' => $dbForInternal->find('bucket_' . $bucketId, $queries, $limit, $offset, [], [$orderType], $afterFile ?? null),
+            'files' => $dbForInternal->find('bucket_' . $bucketId, $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection),
             'sum' => $dbForInternal->count('bucket_' . $bucketId, $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FILE_LIST);
     });
