@@ -14,15 +14,10 @@ use Utopia\Audit\Audit;
 require_once __DIR__.'/../init.php';
 
 Console::title('Deletes V1 Worker');
-Console::success(APP_NAME.' deletes worker v1 has started'."\n");
+Console::success(APP_NAME . ' deletes worker v1 has started' . "\n");
 
 class DeletesV1 extends Worker
 {
-    /**
-     * @var array
-     */
-    public $args = [];
-
     /**
      * @var Database
      */
@@ -63,7 +58,7 @@ class DeletesV1 extends Worker
                         $this->deleteBucket($document, $projectId);
                         break;
                     default:
-                        Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
+                        Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
                         break;
                 }
                 break;
@@ -80,6 +75,11 @@ class DeletesV1 extends Worker
                 $this->deleteAbuseLogs($this->args['timestamp']);
                 break;
 
+            case DELETE_TYPE_REALTIME:
+                //$this->deleteRealtimeUsage($this->args['timestamp']);
+                //TODO: implement this
+                break;
+
             case DELETE_TYPE_CERTIFICATES:
                 $document = new Document($this->args['document']);
                 $this->deleteCertificates($document);
@@ -89,9 +89,9 @@ class DeletesV1 extends Worker
                 $this->deleteUsageStats($this->args['timestamp1d'], $this->args['timestamp30m']);
                 break;
             default:
-                Console::error('No delete operation for type: '.$type);
+                Console::error('No delete operation for type: ' . $type);
                 break;
-            }
+        }
     }
 
     public function shutdown(): void
@@ -233,7 +233,7 @@ class DeletesV1 extends Worker
 
             $status = $abuse->cleanup($timestamp);
             if (!$status) {
-                throw new Exception('Failed to delete Abuse logs for project '.$projectId);
+                throw new Exception('Failed to delete Abuse logs for project ' . $projectId);
             }
         });
     }
@@ -250,7 +250,7 @@ class DeletesV1 extends Worker
             $audit = new Audit($this->getInternalDB($projectId));
             $status = $audit->cleanup($timestamp);
             if (!$status) {
-                throw new Exception('Failed to delete Audit logs for project'.$projectId);
+                throw new Exception('Failed to delete Audit logs for project' . $projectId);
             }
         });
     }
@@ -270,10 +270,9 @@ class DeletesV1 extends Worker
         ], $dbForInternal, function(Document $document) use ($device) {
 
             if ($device->delete($document->getAttribute('path', ''))) {
-                Console::success('Delete code tag: '.$document->getAttribute('path', ''));
-            }
-            else {
-                Console::error('Failed to delete code tag: '.$document->getAttribute('path', ''));
+                Console::success('Delete code tag: ' . $document->getAttribute('path', ''));
+            } else {
+                Console::error('Failed to delete code tag: ' . $document->getAttribute('path', ''));
             }
         });
 
@@ -299,14 +298,13 @@ class DeletesV1 extends Worker
         if($database->deleteDocument($document->getCollection(), $document->getId())) {
             Console::success('Deleted document "'.$document->getId().'" successfully');
 
-            if(is_callable($callback)) {
+            if (is_callable($callback)) {
                 $callback($document);
             }
 
             return true;
-        }
-        else {
-            Console::error('Failed to delete document: '.$document->getId());
+        } else {
+            Console::error('Failed to delete document: ' . $document->getId());
             return false;
         }
 
@@ -339,7 +337,7 @@ class DeletesV1 extends Worker
 
             $sum = count($projects);
 
-            Console::info('Executing delete function for chunk #'.$chunk.'. Found '.$sum.' projects');
+            Console::info('Executing delete function for chunk #' . $chunk . '. Found ' . $sum . ' projects');
             foreach ($projectIds as $projectId) {
                 $callback($projectId);
                 $count++;
@@ -377,7 +375,7 @@ class DeletesV1 extends Worker
 
             $sum = count($results);
 
-            Console::info('Deleting chunk #'.$chunk.'. Found '.$sum.' documents');
+            Console::info('Deleting chunk #' . $chunk . '. Found ' . $sum . ' documents');
 
             foreach ($results as $document) {
                 $this->deleteById($document, $database, $callback);
@@ -399,8 +397,8 @@ class DeletesV1 extends Worker
         $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
         $checkTraversal = realpath($directory) === $directory;
 
-        if($domain && $checkTraversal && is_dir($directory)) {
-            array_map('unlink', glob($directory.'/*.*'));
+        if ($domain && $checkTraversal && is_dir($directory)) {
+            array_map('unlink', glob($directory . '/*.*'));
             rmdir($directory);
             Console::info("Deleted certificate files for {$domain}");
         } else {

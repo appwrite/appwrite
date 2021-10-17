@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
+use Utopia\Database\Database;
 
 trait TeamsBase
 {
@@ -172,6 +173,19 @@ trait TeamsBase
         $this->assertCount(1, $response['body']['teams']);
         $this->assertEquals('Manchester United', $response['body']['teams'][0]['name']);
 
+        $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $data['teamUid'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertGreaterThan(0, $response['body']['sum']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertCount(1, $response['body']['teams']);
+        $this->assertEquals('Arsenal', $response['body']['teams'][0]['name']);
+
         $teams = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -189,7 +203,7 @@ trait TeamsBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'limit' => 1,
-            'after' => $teams['body']['teams'][0]['$id']
+            'cursor' => $teams['body']['teams'][0]['$id']
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -198,9 +212,32 @@ trait TeamsBase
         $this->assertCount(1, $response['body']['teams']);
         $this->assertEquals($teams['body']['teams'][1]['$id'], $response['body']['teams'][0]['$id']);
 
+        $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 1,
+            'cursor' => $teams['body']['teams'][1]['$id'],
+            'cursorDirection' => Database::CURSOR_BEFORE
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertGreaterThan(0, $response['body']['sum']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertCount(1, $response['body']['teams']);
+        $this->assertEquals($teams['body']['teams'][0]['$id'], $response['body']['teams'][0]['$id']);
+
         /**
          * Test for FAILURE
          */
+        $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => 'unknown'
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return [];
     }

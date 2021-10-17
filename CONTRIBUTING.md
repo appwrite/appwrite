@@ -99,7 +99,7 @@ We love to create issues that are good for beginners and label them as `good fir
 - [PHP FIG](https://www.php-fig.org/) - [PSR-1](https://www.php-fig.org/psr/psr-1/) and [PSR-4](https://www.php-fig.org/psr/psr-4/)
 - [PHP Swoole](https://www.swoole.co.uk/)
 
-Learn more at our [Technology Stack](## Technology Stack) section.
+Learn more at our [Technology Stack](#technology-stack) section.
 
 ##### Network and Protocols
 - [OSI Model](https://en.wikipedia.org/wiki/OSI_model)
@@ -167,6 +167,8 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 │       ├── Migration
 │       ├── Network
 │       ├── OpenSSL
+│       ├── Realtime
+│       ├── Resque
 │       ├── Specification
 │       ├── Task
 │       ├── Template

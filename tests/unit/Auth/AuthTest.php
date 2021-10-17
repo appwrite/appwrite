@@ -3,7 +3,8 @@
 namespace Appwrite\Tests;
 
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use PHPUnit\Framework\TestCase;
 
 class AuthTest extends TestCase
@@ -12,8 +13,13 @@ class AuthTest extends TestCase
     {
     }
 
+    /**
+     * Reset Roles
+     */
     public function tearDown(): void
     {
+        Authorization::cleanRoles();
+        Authorization::setRole('role:all');
     }
 
     public function testCookieName()
@@ -195,5 +201,117 @@ class AuthTest extends TestCase
         $this->assertEquals(true, Auth::isAppUser(['role:'.Auth::USER_ROLE_APP => true, 'role:'.Auth::USER_ROLE_GUEST => true]));
         $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_OWNER => true, 'role:'.Auth::USER_ROLE_GUEST => true]));
         $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_OWNER => true, 'role:'.Auth::USER_ROLE_ADMIN => true, 'role:'.Auth::USER_ROLE_DEVELOPER => true]));
+    }
+
+    public function testGuestRoles()
+    {
+        $user = new Document([
+            '$id' => ''
+        ]);
+
+        $roles = Auth::getRoles($user);
+        $this->assertCount(1, $roles);
+        $this->assertContains('role:guest', $roles);
+    }
+
+    public function testUserRoles()
+    {
+        $user  = new Document([
+            '$id' => '123',
+            'memberships' => [
+                [
+                    'teamId' => 'abc',
+                    'roles' => [
+                        'administrator',
+                        'moderator'
+                    ]
+                ],
+                [
+                    'teamId' => 'def',
+                    'roles' => [
+                        'guest'
+                    ]
+                ]
+            ]
+        ]);
+
+        $roles = Auth::getRoles($user);
+
+        $this->assertCount(7, $roles);
+        $this->assertContains('role:member', $roles);
+        $this->assertContains('user:123', $roles);
+        $this->assertContains('team:abc', $roles);
+        $this->assertContains('team:abc/administrator', $roles);
+        $this->assertContains('team:abc/moderator', $roles);
+        $this->assertContains('team:def', $roles);
+        $this->assertContains('team:def/guest', $roles);
+    }
+
+    public function testPrivilegedUserRoles()
+    {
+        Authorization::setRole('role:'.Auth::USER_ROLE_OWNER);
+        $user  = new Document([
+            '$id' => '123',
+            'memberships' => [
+                [
+                    'teamId' => 'abc',
+                    'roles' => [
+                        'administrator',
+                        'moderator'
+                    ]
+                ],
+                [
+                    'teamId' => 'def',
+                    'roles' => [
+                        'guest'
+                    ]
+                ]
+            ]
+        ]);
+
+        $roles = Auth::getRoles($user);
+
+        $this->assertCount(5, $roles);
+        $this->assertNotContains('role:member', $roles);
+        $this->assertNotContains('user:123', $roles);
+        $this->assertContains('team:abc', $roles);
+        $this->assertContains('team:abc/administrator', $roles);
+        $this->assertContains('team:abc/moderator', $roles);
+        $this->assertContains('team:def', $roles);
+        $this->assertContains('team:def/guest', $roles);
+    }
+
+    public function testAppUserRoles()
+    {
+        Authorization::setRole('role:'.Auth::USER_ROLE_APP);
+        $user  = new Document([
+            '$id' => '123',
+            'memberships' => [
+                [
+                    'teamId' => 'abc',
+                    'roles' => [
+                        'administrator',
+                        'moderator'
+                    ]
+                ],
+                [
+                    'teamId' => 'def',
+                    'roles' => [
+                        'guest'
+                    ]
+                ]
+            ]
+        ]);
+
+        $roles = Auth::getRoles($user);
+
+        $this->assertCount(5, $roles);
+        $this->assertNotContains('role:member', $roles);
+        $this->assertNotContains('user:123', $roles);
+        $this->assertContains('team:abc', $roles);
+        $this->assertContains('team:abc/administrator', $roles);
+        $this->assertContains('team:abc/moderator', $roles);
+        $this->assertContains('team:def', $roles);
+        $this->assertContains('team:def/guest', $roles);
     }
 }

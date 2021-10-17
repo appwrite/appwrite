@@ -33,6 +33,7 @@ foreach ([
     realpath(__DIR__ . '/../vendor/matomo'),
     realpath(__DIR__ . '/../vendor/symfony'),
     realpath(__DIR__ . '/../vendor/mongodb'),
+    realpath(__DIR__ . '/../vendor/utopia-php/websocket'), // TODO: remove workerman autoload
 ] as $key => $value) {
     if($value !== false) {
         $preloader->ignore($value);
