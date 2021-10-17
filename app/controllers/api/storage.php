@@ -244,19 +244,32 @@ App::post('/v1/storage/buckets')
                     'array' => false,
                     'filters' => [],
                 ]),
+                new Document([
+                    [
+                        '$id' => 'search',
+                        'type' => Database::VAR_STRING,
+                        'format' => '',
+                        'size' => 16384,
+                        'signed' => true,
+                        'required' => false,
+                        'default' => null,
+                        'array' => false,
+                        'filters' => [],
+                    ],
+                ]),
             ], [
+                new Document([
+                    '$id' => '_key_search',
+                    'type' => Database::INDEX_FULLTEXT,
+                    'attributes' => ['search'],
+                    'lengths' => [2048],
+                    'orders' => [Database::ORDER_ASC],
+                ]),
                 new Document([
                     '$id' => '_key_bucket',
                     'type' => Database::INDEX_KEY,
                     'attributes' => ['bucketId'],
                     'lengths' => [Database::LENGTH_KEY],
-                    'orders' => [Database::ORDER_ASC],
-                ]),
-                new Document([
-                    '$id' => '_fulltext_name',
-                    'type' => Database::INDEX_FULLTEXT,
-                    'attributes' => ['name'],
-                    'lengths' => [1024],
                     'orders' => [Database::ORDER_ASC],
                 ]),
             ]);
@@ -276,6 +289,7 @@ App::post('/v1/storage/buckets')
                 'antiVirus' => $antiVirus,
                 '$read' => $read,
                 '$write' => $write,
+                'search' => implode(' ', [$bucketId, $name]),
             ]));
         } catch (Duplicate $th) {
             throw new Exception('Bucket already exists', 409);
@@ -682,6 +696,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     'openSSLCipher' => $openSSLCipher,
                     'openSSLTag' => $openSSLTag,
                     'openSSLIV' => $openSSLIV,
+                    'search' => implode(' ', [$fileId, $fileName,]),
                 ]));
             } else {
                 $file = $dbForInternal->updateDocument('bucket_' . $bucketId, $fileId, $file
@@ -715,6 +730,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     'comment' => '',
                     'chunksTotal' => $chunks,
                     'chunksUploaded' => $chunksUploaded,
+                    'search' => implode(' ', [$fileId, $fileName,]),
                 ]));
             } else {
                 $file = $dbForInternal->updateDocument('bucket_' . $bucketId, $fileId, $file
