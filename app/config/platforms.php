@@ -84,7 +84,7 @@ return [
                 'package' => 'https://github.com/appwrite/sdk-for-apple',
                 'enabled' => true,
                 'beta' => true,
-                'dev' => true,
+                'dev' => false,
                 'hidden' => false,
                 'family' => APP_PLATFORM_CLIENT,
                 'prism' => 'swift',
