@@ -255,7 +255,7 @@ App::post('/v1/storage/buckets')
                 '$collection' => 'buckets',
                 'dateCreated' => \time(),
                 'dateUpdated' => \time(),
-                'name' => $name,
+            'name' => $name,
                 'permission' => $permission,
                 'maximumFileSize' => $maximumFileSize,
                 'allowedFileExtensions' => $allowedFileExtensions,
@@ -263,8 +263,8 @@ App::post('/v1/storage/buckets')
                 'adapter' => $adapter,
                 'encryption' => $encryption,
                 'antiVirus' => $antiVirus,
-                '$read' => $read,
-                '$write' => $write,
+                '$read' => $read ?? [],
+                '$write' => $write ?? [],
                 'search' => implode(' ', [$bucketId, $name]),
             ]));
         } catch (Duplicate $th) {
