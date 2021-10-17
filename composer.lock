@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5489e56e6ddb6757838eccd5314c8eb8",
+    "content-hash": "6658bcb6a570300242ac1d227052f1bf",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2586,12 +2586,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "50121f485da858fd7ca7c56446b5db82fccac469"
+                "reference": "cb7ed206fb3a63fa764db90d64f5b6316e466b73"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/d6f07d956f1ebfc8c582454be851c79afe76b3f0",
-                "reference": "50121f485da858fd7ca7c56446b5db82fccac469",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/cb7ed206fb3a63fa764db90d64f5b6316e466b73",
+                "reference": "cb7ed206fb3a63fa764db90d64f5b6316e466b73",
                 "shasum": ""
             },
             "require": {
@@ -2627,7 +2627,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/feat-swift-templates"
             },
-            "time": "2021-10-13T10:56:04+00:00"
+            "time": "2021-10-15T11:25:15+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
@@ -5062,6 +5062,7 @@
                     "type": "github"
                 }
             ],
+            "abandoned": true,
             "time": "2020-09-28T06:45:17+00:00"
         },
         {
@@ -6320,5 +6321,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.0.0"
 }
