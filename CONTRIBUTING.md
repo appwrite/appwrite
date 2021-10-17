@@ -377,7 +377,7 @@ php-cs-fixer fix src --rules='{"braces": {"allow_single_line_closure": true}}'
 Static Code Analysis:
 
 ```bash
-docker-compose exec appwrite /usr/src/code/vendor/bin/psalm
+vendor/bin/phpstan
 ```
 
 ## Tutorials

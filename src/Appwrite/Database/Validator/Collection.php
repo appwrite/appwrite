@@ -27,7 +27,7 @@ class Collection extends Structure
         $this->collections = $collections;
         $this->merge = $merge;
 
-        return parent::__construct($database);
+        parent::__construct($database);
     }
 
     /**

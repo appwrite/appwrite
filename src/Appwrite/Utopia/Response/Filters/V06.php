@@ -9,14 +9,18 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
 use Exception;
+use Utopia\App;
 use Utopia\Config\Config;
-use Utopia\Locale\Locale as Locale;
+use Utopia\Locale\Locale;
 
 class V06 extends Filter {
+
+    protected Locale $locale;
     
     // Convert 0.7 Data format to 0.6 format
     public function parse(array $content, string $model): array {
-        
+        $this->locale = new Locale(App::getEnv('_APP_LOCALE', 'en'));
+
         $parsedResponse = [];
 
         switch($model) {
@@ -199,8 +203,8 @@ class V06 extends Filter {
     {
         $content['ip'] = $content['ip'] ?? '';
         $content['countryCode'] = $content['countryCode'] ?? '--';
-        $content['country'] = $content['country'] ??  Locale::getText('locale.country.unknown');
-        $content['continent'] = $content['continent'] ?? Locale::getText('locale.country.unknown');
+        $content['country'] = $content['country'] ??  $this->locale->getText('locale.country.unknown');
+        $content['continent'] = $content['continent'] ?? $this->locale->getText('locale.country.unknown');
         $content['continentCode'] = $content['continentCode'] ?? '--';
         $content['eu'] = $content['eu'] ?? false;
         $content['currency'] = $content['currency'] ?? null;
@@ -245,7 +249,7 @@ class V06 extends Filter {
                 'time' => $log['time'],
                 'geo' => [
                     'isoCode' => empty($log['countryCode']) ? '---' : $log['countryCode']  ,
-                    'country' => empty($log['countryName'] ) ? Locale::getText('locale.country.unknown') : $log['countryName']
+                    'country' => empty($log['countryName'] ) ? $this->locale->getText('locale.country.unknown') : $log['countryName']
                 ],
                 'OS' => [
                     'name' => $log['osName'],
@@ -280,7 +284,7 @@ class V06 extends Filter {
                 'model' => $session['deviceModel'],
                 'geo' => [
                     'isoCode' => empty($session['countryCode']) ? '---' : $session['countryCode']  ,
-                    'country' => empty($session['countryName'] ) ? Locale::getText('locale.country.unknown') : $session['countryName']
+                    'country' => empty($session['countryName'] ) ? $this->locale->getText('locale.country.unknown') : $session['countryName']
                 ],
                 'OS' => [
                     'name' => $session['osName'],

@@ -38,6 +38,8 @@ App::get('/v1/locale')
 
         $record = $geodb->get($ip);
 
+        $continents = $locale->getText('continents');
+
         if ($record) {
             $output['countryCode'] = $record['country']['iso_code'];
             $output['country'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
