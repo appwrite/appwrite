@@ -18,7 +18,7 @@ FutureBuilder(
   builder: (context, snapshot) {
     return snapshot.hasData && snapshot.data != null
       ? Image.memory(
-          snapshot.data.data,
+          snapshot.data,
         )
       : CircularProgressIndicator();
   },
