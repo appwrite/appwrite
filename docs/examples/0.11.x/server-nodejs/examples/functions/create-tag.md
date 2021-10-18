@@ -12,7 +12,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = functions.createTag('[FUNCTION_ID]', '[COMMAND]', fs.createReadStream(__dirname + '/file.png')));
+let promise = functions.createTag('[FUNCTION_ID]', '[COMMAND]', fs.createReadStream(__dirname + '/file.png'));
 
 promise.then(function (response) {
     console.log(response);

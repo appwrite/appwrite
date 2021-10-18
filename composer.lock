@@ -2586,12 +2586,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "cb7ed206fb3a63fa764db90d64f5b6316e466b73"
+                "reference": "7faba7699451be05816c40bd4736b14bf35dadf6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/cb7ed206fb3a63fa764db90d64f5b6316e466b73",
-                "reference": "cb7ed206fb3a63fa764db90d64f5b6316e466b73",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/7faba7699451be05816c40bd4736b14bf35dadf6",
+                "reference": "7faba7699451be05816c40bd4736b14bf35dadf6",
                 "shasum": ""
             },
             "require": {
@@ -2627,7 +2627,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/feat-swift-templates"
             },
-            "time": "2021-10-15T11:25:15+00:00"
+            "time": "2021-10-18T08:06:50+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
