@@ -71,9 +71,14 @@ App::get('/v1/health/cache')
     ->action(function ($response, $utopia) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\App $utopia */
-        $utopia->getResource('cache');
+        /** @var Redis */
+        $redis = $utopia->getResource('cache');
 
-        $response->json(['status' => 'OK']);
+        if ($redis->ping(true)) {
+            return $response->json(['status' => 'OK']);
+        } else {
+            throw new Exception('Cache is not available', 500);
+        }
     });
 
 App::get('/v1/health/time')
