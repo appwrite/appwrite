@@ -1,4 +1,4 @@
-# Version 0.11.0 (NOT RELEASED YET)
+# Version 0.11.0
 
 ## Features
 - Added Swift Platform Support
