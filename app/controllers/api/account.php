@@ -162,7 +162,7 @@ App::post('/v1/account/sessions')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
-    ->param('duration', App::getEnv('_APP_AUTH_DEFAULT_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG), new Range(App::getEnv('_APP_AUTH_MIN_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_SHORT), App::getEnv('_APP_AUTH_MAX_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG)), 'Session duration in seconds. Must be between 1 and 365 days, if not configured otherwise in .env', true)
+    ->param('duration', App::getEnv('_APP_AUTH_DEFAULT_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG), new Range(App::getEnv('_APP_AUTH_MIN_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_SHORT), App::getEnv('_APP_AUTH_MAX_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG)), 'Session duration in seconds. Must be between 1 and 365 days.', true)
     ->inject('request')
     ->inject('response')
     ->inject('projectDB')
@@ -282,7 +282,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->param('success', '', function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('failure', '', function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('scopes', [], new ArrayList(new Text(128)), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes.', true)
-    ->param('duration', App::getEnv('_APP_AUTH_DEFAULT_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG), new Range(App::getEnv('_APP_AUTH_MIN_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_SHORT), App::getEnv('_APP_AUTH_MAX_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG)), 'Session duration in seconds. Must be between 1 and 365 days, if not configured otherwise in .env', true)
+    ->param('duration', App::getEnv('_APP_AUTH_DEFAULT_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG), new Range(App::getEnv('_APP_AUTH_MIN_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_SHORT), App::getEnv('_APP_AUTH_MAX_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG)), 'Session duration in seconds. Must be between 1 and 365 days.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -448,7 +448,12 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             throw new Exception('Invalid redirect URL for failure login', 400);
         }
 
-        $state['duration'] = (int) $state['duration'];
+        if(!empty($state['duration'])) {
+            $state['duration'] = (int) $state['duration'];
+        } else {
+            $state['duration'] = App::getEnv('_APP_AUTH_DEFAULT_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        }
+
         $durationValidator = new Range(App::getEnv('_APP_AUTH_MIN_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_SHORT), App::getEnv('_APP_AUTH_MAX_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG));
         if(!$durationValidator->isValid($state['duration'])) {
             throw new Exception($durationValidator->getDescription(), 400);
@@ -645,7 +650,7 @@ App::post('/v1/account/sessions/magic-url')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', new Email(), 'User email.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
-    ->param('duration', App::getEnv('_APP_AUTH_DEFAULT_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG), new Range(App::getEnv('_APP_AUTH_MIN_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_SHORT), App::getEnv('_APP_AUTH_MAX_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG)), 'Session duration in seconds. Must be between 1 and 365 days, if not configured otherwise in .env', true)
+    ->param('duration', App::getEnv('_APP_AUTH_DEFAULT_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG), new Range(App::getEnv('_APP_AUTH_MIN_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_SHORT), App::getEnv('_APP_AUTH_MAX_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG)), 'Session duration in seconds. Must be between 1 and 365 days.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -944,7 +949,7 @@ App::post('/v1/account/sessions/anonymous')
     ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('duration', App::getEnv('_APP_AUTH_DEFAULT_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG), new Range(App::getEnv('_APP_AUTH_MIN_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_SHORT), App::getEnv('_APP_AUTH_MAX_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG)), 'Session duration in seconds. Must be between 1 and 365 days, if not configured otherwise in .env', true)
+    ->param('duration', App::getEnv('_APP_AUTH_DEFAULT_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG), new Range(App::getEnv('_APP_AUTH_MIN_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_SHORT), App::getEnv('_APP_AUTH_MAX_DURATION', Auth::TOKEN_EXPIRATION_LOGIN_LONG)), 'Session duration in seconds. Must be between 1 and 365 days.', true)
     ->inject('request')
     ->inject('response')
     ->inject('locale')
