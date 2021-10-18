@@ -1871,16 +1871,16 @@
         },
         {
             "name": "utopia-php/image",
-            "version": "0.5.1",
+            "version": "0.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/image.git",
-                "reference": "a7255ac9ea04eaa18b985e9acce30d407bfb8e79"
+                "reference": "049446fea7cb53db8a431455ec382e30e6d1482a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/image/zipball/a7255ac9ea04eaa18b985e9acce30d407bfb8e79",
-                "reference": "a7255ac9ea04eaa18b985e9acce30d407bfb8e79",
+                "url": "https://api.github.com/repos/utopia-php/image/zipball/049446fea7cb53db8a431455ec382e30e6d1482a",
+                "reference": "049446fea7cb53db8a431455ec382e30e6d1482a",
                 "shasum": ""
             },
             "require": {
@@ -1918,9 +1918,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/image/issues",
-                "source": "https://github.com/utopia-php/image/tree/0.5.1"
+                "source": "https://github.com/utopia-php/image/tree/0.5.2"
             },
-            "time": "2021-10-15T10:16:38+00:00"
+            "time": "2021-10-18T06:41:05+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -6321,5 +6321,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.0.0"
+    "plugin-api-version": "2.1.0"
 }
