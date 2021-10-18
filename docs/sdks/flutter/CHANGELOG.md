@@ -1,3 +1,10 @@
+# 2.0.3
+- Support for Appwrite 0.11
+- Fix comments on `sum` attributes
+
+## 2.0.2
+- Fix realtime not restarting when there was only one subscription and that was closed and reopened
+
 ## 2.0.1
 - Fix realtime close and reconnect working only 1 out of two times due to future returning too early
 - Add dart doc comments to newly added response models

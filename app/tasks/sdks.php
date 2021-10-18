@@ -189,7 +189,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setTwitter(APP_SOCIAL_TWITTER_HANDLE)
                     ->setDiscord(APP_SOCIAL_DISCORD_CHANNEL, APP_SOCIAL_DISCORD)
                     ->setDefaultHeaders([
-                        'X-Appwrite-Response-Format' => '0.10.0',
+                        'X-Appwrite-Response-Format' => '0.11.0',
                     ])
                 ;
                 
@@ -202,6 +202,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 }
 
                 $gitUrl = $language['gitUrl'];
+                $gitBranch = $language['gitBranch'];
+
                 
                 if(!$production) {
                     $gitUrl = 'git@github.com:aw-tests/'.$language['gitRepoName'].'.git';
@@ -211,7 +213,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     \exec('rm -rf '.$target.' && \
                         mkdir -p '.$target.' && \
                         cd '.$target.' && \
-                        git init --initial-branch=master && \
+                        git init --initial-branch='.$gitBranch.' && \
                         git remote add origin '.$gitUrl.' && \
                         git fetch && \
                         git pull '.$gitUrl.' && \
@@ -219,7 +221,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         cp -r '.$result.'/ '.$target.'/ && \
                         git add . && \
                         git commit -m "'.$message.'" && \
-                        git push -u origin master
+                        git push -u origin '.$gitBranch.'
                     ');
 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
