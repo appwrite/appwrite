@@ -58,6 +58,7 @@
   - Latvian `lv` by @RReiso in https://github.com/appwrite/appwrite/pull/2022
   - Lithuanian `lt` by @mantasio in https://github.com/appwrite/appwrite/pull/2018
   - Japanese `jp` by @takmar in https://github.com/appwrite/appwrite/pull/2177
+- Added new audio mime-types for viewing audio files on browsers by @eldadfux in https://github.com/appwrite/appwrite/pull/2239
 
 ## Bugs
 - Fixed `sum` description by @eldadfux in https://github.com/appwrite/appwrite/pull/1659
