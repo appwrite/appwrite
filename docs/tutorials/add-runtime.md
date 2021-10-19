@@ -150,7 +150,7 @@ docker build -t dart-runtime:2.12 ./runtimes/dart-2.12
 Next open up the `/runtimes/build.sh` script and also add your runtime to it. This one is slightly different as this is the one that will be used for cross platform compiles and deploying it to docker hub. The following is an example also with dart version 2.12:
 ```
 echo  'Dart 2.12...'
-docker buildx build --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/386 -t dart-runtime:2.12 ./runtimes/dart-2.12/ --push
+docker buildx build --platform linux/amd64,linux/arm64 -t dart-runtime:2.12 ./runtimes/dart-2.12/ --push
 ```
 
 ## 4. Adding the runtime to the runtimes list
