@@ -39,7 +39,6 @@ class StorageCustomClientTest extends Scope
         ], $this->getHeaders()), [
             'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
-            'folderId' => 'xyz',
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 201);

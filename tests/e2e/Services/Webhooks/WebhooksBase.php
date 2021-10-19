@@ -246,6 +246,7 @@ trait WebhooksBase
         ]), [
             'bucketId' => 'unique()',
             'name' => 'Test Bucket',
+            'permission' => 'bucket',
             'read' => ['role:all'],
             'write' => ['role:all']
         ]);
