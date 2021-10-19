@@ -57,6 +57,7 @@ return [
     'ro', // Romanian
     'ru', // Russian
     'sa', //Sanskrit
+    'sd', // Sindhi
     'si', // Sinhala
     'sk', // Slovakia
     'sl', // Slovenian
