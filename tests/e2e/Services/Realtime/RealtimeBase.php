@@ -783,8 +783,25 @@ trait RealtimeBase
 
         /**
          * Test File Create
+         * TODO Buckets Channels
          */
-        $file = $this->client->call(Client::METHOD_POST, '/storage/files', array_merge([
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'bucketId' => 'unique()',
+            'name' => 'Test Bucket',
+            'permission' => 'file',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertNotEmpty($bucket['body']['$id']);
+        
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/'.$bucketId.'/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -813,7 +830,7 @@ trait RealtimeBase
         /**
          * Test File Update
          */
-        $this->client->call(Client::METHOD_PUT, '/storage/files/' . $data['fileId'], array_merge([
+        $this->client->call(Client::METHOD_PUT, '/storage/buckets/'.$bucketId.'files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -837,7 +854,7 @@ trait RealtimeBase
         /**
          * Test File Delete
          */
-        $this->client->call(Client::METHOD_DELETE, '/storage/files/' . $data['fileId'], array_merge([
+        $this->client->call(Client::METHOD_DELETE, '/storage/buckets/'. $bucketId . 'files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
