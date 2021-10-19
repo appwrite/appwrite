@@ -65,7 +65,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                     <th>Filename</th>
                                     <th width="140">Type</th>
                                     <th width="100">Size</th>
-                                    <th width="120">Created</th>
+                                    <th width="122">Created</th>
                                 </tr>
                             </thead>
                             <tbody data-ls-loop="project-files.files" data-ls-as="file">
@@ -176,7 +176,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                         <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileUnit}}"></span>
                                     </td>
                                     <td data-title="Created: ">
-                                        <span class="text-fade text-size-small" data-ls-bind="{{file.dateCreated|dateText}}"></span>
+                                        <span class="text-fade text-size-small" data-ls-bind="{{file.dateCreated|dateTimeText}}"></span>
                                     </td>
                                 </tr>
                             </tbody>

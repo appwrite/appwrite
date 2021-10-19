@@ -34,6 +34,9 @@ window.ls.filter
   .add("dateTime", function($value, date) {
     return date.format("Y-m-d H:i", $value);
   })
+  .add("dateTimeText", function($value, date) {
+    return date.format("d M Y H:i:s", $value);
+  })
   .add("dateText", function($value, date) {
     return date.format("d M Y", $value);
   })
