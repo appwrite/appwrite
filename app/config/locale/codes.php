@@ -30,8 +30,8 @@ return [
     'kn', // Kannada
     'km', // Khmer
     'ko', // Korean
-    'lt', // Lithuanian
     'la', // Latin
+    'lt', // Lithuanian
     'ml', // Malayalam
     'mr', // Marathi
     'ms', // Malay
