@@ -143,7 +143,7 @@ Below is a list of currently supported platforms and languages. If you wish to h
     
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 
-## Contributing
+## Contribution
 
 All code contributions - including those of people having commit access - must go through a pull request and be approved by a core developer before being merged. This is to ensure a proper review of all the code.
 
