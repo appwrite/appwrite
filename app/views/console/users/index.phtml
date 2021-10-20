@@ -98,7 +98,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                             <span class="tag red">Blocked</span>
                                         </span>
                                     </td>
-                                    <td data-title="Created: "><small data-ls-bind="{{user.registration|dateText}}"></small></td>
+                                    <td data-title="Created: "><small data-ls-bind="{{user.registration|dateTimeText}}"></small></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -234,7 +234,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                         <a data-ls-attrs="href=/console/users/teams/team?id={{team.$id}}&project={{router.params.project}}" data-ls-bind="{{team.name}}"></a>
                                     </td>
                                     <td data-title="Members: "><span data-ls-bind="{{team.sum}} members"></span></td>
-                                    <td data-title="Date Created: "><small data-ls-bind="{{team.dateCreated|dateText}}"></small></td>
+                                    <td data-title="Date Created: "><small data-ls-bind="{{team.dateCreated|dateTimeText}}"></small></td>
                                 </tr>
                             </tbody>
                         </table>
