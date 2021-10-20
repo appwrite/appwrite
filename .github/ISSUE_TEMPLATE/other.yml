@@ -1,5 +1,5 @@
 name: Other
-description: Use this for any other issues. Please do NOT create blank issues
+description: Use this for any other issues.
 title: "[OTHER]"
 body:
   - type: markdown
