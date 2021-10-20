@@ -26,7 +26,7 @@
             "type": "git"
         },
         {
-            "url": "https://github.com/PineappleIOnic/php-runtimes.git",
+            "url": "https://github.com/appwrite/php-runtimes.git",
             "type": "git"
         }
     ],
@@ -46,7 +46,7 @@
         "ext-sockets": "*",
 
         "appwrite/php-clamav": "1.1.*",
-        "appwrite/php-runtimes": "dev-new-runtimes",
+        "appwrite/php-runtimes": "dev-refactor",
 
         "utopia-php/framework": "0.18.*",
         "utopia-php/abuse": "0.6.*",

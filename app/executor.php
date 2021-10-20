@@ -409,7 +409,7 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
             command: [
                 'sh',
                 '-c',
-                'mkdir -p /usr/code && cp /tmp/code.tar.gz /usr/code.tar.gz && cd /usr && tar -zxf /usr/code.tar.gz -C /usr/code && rm /usr/code.tar.gz'
+                'mkdir -p /usr/code && cp /tmp/code.tar.gz /usr/workspace/code.tar.gz && cd /usr/workspace/ && tar -zxf /usr/workspace/code.tar.gz -C /usr/code && rm /usr/workspace/code.tar.gz'
             ],
             stdout: $untarStdout,
             stderr: $untarStderr,
@@ -559,7 +559,7 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
     if ($activeFunctions->exists($container) && !(\substr($activeFunctions->get($container)['status'], 0, 2) === 'Up')) { // Remove container if not online
         // If container is online then stop and remove it
         try {
-            $orchestration->remove($container);
+            $orchestration->remove($container, true);
         } catch (Exception $e) {
             Console::warning('Failed to remove container: ' . $e->getMessage());
         }
