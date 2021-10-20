@@ -22,7 +22,7 @@
     "emails.recovery.thanks": "धन्यवाद",
     "emails.recovery.signature": "{{project}} टीम",
     "emails.invitation.subject": "%s टीम को %s पर आमंत्रण",
-    "emails.invitation.hello": "नमस्ते",
+    "emails.invitation.hello": "नमस्ते {{name}}",
     "emails.invitation.body": "यह मेल आपको इसलिए भेजा गया था क्योंकि {{owner}} आपको {{team}} टीम का सदस्य बनने के लिए आमंत्रित करना चाहते थे जो {{project}} से जुड़ा है।",
     "emails.invitation.footer": "यदि यह आपके लिए आवश्यक नहीं है, तो आप इस संदेश को नज़रअंदाज़ कर सकते हैं।",
     "emails.invitation.thanks": "धन्यवाद {{name}}",
