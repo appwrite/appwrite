@@ -231,6 +231,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'yammer' => [
+        'name' => 'Yammer',
+        'developers' => 'https://developer.yammer.com/docs/oauth-2',
+        'icon' => 'icon-yammer',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'yandex' => [
         'name' => 'Yandex',
         'developers' => 'https://tech.yandex.com/oauth/',
