@@ -4,11 +4,12 @@ title: "[OTHER]"
 body:
   - type: markdown
     attributes:
-      value: "# Other issue"
+      value: |
+        Thanks for taking the time to fill out our feature request form 🙏
   - type: textarea
     id: issuedescription
     attributes:
-      label: What would you like to share?
+      label: "🔖 What would you like to share?"
       description: Provide a clear and concise explanation of your issue.
     validations:
       required: true
