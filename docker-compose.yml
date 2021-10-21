@@ -464,7 +464,7 @@ services:
   #     - SMARTHOST_PORT=587
   
   redis:
-    image: redis:6.0-alpine
+    image: redis:6.2-alpine
     container_name: appwrite-redis
     networks:
       - appwrite
