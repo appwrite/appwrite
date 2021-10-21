@@ -3,6 +3,7 @@
 /node_modules/
 /tests/resources/storage/
 /app/sdks/*
+/public/dist/
 /.idea/
 .DS_Store
 .php_cs.cache
