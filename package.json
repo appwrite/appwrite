@@ -4,7 +4,7 @@
   "license": "BSD-3-Clause",
   "repository": "public",
   "scripts": {
-    "build": "ls public/ && npm run gulp:less && npm run gulp:import && npm run gulp:build",
+    "build": "npm run gulp:less && npm run gulp:import && npm run gulp:build",
     "gulp:less": "gulp less",
     "gulp:import": "gulp import",
     "gulp:build": "gulp build"
