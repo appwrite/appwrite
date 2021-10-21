@@ -4,7 +4,7 @@
   "license": "BSD-3-Clause",
   "repository": "public",
   "scripts": {
-    "build": "npm run gulp:less && npm run gulp:import && npm run gulp:build",
+    "build": "ls public/ && npm run gulp:less && npm run gulp:import && npm run gulp:build",
     "gulp:less": "gulp less",
     "gulp:import": "gulp import",
     "gulp:build": "gulp build"
@@ -15,5 +15,11 @@
     "gulp-concat": "^2.6.1",
     "gulp-jsmin": "^0.1.5",
     "gulp-less": "^5.0.0"
+  },
+  "dependencies": {
+    "chart.js": "^3.5.1",
+    "markdown-it": "^12.2.0",
+    "pell": "^1.0.6",
+    "turndown": "^7.1.1"
   }
 }

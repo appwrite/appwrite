@@ -9,7 +9,7 @@ const gulpCleanCSS = require('gulp-clean-css');
 
 // Config
 
-const configApp  = {
+const configApp = {
     mainFile: 'app.js',
     src: [
         'public/scripts/dependencies/litespeed.js',
@@ -76,7 +76,7 @@ const configApp  = {
         'public/scripts/views/general/switch.js',
         'public/scripts/views/general/theme.js',
         'public/scripts/views/general/version.js',
-        
+
         'public/scripts/views/paging/back.js',
         'public/scripts/views/paging/next.js',
 
@@ -87,19 +87,18 @@ const configApp  = {
         'public/scripts/views/ui/phases.js',
         'public/scripts/views/ui/trigger.js',
     ],
+
     dest: './public/dist/scripts'
 };
 
 const configDep = {
     mainFile: 'app-dep.js',
     src: [
-        //'node_modules/appwrite/src/sdk.js',
         'public/scripts/dependencies/appwrite.js',
-        'public/scripts/dependencies/chart.js',
-        'public/scripts/dependencies/markdown-it.js',
-        'public/scripts/dependencies/pell.js',
-        'public/scripts/dependencies/prism.js',
-        'public/scripts/dependencies/turndown.js',
+        'node_modules/chart.js/dist/chart.js',
+        'node_modules/markdown-it/dist/markdown-it.js',
+        'node_modules/pell/dist/pell.js',
+        'node_modules/turndown/dist/turndown.js',
     ],
     dest: './public/dist/scripts'
 };
@@ -113,40 +112,40 @@ const config = {
     dest: './public/dist/scripts'
 };
 
-function lessLTR () {
+function lessLTR() {
     return src('./public/styles/default-ltr.less')
         .pipe(gulpLess())
-        .pipe(gulpCleanCSS({compatibility: 'ie8'}))
+        .pipe(gulpCleanCSS({ compatibility: 'ie8' }))
         .pipe(dest('./public/dist/styles'));
 }
 
-function lessRTL () {
+function lessRTL() {
     return src('./public/styles/default-rtl.less')
         .pipe(gulpLess())
-        .pipe(gulpCleanCSS({compatibility: 'ie8'}))
+        .pipe(gulpCleanCSS({ compatibility: 'ie8' }))
         .pipe(dest('./public/dist/styles'));
 }
 
-function concatApp () {
+function concatApp() {
     return src(configApp.src)
         .pipe(gulpConcat(configApp.mainFile))
         .pipe(gulpJsmin())
         .pipe(dest(configApp.dest));
 }
 
-function concatDep () {
+function concatDep() {
     return src(configDep.src)
         .pipe(gulpConcat(configDep.mainFile))
         .pipe(gulpJsmin())
         .pipe(dest(configDep.dest));
 }
 
-function concat () {
+function concat() {
     return src(config.src)
         .pipe(gulpConcat(config.mainFile))
         .pipe(dest(config.dest));
 }
 
-exports.import  = series(concatDep);
-exports.less    = series(lessLTR, lessRTL);
-exports.build   = series(concatApp, concat);
+exports.import = series(concatDep);
+exports.less = series(lessLTR, lessRTL);
+exports.build = series(concatApp, concat);
