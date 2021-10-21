@@ -18,6 +18,7 @@ use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\Kotlin;
 use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Swift;
+use Appwrite\SDK\Language\SwiftClient;
 
 $cli
     ->task('sdks')
@@ -29,7 +30,7 @@ $cli
         $production = ($git) ? (Console::confirm('Type "Appwrite" to push code to production git repos') == 'Appwrite') : false;
         $message = ($git) ? Console::confirm('Please enter your commit message:') : '';
 
-        if(!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x'])) {
+        if(!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x',  '0.11.x'])) {
             throw new Exception('Unknown version given');
         }
 
@@ -137,6 +138,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'swift':
                         $config = new Swift();
+                        $warning = $warning."\n\n > This is the Swift SDK for integrating with Appwrite from your Swift server-side code. If you're looking for the Apple SDK you should check [appwrite/sdk-for-apple](https://github.com/appwrite/sdk-for-apple)";
+                        break;
+                    case 'apple':
+                        $config = new SwiftClient();
                         break;
                     case 'dotnet':
                         $cover = '';
@@ -184,7 +189,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setTwitter(APP_SOCIAL_TWITTER_HANDLE)
                     ->setDiscord(APP_SOCIAL_DISCORD_CHANNEL, APP_SOCIAL_DISCORD)
                     ->setDefaultHeaders([
-                        'X-Appwrite-Response-Format' => '0.10.0',
+                        'X-Appwrite-Response-Format' => '0.11.0',
                     ])
                 ;
                 
@@ -197,6 +202,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 }
 
                 $gitUrl = $language['gitUrl'];
+                $gitBranch = $language['gitBranch'];
+
                 
                 if(!$production) {
                     $gitUrl = 'git@github.com:aw-tests/'.$language['gitRepoName'].'.git';
@@ -206,7 +213,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     \exec('rm -rf '.$target.' && \
                         mkdir -p '.$target.' && \
                         cd '.$target.' && \
-                        git init --initial-branch=master && \
+                        git init --initial-branch='.$gitBranch.' && \
                         git remote add origin '.$gitUrl.' && \
                         git fetch && \
                         git pull '.$gitUrl.' && \
@@ -214,7 +221,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         cp -r '.$result.'/ '.$target.'/ && \
                         git add . && \
                         git commit -m "'.$message.'" && \
-                        git push -u origin master
+                        git push -u origin '.$gitBranch.'
                     ');
 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
