@@ -20,7 +20,7 @@ window.ls.container
 
       // Special case for console index page
 
-      if ("/console" === router.getCurrent().path) {
+      if (router.getCurrent().path === "/console") {
         document.body.classList.add("index");
       } else {
         document.body.classList.remove("index");

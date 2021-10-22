@@ -4492,7 +4492,7 @@
                             message: yield response.text()
                         };
                     }
-                    if (400 <= response.status) {
+                    if (response.status >= 400) {
                         throw new AppwriteException(data === null || data === void 0 ? void 0 : data.message, response.status, data);
                     }
                     const cookieFallback = response.headers.get('X-Fallback-Cookies');
