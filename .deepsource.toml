@@ -1,0 +1,35 @@
+version = 1
+
+[[analyzers]]
+name = "secrets"
+enabled = true
+
+[[analyzers]]
+name = "javascript"
+enabled = true
+
+  [analyzers.meta]
+  plugins = [
+    "angularjs",
+    "react",
+    "angular",
+    "vue",
+    "ember",
+    "meteor"
+  ]
+
+[[analyzers]]
+name = "php"
+enabled = true
+
+[[transformers]]
+name = "prettier"
+enabled = true
+
+[[transformers]]
+name = "standardjs"
+enabled = true
+
+[[transformers]]
+name = "php-cs-fixer"
+enabled = true
