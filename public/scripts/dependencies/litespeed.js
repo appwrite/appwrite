@@ -1,5 +1,5 @@
 
-window.ls=window.ls||{};window.ls.container=function(){let stock={};let listeners={};let namespaces={};let set=function(name,object,singleton,watch=true){if(typeof name!=='string'){throw new Error('var name must be of type string');}
+window.ls=window.ls||{};window.ls.container=(function(){let stock={};let listeners={};let namespaces={};let set=function(name,object,singleton,watch=true){if(typeof name!=='string'){throw new Error('var name must be of type string');}
 if(typeof singleton!=='boolean'){throw new Error('var singleton "'+singleton+'" of service "'+name+'" must be of type boolean');}
 stock[name]={name:name,object:object,singleton:singleton,instance:null,watch:watch,};if(!watch){return this;}
 let binds=listeners[name]||{};for(let key in binds){if(binds.hasOwnProperty(key)){document.dispatchEvent(new CustomEvent(key));}}
@@ -34,7 +34,7 @@ let oldNamespaces=namespaces;namespaces=x;callback();namespaces=oldNamespaces;}}
 let removeNamespace=function(key){delete namespaces[key];return this;}
 let scope=function(path){for(let[key,value]of Object.entries(namespaces)){path=(path.indexOf('.')>-1)?path.replace(key+'.',value+'.'):path.replace(key,value);}
 return path;}
-let container={set:set,get:get,resolve:resolve,path:path,bind:bind,scope:scope,addNamespace:addNamespace,removeNamespace:removeNamespace,stock:stock,listeners:listeners,namespaces:namespaces,};set('container',container,true,false);return container;}();window.ls.container.set('http',function(document){let globalParams=[],globalHeaders=[];let addParam=function(url,param,value){param=encodeURIComponent(param);let a=document.createElement('a');param+=(value?"="+encodeURIComponent(value):"");a.href=url;a.search+=(a.search?"&":"")+param;return a.href;};let request=function(method,url,headers,payload,progress){let i;if(-1===['GET','POST','PUT','DELETE','TRACE','HEAD','OPTIONS','CONNECT','PATCH'].indexOf(method)){throw new Error('var method must contain a valid HTTP method name');}
+let container={set:set,get:get,resolve:resolve,path:path,bind:bind,scope:scope,addNamespace:addNamespace,removeNamespace:removeNamespace,stock:stock,listeners:listeners,namespaces:namespaces,};set('container',container,true,false);return container;}());window.ls.container.set('http',function(document){let globalParams=[],globalHeaders=[];let addParam=function(url,param,value){param=encodeURIComponent(param);let a=document.createElement('a');param+=(value?"="+encodeURIComponent(value):"");a.href=url;a.search+=(a.search?"&":"")+param;return a.href;};let request=function(method,url,headers,payload,progress){let i;if(-1===['GET','POST','PUT','DELETE','TRACE','HEAD','OPTIONS','CONNECT','PATCH'].indexOf(method)){throw new Error('var method must contain a valid HTTP method name');}
 if(typeof url!=='string'){throw new Error('var url must be of type string');}
 if(typeof headers!=='object'){throw new Error('var headers must be of type object');}
 if(typeof url!=='string'){throw new Error('var url must be of type string');}
@@ -55,7 +55,7 @@ let comp=stock[attr];if(typeof comp.template==="function"){comp.template=contain
 if(!comp.template){(function(comp,node,container){execute(comp,node,container);})(comp,node,container);if(length!==attrsLen){x--;}
 if(callback){callback();}
 continue;}
-node.classList.remove('load-end');node.classList.add('load-start');node.$lsSkip=true;http.get(comp.template).then(function(node,comp){return function(data){node.$lsSkip=false;node.innerHTML=data;node.classList.remove('load-start');node.classList.add('load-end');(function(comp,node,container){execute(comp,node,container);})(comp,node,container);parse(node,true);if(callback){callback();}}}(node,comp),function(error){throw new Error('Failed to load comp template: '+error.message);});}}}
+node.classList.remove('load-end');node.classList.add('load-start');node.$lsSkip=true;http.get(comp.template).then((function(node,comp){return function(data){node.$lsSkip=false;node.innerHTML=data;node.classList.remove('load-start');node.classList.add('load-end');(function(comp,node,container){execute(comp,node,container);})(comp,node,container);parse(node,true);if(callback){callback();}}}(node,comp)),function(error){throw new Error('Failed to load comp template: '+error.message);});}}}
 if(true===node.$lsSkip){return;}
 let list=(node)?node.childNodes:[];if(node.$lsSkip===true){list=[];}
 for(let i=0;i<list.length;i++){let child=list[i];parse(child);}};return{stock:stock,add:function(object){if(typeof object!=='object'){throw new Error('object must be of type object');}
@@ -139,4 +139,4 @@ element.dispatchEvent(new Event('looped'));};let template=(element.children.leng
 else{if(debug){console.error('Missing template "'+source+'"');}}
 if(!init){view.render(element);}
 return;}
-http.get(source).then(function(element){return function(data){element.innerHTML=data;view.render(element);element.dispatchEvent(new CustomEvent('template-loaded',{bubbles:true,cancelable:false}));}}(element),function(){throw new Error('Failed loading template');});};check(true);for(let i=0;i<paths.length;i++){let path=paths[i].split('.');while(path.length){container.bind(element,path.join('.'),check);path.pop();}}}});
+http.get(source).then((function(element){return function(data){element.innerHTML=data;view.render(element);element.dispatchEvent(new CustomEvent('template-loaded',{bubbles:true,cancelable:false}));}}(element)),function(){throw new Error('Failed loading template');});};check(true);for(let i=0;i<paths.length;i++){let path=paths[i].split('.');while(path.length){container.bind(element,path.join('.'),check);path.pop();}}}});
