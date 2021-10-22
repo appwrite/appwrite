@@ -83,7 +83,7 @@ docker run -it --rm ,
     appwrite/appwrite:0.11.0
 ```
 
-Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-linux native hosts, the server might take a few minutes to start after installation completes.
+Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after installation completes.
 
 
 For advanced production and custom installation, check out our Docker [environment variables](https://appwrite.io/docs/environment-variables) docs. You can also use our public [docker-compose.yml](https://gist.github.com/eldadfux/977869ff6bdd7312adfd4e629ee15cc5#file-docker-compose-yml) file to manually set up an environment.
@@ -94,7 +94,7 @@ If you are upgrading your Appwrite server from an older version, you should use 
 
 ## Getting Started
 
-Getting started with Appwrite is as easy as creating a new project, choosing your platform, and integrating its SDK in your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
+Getting started with Appwrite is as easy as creating a new project, choosing your platform, and integrating its SDK into your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
 
 * [Getting Started for Web](https://appwrite.io/docs/getting-started-for-web)
 * [Getting Started for Flutter](https://appwrite.io/docs/getting-started-for-flutter)
