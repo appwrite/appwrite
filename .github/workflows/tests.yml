@@ -37,3 +37,6 @@ jobs:
 
     - name: Run Tests
       run: docker compose exec -T appwrite test --debug
+
+    - name: Teardown
+      run: docker compose down -v

@@ -212,7 +212,6 @@ trait DatabaseBase
         $this->assertEquals(201, $string['headers']['status-code']);
         $this->assertEquals('string', $string['body']['key']);
         $this->assertEquals('string', $string['body']['type']);
-        $this->assertEquals('processing', $string['body']['status']);
         $this->assertEquals(false, $string['body']['required']);
         $this->assertEquals(false, $string['body']['array']);
         $this->assertEquals(16, $string['body']['size']);
@@ -221,7 +220,6 @@ trait DatabaseBase
         $this->assertEquals(201, $email['headers']['status-code']);
         $this->assertEquals('email', $email['body']['key']);
         $this->assertEquals('string', $email['body']['type']);
-        $this->assertEquals('processing', $email['body']['status']);
         $this->assertEquals(false, $email['body']['required']);
         $this->assertEquals(false, $email['body']['array']);
         $this->assertEquals('email', $email['body']['format']);
@@ -230,7 +228,6 @@ trait DatabaseBase
         $this->assertEquals(201, $enum['headers']['status-code']);
         $this->assertEquals('enum', $enum['body']['key']);
         $this->assertEquals('string', $enum['body']['type']);
-        $this->assertEquals('processing', $enum['body']['status']);
         $this->assertEquals(false, $enum['body']['required']);
         $this->assertEquals(false, $enum['body']['array']);
         $this->assertEquals('enum', $enum['body']['format']);
@@ -241,7 +238,6 @@ trait DatabaseBase
         $this->assertEquals(201, $ip['headers']['status-code']);
         $this->assertEquals('ip', $ip['body']['key']);
         $this->assertEquals('string', $ip['body']['type']);
-        $this->assertEquals('processing', $ip['body']['status']);
         $this->assertEquals(false, $ip['body']['required']);
         $this->assertEquals(false, $ip['body']['array']);
         $this->assertEquals('ip', $ip['body']['format']);
@@ -250,7 +246,6 @@ trait DatabaseBase
         $this->assertEquals(201, $url['headers']['status-code']);
         $this->assertEquals('url', $url['body']['key']);
         $this->assertEquals('string', $url['body']['type']);
-        $this->assertEquals('processing', $url['body']['status']);
         $this->assertEquals(false, $url['body']['required']);
         $this->assertEquals(false, $url['body']['array']);
         $this->assertEquals('url', $url['body']['format']);
@@ -259,7 +254,6 @@ trait DatabaseBase
         $this->assertEquals(201, $integer['headers']['status-code']);
         $this->assertEquals('integer', $integer['body']['key']);
         $this->assertEquals('integer', $integer['body']['type']);
-        $this->assertEquals('processing', $integer['body']['status']);
         $this->assertEquals(false, $integer['body']['required']);
         $this->assertEquals(false, $integer['body']['array']);
         $this->assertEquals(1, $integer['body']['min']);
@@ -269,7 +263,6 @@ trait DatabaseBase
         $this->assertEquals(201, $float['headers']['status-code']);
         $this->assertEquals('float', $float['body']['key']);
         $this->assertEquals('double', $float['body']['type']);
-        $this->assertEquals('processing', $float['body']['status']);
         $this->assertEquals(false, $float['body']['required']);
         $this->assertEquals(false, $float['body']['array']);
         $this->assertEquals(1.5, $float['body']['min']);
@@ -279,13 +272,12 @@ trait DatabaseBase
         $this->assertEquals(201, $boolean['headers']['status-code']);
         $this->assertEquals('boolean', $boolean['body']['key']);
         $this->assertEquals('boolean', $boolean['body']['type']);
-        $this->assertEquals('processing', $boolean['body']['status']);
         $this->assertEquals(false, $boolean['body']['required']);
         $this->assertEquals(false, $boolean['body']['array']);
         $this->assertEquals(true, $boolean['body']['default']);
 
         // wait for database worker to create attributes
-        sleep(5);
+        sleep(2);
 
         $stringResponse = $this->client->call(Client::METHOD_GET, "/database/collections/{$collectionId}/attributes/{$collectionId}_{$string['body']['key']}",array_merge([
             'content-type' => 'application/json',
