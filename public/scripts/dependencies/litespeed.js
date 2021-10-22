@@ -28,7 +28,7 @@ window.ls.container = (function () {
     }
     const binds = listeners[name] || {}
     for (const key in binds) {
-      if (binds.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(binds, key)) {
         document.dispatchEvent(new CustomEvent(key))
       }
     }
@@ -309,7 +309,7 @@ window.ls.container.set(
           )
         }
         for (const key in headers) {
-          if (headers.hasOwnProperty(key)) {
+          if (Object.prototype.hasOwnProperty.call(headers, key)) {
             xmlhttp.setRequestHeader(key, headers[key])
           }
         }
@@ -492,7 +492,7 @@ window.ls.container.set(
           protected: false
         }
         for (const prop in defaults) {
-          if (!defaults.hasOwnProperty(prop)) {
+          if (!Object.prototype.hasOwnProperty.call(defaults, prop)) {
             continue
           }
           if (prop in object) {
@@ -1163,7 +1163,7 @@ window.ls.container.get('view').add({
           break
         }
         counter++
-        if (!array.hasOwnProperty(prop)) {
+        if (!Object.prototype.hasOwnProperty.call(array, prop)) {
           continue
         }
         children[prop] = template.cloneNode(true)
