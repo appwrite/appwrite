@@ -3,7 +3,7 @@ window.ls=window.ls||{};window.ls.container=function(){let stock={};let listener
 if(typeof singleton!=='boolean'){throw new Error('var singleton "'+singleton+'" of service "'+name+'" must be of type boolean');}
 stock[name]={name:name,object:object,singleton:singleton,instance:null,watch:watch,};if(!watch){return this;}
 let binds=listeners[name]||{};for(let key in binds){if(binds.hasOwnProperty(key)){document.dispatchEvent(new CustomEvent(key));}}
-return this;};let get=function(name){let service=(undefined!==stock[name])?stock[name]:null;if(null==service){return null;}
+return this;};let get=function(name){let service=(undefined!==stock[name])?stock[name]:null;if(null===service){return null;}
 if(service.instance){return service.instance;}
 let instance=(typeof service.object==='function')?this.resolve(service.object):service.object;let skip=false;if(service.watch&&name!=='window'&&name!=='document'&&name!=='element'&&typeof instance==='object'&&instance!==null){let handler={name:service.name,watch:function(){},get:function(target,key){if(key==="__name"){return this.name;}
 if(key==="__watch"){return this.watch;}
