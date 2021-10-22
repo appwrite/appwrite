@@ -104,6 +104,10 @@ class DatabasePermissionsTeamTest extends Scope
     }
 
     /**
+     * Setup database
+     *
+     * Data providers lose object state
+     * so explicitly pass $users to each iteration
      * @return array $users
      */
     public function testSetupDatabase(): array
@@ -140,6 +144,7 @@ class DatabasePermissionsTeamTest extends Scope
     }
 
     /**
+     * Data provider params are passed before test dependencies
      * @depends testSetupDatabase
      * @dataProvider readDocumentsProvider
      */
@@ -157,7 +162,6 @@ class DatabasePermissionsTeamTest extends Scope
         } else {
             $this->assertEquals(404, $documents['headers']['status-code']);
         }
-
     }
 
     /**
@@ -184,6 +188,5 @@ class DatabasePermissionsTeamTest extends Scope
             // 401 if user is a part of team, 404 otherwise
             $this->assertContains($documents['headers']['status-code'], [401, 404]);
         }
-
     }
 }
