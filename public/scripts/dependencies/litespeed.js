@@ -2,7 +2,7 @@
 window.ls=window.ls||{};window.ls.container=function(){let stock={};let listeners={};let namespaces={};let set=function(name,object,singleton,watch=true){if(typeof name!=='string'){throw new Error('var name must be of type string');}
 if(typeof singleton!=='boolean'){throw new Error('var singleton "'+singleton+'" of service "'+name+'" must be of type boolean');}
 stock[name]={name:name,object:object,singleton:singleton,instance:null,watch:watch,};if(!watch){return this;}
-let binds=listeners[name]||{};for(let key in binds){if(binds.hasOwnProperty(key)){document.dispatchEvent(new CustomEvent(key));}}
+let binds=listeners[name]||{};for(let key in binds){if(Object.prototype.hasOwnProperty.call(binds, key)){document.dispatchEvent(new CustomEvent(key));}}
 return this;};let get=function(name){let service=(undefined!==stock[name])?stock[name]:null;if(null===service){return null;}
 if(service.instance){return service.instance;}
 let instance=(typeof service.object==='function')?this.resolve(service.object):service.object;let skip=false;if(service.watch&&name!=='window'&&name!=='document'&&name!=='element'&&typeof instance==='object'&&instance!==null){let handler={name:service.name,watch:function(){},get:function(target,key){if(key==="__name"){return this.name;}
@@ -40,7 +40,7 @@ if(typeof headers!=='object'){throw new Error('var headers must be of type objec
 if(typeof url!=='string'){throw new Error('var url must be of type string');}
 for(i=0;i<globalParams.length;i++){url=addParam(url,globalParams[i].key,globalParams[i].value);}
 return new Promise(function(resolve,reject){let xmlhttp=new XMLHttpRequest();xmlhttp.open(method,url,true);for(i=0;i<globalHeaders.length;i++){xmlhttp.setRequestHeader(globalHeaders[i].key,globalHeaders[i].value);}
-for(let key in headers){if(headers.hasOwnProperty(key)){xmlhttp.setRequestHeader(key,headers[key]);}}
+for(let key in headers){if(Object.prototype.hasOwnProperty.call(headers, key)){xmlhttp.setRequestHeader(key,headers[key]);}}
 xmlhttp.onload=function(){if(4===xmlhttp.readyState&&200===xmlhttp.status){resolve(xmlhttp.response);}
 else{document.dispatchEvent(new CustomEvent('http-'+method.toLowerCase()+'-'+xmlhttp.status));reject(new Error(xmlhttp.statusText));}};if(progress){xmlhttp.addEventListener('progress',progress);xmlhttp.upload.addEventListener('progress',progress,false);}
 xmlhttp.onerror=function(){reject(new Error("Network Error"));};xmlhttp.send(payload);})};return{'get':function(url){return request('GET',url,{},'')},'post':function(url,headers,payload){return request('POST',url,headers,payload)},'put':function(url,headers,payload){return request('PUT',url,headers,payload)},'patch':function(url,headers,payload){return request('PATCH',url,headers,payload)},'delete':function(url){return request('DELETE',url,{},'')},'addGlobalParam':function(key,value){globalParams.push({key:key,value:value});},'addGlobalHeader':function(key,value){globalHeaders.push({key:key,value:value});}}},true,false);window.ls.container.set('cookie',function(document){function get(name){let value="; "+document.cookie,parts=value.split("; "+name+"=");if(parts.length===2){return parts.pop().split(";").shift();}
@@ -59,7 +59,7 @@ node.classList.remove('load-end');node.classList.add('load-start');node.$lsSkip=
 if(true===node.$lsSkip){return;}
 let list=(node)?node.childNodes:[];if(node.$lsSkip===true){list=[];}
 for(let i=0;i<list.length;i++){let child=list[i];parse(child);}};return{stock:stock,add:function(object){if(typeof object!=='object'){throw new Error('object must be of type object');}
-let defaults={'selector':'','controller':function(){},'template':'','repeat':false,'protected':false};for(let prop in defaults){if(!defaults.hasOwnProperty(prop)){continue;}
+let defaults={'selector':'','controller':function(){},'template':'','repeat':false,'protected':false};for(let prop in defaults){if(!Object.prototype.hasOwnProperty.call(defaults, prop)){continue;}
 if(prop in object){continue;}
 object[prop]=defaults[prop];}
 if(!object.selector){throw new Error('View component is missing a selector attribute');}
@@ -132,7 +132,7 @@ else{element.style.removeProperty('display');element.style.removeProperty('visib
 if(prv===true&&element.$lsSkip===false){view.render(element)}};check();for(let i=0;i<paths.length;i++){let path=paths[i].split('.');while(path.length){container.bind(element,path.join('.'),check);path.pop();}}}});window.ls.container.get('view').add({selector:'data-ls-loop',template:false,nested:false,controller:function(element,view,container,window,expression){let expr=expression.parse(element.getAttribute('data-ls-loop'));let as=element.getAttribute('data-ls-as');let key=element.getAttribute('data-ls-key')||'$index';let limit=parseInt(expression.parse(element.getAttribute('data-limit')||'')||-1);let debug=element.getAttribute('data-debug')||false;let echo=function(){let array=container.path(expr);let counter=0;array=(!array)?[]:array;let watch=!!(array&&array.__proxy);while(element.hasChildNodes()){element.removeChild(element.lastChild);element.lastChild=null;}
 if(array instanceof Array&&typeof array!=='object'){throw new Error('Reference value must be array or object. '+(typeof array)+' given');}
 let children=[];element.$lsSkip=true;element.style.visibility=(0===array.length&&element.style.visibility=='')?'hidden':'visible';for(let prop in array){if(counter==limit){break;}
-counter++;if(!array.hasOwnProperty(prop)){continue;}
+counter++;if(!Object.prototype.hasOwnProperty.call(array, prop)){continue;}
 children[prop]=template.cloneNode(true);element.appendChild(children[prop]);(index=>{let context=expr+'.'+index;container.addNamespace(as,context);if(debug){console.info('debug-ls-loop','index',index);console.info('debug-ls-loop','context',context);console.info('debug-ls-loop','context-path',container.path(context).name);console.info('debug-ls-loop','namespaces',container.namespaces);}
 container.set(as,container.path(context),true,watch);container.set(key,index,true,false);view.render(children[prop]);container.removeNamespace(as);})(prop);}
 element.dispatchEvent(new Event('looped'));};let template=(element.children.length===1)?element.children[0]:window.document.createElement('li');echo();container.bind(element,expr+'.length',echo);let path=(expr+'.length').split('.');while(path.length){container.bind(element,path.join('.'),echo);path.pop();}}});window.ls.container.get('view').add({selector:'data-ls-template',template:false,controller:function(element,view,http,expression,document,container){let template=element.getAttribute('data-ls-template')||'';let type=element.getAttribute('data-type')||'url';let debug=element.getAttribute('data-debug')||false;let paths=[];let check=function(init=false){let source=expression.parse(template);paths=expression.getPaths();element.innerHTML='';if('script'===type){let inlineTemplate=document.getElementById(source);if(inlineTemplate&&inlineTemplate.innerHTML){element.innerHTML=inlineTemplate.innerHTML;element.dispatchEvent(new CustomEvent('template-loaded',{bubbles:true,cancelable:false}));}

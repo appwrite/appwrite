@@ -10,7 +10,7 @@
     (global = global || self, global.Chart = factory(global.moment));
     }(this, (function (moment) { 'use strict';
     
-    moment = moment && moment.hasOwnProperty('default') ? moment['default'] : moment;
+    moment = moment && Object.prototype.hasOwnProperty.call(moment, 'default') ? moment['default'] : moment;
     
     function createCommonjsModule(fn, module) {
         return module = { exports: {} }, fn(module, module.exports), module.exports;
@@ -181,7 +181,7 @@
     
     var reverseKeywords = {};
     for (var key in colorName) {
-        if (colorName.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(colorName, key)) {
             reverseKeywords[colorName[key]] = key;
         }
     }
@@ -206,7 +206,7 @@
     
     // hide .channels and .labels properties
     for (var model in convert) {
-        if (convert.hasOwnProperty(model)) {
+        if (Object.prototype.hasOwnProperty.call(convert, model)) {
             if (!('channels' in convert[model])) {
                 throw new Error('missing channels property: ' + model);
             }
@@ -363,7 +363,7 @@
         var currentClosestKeyword;
     
         for (var keyword in colorName) {
-            if (colorName.hasOwnProperty(keyword)) {
+            if (Object.prototype.hasOwnProperty.call(colorName, keyword)) {
                 var value = colorName[keyword];
     
                 // Compute comparative distance
@@ -1957,7 +1957,7 @@
             var value, type;
     
             for (var prop in source) {
-                if (source.hasOwnProperty(prop)) {
+                if (Object.prototype.hasOwnProperty.call(source, prop)) {
                     value = source[prop];
                     type = ({}).toString.call(value);
                     if (type === '[object Array]') {
@@ -2319,7 +2319,7 @@
     
             if (helpers.isObject(tval) && helpers.isObject(sval)) {
                 helpers.mergeIf(tval, sval);
-            } else if (!target.hasOwnProperty(key)) {
+            } else if (!Object.prototype.hasOwnProperty.call(target, key)) {
                 target[key] = helpers.clone(sval);
             }
         },
@@ -2391,7 +2391,7 @@
          */
         inherits: function(extensions) {
             var me = this;
-            var ChartElement = (extensions && extensions.hasOwnProperty('constructor')) ? extensions.constructor : function() {
+            var ChartElement = (extensions && Object.prototype.hasOwnProperty.call(extensions, 'constructor')) ? extensions.constructor : function() {
                 return me.apply(this, arguments);
             };
     
@@ -3279,7 +3279,7 @@
     
             // if a value is added to the model after pivot() has been called, the view
             // doesn't contain it, so let's initialize the view to the target value.
-            if (!view.hasOwnProperty(key)) {
+            if (!Object.prototype.hasOwnProperty.call(view, key)) {
                 view[key] = target;
             }
     
@@ -3289,7 +3289,7 @@
                 continue;
             }
     
-            if (!start.hasOwnProperty(key)) {
+            if (!Object.prototype.hasOwnProperty.call(start, key)) {
                 start[key] = actual;
             }
     
@@ -7262,7 +7262,7 @@
     
             for (; i < ilen; ++i) {
                 prop = props[i];
-                if (options.hasOwnProperty(prop)) {
+                if (Object.prototype.hasOwnProperty.call(options, prop)) {
                     item[prop] = options[prop];
                 }
             }
@@ -8098,7 +8098,7 @@
         },
         updateScaleDefaults: function(type, additions) {
             var me = this;
-            if (me.defaults.hasOwnProperty(type)) {
+            if (Object.prototype.hasOwnProperty.call(me.defaults, type)) {
                 me.defaults[type] = helpers$1.extend(me.defaults[type], additions);
             }
         },
@@ -16034,7 +16034,7 @@
     // Loading built-in plugins
     
     for (var k in plugins) {
-        if (plugins.hasOwnProperty(k)) {
+        if (Object.prototype.hasOwnProperty.call(plugins, k)) {
             core_controller.plugins.register(plugins[k]);
         }
     }

@@ -6051,7 +6051,7 @@ module.exports = function text(state, silent) {
 
     function isOptionsObj(obj) {
         return Object.keys(obj || {}).reduce(function (acc, k) {
-            return acc || defaultOptions.hasOwnProperty(k);
+            return acc || Object.prototype.hasOwnProperty.call(defaultOptions, k);
         }, false);
     }
 
@@ -7925,7 +7925,7 @@ module.exports = function text(state, silent) {
                 } else {
                     // in Narwhal or RingoJS v0.7.0-
                     for (key in punycode) {
-                        punycode.hasOwnProperty(key) && (freeExports[key] = punycode[key]);
+                        Object.prototype.hasOwnProperty.call(punycode, key) && (freeExports[key] = punycode[key]);
                     }
                 }
             } else {
