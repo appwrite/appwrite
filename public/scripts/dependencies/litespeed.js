@@ -36,7 +36,7 @@ window.ls.container = (function () {
   }
   const get = function (name) {
     const service = undefined !== stock[name] ? stock[name] : null
-    if (service == null) {
+    if (service === null) {
       return null
     }
     if (service.instance) {
