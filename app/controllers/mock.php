@@ -237,6 +237,10 @@ App::post('/v1/mock/tests/general/upload')
     ->action(function ($x, $y, $z, $file, $request) {
         /** @var Utopia\Swoole\Request $request */
         
+        // support multipart upload
+        // validate md5 for each chunk
+        // validate individual chunk and chunk size
+
         $file = $request->getFiles('file');
         $file['tmp_name'] = (\is_array($file['tmp_name'])) ? $file['tmp_name'] : [$file['tmp_name']];
         $file['name'] = (\is_array($file['name'])) ? $file['name'] : [$file['name']];
