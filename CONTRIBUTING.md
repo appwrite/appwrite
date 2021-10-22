@@ -190,11 +190,11 @@ Although the Appwrite API is a monolithic app, it has a very clear separation of
 
 Each container in Appwrite is a microservice on its own. Each service is an independent process that can scale without regard to any of the other services.
 
-Currently, all of the Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443, who, by default, are used to expose the Appwrite HTTP API.
+Currently, all of the Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public ports 80 and 443, which, by default, are used to expose the Appwrite HTTP API.
 
 ## Ports
 
-Appwrite dev version uses ports 80 and 443 as an entry point to the Appwrite API and console. We also expose multiple ports in the range of 9500-9504 for debugging some of the Appwrite containers on dev mode. If you have any conflicts with the ports running on your system, you can easily replace them by editing Appwrite's docker-compose.yml file and executing `docker-compose up -d` command.
+Appwrite dev version uses ports 80 and 443 as an entry point to the Appwrite API and console. We also expose multiple ports in the range of 9500-9504 for debugging some of the Appwrite containers on dev mode. If you have any conflicts with the ports running on your system, you can easily replace them by editing Appwrite's docker-compose.yml file and executing the `docker-compose up -d` command.
 
 ## Technology Stack
 
@@ -230,7 +230,7 @@ We use prettier for our JS coding standards and auto-formatting our code.
 
 ## Scalability, Speed, and Performance
 
-Appwrite is built to scale. Please keep in mind that the Appwrite stack can run in different environments and different scales.
+Appwrite is built to scale. Please keep in mind that the Appwrite stack can run in different environments and at different scales.
 
 We wish Appwrite will be as easy to set up and in a single, localhost, and easy to grow to a large environment with dozens and even hundreds of instances.
 
@@ -286,9 +286,9 @@ The Runtimes for all supported cloud functions (multicore builds) can be found a
 
 ## Debug
 
-Appwrite uses [yasd](https://github.com/swoole/yasd) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension or if you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection.
+Appwrite uses [yasd](https://github.com/swoole/yasd) debugger, which can be made available during the build of Appwrite. You can connect to the debugger using VS Code [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension or if you are in PHP Storm you don't need any plugin. Below are the settings required for a remote debugger connection.
 
-First, you need to create an init file. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php** and there change the IP address to your development machine's IP. Without the proper IP address debugger wont connect. And you also need to set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
+First, you need to create an init file. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php** and there change the IP address to your development machine's IP. Without the proper IP address debugger, won't connect. And you also need to set **DEBUG** to build arg in **appwrite** service in the **docker-compose.yml** file.
 
 ### VS Code Launch Configuration
 
@@ -407,7 +407,7 @@ Sending feedback is a great way for us to understand your different use cases of
 
 ### Submitting New Ideas
 
-If you think Appwrite could use a new feature, please open an issue on our GitHub repository, stating as much information as you can think about your new idea and it's implications. We would also use this issue to gather more information, get more feedback from the community, and have a proper discussion about the new feature.
+If you think Appwrite could use a new feature, please open an issue on our GitHub repository, stating as much information as you can think about your new idea and its implications. We would also use this issue to gather more information, get more feedback from the community, and have a proper discussion about the new feature.
 
 ### Improving Documentation
 
