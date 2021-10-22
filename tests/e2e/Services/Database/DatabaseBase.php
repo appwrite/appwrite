@@ -277,7 +277,7 @@ trait DatabaseBase
         $this->assertEquals(true, $boolean['body']['default']);
 
         // wait for database worker to create attributes
-        sleep(10);
+        sleep(30);
 
         $stringResponse = $this->client->call(Client::METHOD_GET, "/database/collections/{$collectionId}/attributes/{$collectionId}_{$string['body']['key']}",array_merge([
             'content-type' => 'application/json',

@@ -42,4 +42,4 @@ jobs:
       if: always()
       run: |
         docker compose down -v
-        docker ps -q | xargs docker stop
+        docker ps -aq | xargs docker rm --force

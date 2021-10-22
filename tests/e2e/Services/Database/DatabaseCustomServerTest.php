@@ -588,7 +588,7 @@ class DatabaseCustomServerTest extends Scope
             $this->assertEquals(201, $attribute['headers']['status-code']);
         }
 
-        sleep(5);
+        sleep(30);
 
         $tooMany = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
             'content-type' => 'application/json',
