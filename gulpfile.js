@@ -99,6 +99,32 @@ const configDep = {
         'node_modules/markdown-it/dist/markdown-it.js',
         'node_modules/pell/dist/pell.js',
         'node_modules/turndown/dist/turndown.js',
+        // PrismJS Core
+        'node_modules/prismjs/components/prism-core.min.js',
+        // PrismJS Languages
+        'node_modules/prismjs/components/prism-markup.min.js',
+        'node_modules/prismjs/components/prism-css.min.js',
+        'node_modules/prismjs/components/prism-clike.min.js',
+        'node_modules/prismjs/components/prism-javascript.min.js',
+        'node_modules/prismjs/components/prism-bash.min.js',
+        'node_modules/prismjs/components/prism-csharp.min.js',
+        'node_modules/prismjs/components/prism-dart.min.js',
+        'node_modules/prismjs/components/prism-go.min.js',
+        'node_modules/prismjs/components/prism-graphql.min.js',
+        'node_modules/prismjs/components/prism-http.min.js',
+        'node_modules/prismjs/components/prism-java.min.js',
+        'node_modules/prismjs/components/prism-json.min.js',
+        'node_modules/prismjs/components/prism-kotlin.min.js',
+        'node_modules/prismjs/components/prism-markup-templating.min.js',
+        'node_modules/prismjs/components/prism-php.min.js',
+        'node_modules/prismjs/components/prism-powershell.min.js',
+        'node_modules/prismjs/components/prism-python.min.js',
+        'node_modules/prismjs/components/prism-ruby.min.js',
+        'node_modules/prismjs/components/prism-swift.min.js',
+        'node_modules/prismjs/components/prism-typescript.min.js',
+        'node_modules/prismjs/components/prism-yaml.min.js',
+        // PrismJS Plugins
+        'node_modules/prismjs/plugins/line-numbers/prism-line-numbers.min.js',
     ],
     dest: './public/dist/scripts'
 };

@@ -20,6 +20,7 @@
     "chart.js": "^3.5.1",
     "markdown-it": "^12.2.0",
     "pell": "^1.0.6",
+    "prismjs": "^1.25.0",
     "turndown": "^7.1.1"
   }
 }
