@@ -1,6 +1,6 @@
 # Contributing
 
-We would ❤️ for you to contribute to Appwrite and help make it better! We want contributing to Appwrite to be fun, enjoyable, and educational for anyone and everyone. All contributions are welcome, including issues, new docs as well as updates and tweaks, blog posts, workshops, and more.
+We would ❤️ for you to contribute to Appwrite and help make it better! We want to contribute to Appwrite to be fun, enjoyable, and educational for anyone and everyone. All contributions are welcome, including issues, new docs as well as updates and tweaks, blog posts, workshops, and more.
 
 ## How to Start?
 
@@ -12,7 +12,7 @@ Help us keep Appwrite open and inclusive. Please read and follow our [Code of Co
 
 ## Submit a Pull Request 🚀
 
-Branch naming convention is as following 
+Branch naming convention is as follows 
 
 `TYPE-ISSUE_ID-DESCRIPTION`
 
@@ -29,9 +29,9 @@ When `TYPE` can be:
 - **fix** - a bug fix
 - **refactor** - code change that neither fixes a bug nor adds a feature
 
-**All PRs must include a commit message with the changes description!** 
+**All PRs must include a commit message with the description of the changes!** 
 
-For the initial start, fork the project and use git clone command to download the repository to your computer. A standard procedure for working on an issue would be to:
+For the initial start, fork the project and use the git clone command to download the repository to your computer. A standard procedure for working on an issue would be to:
 
 1. `git pull`, before creating a new branch, pull the changes from upstream. Your master needs to be up to date.
 ```
@@ -92,7 +92,7 @@ After finishing the installation process, you can start writing and editing code
 
 
 #### Advanced Topics
-We love to create issues that are good for beginners and label them as `good first issue` or `hacktoberfest`, but some more advanced topics might require extra knowledge. Below is a list of links you can use to learn more about some of the more advance topics that will help you master the Appwrite codebase.
+We love to create issues that are good for beginners and label them as `good first issue` or `hacktoberfest`, but some more advanced topics might require extra knowledge. Below is a list of links you can use to learn more about some of the more advanced topics that will help you master the Appwrite codebase.
 
 ##### Tools and Libs
 - [Docker](https://www.docker.com/get-started)
