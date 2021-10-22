@@ -13,37 +13,6 @@ class DatabasePermissionsGuestTest extends Scope
     use SideClient;
     use DatabasePermissionsScope;
 
-    public array $mockPermissions = [
-        [
-            'read' => ['role:all'],
-            'write' => []
-        ],
-        [
-            'read' => ['role:member'],
-            'write' => []
-        ],
-        [
-            'read' => ['user:random'],
-            'write' => []
-        ],
-        [
-            'read' => [],
-            'write' => ['role:all']
-        ],
-        [
-            'read' => ['role:all'],
-            'write' => ['role:all']
-        ],
-        [
-            'read' => ['role:member'],
-            'write' => ['role:member']
-        ],
-        [
-            'read' => ['role:all'],
-            'write' => ['role:member']
-        ]
-    ];
-
     public function createCollection(): array
     {
         $movies = $this->client->call(Client::METHOD_POST, '/database/collections', $this->getServerHeader(), [
@@ -67,21 +36,37 @@ class DatabasePermissionsGuestTest extends Scope
         return $collection;
     }
 
-    public function testReadDocuments()
+    /**
+     * [string[] $read, string[] $write]
+     */
+    public function readDocumentsProvider()
+    {
+        return [
+            [['role:all'], []],
+            [['role:member'], []],
+            [[] ,['role:all']],
+            [['role:all'], ['role:all']],
+            [['role:member'], ['role:member']],
+            [['role:all'], ['role:member']],
+        ];
+    }
+
+    /**
+     * @dataProvider readDocumentsProvider
+     */
+    public function testReadDocuments($read, $write)
     {
         $collection = $this->createCollection();
 
-        foreach ($this->mockPermissions as $permissions) {
-            $response = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collection['id'] . '/documents', $this->getServerHeader(), [
-                'documentId' => 'unique()',
-                'data' => [
-                    'title' => 'Lorem',
-                ],
-                'read' => $permissions['read'],
-                'write' => $permissions['write'],
-            ]);
-            $this->assertEquals(201, $response['headers']['status-code']);
-        }
+        $response = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collection['id'] . '/documents', $this->getServerHeader(), [
+            'documentId' => 'unique()',
+            'data' => [
+                'title' => 'Lorem',
+            ],
+            'read' => $read,
+            'write' => $write,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collection['id']  . '/documents', [
             'content-type' => 'application/json',
