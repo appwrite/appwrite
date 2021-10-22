@@ -26,14 +26,14 @@ jobs:
         echo "_APP_FUNCTIONS_RUNTIMES=php-8.0" >> .env
         docker pull composer:2.0
         docker pull php:8.0-cli-alpine
-        docker-compose build
-        docker-compose up -d
+        docker compose build
+        docker compose up -d
         sleep 10
     - name: Doctor
-      run: docker-compose exec -T appwrite doctor
+      run: docker compose exec -T appwrite doctor
 
     - name: Environment Variables
-      run:  docker-compose exec -T appwrite vars
+      run:  docker compose exec -T appwrite vars
 
     - name: Run Tests
-      run: docker-compose exec -T appwrite test --debug
+      run: docker compose exec -T appwrite test --debug
