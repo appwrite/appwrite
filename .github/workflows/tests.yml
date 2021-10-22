@@ -26,7 +26,7 @@ jobs:
         echo "_APP_FUNCTIONS_RUNTIMES=php-8.0" >> .env
         docker pull composer:2.0
         docker pull php:8.0-cli-alpine
-        docker compose build
+        docker compose build --progress=plain
         docker compose up -d
         sleep 10
     - name: Doctor
