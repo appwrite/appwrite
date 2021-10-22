@@ -13,66 +13,63 @@ class DatabasePermissionsMemberTest extends Scope
     use SideClient;
     use DatabasePermissionsScope;
 
-    public array $mockPermissions = [
-        [
-            'read' => ['role:all'],
-            'write' => []
-        ],
-        [
-            'read' => ['role:member'],
-            'write' => []
-        ],
-        [
-            'read' => ['user:random'],
-            'write' => []
-        ],
-        [
-            'read' => ['user:lorem'],
-            'write' => ['user:lorem']
-        ],
-        [
-            'read' => ['user:dolor'],
-            'write' => ['user:dolor']
-        ],
-        [
-            'read' => ['user:dolor', 'user:lorem'],
-            'write' => ['user:dolor']
-        ],
-        [
-            'read' => [],
-            'write' => ['role:all']
-        ],
-        [
-            'read' => ['role:all'],
-            'write' => ['role:all']
-        ],
-        [
-            'read' => ['role:member'],
-            'write' => ['role:member']
-        ],
-        [
-            'read' => ['role:all'],
-            'write' => ['role:member']
-        ]
-    ];
+    public array $collections = [];
 
-    public function createCollections(): array
+    public function createUsers(): array
     {
-        $movies = $this->client->call(Client::METHOD_POST, '/database/collections', $this->getServerHeader(), [
+        return [
+            'user1' => $this->createUser('user1', 'lorem@ipsum.com'),
+            'user2' => $this->createUser('user2', 'dolor@ipsum.com'),
+        ];
+    }
+
+    /**
+     * [string[] $read, string[] $write]
+     */
+    public function readDocumentsProvider()
+    {
+        return [
+            [['role:all'], []],
+            [['role:member'], []],
+            [['user:random'], []],
+            [['user:lorem'] ,['user:lorem']],
+            [['user:dolor'] ,['user:dolor']],
+            [['user:dolor', 'user:lorem'] ,['user:dolor']],
+            [[], ['role:all']],
+            [['role:all'], ['role:all']],
+            [['role:member'], ['role:member']],
+            [['role:all'], ['role:member']],
+        ];
+    }
+
+    /**
+     * Setup database
+     *
+     * Data providers lose object state
+     * so explicitly pass [$users, $collections] to each iteration
+     * @return array
+     */
+    public function testSetupDatabase(): array
+    {
+        $this->createUsers();
+
+        $public = $this->client->call(Client::METHOD_POST, '/database/collections', $this->getServerHeader(), [
             'collectionId' => 'unique()',
             'name' => 'Movies',
             'read' => ['role:all'],
             'write' => ['role:all'],
             'permission' => 'document',
         ]);
+        $this->assertEquals(201, $public['headers']['status-code']);
 
-        $collections = ['public' => $movies['body']['$id']];
+        $this->collections = ['public' => $public['body']['$id']];
 
-        $this->client->call(Client::METHOD_POST, '/database/collections/' . $collections['public'] . '/attributes/string', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/database/collections/' . $this->collections['public'] . '/attributes/string', $this->getServerHeader(), [
             'attributeId' => 'title',
             'size' => 256,
             'required' => true,
         ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $private = $this->client->call(Client::METHOD_POST, '/database/collections', $this->getServerHeader(), [
             'collectionId' => 'unique()',
@@ -81,50 +78,54 @@ class DatabasePermissionsMemberTest extends Scope
             'write' => ['role:member'],
             'permission' => 'document',
         ]);
+        $this->assertEquals(201, $private['headers']['status-code']);
 
-        $collections['private'] = $private['body']['$id'];
+        $this->collections['private'] = $private['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/database/collections/' . $collections['private'] . '/attributes/string', $this->getServerHeader(), [
+        $this->client->call(Client::METHOD_POST, '/database/collections/' . $this->collections['private'] . '/attributes/string', $this->getServerHeader(), [
             'attributeId' => 'title',
             'size' => 256,
             'required' => true,
         ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         sleep(2);
 
-        return $collections;
+        return [
+            'users' => $this->users,
+            'collections' => $this->collections
+        ];
     }
 
-    public function testReadDocuments()
+    /**
+     * Data provider params are passed before test dependencies
+     * @dataProvider readDocumentsProvider
+     * @depends testSetupDatabase
+     */
+    public function testReadDocuments($read, $write, $data)
     {
-        $user1 = $this->createUser('lorem', 'lorem@ipsum.com');
-        $user2 = $this->createUser('dolor', 'dolor@ipsum.com');
+        $users = $data['users'];
+        $collections = $data['collections'];
 
-        $collections = $this->createCollections();
+        $response = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collections['public'] . '/documents', $this->getServerHeader(), [
+            'documentId' => 'unique()',
+            'data' => [
+                'title' => 'Lorem',
+            ],
+            'read' => $read,
+            'write' => $write,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
-        foreach ($this->mockPermissions as $permissions) {
-            $response = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collections['public'] . '/documents', $this->getServerHeader(), [
-                'documentId' => 'unique()',
-                'data' => [
-                    'title' => 'Lorem',
-                ],
-                'read' => $permissions['read'],
-                'write' => $permissions['write'],
-            ]);
-            $this->assertEquals(201, $response['headers']['status-code']);
-        }
-
-        foreach ($this->mockPermissions as $permissions) {
-            $response = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collections['private'] . '/documents', $this->getServerHeader(), [
-                'documentId' => 'unique()',
-                'data' => [
-                    'title' => 'Lorem',
-                ],
-                'read' => $permissions['read'],
-                'write' => $permissions['write'],
-            ]);
-            $this->assertEquals(201, $response['headers']['status-code']);
-        }
+        $response = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collections['private'] . '/documents', $this->getServerHeader(), [
+            'documentId' => 'unique()',
+            'data' => [
+                'title' => 'Lorem',
+            ],
+            'read' => $read,
+            'write' => $write,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         /**
          * Check role:all collection
@@ -133,11 +134,11 @@ class DatabasePermissionsMemberTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user1['session'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $users['user1']['session'],
         ]);
 
         foreach ($documents['body']['documents'] as $document) {
-            $hasPermissions = \array_reduce(['role:all', 'role:member', 'user:' . $user1['$id']], function ($carry, $item) use ($document) {
+            $hasPermissions = \array_reduce(['role:all', 'role:member', 'user:' . $users['user1']['$id']], function ($carry, $item) use ($document) {
                 return $carry ? true : \in_array($item, $document['$read']);
             }, false);
             $this->assertTrue($hasPermissions);
@@ -150,16 +151,15 @@ class DatabasePermissionsMemberTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user1['session'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $users['user1']['session'],
         ]);
 
         foreach ($documents['body']['documents'] as $document) {
-            $hasPermissions = \array_reduce(['role:all', 'role:member', 'user:' . $user1['$id']], function ($carry, $item) use ($document) {
+            $hasPermissions = \array_reduce(['role:all', 'role:member', 'user:' . $users['user1']['$id']], function ($carry, $item) use ($document) {
                 return $carry ? true : \in_array($item, $document['$read']);
             }, false);
             $this->assertTrue($hasPermissions);
         }
 
-        
     }
 }
