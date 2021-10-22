@@ -28,7 +28,7 @@ window.ls.container = (function () {
     }
     const binds = listeners[name] || {}
     for (const key in binds) {
-      if (Object.prototype.hasOwnProperty.call(binds, key)) {
+      if (binds.hasOwnProperty(key)) {
         document.dispatchEvent(new CustomEvent(key))
       }
     }
@@ -36,7 +36,7 @@ window.ls.container = (function () {
   }
   const get = function (name) {
     const service = undefined !== stock[name] ? stock[name] : null
-    if (service === null) {
+    if (service == null) {
       return null
     }
     if (service.instance) {
@@ -309,7 +309,7 @@ window.ls.container.set(
           )
         }
         for (const key in headers) {
-          if (Object.prototype.hasOwnProperty.call(headers, key)) {
+          if (headers.hasOwnProperty(key)) {
             xmlhttp.setRequestHeader(key, headers[key])
           }
         }
@@ -492,7 +492,7 @@ window.ls.container.set(
           protected: false
         }
         for (const prop in defaults) {
-          if (!Object.prototype.hasOwnProperty.call(defaults, prop)) {
+          if (!defaults.hasOwnProperty(prop)) {
             continue
           }
           if (prop in object) {
@@ -1163,7 +1163,7 @@ window.ls.container.get('view').add({
           break
         }
         counter++
-        if (!Object.prototype.hasOwnProperty.call(array, prop)) {
+        if (!array.hasOwnProperty(prop)) {
           continue
         }
         children[prop] = template.cloneNode(true)
