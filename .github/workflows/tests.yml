@@ -39,6 +39,7 @@ jobs:
       run: docker compose exec -T appwrite test --debug
 
     - name: Teardown
+      if: always()
       run: |
         docker compose down -v
         docker ps -q | xargs docker stop
