@@ -1,6 +1,6 @@
-name: Other
+name: :sparkles:Other
 description: Use this for any other issues.
-title: "[OTHER]"
+title: "[:sparkles:OTHER]"
 body:
   - type: markdown
     attributes:
@@ -16,7 +16,7 @@ body:
   - type: textarea
     id: extrainfo
     attributes:
-      label: Additional information
+      label: ":heavy_plus_sign:  Additional information"
       description: Is there anything else we should know about this issue?
     validations:
       required: false
