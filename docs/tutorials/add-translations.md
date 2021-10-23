@@ -24,13 +24,13 @@ Before making any changes, you will need to fork Appwrite's repository to clean 
 
 ![Fork button](images/fork.png)
 
-This will redirect you from `github.com/appwrite/appwrite` to `github.com/YOUR_USERNAME/appwrite,` meaning all changes you do are only done inside your repository. Once you are there, click the highlighted `Code` button, copy the URL and clone the repository to your computer using the `git clone command:
+This will redirect you from `github.com/appwrite/appwrite` to `github.com/YOUR_USERNAME/appwrite` , meaning all changes you do are only done inside your repository. Once you are there, click the highlighted `Code` button, copy the URL and clone the repository to your computer using the `git clone' command:
 
 ```shell
 $ git clone COPIED_URL
 ```
 
-> To fork a repository, you will need a basic understanding of CLI and git-CLI binaries installed. If you are a beginner, we recommend you to use `Github Desktop.` It is a clean and straightforward visual Git client.
+> To fork a repository, you will need a basic understanding of CLI and git-cli binaries installed. If you are a beginner, we recommend you to use `Github Desktop.` It is a clean and straightforward visual Git client.
 
 Finally, you will need to create a `feat-XXX-YYY-translation` branch based on the `locale` branch and switch to it. The `XXX` should represent the issue ID and `YYY` the language name.
 
@@ -66,7 +66,7 @@ We maintain a [`locale branch`](https://github.com/appwrite/appwrite/tree/locale
 
     ```json
     {
-        "settings.inspire": "\" The art of being wise is the art of knowing what to overlook.\","
+        "settings.inspire": "\" The art of being wise is the art of knowing what to overlook.\"",
         "settings.locale": "en",
         "settings.direction": "ltr",
         "emails.sender": "%s Team",
@@ -123,9 +123,9 @@ Once you're happy with your translations, you can export them. Head over to the 
 
 ![Exporting](images/export.png)
 
-> **Attention! 🛑** There are two JSON exports. Please make sure to export the one saying `Key-value JSON.` Refer to the screenshot if you are not sure which one is correct.
+> **Attention! 🛑** There are two JSON exports. Please make sure to export the one saying `Key-value JSON`. Refer to the screenshot if you are not sure which one is correct.
 
-After exporting a JSON file, we need to rename it to follow the **[ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)** standards. You can use [languages.php](https://github.com/appwrite/appwrite/blob/locale/app/config/locale/languages.php) file to find your language code when contributing to your language. For example, Spanish translation should have a file called `es.json.`
+After exporting a JSON file, we need to rename it to follow the **[ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)** standards. You can use [languages.php](https://github.com/appwrite/appwrite/blob/locale/app/config/locale/languages.php) file to find your language code when contributing to your language. For example, Spanish translation should have a file called `es.json`.
 
 
 ## 3. Add the translations to the project
@@ -151,14 +151,14 @@ First of all, we need to start a local instance of Appwrite. Thanks to Docker, t
 $ docker-compose up -d
 ```
 
-If this is your first time running Appwrite, it may take up to a few minutes to download all images and start all containers. Once everything is created, you should see Appwrite running on `http://localhost:80`. When you visit this URL, it will ask you to sign up. After that, it will show you your empty dashboard where you need to create a new project - give it any name you want. Then you need to go to `Settings` of the project and copy `Project-ID.`
+If this is your first time running Appwrite, it may take up to a few minutes to download all images and start all containers. Once everything is created, you should see Appwrite running on `http://localhost:80`. When you visit this URL, it will ask you to sign up. After that, it will show you your empty dashboard where you need to create a new project - give it any name you want. Then you need to go to `Settings` of the project and copy `Project-ID`.
 
 If you are lost in the Appwrite dashboard, check out our [Article about Appwrite's dashboard](https://dev.to/appwrite/30daysofappwrite-appwrite-dashboard-15cc).
 
 
 Now, let's send the request. We will be editing headers of the request, so you will need a tool to do that, such as Postman or Insomnia.
 
-First, let's see English translations. Let's set request type to `GET,` URL to `https://localhost/v1/locale/countries/eu` and add `X-Appwrite-Project` header.
+First, let's see English translations. Let's set request type to `GET`, URL to `https://localhost/v1/locale/countries/eu` and add `X-Appwrite-Project` header.
 
 ![English test](images/test-en.png)
 
@@ -176,7 +176,7 @@ If you can see countries' names translated, everything works, and you are ready 
 
 ## 5. Raise a pull request
 
-First, commit the changes with the message `Added YYY translations` where `YYY` is the translated language and push it. This will publish a new branch to your forked version of Appwrite. If you visit it at `github.com/YOUR_USERNAME/appwrite,` you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
+First, commit the changes with the message `Added YYY translations` where `YYY` is the translated language and push it. This will publish a new branch to your forked version of Appwrite. If you visit it at `github.com/YOUR_USERNAME/appwrite`, you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
 
 ## 🤕 Stuck?
 If you need any help with the contribution, feel free to head over to [our discord channel](https://appwrite.io/discord), and we'll be happy to help you out.
