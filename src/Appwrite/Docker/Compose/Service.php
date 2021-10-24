@@ -21,7 +21,7 @@ class Service
         $ports = (isset($this->service['ports']) && is_array($this->service['ports'])) ? $this->service['ports'] : [];
         $this->service['ports'] = [];
 
-        array_walk($ports, function(&$value, $key) {
+        array_walk($ports, function (&$value, $key) {
             $split = explode(':', $value);
             $this->service['ports'][
                 (isset($split[0])) ? $split[0] : ''
