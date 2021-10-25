@@ -1293,17 +1293,16 @@ trait DatabaseBase
             'max' => 1.4,
         ]);
 
-        // TODO@kodumbeats float validator rejects 0.0 and 1.0 as floats
-        // $probability = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/float', array_merge([
-        //     'content-type' => 'application/json',
-        //     'x-appwrite-project' => $this->getProject()['$id'],
-        //     'x-appwrite-key' => $this->getProject()['apiKey']
-        // ]), [
-        //     'attributeId' => 'probability',
-        //     'required' => false,
-        //     'min' => \floatval(0.0),
-        //     'max' => \floatval(1.0),
-        // ]);
+        $probability = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/float', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'probability',
+            'required' => false,
+            'min' => 0,
+            'max' => 1,
+        ]);
 
         $upperBound = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
             'content-type' => 'application/json',
@@ -1345,6 +1344,7 @@ trait DatabaseBase
         $this->assertEquals(201, $url['headers']['status-code']);
         $this->assertEquals(201, $range['headers']['status-code']);
         $this->assertEquals(201, $floatRange['headers']['status-code']);
+        $this->assertEquals(201, $probability['headers']['status-code']);
         $this->assertEquals(201, $upperBound['headers']['status-code']);
         $this->assertEquals(201, $lowerBound['headers']['status-code']);
         // $this->assertEquals(400, $invalidRange['headers']['status-code']);
@@ -1359,7 +1359,7 @@ trait DatabaseBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), []); 
 
-        $this->assertCount(8, $collection['body']['attributes']);
+        $this->assertCount(9, $collection['body']['attributes']);
 
         /**
          * Test for successful validation
@@ -1437,6 +1437,18 @@ trait DatabaseBase
             'write' => ['user:'.$this->getUser()['$id']],
         ]);
 
+        $goodProbability = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'probability' => 0.99999,
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
         $notTooHigh = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1467,6 +1479,7 @@ trait DatabaseBase
         $this->assertEquals(201, $goodUrl['headers']['status-code']);
         $this->assertEquals(201, $goodRange['headers']['status-code']);
         $this->assertEquals(201, $goodFloatRange['headers']['status-code']);
+        $this->assertEquals(201, $goodProbability['headers']['status-code']);
         $this->assertEquals(201, $notTooHigh['headers']['status-code']);
         $this->assertEquals(201, $notTooLow['headers']['status-code']);
 
@@ -1546,6 +1559,18 @@ trait DatabaseBase
             'write' => ['user:'.$this->getUser()['$id']],
         ]);
 
+        $badProbability = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'probability' => 1.1,
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
         $tooHigh = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1576,6 +1601,7 @@ trait DatabaseBase
         $this->assertEquals(400, $badUrl['headers']['status-code']);
         $this->assertEquals(400, $badRange['headers']['status-code']);
         $this->assertEquals(400, $badFloatRange['headers']['status-code']);
+        $this->assertEquals(400, $badProbability['headers']['status-code']);
         $this->assertEquals(400, $tooHigh['headers']['status-code']);
         $this->assertEquals(400, $tooLow['headers']['status-code']);
         $this->assertEquals('Invalid document structure: Attribute "email" has invalid format. Value must be a valid email address', $badEmail['body']['message']);
@@ -1584,6 +1610,7 @@ trait DatabaseBase
         $this->assertEquals('Invalid document structure: Attribute "url" has invalid format. Value must be a valid URL', $badUrl['body']['message']);
         $this->assertEquals('Invalid document structure: Attribute "range" has invalid format. Value must be a valid range between 1 and 10', $badRange['body']['message']);
         $this->assertEquals('Invalid document structure: Attribute "floatRange" has invalid format. Value must be a valid range between 1 and 1', $badFloatRange['body']['message']);
+        $this->assertEquals('Invalid document structure: Attribute "probability" has invalid format. Value must be a valid range between 0 and 1', $badProbability['body']['message']);
         $this->assertEquals('Invalid document structure: Attribute "upperBound" has invalid format. Value must be a valid range between -9,223,372,036,854,775,808 and 10', $tooHigh['body']['message']);
         $this->assertEquals('Invalid document structure: Attribute "lowerBound" has invalid format. Value must be a valid range between 5 and 9,223,372,036,854,775,808', $tooLow['body']['message']);
     }
