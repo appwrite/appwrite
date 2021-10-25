@@ -1742,7 +1742,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId/logs')
 
         $audit = new Audit($dbForInternal);
 
-        $logs = $audit->getLogsByResource('database/document/'.$document->getId());
+        $logs = $audit->getLogsByResource('document/'.$document->getId());
 
         $output = [];
 
