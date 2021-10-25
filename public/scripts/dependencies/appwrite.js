@@ -47,8 +47,78 @@
                 mode: '',
             };
             this.headers = {
-                'x-sdk-version': 'appwrite:web:2.1.0',
-                'X-Appwrite-Response-Format': '0.9.0',
+                'x-sdk-version': 'appwrite:web:4.0.1',
+                'X-Appwrite-Response-Format': '0.10.0',
+            };
+            this.realtime = {
+                socket: undefined,
+                timeout: undefined,
+                channels: {},
+                lastMessage: undefined,
+                createSocket: () => {
+                    var _a, _b;
+                    const channels = new URLSearchParams();
+                    channels.set('project', this.config.project);
+                    for (const property in this.realtime.channels) {
+                        channels.append('channels[]', property);
+                    }
+                    if (((_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.readyState) === WebSocket.OPEN) {
+                        this.realtime.socket.close();
+                    }
+                    this.realtime.socket = new WebSocket(this.config.endpointRealtime + '/realtime?' + channels.toString());
+                    (_b = this.realtime.socket) === null || _b === void 0 ? void 0 : _b.addEventListener('message', this.realtime.authenticate);
+                    for (const channel in this.realtime.channels) {
+                        this.realtime.channels[channel].forEach(callback => {
+                            var _a;
+                            (_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.addEventListener('message', callback);
+                        });
+                    }
+                    this.realtime.socket.addEventListener('close', event => {
+                        var _a, _b, _c;
+                        if (((_b = (_a = this.realtime) === null || _a === void 0 ? void 0 : _a.lastMessage) === null || _b === void 0 ? void 0 : _b.type) === 'error' && ((_c = this.realtime) === null || _c === void 0 ? void 0 : _c.lastMessage.data).code === 1008) {
+                            return;
+                        }
+                        console.error('Realtime got disconnected. Reconnect will be attempted in 1 second.', event.reason);
+                        setTimeout(() => {
+                            this.realtime.createSocket();
+                        }, 1000);
+                    });
+                },
+                authenticate: (event) => {
+                    var _a, _b, _c;
+                    const message = JSON.parse(event.data);
+                    if (message.type === 'connected' && ((_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.readyState) === WebSocket.OPEN) {
+                        const cookie = JSON.parse((_b = window.localStorage.getItem('cookieFallback')) !== null && _b !== void 0 ? _b : "{}");
+                        const session = cookie === null || cookie === void 0 ? void 0 : cookie[`a_session_${this.config.project}`];
+                        const data = message.data;
+                        if (session && !data.user) {
+                            (_c = this.realtime.socket) === null || _c === void 0 ? void 0 : _c.send(JSON.stringify({
+                                type: "authentication",
+                                data: {
+                                    session
+                                }
+                            }));
+                        }
+                    }
+                },
+                onMessage: (channel, callback) => (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        this.realtime.lastMessage = message;
+                        if (message.type === 'event') {
+                            let data = message.data;
+                            if (data.channels && data.channels.includes(channel)) {
+                                callback(data);
+                            }
+                        }
+                        else if (message.type === 'error') {
+                            throw message.data;
+                        }
+                    }
+                    catch (e) {
+                        console.error(e);
+                    }
+                }
             };
             this.realtime = {
                 socket: undefined,
@@ -462,7 +532,7 @@
                     }, payload);
                 }),
                 /**
-                 * Complete Password Recovery
+                 * Create Password Recovery (confirmation)
                  *
                  * Use this endpoint to complete the user account password reset. Both the
                  * **userId** and **secret** arguments will be passed as query parameters to
@@ -600,6 +670,82 @@
                     }, payload);
                 }),
                 /**
+                 * Create Magic URL session
+                 *
+                 * Sends the user an email with a secret key for creating a session. When the
+                 * user clicks the link in the email, the user is redirected back to the URL
+                 * you provided with the secret key and userId values attached to the URL
+                 * query string. Use the query string parameters to submit a request to the
+                 * [PUT
+                 * /account/sessions/magic-url](/docs/client/account#accountUpdateMagicURLSession)
+                 * endpoint to complete the login process. The link sent to the user's email
+                 * address is valid for 1 hour. If you are on a mobile device you can leave
+                 * the URL parameter empty, so that the login completion will be handled by
+                 * your Appwrite instance by default.
+                 *
+                 * @param {string} email
+                 * @param {string} url
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createMagicURLSession: (email, url) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof email === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "email"');
+                    }
+                    let path = '/account/sessions/magic-url';
+                    let payload = {};
+                    if (typeof email !== 'undefined') {
+                        payload['email'] = email;
+                    }
+                    if (typeof url !== 'undefined') {
+                        payload['url'] = url;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Magic URL session (confirmation)
+                 *
+                 * Use this endpoint to complete creating the session with the Magic URL. Both
+                 * the **userId** and **secret** arguments will be passed as query parameters
+                 * to the redirect URL you have provided when sending your request to the
+                 * [POST
+                 * /account/sessions/magic-url](/docs/client/account#accountCreateMagicURLSession)
+                 * endpoint.
+                 *
+                 * Please note that in order to avoid a [Redirect
+                 * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+                 * the only valid redirect URLs are the ones from domains you have set when
+                 * adding your platforms in the console interface.
+                 *
+                 * @param {string} userId
+                 * @param {string} secret
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateMagicURLSession: (userId, secret) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof secret === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "secret"');
+                    }
+                    let path = '/account/sessions/magic-url';
+                    let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
+                    if (typeof secret !== 'undefined') {
+                        payload['secret'] = secret;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('put', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Create Account Session with OAuth2
                  *
                  * Allow the user to login to their account using the OAuth2 provider of their
@@ -730,7 +876,7 @@
                     }, payload);
                 }),
                 /**
-                 * Complete Email Verification
+                 * Create Email Verification (confirmation)
                  *
                  * Use this endpoint to complete the user email verification process. Use both
                  * the **userId** and **secret** parameters that were attached to your app URL
@@ -1034,12 +1180,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listCollections: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
+                listCollections: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/database/collections';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -1051,8 +1198,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -1584,13 +1734,14 @@
                  * @param {string[]} queries
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string[]} orderAttributes
                  * @param {string[]} orderTypes
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listDocuments: (collectionId, queries, limit, offset, after, orderAttributes, orderTypes) => __awaiter(this, void 0, void 0, function* () {
+                listDocuments: (collectionId, queries, limit, offset, cursor, cursorDirection, orderAttributes, orderTypes) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
@@ -1605,8 +1756,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderAttributes !== 'undefined') {
                         payload['orderAttributes'] = orderAttributes;
@@ -1907,6 +2061,48 @@
                     return yield this.call('get', uri, {
                         'content-type': 'application/json',
                     }, payload);
+                }),
+                /**
+                 * Get usage stats for the database
+                 *
+                 *
+                 * @param {string} range
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getUsage: (range) => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/database/usage';
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Get usage stats for a collection
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} range
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getCollectionUsage: (collectionId, range) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    let path = '/database/{collectionId}/usage'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
                 })
             };
             this.functions = {
@@ -1919,12 +2115,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/functions';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -1936,8 +2133,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -2110,11 +2310,12 @@
                  * @param {string} functionId
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listExecutions: (functionId, limit, offset, after) => __awaiter(this, void 0, void 0, function* () {
+                listExecutions: (functionId, limit, offset, cursor, cursorDirection) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -2126,8 +2327,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
@@ -2224,12 +2428,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listTags: (functionId, search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
+                listTags: (functionId, search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -2244,8 +2449,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -2693,12 +2901,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/projects';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -2710,8 +2919,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -3425,7 +3637,7 @@
                     }, payload);
                 }),
                 /**
-                 * Get Project
+                 * Get usage stats for a project
                  *
                  *
                  * @param {string} projectId
@@ -3638,12 +3850,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listFiles: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
+                listFiles: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/storage/files';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -3655,8 +3868,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -3899,7 +4115,49 @@
                         uri.searchParams.append(key, value);
                     }
                     return uri;
-                }
+                },
+                /**
+                 * Get usage stats for storage
+                 *
+                 *
+                 * @param {string} range
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getUsage: (range) => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/storage/usage';
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Get usage stats for a storage bucket
+                 *
+                 *
+                 * @param {string} bucketId
+                 * @param {string} range
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getBucketUsage: (bucketId, range) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof bucketId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "bucketId"');
+                    }
+                    let path = '/storage/{bucketId}/usage'.replace('{bucketId}', bucketId);
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                })
             };
             this.teams = {
                 /**
@@ -3913,12 +4171,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/teams';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -3930,8 +4189,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -4058,12 +4320,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getMemberships: (teamId, search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
+                getMemberships: (teamId, search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof teamId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "teamId"');
                     }
@@ -4078,8 +4341,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -4281,12 +4547,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} after
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/users';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -4298,8 +4565,11 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof after !== 'undefined') {
-                        payload['after'] = after;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -4351,6 +4621,29 @@
                     }, payload);
                 }),
                 /**
+                 * Get usage stats for the users API
+                 *
+                 *
+                 * @param {string} range
+                 * @param {string} provider
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getUsage: (range, provider) => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/users/usage';
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
+                    }
+                    if (typeof provider !== 'undefined') {
+                        payload['provider'] = provider;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Get User
                  *
                  * Get a user by its unique ID.
@@ -4393,7 +4686,6 @@
                 /**
                  * Update Email
                  *
-                 * Update the user email by its unique ID.
                  *
                  * @param {string} userId
                  * @param {string} email
@@ -4440,7 +4732,6 @@
                 /**
                  * Update Name
                  *
-                 * Update the user name by its unique ID.
                  *
                  * @param {string} userId
                  * @param {string} name
@@ -4467,7 +4758,6 @@
                 /**
                  * Update Password
                  *
-                 * Update the user password by its unique ID.
                  *
                  * @param {string} userId
                  * @param {string} password
@@ -4777,17 +5067,26 @@
          */
         subscribe(channels, callback) {
             let channelArray = typeof channels === 'string' ? [channels] : channels;
-            channelArray.forEach(channel => this.realtime.channels.add(channel));
-            const counter = this.realtime.subscriptionsCounter++;
-            this.realtime.subscriptions.set(counter, {
-                channels: channelArray,
-                callback
+            let savedChannels = [];
+            channelArray.forEach((channel, index) => {
+                if (!(channel in this.realtime.channels)) {
+                    this.realtime.channels[channel] = [];
+                }
+                savedChannels[index] = {
+                    name: channel,
+                    index: (this.realtime.channels[channel].push(this.realtime.onMessage(channel, callback)) - 1)
+                };
+                clearTimeout(this.realtime.timeout);
+                this.realtime.timeout = window === null || window === void 0 ? void 0 : window.setTimeout(() => {
+                    this.realtime.createSocket();
+                }, 1);
             });
-            this.realtime.connect();
             return () => {
-                this.realtime.subscriptions.delete(counter);
-                this.realtime.cleanUp(channelArray);
-                this.realtime.connect();
+                savedChannels.forEach(channel => {
+                    var _a;
+                    (_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.removeEventListener('message', this.realtime.channels[channel.name][channel.index]);
+                    this.realtime.channels[channel.name].splice(channel.index, 1);
+                });
             };
         }
         call(method, url, headers = {}, params = {}) {
@@ -4817,9 +5116,10 @@
                             let formData = new FormData();
                             for (const key in params) {
                                 if (Array.isArray(params[key])) {
-                                    formData.append(key + '[]', params[key].join(','));
-                                }
-                                else {
+                                    params[key].forEach((value) => {
+                                        formData.append(key + '[]', value);
+                                    })
+                                } else {
                                     formData.append(key, params[key]);
                                 }
                             }
@@ -4877,4 +5177,4 @@
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
-}(this.window = this.window || {}, null, window));
+})(this.window = this.window || {}, null, window);

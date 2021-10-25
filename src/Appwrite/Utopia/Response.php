@@ -17,6 +17,7 @@ use Appwrite\Utopia\Response\Model\AttributeInteger;
 use Appwrite\Utopia\Response\Model\AttributeFloat;
 use Appwrite\Utopia\Response\Model\AttributeBoolean;
 use Appwrite\Utopia\Response\Model\AttributeEmail;
+use Appwrite\Utopia\Response\Model\AttributeEnum;
 use Appwrite\Utopia\Response\Model\AttributeIP;
 use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\BaseList;
@@ -59,10 +60,9 @@ use Appwrite\Utopia\Response\Model\UsageFunctions;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
-use stdClass;
 
 /**
- * @method Response public function setStatusCode(int $code = 200)
+ * @method Response setStatusCode(int $code = 200)
  */
 class Response extends SwooleResponse
 {
@@ -96,11 +96,12 @@ class Response extends SwooleResponse
     const MODEL_ATTRIBUTE = 'attribute';
     const MODEL_ATTRIBUTE_LIST = 'attributeList';
     const MODEL_ATTRIBUTE_STRING = 'attributeString';
-    const MODEL_ATTRIBUTE_INTEGER= 'attributeInteger';
-    const MODEL_ATTRIBUTE_FLOAT= 'attributeFloat';
-    const MODEL_ATTRIBUTE_BOOLEAN= 'attributeBoolean';
-    const MODEL_ATTRIBUTE_EMAIL= 'attributeEmail';
-    const MODEL_ATTRIBUTE_IP= 'attributeIp';
+    const MODEL_ATTRIBUTE_INTEGER = 'attributeInteger';
+    const MODEL_ATTRIBUTE_FLOAT = 'attributeFloat';
+    const MODEL_ATTRIBUTE_BOOLEAN = 'attributeBoolean';
+    const MODEL_ATTRIBUTE_EMAIL = 'attributeEmail';
+    const MODEL_ATTRIBUTE_ENUM = 'attributeEnum';
+    const MODEL_ATTRIBUTE_IP = 'attributeIp';
     const MODEL_ATTRIBUTE_URL= 'attributeUrl';
 
     // Users
@@ -220,6 +221,7 @@ class Response extends SwooleResponse
             ->setModel(new AttributeFloat())
             ->setModel(new AttributeBoolean())
             ->setModel(new AttributeEmail())
+            ->setModel(new AttributeEnum())
             ->setModel(new AttributeIP())
             ->setModel(new AttributeURL())
             ->setModel(new Index())
@@ -328,7 +330,7 @@ class Response extends SwooleResponse
             $output = self::getFilter()->parse($output, $model);
         }
 
-        $this->json(!empty($output) ? $output : new stdClass());
+        $this->json(!empty($output) ? $output : new \stdClass());
     }
 
     /**

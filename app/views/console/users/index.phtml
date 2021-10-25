@@ -1,6 +1,7 @@
 <?php
 $providers = $this->getParam('providers', []);
 $auth = $this->getParam('auth', []);
+$smtpEnabled = $this->getParam('smtpEnabled', false);
 ?>
 
 <div class="cover">
@@ -394,20 +395,27 @@ $auth = $this->getParam('auth', []);
                                 data-failure-param-alert-text="Failed to update project auth status settings"
                                 data-failure-param-alert-classname="error">
                                 <input name="method" id="<?php echo $this->escape($key); ?>" type="hidden" autocomplete="off" value="<?php echo $this->escape($index); ?>">
-
-                                <input name="status" type="hidden" data-forms-switch data-ls-bind="{{console-project.auth<?php echo $this->escape(ucfirst($key)); ?>}}" data-cast-to="boolean" class="pull-end" />
+                                <?php if( !(in_array($key, ['usersAuthMagicURL', 'usersAuthInvites']) && !$smtpEnabled)): ?>
+                                    <input name="status" type="hidden" data-forms-switch data-ls-bind="{{console-project.<?php echo $this->escape($key); ?>}}" data-cast-to="boolean" class="pull-end" />
+                                <?php endif; ?>
                             </form>
                         <?php endif; ?>
-
-                        <img src="<?php echo $this->escape($icon); ?>?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="<?php echo $this->escape($name); ?> Logo" class="pull-start provider margin-end" />
-
-                        <span class="text-size-small"><?php echo $this->escape($name); ?><?php if (!$enabled): ?> <span class="text-fade text-size-xs">soon</span><?php endif;?></span>
-
-                        <?php if ($docs): ?>
-                        <p class="margin-bottom-no text-one-liner text-size-small">
-                            <a href="<?php echo $this->escape($docs); ?>" target="_blank" rel="noopener">Docs<i class="icon-link-ext"></i></a>
-                        </p>
-                        <?php endif;?>
+                        
+                        <img src="<?php echo $this->escape($icon); ?>?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="Email/Password Logo" class="pull-start provider margin-end" />
+                                
+                        <span class="text-size-small"><?php echo $this->escape($name); ?><?php if(!$enabled): ?> <spann class="text-fade text-size-xs">soon</span><?php endif; ?>
+                        
+                        <?php if( in_array($key, ['usersAuthMagicURL', 'usersAuthInvites']) && !$smtpEnabled): ?>
+                            <p class="margin-bottom-no text-one-liner text-size-small text-danger">
+                                SMTP Disabled
+                            </p>
+                        <?php else: ?>
+                            <?php if($docs): ?>
+                            <p class="margin-bottom-no text-one-liner text-size-small">
+                                <a href="<?php echo $this->escape($docs); ?>" target="_blank" rel="noopener">Docs<i class="icon-link-ext"></i></a>
+                            </p>
+                            <?php endif; ?>
+                        <?php endif; ?>
                     </div>
                 </li>
                 <?php endforeach;?>

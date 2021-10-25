@@ -131,7 +131,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 }
 
                 $dbForConsole->createCollection($key, $attributes, $indexes);
-                
             }
 
             Console::success('[Setup] - Server database init completed...');
