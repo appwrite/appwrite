@@ -47,8 +47,8 @@
                 mode: '',
             };
             this.headers = {
-                'x-sdk-version': 'appwrite:web:4.0.1',
-                'X-Appwrite-Response-Format': '0.10.0',
+                'x-sdk-version': 'appwrite:web:4.0.4',
+                'X-Appwrite-Response-Format': '0.12.0',
             };
             this.realtime = {
                 socket: undefined,
@@ -613,17 +613,24 @@
                  * the URL parameter empty, so that the login completion will be handled by
                  * your Appwrite instance by default.
                  *
+                 * @param {string} userId
                  * @param {string} email
                  * @param {string} url
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createMagicURLSession: (email, url) => __awaiter(this, void 0, void 0, function* () {
+                createMagicURLSession: (userId, email, url) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
                     if (typeof email === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "email"');
                     }
                     let path = '/account/sessions/magic-url';
                     let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
                     if (typeof email !== 'undefined') {
                         payload['email'] = email;
                     }
@@ -1327,7 +1334,7 @@
                         payload['required'] = required;
                     }
                     if (typeof xdefault !== 'undefined') {
-                        payload['xdefault'] = xdefault;
+                        payload['default'] = xdefault;
                     }
                     if (typeof array !== 'undefined') {
                         payload['array'] = array;
@@ -1368,7 +1375,55 @@
                         payload['required'] = required;
                     }
                     if (typeof xdefault !== 'undefined') {
-                        payload['xdefault'] = xdefault;
+                        payload['default'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Enum Attribute
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} attributeId
+                 * @param {string[]} elements
+                 * @param {boolean} required
+                 * @param {string} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createEnumAttribute: (collectionId, attributeId, elements, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof attributeId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    }
+                    if (typeof elements === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "elements"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/enum'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof attributeId !== 'undefined') {
+                        payload['attributeId'] = attributeId;
+                    }
+                    if (typeof elements !== 'undefined') {
+                        payload['elements'] = elements;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['default'] = xdefault;
                     }
                     if (typeof array !== 'undefined') {
                         payload['array'] = array;
@@ -1417,7 +1472,7 @@
                         payload['max'] = max;
                     }
                     if (typeof xdefault !== 'undefined') {
-                        payload['xdefault'] = xdefault;
+                        payload['default'] = xdefault;
                     }
                     if (typeof array !== 'undefined') {
                         payload['array'] = array;
@@ -1466,7 +1521,7 @@
                         payload['max'] = max;
                     }
                     if (typeof xdefault !== 'undefined') {
-                        payload['xdefault'] = xdefault;
+                        payload['default'] = xdefault;
                     }
                     if (typeof array !== 'undefined') {
                         payload['array'] = array;
@@ -1507,7 +1562,7 @@
                         payload['required'] = required;
                     }
                     if (typeof xdefault !== 'undefined') {
-                        payload['xdefault'] = xdefault;
+                        payload['default'] = xdefault;
                     }
                     if (typeof array !== 'undefined') {
                         payload['array'] = array;
@@ -1555,7 +1610,7 @@
                         payload['required'] = required;
                     }
                     if (typeof xdefault !== 'undefined') {
-                        payload['xdefault'] = xdefault;
+                        payload['default'] = xdefault;
                     }
                     if (typeof array !== 'undefined') {
                         payload['array'] = array;
@@ -1566,7 +1621,7 @@
                     }, payload);
                 }),
                 /**
-                 * Create IP Address Attribute
+                 * Create URL Attribute
                  *
                  *
                  * @param {string} collectionId
@@ -1596,7 +1651,7 @@
                         payload['required'] = required;
                     }
                     if (typeof xdefault !== 'undefined') {
-                        payload['xdefault'] = xdefault;
+                        payload['default'] = xdefault;
                     }
                     if (typeof array !== 'undefined') {
                         payload['array'] = array;
@@ -2216,12 +2271,13 @@
                  * @param {string} functionId
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} search
                  * @param {string} cursor
                  * @param {string} cursorDirection
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listExecutions: (functionId, limit, offset, cursor, cursorDirection) => __awaiter(this, void 0, void 0, function* () {
+                listExecutions: (functionId, limit, offset, search, cursor, cursorDirection) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -2232,6 +2288,9 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof search !== 'undefined') {
+                        payload['search'] = search;
                     }
                     if (typeof cursor !== 'undefined') {
                         payload['cursor'] = cursor;
@@ -2551,7 +2610,7 @@
                     }, payload);
                 }),
                 /**
-                 * Get Certificate Queue
+                 * Get Certificates Queue
                  *
                  * Get the number of certificates that are waiting to be issued against
                  * [Letsencrypt](https://letsencrypt.org/) in the Appwrite internal queue
@@ -4307,14 +4366,14 @@
                     if (typeof email !== 'undefined') {
                         payload['email'] = email;
                     }
-                    if (typeof name !== 'undefined') {
-                        payload['name'] = name;
-                    }
                     if (typeof roles !== 'undefined') {
                         payload['roles'] = roles;
                     }
                     if (typeof url !== 'undefined') {
                         payload['url'] = url;
+                    }
+                    if (typeof name !== 'undefined') {
+                        payload['name'] = name;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
@@ -4592,6 +4651,7 @@
                 /**
                  * Update Email
                  *
+                 * Update the user email by its unique ID.
                  *
                  * @param {string} userId
                  * @param {string} email
@@ -4638,6 +4698,7 @@
                 /**
                  * Update Name
                  *
+                 * Update the user name by its unique ID.
                  *
                  * @param {string} userId
                  * @param {string} name
@@ -4664,6 +4725,7 @@
                 /**
                  * Update Password
                  *
+                 * Update the user password by its unique ID.
                  *
                  * @param {string} userId
                  * @param {string} password
@@ -5075,4 +5137,4 @@
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
-})(this.window = this.window || {}, null, window);
+}(this.window = this.window || {}, null, window));

@@ -204,4 +204,48 @@ class Project extends Model
     {
         return Response::MODEL_PROJECT;
     }
+
+    /**
+     * Get Collection
+     * 
+     * @return string
+     */
+    public function filter(Document $document): Document
+    {
+        $values = $document->getAttribute('services', []);
+        $services = Config::getParam('services', []);
+
+        foreach($services as $service) {
+            if(!$service['optional']) {
+                continue;
+            }
+            $key = $service['key'] ?? '';
+            $value = $values[$key] ?? true;
+            $document->setAttribute('serviceStatusFor'.ucfirst($key), $value);
+        }
+
+        $authValues = $document->getAttribute('auths',[]);
+        $auth = Config::getParam('auth', []);
+
+        $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
+
+        foreach ($auth as $index => $method) {
+            $key = $method['key'];
+            $value = $authValues[$key] ?? true;
+            $document->setAttribute('auth' . ucfirst($key), $value);
+        }
+
+        $providers = Config::getParam('providers', []);
+        $providerValues = $document->getAttribute('providers', []);
+
+        foreach ($providers as $key => $provider) {
+            if (!$provider['enabled']) {
+                continue;
+            }
+            $appId = $providerValues[$key . 'Appid'] ?? '';
+            $secret = $providerValues[$key . 'Secret'] ?? '';
+            $document->setAttribute('provider' . ucfirst($key) . 'Appid', $appId)->setAttribute('provider' . ucfirst($key) . 'Secret', $secret);
+        }
+        return $document;
+    }
 }
