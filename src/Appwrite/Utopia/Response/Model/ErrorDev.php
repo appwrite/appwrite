@@ -40,7 +40,7 @@ class ErrorDev extends Error
 
     /**
      * Get Collection
-     * 
+     *
      * @return string
      */
     public function getType():string

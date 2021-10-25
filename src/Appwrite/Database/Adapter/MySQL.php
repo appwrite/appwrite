@@ -569,7 +569,7 @@ class MySQL extends Adapter
 
             //$path = implode('.', $path);
 
-            if(array_key_exists($key, $filterTypes) && $filterTypes[$key] === 'numeric') {
+            if (array_key_exists($key, $filterTypes) && $filterTypes[$key] === 'numeric') {
                 $value = (float) $value;
             } else {
                 $value = $this->getPDO()->quote($value, PDO::PARAM_STR);
@@ -607,7 +607,7 @@ class MySQL extends Adapter
         }
 
         // Sorting
-        if(!empty($options['orderField'])) {
+        if (!empty($options['orderField'])) {
             $orderPath = \explode('.', $options['orderField']);
             $len = \count($orderPath);
             $orderKey = 'order_b';
@@ -634,9 +634,8 @@ class MySQL extends Adapter
                         $prev = 'd';
                     }
                 }
-            }    
-        }
-        else {
+            }
+        } else {
             $orderSelect = 'a.uid AS sort_ff';
         }
         
