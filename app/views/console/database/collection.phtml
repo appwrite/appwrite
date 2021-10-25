@@ -326,10 +326,110 @@ $logs = $this->getParam('logs', null);
             <li data-state="/console/database/collection/activity?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Activity <span class="badge" data-ls-bind="{{logs.logs.length}}"></span></h2>
 
-                <?php echo $logs->render(); ?>                
+                <?php echo $logs->render(); ?>
             </li>
             <li data-state="/console/database/collection/usage?id={{router.params.id}}&project={{router.params.project}}">
+                <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
+                    data-service="database.getCollectionUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-collection-id="{{router.params.id}}"
+                    data-param-range="90d">
+                    <button class="tick">90d</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
+
+                <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '30d'"
+                    data-service="database.getCollectionUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-collection-id="{{router.params.id}}">
+                    <button class="tick">30d</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
+
+                <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '24h'"
+                    data-service="database.getCollectionUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-collection-id="{{router.params.id}}"
+                    data-param-range="24h">
+                    <button class="tick">24h</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
+
                 <h2>Usage</h2>
+
+                <div
+                    data-service="database.getCollectionUsage"
+                    data-event="load"
+                    data-name="usage"
+                    data-param-collection-id="{{router.params.id}}">
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Documents=documents.count" data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large">
+                        <li>Documents <span data-ls-bind="({{usage.executions.total}})"></span></li> <!-- TODO: add total to endpoint's response -->
+                    </ul>
+
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Created=documents.create" data-colors="orange" data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large">
+                        <li class="orange">Created <span data-ls-bind="({{usage.compute.total}})"></span></li> <!-- TODO: add total to endpoint's response -->
+                    </ul>
+
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Read=documents.read" data-colors="green" data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large">
+                        <li class="red">Read <span data-ls-bind="({{usage.failures.total}})"></span></li> <!-- TODO: add total to endpoint's response -->
+                    </ul>
+
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Updated=documents.update" data-colors="blue" data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large">
+                        <li class="red">Updated <span data-ls-bind="({{usage.failures.total}})"></span></li> <!-- TODO: add total to endpoint's response -->
+                    </ul>
+
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Deleted=documents.delete" data-colors="red" data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large">
+                        <li class="red">Deleted <span data-ls-bind="({{usage.failures.total}})"></span></li> <!-- TODO: add total to endpoint's response -->
+                    </ul>
+                </div>
+
+
             </li>
             <li data-state="/console/database/collection/settings?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Settings</h2>
