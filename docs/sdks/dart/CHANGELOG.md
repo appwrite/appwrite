@@ -1,3 +1,6 @@
+## 1.0.2
+- Support for Appwrite 0.11
+
 ## 1.0.1
 - Export, separate IO and Browser clients for Flutter (Client and Realtime as well) and Dart (Client)
 

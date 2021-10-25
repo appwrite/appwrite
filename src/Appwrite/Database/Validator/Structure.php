@@ -277,9 +277,9 @@ class Structure extends Validator
 
     /**
      * Get Collection
-     * 
+     *
      * Get Collection by unique ID
-     * 
+     *
      * @return Document
      */
     protected function getCollection($id): Document

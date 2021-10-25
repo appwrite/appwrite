@@ -44,21 +44,21 @@ abstract class Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     abstract public function getName(): string;
 
     /**
      * Get Collection
-     * 
+     *
      * @return string
      */
     abstract public function getType(): string;
 
     /**
      * Get Rules
-     * 
+     *
      * @return array
      */
     public function getRules(): array
@@ -91,8 +91,8 @@ abstract class Model
     {
         $list = [];
 
-        foreach($this->rules as $key => $rule) {
-            if(isset($rule['require']) || $rule['require']) {
+        foreach ($this->rules as $key => $rule) {
+            if (isset($rule['require']) || $rule['require']) {
                 $list[] = $key;
             }
         }
@@ -102,9 +102,9 @@ abstract class Model
 
     /**
      * Is None
-     * 
+     *
      * Use to check if response is empty
-     * 
+     *
      * @return bool
      */
     public function isNone(): bool
@@ -114,9 +114,9 @@ abstract class Model
 
     /**
      * Is Any
-     * 
+     *
      * Use to check if response is a wildcard
-     * 
+     *
      * @return bool
      */
     public function isAny(): bool
@@ -126,9 +126,9 @@ abstract class Model
 
     /**
      * Is Public
-     * 
+     *
      * Should this model be publicly available in docs and spec files?
-     * 
+     *
      * @return bool
      */
     public function isPublic(): bool

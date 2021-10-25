@@ -16,7 +16,7 @@
 [![Translate](https://img.shields.io/badge/translate-f02e65?style=flat-square)](docs/tutorials/add-translations.md)
 <!-- [![Swag Store](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io) -->
 
-[**Appwrite 0.10 has been released! Learn what's new!**](https://dev.to/appwrite/it-s-here-announcing-appwrite-0-10-and-the-new-appwrite-realtime-api-lbm)
+[**Appwrite 0.11 has been released! Learn what's new!**](https://dev.to/appwrite/building-apps-just-got-swifter-announcing-appwrite-v011-4g62)
 
 Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
@@ -58,7 +58,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:0.10.4
+    appwrite/appwrite:0.11.0
 ```
 
 ### Windows
@@ -70,7 +70,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:0.10.4
+    appwrite/appwrite:0.11.0
 ```
 
 #### PowerShell
@@ -80,10 +80,10 @@ docker run -it --rm ,
     --volume /var/run/docker.sock:/var/run/docker.sock ,
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw ,
     --entrypoint="install" ,
-    appwrite/appwrite:0.10.4
+    appwrite/appwrite:0.11.0
 ```
 
-Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-linux native hosts, the server might take a few minutes to start after installation completes.
+Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after installation completes.
 
 
 For advanced production and custom installation, check out our Docker [environment variables](https://appwrite.io/docs/environment-variables) docs. You can also use our public [docker-compose.yml](https://gist.github.com/eldadfux/977869ff6bdd7312adfd4e629ee15cc5#file-docker-compose-yml) file to manually set up an environment.
@@ -94,10 +94,11 @@ If you are upgrading your Appwrite server from an older version, you should use 
 
 ## Getting Started
 
-Getting started with Appwrite is as easy as creating a new project, choosing your platform, and integrating its SDK in your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
+Getting started with Appwrite is as easy as creating a new project, choosing your platform, and integrating its SDK into your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
 
 * [Getting Started for Web](https://appwrite.io/docs/getting-started-for-web)
 * [Getting Started for Flutter](https://appwrite.io/docs/getting-started-for-flutter)
+* [Getting Started for Apple](https://appwrite.io/docs/getting-started-for-apple)
 * [Getting Started for Android](https://appwrite.io/docs/getting-started-for-android)
 * [Getting Started for Server](https://appwrite.io/docs/getting-started-for-server)
 * [Getting Started for CLI](https://appwrite.io/docs/command-line)
@@ -123,16 +124,18 @@ Below is a list of currently supported platforms and languages. If you wish to h
 #### Client
 * ✅  &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **Beta** (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Android](https://github.com/appwrite/sdk-for-android) (Maintained by the Appwrite Team)
 
 #### Server
 * ✅  &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node) (Maintained by the Appwrite Team)
 * ✅  &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
-* ✅  &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) **Beta** (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) - (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) - **Beta** (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Python](https://github.com/appwrite/sdk-for-python) (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) - **Beta** (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **Beta** (Maintained by the Appwrite Team)
 * ✅  &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **Experimental** (Maintained by the Appwrite Team)
 
 #### Community
