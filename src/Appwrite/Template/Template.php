@@ -5,24 +5,22 @@ namespace Appwrite\Template;
 use Exception;
 use Utopia\View;
 
-
 class Template extends View
 {
-
     /**
      * @var string
      */
-    protected string $content = ''; 
+    protected string $content = '';
 
     /**
      * fromFile
      *
      * Creates a new Template() from the file at $path
-     * 
+     *
      * @param string $path
      *
      * @return self
-     * 
+     *
      */
     public static function fromFile(string $path): self
     {
@@ -38,11 +36,11 @@ class Template extends View
      * fromString
      *
      * Creates a new Template() using a raw string
-     * 
+     *
      * @param string $content
      *
      * @return self
-     * 
+     *
      */
     public static function fromString(string $content): self
     {
@@ -73,7 +71,7 @@ class Template extends View
 
         if (\is_readable($this->path)) {
             $template = \file_get_contents($this->path); // Include template file
-        } else if (!empty($this->content)) {
+        } elseif (!empty($this->content)) {
             $template = $this->print($this->content, self::FILTER_NL2P);
         } else {
             throw new Exception('"'.$this->path.'" template is not readable or not found');
@@ -116,7 +114,7 @@ class Template extends View
         $port = isset($url['port']) ? ':'.$url['port'] : '';
 
         $user = isset($url['user']) ? $url['user'] : '';
-        $pass = isset($url['pass']) ? ':'.$url['pass']  : '';
+        $pass = isset($url['pass']) ? ':'.$url['pass'] : '';
         $pass = ($user || $pass) ? "$pass@" : '';
 
         $path = isset($url['path']) ? $url['path'] : '';
@@ -150,9 +148,9 @@ class Template extends View
 
     /**
      * From Camel Case
-     * 
+     *
      * @var string $input
-     * 
+     *
      * @return string
      */
     public static function fromCamelCaseToSnake($input): string
@@ -168,14 +166,13 @@ class Template extends View
 
     /**
      * From Camel Case to Dash Case
-     * 
+     *
      * @var string $input
-     * 
+     *
      * @return string
      */
     public static function fromCamelCaseToDash($input): string
     {
         return \str_replace([' ', '_'], '-', \strtolower(\preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1-', $input)));
     }
-
 }

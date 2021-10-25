@@ -13,7 +13,7 @@ class Preferences extends Any
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -23,7 +23,7 @@ class Preferences extends Any
 
     /**
      * Get Collection
-     * 
+     *
      * @return string
      */
     public function getType():string

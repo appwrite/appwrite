@@ -177,7 +177,7 @@ class Response extends SwooleResponse
 
     /**
      * Response constructor.
-     * 
+     *
      * @param float $time
      */
     public function __construct(SwooleHTTPResponse $response)
@@ -278,7 +278,7 @@ class Response extends SwooleResponse
 
     /**
      * Set Model Object
-     * 
+     *
      * @return self
      */
     public function setModel(Model $instance)
@@ -290,7 +290,7 @@ class Response extends SwooleResponse
 
     /**
      * Get Model Object
-     * 
+     *
      * @return Model
      */
     public function getModel(string $key): Model
@@ -304,7 +304,7 @@ class Response extends SwooleResponse
 
     /**
      * Get Models List
-     * 
+     *
      * @return Model[]
      */
     public function getModels(): array
@@ -315,10 +315,10 @@ class Response extends SwooleResponse
     /**
      * Validate response objects and outputs
      *  the response according to given format type
-     * 
+     *
      * @param Document $document
      * @param string $model
-     * 
+     *
      * return void
      */
     public function dynamic(Document $document, string $model): void
@@ -326,7 +326,7 @@ class Response extends SwooleResponse
         $output = $this->output($document, $model);
 
         // If filter is set, parse the output
-        if(self::isFilter()){
+        if (self::isFilter()) {
             $output = self::getFilter()->parse($output, $model);
         }
 
@@ -335,10 +335,10 @@ class Response extends SwooleResponse
 
     /**
      * Generate valid response object from document data
-     * 
+     *
      * @param Document $document
      * @param string $model
-     * 
+     *
      * return array
      */
     public function output(Document $document, string $model): array
@@ -440,32 +440,32 @@ class Response extends SwooleResponse
 
     /**
      * Function to set a response filter
-     * 
+     *
      * @param $filter the response filter to set
-     * 
+     *
      * @return void
      */
-    public static function setFilter(?Filter $filter) 
+    public static function setFilter(?Filter $filter)
     {
         self::$filter = $filter;
     }
 
     /**
      * Return the currently set filter
-     * 
+     *
      * @return Filter
      */
-    public static function getFilter(): ?Filter 
+    public static function getFilter(): ?Filter
     {
         return self::$filter;
     }
 
     /**
      * Check if a filter has been set
-     * 
+     *
      * @return bool
      */
-    public static function isFilter(): bool 
+    public static function isFilter(): bool
     {
         return self::$filter != null;
     }
