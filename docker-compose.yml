@@ -17,8 +17,8 @@ services:
       - --providers.docker=true
       - --providers.docker.exposedByDefault=false
       - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
-      - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
+      - --entrypoints.appwrite_web.address=:80
+      - --entrypoints.appwrite_websecure.address=:443
       - --accesslog=true
     ports:
       - 80:80
@@ -47,11 +47,19 @@ services:
     networks:
       - appwrite
     labels:
-      - traefik.enable=true
-      - traefik.constraint-label-stack=appwrite
-      - traefik.http.routers.appwrite.rule=PathPrefix(`/`)
-      - traefik.http.routers.appwrite-secure.rule=PathPrefix(`/`)
-      - traefik.http.routers.appwrite-secure.tls=true
+      - "traefik.enable=true"
+      - "traefik.constraint-label-stack=appwrite"
+      - "traefik.docker.network=appwrite"
+      - "traefik.http.services.appwrite_api.loadbalancer.server.port=80"
+      #http
+      - traefik.http.routers.appwrite_api_http.entrypoints=appwrite_web
+      - traefik.http.routers.appwrite_api_http.rule=PathPrefix(`/`)
+      - traefik.http.routers.appwrite_api_http.service=appwrite_api
+      # https
+      - traefik.http.routers.appwrite_api_https.entrypoints=appwrite_websecure
+      - traefik.http.routers.appwrite_api_https.rule=PathPrefix(`/`)
+      - traefik.http.routers.appwrite_api_https.service=appwrite_api
+      - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-uploads:/storage/uploads:rw
@@ -63,7 +71,7 @@ services:
       - ./psalm.xml:/usr/src/code/psalm.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
-      - ./vendor:/usr/src/code/vendor
+      # - ./vendor:/usr/src/code/vendor
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
@@ -118,12 +126,49 @@ services:
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_FUNCTIONS_RUNTIMES
-      - _APP_STATSD_HOST
-      - _APP_STATSD_PORT
-      - _APP_MAINTENANCE_INTERVAL
-      - _APP_MAINTENANCE_RETENTION_EXECUTION
-      - _APP_MAINTENANCE_RETENTION_ABUSE
-      - _APP_MAINTENANCE_RETENTION_AUDIT
+
+  appwrite-realtime:
+    entrypoint: realtime
+    container_name: appwrite-realtime
+    build:
+      context: .
+    restart: unless-stopped
+    ports: 
+      - 9505:80
+    labels:
+      - "traefik.enable=true"
+      - "traefik.constraint-label-stack=appwrite"
+      - "traefik.docker.network=appwrite"
+      - "traefik.http.services.appwrite_realtime.loadbalancer.server.port=80"
+      #ws
+      - traefik.http.routers.appwrite_realtime_ws.entrypoints=appwrite_web
+      - traefik.http.routers.appwrite_realtime_ws.rule=PathPrefix(`/v1/realtime`)
+      - traefik.http.routers.appwrite_realtime_ws.service=appwrite_realtime
+      # wss
+      - traefik.http.routers.appwrite_realtime_wss.entrypoints=appwrite_websecure
+      - traefik.http.routers.appwrite_realtime_wss.rule=PathPrefix(`/v1/realtime`)
+      - traefik.http.routers.appwrite_realtime_wss.service=appwrite_realtime
+      - traefik.http.routers.appwrite_realtime_wss.tls=true
+      - traefik.http.routers.appwrite_realtime_wss.tls.certresolver=dns
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_OPTIONS_ABUSE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_USAGE_STATS
 
   appwrite-worker-audits:
     entrypoint: worker-audits
@@ -494,7 +539,7 @@ services:
     container_name: appwrite-adminer
     restart: always
     ports:
-      - 9505:8080
+      - 9506:8080
     networks:
       - appwrite
 

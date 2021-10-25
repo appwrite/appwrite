@@ -4,7 +4,6 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use stdClass;
 
 class UsageStorage extends Model
 {
@@ -21,14 +20,14 @@ class UsageStorage extends Model
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for the occupied storage size (in bytes).',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => new \stdClass,
                 'array' => true 
             ])
             ->addRule('files', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for total number of files.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => new \stdClass,
                 'array' => true 
             ])
         ;

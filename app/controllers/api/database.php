@@ -76,7 +76,8 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
         throw new Exception('Cannot set default value for required attribute', 400);
     }
 
-    $attribute = new Document([
+    try {
+        $attribute = new Document([
             '$id' => $collectionId.'_'.$attributeId,
             'key' => $attributeId,
             'collectionId' => $collectionId,
@@ -89,9 +90,8 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
             'array' => $array,
             'format' => $format,
             'formatOptions' => $formatOptions,
-    ]);
+        ]);
 
-    try {
         $dbForInternal->checkAttribute($collection, $attribute);
         $attribute = $dbForInternal->createDocument('attributes', $attribute);
     }
@@ -102,7 +102,7 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
         throw new Exception('Attribute limit exceeded', 400);
     }
 
-    $dbForInternal->purgeDocument('collections', $collectionId);
+    $dbForInternal->deleteCachedDocument('collections', $collectionId);
 
     // Pass clone of $attribute object to workers
     // so we can later modify Document to fit response model
@@ -200,14 +200,23 @@ App::get('/v1/database/collections')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 40000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('after', '', new UID(), 'ID of the collection used as the starting point for the query, excluding the collection itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursor', '', new UID(), 'ID of the collection used as the starting point for the query, excluding the collection itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForInternal, $usage) {
+    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+
+        if (!empty($cursor)) {
+            $cursorCollection = $dbForInternal->getDocument('collections', $cursor);
+
+            if ($cursorCollection->isEmpty()) {
+                throw new Exception("Collection '{$cursor}' for the 'cursor' value not found.", 400);
+            }
+        }
 
         $queries = [];
 
@@ -215,18 +224,10 @@ App::get('/v1/database/collections')
             $queries[] = new Query('name', Query::TYPE_SEARCH, [$search]);
         }
 
-        if (!empty($after)) {
-            $afterCollection = $dbForInternal->getDocument('collections', $after);
-
-            if ($afterCollection->isEmpty()) {
-                throw new Exception("Collection '{$after}' for the 'after' value not found.", 400);
-            }
-        }
-
         $usage->setParam('database.collections.read', 1);
 
         $response->dynamic(new Document([
-            'collections' => $dbForInternal->find('collections', $queries, $limit, $offset, [], [$orderType], $afterCollection ?? null),
+            'collections' => $dbForInternal->find('collections', $queries, $limit, $offset, [], [$orderType], $cursorCollection ?? null, $cursorDirection),
             'sum' => $dbForInternal->count('collections', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_COLLECTION_LIST);
     });
@@ -669,7 +670,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
     ->label('sdk.description', '/docs/references/database/create-attribute-string.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_STRING)
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->param('size', null, new Integer(), 'Attribute size for text attributes, in number of characters.')
@@ -717,7 +718,7 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
     ->label('sdk.description', '/docs/references/database/create-attribute-email.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_EMAIL)
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
@@ -748,6 +749,61 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
     });
 
+App::post('/v1/database/collections/:collectionId/attributes/enum')
+    ->desc('Create Enum Attribute')
+    ->groups(['api', 'database'])
+    ->label('event', 'database.attributes.create')
+    ->label('scope', 'collections.write')
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.method', 'createEnumAttribute')
+    ->label('sdk.description', '/docs/references/database/create-attribute-enum.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_ENUM)
+    ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('attributeId', '', new Key(), 'Attribute ID.')
+    ->param('elements', [], new ArrayList(new Text(0)), 'Array of elements in enumerated type. Uses length of longest element to determine size.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->inject('database')
+    ->inject('audits')
+    ->inject('usage')
+    ->action(function ($collectionId, $attributeId, $elements, $required, $default, $array, $response, $dbForInternal, $database, $audits, $usage) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal*/
+        /** @var Appwrite\Event\Event $database */
+        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Stats\Stats $usage */
+
+        // use length of longest string as attribute size
+        $size = 0;
+        foreach ($elements as $element) {
+            $length = \strlen($element);
+            if ($length === 0) {
+                throw new Exception('Each enum element must not be empty', 400);
+
+            }
+            $size = ($length > $size) ? $length : $size;
+        }
+
+        $attribute = createAttribute($collectionId, new Document([
+            '$id' => $attributeId,
+            'type' => Database::VAR_STRING,
+            'size' => $size,
+            'required' => $required,
+            'default' => $default,
+            'array' => $array,
+            'format' => APP_DATABASE_ATTRIBUTE_ENUM,
+            'formatOptions' => ['elements' => $elements],
+        ]), $response, $dbForInternal, $database, $audits, $usage);
+
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
+    });
+
 App::post('/v1/database/collections/:collectionId/attributes/ip')
     ->desc('Create IP Address Attribute')
     ->groups(['api', 'database'])
@@ -759,7 +815,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
     ->label('sdk.description', '/docs/references/database/create-attribute-ip.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_IP)
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
@@ -801,7 +857,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
     ->label('sdk.description', '/docs/references/database/create-attribute-url.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_URL)
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
@@ -843,7 +899,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
     ->label('sdk.description', '/docs/references/database/create-attribute-integer.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_INTEGER)
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
@@ -907,7 +963,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
     ->label('sdk.description', '/docs/references/database/create-attribute-float.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_FLOAT)
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
@@ -971,7 +1027,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
     ->label('sdk.description', '/docs/references/database/create-attribute-boolean.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_BOOLEAN)
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
@@ -1046,7 +1102,15 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
     ->label('sdk.description', '/docs/references/database/get-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
+    ->label('sdk.response.model', [
+        Response::MODEL_ATTRIBUTE_BOOLEAN,
+        Response::MODEL_ATTRIBUTE_INTEGER,
+        Response::MODEL_ATTRIBUTE_FLOAT,
+        Response::MODEL_ATTRIBUTE_EMAIL,
+        Response::MODEL_ATTRIBUTE_ENUM,
+        Response::MODEL_ATTRIBUTE_URL,
+        Response::MODEL_ATTRIBUTE_IP,
+        Response::MODEL_ATTRIBUTE_STRING,])// needs to be last, since its condition would dominate any other string attribute
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->inject('response')
@@ -1078,6 +1142,7 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
             Database::VAR_STRING => match($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,
+                APP_DATABASE_ATTRIBUTE_ENUM => Response::MODEL_ATTRIBUTE_ENUM,
                 APP_DATABASE_ATTRIBUTE_IP => Response::MODEL_ATTRIBUTE_IP,
                 APP_DATABASE_ATTRIBUTE_URL => Response::MODEL_ATTRIBUTE_URL,
                 default => Response::MODEL_ATTRIBUTE_STRING,
@@ -1130,7 +1195,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
         }
 
         $attribute = $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
-        $dbForInternal->purgeDocument('collections', $collectionId);
+        $dbForInternal->deleteCachedDocument('collections', $collectionId);
 
         $database
             ->setParam('type', DATABASE_TYPE_DELETE_ATTRIBUTE)
@@ -1237,7 +1302,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
             throw new Exception('Index already exists', 409);
         }
 
-        $dbForInternal->purgeDocument('collections', $collectionId);
+        $dbForInternal->deleteCachedDocument('collections', $collectionId);
 
         $database
             ->setParam('type', DATABASE_TYPE_CREATE_INDEX)
@@ -1382,7 +1447,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
         }
 
         $index = $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
-        $dbForInternal->purgeDocument('collections', $collectionId);
+        $dbForInternal->deleteCachedDocument('collections', $collectionId);
 
         $database
             ->setParam('type', DATABASE_TYPE_DELETE_INDEX)
@@ -1435,7 +1500,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
-    
+
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data)) {
@@ -1445,7 +1510,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         if (isset($data['$id'])) {
             throw new Exception('$id is not allowed for creating new documents, try update instead', 400);
         }
-        
+
         $collection = $dbForInternal->getDocument('collections', $collectionId);
 
         if ($collection->isEmpty()) {
@@ -1512,14 +1577,15 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->param('queries', [], new ArrayList(new Text(128)), 'Array of query strings.', true)
     ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
-    ->param('after', '', new UID(), 'ID of the document used as the starting point for the query, excluding the document itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursor', '', new UID(), 'ID of the document used as the starting point for the query, excluding the document itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderAttributes', [], new ArrayList(new Text(128)), 'Array of attributes used to sort results.', true)
     ->param('orderTypes', [], new ArrayList(new WhiteList(['DESC', 'ASC'], true)), 'Array of order directions for sorting attribtues. Possible values are DESC for descending order, or ASC for ascending order.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->inject('usage')
-    ->action(function ($collectionId, $queries, $limit, $offset, $after, $orderAttributes, $orderTypes, $response, $dbForInternal, $dbForExternal, $usage) {
+    ->action(function ($collectionId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderAttributes, $orderTypes, $response, $dbForInternal, $dbForExternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
@@ -1550,28 +1616,29 @@ App::get('/v1/database/collections/:collectionId/documents')
             throw new Exception($validator->getDescription(), 400);
         }
 
-        if (!empty($after)) {
-            $afterDocument = $dbForExternal->getDocument($collectionId, $after);
+        $cursorDocument = null;
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForExternal->getDocument($collectionId, $cursor);
 
-            if ($afterDocument->isEmpty()) {
-                throw new Exception("Document '{$after}' for the 'after' value not found.", 400);
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
 
         if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document[] $documents */
-            $documents = Authorization::skip(function() use ($dbForExternal, $collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $afterDocument) {
-                return $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $afterDocument ?? null);
+            $documents = Authorization::skip(function() use ($dbForExternal, $collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument, $cursorDirection) {
+                return $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
             });
         } else {
-            $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $afterDocument ?? null);
+            $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
         }
 
         $usage
             ->setParam('database.documents.read', 1)
             ->setParam('collectionId', $collectionId)
-            ;
-        
+        ;
+
         $response->dynamic(new Document([
             'sum' => $dbForExternal->count($collectionId, $queries, APP_LIMIT_COUNT),
             'documents' => $documents,
@@ -1675,7 +1742,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId/logs')
 
         $audit = new Audit($dbForInternal);
 
-        $logs = $audit->getLogsByResource('database/document/'.$document->getId());
+        $logs = $audit->getLogsByResource('document/'.$document->getId());
 
         $output = [];
 

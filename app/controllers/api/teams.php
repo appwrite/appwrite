@@ -14,6 +14,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
@@ -39,10 +40,12 @@ App::post('/v1/teams')
     ->inject('response')
     ->inject('user')
     ->inject('dbForInternal')
-    ->action(function ($teamId, $name, $roles, $response, $user, $dbForInternal) {
+    ->inject('events')
+    ->action(function ($teamId, $name, $roles, $response, $user, $dbForInternal, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Event\Event $events */
 
         Authorization::disable();
 
@@ -57,6 +60,7 @@ App::post('/v1/teams')
             'name' => $name,
             'sum' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
             'dateCreated' => \time(),
+            'search' => implode(' ', [$teamId, $name]),
         ]));
 
         Authorization::reset();
@@ -81,6 +85,10 @@ App::post('/v1/teams')
             $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
         }
 
+        if (!empty($user->getId())) {
+            $events->setParam('userId', $user->getId());
+        }
+
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($team, Response::MODEL_TEAM);
     });
@@ -99,25 +107,30 @@ App::get('/v1/teams')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('after', '', new UID(), 'ID of the team used as the starting point for the query, excluding the team itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursor', '', new UID(), 'ID of the team used as the starting point for the query, excluding the team itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForInternal) {
+    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
+        if (!empty($cursor)) {
+            $cursorTeam = $dbForInternal->getDocument('teams', $cursor);
 
-        if (!empty($after)) {
-            $afterTeam = $dbForInternal->getDocument('teams', $after);
-
-            if ($afterTeam->isEmpty()) {
-                throw new Exception("Team '{$after}' for the 'after' value not found.", 400);
+            if ($cursorTeam->isEmpty()) {
+                throw new Exception("Team '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
 
-        $results = $dbForInternal->find('teams', $queries, $limit, $offset, [], [$orderType], $afterTeam ?? null);
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
+
+        $results = $dbForInternal->find('teams', $queries, $limit, $offset, [], [$orderType], $cursorTeam ?? null, $cursorDirection);
         $sum = $dbForInternal->count('teams', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
@@ -179,7 +192,10 @@ App::put('/v1/teams/:teamId')
             throw new Exception('Team not found', 404);
         }
 
-        $team = $dbForInternal->updateDocument('teams', $team->getId(), $team->setAttribute('name', $name));
+        $team = $dbForInternal->updateDocument('teams', $team->getId(),$team
+            ->setAttribute('name', $name)
+            ->setAttribute('search', implode(' ', [$teamId, $name]))
+        );
 
         $response->dynamic($team, Response::MODEL_TEAM);
     });
@@ -255,9 +271,9 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('abuse-limit', 10)
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('email', '', new Email(), 'New team member email.')
-    ->param('name', '', new Text(128), 'New team member name. Max length: 128 chars.', true)
     ->param('roles', [], new ArrayList(new Key()), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
-    ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
+    ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
+    ->param('name', '', new Text(128), 'New team member name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
     ->inject('user')
@@ -265,7 +281,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('locale')
     ->inject('audits')
     ->inject('mails')
-    ->action(function ($teamId, $email, $name, $roles, $url, $response, $project, $user, $dbForInternal, $locale, $audits, $mails) {
+    ->action(function ($teamId, $email, $roles, $url, $name, $response, $project, $user, $dbForInternal, $locale, $audits, $mails) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Document $user */
@@ -273,9 +289,13 @@ App::post('/v1/teams/:teamId/memberships')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $mails */
 
+        if(empty(App::getEnv('_APP_SMTP_HOST'))) {
+            throw new Exception('SMTP Disabled', 503);
+        }
+
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
-        
+
         $email = \strtolower($email);
         $name = (empty($name)) ? $email : $name;
         $team = $dbForInternal->getDocument('teams', $teamId);
@@ -289,10 +309,10 @@ App::post('/v1/teams/:teamId/memberships')
         if (empty($invitee)) { // Create new user if no user with same email found
 
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
-        
+
             if ($limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
                 $sum = $dbForInternal->count('users', [], APP_LIMIT_USERS);
-    
+
                 if($sum >= $limit) {
                     throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
                 }
@@ -323,6 +343,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'sessions' => [],
                     'tokens' => [],
                     'memberships' => [],
+                    'search' => implode(' ', [$userId, $email, $name]),
                 ]));
             } catch (Duplicate $th) {
                 throw new Exception('Account already exists', 409);
@@ -377,7 +398,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
         $url = Template::unParseURL($url);
 
         if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
@@ -424,11 +445,12 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('after', '', new UID(), 'ID of the membership used as the starting point for the query, excluding the membership itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursor', '', new UID(), 'ID of the membership used as the starting point for the query, excluding the membership itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($teamId, $search, $limit, $offset, $after, $orderType, $response, $dbForInternal) {
+    ->action(function ($teamId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
@@ -438,15 +460,15 @@ App::get('/v1/teams/:teamId/memberships')
             throw new Exception('Team not found', 404);
         }
 
-        if (!empty($after)) {
-            $afterMembership = $dbForInternal->getDocument('memberships', $after);
+        if (!empty($cursor)) {
+            $cursorMembership = $dbForInternal->getDocument('memberships', $cursor);
 
-            if ($afterMembership->isEmpty()) {
-                throw new Exception("Membership '{$after}' for the 'after' value not found.", 400);
+            if ($cursorMembership->isEmpty()) {
+                throw new Exception("Membership '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
 
-        $memberships = $dbForInternal->find('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], $limit, $offset, [], [$orderType], $afterMembership ?? null);
+        $memberships = $dbForInternal->find('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], $limit, $offset, [], [$orderType], $cursorMembership ?? null, $cursorDirection);
         $sum = $dbForInternal->count('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], APP_LIMIT_COUNT);
         $users = [];
 

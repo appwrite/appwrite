@@ -45,6 +45,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Range;
+use Utopia\Validator\WhiteList;
 use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
@@ -61,9 +62,10 @@ const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
-const APP_CACHE_BUSTER = 151;
-const APP_VERSION_STABLE = '0.9.4';
+const APP_CACHE_BUSTER = 160;
+const APP_VERSION_STABLE = '0.11.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
+const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
 const APP_DATABASE_ATTRIBUTE_URL = 'url';
 const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
@@ -95,8 +97,10 @@ const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_CERTIFICATES = 'certificates';
 const DELETE_TYPE_USAGE = 'usage';
-// Mail Worker Types
+const DELETE_TYPE_REALTIME = 'realtime';
+// Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
+const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
 const MAIL_TYPE_RECOVERY = 'recovery';
 const MAIL_TYPE_INVITATION = 'invitation';
 // Auth Types
@@ -198,6 +202,22 @@ Database::addFilter('casting',
     }
 );
 
+Database::addFilter('enum',
+    function($value, Document $attribute) {
+        if ($attribute->isSet('elements')) {
+            $attribute->removeAttribute('elements');
+        }
+        return $value;
+    },
+    function($value, Document $attribute) {
+        $formatOptions = json_decode($attribute->getAttribute('formatOptions', []), true);
+        if (isset($formatOptions['elements'])) {
+            $attribute->setAttribute('elements', $formatOptions['elements']);
+        }
+        return $value;
+    }
+);
+
 Database::addFilter('range',
     function($value, Document $attribute) {
         if ($attribute->isSet('min')) {
@@ -240,6 +260,54 @@ Database::addFilter('subQueryIndexes',
         return $database
             ->find('indexes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
+            ], 64, 0, []);
+    }
+);
+
+Database::addFilter('subQueryPlatforms',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('platforms', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []);
+    }
+);
+
+Database::addFilter('subQueryDomains',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('domains', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []);
+    }
+);
+
+Database::addFilter('subQueryKeys',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('keys', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []);
+    }
+);
+
+Database::addFilter('subQueryWebhooks',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('webhooks', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
             ], $database->getIndexLimit(), 0, []);
     }
 );
@@ -270,6 +338,11 @@ Database::addFilter('encrypt',
  */
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_EMAIL, function() {
     return new Email();
+}, Database::VAR_STRING);
+
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_ENUM, function($attribute) {
+    $elements = $attribute['formatOptions']['elements'];
+    return new WhiteList($elements);
 }, Database::VAR_STRING);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_IP, function() {
@@ -421,10 +494,12 @@ Locale::setLanguageFromJSON('af', __DIR__.'/config/locale/translations/af.json')
 Locale::setLanguageFromJSON('ar', __DIR__.'/config/locale/translations/ar.json');
 Locale::setLanguageFromJSON('be', __DIR__.'/config/locale/translations/be.json');
 Locale::setLanguageFromJSON('bg', __DIR__.'/config/locale/translations/bg.json');
+Locale::setLanguageFromJSON('bh', __DIR__.'/config/locale/translations/bh.json');
 Locale::setLanguageFromJSON('bn', __DIR__.'/config/locale/translations/bn.json');
 Locale::setLanguageFromJSON('bs', __DIR__.'/config/locale/translations/bs.json');
 Locale::setLanguageFromJSON('ca', __DIR__.'/config/locale/translations/ca.json');
 Locale::setLanguageFromJSON('cs', __DIR__.'/config/locale/translations/cs.json');
+Locale::setLanguageFromJSON('da', __DIR__.'/config/locale/translations/da.json');
 Locale::setLanguageFromJSON('de', __DIR__.'/config/locale/translations/de.json');
 Locale::setLanguageFromJSON('el', __DIR__.'/config/locale/translations/el.json');
 Locale::setLanguageFromJSON('en', __DIR__.'/config/locale/translations/en.json');
@@ -436,6 +511,7 @@ Locale::setLanguageFromJSON('fr', __DIR__.'/config/locale/translations/fr.json')
 Locale::setLanguageFromJSON('gu', __DIR__.'/config/locale/translations/gu.json');
 Locale::setLanguageFromJSON('he', __DIR__.'/config/locale/translations/he.json');
 Locale::setLanguageFromJSON('hi', __DIR__.'/config/locale/translations/hi.json');
+Locale::setLanguageFromJSON('hr', __DIR__.'/config/locale/translations/hr.json');
 Locale::setLanguageFromJSON('hu', __DIR__.'/config/locale/translations/hu.json');
 Locale::setLanguageFromJSON('hy', __DIR__.'/config/locale/translations/hy.json');
 Locale::setLanguageFromJSON('id', __DIR__.'/config/locale/translations/id.json');
@@ -446,6 +522,7 @@ Locale::setLanguageFromJSON('jv', __DIR__.'/config/locale/translations/jv.json')
 Locale::setLanguageFromJSON('kn', __DIR__.'/config/locale/translations/kn.json');
 Locale::setLanguageFromJSON('km', __DIR__.'/config/locale/translations/km.json');
 Locale::setLanguageFromJSON('ko', __DIR__.'/config/locale/translations/ko.json');
+Locale::setLanguageFromJSON('lb', __DIR__.'/config/locale/translations/lb.json');
 Locale::setLanguageFromJSON('lt', __DIR__.'/config/locale/translations/lt.json');
 Locale::setLanguageFromJSON('ml', __DIR__.'/config/locale/translations/ml.json');
 Locale::setLanguageFromJSON('mr', __DIR__.'/config/locale/translations/mr.json');
@@ -460,7 +537,9 @@ Locale::setLanguageFromJSON('pt-br', __DIR__.'/config/locale/translations/pt-br.
 Locale::setLanguageFromJSON('pt-pt', __DIR__.'/config/locale/translations/pt-pt.json');
 Locale::setLanguageFromJSON('ro', __DIR__.'/config/locale/translations/ro.json');
 Locale::setLanguageFromJSON('ru', __DIR__ . '/config/locale/translations/ru.json');
+Locale::setLanguageFromJSON('sa', __DIR__ . '/config/locale/translations/sa.json');
 Locale::setLanguageFromJSON('si', __DIR__ . '/config/locale/translations/si.json');
+Locale::setLanguageFromJSON('sk', __DIR__ . '/config/locale/translations/sk.json');
 Locale::setLanguageFromJSON('sl', __DIR__ . '/config/locale/translations/sl.json');
 Locale::setLanguageFromJSON('sq', __DIR__ . '/config/locale/translations/sq.json');
 Locale::setLanguageFromJSON('sv', __DIR__ . '/config/locale/translations/sv.json');
@@ -583,10 +662,10 @@ App::setResource('user', function($mode, $project, $console, $request, $response
             $request->getCookie(Auth::$cookieName.'_legacy', '')));// Get fallback session from old clients (no SameSite support)
 
     // Get fallback session from clients who block 3rd-party cookies
-    $response->addHeader('X-Debug-Fallback', 'false');
+    if($response) $response->addHeader('X-Debug-Fallback', 'false');
 
     if(empty($session['id']) && empty($session['secret'])) {
-        $response->addHeader('X-Debug-Fallback', 'true');
+        if($response) $response->addHeader('X-Debug-Fallback', 'true');
         $fallback = $request->getHeader('x-fallback-cookies', '');
         $fallback = \json_decode($fallback, true);
         $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
@@ -630,7 +709,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         } catch (JWTException $error) {
             throw new Exception('Failed to verify JWT. '.$error->getMessage(), 401);
         }
-        
+
         $jwtUserId = $payload['userId'] ?? '';
         $jwtSessionId = $payload['sessionId'] ?? '';
 

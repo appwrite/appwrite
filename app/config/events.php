@@ -197,6 +197,21 @@ return [
         'model' => Response::MODEL_ANY,
         'note' => 'version >= 0.7',
     ],
+    'users.update.email' => [
+        'description' => 'This event triggers when the user email address is updated.',
+        'model' => Response::MODEL_USER,
+        'note' => 'version >= 0.10',
+    ],
+    'users.update.name' => [
+        'description' => 'This event triggers when the user name is updated.',
+        'model' => Response::MODEL_USER,
+        'note' => 'version >= 0.10',
+    ],
+    'users.update.password' => [
+        'description' => 'This event triggers when the user password is updated.',
+        'model' => Response::MODEL_USER,
+        'note' => 'version >= 0.10',
+    ],
     'users.update.status' => [
         'description' => 'This event triggers when a user status is updated from the users API.',
         'model' => Response::MODEL_USER,
