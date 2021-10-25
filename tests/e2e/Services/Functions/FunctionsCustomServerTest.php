@@ -392,7 +392,7 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals($function['body']['sum'], 1);
+        $this->assertEquals($function['body']['sum'], 2);
         $this->assertIsArray($function['body']['tags']);
         $this->assertCount(1, $function['body']['tags']);
         $this->assertEquals($function['body']['tags'][0]['$id'], $data['tagId']);
@@ -405,7 +405,7 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals($function['body']['sum'], 1);
+        $this->assertEquals($function['body']['sum'], 2);
         $this->assertIsArray($function['body']['tags']);
         $this->assertCount(1, $function['body']['tags']);
         $this->assertEquals($function['body']['tags'][0]['$id'], $data['tagId']);
@@ -418,7 +418,7 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals($function['body']['sum'], 1);
+        $this->assertEquals($function['body']['sum'], 2);
         $this->assertIsArray($function['body']['tags']);
         $this->assertCount(1, $function['body']['tags']);
         $this->assertEquals($function['body']['tags'][0]['$id'], $data['tagId']);
