@@ -688,7 +688,7 @@ class DatabaseCustomServerTest extends Scope
             $this->assertEquals($attribute['headers']['status-code'], 201);
         }
 
-        sleep(5);
+        sleep(10);
 
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
