@@ -623,19 +623,6 @@ trait RealtimeBase
             'permission' => 'collection'
         ]);
 
-        $response = json_decode($client->receive(), true);
-
-        $this->assertArrayHasKey('type', $response);
-        $this->assertArrayHasKey('data', $response);
-        $this->assertEquals('event', $response['type']);
-        $this->assertNotEmpty($response['data']);
-        $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(2, $response['data']['channels']);
-        $this->assertContains('collections', $response['data']['channels']);
-        $this->assertContains('collections.' . $actors['body']['$id'], $response['data']['channels']);
-        $this->assertEquals('database.collections.create', $response['data']['event']);
-        $this->assertNotEmpty($response['data']['payload']);
-
         $data = ['actorsId' => $actors['body']['$id']];
 
         $name = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/attributes/string', array_merge([
@@ -783,8 +770,25 @@ trait RealtimeBase
 
         /**
          * Test File Create
+         * TODO Buckets Channels
          */
-        $file = $this->client->call(Client::METHOD_POST, '/storage/files', array_merge([
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'bucketId' => 'unique()',
+            'name' => 'Test Bucket',
+            'permission' => 'file',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertNotEmpty($bucket['body']['$id']);
+        
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/'.$bucketId.'/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -802,9 +806,10 @@ trait RealtimeBase
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
         $this->assertContains('files.' . $file['body']['$id'], $response['data']['channels']);
+        $this->assertContains('buckets.' . $bucketId . '.files', $response['data']['channels']);
         $this->assertEquals('storage.files.create', $response['data']['event']);
         $this->assertNotEmpty($response['data']['payload']);
 
@@ -813,7 +818,7 @@ trait RealtimeBase
         /**
          * Test File Update
          */
-        $this->client->call(Client::METHOD_PUT, '/storage/files/' . $data['fileId'], array_merge([
+        $this->client->call(Client::METHOD_PUT, '/storage/buckets/'.$bucketId.'/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -828,8 +833,9 @@ trait RealtimeBase
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
+        $this->assertContains('buckets.'.$bucketId.'.files', $response['data']['channels']);
         $this->assertContains('files.' . $file['body']['$id'], $response['data']['channels']);
         $this->assertEquals('storage.files.update', $response['data']['event']);
         $this->assertNotEmpty($response['data']['payload']);
@@ -837,7 +843,7 @@ trait RealtimeBase
         /**
          * Test File Delete
          */
-        $this->client->call(Client::METHOD_DELETE, '/storage/files/' . $data['fileId'], array_merge([
+        $this->client->call(Client::METHOD_DELETE, '/storage/buckets/'. $bucketId . '/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -849,8 +855,9 @@ trait RealtimeBase
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
+        $this->assertContains('buckets.'.$bucketId.'.files', $response['data']['channels']);
         $this->assertContains('files.' . $file['body']['$id'], $response['data']['channels']);
         $this->assertEquals('storage.files.delete', $response['data']['event']);
         $this->assertNotEmpty($response['data']['payload']);

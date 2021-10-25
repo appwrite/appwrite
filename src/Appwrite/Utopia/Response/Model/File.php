@@ -16,6 +16,12 @@ class File extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('bucketId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Bucket ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
             ->addRule('$read', [
                 'type' => self::TYPE_STRING,
                 'description' => 'File read permissions.',
