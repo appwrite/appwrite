@@ -922,6 +922,11 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
         // Ensure attribute default is within range
         $min = (is_null($min)) ? PHP_INT_MIN : \intval($min);
         $max = (is_null($max)) ? PHP_INT_MAX : \intval($max);
+
+        if ($min > $max) {
+            throw new Exception('Minimum value must be lesser than maximum value', 400);
+        }
+
         $validator = new Range($min, $max, Database::VAR_INTEGER);
 
         if (!is_null($default) && !$validator->isValid($default)) {
@@ -986,6 +991,11 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
         // Ensure attribute default is within range
         $min = (is_null($min)) ? PHP_FLOAT_MIN : \floatval($min);
         $max = (is_null($max)) ? PHP_FLOAT_MAX : \floatval($max);
+
+        if ($min > $max) {
+            throw new Exception('Minimum value must be lesser than maximum value', 400);
+        }
+
         $validator = new Range($min, $max, Database::VAR_FLOAT);
 
         if (!is_null($default) && !$validator->isValid($default)) {

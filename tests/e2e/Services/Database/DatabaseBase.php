@@ -1328,16 +1328,15 @@ trait DatabaseBase
          * Test for failure
          */
 
-        // TODO@kodumbeats troubleshoot
-        // $invalidRange = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
-        //     'content-type' => 'application/json', 'x-appwrite-project' => $this->getProject()['$id'],
-        //     'x-appwrite-key' => $this->getProject()['apiKey']
-        // ]), [
-        //     'attributeId' => 'invalidRange',
-        //     'required' => false,
-        //     'min' => 4,
-        //     'max' => 3,
-        // ]);
+        $invalidRange = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
+            'content-type' => 'application/json', 'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'invalidRange',
+            'required' => false,
+            'min' => 4,
+            'max' => 3,
+        ]);
 
         $this->assertEquals(201, $email['headers']['status-code']);
         $this->assertEquals(201, $ip['headers']['status-code']);
@@ -1347,8 +1346,8 @@ trait DatabaseBase
         $this->assertEquals(201, $probability['headers']['status-code']);
         $this->assertEquals(201, $upperBound['headers']['status-code']);
         $this->assertEquals(201, $lowerBound['headers']['status-code']);
-        // $this->assertEquals(400, $invalidRange['headers']['status-code']);
-        // $this->assertEquals('Minimum value must be lesser than maximum value', $invalidRange['body']['message']);
+        $this->assertEquals(400, $invalidRange['headers']['status-code']);
+        $this->assertEquals('Minimum value must be lesser than maximum value', $invalidRange['body']['message']);
 
         // wait for worker to add attributes
         sleep(3);
