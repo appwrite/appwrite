@@ -1338,6 +1338,16 @@ trait DatabaseBase
             'max' => 3,
         ]);
 
+        $defaultArray = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
+            'content-type' => 'application/json', 'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'defaultArray',
+            'required' => false,
+            'default' => 42,
+            'array' => true,
+        ]);
+
         $this->assertEquals(201, $email['headers']['status-code']);
         $this->assertEquals(201, $ip['headers']['status-code']);
         $this->assertEquals(201, $url['headers']['status-code']);
@@ -1347,7 +1357,9 @@ trait DatabaseBase
         $this->assertEquals(201, $upperBound['headers']['status-code']);
         $this->assertEquals(201, $lowerBound['headers']['status-code']);
         $this->assertEquals(400, $invalidRange['headers']['status-code']);
+        $this->assertEquals(400, $defaultArray['headers']['status-code']);
         $this->assertEquals('Minimum value must be lesser than maximum value', $invalidRange['body']['message']);
+        $this->assertEquals('Cannot set default value for array attributes', $defaultArray['body']['message']);
 
         // wait for worker to add attributes
         sleep(3);

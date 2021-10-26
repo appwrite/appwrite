@@ -76,6 +76,10 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
         throw new Exception('Cannot set default value for required attribute', 400);
     }
 
+    if ($array && $default) {
+        throw new Exception('Cannot set default value for array attributes', 400);
+    }
+
     try {
         $attribute = new Document([
             '$id' => $collectionId.'_'.$attributeId,
@@ -1591,7 +1595,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         $usage
             ->setParam('database.documents.create', 1)
             ->setParam('collectionId', $collectionId)
-            ;
+        ;
 
         $audits
             ->setParam('event', 'database.documents.create')
