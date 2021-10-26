@@ -290,7 +290,6 @@ class DeletesV1 extends Worker
     {
         Authorization::disable();
 
-        // TODO@kodumbeats is it better to pass objects or ID strings?
         if($database->deleteDocument($document->getCollection(), $document->getId())) {
             Console::success('Deleted document "'.$document->getId().'" successfully');
 
