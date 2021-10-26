@@ -690,8 +690,8 @@ App::get('/v1/storage/usage')
             ];
 
             $metrics = [
-                "storage.total",
-                "storage.files.count"
+                'storage.total',
+                'storage.files.count'
             ];
 
             $stats = [];
@@ -702,7 +702,7 @@ App::get('/v1/storage/usage')
                         new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
                     ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
-    
+
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
                         $stats[$metric][] = [
@@ -711,7 +711,7 @@ App::get('/v1/storage/usage')
                         ];
                     }
                     $stats[$metric] = array_reverse($stats[$metric]);
-                }    
+                }
             });
 
             $usage = new Document([
@@ -781,7 +781,7 @@ App::get('/v1/storage/:bucketId/usage')
                         new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
                     ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
-    
+
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
                         $stats[$metric][] = [
@@ -790,16 +790,16 @@ App::get('/v1/storage/:bucketId/usage')
                         ];
                     }
                     $stats[$metric] = array_reverse($stats[$metric]);
-                }    
+                }
             });
 
             $usage = new Document([
                 'range' => $range,
-                'files.count' => $stats["storage.buckets.$bucketId.files.count"],
-                'files.create' => $stats["storage.buckets.$bucketId.files.create"],
-                'files.read' => $stats["storage.buckets.$bucketId.files.read"],
-                'files.update' => $stats["storage.buckets.$bucketId.files.update"],
-                'files.delete' => $stats["storage.buckets.$bucketId.files.delete"]
+                'filesCount' => $stats["storage.buckets.$bucketId.files.count"],
+                'filesCreate' => $stats["storage.buckets.$bucketId.files.create"],
+                'filesRead' => $stats["storage.buckets.$bucketId.files.read"],
+                'filesUpdate' => $stats["storage.buckets.$bucketId.files.update"],
+                'filesDelete' => $stats["storage.buckets.$bucketId.files.delete"]
             ]);
         }
 

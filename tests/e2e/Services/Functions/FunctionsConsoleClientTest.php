@@ -12,7 +12,7 @@ class FunctionsConsoleClientTest extends Scope
     use ProjectCustom;
     use SideConsole;
 
-    public function testCreateFunction():array
+    public function testCreateFunction(): array
     {
         $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
             'content-type' => 'application/json',
@@ -20,7 +20,7 @@ class FunctionsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'functionId' => 'unique()',
             'name' => 'Test',
-            'execute' => ['user:'.$this->getUser()['$id']],
+            'execute' => ['user:' . $this->getUser()['$id']],
             'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',
@@ -41,7 +41,7 @@ class FunctionsConsoleClientTest extends Scope
             'functionId' => $function['body']['$id']
         ];
     }
-    
+
     /**
      * @depends testCreateFunction
      */
@@ -51,7 +51,7 @@ class FunctionsConsoleClientTest extends Scope
          * Test for FAILURE
          */
 
-        $response = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -73,7 +73,7 @@ class FunctionsConsoleClientTest extends Scope
          * Test for SUCCESS
          */
 
-        $response = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -83,9 +83,8 @@ class FunctionsConsoleClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertEquals(count($response['body']), 4);
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['functions.executions']);
-        $this->assertIsArray($response['body']['functions.failures']);
-        $this->assertIsArray($response['body']['functions.compute']);
+        $this->assertIsArray($response['body']['functionsExecutions']);
+        $this->assertIsArray($response['body']['functionsFailures']);
+        $this->assertIsArray($response['body']['functionsCompute']);
     }
-    
 }

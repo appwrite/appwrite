@@ -294,7 +294,7 @@ App::get('/v1/projects/:projectId/usage')
                         new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
                     ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
-    
+
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
                         $stats[$metric][] = [
@@ -303,7 +303,7 @@ App::get('/v1/projects/:projectId/usage')
                         ];
                     }
                     $stats[$metric] = array_reverse($stats[$metric]);
-                }    
+                }
             });
 
             $usage = new Document([

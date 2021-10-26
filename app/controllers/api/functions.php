@@ -223,9 +223,9 @@ App::get('/v1/functions/:functionId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'functions.executions' => $stats["functions.$functionId.executions"],
-                'functions.failures' => $stats["functions.$functionId.failures"],
-                'functions.compute' => $stats["functions.$functionId.compute"]
+                'functionsExecutions' => $stats["functions.$functionId.executions"],
+                'functionsFailures' => $stats["functions.$functionId.failures"],
+                'functionsCompute' => $stats["functions.$functionId.compute"]
             ]);
         }
 

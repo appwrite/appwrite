@@ -39,7 +39,7 @@ $home = $this->getParam('home', '');
             <li class="margin-bottom">
                 <a data-ls-attrs="href=/console/home?project={{project.$id}}" class="box">
                     <div data-ls-bind="{{project.name}}" class="text-one-liner margin-bottom-tiny text-bold">&nbsp;</div>
-                    
+
                     <p data-ls-if="({{project.platforms.length}})" class="text-fade text-size-small" data-ls-bind="{{project.platforms.length}} apps"></p>
                     <p data-ls-if="(!{{project.platforms.length}})" class="text-fade text-size-small">&nbsp;</p>
 

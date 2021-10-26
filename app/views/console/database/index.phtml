@@ -118,9 +118,108 @@
                 </div>
 
             </li>
-            <!-- <li data-state="/console/database/usage?project={{router.params.project}}">
+            <li data-state="/console/database/usage?project={{router.params.project}}">
+                <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
+                    data-service="database.getUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-range="90d">
+                    <button class="tick">90d</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
+
+                <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '30d'"
+                    data-service="database.getUsage"
+                    data-event="submit"
+                    data-name="usage">
+                    <button class="tick">30d</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
+
+                <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '24h'"
+                    data-service="database.getUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-range="24h">
+                    <button class="tick">24h</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
+
                 <h2>Usage</h2>
-            </li> -->
+
+                <div
+                    data-service="database.getUsage"
+                    data-event="load"
+                    data-name="usage">
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Total Documents=documentsCount,Total Collections=collectionsCount" data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large">
+                        <li>Total Documents <span data-ls-bind="({{usage.documentsCount|statsGetLast|statsTotal}})"></span></li>
+                        <li>Total Collections <span data-ls-bind="({{usage.collectionsCount|statsGetLast|statsTotal}})"></span></li>
+                    </ul>
+
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Documents created=documentsCreate,Collections created=collectionsCreate" data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large">
+                        <li>Documents created</li>
+                        <li>Collections created</li>
+                    </ul>
+
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Documents read=documentsRead,Collections read=collectionsRead" data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large">
+                        <li>Documents read</li>
+                        <li>Collections read</li>
+                    </ul>
+
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Documents updated=documentsUpdate,Collections updated=collectionsUpdate" data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large">
+                        <li>Documents updated</li>
+                        <li>Collections updated</li>
+                    </ul>
+
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Documents deleted=documentsDelete,Collections deleted=collectionsDelete" data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large">
+                        <li>Documents deleted</li>
+                        <li>Collections deleted</li>
+                    </ul>
+                </div>
+            </li>
         </ul>
     </div>
 </div>

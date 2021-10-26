@@ -323,7 +323,7 @@ App::get('/v1/database/usage')
                         new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
                     ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
-    
+
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
                         $stats[$metric][] = [
@@ -332,21 +332,21 @@ App::get('/v1/database/usage')
                         ];
                     }
                     $stats[$metric] = array_reverse($stats[$metric]);
-                }    
+                }
             });
 
             $usage = new Document([
                 'range' => $range,
-                'documents.count' => $stats["database.documents.count"],
-                'collections.count' => $stats["database.collections.count"],
-                'documents.create' =>  $stats["database.documents.create"],
-                'documents.read' =>  $stats["database.documents.read"],
-                'documents.update' => $stats["database.documents.update"],
-                'documents.delete' => $stats["database.documents.delete"],
-                'collections.create' => $stats["database.collections.create"],
-                'collections.read' =>  $stats["database.collections.read"],
-                'collections.update' => $stats["database.collections.update"],
-                'collections.delete' => $stats["database.collections.delete"],
+                'documentsCount' => $stats["database.documents.count"],
+                'collectionsCount' => $stats["database.collections.count"],
+                'documentsCreate' =>  $stats["database.documents.create"],
+                'documentsRead' =>  $stats["database.documents.read"],
+                'documentsUpdate' => $stats["database.documents.update"],
+                'documentsDelete' => $stats["database.documents.delete"],
+                'collectionsCreate' => $stats["database.collections.create"],
+                'collectionsRead' =>  $stats["database.collections.read"],
+                'collectionsUpdate' => $stats["database.collections.update"],
+                'collectionsDelete' => $stats["database.collections.delete"],
             ]);
         }
 
@@ -417,7 +417,7 @@ App::get('/v1/database/:collectionId/usage')
                         new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
                     ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
-    
+
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
                         $stats[$metric][] = [
@@ -431,11 +431,11 @@ App::get('/v1/database/:collectionId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'documents.count' => $stats["database.collections.$collectionId.documents.count"],
-                'documents.create' => $stats["database.collections.$collectionId.documents.create"],
-                'documents.read' => $stats["database.collections.$collectionId.documents.read"],
-                'documents.update' =>  $stats["database.collections.$collectionId.documents.update"],
-                'documents.delete' =>  $stats["database.collections.$collectionId.documents.delete"]
+                'documentsCount' => $stats["database.collections.$collectionId.documents.count"],
+                'documentsCreate' => $stats["database.collections.$collectionId.documents.create"],
+                'documentsRead' => $stats["database.collections.$collectionId.documents.read"],
+                'documentsUpdate' =>  $stats["database.collections.$collectionId.documents.update"],
+                'documentsDelete' =>  $stats["database.collections.$collectionId.documents.delete"]
             ]);
         }
 

@@ -74,10 +74,10 @@ $logs = $this->getParam('logs', null);
                                 </thead>
                                 <tbody data-ls-loop="project-documents.documents" data-ls-as="node">
                                     <tr data-ls-loop="project-collection.attributes" data-ls-as="attribute" data-ls-prefix="template-attribute-body-first" data-ls-limit="20">
-                                        <td data-ls-if="{{attribute.status}} === 'available'" data-ls-attrs="data-title={{attribute.key}}: ">
+                                        <td data-ls-if="{{attribute.status}} === 'available'" data-ls-attrs="data-title={{attribute.key}}">
                                             <!-- <a href="" target="_blank" rel="noopener" class="pull-end margin-start"><i class="icon-link-ext"></i></a> -->
                                             <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{router.params.id}}&project={{router.params.project}}"><span data-ls-bind="{{node|documentAttribute}}"></span></a>
-                                            <span data-ls-if="!{{node|documentAttribute}}" class="text-fade">n/a</span>
+                                            <span data-ls-if="!{{node|documentAttribute}}" class="text-fade" data-debug="true">n/a</span>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -371,65 +371,63 @@ $logs = $this->getParam('logs', null);
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Documents=documents.count" data-height="140" />
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Documents=documentsCount" data-height="140" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li>Documents <span data-ls-bind="({{usage.executions.total}})"></span></li> <!-- TODO: add total to endpoint's response -->
+                        <li>Documents <span data-ls-bind="({{usage.documentsCount|statsGetLast|statsTotal}})"></span></li>
                     </ul>
 
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Created=documents.create" data-colors="orange" data-height="140" />
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Created=documentsCreate" data-colors="orange" data-height="140" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li class="orange">Created <span data-ls-bind="({{usage.compute.total}})"></span></li> <!-- TODO: add total to endpoint's response -->
+                        <li class="orange">Created <span data-ls-bind="({{usage.documentsCreate|statsGetLast|statsTotal}})"></span></li>
                     </ul>
 
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Read=documents.read" data-colors="green" data-height="140" />
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Read=documentsRead" data-colors="green" data-height="140" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li class="red">Read <span data-ls-bind="({{usage.failures.total}})"></span></li> <!-- TODO: add total to endpoint's response -->
+                        <li class="green">Read <span data-ls-bind="({{usage.documentsRead|statsGetLast|statsTotal}})"></span></li>
                     </ul>
 
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Updated=documents.update" data-colors="blue" data-height="140" />
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Updated=documentsUpdate" data-colors="blue" data-height="140" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li class="red">Updated <span data-ls-bind="({{usage.failures.total}})"></span></li> <!-- TODO: add total to endpoint's response -->
+                        <li class="blue">Updated <span data-ls-bind="({{usage.documentsUpdate|statsGetLast|statsTotal}})"></span></li>
                     </ul>
 
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Deleted=documents.delete" data-colors="red" data-height="140" />
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Deleted=documentsDelete" data-colors="red" data-height="140" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li class="red">Deleted <span data-ls-bind="({{usage.failures.total}})"></span></li> <!-- TODO: add total to endpoint's response -->
+                        <li class="red">Deleted <span data-ls-bind="({{usage.documentsDelete|statsGetLast|statsTotal}})"></span></li>
                     </ul>
                 </div>
-
-
             </li>
             <li data-state="/console/database/collection/settings?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Settings</h2>

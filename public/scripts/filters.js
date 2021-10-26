@@ -174,7 +174,14 @@ window.ls.filter
 
     $value = abbreviate($value, 0, false, false);
 
-    return $value === "0" ? "N/A" : $value;
+    return $value ?? "N/A";
+  })
+  .add("statsGetLast", function($value) {
+    if (!$value || $value.length < 1) {
+      return 0;
+    }
+
+    return $value[$value.length - 1].value;
   })
   .add("isEmpty", function($value) {
     return (!!$value);
@@ -184,7 +191,7 @@ window.ls.filter
   })
   .add("activeDomainsCount", function($value) {
     let result = [];
-    
+
     if(Array.isArray($value)) {
       result = $value.filter(function(node) {
         return (node.verification && node.certificateId);
@@ -278,7 +285,7 @@ window.ls.filter
     if($value[attribute.key]) {
       return $value[attribute.key];
     }
-    
+
     return null;
   })
   .add("accessProject", function($value, router) {
