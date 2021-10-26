@@ -703,6 +703,10 @@ class DatabaseCustomServerTest extends Scope
         $this->assertCount(64, $collection['body']['attributes']);
         $this->assertCount(0, $collection['body']['indexes']);
 
+        foreach ($collection['body']['attributes'] as $attribute) {
+            $this->assertEquals('available', $attribute['status']);
+        }
+
         // testing for indexLimit = 64
         // MariaDB, MySQL, and MongoDB create 3 indexes per new collection
         // Add up to the limit, then check if the next index throws IndexLimitException
