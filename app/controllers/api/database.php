@@ -1219,8 +1219,26 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
 
         $usage->setParam('database.collections.update', 1);
 
+        // Select response model based on type and format
+        $type = $attribute->getAttribute('type');
+        $format = $attribute->getAttribute('format');
+
+        $model = match($type) {
+            Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
+            Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
+            Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
+            Database::VAR_STRING => match($format) {
+                APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,
+                APP_DATABASE_ATTRIBUTE_ENUM => Response::MODEL_ATTRIBUTE_ENUM,
+                APP_DATABASE_ATTRIBUTE_IP => Response::MODEL_ATTRIBUTE_IP,
+                APP_DATABASE_ATTRIBUTE_URL => Response::MODEL_ATTRIBUTE_URL,
+                default => Response::MODEL_ATTRIBUTE_STRING,
+            },
+            default => Response::MODEL_ATTRIBUTE,
+        };
+
         $events
-            ->setParam('payload', $response->output($attribute, Response::MODEL_ATTRIBUTE))
+            ->setParam('payload', $response->output($attribute, $model))
         ;
 
         $audits
