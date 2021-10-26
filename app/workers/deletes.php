@@ -38,20 +38,19 @@ class DeletesV1 extends Worker
                 $document = new Document($document);
                 
                 switch ($document->getCollection()) {
-                    // TODO@kodumbeats define these as constants somewhere
-                    case 'collections':
+                    case DELETE_TYPE_COLLECTIONS:
                         $this->deleteCollection($document, $projectId);
                         break;
-                    case 'projects':
+                    case DELETE_TYPE_PROJECTS:
                         $this->deleteProject($document);
                         break;
-                    case 'functions':
+                    case DELETE_TYPE_FUNCTIONS:
                         $this->deleteFunction($document, $projectId);
                         break;
-                    case 'users':
+                    case DELETE_TYPE_USERS:
                         $this->deleteUser($document, $projectId);
                         break;
-                    case 'teams':
+                    case DELETE_TYPE_TEAMS:
                         $this->deleteMemberships($document, $projectId);
                         break;
                     default:

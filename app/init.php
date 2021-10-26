@@ -93,6 +93,11 @@ const DATABASE_TYPE_DELETE_ATTRIBUTE = 'deleteAttribute';
 const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
 // Deletion Types
 const DELETE_TYPE_DOCUMENT = 'document';
+const DELETE_TYPE_COLLECTIONS = 'collections';
+const DELETE_TYPE_PROJECTS = 'projects';
+const DELETE_TYPE_FUNCTIONS = 'functions';
+const DELETE_TYPE_USERS = 'users';
+const DELETE_TYPE_TEAMS= 'teams';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
