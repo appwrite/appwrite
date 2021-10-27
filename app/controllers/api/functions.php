@@ -176,7 +176,7 @@ App::get('/v1/functions/:functionId/usage')
         
         $usage = [];
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $period = [
+            $periods = [
                 '24h' => [
                     'period' => '30m',
                     'limit' => 48,
@@ -203,10 +203,10 @@ App::get('/v1/functions/:functionId/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+            Authorization::skip(function() use ($dbForInternal, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
-                    $limit = $period[$range]['limit'];
-                    $period = $period[$range]['period'];
+                    $limit = $periods[$range]['limit'];
+                    $period = $periods[$range]['period'];
 
                     $requestDocs = $dbForInternal->find('stats', [
                         new Query('period', Query::TYPE_EQUAL, [$period]),
