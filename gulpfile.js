@@ -41,7 +41,6 @@ const configApp  = {
 
         'public/scripts/views/forms/clone.js',
         'public/scripts/views/forms/add.js',
-        'public/scripts/views/forms/condition.js',
         'public/scripts/views/forms/chart.js',
         'public/scripts/views/forms/chart-bar.js',
         'public/scripts/views/forms/code.js',
@@ -60,6 +59,7 @@ const configApp  = {
         'public/scripts/views/forms/oauth-apple.js',
         'public/scripts/views/forms/password-meter.js',
         'public/scripts/views/forms/pell.js',
+        'public/scripts/views/forms/required.js',
         'public/scripts/views/forms/remove.js',
         'public/scripts/views/forms/run.js',
         'public/scripts/views/forms/select-all.js',
