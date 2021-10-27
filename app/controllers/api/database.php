@@ -353,6 +353,7 @@ App::get('/v1/database/usage')
                         ];
                         $backfill--;
                     }
+                    // TODO@kodumbeats explore performance if query is ordered by time ASC
                     $stats[$metric] = array_reverse($stats[$metric]);
                 }
             });
