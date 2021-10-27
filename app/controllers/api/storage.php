@@ -724,7 +724,7 @@ App::get('/v1/storage/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => $stats[$metric][$last]['time'] - $diff, // time of last metric minus period
+                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
                         ];
                         $backfill--;
                     }
@@ -821,7 +821,7 @@ App::get('/v1/storage/:bucketId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => $stats[$metric][$last]['time'] - $diff, // time of last metric minus period
+                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
                         ];
                         $backfill--;
                     }

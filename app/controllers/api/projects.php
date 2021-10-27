@@ -316,7 +316,7 @@ App::get('/v1/projects/:projectId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => $stats[$metric][$last]['time'] - $diff, // time of last metric minus period
+                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
                         ];
                         $backfill--;
                     }

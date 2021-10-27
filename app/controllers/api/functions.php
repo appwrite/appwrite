@@ -231,7 +231,7 @@ App::get('/v1/functions/:functionId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => $stats[$metric][$last]['time'] - $diff, // time of last metric minus period
+                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
                         ];
                         $backfill--;
                     }

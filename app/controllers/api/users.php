@@ -833,6 +833,7 @@ App::get('/v1/users/usage')
                     // backfill metrics with empty values for graphs
                     $backfill = $limit - \count($requestDocs);
                     while ($backfill > 0) {
+
                         $last = $limit - $backfill - 1; // array index of last added metric
                         $diff = match($period) { // convert period to seconds for unix timestamp math
                             '30m' => 1800,
@@ -840,7 +841,7 @@ App::get('/v1/users/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => $stats[$metric][$last]['time'] - $diff, // time of last metric minus period
+                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
                         ];
                         $backfill--;
                     }
