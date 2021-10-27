@@ -46,14 +46,18 @@ App::get('/v1/health/db')
     ->action(function ($response, $utopia) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\App $utopia */
-        $db = $utopia->getResource('db'); /* @var $db PDO */
+        try {
+            $db = $utopia->getResource('db'); /* @var $db PDO */
 
-        // Run a small test to check the connection
-        $statement = $db->prepare("SELECT 1;");
-
-        $statement->closeCursor();
-
-        $statement->execute();
+            // Run a small test to check the connection
+            $statement = $db->prepare("SELECT 1;");
+    
+            $statement->closeCursor();
+    
+            $statement->execute();
+        } catch (Exception $_e) {
+            throw new Exception('Database is not available', 500);
+        }
 
         return $response->json(['status' => 'OK']);
     });
