@@ -24,7 +24,7 @@ class Index extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Index status. Possible values: `available`, `processing`, `deleting`, or `failed`',
+                'description' => 'Index status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`',
                 'default' => '',
                 'example' => 'available',
             ])

@@ -72,10 +72,22 @@ trait WebhooksBase
             'required' => true,
         ]);
 
+        $extra = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'extra',
+            'size' => 64,
+            'required' => false,
+        ]);
+
         $this->assertEquals($firstName['headers']['status-code'], 201);
         $this->assertEquals($firstName['body']['key'], 'firstName');
         $this->assertEquals($lastName['headers']['status-code'], 201);
         $this->assertEquals($lastName['body']['key'], 'lastName');
+        $this->assertEquals($extra['headers']['status-code'], 201);
+        $this->assertEquals($extra['body']['key'], 'extra');
 
         // wait for database worker to kick in
         sleep(10);
@@ -90,9 +102,27 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertNotEmpty($webhook['data']['key']);
-        $this->assertEquals($webhook['data']['key'], 'lastName');
+        $this->assertEquals($webhook['data']['key'], 'extra');
         
-        // TODO@kodumbeats test webhook for removing attribute
+        $removed = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['actorsId'] . '/attributes/' . $extra['body']['key'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(204, $removed['headers']['status-code']);
+
+        $webhook = $this->getLastRequest();
+
+        // $this->assertEquals($webhook['method'], 'DELETE');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'database.attributes.delete');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertNotEmpty($webhook['data']['key']);
+        $this->assertEquals($webhook['data']['key'], 'extra');
 
         return $data;
     }
