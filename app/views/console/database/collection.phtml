@@ -77,7 +77,7 @@ $logs = $this->getParam('logs', null);
                                         <td data-ls-if="{{attribute.status}} === 'available'" data-ls-attrs="data-title={{attribute.key}}">
                                             <!-- <a href="" target="_blank" rel="noopener" class="pull-end margin-start"><i class="icon-link-ext"></i></a> -->
                                             <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{router.params.id}}&project={{router.params.project}}"><span data-ls-bind="{{node|documentAttribute}}"></span></a>
-                                            <span data-ls-if="!{{node|documentAttribute}}" class="text-fade" data-debug="true">n/a</span>
+                                            <span data-ls-if="!{{node|documentAttribute}}" class="text-fade">n/a</span>
                                         </td>
                                     </tr>
                                 </tbody>

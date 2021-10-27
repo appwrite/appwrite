@@ -327,7 +327,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
         <li data-state="/console/users/providers?project={{router.params.project}}">
             <p data-ls-if="{{console-project.authLimit}} == 0" class="text-fade text-size-small margin-bottom pull-end">Unlimited Users <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Set Limit</a></p>
             <p data-ls-if="{{console-project.authLimit}} != 0" class="text-fade text-size-small margin-bottom pull-end"><span data-ls-bind="{{console-project.authLimit|statsTotal}}"></span> Users allowed <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Change Limit</a></p>
-            
+
             <h2>Settings</h2>
 
             <div data-ui-modal class="modal close" data-button-alias="none" data-open-event="project-update-auth-users-limit">
@@ -335,8 +335,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
 
                 <h1>Max Allowed Users</h1>
 
-                <form data-debug="1"
-                    data-analytics
+                <form data-analytics
                     data-analytics-activity
                     data-analytics-event="submit"
                     data-analytics-category="console"
