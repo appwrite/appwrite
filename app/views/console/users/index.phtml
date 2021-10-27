@@ -368,7 +368,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
 
             <ul class="tiles cell-3 margin-bottom-small">
                 <?php foreach($auth as $index => $method):
-                    $key = $method['key'] ?? '';
+                    $key = ucfirst($method['key'] ?? '');
                     $name = $method['name'] ?? '';
                     $icon = $method['icon'] ?? '';
                     $docs = $method['docs'] ?? '';
@@ -395,15 +395,15 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                 data-failure-param-alert-classname="error">
                                 <input name="method" id="<?php echo $this->escape($key); ?>" type="hidden" autocomplete="off" value="<?php echo $this->escape($index); ?>">
                                 <?php if( !(in_array($key, ['usersAuthMagicURL', 'usersAuthInvites']) && !$smtpEnabled)): ?>
-                                    <input name="status" type="hidden" data-forms-switch data-ls-bind="{{console-project.<?php echo $this->escape($key); ?>}}" data-cast-to="boolean" class="pull-end" />
+                                    <input name="status" type="hidden" data-debug="1" data-forms-switch data-ls-bind="{{console-project.auth<?php echo $this->escape($key); ?>}}" data-cast-to="boolean" class="pull-end" />
                                 <?php endif; ?>
                             </form>
                         <?php endif; ?>
-                        
+
                         <img src="<?php echo $this->escape($icon); ?>?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="Email/Password Logo" class="pull-start provider margin-end" />
-                                
+
                         <span class="text-size-small"><?php echo $this->escape($name); ?><?php if(!$enabled): ?> <spann class="text-fade text-size-xs">soon</span><?php endif; ?>
-                        
+
                         <?php if( in_array($key, ['usersAuthMagicURL', 'usersAuthInvites']) && !$smtpEnabled): ?>
                             <p class="margin-bottom-no text-one-liner text-size-small text-danger">
                                 SMTP Disabled
