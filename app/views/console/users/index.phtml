@@ -395,7 +395,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                 data-failure-param-alert-classname="error">
                                 <input name="method" id="auth<?php echo $this->escape($key); ?>" type="hidden" autocomplete="off" value="<?php echo $this->escape($index); ?>">
                                 <?php if( !(in_array($key, ['usersAuthMagicURL', 'usersAuthInvites']) && !$smtpEnabled)): ?>
-                                    <input name="status" type="hidden" data-debug="1" data-forms-switch data-ls-bind="{{console-project.auth<?php echo $this->escape($key); ?>}}" data-cast-to="boolean" class="pull-end" />
+                                    <input name="status" type="hidden" data-forms-switch data-ls-bind="{{console-project.auth<?php echo $this->escape($key); ?>}}" data-cast-to="boolean" class="pull-end" />
                                 <?php endif; ?>
                             </form>
                         <?php endif; ?>
