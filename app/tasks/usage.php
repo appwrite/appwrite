@@ -249,9 +249,9 @@ $cli
                 $database = $client->selectDB('telegraf');
                 do { // check if telegraf database is ready
                     $attempts++;
-                    if(!in_array('telegraf', $client->listDatabases())) {
+                    if (!in_array('telegraf', $client->listDatabases())) {
                         Console::warning("InfluxDB not ready. Retrying connection ({$attempts})...");
-                        if($attempts >= $max) {
+                        if ($attempts >= $max) {
                             throw new \Exception('InfluxDB database not ready yet');
                         }
                         sleep($sleep);
@@ -275,17 +275,20 @@ $cli
                         $filters = $options['filters'] ?? []; // Some metrics might have additional filters, like function's status
                         if (!empty($filters)) {
                             $filters = ' AND ' . implode(' AND ', array_map(function ($filter, $value) {
-                                return '"' . $filter . '"=\'' . $value . '\'';
+                                return "\"{$filter}\"='{$value}'";
                             }, array_keys($filters), array_values($filters)));
+                        } else {
+                            $filters = '';
                         }
 
-                        $result = $database->query('SELECT sum(value) AS "value" FROM "' . $table . '" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\'' . (empty($filters) ? '' : $filters) . ' GROUP BY time(' . $period['key'] . '), "projectId"' . $groupBy . ' FILL(null)');
+                        $query = "SELECT sum(value) AS \"value\" FROM \"{$table}\" WHERE \"time\" > '{$start}' AND \"time\" < '{$end}' AND \"metric_type\"='counter' {$filters} GROUP BY time({$period['key']}), \"projectId\" {$groupBy} FILL(null)";
+                        $result = $database->query($query);
 
                         $points = $result->getPoints();
                         foreach ($points as $point) {
                             $projectId = $point['projectId'];
 
-                            if (!empty($projectId) && $projectId != 'console') {
+                            if (!empty($projectId) && $projectId !== 'console') {
                                 $dbForProject->setNamespace('project_' . $projectId . '_internal');
                                 $metricUpdated = $metric;
 
@@ -313,8 +316,11 @@ $cli
                                             'type' => 0,
                                         ]));
                                     } else {
-                                        $dbForProject->updateDocument('stats', $document->getId(),
-                                        $document->setAttribute('value', $value));
+                                        $dbForProject->updateDocument(
+                                            'stats',
+                                            $document->getId(),
+                                            $document->setAttribute('value', $value)
+                                        );
                                     }
                                     $latestTime[$metric][$period['key']] = $time;
                                 } catch (\Exception $e) { // if projects are deleted this might fail
@@ -330,7 +336,7 @@ $cli
              * Aggregate MariaDB every 15 minutes
              * Some of the queries here might contain full-table scans.
              */
-            if ($iterations % 30 == 0) { // Every 15 minutes aggregate number of objects in database
+            if ($iterations % 30 === 0) { // Every 15 minutes aggregate number of objects in database
 
                 $latestProject = null;
 
@@ -342,7 +348,7 @@ $cli
                     do { // list projects
                         try {
                             $attempts++;
-                            $projects = $dbForConsole->find('projects', [], 100, cursor:$latestProject);
+                            $projects = $dbForConsole->find('projects', [], 100, cursor: $latestProject);
                             break; // leave the do-while if successful
                         } catch (\Exception $e) {
                             Console::warning("Console DB not ready yet. Retrying ({$attempts})...");
@@ -379,10 +385,13 @@ $cli
                                 'type' => 1,
                             ]));
                         } else {
-                            $dbForProject->updateDocument('stats', $document->getId(),
-                                $document->setAttribute('value', $storageTotal));
+                            $dbForProject->updateDocument(
+                                'stats',
+                                $document->getId(),
+                                $document->setAttribute('value', $storageTotal)
+                            );
                         }
-                        
+
                         $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
                         $id = \md5($time . '_1d_storage.total'); //Construct unique id for each metric using time, period and metric
                         $document = $dbForProject->getDocument('stats', $id);
@@ -396,8 +405,11 @@ $cli
                                 'type' => 1,
                             ]));
                         } else {
-                            $dbForProject->updateDocument('stats', $document->getId(),
-                                $document->setAttribute('value', $storageTotal));
+                            $dbForProject->updateDocument(
+                                'stats',
+                                $document->getId(),
+                                $document->setAttribute('value', $storageTotal)
+                            );
                         }
 
                         $collections = [
@@ -440,8 +452,11 @@ $cli
                                         'type' => 1,
                                     ]));
                                 } else {
-                                    $dbForProject->updateDocument('stats', $document->getId(),
-                                        $document->setAttribute('value', $count));
+                                    $dbForProject->updateDocument(
+                                        'stats',
+                                        $document->getId(),
+                                        $document->setAttribute('value', $count)
+                                    );
                                 }
 
                                 $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
@@ -457,8 +472,11 @@ $cli
                                         'type' => 1,
                                     ]));
                                 } else {
-                                    $dbForProject->updateDocument('stats', $document->getId(),
-                                        $document->setAttribute('value', $count));
+                                    $dbForProject->updateDocument(
+                                        'stats',
+                                        $document->getId(),
+                                        $document->setAttribute('value', $count)
+                                    );
                                 }
 
                                 $subCollections = $options['subCollections'] ?? [];
@@ -472,7 +490,7 @@ $cli
 
                                 do { // Loop over all the parent collection document for each sub collection
                                     $dbForProject->setNamespace("project_{$projectId}_{$options['namespace']}");
-                                    $parents = $dbForProject->find($collection, [], 100, cursor:$latestParent); // Get all the parents for the sub collections for example for documents, this will get all the collections
+                                    $parents = $dbForProject->find($collection, [], 100, cursor: $latestParent); // Get all the parents for the sub collections for example for documents, this will get all the collections
 
                                     if (empty($parents)) {
                                         continue;
@@ -503,8 +521,11 @@ $cli
                                                     'type' => 1,
                                                 ]));
                                             } else {
-                                                $dbForProject->updateDocument('stats', $document->getId(),
-                                                $document->setAttribute('value', $count));
+                                                $dbForProject->updateDocument(
+                                                    'stats',
+                                                    $document->getId(),
+                                                    $document->setAttribute('value', $count)
+                                                );
                                             }
 
                                             $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
@@ -520,8 +541,11 @@ $cli
                                                     'type' => 1,
                                                 ]));
                                             } else {
-                                                $dbForProject->updateDocument('stats', $document->getId(),
-                                                $document->setAttribute('value', $count));
+                                                $dbForProject->updateDocument(
+                                                    'stats',
+                                                    $document->getId(),
+                                                    $document->setAttribute('value', $count)
+                                                );
                                             }
                                         }
                                     }
@@ -548,8 +572,11 @@ $cli
                                             'type' => 1,
                                         ]));
                                     } else {
-                                        $dbForProject->updateDocument('stats', $document->getId(),
-                                        $document->setAttribute('value', $count));
+                                        $dbForProject->updateDocument(
+                                            'stats',
+                                            $document->getId(),
+                                            $document->setAttribute('value', $count)
+                                        );
                                     }
 
                                     $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
@@ -565,11 +592,14 @@ $cli
                                             'type' => 1,
                                         ]));
                                     } else {
-                                        $dbForProject->updateDocument('stats', $document->getId(),
-                                        $document->setAttribute('value', $count));
+                                        $dbForProject->updateDocument(
+                                            'stats',
+                                            $document->getId(),
+                                            $document->setAttribute('value', $count)
+                                        );
                                     }
                                 }
-                            } catch (\Exception$e) {
+                            } catch (\Exception $e) {
                                 Console::warning("Failed to save database counters data for project {$collection}: {$e->getMessage()}");
                             }
                         }
