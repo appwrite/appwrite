@@ -323,10 +323,13 @@ App::get('/v1/database/usage')
 
             Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
+                    $limit = $period[$range]['limit'];
+                    $period = $period[$range]['period'];
+
                     $requestDocs = $dbForInternal->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
 
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -334,6 +337,21 @@ App::get('/v1/database/usage')
                             'value' => $requestDoc->getAttribute('value'),
                             'date' => $requestDoc->getAttribute('time'),
                         ];
+                    }
+
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                            '30m' => 1800,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => $stats[$metric][$last]['time'] - $diff, // time of last metric minus period
+                        ];
+                        $backfill--;
                     }
                     $stats[$metric] = array_reverse($stats[$metric]);
                 }
@@ -417,10 +435,13 @@ App::get('/v1/database/:collectionId/usage')
 
             Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
+                    $limit = $period[$range]['limit'];
+                    $period = $period[$range]['period'];
+
                     $requestDocs = $dbForInternal->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
 
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -428,6 +449,21 @@ App::get('/v1/database/:collectionId/usage')
                             'value' => $requestDoc->getAttribute('value'),
                             'date' => $requestDoc->getAttribute('time'),
                         ];
+                    }
+
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                            '30m' => 1800,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => $stats[$metric][$last]['time'] - $diff, // time of last metric minus period
+                        ];
+                        $backfill--;
                     }
                     $stats[$metric] = array_reverse($stats[$metric]);
                 }    
