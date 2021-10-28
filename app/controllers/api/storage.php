@@ -918,8 +918,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $outputs = Config::getParam('storage-outputs');
         $fileLogos = Config::getParam('storage-logos');
 
-        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
-        $key = \md5($fileId . $width . $height . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $storage . $output);
+        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
+        $key = \md5($fileId.$width.$height.$gravity.$quality.$borderWidth.$borderColor.$borderRadius.$opacity.$rotation.$background.$storage.$output);
 
         $file = $dbForInternal->getDocument('bucket_' . $bucketId, $fileId);
 
@@ -939,7 +939,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             $cipher = null;
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
-            $key = \md5($path . $width . $height . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $storage . $output);
+            $key = \md5($path.$width.$height.$gravity.$quality.$borderWidth.$borderColor.$borderRadius.$opacity.$rotation.$background.$storage.$output);
         }
 
         $compressor = new GZIP();
@@ -1314,7 +1314,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $file = $dbForInternal->getDocument('bucket_' . $bucketId, $fileId);
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
+        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
             throw new Exception('File not found', 404);
         }
 

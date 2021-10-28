@@ -31,6 +31,12 @@ class Bucket extends Model
             'example' => ['user:608f9da25e7e1'],
             'array' => true,
         ])
+        ->addRule('permission', [
+            'type' => self::TYPE_STRING,
+            'description' => 'Bucket permission model. Possible values: `bucket` or `file`',
+            'default' => '',
+            'example' => 'file',
+        ])
         ->addRule('dateCreated', [
             'type' => self::TYPE_INTEGER,
             'description' => 'Bucket creation date in Unix timestamp.',
