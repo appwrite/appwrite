@@ -407,7 +407,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($function['headers']['status-code'], 200);
         $this->assertEquals($function['body']['sum'], 2);
         $this->assertIsArray($function['body']['tags']);
-        $this->assertCount(1, $function['body']['tags']);
+        $this->assertCount(2, $function['body']['tags']);
         $this->assertEquals($function['body']['tags'][0]['$id'], $data['tagId']);
 
         $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/tags', array_merge([
@@ -420,7 +420,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($function['headers']['status-code'], 200);
         $this->assertEquals($function['body']['sum'], 2);
         $this->assertIsArray($function['body']['tags']);
-        $this->assertCount(1, $function['body']['tags']);
+        $this->assertCount(2, $function['body']['tags']);
         $this->assertEquals($function['body']['tags'][0]['$id'], $data['tagId']);
 
         return $data;
