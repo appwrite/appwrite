@@ -12,7 +12,7 @@ Help us keep Appwrite open and inclusive. Please read and follow our [Code of Co
 
 ## Submit a Pull Request 🚀
 
-Branch naming convention is as following 
+Branch naming convention is as following
 
 `TYPE-ISSUE_ID-DESCRIPTION`
 
@@ -29,7 +29,7 @@ When `TYPE` can be:
 - **fix** - a bug fix
 - **refactor** - code change that neither fixes a bug nor adds a feature
 
-**All PRs must include a commit message with the changes description!** 
+**All PRs must include a commit message with the changes description!**
 
 For the initial start, fork the project and use git clone command to download the repository to your computer. A standard procedure for working on an issue would be to:
 
@@ -43,7 +43,7 @@ $ git checkout -b [name_of_your_new_branch]
 ```
 3. Work - commit - repeat ( be sure to be in your branch )
 
-4. Push changes to GitHub 
+4. Push changes to GitHub
 ```
 $ git push origin [name_of_your_new_branch]
 ```
@@ -338,23 +338,23 @@ docker-compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName]
 You can use WRK Docker image to benchmark the server performance. Benchmarking is extremely useful when you want to compare how the server behaves before and after a change has been applied. Replace [APPWRITE_HOSTNAME_OR_IP] with your Appwrite server hostname or IP. Note that localhost is not accessible from inside the WRK container.
 
 ```
-  Options:                                            
-    -c, --connections <N>  Connections to keep open   
-    -d, --duration    <T>  Duration of test           
-    -t, --threads     <N>  Number of threads to use   
-                                                      
-    -s, --script      <S>  Load Lua script file       
-    -H, --header      <H>  Add header to request      
-        --latency          Print latency statistics   
-        --timeout     <T>  Socket/request timeout     
-    -v, --version          Print version details    
-``` 
+  Options:
+    -c, --connections <N>  Connections to keep open
+    -d, --duration    <T>  Duration of test
+    -t, --threads     <N>  Number of threads to use
+
+    -s, --script      <S>  Load Lua script file
+    -H, --header      <H>  Add header to request
+        --latency          Print latency statistics
+        --timeout     <T>  Socket/request timeout
+    -v, --version          Print version details
+```
 
 ```bash
 docker run --rm skandyla/wrk -t3 -c100 -d30  https://[APPWRITE_HOSTNAME_OR_IP]
 ```
 
-## Code Maintenance  
+## Code Maintenance
 
 We use some automation tools to help us keep a healthy codebase.
 
@@ -391,7 +391,7 @@ From time to time, our team will add tutorials that will help contributors find 
 
 ## Other Ways to Help
 
-Pull requests are great, but there are many other areas where you can help Appwrite. 
+Pull requests are great, but there are many other areas where you can help Appwrite.
 
 ### Blogging & Speaking
 

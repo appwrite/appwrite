@@ -44,7 +44,7 @@ Table of Contents:
 - [Security](#security)
 - [Follow Us](#follow-us)
 - [License](#license)
-      
+
 ## Installation
 
 Appwrite backend server is designed to run in a container environment. Running your server is as easy as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool like Kubernetes, Docker Swarm, or Rancher.
@@ -139,8 +139,8 @@ Below is a list of currently supported platforms and languages. If you wish to h
 * ✅  &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **Experimental** (Maintained by the Appwrite Team)
 
 #### Community
-* ✅  &nbsp; [Appcelerator Titanium](https://github.com/m1ga/ti.appwrite) (Maintained by [Michael Gangolf](https://github.com/m1ga/))    
-    
+* ✅  &nbsp; [Appcelerator Titanium](https://github.com/m1ga/ti.appwrite) (Maintained by [Michael Gangolf](https://github.com/m1ga/))
+
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 
 ## Contributing

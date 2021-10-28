@@ -33,7 +33,7 @@ services:
     networks:
       - gateway
       - appwrite
-  
+
   appwrite:
     container_name: appwrite
     build:
@@ -42,7 +42,7 @@ services:
         - DEBUG=false
         - TESTING=true
         - VERSION=dev
-    ports: 
+    ports:
       - 9501:80
     networks:
       - appwrite
@@ -82,7 +82,7 @@ services:
       - redis
       # - clamav
       - influxdb
-    entrypoint: 
+    entrypoint:
       - php
       - -e
       - app/http.php
@@ -136,7 +136,7 @@ services:
     build:
       context: .
     restart: unless-stopped
-    ports: 
+    ports:
       - 9505:80
     labels:
       - "traefik.enable=true"
@@ -276,7 +276,7 @@ services:
       context: .
     networks:
       - appwrite
-    volumes: 
+    volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-functions:/storage/functions:rw
@@ -305,7 +305,7 @@ services:
       context: .
     networks:
       - appwrite
-    volumes: 
+    volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
@@ -462,7 +462,7 @@ services:
   #     - RELAY_FROM_HOSTS=192.168.0.0/16 ; *.yourdomain.com
   #     - SMARTHOST_HOST=smtp
   #     - SMARTHOST_PORT=587
-  
+
   redis:
     image: redis:6.2-alpine
     container_name: appwrite-redis
@@ -478,7 +478,7 @@ services:
   #     - appwrite
   #   volumes:
   #     - appwrite-uploads:/storage/uploads
-      
+
   influxdb:
     image: appwrite/influxdb:1.4.0
     container_name: appwrite-influxdb
@@ -492,12 +492,12 @@ services:
     container_name: appwrite-telegraf
     networks:
       - appwrite
-    environment: 
+    environment:
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
 
   # Dev Tools Start ------------------------------------------------------------------------------------------
-  # 
+  #
   # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack
   #
   # Here is a description of the different tools and why are we using them:
@@ -582,7 +582,7 @@ services:
   #     - './debug:/tmp'
   #   ports:
   #     - '3001:80'
-  
+
   # Dev Tools End   ------------------------------------------------------------------------------------------
 
 networks:

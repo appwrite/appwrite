@@ -202,7 +202,7 @@
 - Added events for functions and executions (#971)
 - Added JWT support (#784)
 - Added ARM support (#726)
-- New awesome image preview features, supports borderRadius, borderColor, borderWidth 
+- New awesome image preview features, supports borderRadius, borderColor, borderWidth
 - Split token & session models to become 2 different internal entities (#922)
 - Added Dart 2.12 as a new Cloud Functions runtime (#989)
 - Added option to disable email/password (#947)
@@ -210,7 +210,7 @@
 - Added option to disable JWT auth (#947)
 - Added option to disable team invites (#947)
 - Option to limit number of users (good for app launches + root account PR) (#947)
-- Added 2 new endpoints to the projects API to allow new settings 
+- Added 2 new endpoints to the projects API to allow new settings
 - Enabled 501 errors (Not Implemented) from the error handler
 - Added Python 3.9 as a new Cloud Functions runtime (#1044)
 - Added Deno 1.8 as a new Cloud Functions runtime (#989)
@@ -289,7 +289,7 @@
 - Upgraded phpmailer/phpmailer lib to version 6.3.0
 - Upgraded adhocore/jwt lib to version 1.1.2
 - Upgraded domnikl/statsd to slickdeals/statsd version 3.0
- 
+
 ## Bug Fixes
 
 - Updated missing storage env vars
@@ -346,12 +346,12 @@
 - New OAuth adapter for Tradeshift sandbox  (@armino-dev - [#855](https://github.com/appwrite/appwrite/pull/855))
 - Introducing new permssion types: role:guest & role:member
 - Disabled rate-limits on server side integrations
-- Refactored migration script 
+- Refactored migration script
 
 ### User Interface
 
 - Updated grid for OAuth2 providers list in the console ([#413](https://github.com/appwrite/appwrite/issues/413))
-- Added Google Fonts to Appwrite for offline availability 
+- Added Google Fonts to Appwrite for offline availability
 - Added option to delete user from the console (@PineappleIOnic - [#538](https://github.com/appwrite/appwrite/issues/538))
 - Added option to delete team from the console ([#380](https://github.com/appwrite/appwrite/issues/380))
 - Added option to view team members from the console ([#378](https://github.com/appwrite/appwrite/issues/378))
@@ -423,7 +423,7 @@
 - Now using your `_APP_SYSTEM_EMAIL_ADDRESS` as the email address for issuing and renewing SSL certificates
 - Block iframe access to Appwrite console using the `X-Frame-Options` header.
 - Fixed `roles` param input validator
-- API Keys are now stored encrypted 
+- API Keys are now stored encrypted
 - Disabled domains whitlist ACL for the Appwrite console
 
 # Version 0.6.2 (PRE-RELEASE)
@@ -435,7 +435,7 @@
 ## Bug Fixes
 
 - Fixed custom domain not setting correct domain
-- Fixed wrong SDK method type in avatars browser route 
+- Fixed wrong SDK method type in avatars browser route
 - Fixed bug denied public documents (*) to be accessed by guest users
 - Fixed cache-control issue not allowing collection UI to update properly
 - Fixed a bug where single permission tag in the console was not being saved
@@ -494,7 +494,7 @@
 
 - Fixed bug where multiple unique attribute were allowed
 - Blocked forms from being submitted unlimited times
-  
+
 # Version 0.5.2 (PRE-RELEASE)
 
 ## Bug Fixes
@@ -530,7 +530,7 @@
 - Upgraded MariaDB image to version 1.0.2
 - Upgraded SMTP image to version 1.0.1
 - File upload route (POST /v1/storage/files) now accept a single file per request
-- Added ENV vars to change system email sender name and address 
+- Added ENV vars to change system email sender name and address
 - Usage for requests made by project admin in the console are not counted as API usage
 - Added ENV var to change default file upload size limit. New default value is 100MB
 - Added option to delete file directly from the dashboard
