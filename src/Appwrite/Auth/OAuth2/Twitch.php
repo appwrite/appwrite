@@ -139,7 +139,8 @@ class Twitch extends OAuth2
         if (empty($this->user)) {
             $response = \json_decode($this->request(
                 'GET',
-                $this->resourceEndpoint , [
+                $this->resourceEndpoint,
+                [
                     'Authorization: Bearer '.\urlencode($accessToken),
                     'Client-Id: '. \urlencode($this->appID)
                 ]

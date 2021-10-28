@@ -164,7 +164,7 @@ App::get('/v1/health/queue/usage')
     }, ['response']);
 
 App::get('/v1/health/queue/certificates')
-    ->desc('Get Certificate Queue')
+    ->desc('Get Certificates Queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])

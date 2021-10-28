@@ -5,6 +5,74 @@
 - Grouped auth related attributes in project collection. Introduced new attribute `auths` and removed all attributes related to auth methods and `usersAuthLimit` as well, all these are grouped under `auths` attribute
 - Grouped oAuth related attributes in project collection. Introduced new attribute `providers` and removed all attributes related to OAuth2 providers. All OAuth2 attributes are grouped under `providers`
 - Project model changed, `userAuth<AuthMethod>` => `auth<AuthMethod>` example `userAuthEmailPassword` => `authEmailPassword`, also `userOauth2<Provider>...` => `provider<Provider>...` example `userOauth2GithubAppid` => `providerGithubAppid`
+# Version 0.11.0
+
+## Features
+- Added Swift Platform Support
+- Added new Cloud Functions Runtimes:
+  - Swift 5.5
+  - Java 17
+  - Python 3.10
+  - Deno 1.12
+  - Deno 1.13
+  - Deno 1.14
+- Added translations:
+  - German `de` by @SoftCreatR in https://github.com/appwrite/appwrite/pull/1790
+  - Hebrew `he` by @Kokoden in https://github.com/appwrite/appwrite/pull/1846
+  - Oriya `or` by @Rutam21 in https://github.com/appwrite/appwrite/pull/1827
+  - Italian `it` by @ilmalte in https://github.com/appwrite/appwrite/pull/1824
+  - Portugese (Portugal) `pt-PT` by @OscarRG in https://github.com/appwrite/appwrite/pull/1820
+  - Portugese (Brazil) `pt-BR` by @renato04 in https://github.com/appwrite/appwrite/pull/1817
+  - Indonesian `id` by @Hrdtr in https://github.com/appwrite/appwrite/pull/1816
+  - Korean `ko` by @ssong in https://github.com/appwrite/appwrite/pull/1814
+  - Ukrainian `uk` by @daniloff200 in https://github.com/appwrite/appwrite/pull/1794
+  - Russian `ru` by @daniloff200 in https://github.com/appwrite/appwrite/pull/1795
+  - Belarusian `be` by @daniloff200 in https://github.com/appwrite/appwrite/pull/1796
+  - Arabic `ar` by @arsangamal in https://github.com/appwrite/appwrite/pull/1800
+  - Malay `ms` by @izqalan in https://github.com/appwrite/appwrite/pull/1806
+  - Gujarati `gu` by @honeykpatel in https://github.com/appwrite/appwrite/pull/1808
+  - Polish `pl` by @achromik in https://github.com/appwrite/appwrite/pull/1811
+  - Malayalam `ml` by @anoopmsivadas in https://github.com/appwrite/appwrite/pull/1813
+  - Croatian `hr` by @mbos2 in https://github.com/appwrite/appwrite/pull/1825
+  - Danish `da` by @Ganzabahl in https://github.com/appwrite/appwrite/pull/1829
+  - French `fr` by @Olyno in https://github.com/appwrite/appwrite/pull/1771
+  - Spanish `es` by @chuiizeet in https://github.com/appwrite/appwrite/pull/1833
+  - Vietnamese `vt` by @hdkhoasgt in https://github.com/appwrite/appwrite/pull/1880
+  - Kannada `kn` by @Nikhil-1503 in https://github.com/appwrite/appwrite/pull/1840
+  - Finnish `fi` by @minna-xD in https://github.com/appwrite/appwrite/pull/1847
+  - Thai `th` by @teeradon43 in https://github.com/appwrite/appwrite/pull/1851
+  - Persian `fa` by @aerabi in https://github.com/appwrite/appwrite/pull/1878
+  - Norwegian `no` by @NeonSpork in https://github.com/appwrite/appwrite/pull/1871
+  - Norwegian (Nynorsk) `nn` by @NeonSpork in https://github.com/appwrite/appwrite/pull/2019
+  - Norwegian (Bokmål) `nb` by @Exouxas in https://github.com/appwrite/appwrite/pull/1877
+  - Dutch `nl` by @ArtixAllMighty in https://github.com/appwrite/appwrite/pull/1879
+  - Sanskrit `sa` by @Rutam21 in https://github.com/appwrite/appwrite/pull/1895
+  - Nepali `ne` by @TheLearneer in https://github.com/appwrite/appwrite/pull/1807
+  - Swedish `sv` by @didair in https://github.com/appwrite/appwrite/pull/1948
+  - Hindi `hi` by @willtryagain in https://github.com/appwrite/appwrite/pull/1810
+  - Luxembourgish `lb` by @OscarRG in https://github.com/appwrite/appwrite/pull/1857
+  - Catalan `ca` by @und1n3 in https://github.com/appwrite/appwrite/pull/1875
+  - Chinese (Taiwan) `zh-TW` by @HelloSeaNation in https://github.com/appwrite/appwrite/pull/2134
+  - Chinese (PRC)	`zh-CN` by @HelloSeaNation in https://github.com/appwrite/appwrite/pull/1836
+  - Bihari `bh` by @dazzlerkumar in https://github.com/appwrite/appwrite/pull/1841
+  - Romanian `ro` by @cristina-sirbu in https://github.com/appwrite/appwrite/pull/1868
+  - Slovak `sk` by @jakubhi in https://github.com/appwrite/appwrite/pull/1958
+  - Greek `el` by @kostapappas in https://github.com/appwrite/appwrite/pull/1992
+  - Assamese `as` by @PrerakMathur20 in https://github.com/appwrite/appwrite/pull/2023
+  - Esperanto `eo` by @tacoelho in https://github.com/appwrite/appwrite/pull/1927
+  - Irish `ga` by @ivernus in https://github.com/appwrite/appwrite/pull/2178
+  - Azerbaijani `az` by @aerabi in https://github.com/appwrite/appwrite/pull/2129
+  - Latvian `lv` by @RReiso in https://github.com/appwrite/appwrite/pull/2022
+  - Lithuanian `lt` by @mantasio in https://github.com/appwrite/appwrite/pull/2018
+  - Japanese `jp` by @takmar in https://github.com/appwrite/appwrite/pull/2177
+- Added new audio mime-types for viewing audio files on browsers by @eldadfux in https://github.com/appwrite/appwrite/pull/2239
+
+## Bugs
+- Fixed `sum` description by @eldadfux in https://github.com/appwrite/appwrite/pull/1659
+- Fixed `Add Team Membership` parameter order by @deshankoswatte in https://github.com/appwrite/appwrite/pull/1818
+- Fixed Storage File Preview on mobile devices by @m1ga in https://github.com/appwrite/appwrite/pull/2230
+- Fixed `top-left` gravity on `Get File Preview` endpoint by @lohanidamodar in https://github.com/appwrite/appwrite/pull/2249
+
 # Version 0.10.4
 
 ## Bugs
