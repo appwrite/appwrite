@@ -65,14 +65,15 @@ const APP_LIMIT_USERS = 10000;
 const APP_LIMIT_ANTIVIRUS = 20971520; //20MB
 const APP_LIMIT_ENCRYPTION = 20971520; //20MB
 const APP_LIMIT_COMPRESSION = 20971520; //20MB
-const APP_CACHE_BUSTER = 160;
-const APP_VERSION_STABLE = '0.11.0';
+const APP_CACHE_BUSTER = 180;
+const APP_VERSION_STABLE = '0.12.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
 const APP_DATABASE_ATTRIBUTE_URL = 'url';
 const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
+const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1073741824; // 2^32 bits / 4 bits per char
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -89,13 +90,19 @@ const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
 const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
+const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite';
 // Database Worker Types
 const DATABASE_TYPE_CREATE_ATTRIBUTE = 'createAttribute';
 const DATABASE_TYPE_CREATE_INDEX = 'createIndex';
 const DATABASE_TYPE_DELETE_ATTRIBUTE = 'deleteAttribute';
 const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
-// Deletes Worker Types
+// Deletion Types
 const DELETE_TYPE_DOCUMENT = 'document';
+const DELETE_TYPE_COLLECTIONS = 'collections';
+const DELETE_TYPE_PROJECTS = 'projects';
+const DELETE_TYPE_FUNCTIONS = 'functions';
+const DELETE_TYPE_USERS = 'users';
+const DELETE_TYPE_TEAMS= 'teams';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
@@ -466,7 +473,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-06.mmdb');
+    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-10.mmdb');
 });
 $register->set('db', function () { // This is usually for our workers or CLI commands scope
     $dbHost = App::getEnv('_APP_DB_HOST', '');
@@ -498,6 +505,8 @@ $register->set('cache', function () { // This is usually for our workers or CLI 
 Locale::$exceptions = false;
 Locale::setLanguageFromJSON('af', __DIR__.'/config/locale/translations/af.json');
 Locale::setLanguageFromJSON('ar', __DIR__.'/config/locale/translations/ar.json');
+Locale::setLanguageFromJSON('as', __DIR__.'/config/locale/translations/as.json');
+Locale::setLanguageFromJSON('az', __DIR__.'/config/locale/translations/az.json');
 Locale::setLanguageFromJSON('be', __DIR__.'/config/locale/translations/be.json');
 Locale::setLanguageFromJSON('bg', __DIR__.'/config/locale/translations/bg.json');
 Locale::setLanguageFromJSON('bh', __DIR__.'/config/locale/translations/bh.json');
@@ -509,11 +518,13 @@ Locale::setLanguageFromJSON('da', __DIR__.'/config/locale/translations/da.json')
 Locale::setLanguageFromJSON('de', __DIR__.'/config/locale/translations/de.json');
 Locale::setLanguageFromJSON('el', __DIR__.'/config/locale/translations/el.json');
 Locale::setLanguageFromJSON('en', __DIR__.'/config/locale/translations/en.json');
+Locale::setLanguageFromJSON('eo', __DIR__.'/config/locale/translations/eo.json');
 Locale::setLanguageFromJSON('es', __DIR__.'/config/locale/translations/es.json');
 Locale::setLanguageFromJSON('fa', __DIR__.'/config/locale/translations/fa.json');
 Locale::setLanguageFromJSON('fi', __DIR__.'/config/locale/translations/fi.json');
 Locale::setLanguageFromJSON('fo', __DIR__.'/config/locale/translations/fo.json');
 Locale::setLanguageFromJSON('fr', __DIR__.'/config/locale/translations/fr.json');
+Locale::setLanguageFromJSON('ga', __DIR__.'/config/locale/translations/ga.json');
 Locale::setLanguageFromJSON('gu', __DIR__.'/config/locale/translations/gu.json');
 Locale::setLanguageFromJSON('he', __DIR__.'/config/locale/translations/he.json');
 Locale::setLanguageFromJSON('hi', __DIR__.'/config/locale/translations/hi.json');
@@ -530,11 +541,14 @@ Locale::setLanguageFromJSON('km', __DIR__.'/config/locale/translations/km.json')
 Locale::setLanguageFromJSON('ko', __DIR__.'/config/locale/translations/ko.json');
 Locale::setLanguageFromJSON('lb', __DIR__.'/config/locale/translations/lb.json');
 Locale::setLanguageFromJSON('lt', __DIR__.'/config/locale/translations/lt.json');
+Locale::setLanguageFromJSON('lv', __DIR__.'/config/locale/translations/lv.json');
 Locale::setLanguageFromJSON('ml', __DIR__.'/config/locale/translations/ml.json');
 Locale::setLanguageFromJSON('mr', __DIR__.'/config/locale/translations/mr.json');
 Locale::setLanguageFromJSON('ms', __DIR__.'/config/locale/translations/ms.json');
+Locale::setLanguageFromJSON('nb', __DIR__.'/config/locale/translations/nb.json');
 Locale::setLanguageFromJSON('ne', __DIR__.'/config/locale/translations/ne.json');
 Locale::setLanguageFromJSON('nl', __DIR__.'/config/locale/translations/nl.json');
+Locale::setLanguageFromJSON('nn', __DIR__.'/config/locale/translations/nn.json');
 Locale::setLanguageFromJSON('no', __DIR__.'/config/locale/translations/no.json');
 Locale::setLanguageFromJSON('or', __DIR__.'/config/locale/translations/or.json');
 Locale::setLanguageFromJSON('pa', __DIR__.'/config/locale/translations/pa.json');
@@ -544,6 +558,7 @@ Locale::setLanguageFromJSON('pt-pt', __DIR__.'/config/locale/translations/pt-pt.
 Locale::setLanguageFromJSON('ro', __DIR__.'/config/locale/translations/ro.json');
 Locale::setLanguageFromJSON('ru', __DIR__ . '/config/locale/translations/ru.json');
 Locale::setLanguageFromJSON('sa', __DIR__ . '/config/locale/translations/sa.json');
+Locale::setLanguageFromJSON('sd', __DIR__ . '/config/locale/translations/sd.json');
 Locale::setLanguageFromJSON('si', __DIR__ . '/config/locale/translations/si.json');
 Locale::setLanguageFromJSON('sk', __DIR__ . '/config/locale/translations/sk.json');
 Locale::setLanguageFromJSON('sl', __DIR__ . '/config/locale/translations/sl.json');

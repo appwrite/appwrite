@@ -60,12 +60,12 @@ class Database
     /**
      * @var array
      */
-    static protected $filters = [];
+    protected static $filters = [];
 
     /**
      * @var bool
      */
-    static protected $statusFilters = true;
+    protected static $statusFilters = true;
 
     /**
      * @var array
@@ -463,7 +463,7 @@ class Database
      *
      * @return void
      */
-    static public function addFilter(string $name, callable $encode, callable $decode): void
+    public static function addFilter(string $name, callable $encode, callable $decode): void
     {
         self::$filters[$name] = [
             'encode' => $encode,
@@ -497,7 +497,7 @@ class Database
             return $document;
         }
 
-        $collection = $this->getDocument($document->getCollection(), true , false);
+        $collection = $this->getDocument($document->getCollection(), true, false);
         $rules = $collection->getAttribute('rules', []);
 
         foreach ($rules as $key => $rule) {
@@ -509,7 +509,7 @@ class Database
 
             if (($value !== null)) {
                 if ($type === self::SYSTEM_VAR_TYPE_DOCUMENT) {
-                    if($array) {
+                    if ($array) {
                         $list = [];
                         foreach ($value as $child) {
                             $list[] = $this->encode($child);
@@ -537,7 +537,7 @@ class Database
             return $document;
         }
 
-        $collection = $this->getDocument($document->getCollection(), true , false);
+        $collection = $this->getDocument($document->getCollection(), true, false);
         $rules = $collection->getAttribute('rules', []);
 
         foreach ($rules as $key => $rule) {
@@ -549,7 +549,7 @@ class Database
 
             if (($value !== null)) {
                 if ($type === self::SYSTEM_VAR_TYPE_DOCUMENT) {
-                    if($array) {
+                    if ($array) {
                         $list = [];
                         foreach ($value as $child) {
                             $list[] = $this->decode($child);
@@ -573,11 +573,11 @@ class Database
 
     /**
      * Encode Attribute
-     * 
+     *
      * @param string $name
      * @param mixed $value
      */
-    static protected function encodeAttribute(string $name, $value)
+    protected static function encodeAttribute(string $name, $value)
     {
         if (!isset(self::$filters[$name])) {
             return $value;
@@ -595,11 +595,11 @@ class Database
 
     /**
      * Decode Attribute
-     * 
+     *
      * @param string $name
      * @param mixed $value
      */
-    static protected function decodeAttribute(string $name, $value)
+    protected static function decodeAttribute(string $name, $value)
     {
         if (!isset(self::$filters[$name])) {
             return $value;
