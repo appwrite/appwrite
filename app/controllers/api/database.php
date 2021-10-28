@@ -76,13 +76,17 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
         throw new Exception('Cannot set default value for required attribute', 400);
     }
 
+    if ($array && $default) {
+        throw new Exception('Cannot set default value for array attributes', 400);
+    }
+
     try {
         $attribute = new Document([
             '$id' => $collectionId.'_'.$attributeId,
             'key' => $attributeId,
             'collectionId' => $collectionId,
             'type' => $type,
-            'status' => 'processing', // processing, available, failed, deleting
+            'status' => 'processing', // processing, available, failed, deleting, stuck
             'size' => $size,
             'required' => $required,
             'signed' => $signed,
@@ -667,13 +671,13 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'createStringAttribute')
-    ->label('sdk.description', '/docs/references/database/create-attribute-string.md')
+    ->label('sdk.description', '/docs/references/database/create-string-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_STRING)
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
-    ->param('size', null, new Integer(), 'Attribute size for text attributes, in number of characters.')
+    ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Range::TYPE_INTEGER), 'Attribute size for text attributes, in number of characters.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
@@ -715,7 +719,7 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createEmailAttribute')
-    ->label('sdk.description', '/docs/references/database/create-attribute-email.md')
+    ->label('sdk.description', '/docs/references/database/create-email-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_EMAIL)
@@ -812,7 +816,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createIpAttribute')
-    ->label('sdk.description', '/docs/references/database/create-attribute-ip.md')
+    ->label('sdk.description', '/docs/references/database/create-ip-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_IP)
@@ -854,7 +858,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createUrlAttribute')
-    ->label('sdk.description', '/docs/references/database/create-attribute-url.md')
+    ->label('sdk.description', '/docs/references/database/create-url-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_URL)
@@ -896,7 +900,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createIntegerAttribute')
-    ->label('sdk.description', '/docs/references/database/create-attribute-integer.md')
+    ->label('sdk.description', '/docs/references/database/create-integer-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_INTEGER)
@@ -922,6 +926,11 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
         // Ensure attribute default is within range
         $min = (is_null($min)) ? PHP_INT_MIN : \intval($min);
         $max = (is_null($max)) ? PHP_INT_MAX : \intval($max);
+
+        if ($min > $max) {
+            throw new Exception('Minimum value must be lesser than maximum value', 400);
+        }
+
         $validator = new Range($min, $max, Database::VAR_INTEGER);
 
         if (!is_null($default) && !$validator->isValid($default)) {
@@ -960,7 +969,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createFloatAttribute')
-    ->label('sdk.description', '/docs/references/database/create-attribute-float.md')
+    ->label('sdk.description', '/docs/references/database/create-float-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_FLOAT)
@@ -986,6 +995,11 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
         // Ensure attribute default is within range
         $min = (is_null($min)) ? PHP_FLOAT_MIN : \floatval($min);
         $max = (is_null($max)) ? PHP_FLOAT_MAX : \floatval($max);
+
+        if ($min > $max) {
+            throw new Exception('Minimum value must be lesser than maximum value', 400);
+        }
+
         $validator = new Range($min, $max, Database::VAR_FLOAT);
 
         if (!is_null($default) && !$validator->isValid($default)) {
@@ -1024,7 +1038,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createBooleanAttribute')
-    ->label('sdk.description', '/docs/references/database/create-attribute-boolean.md')
+    ->label('sdk.description', '/docs/references/database/create-boolean-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_BOOLEAN)
@@ -1194,7 +1208,11 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
             throw new Exception('Attribute not found', 404);
         }
 
-        $attribute = $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
+        // Only update status if removing available attribute
+        if ($attribute->getAttribute('status' === 'available')) {
+            $attribute = $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
+        }
+
         $dbForInternal->deleteCachedDocument('collections', $collectionId);
 
         $database
@@ -1205,8 +1223,26 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
 
         $usage->setParam('database.collections.update', 1);
 
+        // Select response model based on type and format
+        $type = $attribute->getAttribute('type');
+        $format = $attribute->getAttribute('format');
+
+        $model = match($type) {
+            Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
+            Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
+            Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
+            Database::VAR_STRING => match($format) {
+                APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,
+                APP_DATABASE_ATTRIBUTE_ENUM => Response::MODEL_ATTRIBUTE_ENUM,
+                APP_DATABASE_ATTRIBUTE_IP => Response::MODEL_ATTRIBUTE_IP,
+                APP_DATABASE_ATTRIBUTE_URL => Response::MODEL_ATTRIBUTE_URL,
+                default => Response::MODEL_ATTRIBUTE_STRING,
+            },
+            default => Response::MODEL_ATTRIBUTE,
+        };
+
         $events
-            ->setParam('payload', $response->output($attribute, Response::MODEL_ATTRIBUTE))
+            ->setParam('payload', $response->output($attribute, $model))
         ;
 
         $audits
@@ -1271,7 +1307,6 @@ App::post('/v1/database/collections/:collectionId/indexes')
         // lengths hidden by default
         $lengths = [];
 
-        // set attribute size as length for strings, null otherwise
         foreach ($attributes as $key => $attribute) {
             // find attribute metadata in collection document
             $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
@@ -1280,10 +1315,16 @@ App::post('/v1/database/collections/:collectionId/indexes')
                 throw new Exception('Unknown attribute: ' . $attribute, 400);
             }
 
+            $attributeStatus = $oldAttributes[$attributeIndex]['status'];
             $attributeType = $oldAttributes[$attributeIndex]['type'];
             $attributeSize = $oldAttributes[$attributeIndex]['size'];
 
-            // Only set length for indexes on strings
+            // ensure attribute is available
+            if ($attributeStatus !== 'available') {
+                throw new Exception ('Attribute not available: ' . $oldAttributes[$attributeIndex]['key'], 400);
+            }
+
+            // set attribute size as index length only for strings
             $lengths[$key] = ($attributeType === Database::VAR_STRING) ? $attributeSize : null;
         }
 
@@ -1291,7 +1332,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
             $index = $dbForInternal->createDocument('indexes', new Document([
                 '$id' => $collectionId.'_'.$indexId,
                 'key' => $indexId,
-                'status' => 'processing', // processing, available, failed, deleting
+                'status' => 'processing', // processing, available, failed, deleting, stuck
                 'collectionId' => $collectionId,
                 'type' => $type,
                 'attributes' => $attributes,
@@ -1446,7 +1487,11 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
             throw new Exception('Index not found', 404);
         }
 
-        $index = $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
+        // Only update status if removing available index
+        if ($index->getAttribute('status') === 'available') {
+            $index = $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
+        }
+
         $dbForInternal->deleteCachedDocument('collections', $collectionId);
 
         $database
@@ -1550,7 +1595,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         $usage
             ->setParam('database.documents.create', 1)
             ->setParam('collectionId', $collectionId)
-            ;
+        ;
 
         $audits
             ->setParam('event', 'database.documents.create')

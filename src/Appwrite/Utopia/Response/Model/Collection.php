@@ -70,7 +70,7 @@ class Collection extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -80,7 +80,7 @@ class Collection extends Model
 
     /**
      * Get Collection
-     * 
+     *
      * @return string
      */
     public function getType():string
