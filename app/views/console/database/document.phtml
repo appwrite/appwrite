@@ -88,7 +88,6 @@ $logs = $this->getParam('logs', null);
                                         <ul data-ls-loop="project-collection.attributes" data-ls-as="attribute">
                                             <li data-ls-if="{{attribute.status}} === 'available'">
                                                 <label>
-                                                    <div data-ls-bind="{{attribute.key}}" class="margin-bottom-tiny"></div>
                                                     <div data-ls-if="{{attribute.required}}" class="text-size-xs text-danger text-fade">required</div>
                                                     <div data-ls-if="!{{attribute.required}}" class="text-size-xs text-fade">optional</div>
                                                 </label>
@@ -98,7 +97,6 @@ $logs = $this->getParam('logs', null);
                                                 </div>
 
                                                 <div data-debug="1" data-ls-if="{{attribute.array}}" data-ls-loop="project-document.{{attribute.key}}" data-ls-as="item" data-ls-attrs="id=attribute-{{attribute.key}}">
-                                                    <div data-ls-bind="{{attribute.key}}"></div>
                                                     <div class="row responsive thin margin-bottom-tiny" data-forms-remove>
                                                         <div class="col span-11 margin-bottom-small">
                                                             <div data-ls-if="{{attribute.format}}" data-ls-template="template-{{attribute.format}}-array" data-type="script"></div>
