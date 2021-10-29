@@ -101,7 +101,7 @@ Next, choose a reference language. If English is your reference language, copy t
 
 We use [PO Editor](https://poeditor.com/) to manage all our translations in a convenient way. The first step is to join the Appwrite Project on PO Editor using [our invite link](https://poeditor.com/join/project?hash=BNrWbRXyk6). 
 
-On the home page, you can see all the languages that we currently support and the progress in each one. You can choose to be help us complete the existing translations or add new ones.
+On the home page, you can see all the languages that we currently support and the progress in each one. You can choose to help us complete the existing translations or add new ones.
 
 ![Home Page](images/home-page.png)
 
