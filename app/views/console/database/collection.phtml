@@ -42,9 +42,9 @@ $logs = $this->getParam('logs', null);
                     data-service="database.listDocuments"
                     data-event="load,database.createDocument,database.updateDocument,database.deleteDocument"
                     data-param-collection-id="{{router.params.id}}"
-                    data-param-search="{{router.params.search}}"
+                    data-param-cursor="{{router.params.cursor}}"
+                    data-param-cursor-direction="{{router.params.cursorDirection}}"
                     data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                    data-param-offset="{{router.params.offset}}"
                     data-param-order-types="DESC"
                     data-param-order-types-cast-to="array"
                     data-scope="sdk"
@@ -57,7 +57,7 @@ $logs = $this->getParam('logs', null);
                     </div>
 
                     <div data-ls-if="({{project-documents.sum}})" class="margin-top-negative">
-                        <div class="margin-bottom-small text-align-end text-size-small text-fade"><span data-ls-bind="{{project-documents.sum}}"></span> documents found</div>
+                        <div class="margin-bottom-small text-align-end text-size-small text-fade"><span data-ls-bind="{{project-documents.sum}}"></span><span data-ls-if="{{project-documents.sum}} == <?php echo APP_LIMIT_COUNT; ?>">+</span> documents found</div>
 
                         <div class="box margin-bottom y-scroll text-size-small">
                             <table class="vertical borders">
@@ -76,7 +76,7 @@ $logs = $this->getParam('logs', null);
                                     <tr data-ls-loop="project-collection.attributes" data-ls-as="attribute" data-ls-prefix="template-attribute-body-first" data-ls-limit="20">
                                         <td data-ls-if="{{attribute.status}} === 'available'" data-ls-attrs="data-title={{attribute.key}}">
                                             <!-- <a href="" target="_blank" rel="noopener" class="pull-end margin-start"><i class="icon-link-ext"></i></a> -->
-                                            <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{router.params.id}}&project={{router.params.project}}"><span data-ls-bind="{{node|documentAttribute}}"></span></a>
+                                            <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{node.$collection}}&project={{router.params.project}}"><span data-ls-bind="{{node|documentAttribute}}"></span></a>
                                             <span data-ls-if="!{{node|documentAttribute}}" class="text-fade">n/a</span>
                                         </td>
                                     </tr>
@@ -85,37 +85,38 @@ $logs = $this->getParam('logs', null);
                         </div>
                     </div>
 
-                    <div class="pull-end text-align-center paging">
+                    <div 
+                        data-ls-if="0 != {{project-documents.sum}}"
+                        class="pull-end text-align-center paging">
                         <form
                             data-service="database.listDocuments"
                             data-event="submit"
                             data-param-collection-id="{{router.params.id}}"
-                            data-param-search="{{router.params.search}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                             data-param-order-types="DESC"
                             data-param-order-types-cast-to="array"
                             data-scope="sdk"
                             data-name="project-documents"
                             data-success="state"
-                            data-success-param-state-keys="search,offset">
-                            <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-documents.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                            data-success-param-state-keys="cursor,cursorDirection">
+                            <input type="hidden" name="cursorDirection" value="before">
+                            <button name="cursor" data-ls-bind="{{project-documents.documents|first}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                         </form>
 
-                        <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-documents.sum|pageTotal}}"></span>
-
                         <form
+                            data-ls-if="<?php echo APP_PAGING_LIMIT; ?> == {{project-documents.documents.length}}"
                             data-service="database.listDocuments"
                             data-event="submit"
                             data-param-collection-id="{{router.params.id}}"
-                            data-param-search="{{router.params.search}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                             data-param-order-types="DESC"
                             data-param-order-types-cast-to="array"
                             data-scope="sdk"
                             data-name="project-documents"
                             data-success="state"
-                            data-success-param-state-keys="search,offset">
-                            <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-documents.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                            data-success-param-state-keys="cursor,cursorDirection">
+                            <input type="hidden" name="cursorDirection" value="after">
+                            <button name="cursor" data-ls-bind="{{project-documents.documents|last}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                         </form>
                     </div>
 
@@ -236,6 +237,9 @@ $logs = $this->getParam('logs', null);
                         </li>
                         <li>
                             <div class="link new-attribute-ip"><i class="avatar icon-ip"></i> New IP Attribute</div>
+                        </li>
+                        <li>
+                            <div class="link new-attribute-enum"><i class="avatar icon-string"></i> New Enum Attribute</div>
                         </li>
                     </ul>
                 </div>
@@ -1057,6 +1061,100 @@ $logs = $this->getParam('logs', null);
 
         <label for="string-attributeId">Attribute ID</label>
         <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+
+        <div class="margin-bottom">
+            <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+        </div>
+
+        <div class="margin-bottom">
+            <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+        </div>
+
+        <label for="string-default">Default Value</label>
+        <input id="string-default" name="xdefault" type="url" pattern="https://.*" title="Valid URL address" class="margin-bottom-large" autocomplete="off">
+
+        <footer>
+            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        </footer>
+    </form>
+    <script type="text/javascript">
+        (() => {
+            const form = document.getElementById("add-url-attribute");
+            const fields = {
+                required: {
+                    array: ["disable", "uncheck"],
+                    required: ["enable"]
+                },
+                array: {
+                    required: ["disable", "uncheck"],
+                    array: ["enable"]
+                },
+                xdefault: {
+                    oneOf: {
+                        if: ["array", "required"],
+                        then: {
+                            xdefault: ["unvalue", "disable"]
+                        },
+                        else: {
+                            required: ["enable"],
+                            array: ["enable"],
+                            xdefault: ["enable"]
+                        }
+                    }
+                }
+            };
+
+            form.addEventListener('change', event => {
+                formValidation(form, fields);
+            });
+        })();
+    </script>
+</div>
+
+<div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-enum">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1>Add Enum Attribute</h1>
+
+        <form
+            id="add-enum-attribute"
+            data-analytics
+            data-analytics-activity
+            data-analytics-event="submit"
+            data-analytics-category="console"
+            data-analytics-label="Create Collection Attribute (enum)"
+            data-service="database.createEnumAttribute"
+            data-scope="sdk"
+            data-event="submit"
+            data-success="alert,trigger,reset"
+            data-success-param-alert-text="Created new attribute successfully"
+            data-success-param-trigger-events="database.createAttribute"
+            data-failure="alert"
+            data-failure-param-alert-text="Failed to create attribute"
+            data-failure-param-alert-classname="error">
+
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+
+        <label for="string-attributeId">Attribute ID</label>
+        <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+
+        <label>Elements</label>
+
+        <div id="elements-section"></div>
+
+        <div class="margin-bottom">
+            <div data-forms-clone="" data-label="Add Element" data-target="elements-section" data-first="1">
+                <div class="row responsive thin margin-bottom-tiny">
+                    <div class="col span-11 margin-bottom-small">
+                        <input type="text" class="full-width" name="elements" required autocomplete="off" maxlength="128" />
+                    </div>
+                    <div class="col span-1 margin-bottom-small">
+                        <button type="button" data-remove class="dark danger small round pull-end" style="margin-top: 10px;"><i class="icon-cancel"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="margin-bottom">
             <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>

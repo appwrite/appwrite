@@ -92,14 +92,17 @@ $logs = $this->getParam('logs', null);
                                                     <div data-ls-if="{{attribute.required}}" class="text-size-xs text-danger text-fade">required</div>
                                                     <div data-ls-if="!{{attribute.required}}" class="text-size-xs text-fade">optional</div>
                                                 </label>
-
-                                                <div data-ls-if="!{{attribute.array}}" data-ls-template="template-{{attribute.type}}" data-type="script"></div>
+                                                <div data-ls-if="!{{attribute.array}}">
+                                                    <div data-ls-if="{{attribute.format}}" data-ls-template="template-{{attribute.format}}" data-type="script"></div>
+                                                    <div data-ls-if="!{{attribute.format}}" data-ls-template="template-{{attribute.type}}" data-type="script"></div>
+                                                </div>
 
                                                 <div data-ls-if="{{attribute.array}}">
                                                     <div data-ls-loop="project-document.{{attribute.key}}" data-ls-as="item" data-ls-attrs="id=attribute-{{attribute.key}}">
                                                         <div class="row responsive thin margin-bottom-tiny" data-forms-remove>
                                                             <div class="col span-11 margin-bottom-small">
-                                                                <div data-ls-template="template-{{attribute.type}}-array" data-type="script"></div>
+                                                                <div dfata-ls-if="{{attribute.typ}}" data-ls-template="template-{{attribute.format}}-array" data-type="script"></div>
+                                                                <div data-ls-template="template-{{attribute.format}}-array" data-type="script"></div>
                                                             </div>
                                                             <div class="col span-1 margin-bottom-small">
                                                                 <button type="button" data-remove class="dark danger small round pull-end" style="margin-top: 10px;"><i class="icon-cancel"></i></button>
@@ -112,7 +115,8 @@ $logs = $this->getParam('logs', null);
                                                     <div data-forms-clone="" data-label="Add Attribute" data-target="attributes-section-{{attribute.key}}" data-first="0">
                                                         <div class="row responsive thin margin-bottom-tiny" data-forms-remove>
                                                             <div class="col span-11 margin-bottom-small">
-                                                                <div data-ls-template="template-{{attribute.type}}-array" data-type="script"></div>
+                                                                <div data-ls-template="template-{{attribute.format}}-array" data-type="script"></div>
+                                                                <div data-ls-template="template-{{attribute.format}}-array" data-type="script"></div>
                                                             </div>
                                                             <div class="col span-1 margin-bottom-small">
                                                                 <button type="button" data-remove class="dark danger small round pull-end" style="margin-top: 10px;"><i class="icon-cancel"></i></button>
@@ -255,4 +259,14 @@ $logs = $this->getParam('logs', null);
 
 <script type="text/html" id="template-ip-array">
     <input type="text" data-ls-attrs="placeholder={{attribute.default}},name={{attribute.key}}" data-ls-bind="{{item}}" pattern="((^\s*((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\s*$)|(^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$))" title="Enter a valid IPV4 or IPV6 address" />
+</script>
+
+<script type="text/html" id="template-enum">
+    <select data-ls-attrs="name=elements" data-ls-loop="attribute.elements" data-ls-as="element" data-cast-to="array">
+        <option data-ls-attrs="value={{element}}" data-ls-bind="{{element}}"></option>
+    </select>
+</script>
+
+<script type="text/html" id="template-enum-array">
+    <input type="email" data-ls-attrs="placeholder={{attribute.default}},name={{attribute.key}}" data-ls-bind="{{item}}" />
 </script>

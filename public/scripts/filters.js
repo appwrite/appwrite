@@ -1,16 +1,16 @@
 window.ls.filter
-  .add("avatar", function($value, element) {
+  .add("avatar", function ($value, element) {
     if (!$value) {
       return "";
     }
 
     let size = element.dataset["size"] || 80;
     let name = $value.name || $value || "";
-    
+
     name = (typeof name !== 'string') ? '--' : name;
 
     return def =
-      "/v1/avatars/initials?project=console"+
+      "/v1/avatars/initials?project=console" +
       "&name=" +
       encodeURIComponent(name) +
       "&width=" +
@@ -18,26 +18,26 @@ window.ls.filter
       "&height=" +
       size;
   })
-  .add("selectedCollection", function($value, router) {
+  .add("selectedCollection", function ($value, router) {
     return $value === router.params.collectionId ? "selected" : "";
   })
-  .add("selectedDocument", function($value, router) {
+  .add("selectedDocument", function ($value, router) {
     return $value === router.params.documentId ? "selected" : "";
   })
-  .add("localeString", function($value) {
+  .add("localeString", function ($value) {
     $value = parseInt($value);
     return !Number.isNaN($value) ? $value.toLocaleString() : "";
   })
-  .add("date", function($value, date) {
+  .add("date", function ($value, date) {
     return date.format("Y-m-d", $value);
   })
-  .add("dateTime", function($value, date) {
+  .add("dateTime", function ($value, date) {
     return date.format("Y-m-d H:i", $value);
   })
-  .add("dateText", function($value, date) {
+  .add("dateText", function ($value, date) {
     return date.format("d M Y", $value);
   })
-  .add("timeSince", function($value) {
+  .add("timeSince", function ($value) {
     $value = $value * 1000;
 
     let seconds = Math.floor((Date.now() - $value) / 1000);
@@ -50,7 +50,7 @@ window.ls.filter
     }
 
     let value = seconds;
-    
+
     if (seconds >= 31536000) {
       value = Math.floor(seconds / 31536000);
       unit = "year";
@@ -71,10 +71,10 @@ window.ls.filter
     if (value != 1) {
       unit = unit + "s";
     }
-    
+
     return value + " " + unit + " " + direction;
   })
-  .add("ms2hum", function($value) {
+  .add("ms2hum", function ($value) {
     let temp = $value;
     const years = Math.floor(temp / 31536000),
       days = Math.floor((temp %= 31536000) / 86400),
@@ -95,37 +95,37 @@ window.ls.filter
 
     return "< 1s";
   })
-  .add("seconds2hum", function($value) {
+  .add("seconds2hum", function ($value) {
 
-      var seconds = ($value).toFixed(3);
+    var seconds = ($value).toFixed(3);
 
-      var minutes = ($value / (60)).toFixed(1);
+    var minutes = ($value / (60)).toFixed(1);
 
-      var hours = ($value / (60 * 60)).toFixed(1);
+    var hours = ($value / (60 * 60)).toFixed(1);
 
-      var days = ($value / (60 * 60 * 24)).toFixed(1);
+    var days = ($value / (60 * 60 * 24)).toFixed(1);
 
-      if (seconds < 60) {
-          return seconds + "s";
-      } else if (minutes < 60) {
-          return minutes + "m";
-      } else if (hours < 24) {
-          return hours + "h";
-      } else {
-          return days + "d"
-      }
+    if (seconds < 60) {
+      return seconds + "s";
+    } else if (minutes < 60) {
+      return minutes + "m";
+    } else if (hours < 24) {
+      return hours + "h";
+    } else {
+      return days + "d"
+    }
   })
-  .add("markdown", function($value, markdown) {
+  .add("markdown", function ($value, markdown) {
     return markdown.render($value);
   })
-  .add("pageCurrent", function($value, env) {
+  .add("pageCurrent", function ($value, env) {
     return Math.ceil(parseInt($value || 0) / env.PAGING_LIMIT) + 1;
   })
-  .add("pageTotal", function($value, env) {
+  .add("pageTotal", function ($value, env) {
     let total = Math.ceil(parseInt($value || 0) / env.PAGING_LIMIT);
     return total ? total : 1;
   })
-  .add("humanFileSize", function($value) {
+  .add("humanFileSize", function ($value) {
     if (!$value) {
       return 0;
     }
@@ -146,7 +146,7 @@ window.ls.filter
 
     return $value.toFixed(1);
   })
-  .add("humanFileUnit", function($value) {
+  .add("humanFileUnit", function ($value) {
     if (!$value) {
       return '';
     }
@@ -167,7 +167,7 @@ window.ls.filter
 
     return units[u];
   })
-  .add("statsTotal", function($value) {
+  .add("statsTotal", function ($value) {
     if (!$value) {
       return 0;
     }
@@ -176,102 +176,102 @@ window.ls.filter
 
     return $value ?? "N/A";
   })
-  .add("statsGetLast", function($value) {
+  .add("statsGetLast", function ($value) {
     if (!$value || $value.length < 1) {
       return 0;
     }
 
     return $value[$value.length - 1].value;
   })
-  .add("isEmpty", function($value) {
+  .add("isEmpty", function ($value) {
     return (!!$value);
   })
-  .add("isEmptyObject", function($value) {
+  .add("isEmptyObject", function ($value) {
     return ((Object.keys($value).length === 0 && $value.constructor === Object) || $value.length === 0)
   })
-  .add("activeDomainsCount", function($value) {
+  .add("activeDomainsCount", function ($value) {
     let result = [];
 
-    if(Array.isArray($value)) {
-      result = $value.filter(function(node) {
+    if (Array.isArray($value)) {
+      result = $value.filter(function (node) {
         return (node.verification && node.certificateId);
       });
     }
 
     return result.length;
   })
-  .add("documentAction", function(container) {
+  .add("documentAction", function (container) {
     let collection = container.get('project-collection');
     let document = container.get('project-document');
 
-    if(collection && document && !document.$id) {
+    if (collection && document && !document.$id) {
       return 'database.createDocument';
     }
 
     return 'database.updateDocument';
   })
-  .add("documentSuccess", function(container) {
+  .add("documentSuccess", function (container) {
     let document = container.get('project-document');
 
-    if(document && !document.$id) {
+    if (document && !document.$id) {
       return ',redirect';
     }
 
     return '';
   })
-  .add("firstElement", function($value) {
-    if($value && $value[0]) {
+  .add("firstElement", function ($value) {
+    if ($value && $value[0]) {
       return $value[0];
     }
 
     return $value;
   })
-  .add("platformsLimit", function($value) {
+  .add("platformsLimit", function ($value) {
     return $value;
   })
-  .add("limit", function($value) {
+  .add("limit", function ($value) {
     let postfix = ($value.length >= 50) ? '...' : '';
     return $value.substring(0, 50) + postfix;
     ;
   })
-  .add("arraySentence", function($value) {
-    if(!Array.isArray($value)) {
+  .add("arraySentence", function ($value) {
+    if (!Array.isArray($value)) {
       return '';
     }
 
     return $value.join(", ").replace(/,\s([^,]+)$/, ' and $1');
   })
-  .add("runtimeName", function($value, env) {
-    if(env && env.RUNTIMES && env.RUNTIMES[$value]) {
+  .add("runtimeName", function ($value, env) {
+    if (env && env.RUNTIMES && env.RUNTIMES[$value]) {
       return env.RUNTIMES[$value].name;
     }
 
     return '';
   })
-  .add("runtimeLogo", function($value, env) {
-    if(env && env.RUNTIMES && env.RUNTIMES[$value]) {
+  .add("runtimeLogo", function ($value, env) {
+    if (env && env.RUNTIMES && env.RUNTIMES[$value]) {
       return env.RUNTIMES[$value].logo;
     }
 
     return '';
   })
-  .add("runtimeVersion", function($value, env) {
-    if(env && env.RUNTIMES && env.RUNTIMES[$value]) {
+  .add("runtimeVersion", function ($value, env) {
+    if (env && env.RUNTIMES && env.RUNTIMES[$value]) {
       return env.RUNTIMES[$value].version;
     }
 
     return '';
   })
-  .add("indexAttributes", function($value) {
+  .add("indexAttributes", function ($value) {
     let output = '';
 
-    for(let i = 0; i < $value.attributes.length; i++) {
+    for (let i = 0; i < $value.attributes.length; i++) {
       output += $value.attributes[i] + ' (' + $value.orders[i] + '), '
     }
     return output.slice(0, -2);
   })
-  .add("collectionAttributes", function($value) {
-    if(!Array.isArray($value)) {
+  .add("collectionAttributes", function ($value) {
+    if (!Array.isArray($value)) {
       return [];
     }
 
@@ -281,17 +281,23 @@ window.ls.filter
 
     return $value;
   })
-  .add("documentAttribute", function($value, attribute) {
-    if($value[attribute.key]) {
+  .add("documentAttribute", function ($value, attribute) {
+    if ($value[attribute.key]) {
       return $value[attribute.key];
     }
 
     return null;
   })
-  .add("accessProject", function($value, router) {
+  .add("accessProject", function ($value, router) {
     return ($value && $value.hasOwnProperty(router.params.project)) ? $value[router.params.project] : 0;
   })
-;
+  .add("first", function ($value) {
+    return $value[0].$id;
+  })
+  .add("last", function ($value) {
+    return $value[$value.length - 1].$id;
+  })
+  ;
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {
   number = Number(number);
