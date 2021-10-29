@@ -262,8 +262,8 @@ $logs = $this->getParam('logs', null);
 </script>
 
 <script type="text/html" id="template-enum">
-    <select data-ls-attrs="name=elements" data-ls-loop="attribute.elements" data-ls-as="element" data-cast-to="array">
-        <option data-ls-attrs="value={{element}}" data-ls-bind="{{element}}"></option>
+    <select data-ls-attrs="name={{attribute.key}}" data-ls-loop="attribute.elements" data-ls-as="element">
+        <option data-ls-attrs="value={{element}}" data-ls-bind="{{element}}" data-forms-selected="{{project-document|documentAttribute}}"></option>
     </select>
 </script>
 
