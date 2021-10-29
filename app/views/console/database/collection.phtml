@@ -42,8 +42,6 @@ $logs = $this->getParam('logs', null);
                     data-service="database.listDocuments"
                     data-event="load,database.createDocument,database.updateDocument,database.deleteDocument"
                     data-param-collection-id="{{router.params.id}}"
-                    data-param-cursor="{{router.params.cursor}}"
-                    data-param-cursor-direction="{{router.params.cursorDirection}}"
                     data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                     data-param-order-types="DESC"
                     data-param-order-types-cast-to="array"
@@ -85,38 +83,35 @@ $logs = $this->getParam('logs', null);
                         </div>
                     </div>
 
-                    <div 
-                        data-ls-if="0 != {{project-documents.sum}}"
-                        class="pull-end text-align-center paging">
+                    <div class="pull-end text-align-center paging">
                         <form
                             data-service="database.listDocuments"
                             data-event="submit"
                             data-param-collection-id="{{router.params.id}}"
+                            data-param-search="{{router.params.search}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-types="DESC"
-                            data-param-order-types-cast-to="array"
+                            data-param-order-type="DESC"
                             data-scope="sdk"
                             data-name="project-documents"
                             data-success="state"
-                            data-success-param-state-keys="cursor,cursorDirection">
-                            <input type="hidden" name="cursorDirection" value="before">
-                            <button name="cursor" data-ls-bind="{{project-documents.documents|first}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                            data-success-param-state-keys="search,offset">
+                            <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-documents.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                         </form>
 
+                        <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-documents.sum|pageTotal}}"></span>
+
                         <form
-                            data-ls-if="<?php echo APP_PAGING_LIMIT; ?> == {{project-documents.documents.length}}"
                             data-service="database.listDocuments"
                             data-event="submit"
                             data-param-collection-id="{{router.params.id}}"
+                            data-param-search="{{router.params.search}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-types="DESC"
-                            data-param-order-types-cast-to="array"
+                            data-param-order-type="DESC"
                             data-scope="sdk"
                             data-name="project-documents"
                             data-success="state"
-                            data-success-param-state-keys="cursor,cursorDirection">
-                            <input type="hidden" name="cursorDirection" value="after">
-                            <button name="cursor" data-ls-bind="{{project-documents.documents|last}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                            data-success-param-state-keys="search,offset">
+                            <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-documents.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                         </form>
                     </div>
 
