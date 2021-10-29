@@ -289,7 +289,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
         /** @var Appwrite\Database\Document $project */
 
         $protocol = $request->getProtocol();
-        $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
+        $callback = $protocol.'://'.$request->getHostname().':'.$request->getPort().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
         $appId = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Appid', '');
         $appSecret = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}');
 
@@ -346,7 +346,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($protocol.'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
+            ->redirect($protocol.'://'.$domain.':'.$request->getPort().'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
                 .\http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
     });
 
@@ -373,7 +373,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($protocol.'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
+            ->redirect($protocol.'://'.$domain.':'.$request->getPort().'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
                 .\http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
     });
 
@@ -407,7 +407,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         /** @var Appwrite\Event\Event $audits */
         
         $protocol = $request->getProtocol();
-        $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
+        $callback = $protocol.'://'.$request->getHostname().':'.$request->getPort().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $validateURL = new URL();
 

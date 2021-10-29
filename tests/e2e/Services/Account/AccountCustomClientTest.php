@@ -48,6 +48,20 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('success', $response['body']['result']);
 
+        // PORT Number Test
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/'.$provider.'/'.$this->getProject()['$id'], array_merge([
+            'origin' => 'http://localhost:3000',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'success' => 'http://localhost:3000/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost:3000/v1/mock/tests/general/oauth2/failure',
+        ]);
+
+        $this->assertEquals($protocol.'://'.$domain.':300/v1/account/sessions/oauth2/'.$provider.'/redirect?'
+        .\http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]), 
+        $response);
+
         return [];
     }
 
