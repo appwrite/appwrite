@@ -24,6 +24,9 @@
                     break;
                 case 'string':
                     value = value.toString();
+                    if (value.length === 0) {
+                        value = null;
+                    }
                     break;
                 case 'json':
                     value = (value) ? JSON.parse(value) : [];
@@ -111,7 +114,7 @@
                             json[name] = element.value;
                         }
                     }
-                    
+
                     json[name] = cast(json[name], castTo); // Apply casting
                 }
             }
