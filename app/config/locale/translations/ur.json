@@ -21,7 +21,7 @@
     "emails.recovery.footer": "اگر آپ نے اپنا پاس ورڈ دوبارہ ترتیب دینے کے لیے نہیں کہا تو آپ اس پیغام کو نظر انداز کر سکتے ہیں۔",
     "emails.recovery.thanks": "شکریہ",
     "emails.recovery.signature": "ٹیم۔ {{project}}",
-    "emails.invitation.subject": "٪ s پر٪ s ٹیم کو دعوت",
+    "emails.invitation.subject": "%s پر %s ٹیم کو دعوت",
     "emails.invitation.hello": "خوش آمدید",
     "emails.invitation.body": "یہ پیغام آپ کو اس لیے بھیجا گیا تھا کہ {{مالک}} نے آپ کو {{project}} میں {{team}} ٹیم کا رکن بننے کی دعوت بھیجی",
     "emails.invitation.footer": "اگر آپ دلچسپی نہیں رکھتے تو آپ اس پیغام کو نظر انداز کر سکتے ہیں۔",
