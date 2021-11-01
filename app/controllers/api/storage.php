@@ -1106,7 +1106,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $file = $dbForInternal->getDocument('bucket_' . $bucketId, $fileId);
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
+        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
             throw new Exception('File not found', 404);
         }
 
