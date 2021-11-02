@@ -994,7 +994,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
         /** @var Appwrite\Stats\Stats $usage */
 
         // Ensure attribute default is within range
-        $min = (is_null($min)) ? PHP_FLOAT_MIN : \floatval($min);
+        $min = (is_null($min)) ? -PHP_FLOAT_MAX : \floatval($min);
         $max = (is_null($max)) ? PHP_FLOAT_MAX : \floatval($max);
 
         if ($min > $max) {
