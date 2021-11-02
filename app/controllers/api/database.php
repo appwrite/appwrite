@@ -94,6 +94,7 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
             'array' => $array,
             'format' => $format,
             'formatOptions' => $formatOptions,
+            'filters' => $filters,
         ]);
 
         $dbForInternal->checkAttribute($collection, $attribute);
@@ -680,6 +681,8 @@ App::delete('/v1/database/collections/:collectionId')
             throw new Exception('Failed to remove collection from DB', 500);
         }
 
+        $dbForExternal->deleteCachedCollection($collection->getId());
+
         $deletes
             ->setParam('type', DELETE_TYPE_DOCUMENT)
             ->setParam('document', $collection)
@@ -1030,7 +1033,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
         /** @var Appwrite\Stats\Stats $usage */
 
         // Ensure attribute default is within range
-        $min = (is_null($min)) ? PHP_FLOAT_MIN : \floatval($min);
+        $min = (is_null($min)) ? -PHP_FLOAT_MAX : \floatval($min);
         $max = (is_null($max)) ? PHP_FLOAT_MAX : \floatval($max);
 
         if ($min > $max) {
@@ -2041,6 +2044,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         }
 
         $dbForExternal->deleteDocument($collectionId, $documentId);
+        $dbForExternal->deleteCachedDocument($collectionId, $documentId);
 
         $usage
             ->setParam('database.documents.delete', 1)
