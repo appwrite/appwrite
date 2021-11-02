@@ -255,7 +255,7 @@ App::get('/v1/projects/:projectId/usage')
 
         $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $period = [
+            $periods = [
                 '24h' => [
                     'period' => '30m',
                     'limit' => 48,
@@ -288,12 +288,15 @@ App::get('/v1/projects/:projectId/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+            Authorization::skip(function() use ($dbForInternal, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
+                    $limit = $periods[$range]['limit'];
+                    $period = $periods[$range]['period'];
+
                     $requestDocs = $dbForInternal->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
 
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -301,6 +304,21 @@ App::get('/v1/projects/:projectId/usage')
                             'value' => $requestDoc->getAttribute('value'),
                             'date' => $requestDoc->getAttribute('time'),
                         ];
+                    }
+
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                            '30m' => 1800,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                        ];
+                        $backfill--;
                     }
                     $stats[$metric] = array_reverse($stats[$metric]);
                 }
