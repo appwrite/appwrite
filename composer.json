@@ -45,7 +45,7 @@
         "utopia-php/cache": "0.4.*",
         "utopia-php/cli": "0.11.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.10.*",
+        "utopia-php/database": "dev-feat-null-valid-for-optional-array-attributes as 0.10.1",
         "utopia-php/locale": "0.4.*",
         "utopia-php/orchestration": "0.2.*",
         "utopia-php/registry": "0.5.*",
