@@ -97,7 +97,7 @@ $logs = $this->getParam('logs', null);
                                                     <div data-ls-if="!{{attribute.format}}" data-ls-template="template-{{attribute.type}}" data-type="script"></div>
                                                 </div>
 
-                                                <div data-ls-if="{{attribute.array}}" data-ls-loop="project-document.{{attribute.key}}" data-ls-as="item" data-ls-attrs="id=attribute-{{attribute.key}}">
+                                                <div data-ls-if="{{attribute.array}}" data-ls-loop="project-document.{{attribute.key}}" data-ls-as="item">
                                                     <div class="row responsive thin margin-bottom-tiny" data-forms-remove>
                                                         <div class="col span-11 margin-bottom-small">
                                                             <div data-ls-if="{{attribute.format}}" data-ls-template="template-{{attribute.format}}-array" data-type="script"></div>
@@ -108,6 +108,8 @@ $logs = $this->getParam('logs', null);
                                                         </div>
                                                     </div>
                                                 </div>
+
+                                                <div data-ls-attrs="id=attribute-{{attribute.key}}"></div>
 
                                                 <div data-ls-if="{{attribute.array}}" class="margin-bottom">
                                                     <div data-forms-clone="" data-label="Add Attribute" data-target="attribute-{{attribute.key}}" data-first="0">
