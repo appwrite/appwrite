@@ -249,8 +249,6 @@ App::post('/v1/mock/tests/general/upload')
             $id = $request->getHeader('x-appwrite-id', '');
             $file['size'] = (\is_array($file['size'])) ? $file['size'] : [$file['size']];
 
-            var_dump($id);
-
             if(is_null($start) || is_null($end) || is_null($size)) {
                 throw new Exception('Invalid content-range header', 400);
             }
