@@ -94,6 +94,7 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
             'array' => $array,
             'format' => $format,
             'formatOptions' => $formatOptions,
+            'filters' => $filters,
         ]);
 
         $dbForInternal->checkAttribute($collection, $attribute);
