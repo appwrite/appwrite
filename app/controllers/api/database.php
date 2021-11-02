@@ -644,6 +644,8 @@ App::delete('/v1/database/collections/:collectionId')
             throw new Exception('Failed to remove collection from DB', 500);
         }
 
+        $dbForExternal->deleteCachedCollection($collection->getId());
+
         $deletes
             ->setParam('type', DELETE_TYPE_DOCUMENT)
             ->setParam('document', $collection)
@@ -2005,6 +2007,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         }
 
         $dbForExternal->deleteDocument($collectionId, $documentId);
+        $dbForExternal->deleteCachedDocument($collectionId, $documentId);
 
         $usage
             ->setParam('database.documents.delete', 1)
