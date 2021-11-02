@@ -249,6 +249,8 @@ App::post('/v1/mock/tests/general/upload')
             $id = $request->getHeader('x-appwrite-id', '');
             $file['size'] = (\is_array($file['size'])) ? $file['size'] : [$file['size']];
 
+            var_dump($id);
+
             if(is_null($start) || is_null($end) || is_null($size)) {
                 throw new Exception('Invalid content-range header', 400);
             }
@@ -265,7 +267,7 @@ App::post('/v1/mock/tests/general/upload')
                 throw new Exception('All chunked request must have id header (except first)', 400);
             }
 
-            if($end !== $size && $end-$start !== 5*1024*1024) {
+            if($end !== $size && $end-$start+1 !== 5*1024*1024) {
                 throw new Exception('Chunk size must be 5MB (except last chunk)', 400);
             }
 
@@ -278,7 +280,9 @@ App::post('/v1/mock/tests/general/upload')
                     throw new Exception('Chunk size must be 5MB or less', 400);
                 }
             }
-            $response->json(['$id'=> 'newfileid']);
+            if($end !== $size) {
+                $response->json(['$id'=> 'newfileid']);
+            }
         } else {
             $file['tmp_name'] = (\is_array($file['tmp_name'])) ? $file['tmp_name'] : [$file['tmp_name']];
             $file['name'] = (\is_array($file['name'])) ? $file['name'] : [$file['name']];
