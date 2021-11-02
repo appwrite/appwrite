@@ -112,7 +112,7 @@ $logs = $this->getParam('logs', null);
                                                 <div data-ls-attrs="id=attribute-{{attribute.key}}"></div>
 
                                                 <div data-ls-if="{{attribute.array}}" class="margin-bottom">
-                                                    <div data-forms-clone="" data-label="Add Attribute" data-target="attribute-{{attribute.key}}" data-first="0">
+                                                    <div data-forms-clone data-debug="1" data-label="Add Attribute" data-target="attribute-{{attribute.key}}" data-first="0">
                                                         <div class="row responsive thin margin-bottom-tiny" data-forms-remove>
                                                             <div class="col span-11 margin-bottom-small">
                                                                 <div data-ls-if="{{attribute.format}}" data-ls-template="template-{{attribute.format}}-array" data-type="script"></div>
