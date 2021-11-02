@@ -595,11 +595,11 @@ trait DatabaseBase
             'attributes' => ['title'],
         ]);
 
-        $this->assertEquals($titleIndex['headers']['status-code'], 201);
-        $this->assertEquals($titleIndex['body']['key'], 'titleIndex');
-        $this->assertEquals($titleIndex['body']['type'], 'fulltext');
+        $this->assertEquals(201, $titleIndex['headers']['status-code']);
+        $this->assertEquals('titleIndex', $titleIndex['body']['key']);
+        $this->assertEquals('fulltext', $titleIndex['body']['type']);
         $this->assertCount(1, $titleIndex['body']['attributes']);
-        $this->assertEquals($titleIndex['body']['attributes'][0], 'title');
+        $this->assertEquals('title', $titleIndex['body']['attributes'][0]);
 
         // wait for database worker to create index
         sleep(2);
@@ -612,7 +612,8 @@ trait DatabaseBase
 
         $this->assertIsArray($movies['body']['indexes']);
         $this->assertCount(1, $movies['body']['indexes']);
-        $this->assertEquals($movies['body']['indexes'][0]['key'], $titleIndex['body']['key']);
+        $this->assertEquals($titleIndex['body']['key'], $movies['body']['indexes'][0]['key']);
+        $this->assertEquals('available', $movies['body']['indexes'][0]['status']);
 
         return $data;
     }
