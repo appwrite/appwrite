@@ -26,6 +26,7 @@ use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Appwrite\Auth\Auth;
 use Appwrite\Database\Validator\CustomId;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
@@ -1575,6 +1576,18 @@ App::post('/v1/database/collections/:collectionId/documents')
         $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
         $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
 
+        // Users can only add their roles to documents, API keys can add any
+        foreach ($data['$read'] as $read) {
+            if (!Authorization::isRole('role:'.Auth::USER_ROLE_APP) && !Authorization::isRole($read)) {
+                throw new Exception('Read permissions must be one of: ('.\implode(', ', Authorization::getRoles()).')', 400);
+            }
+        }
+        foreach ($data['$write'] as $write) {
+            if (!Authorization::isRole('role:'.Auth::USER_ROLE_APP) && !Authorization::isRole($write)) {
+                throw new Exception('Write permissions must be one of: ('.\implode(', ', Authorization::getRoles()).')', 400);
+            }
+        }
+
         try {
             if ($collection->getAttribute('permission') === 'collection') {
                 /** @var Document $document */
@@ -1812,6 +1825,18 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $data['$id'] = $document->getId(); // Make sure user don't switch document unique ID
         $data['$read'] = (is_null($read)) ? ($document->getRead() ?? []) : $read; // By default inherit read permissions
         $data['$write'] = (is_null($write)) ? ($document->getWrite() ?? []) : $write; // By default inherit write permissions
+
+        // Users can only add their roles to documents, API keys can add any
+        foreach ($data['$read'] as $read) {
+            if (!Authorization::isRole('role:'.Auth::USER_ROLE_APP) && !Authorization::isRole($read)) {
+                throw new Exception('Read permissions must be one of: ('.\implode(', ', Authorization::getRoles()).')', 400);
+            }
+        }
+        foreach ($data['$write'] as $write) {
+            if (!Authorization::isRole('role:'.Auth::USER_ROLE_APP) && !Authorization::isRole($write)) {
+                throw new Exception('Write permissions must be one of: ('.\implode(', ', Authorization::getRoles()).')', 400);
+            }
+        }
 
         try {
             if ($collection->getAttribute('permission') === 'collection') {
