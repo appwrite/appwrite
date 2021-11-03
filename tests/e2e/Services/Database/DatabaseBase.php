@@ -1127,8 +1127,8 @@ trait DatabaseBase
                 'releaseYear' => 2017,
                 'actors' => [],
             ],
-            'read' => ['user:'.$this->getUser()['$id'], 'user:testx'],
-            'write' => ['user:'.$this->getUser()['$id'], 'user:testy'],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
         ]);
 
         $id = $document['body']['$id'];
@@ -1136,8 +1136,8 @@ trait DatabaseBase
         $this->assertEquals($document['headers']['status-code'], 201);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnaroc');
         $this->assertEquals($document['body']['releaseYear'], 2017);
-        $this->assertEquals($document['body']['$read'][1], 'user:testx');
-        $this->assertEquals($document['body']['$write'][1], 'user:testy');
+        $this->assertEquals('user:'.$this->getUser()['$id'], $document['body']['$read'][0],);
+        $this->assertEquals('user:'.$this->getUser()['$id'], $document['body']['$write'][0],);
 
         $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
@@ -1146,11 +1146,15 @@ trait DatabaseBase
             'data' => [
                 'title' => 'Thor: Ragnarok',
             ],
+            'read' => ['role:member'],
+            'write' => ['role:member'],
         ]);
 
         $this->assertEquals($document['headers']['status-code'], 200);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnarok');
         $this->assertEquals($document['body']['releaseYear'], 2017);
+        $this->assertEquals('role:member', $document['body']['$read'][0]);
+        $this->assertEquals('role:member', $document['body']['$write'][0]);
 
         $document = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
