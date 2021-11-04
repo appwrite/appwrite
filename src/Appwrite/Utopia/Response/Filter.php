@@ -2,7 +2,8 @@
 
 namespace Appwrite\Utopia\Response;
 
-abstract class Filter {
+abstract class Filter
+{
 
     /**
      * Parse the content to another format.
@@ -12,6 +13,5 @@ abstract class Filter {
      *
      * @return array
      */
-    abstract function parse(array $content, string $model): array;
-    
+    abstract public function parse(array $content, string $model): array;
 }

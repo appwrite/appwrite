@@ -1,7 +1,7 @@
 # WARNING!
 # This is a development version of THE Appwrite docker-compose.yml file.
 # Avoid using this file in your production environment.
-# We're exposing here sensetive ports and mounting code volumes for rapid development and debugging of the server stack.
+# We're exposing here sensitive ports and mounting code volumes for rapid development and debugging of the server stack.
 
 version: '3'
 
@@ -464,7 +464,7 @@ services:
   #     - SMARTHOST_PORT=587
   
   redis:
-    image: redis:6.0-alpine
+    image: redis:6.2-alpine
     container_name: appwrite-redis
     networks:
       - appwrite
@@ -480,7 +480,7 @@ services:
   #     - appwrite-uploads:/storage/uploads
       
   influxdb:
-    image: appwrite/influxdb:1.0.0
+    image: appwrite/influxdb:1.4.0
     container_name: appwrite-influxdb
     networks:
       - appwrite
@@ -488,7 +488,7 @@ services:
       - appwrite-influxdb:/var/lib/influxdb:rw
 
   telegraf:
-    image: appwrite/telegraf:1.2.0
+    image: appwrite/telegraf:1.3.0
     container_name: appwrite-telegraf
     networks:
       - appwrite

@@ -2,7 +2,6 @@
 
 namespace Appwrite\Migration\Version;
 
-
 use Utopia\App;
 use Utopia\CLI\Console;
 use Appwrite\Database\Database;
@@ -35,8 +34,7 @@ class V06 extends Migration
             case Database::SYSTEM_COLLECTION_KEYS:
                 if ($document->getAttribute('secret', null)) {
                     $json = \json_decode($document->getAttribute('secret'), true);
-                    if (is_array($json))
-                    {
+                    if (is_array($json)) {
                         Console::log('Secret already encrypted. Skipped: ' . $document->getId());
                         break;
                     }

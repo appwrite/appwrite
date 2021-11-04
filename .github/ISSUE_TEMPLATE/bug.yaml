@@ -58,7 +58,7 @@ body:
     validations:
       required: true
   - type: textarea
-    id: enviromnemt
+    id: environment
     validations:
       required: false
     attributes:
@@ -72,4 +72,11 @@ body:
       description: "Have you Googled for a similar issue or checked our older issues for a similar bug?"
       options:
         - label: "I checked and didn't find similar issue"
+          required: true
+  - type: checkboxes
+    id: read-code-of-conduct
+    attributes:
+      label: "🏢 Have you read the Code of Conduct?"
+      options:
+        - label: "I have read the [Code of Conduct](https://github.com/appwrite/appwrite/blob/HEAD/CODE_OF_CONDUCT.md)"
           required: true
