@@ -1,4 +1,5 @@
-{  
+{
+     "settings.inspire": "",
      "settings.locale": "eo",
      "settings.direction": "ltr",
      "emails.sender": "Teamo %s",
