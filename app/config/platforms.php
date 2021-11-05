@@ -81,7 +81,7 @@ return [
             [
                 'key' => 'apple',
                 'name' => 'Apple',
-                'version' => '0.1.0',
+                'version' => '0.1.1',
                 'url' => 'https://github.com/appwrite/sdk-for-apple',
                 'package' => 'https://github.com/appwrite/sdk-for-apple',
                 'enabled' => true,
