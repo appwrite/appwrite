@@ -1,1 +1,1 @@
-Update a team by its unique ID. Only team owners have write access for this resource.
+Update a team using its unique ID. Every team member has access to this endpoint.

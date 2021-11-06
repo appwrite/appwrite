@@ -1,1 +1,1 @@
-Delete a team by its unique ID. Only team owners have write access for this resource.
+Delete a team using its unique ID. Every member of the team has access to this endpoint.

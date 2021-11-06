@@ -1,1 +1,1 @@
-Create a new team. The user who creates the team will automatically be assigned as the owner of the team. The team owner can invite new members, who will be able add new owners and update or delete the team from your project.
+Use this endpoint to create a new team. The user who creates the team will automatically be assigned as the owner of the team. Only the users with the owner role can invite new members or add new owners. However, every member can delete or update the team.
