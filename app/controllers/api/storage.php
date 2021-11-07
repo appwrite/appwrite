@@ -64,7 +64,7 @@ App::post('/v1/storage/buckets')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $bucketId = $bucketId == 'unique()' ? $dbForInternal->getId() : $bucketId;
+        $bucketId = $bucketId === 'unique()' ? $dbForInternal->getId() : $bucketId;
         try {
             $dbForInternal->createCollection('bucket_' . $bucketId, [
                 new Document([
@@ -603,7 +603,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $sizeActual = $device->getFileSize($path);
         
         $data = [
-            '$id' => $fileId == 'unique()' ? $dbForInternal->getId() : $fileId,
+            '$id' => $fileId === 'unique()' ? $dbForInternal->getId() : $fileId,
             '$read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], // By default set read permissions for user
             '$write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], // By default set write permissions for user
             'dateCreated' => \time(),
@@ -800,7 +800,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception('Bucket not found', 404);
         }
 
-        if ((\strpos($request->getAccept(), 'image/webp') === false) && ('webp' == $output)) { // Fallback webp to jpeg when no browser support
+        if ((\strpos($request->getAccept(), 'image/webp') === false) && ('webp' === $output)) { // Fallback webp to jpeg when no browser support
             $output = 'jpg';
         }
 
@@ -874,7 +874,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $image->crop((int) $width, (int) $height, $gravity);
         
-        if (!empty($opacity) || $opacity==0) {
+        if (!empty($opacity) || $opacity===0) {
             $image->setOpacity($opacity);
         }
 
@@ -1210,7 +1210,7 @@ App::get('/v1/storage/usage')
         /** @var Utopia\Database\Database $dbForInternal */
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
             $period = [
                 '24h' => [
                     'period' => '30m',
@@ -1290,7 +1290,7 @@ App::get('/v1/storage/:bucketId/usage')
         } 
         
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
             $period = [
                 '24h' => [
                     'period' => '30m',
