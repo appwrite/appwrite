@@ -53,7 +53,7 @@ class DeletesV1 extends Worker
                     case DELETE_TYPE_TEAMS:
                         $this->deleteMemberships($document, $projectId);
                         break;
-                    case 'buckets':
+                    case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($document, $projectId);
                         break;
                     default:
