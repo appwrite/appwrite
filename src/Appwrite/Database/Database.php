@@ -36,7 +36,6 @@ class Database
 
     // Storage
     const SYSTEM_COLLECTION_FILES = 'files';
-    const SYSTEM_COLLECTION_BUCKETS = 'buckets';
 
     // Functions
     const SYSTEM_COLLECTION_FUNCTIONS = 'functions';
