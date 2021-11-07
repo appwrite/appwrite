@@ -53,6 +53,9 @@ class DeletesV1 extends Worker
                     case DELETE_TYPE_TEAMS:
                         $this->deleteMemberships($document, $projectId);
                         break;
+                    case 'buckets':
+                        $this->deleteBucket($document, $projectId);
+                        break;
                     default:
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
                         break;
@@ -399,5 +402,17 @@ class DeletesV1 extends Worker
         } else {
             Console::info("No certificate files found for {$domain}");
         }
+    }
+
+    protected function deleteBucket(Document $document, string $projectId)
+    {
+        $bucketId = $document->getId();
+        
+        $this->deleteByGroup('files',[
+            new Query('bucketId', Query::TYPE_EQUAL, [$bucketId])
+        ], $this->getInternalDB($projectId));
+
+        $device = new Local(APP_STORAGE_UPLOADS.'/app-'.$projectId);
+        $device->deletePath($device->getRoot() . DIRECTORY_SEPARATOR . $bucketId);
     }
 }
