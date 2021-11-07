@@ -1059,7 +1059,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             ->setParam('bucketId', $bucketId)
         ;
 
-        // Response
         $response
             ->setContentType($contentType)
             ->addHeader('Content-Security-Policy', 'script-src none;')
