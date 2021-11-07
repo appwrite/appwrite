@@ -738,7 +738,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $file = $dbForInternal->getDocument('bucket_' . $bucketId, $fileId);
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId)  {
+        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId)  {
             throw new Exception('File not found', 404);
         }
         $usage
@@ -813,7 +813,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $file = $dbForInternal->getDocument('bucket_' . $bucketId, $fileId);
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
+        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
             throw new Exception('File not found', 404);
         }
 
@@ -945,7 +945,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
 
         $file = $dbForInternal->getDocument('bucket_' . $bucketId, $fileId);
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
+        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
             throw new Exception('File not found', 404);
         }
 
@@ -1019,7 +1019,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         $file  = $dbForInternal->getDocument('bucket_' . $bucketId, $fileId);
         $mimes = Config::getParam('storage-mimes');
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
+        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
             throw new Exception('File not found', 404);
         }
 
@@ -1162,7 +1162,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $file = $dbForInternal->getDocument('bucket_' . $bucketId, $fileId);
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
+        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
             throw new Exception('File not found', 404);
         }
 
