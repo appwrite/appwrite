@@ -280,6 +280,44 @@ App::get('/console/storage')
             ->setParam('body', $page);
     });
 
+App::get('/console/storage/bucket')
+    ->groups(['web', 'console'])
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->param('id', '', new UID(), 'Bucket unique ID.')
+    ->inject('response')
+    ->inject('layout')
+    ->action(function ($id, $response, $layout) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\View $layout */
+
+        // $logs = new View(__DIR__.'/../../views/console/comps/logs.phtml');
+
+        // $logs
+        //     ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 0))
+        // ;
+
+        $page = new View(__DIR__.'/../../views/console/storage/bucket.phtml');
+        $page
+            ->setParam('home', App::getEnv('_APP_HOME', 0))
+            ->setParam('fileLimit', App::getEnv('_APP_STORAGE_LIMIT', 0))
+            ->setParam('fileLimitHuman', Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0)))
+        ;
+        
+        // $page->setParam('logs', $logs);
+        
+        $layout
+            ->setParam('title', APP_NAME.' - Storage Bucket')
+            ->setParam('body', $page)
+        ;
+
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Expires', 0)
+            ->addHeader('Pragma', 'no-cache')
+        ;
+    });
+
 App::get('/console/users')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
