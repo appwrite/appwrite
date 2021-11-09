@@ -558,50 +558,59 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 404);
     }
 
-    public function testAttributeCountLimit()
-    {
-        $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'collectionId' => 'unique()',
-            'name' => 'attributeCountLimit',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'document',
-        ]);
+    // Adds several minutes to test to replicate coverage in Utopia\Database unit tests
+    // and messes with subsequent tests as DatabaseV1 queue gets overwhelmed
+    // TODO@kodumbeats either fix or remove testAttributeCountLimit
+    // Options to fix:
+    // - Enable attribute creation in batches
+    // - Use additional database workers
+    // - Wait for worker to complete before moving onto next test
+    // - Remove since this is unit tested in Utopia\Database
+    //
+    // public function testAttributeCountLimit()
+    // {
+    //     $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //         'x-appwrite-key' => $this->getProject()['apiKey']
+    //     ]), [
+    //         'collectionId' => 'unique()',
+    //         'name' => 'attributeCountLimit',
+    //         'read' => ['role:all'],
+    //         'write' => ['role:all'],
+    //         'permission' => 'document',
+    //     ]);
 
-        $collectionId = $collection['body']['$id'];
+    //     $collectionId = $collection['body']['$id'];
 
-        // load the collection up to the limit
-        for ($i=0; $i < 1012; $i++) {
-            $attribute = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'attributeId' => "attribute{$i}",
-                'required' => false,
-            ]);
+    //     // load the collection up to the limit
+    //     for ($i=0; $i < 1012; $i++) {
+    //         $attribute = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
+    //             'content-type' => 'application/json',
+    //             'x-appwrite-project' => $this->getProject()['$id'],
+    //             'x-appwrite-key' => $this->getProject()['apiKey']
+    //         ]), [
+    //             'attributeId' => "attribute{$i}",
+    //             'required' => false,
+    //         ]);
 
-            $this->assertEquals(201, $attribute['headers']['status-code']);
-        }
+    //         $this->assertEquals(201, $attribute['headers']['status-code']);
+    //     }
 
-        sleep(5);
+    //     sleep(30);
 
-        $tooMany = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'attributeId' => "tooMany",
-            'required' => false,
-        ]);
+    //     $tooMany = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //         'x-appwrite-key' => $this->getProject()['apiKey']
+    //     ]), [
+    //         'attributeId' => "tooMany",
+    //         'required' => false,
+    //     ]);
 
-        $this->assertEquals(400, $tooMany['headers']['status-code']);
-        $this->assertEquals('Attribute limit exceeded', $tooMany['body']['message']);
-    }
+    //     $this->assertEquals(400, $tooMany['headers']['status-code']);
+    //     $this->assertEquals('Attribute limit exceeded', $tooMany['body']['message']);
+    // }
 
     public function testAttributeRowWidthLimit()
     {
@@ -688,7 +697,7 @@ class DatabaseCustomServerTest extends Scope
             $this->assertEquals($attribute['headers']['status-code'], 201);
         }
 
-        sleep(5);
+        sleep(20);
 
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -702,6 +711,10 @@ class DatabaseCustomServerTest extends Scope
         $this->assertIsArray($collection['body']['indexes']);
         $this->assertCount(64, $collection['body']['attributes']);
         $this->assertCount(0, $collection['body']['indexes']);
+
+        foreach ($collection['body']['attributes'] as $attribute) {
+            $this->assertEquals('available', $attribute['status'], 'attribute: ' . $attribute['key']);
+        }
 
         // testing for indexLimit = 64
         // MariaDB, MySQL, and MongoDB create 3 indexes per new collection

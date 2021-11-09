@@ -34,7 +34,7 @@ class Collection extends Structure
      * Is valid.
      *
      * Returns true if valid or false if not.
-     * 
+     *
      * @param mixed $document
      *
      * @return bool

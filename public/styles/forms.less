@@ -25,7 +25,7 @@ input, textarea {
 
 input[type=file],
 input[type=file]::-webkit-file-upload-button {
-    cursor: pointer; 
+    cursor: pointer;
 }
 
 button,
@@ -412,6 +412,7 @@ fieldset {
   width: ~"calc(100% - 2px)";
   max-height: 180px;
   visibility: visible !important;
+  object-fit: contain;
 }
 
 .video-preview {
@@ -591,7 +592,7 @@ input[type=checkbox], input[type=radio] {
     color: var(--config-color-background-fade);
     background: var(--config-color-focus);
   }
-  
+
   &[type=radio] {
     &:checked:after {
       //content: '●';
@@ -665,7 +666,7 @@ input[type=checkbox], input[type=radio] {
   color: var(--config-color-fade);
   padding: 0;
   font-size: 12px;
-  
+
   form {
     display: inline-block;
   }
@@ -832,7 +833,7 @@ label.switch {
     &:focus,
     &:hover {
       background: var(--config-color-success);
-    }  
+    }
   }
 
   &:focus,
@@ -944,7 +945,7 @@ hr {
   height: 1px;
   background: var(--config-border-color)!important;
   border: none;
-  
+
   &.fade {
     opacity: .7;
   }
@@ -1320,7 +1321,7 @@ ol {
   height: 26px;
   width: 44px;
   margin: 9px 0;
-  
+
   button {
     padding: 3px;
     display: block;
@@ -1343,7 +1344,7 @@ ol {
     &.force-light {
       .pull-end;
     }
-    
+
     &.force-dark {
       .pull-start;
     }

@@ -47,77 +47,134 @@
                 mode: '',
             };
             this.headers = {
-                'x-sdk-version': 'appwrite:web:4.0.1',
-                'X-Appwrite-Response-Format': '0.10.0',
+                'x-sdk-version': 'appwrite:web:4.0.4',
+                'X-Appwrite-Response-Format': '0.12.0',
             };
             this.realtime = {
                 socket: undefined,
                 timeout: undefined,
-                channels: {},
+                url: '',
+                channels: new Set(),
+                subscriptions: new Map(),
+                subscriptionsCounter: 0,
+                reconnect: true,
+                reconnectAttempts: 0,
                 lastMessage: undefined,
+                connect: () => {
+                    clearTimeout(this.realtime.timeout);
+                    this.realtime.timeout = window === null || window === void 0 ? void 0 : window.setTimeout(() => {
+                        this.realtime.createSocket();
+                    }, 50);
+                },
+                getTimeout: () => {
+                    switch (true) {
+                        case this.realtime.reconnectAttempts < 5:
+                            return 1000;
+                        case this.realtime.reconnectAttempts < 15:
+                            return 5000;
+                        case this.realtime.reconnectAttempts < 100:
+                            return 10000;
+                        default:
+                            return 60000;
+                    }
+                },
                 createSocket: () => {
                     var _a, _b;
+                    if (this.realtime.channels.size < 1)
+                        return;
                     const channels = new URLSearchParams();
                     channels.set('project', this.config.project);
-                    for (const property in this.realtime.channels) {
-                        channels.append('channels[]', property);
-                    }
-                    if (((_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.readyState) === WebSocket.OPEN) {
-                        this.realtime.socket.close();
-                    }
-                    this.realtime.socket = new WebSocket(this.config.endpointRealtime + '/realtime?' + channels.toString());
-                    (_b = this.realtime.socket) === null || _b === void 0 ? void 0 : _b.addEventListener('message', this.realtime.authenticate);
-                    for (const channel in this.realtime.channels) {
-                        this.realtime.channels[channel].forEach(callback => {
-                            var _a;
-                            (_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.addEventListener('message', callback);
+                    this.realtime.channels.forEach(channel => {
+                        channels.append('channels[]', channel);
+                    });
+                    const url = this.config.endpointRealtime + '/realtime?' + channels.toString();
+                    if (url !== this.realtime.url || // Check if URL is present
+                        !this.realtime.socket || // Check if WebSocket has not been created
+                        ((_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.readyState) > WebSocket.OPEN // Check if WebSocket is CLOSING (3) or CLOSED (4)
+                    ) {
+                        if (this.realtime.socket &&
+                            ((_b = this.realtime.socket) === null || _b === void 0 ? void 0 : _b.readyState) < WebSocket.CLOSING // Close WebSocket if it is CONNECTING (0) or OPEN (1)
+                        ) {
+                            this.realtime.reconnect = false;
+                            this.realtime.socket.close();
+                        }
+                        this.realtime.url = url;
+                        this.realtime.socket = new WebSocket(url);
+                        this.realtime.socket.addEventListener('message', this.realtime.onMessage);
+                        this.realtime.socket.addEventListener('open', _event => {
+                            this.realtime.reconnectAttempts = 0;
+                        });
+                        this.realtime.socket.addEventListener('close', event => {
+                            var _a, _b, _c;
+                            if (!this.realtime.reconnect ||
+                                (((_b = (_a = this.realtime) === null || _a === void 0 ? void 0 : _a.lastMessage) === null || _b === void 0 ? void 0 : _b.type) === 'error' && // Check if last message was of type error
+                                    ((_c = this.realtime) === null || _c === void 0 ? void 0 : _c.lastMessage.data).code === 1008 // Check for policy violation 1008
+                                )) {
+                                this.realtime.reconnect = true;
+                                return;
+                            }
+                            const timeout = this.realtime.getTimeout();
+                            console.error(`Realtime got disconnected. Reconnect will be attempted in ${timeout / 1000} seconds.`, event.reason);
+                            setTimeout(() => {
+                                this.realtime.reconnectAttempts++;
+                                this.realtime.createSocket();
+                            }, timeout);
                         });
                     }
-                    this.realtime.socket.addEventListener('close', event => {
-                        var _a, _b, _c;
-                        if (((_b = (_a = this.realtime) === null || _a === void 0 ? void 0 : _a.lastMessage) === null || _b === void 0 ? void 0 : _b.type) === 'error' && ((_c = this.realtime) === null || _c === void 0 ? void 0 : _c.lastMessage.data).code === 1008) {
-                            return;
-                        }
-                        console.error('Realtime got disconnected. Reconnect will be attempted in 1 second.', event.reason);
-                        setTimeout(() => {
-                            this.realtime.createSocket();
-                        }, 1000);
-                    });
                 },
-                authenticate: (event) => {
-                    var _a, _b, _c;
-                    const message = JSON.parse(event.data);
-                    if (message.type === 'connected' && ((_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.readyState) === WebSocket.OPEN) {
-                        const cookie = JSON.parse((_b = window.localStorage.getItem('cookieFallback')) !== null && _b !== void 0 ? _b : "{}");
-                        const session = cookie === null || cookie === void 0 ? void 0 : cookie[`a_session_${this.config.project}`];
-                        const data = message.data;
-                        if (session && !data.user) {
-                            (_c = this.realtime.socket) === null || _c === void 0 ? void 0 : _c.send(JSON.stringify({
-                                type: "authentication",
-                                data: {
-                                    session
-                                }
-                            }));
-                        }
-                    }
-                },
-                onMessage: (channel, callback) => (event) => {
+                onMessage: (event) => {
+                    var _a, _b;
                     try {
                         const message = JSON.parse(event.data);
                         this.realtime.lastMessage = message;
-                        if (message.type === 'event') {
-                            let data = message.data;
-                            if (data.channels && data.channels.includes(channel)) {
-                                callback(data);
-                            }
-                        }
-                        else if (message.type === 'error') {
-                            throw message.data;
+                        switch (message.type) {
+                            case 'connected':
+                                const cookie = JSON.parse((_a = window.localStorage.getItem('cookieFallback')) !== null && _a !== void 0 ? _a : '{}');
+                                const session = cookie === null || cookie === void 0 ? void 0 : cookie[`a_session_${this.config.project}`];
+                                const messageData = message.data;
+                                if (session && !messageData.user) {
+                                    (_b = this.realtime.socket) === null || _b === void 0 ? void 0 : _b.send(JSON.stringify({
+                                        type: 'authentication',
+                                        data: {
+                                            session
+                                        }
+                                    }));
+                                }
+                                break;
+                            case 'event':
+                                let data = message.data;
+                                if (data === null || data === void 0 ? void 0 : data.channels) {
+                                    const isSubscribed = data.channels.some(channel => this.realtime.channels.has(channel));
+                                    if (!isSubscribed)
+                                        return;
+                                    this.realtime.subscriptions.forEach(subscription => {
+                                        if (data.channels.some(channel => subscription.channels.includes(channel))) {
+                                            setTimeout(() => subscription.callback(data));
+                                        }
+                                    });
+                                }
+                                break;
+                            case 'error':
+                                throw message.data;
+                            default:
+                                break;
                         }
                     }
                     catch (e) {
                         console.error(e);
                     }
+                },
+                cleanUp: channels => {
+                    this.realtime.channels.forEach(channel => {
+                        if (channels.includes(channel)) {
+                            let found = Array.from(this.realtime.subscriptions).some(([_key, subscription]) => {
+                                return subscription.channels.includes(channel);
+                            });
+                            if (!found) {
+                                this.realtime.channels.delete(channel);
+                            }
+                        }
+                    });
                 }
             };
             this.account = {
@@ -556,17 +613,24 @@
                  * the URL parameter empty, so that the login completion will be handled by
                  * your Appwrite instance by default.
                  *
+                 * @param {string} userId
                  * @param {string} email
                  * @param {string} url
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createMagicURLSession: (email, url) => __awaiter(this, void 0, void 0, function* () {
+                createMagicURLSession: (userId, email, url) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
                     if (typeof email === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "email"');
                     }
                     let path = '/account/sessions/magic-url';
                     let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
                     if (typeof email !== 'undefined') {
                         payload['email'] = email;
                     }
@@ -1270,7 +1334,7 @@
                         payload['required'] = required;
                     }
                     if (typeof xdefault !== 'undefined') {
-                        payload['xdefault'] = xdefault;
+                        payload['default'] = xdefault;
                     }
                     if (typeof array !== 'undefined') {
                         payload['array'] = array;
@@ -1311,7 +1375,55 @@
                         payload['required'] = required;
                     }
                     if (typeof xdefault !== 'undefined') {
-                        payload['xdefault'] = xdefault;
+                        payload['default'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Enum Attribute
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} attributeId
+                 * @param {string[]} elements
+                 * @param {boolean} required
+                 * @param {string} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createEnumAttribute: (collectionId, attributeId, elements, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof attributeId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    }
+                    if (typeof elements === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "elements"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/enum'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof attributeId !== 'undefined') {
+                        payload['attributeId'] = attributeId;
+                    }
+                    if (typeof elements !== 'undefined') {
+                        payload['elements'] = elements;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['default'] = xdefault;
                     }
                     if (typeof array !== 'undefined') {
                         payload['array'] = array;
@@ -1360,7 +1472,7 @@
                         payload['max'] = max;
                     }
                     if (typeof xdefault !== 'undefined') {
-                        payload['xdefault'] = xdefault;
+                        payload['default'] = xdefault;
                     }
                     if (typeof array !== 'undefined') {
                         payload['array'] = array;
@@ -1409,7 +1521,7 @@
                         payload['max'] = max;
                     }
                     if (typeof xdefault !== 'undefined') {
-                        payload['xdefault'] = xdefault;
+                        payload['default'] = xdefault;
                     }
                     if (typeof array !== 'undefined') {
                         payload['array'] = array;
@@ -1450,7 +1562,7 @@
                         payload['required'] = required;
                     }
                     if (typeof xdefault !== 'undefined') {
-                        payload['xdefault'] = xdefault;
+                        payload['default'] = xdefault;
                     }
                     if (typeof array !== 'undefined') {
                         payload['array'] = array;
@@ -1498,7 +1610,7 @@
                         payload['required'] = required;
                     }
                     if (typeof xdefault !== 'undefined') {
-                        payload['xdefault'] = xdefault;
+                        payload['default'] = xdefault;
                     }
                     if (typeof array !== 'undefined') {
                         payload['array'] = array;
@@ -1509,7 +1621,7 @@
                     }, payload);
                 }),
                 /**
-                 * Create IP Address Attribute
+                 * Create URL Attribute
                  *
                  *
                  * @param {string} collectionId
@@ -1539,7 +1651,7 @@
                         payload['required'] = required;
                     }
                     if (typeof xdefault !== 'undefined') {
-                        payload['xdefault'] = xdefault;
+                        payload['default'] = xdefault;
                     }
                     if (typeof array !== 'undefined') {
                         payload['array'] = array;
@@ -2159,12 +2271,13 @@
                  * @param {string} functionId
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} search
                  * @param {string} cursor
                  * @param {string} cursorDirection
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listExecutions: (functionId, limit, offset, cursor, cursorDirection) => __awaiter(this, void 0, void 0, function* () {
+                listExecutions: (functionId, limit, offset, search, cursor, cursorDirection) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -2175,6 +2288,9 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof search !== 'undefined') {
+                        payload['search'] = search;
                     }
                     if (typeof cursor !== 'undefined') {
                         payload['cursor'] = cursor;
@@ -2494,7 +2610,7 @@
                     }, payload);
                 }),
                 /**
-                 * Get Certificate Queue
+                 * Get Certificates Queue
                  *
                  * Get the number of certificates that are waiting to be issued against
                  * [Letsencrypt](https://letsencrypt.org/) in the Appwrite internal queue
@@ -4250,14 +4366,14 @@
                     if (typeof email !== 'undefined') {
                         payload['email'] = email;
                     }
-                    if (typeof name !== 'undefined') {
-                        payload['name'] = name;
-                    }
                     if (typeof roles !== 'undefined') {
                         payload['roles'] = roles;
                     }
                     if (typeof url !== 'undefined') {
                         payload['url'] = url;
+                    }
+                    if (typeof name !== 'undefined') {
+                        payload['name'] = name;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
@@ -4535,6 +4651,7 @@
                 /**
                  * Update Email
                  *
+                 * Update the user email by its unique ID.
                  *
                  * @param {string} userId
                  * @param {string} email
@@ -4581,6 +4698,7 @@
                 /**
                  * Update Name
                  *
+                 * Update the user name by its unique ID.
                  *
                  * @param {string} userId
                  * @param {string} name
@@ -4607,6 +4725,7 @@
                 /**
                  * Update Password
                  *
+                 * Update the user password by its unique ID.
                  *
                  * @param {string} userId
                  * @param {string} password
@@ -4809,7 +4928,7 @@
          */
         setEndpoint(endpoint) {
             this.config.endpoint = endpoint;
-            this.config.endpointRealtime = this.config.endpointRealtime || this.config.endpoint.replace("https://", "wss://").replace("http://", "ws://");
+            this.config.endpointRealtime = this.config.endpointRealtime || this.config.endpoint.replace('https://', 'wss://').replace('http://', 'ws://');
             return this;
         }
         /**
@@ -4916,26 +5035,17 @@
          */
         subscribe(channels, callback) {
             let channelArray = typeof channels === 'string' ? [channels] : channels;
-            let savedChannels = [];
-            channelArray.forEach((channel, index) => {
-                if (!(channel in this.realtime.channels)) {
-                    this.realtime.channels[channel] = [];
-                }
-                savedChannels[index] = {
-                    name: channel,
-                    index: (this.realtime.channels[channel].push(this.realtime.onMessage(channel, callback)) - 1)
-                };
-                clearTimeout(this.realtime.timeout);
-                this.realtime.timeout = window === null || window === void 0 ? void 0 : window.setTimeout(() => {
-                    this.realtime.createSocket();
-                }, 1);
+            channelArray.forEach(channel => this.realtime.channels.add(channel));
+            const counter = this.realtime.subscriptionsCounter++;
+            this.realtime.subscriptions.set(counter, {
+                channels: channelArray,
+                callback
             });
+            this.realtime.connect();
             return () => {
-                savedChannels.forEach(channel => {
-                    var _a;
-                    (_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.removeEventListener('message', this.realtime.channels[channel.name][channel.index]);
-                    this.realtime.channels[channel.name].splice(channel.index, 1);
-                });
+                this.realtime.subscriptions.delete(counter);
+                this.realtime.cleanUp(channelArray);
+                this.realtime.connect();
             };
         }
         call(method, url, headers = {}, params = {}) {
@@ -4949,7 +5059,7 @@
                     credentials: 'include'
                 };
                 if (typeof window !== 'undefined' && window.localStorage) {
-                    headers['X-Fallback-Cookies'] = (_a = window.localStorage.getItem('cookieFallback')) !== null && _a !== void 0 ? _a : "";
+                    headers['X-Fallback-Cookies'] = (_a = window.localStorage.getItem('cookieFallback')) !== null && _a !== void 0 ? _a : '';
                 }
                 if (method === 'GET') {
                     for (const [key, value] of Object.entries(this.flatten(params))) {
@@ -4967,8 +5077,9 @@
                                 if (Array.isArray(params[key])) {
                                     params[key].forEach((value) => {
                                         formData.append(key + '[]', value);
-                                    })
-                                } else {
+                                    });
+                                }
+                                else {
                                     formData.append(key, params[key]);
                                 }
                             }
@@ -4980,7 +5091,7 @@
                 try {
                     let data = null;
                     const response = yield crossFetch.fetch(url.toString(), options);
-                    if ((_b = response.headers.get("content-type")) === null || _b === void 0 ? void 0 : _b.includes("application/json")) {
+                    if ((_b = response.headers.get('content-type')) === null || _b === void 0 ? void 0 : _b.includes('application/json')) {
                         data = yield response.json();
                     }
                     else {
@@ -5026,4 +5137,4 @@
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
-})(this.window = this.window || {}, null, window);
+}(this.window = this.window || {}, null, window));

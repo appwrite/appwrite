@@ -31,7 +31,7 @@ class Swagger2 extends Format
      * @return void
      */
     protected function getUsedModels($model, array &$usedModels)
-    {   
+    {
         if (is_string($model) && !in_array($model, ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
             $usedModels[] = $model;
             return;
@@ -225,14 +225,10 @@ class Swagger2 extends Format
                     }
                     $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
                         'description' => $modelDescription,
-                        'content' => [
-                            $produces => [
-                                'schema' => [
-                                    'oneOf' => \array_map(function($m) {
-                                        return ['$ref' => '#/definitions/'.$m->getType()];
-                                    }, $model)
-                                ],
-                            ],
+                        'schema' => [
+                            'oneOf' => \array_map(function($m) {
+                                return ['$ref' => '#/definitions/'.$m->getType()];
+                            }, $model)
                         ],
                     ];
                 } else {
@@ -240,12 +236,8 @@ class Swagger2 extends Format
                     $usedModels[] = $model->getType();
                     $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
                         'description' => $model->getName(),
-                        'content' => [
-                            $produces => [
-                                'schema' => [
-                                    '$ref' => '#/definitions/'.$model->getType(),
-                                ],
-                            ],
+                        'schema' => [
+                            '$ref' => '#/definitions/'.$model->getType(),
                         ],
                     ];
                 }
