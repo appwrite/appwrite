@@ -23,7 +23,7 @@ class UsageBuckets extends Model
                 'example' => new \stdClass,
                 'array' => true 
             ])
-            ->addRule('filesTotal', [
+            ->addRule('filesStorage', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for total storage of files in this bucket.',
                 'default' => [],
