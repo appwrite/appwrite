@@ -58,6 +58,8 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     //TODO make sure we get array here
 
     $closestLimit = 999;
+    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
+    $isAppUser = Auth::isAppUser(Authorization::$roles);
 
     foreach ($timeLimitArray as $timeLimit) {
         foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
@@ -76,9 +78,6 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
                 ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600))
             ;
         }
-
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-        $isAppUser = Auth::isAppUser(Authorization::$roles);
     
         if (($abuse->check() // Route is rate-limited
             && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not diabled
