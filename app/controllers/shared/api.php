@@ -57,7 +57,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
 
     //TODO make sure we get array here
 
-    $closestLimit = 999;
+    $closestLimit = null;
     $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
     $isAppUser = Auth::isAppUser(Authorization::$roles);
 
@@ -70,7 +70,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
 
         $abuse = new Abuse($timeLimit);
 
-        if ($timeLimit->limit() && $timeLimit->remaining() < $closestLimit) {
+        if ($timeLimit->limit() && $timeLimit->remaining() < $closestLimit || is_null($closestLimit)) {
             $closestLimit = $timeLimit->remaining();
             $response
                 ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
