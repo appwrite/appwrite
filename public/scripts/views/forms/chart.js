@@ -70,7 +70,8 @@
         for (let i = 0; i < sources.length; i++) {
           let label = sources[i].substring(0, sources[i].indexOf('='));
           let path = sources[i].substring(sources[i].indexOf('=') + 1);
-          let data = container.path(path);
+          let usage = container.get('usage');
+          let data = usage[path];
           let value = JSON.parse(element.value);
 
           config.data.labels[i] = label;
@@ -100,9 +101,7 @@
         else {
         }
         chart = new Chart(child.getContext("2d"), config);
-        
         wrapper.dataset["canvas"] = true;
-
       }
 
       check();

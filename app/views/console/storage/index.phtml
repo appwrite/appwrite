@@ -118,9 +118,106 @@
                 </div>
 
             </li>
-            <!-- <li data-state="/console/storage/usage?project={{router.params.project}}">
+
+            <li data-state="/console/storage/usage?project={{router.params.project}}">
+                <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
+                    data-service="storage.getUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-range="90d">
+                    <button class="tick">90d</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
+
+                <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '30d'"
+                    data-service="storage.getUsage"
+                    data-event="submit"
+                    data-name="usage">
+                    <button class="tick">30d</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
+
+                <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '24h'"
+                    data-service="storage.getUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-range="24h">
+                    <button class="tick">24h</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
+
                 <h2>Usage</h2>
-            </li> -->
+
+                <div
+                    data-service="storage.getUsage"
+                    data-event="load"
+                    data-name="usage">
+
+                    <div class="box dashboard">
+                        <div class="row responsive">
+                            <div class="col span-12">
+                                <div class="margin-top-negative-small margin-end-negative-large">
+                                    <div class="chart pull-end">
+                                        <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Total Files=filesCount,Total Buckets=bucketsCount"/>
+                                    </div>
+                                    <div class="chart-metric">
+                                        <div class="value margin-bottom-small margin-top-small">
+                                            <span class="sum" data-ls-bind="{{usage.filesStorage|statsGetLast|humanFileSize}}">0</span>
+                                            <span class="sum" data-ls-bind="{{usage.filesStorage|statsGetLast|statsTotal|humanFileUnit}}"></span>
+                                        </div>
+                                        <div class="unit margin-start-no margin-bottom-small">Storage</div>
+                                    </div>
+                                </div>
+                                <ul class="chart-notes margin-top-small">
+                                    <li>Total Files <span data-ls-bind="({{usage.filesCount|statsGetLast|statsTotal}})"></span></li>
+                                    <li>Total Buckets <span data-ls-bind="({{usage.bucketsCount|statsGetLast|statsTotal}})"></span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="box dashboard">
+                        <div class="row responsive">
+                            <div class="col span-6">
+                                <div class="value"><span class="sum" data-ls-bind="{{usage.bucketsCount|statsGetLast|statsTotal}}" data-default="0">0</span></div>
+                                <div class="margin-top-small"><b class="text-size-small unit">Buckets</b></div>
+                            </div>
+                            <div class="col span-6">
+                                <div class="value"><span class="sum" data-ls-bind="{{usage.filesCount|statsGetLast}}" data-default="0">0</span></div>
+                                <div class="margin-top-small"><b class="text-size-small unit">Files</b></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="box margin-bottom-small margin-top-large">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Buckets read=bucketsRead" data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large">
+                        <li>Buckets read</li>
+                    </ul>
+
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Buckets create=bucketsCreate,Buckets update=bucketsUpdate,Buckets delete=bucketsDelete" data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large">
+                        <li>Buckets create</li>
+                        <li>Buckets update</li>
+                        <li>Buckets delete</li>
+                    </ul>
+                </div>
+            </li>
         </ul>
     </div>
 </div>

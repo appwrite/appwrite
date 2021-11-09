@@ -167,14 +167,21 @@ window.ls.filter
 
     return units[u];
   })
-  .add("statsTotal", function($value) {
+  .add("statsTotal", function ($value) {
     if (!$value) {
       return 0;
     }
 
     $value = abbreviate($value, 0, false, false);
 
-    return $value === "0" ? "N/A" : $value;
+    return $value ?? "N/A";
+  })
+  .add("statsGetLast", function ($value) {
+    if (!$value || $value.length < 1) {
+      return 0;
+    }
+
+    return $value[$value.length - 1].value;
   })
   .add("isEmpty", function($value) {
     return (!!$value);
