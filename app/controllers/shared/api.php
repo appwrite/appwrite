@@ -70,7 +70,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
 
         $abuse = new Abuse($timeLimit);
 
-        if ($timeLimit->limit() && $timeLimit->remaining() < $closestLimit || is_null($closestLimit)) {
+        if ($timeLimit->limit() && ($timeLimit->remaining() < $closestLimit || is_null($closestLimit))) {
             $closestLimit = $timeLimit->remaining();
             $response
                 ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
