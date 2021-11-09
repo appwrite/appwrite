@@ -1380,13 +1380,18 @@ App::get('/v1/storage/usage')
             ];
 
             $metrics = [
-                "storage.total",
+                "storage.tags.total",
+                "storage.files.total",
                 "storage.files.count",
                 "storage.buckets.count",
                 "storage.buckets.create",
                 "storage.buckets.read",
                 "storage.buckets.update",
                 "storage.buckets.delete",
+                "storage.files.create",
+                "storage.files.read",
+                "storage.files.update",
+                "storage.files.delete",
             ];
 
             $stats = [];
@@ -1429,13 +1434,18 @@ App::get('/v1/storage/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'storage' => $stats['storage.total'],
+                'filesStorage' => $stats['storage.files.total'],
+                'tagsStorage' => $stats['storage.tags.total'],
                 'filesCount' => $stats['storage.files.count'],
                 'bucketsCount' => $stats['storage.buckets.count'],
                 'bucketsCreate' => $stats['storage.buckets.create'],
                 'bucketsRead' => $stats['storage.buckets.read'],
                 'bucketsUpdate' => $stats['storage.buckets.update'],
                 'bucketsDelete' => $stats['storage.buckets.delete'],
+                'filesCreate' => $stats['storage.files.create'],
+                'filesRead' => $stats['storage.files.read'],
+                'filesUpdate' => $stats['storage.files.update'],
+                'filesDelete' => $stats['storage.files.delete'],
             ]);
         }
 
@@ -1489,6 +1499,7 @@ App::get('/v1/storage/:bucketId/usage')
 
             $metrics = [
                 "storage.buckets.$bucketId.files.count",
+                "storage.buckets.$bucketId.files.total",
                 "storage.buckets.$bucketId.files.create",
                 "storage.buckets.$bucketId.files.read",
                 "storage.buckets.$bucketId.files.update",
@@ -1517,11 +1528,12 @@ App::get('/v1/storage/:bucketId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'files.count' => $stats["storage.buckets.$bucketId.files.count"],
-                'files.create' => $stats["storage.buckets.$bucketId.files.create"],
-                'files.read' => $stats["storage.buckets.$bucketId.files.read"],
-                'files.update' => $stats["storage.buckets.$bucketId.files.update"],
-                'files.delete' => $stats["storage.buckets.$bucketId.files.delete"]
+                'filesStorage' => $stats["storage.buckets.$bucketId.files.total"],
+                'filesCount' => $stats["storage.buckets.$bucketId.files.count"],
+                'filesCreate' => $stats["storage.buckets.$bucketId.files.create"],
+                'filesRead' => $stats["storage.buckets.$bucketId.files.read"],
+                'filesUpdate' => $stats["storage.buckets.$bucketId.files.update"],
+                'filesDelete' => $stats["storage.buckets.$bucketId.files.delete"]
             ]);
         }
 
