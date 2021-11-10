@@ -98,6 +98,7 @@ $logs = $this->getParam('logs', null);
                                                 </div>
 
                                                 <div data-ls-if="{{attribute.array}}">
+                                                    <input type="hidden" data-forms-required="{{attribute.required}}" data-ls-attrs="name={{attribute.key}}" data-cast-to="array-empty">
                                                     <div data-ls-loop="project-document.{{attribute.key}}" data-ls-as="item">
                                                         <div class="row responsive thin margin-bottom-tiny" data-forms-remove>
                                                             <div class="col span-11 margin-bottom-small">
