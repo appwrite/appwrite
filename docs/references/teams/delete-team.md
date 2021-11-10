@@ -1,1 +1,1 @@
-Delete a team using its unique ID. Every member of the team has access to this endpoint.
+Delete a team using its unique ID. Only members with the owner role can delete the team.
