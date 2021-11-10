@@ -4,6 +4,8 @@
   window.ls.container.get("view").add({
     selector: "data-forms-clone",
     controller: function(element, document, view, expression) {
+      element.removeAttribute('data-forms-clone');
+      view.render(element);
       var template = element.innerHTML.toString();
       var label = element.dataset["label"] || "Add";
       var icon = element.dataset["icon"] || null;

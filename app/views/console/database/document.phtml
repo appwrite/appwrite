@@ -97,22 +97,8 @@ $logs = $this->getParam('logs', null);
                                                     <div data-ls-if="!{{attribute.format}}" data-ls-template="template-{{attribute.type}}" data-type="script"></div>
                                                 </div>
 
-                                                <div data-ls-if="{{attribute.array}}" data-ls-loop="project-document.{{attribute.key}}" data-ls-as="item">
-                                                    <div class="row responsive thin margin-bottom-tiny" data-forms-remove>
-                                                        <div class="col span-11 margin-bottom-small">
-                                                            <div data-ls-if="{{attribute.format}}" data-ls-template="template-{{attribute.format}}-array" data-type="script"></div>
-                                                            <div data-ls-if="!{{attribute.format}}" data-ls-template="template-{{attribute.type}}-array" data-type="script"></div>
-                                                        </div>
-                                                        <div class="col span-1 margin-bottom-small">
-                                                            <button type="button" data-remove class="dark danger small round pull-end" style="margin-top: 10px;"><i class="icon-cancel"></i></button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div data-ls-attrs="id=attribute-{{attribute.key}}"></div>
-
-                                                <div data-ls-if="{{attribute.array}}" class="margin-bottom">
-                                                    <div data-forms-clone data-debug="1" data-label="Add Attribute" data-target="attribute-{{attribute.key}}" data-first="0">
+                                                <div data-ls-if="{{attribute.array}}">
+                                                    <div data-ls-loop="project-document.{{attribute.key}}" data-ls-as="item">
                                                         <div class="row responsive thin margin-bottom-tiny" data-forms-remove>
                                                             <div class="col span-11 margin-bottom-small">
                                                                 <div data-ls-if="{{attribute.format}}" data-ls-template="template-{{attribute.format}}-array" data-type="script"></div>
@@ -120,6 +106,21 @@ $logs = $this->getParam('logs', null);
                                                             </div>
                                                             <div class="col span-1 margin-bottom-small">
                                                                 <button type="button" data-remove class="dark danger small round pull-end" style="margin-top: 10px;"><i class="icon-cancel"></i></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div data-ls-attrs="id=attribute-{{attribute.key}}"></div>
+
+                                                    <div class="margin-bottom">
+                                                        <div data-forms-clone data-label="Add Attribute" data-target="attribute-{{attribute.key}}" data-first="0">
+                                                            <div class="row responsive thin margin-bottom-tiny" data-forms-remove>
+                                                                <div class="col span-11 margin-bottom-small">
+                                                                    <div data-ls-if="{{attribute.format}}" data-ls-template="template-{{attribute.format}}-array" data-type="script"></div>
+                                                                    <div data-ls-if="!{{attribute.format}}" data-ls-template="template-{{attribute.type}}-array" data-type="script"></div>
+                                                                </div>
+                                                                <div class="col span-1 margin-bottom-small">
+                                                                    <button type="button" data-remove class="dark danger small round pull-end" style="margin-top: 10px;"><i class="icon-cancel"></i></button>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>

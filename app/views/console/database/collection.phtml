@@ -60,7 +60,7 @@ $logs = $this->getParam('logs', null);
                         <div class="box margin-bottom y-scroll text-size-small">
                             <table class="vertical borders">
                                 <thead>
-                                    <tr data-ls-loop="project-collection.attributes" data-ls-as="attribute" data-ls-prefix="template-attribute-title-first" data-ls-limit="20">
+                                    <tr data-ls-loop="project-collection.attributes" data-ls-as="attribute" data-ls-prefix="template-attribute-title-first" data-ls-limit="20" data-ls-ignore-path-bind="1">
                                         <td data-ls-if="{{attribute.status}} === 'available'" style="width: 170px">
                                             <i data-ls-if="{{attribute.format}}" data-ls-attrs="class=pull-end icon-{{attribute.format}} text-size-xs"></i>
                                             <i data-ls-if="!{{attribute.format}}" data-ls-attrs="class=pull-end icon-{{attribute.type}} text-size-xs"></i>
@@ -70,11 +70,11 @@ $logs = $this->getParam('logs', null);
 
                                     </tr>
                                 </thead>
-                                <tbody data-ls-loop="project-documents.documents" data-ls-as="node">
-                                    <tr data-ls-loop="project-collection.attributes" data-ls-as="attribute" data-ls-prefix="template-attribute-body-first" data-ls-limit="20">
+                                <tbody data-ls-loop="project-documents.documents" data-ls-as="node" data-ls-ignore-path-bind="1">
+                                    <tr data-ls-loop="project-collection.attributes" data-ls-as="attribute" data-ls-prefix="template-attribute-body-first" data-ls-limit="20" data-ls-ignore-path-bind="1">
                                         <td data-ls-if="{{attribute.status}} === 'available'" data-ls-attrs="data-title={{attribute.key}}">
                                             <!-- <a href="" target="_blank" rel="noopener" class="pull-end margin-start"><i class="icon-link-ext"></i></a> -->
-                                            <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{node.$collection}}&project={{router.params.project}}"><span data-ls-bind="{{node|documentAttribute}}"></span></a>
+                                            <a data-ls-if="{{node|documentAttribute}}" data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{node.$collection}}&project={{router.params.project}}"><span data-ls-bind="{{node|documentAttribute}}"></span></a>
                                             <span data-ls-if="!{{node|documentAttribute}}" class="text-fade">n/a</span>
                                         </td>
                                     </tr>
@@ -90,7 +90,8 @@ $logs = $this->getParam('logs', null);
                             data-param-collection-id="{{router.params.id}}"
                             data-param-search="{{router.params.search}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-type="DESC"
+                            data-param-order-types="DESC"
+                            data-param-order-types-cast-to="array"
                             data-scope="sdk"
                             data-name="project-documents"
                             data-success="state"
@@ -106,7 +107,8 @@ $logs = $this->getParam('logs', null);
                             data-param-collection-id="{{router.params.id}}"
                             data-param-search="{{router.params.search}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-type="DESC"
+                            data-param-order-types="DESC"
+                            data-param-order-types-cast-to="array"
                             data-scope="sdk"
                             data-name="project-documents"
                             data-success="state"
