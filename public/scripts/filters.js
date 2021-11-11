@@ -282,7 +282,7 @@ window.ls.filter
     return $value;
   })
   .add("documentAttribute", function ($value, attribute) {
-    if ($value[attribute.key]) {
+    if (attribute.key in $value) {
       return $value[attribute.key];
     }
 

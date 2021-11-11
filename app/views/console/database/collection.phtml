@@ -67,15 +67,15 @@ $logs = $this->getParam('logs', null);
                                             <span class="text-bold" data-ls-bind="{{attribute.key}}"></span>
                                             <span class="text-size-small" data-ls-if="{{attribute.array}}">[]</span>
                                         </td>
-
                                     </tr>
                                 </thead>
                                 <tbody data-ls-loop="project-documents.documents" data-ls-as="node" data-ls-ignore-path-bind="1">
                                     <tr data-ls-loop="project-collection.attributes" data-ls-as="attribute" data-ls-prefix="template-attribute-body-first" data-ls-limit="20" data-ls-ignore-path-bind="1">
                                         <td data-ls-if="{{attribute.status}} === 'available'" data-ls-attrs="data-title={{attribute.key}}">
-                                            <!-- <a href="" target="_blank" rel="noopener" class="pull-end margin-start"><i class="icon-link-ext"></i></a> -->
-                                            <a data-ls-if="{{node|documentAttribute}}" data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{node.$collection}}&project={{router.params.project}}"><span data-ls-bind="{{node|documentAttribute}}"></span></a>
-                                            <span data-ls-if="!{{node|documentAttribute}}" class="text-fade">n/a</span>
+                                            <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{node.$collection}}&project={{router.params.project}}">
+                                                <span data-ls-if="{{node|documentAttribute}}" data-ls-bind="{{node|documentAttribute}}"></span>
+                                                <span data-ls-if="!{{node|documentAttribute}}" class="text-fade">n/a</span>
+                                            </a>
                                         </td>
                                     </tr>
                                 </tbody>
