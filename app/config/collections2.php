@@ -2090,7 +2090,7 @@ $collections = [
             [
                 '$id' => 'maximumFileSize',
                 'type' => Database::VAR_INTEGER,
-                'signed' => true,
+                'signed' => false,
                 'size' => 0,
                 'format' => '',
                 'filters' => [],
