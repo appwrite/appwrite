@@ -452,7 +452,7 @@ $cli
                                 'namespace' => 'internal',
                                 'subCollections' => [
                                     'files' => [
-                                        'namespace' => 'internal',
+                                        'namespace' => 'external',
                                         'collectionPrefix' => 'bucket_',
                                         'sum' => [
                                             'field' => 'sizeOriginal'
