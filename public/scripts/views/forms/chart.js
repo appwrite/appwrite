@@ -9,9 +9,11 @@
       let sources = element.getAttribute('data-forms-chart');
       let width = element.getAttribute('data-width') || 500;
       let height = element.getAttribute('data-height') || 175;
+      let showXAxis = element.getAttribute('data-show-x-axis') || false;
+      let showYAxis = element.getAttribute('data-show-y-axis') || false;
       let colors = (element.getAttribute('data-colors') || 'blue,green,orange,red').split(',');
       let themes = {'blue': '#29b5d9', 'green': '#4eb55b', 'orange': '#fba233', 'red': '#dc3232', 'create': '#00b680', 'read': '#009cde', 'update': '#696fd7', 'delete': '#da5d95',};
-      let range = {'24h': 'H:i', '7d': 'd F Y', '30d': 'd F Y', '90d': 'd F Y'}
+      let range = {'24h': 'H:i', '7d': 'd F', '30d': 'd.m', '90d': 'd F'}
 
       element.parentNode.insertBefore(wrapper, element.nextSibling);
 
@@ -55,12 +57,15 @@
             scales: {
               xAxes: [
                 {
-                  display: false
+                  display: showXAxis
                 }
               ],
               yAxes: [
                 {
-                  display: false
+                  display: showYAxis,
+                  ticks: {
+                    fontColor: "#8f8f8f"
+                  }
                 }
               ]
             }
@@ -87,7 +92,7 @@
             return;
           }
 
-          let dateFormat = (value.range && range[value.range]) ? range[value.range] : 'd F Y';
+          let dateFormat = (value.range && range[value.range]) ? range[value.range] : 'd F';
           
           for (let x = 0; x < data.length; x++) {
             config.data.datasets[i].data[x] = data[x].value;

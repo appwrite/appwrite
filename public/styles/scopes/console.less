@@ -589,7 +589,13 @@
     background-repeat: round;	
     border: solid 1px var(--config-border-color);	
     border-right: solid 1px transparent;	
-    border-bottom: solid 1px transparent;	
+    border-bottom: solid 1px transparent;
+    &.background-image-no {
+      background-image: none;
+    }	
+    &.border-no {
+      border: none;
+    }
     @media @tablets, @phones {	
       width: 100%;	
       padding-bottom: 32%;	

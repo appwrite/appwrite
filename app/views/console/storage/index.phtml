@@ -155,45 +155,28 @@
                     data-service="storage.getUsage"
                     data-event="load"
                     data-name="usage">
-                    <h3 class="margin-bottom-no">Objects</h3>
-                    <p class="small">Count of buckets, files and total storage used over time</p>
+                    <h3 class="margin-bottom-tiny">Objects</h3>
+                    <p class="text-fade">Count of buckets, files and total storage used over time</p>
                     <div class="box">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Total Files=filesCount,Total Buckets=bucketsCount, Total storage=filesStorage"/>
+                            <div class="chart background-image-no border-no margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-show-y-axis="true" data-forms-chart="Total Files=filesCount,Total Buckets=bucketsCount"/>
                             </div>
                         </div>
                     </div>
                     <ul class="chart-notes margin-top-small margin-bottom-large">
                         <li>Total Files <span data-ls-bind="({{usage.filesCount|statsGetLast|statsTotal}})"></span></li>
                         <li>Total Buckets <span data-ls-bind="({{usage.bucketsCount|statsGetLast|statsTotal}})"></span></li>
-                        <li>Total Storage <span data-ls-bind="({{usage.filesStorage|statsGetLast|statsTotal}})"></span></li>
+                        <!-- <li>Total Storage <span data-ls-bind="({{usage.filesStorage|statsGetLast|statsTotal}})"></span></li> -->
                     </ul>
-                    <!-- <div class="box dashboard">
-                        <div class="row responsive">
-                            <div class="col span-4">
-                                <div class="value"><span class="sum" data-ls-bind="{{usage.filesStorage|statsGetLast|humanFileSize}}">0</span>
-                                        <span class="sum" data-ls-bind="{{usage.filesStorage|statsGetLast|statsTotal|humanFileUnit}}"></span></div>
-                                <div class="margin-top-small"><b class="text-size-small unit">Storage</b></div>
-                            </div>
-                            <div class="col span-4">
-                                <div class="value"><span class="sum" data-ls-bind="{{usage.bucketsCount|statsGetLast|statsTotal}}" data-default="0">0</span></div>
-                                <div class="margin-top-small"><b class="text-size-small unit">Buckets</b></div>
-                            </div>
-                            <div class="col span-4">
-                                <div class="value"><span class="sum" data-ls-bind="{{usage.filesCount|statsGetLast}}" data-default="0">0</span></div>
-                                <div class="margin-top-small"><b class="text-size-small unit">Files</b></div>
-                            </div>
-                        </div>
-                    </div> -->
                     
                     <!-- CRUDS class for graph fixed colors, use color codes from Docs for CRUD operations -->
-                    <h3 class="margin-bottom-no">Buckets</h3>
-                    <p>Count of bucket create, read, update and delete operations over time</p>
+                    <h3 class="margin-bottom-tiny">Buckets</h3>
+                    <p class="text-fade">Count of bucket create, read, update and delete operations over time</p>
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="chart crud margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Buckets create=bucketsCreate,Buckets read=bucketsRead,Buckets update=bucketsUpdate,Buckets delete=bucketsDelete" data-colors="create,read,update,delete" data-height="140" />
+                            <div class="chart background-image-no border-no crud margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Buckets create=bucketsCreate,Buckets read=bucketsRead,Buckets update=bucketsUpdate,Buckets delete=bucketsDelete" data-show-y-axis="true" data-colors="create,read,update,delete" data-height="140" />
                             </div>
                         </div>
                     </div>
@@ -205,12 +188,12 @@
                         <li class="green">Delete <span data-ls-bind="({{usage.bucketsDelete|statsGetLast|statsTotal}})"></span></li>
                     </ul>
 
-                    <h3 class="margin-bottom-no">Files</h3>
-                    <p>Count of file create, read, update and delete operations over time</p>
+                    <h3 class="margin-bottom-tiny">Files</h3>
+                    <p class="text-fade">Count of file create, read, update and delete operations over time</p>
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="chart crud margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Files create=filesCreate,Files read=filesRead,Files update=filesUpdate,Files delete=filesDelete" data-colors="create,read,update,delete" data-height="140" />
+                            <div class="chart background-image-no border-no crud margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Files create=filesCreate,Files read=filesRead,Files update=filesUpdate,Files delete=filesDelete" data-show-y-axis="true" data-colors="create,read,update,delete" data-height="140" />
                             </div>
                         </div>
                     </div>
