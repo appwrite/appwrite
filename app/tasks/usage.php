@@ -574,6 +574,7 @@ $cli
                                                 continue;
                                             }
 
+                                            $dbForProject->setNamespace("project_{$projectId}_{$subOptions['namespace']}");
                                             $total = (int) $dbForProject->sum(($subOptions['collectionPrefix'] ?? '') . $parent->getId(), $sum['field']);
 
                                             $subCollectionTotals[$subCollection] = ($ssubCollectionTotals[$subCollection] ?? 0) + $total; // Project level sum for sub collections like storage.total
