@@ -10,7 +10,7 @@
       let width = element.getAttribute('data-width') || 500;
       let height = element.getAttribute('data-height') || 175;
       let colors = (element.getAttribute('data-colors') || 'blue,green,orange,red').split(',');
-      let themes = {'blue': '#29b5d9', 'green': '#4eb55b', 'orange': '#fba233', 'red': '#dc3232',};
+      let themes = {'blue': '#29b5d9', 'green': '#4eb55b', 'orange': '#fba233', 'red': '#dc3232', 'create': '#00b680', 'read': '#009cde', 'update': '#696fd7', 'delete': '#da5d95',};
       let range = {'24h': 'H:i', '7d': 'd F Y', '30d': 'd F Y', '90d': 'd F Y'}
 
       element.parentNode.insertBefore(wrapper, element.nextSibling);
