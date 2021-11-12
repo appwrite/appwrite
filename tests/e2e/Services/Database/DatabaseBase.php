@@ -1052,8 +1052,6 @@ trait DatabaseBase
             'queries' => ['title.search("Captain America")'],
         ]);
 
-        var_dump($documents);
-
         $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
