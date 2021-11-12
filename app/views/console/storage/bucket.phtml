@@ -330,6 +330,8 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 
                 <h2>Usage</h2>
 
+                <h3 class="margin-bottom-no">Objects</h3>
+                <p class="small">Count of files over time</p>
                 <div data-service="storage.getBucketUsage" data-event="load" data-name="usage" data-param-bucket-id="{{router.params.id}}">
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
@@ -343,28 +345,19 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                         <li>Files <span data-ls-bind="({{usage.filesCount|statsGetLast|statsTotal}})"></span></li>
                     </ul>
 
+                    <h3 class="margin-bottom-no">Files</h3>
+                    <p class="small">Count of files create, read, update and delete operations over time</p>
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Read=filesRead" data-colors="orange" data-height="140" />
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Create=filesCreate,Read=filesRead,Updated=filesUpdate,Deleted=filesDelete" data-colors="create,read,update,delete" data-height="140" />
                             </div>
                         </div>
                     </div>
 
-                    <ul class="chart-notes margin-bottom-large">
-                        <li class="orange">Read <span data-ls-bind="({{usage.filesRead|statsGetLast|statsTotal}})"></span></li>
-                    </ul>
-
-                    <div class="box margin-bottom-small">
-                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Create=filesCreate,Updated=filesUpdate,Deleted=filesDelete" data-colors="green" data-height="140" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <ul class="chart-notes margin-bottom-large">
+                    <ul class="chart-notes crud margin-bottom-large">
                         <li class="green">Create <span data-ls-bind="({{usage.filesCreate|statsGetLast|statsTotal}})"></span></li>
+                        <li class="green">Read <span data-ls-bind="({{usage.filesRead|statsGetLast|statsTotal}})"></span></li>
                         <li class="green">Update <span data-ls-bind="({{usage.filesUpdate|statsGetLast|statsTotal}})"></span></li>
                         <li class="green">Delete <span data-ls-bind="({{usage.filesDelete|statsGetLast|statsTotal}})"></span></li>
                     </ul>

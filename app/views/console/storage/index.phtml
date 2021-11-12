@@ -199,10 +199,10 @@
                     </div>
 
                     <ul class="chart-notes crud margin-bottom-large">
-                        <li>Buckets create</li>
-                        <li>Buckets read</li>
-                        <li>Buckets update</li>
-                        <li>Buckets delete</li>
+                    <li class="green">Create <span data-ls-bind="({{usage.bucketsCreate|statsGetLast|statsTotal}})"></span></li>
+                        <li class="green">Read <span data-ls-bind="({{usage.bucketsRead|statsGetLast|statsTotal}})"></span></li>
+                        <li class="green">Update <span data-ls-bind="({{usage.bucketsUpdate|statsGetLast|statsTotal}})"></span></li>
+                        <li class="green">Delete <span data-ls-bind="({{usage.bucketsDelete|statsGetLast|statsTotal}})"></span></li>
                     </ul>
 
                     <h3 class="margin-bottom-no">Files</h3>
@@ -216,10 +216,10 @@
                     </div>
 
                     <ul class="chart-notes crud margin-bottom-large">
-                        <li>Files create</li>
-                        <li>Files read</li>
-                        <li>Files update</li>
-                        <li>Files delete</li>
+                    <li class="green">Create <span data-ls-bind="({{usage.filesCreate|statsGetLast|statsTotal}})"></span></li>
+                        <li class="green">Read <span data-ls-bind="({{usage.filesRead|statsGetLast|statsTotal}})"></span></li>
+                        <li class="green">Update <span data-ls-bind="({{usage.filesUpdate|statsGetLast|statsTotal}})"></span></li>
+                        <li class="green">Delete <span data-ls-bind="({{usage.filesDelete|statsGetLast|statsTotal}})"></span></li>
                     </ul>
                 </div>
             </li>
