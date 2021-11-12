@@ -1136,8 +1136,8 @@ trait DatabaseBase
         $this->assertEquals($document['headers']['status-code'], 201);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnaroc');
         $this->assertEquals($document['body']['releaseYear'], 2017);
-        $this->assertEquals('user:'.$this->getUser()['$id'], $document['body']['$read'][0],);
-        $this->assertEquals('user:'.$this->getUser()['$id'], $document['body']['$write'][0],);
+        $this->assertEquals('user:'.$this->getUser()['$id'], $document['body']['$read'][0]);
+        $this->assertEquals('user:'.$this->getUser()['$id'], $document['body']['$write'][0]);
 
         $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
