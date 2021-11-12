@@ -1577,14 +1577,15 @@ App::post('/v1/database/collections/:collectionId/documents')
         $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
 
         // Users can only add their roles to documents, API keys can add any
+        $roles = Authorization::getRoles();
         foreach ($data['$read'] as $read) {
-            if (!Authorization::isRole('role:'.Auth::USER_ROLE_APP) && !Authorization::isRole($read)) {
-                throw new Exception('Read permissions must be one of: ('.\implode(', ', Authorization::getRoles()).')', 400);
+            if (!Auth::isAppUser($roles) && !Authorization::isRole($read)) {
+                throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
             }
         }
         foreach ($data['$write'] as $write) {
-            if (!Authorization::isRole('role:'.Auth::USER_ROLE_APP) && !Authorization::isRole($write)) {
-                throw new Exception('Write permissions must be one of: ('.\implode(', ', Authorization::getRoles()).')', 400);
+            if (!Auth::isAppUser($roles) && !Authorization::isRole($write)) {
+                throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
             }
         }
 
@@ -1827,14 +1828,15 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $data['$write'] = (is_null($write)) ? ($document->getWrite() ?? []) : $write; // By default inherit write permissions
 
         // Users can only add their roles to documents, API keys can add any
+        $roles = Authorization::getRoles();
         foreach ($data['$read'] as $read) {
-            if (!Authorization::isRole('role:'.Auth::USER_ROLE_APP) && !Authorization::isRole($read)) {
-                throw new Exception('Read permissions must be one of: ('.\implode(', ', Authorization::getRoles()).')', 400);
+            if (!Auth::isAppUser($roles) && !Authorization::isRole($read)) {
+                throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
             }
         }
         foreach ($data['$write'] as $write) {
-            if (!Authorization::isRole('role:'.Auth::USER_ROLE_APP) && !Authorization::isRole($write)) {
-                throw new Exception('Write permissions must be one of: ('.\implode(', ', Authorization::getRoles()).')', 400);
+            if (!Auth::isAppUser($roles) && !Authorization::isRole($write)) {
+                throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
             }
         }
 
