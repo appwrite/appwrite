@@ -710,28 +710,28 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'search' => implode(' ', [$fileId, $fileName,]),
                     ]);
                     if($permissionBucket) {
-                        Authorization::skip(function() use ($dbForInternal, $bucketId, $doc) {
-                            $file = $dbForInternal->createDocument('bucket_' . $bucketId, $doc);
+                        $file = Authorization::skip(function() use ($dbForInternal, $bucketId, $doc) {
+                            return $dbForInternal->createDocument('bucket_' . $bucketId, $doc);
                         });
                     } else {
                         $file = $dbForInternal->createDocument('bucket_' . $bucketId, $doc);
                     }
                 } else {
                     $file = $file
-                    ->setAttribute('$read', $read)
-                    ->setAttribute('$write', $write)
-                    ->setAttribute('signature', $fileHash)
-                    ->setAttribute('mimeType', $mimeType)
-                    ->setAttribute('sizeActual', $sizeActual)
-                    ->setAttribute('algorithm', $algorithm)
-                    ->setAttribute('openSSLVersion', $openSSLVersion)
-                    ->setAttribute('openSSLCipher', $openSSLCipher)
-                    ->setAttribute('openSSLTag', $openSSLTag)
-                    ->setAttribute('openSSLIV', $openSSLIV);
+                        ->setAttribute('$read', $read)
+                        ->setAttribute('$write', $write)
+                        ->setAttribute('signature', $fileHash)
+                        ->setAttribute('mimeType', $mimeType)
+                        ->setAttribute('sizeActual', $sizeActual)
+                        ->setAttribute('algorithm', $algorithm)
+                        ->setAttribute('openSSLVersion', $openSSLVersion)
+                        ->setAttribute('openSSLCipher', $openSSLCipher)
+                        ->setAttribute('openSSLTag', $openSSLTag)
+                        ->setAttribute('openSSLIV', $openSSLIV);
 
                     if($permissionBucket) {
-                        Authorization::skip(function() use ($dbForInternal, $bucketId, $fileId, $file) {
-                            $file = $dbForInternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
+                        $file = Authorization::skip(function() use ($dbForInternal, $bucketId, $fileId, $file) {
+                            return $dbForInternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
                         });
                     } else {
                         $file = $dbForInternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
@@ -767,8 +767,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'search' => implode(' ', [$fileId, $fileName,]),
                     ]);
                     if($permissionBucket) {
-                        Authorization::skip(function() use ($dbForInternal, $bucketId, $doc) {
-                            $file = $dbForInternal->createDocument('bucket_' . $bucketId, $doc);
+                        $file = Authorization::skip(function() use ($dbForInternal, $bucketId, $doc) {
+                            return $dbForInternal->createDocument('bucket_' . $bucketId, $doc);
                         });
                     } else {
                         $file = $dbForInternal->createDocument('bucket_' . $bucketId, $doc);
@@ -778,8 +778,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('chunksUploaded', $chunksUploaded);
 
                     if($permissionBucket) {
-                        Authorization::skip(function() use ($dbForInternal, $bucketId, $fileId, $file) {
-                            $file = $dbForInternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
+                        $file = Authorization::skip(function() use ($dbForInternal, $bucketId, $fileId, $file) {
+                            return $dbForInternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
                         });
                     } else {
                         $file = $dbForInternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
