@@ -660,7 +660,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 }
             }
 
-            $mimeType = $localDevice->getFileMimeType($path); // Get mime-type before compression and encryption
+            $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
             $data = '';
             // Compression
             if ($size <= APP_STORAGE_READ_BUFFER) {
@@ -1069,7 +1069,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $compressor = new GZIP();
         $device = Storage::getDevice('files');
 
-        if (!\file_exists($path)) {
+        if (!$device->exists($path)) {
             throw new Exception('File not found', 404);
         }
 
@@ -1341,12 +1341,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
 
         $path = $file->getAttribute('path', '');
 
-        if (!\file_exists($path)) {
+        $device = Storage::getDevice('files');
+        if (!$device->exists($path)) {
             throw new Exception('File not found in ' . $path, 404);
         }
 
         $compressor = new GZIP();
-        $device = Storage::getDevice('files');
 
         $contentType = 'text/plain';
 
