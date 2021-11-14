@@ -626,7 +626,13 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $path = $device->getPath($fileId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
         $path = str_ireplace($device->getRoot(), $device->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path);
 
-        $file = $dbForInternal->getDocument('bucket_' . $bucketId, $fileId);
+        if($permissionBucket) {
+            $file = Authorization::skip(function() use ($dbForExternal, $bucketId, $fileId) {
+                return $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
+            });
+        } else {
+            $file = $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
+        }
 
         if (!$file->isEmpty()) {
             $chunks = $file->getAttribute('chunksTotal', 1);
@@ -714,11 +720,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'search' => implode(' ', [$fileId, $fileName,]),
                     ]);
                     if($permissionBucket) {
-                        $file = Authorization::skip(function() use ($dbForInternal, $bucketId, $doc) {
-                            return $dbForInternal->createDocument('bucket_' . $bucketId, $doc);
+                        $file = Authorization::skip(function() use ($dbForExternal, $bucketId, $doc) {
+                            return $dbForExternal->createDocument('bucket_' . $bucketId, $doc);
                         });
                     } else {
-                        $file = $dbForInternal->createDocument('bucket_' . $bucketId, $doc);
+                        $file = $dbForExternal->createDocument('bucket_' . $bucketId, $doc);
                     }
                 } else {
                     $file = $file
@@ -734,11 +740,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('openSSLIV', $openSSLIV);
 
                     if($permissionBucket) {
-                        $file = Authorization::skip(function() use ($dbForInternal, $bucketId, $fileId, $file) {
-                            return $dbForInternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
+                        $file = Authorization::skip(function() use ($dbForExternal, $bucketId, $fileId, $file) {
+                            return $dbForExternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
                         });
                     } else {
-                        $file = $dbForInternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
+                        $file = $dbForExternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
                     }
                             
                 }
@@ -771,22 +777,22 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'search' => implode(' ', [$fileId, $fileName,]),
                     ]);
                     if($permissionBucket) {
-                        $file = Authorization::skip(function() use ($dbForInternal, $bucketId, $doc) {
-                            return $dbForInternal->createDocument('bucket_' . $bucketId, $doc);
+                        $file = Authorization::skip(function() use ($dbForExternal, $bucketId, $doc) {
+                            return $dbForExternal->createDocument('bucket_' . $bucketId, $doc);
                         });
                     } else {
-                        $file = $dbForInternal->createDocument('bucket_' . $bucketId, $doc);
+                        $file = $dbForExternal->createDocument('bucket_' . $bucketId, $doc);
                     }
                 } else {
                     $file = $file
                         ->setAttribute('chunksUploaded', $chunksUploaded);
 
                     if($permissionBucket) {
-                        $file = Authorization::skip(function() use ($dbForInternal, $bucketId, $fileId, $file) {
-                            return $dbForInternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
+                        $file = Authorization::skip(function() use ($dbForExternal, $bucketId, $fileId, $file) {
+                            return $dbForExternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
                         });
                     } else {
-                        $file = $dbForInternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
+                        $file = $dbForExternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
                     }
                 }
             }
