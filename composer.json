@@ -51,8 +51,8 @@
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
-        "utopia-php/swoole": "0.2.*",
-        "utopia-php/storage": "0.5.*",
+        "utopia-php/swoole": "0.3.*",
+        "utopia-php/storage": "dev-feat-large-file-support",
         "utopia-php/websocket": "0.0.*",
         "utopia-php/image": "0.5.*",
 
@@ -65,7 +65,20 @@
         "adhocore/jwt": "1.1.2",
         "slickdeals/statsd": "3.1.0"
     },
-    "repositories": [],
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/utopia-php/storage"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/utopia-php/database"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/utopia-php/framework"
+        }
+    ],
     "require-dev": {
         "appwrite/sdk-generator": "0.16.0",
         "phpunit/phpunit": "9.5.6",

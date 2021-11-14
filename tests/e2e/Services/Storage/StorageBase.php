@@ -65,24 +65,48 @@ trait StorageBase
         ]);
         $this->assertEquals(201, $bucket2['headers']['status-code']);
         $this->assertNotEmpty($bucket2['body']['$id']);
+        
+        /**
+         * Chunked Upload
+         */
 
-        $file2 = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files', array_merge([
+        $source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
+        $totalSize = \filesize($source);
+        $chunkSize = 5*1024*1024;
+        $handle = @fopen($source, "rb");
+        $fileId = 'unique()';
+        $mimeType = mime_content_type($source);
+        $counter = 0;
+        $size = filesize($source);
+        $headers = [
             'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'fileId' => 'unique()',
-            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4'), 'video/mp4', 'large-file.mp4'),
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-        ]);
-
-        $this->assertEquals(201, $file2['headers']['status-code']);
-        $this->assertNotEmpty($file2['body']['$id']);
-        $this->assertIsInt($file2['body']['dateCreated']);
-        $this->assertEquals('large-file.mp4', $file2['body']['name']);
-        $this->assertEquals('video/mp4', $file2['body']['mimeType']);
-        $this->assertEquals(23660615, $file2['body']['sizeOriginal']);
-        $this->assertEquals(md5_file(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4')), $file2['body']['signature']); // should validate that the file is not encrypted
+            'x-appwrite-project' => $this->getProject()['$id']
+        ];
+        $id = '';
+        while (!feof($handle)) {
+            $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
+            if(!empty($id)) {
+                $headers['x-appwrite-id'] = $id;
+            }
+            $largeFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files', array_merge($headers, $this->getHeaders()), [
+                'fileId' => $fileId,
+                'file' => $curlFile,
+                'read' => ['role:all'],
+                'write' => ['role:all'],
+            ]);
+            $counter++;
+            $id = $largeFile['body']['$id'];
+        }
+        @fclose($handle);
+        
+        $this->assertEquals(201, $largeFile['headers']['status-code']);
+        $this->assertNotEmpty($largeFile['body']['$id']);
+        $this->assertIsInt($largeFile['body']['dateCreated']);
+        $this->assertEquals('large-file.mp4', $largeFile['body']['name']);
+        $this->assertEquals('video/mp4', $largeFile['body']['mimeType']);
+        $this->assertEquals($totalSize, $largeFile['body']['sizeOriginal']);
+        $this->assertEquals(md5_file(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4')), $largeFile['body']['signature']); // should validate that the file is not encrypted
 
         /**
          * Test for FAILURE unknown Bucket
@@ -133,7 +157,7 @@ trait StorageBase
         $this->assertEquals(400, $res['headers']['status-code']);
         $this->assertEquals('File extension not allowed', $res['body']['message']);
 
-        return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id'],  'largeFileId' => $file2['body']['$id'], 'largeBucketId' => $bucket2['body']['$id']];
+        return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id'],  'largeFileId' => $largeFile['body']['$id'], 'largeBucketId' => $bucket2['body']['$id']];
     }
 
     /**
@@ -263,6 +287,49 @@ trait StorageBase
         $this->assertEquals('image/png', $file5['headers']['content-type']);
         $this->assertNotEmpty($file5['body']);
 
+        // Test ranged download
+        $file51 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=0-99',
+        ], $this->getHeaders()));
+
+        $path = __DIR__ . '/../../../resources/logo.png';
+        $originalChunk = \file_get_contents($path, false, null, 0, 100);
+
+        $this->assertEquals(206, $file51['headers']['status-code']);
+        $this->assertEquals('attachment; filename="logo.png"', $file51['headers']['content-disposition']);
+        $this->assertEquals('image/png', $file51['headers']['content-type']);
+        $this->assertNotEmpty($file51['body']);
+        $this->assertEquals($originalChunk, $file51['body']);
+        
+        // Test ranged download - with invalid range
+        $file52 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=0-',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(206, $file52['headers']['status-code']);
+        
+        // Test ranged download - with invalid range
+        $file53 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=988',
+        ], $this->getHeaders()));
+        
+        $this->assertEquals(416, $file53['headers']['status-code']);
+        
+        // Test ranged download - with invalid range
+        $file54 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=-988',
+        ], $this->getHeaders()));
+        
+        $this->assertEquals(416, $file54['headers']['status-code']);
+        
         $file6 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/view', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

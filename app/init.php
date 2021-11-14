@@ -79,6 +79,7 @@ const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
+const APP_STORAGE_READ_BUFFER = 20 * (1024 * 1024); //20MB other names `APP_STORAGE_MEMORY_LIMIT`, `APP_STORAGE_MEMORY_BUFFER`, `APP_STORAGE_READ_LIMIT`, `APP_STORAGE_BUFFER_LIMIT`
 const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite_io';
 const APP_SOCIAL_TWITTER_HANDLE = 'appwrite_io';
 const APP_SOCIAL_FACEBOOK = 'https://www.facebook.com/appwrite.io';
@@ -119,6 +120,8 @@ const APP_AUTH_TYPE_SESSION = 'Session';
 const APP_AUTH_TYPE_JWT = 'JWT';
 const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
+// Response related
+const MAX_OUTPUT_CHUNK_SIZE = 2*1024*1024; // 2MB
 
 $register = new Registry();
 

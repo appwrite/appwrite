@@ -332,6 +332,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         case 404: // Error allowed publicly
         case 409: // Error allowed publicly
         case 412: // Error allowed publicly
+        case 416: // Error allowed publicly
         case 429: // Error allowed publicly
         case 501: // Error allowed publicly
         case 503: // Error allowed publicly
