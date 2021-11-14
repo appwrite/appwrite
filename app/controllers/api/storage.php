@@ -616,13 +616,14 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         $device = Storage::getDevice('files');
+        $localDevice = Storage::getDevice('self');
 
         if (!$upload->isValid($fileTmpName)) {
             throw new Exception('Invalid file', 403);
         }
 
         // Save to storage
-        $size ??= $device->getFileSize($fileTmpName);
+        $size ??= $localDevice->getFileSize($fileTmpName);
         $path = $device->getPath($fileId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
         $path = str_ireplace($device->getRoot(), $device->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path);
 
@@ -659,7 +660,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 }
             }
 
-            $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
+            $mimeType = $localDevice->getFileMimeType($path); // Get mime-type before compression and encryption
             $data = '';
             // Compression
             if ($size <= APP_STORAGE_READ_BUFFER) {

@@ -472,7 +472,7 @@ App::post('/v1/functions/:functionId/tags')
         }
 
         // Save to storage
-        $size ??= $device->getFileSize($fileTmpName);
+        $size ??= Storage::getDevice('self')->getFileSize($fileTmpName);
         $path = $device->getPath($tagId.'.'.\pathinfo($fileName, PATHINFO_EXTENSION));
         
         $tag = $dbForInternal->getDocument('tags', $tagId);
