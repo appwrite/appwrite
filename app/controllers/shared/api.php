@@ -9,6 +9,7 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Database\Document;
 use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\S3;
 use Utopia\Storage\Storage;
 
 App::init(function ($utopia, $request, $response, $project, $user, $events, $audits, $usage, $deletes, $database, $dbForInternal, $mode) {
@@ -26,8 +27,21 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
     /** @var Appwrite\Event\Event $functions */
     /** @var Utopia\Database\Database $dbForInternal */
 
-    Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
-    Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
+    Storage::setDevice('self', new Local());
+    switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
+        case Storage::DEVICE_LOCAL:default:
+            Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId()));
+            Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId()));
+            break;
+        case Storage::DEVICE_S3:
+            $s3AccessKey = App::getEnv('_APP_STORAGE_DEVICE_S3_ACCESS_KEY', '');
+            $s3SecretKey = App::getEnv('_APP_STORAGE_DEVICE_S3_SECRET', '');
+            $s3Region = App::getEnv('_APP_STORAGE_DEVICE_S3_REGION', '');
+            $s3Bucket = App::getEnv('_APP_STORAGE_DEVICE_S3_BUCKET', '');
+            $s3Acl = 'private';
+            Storage::setDevice('files', new S3(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl));
+            Storage::setDevice('functions', new S3(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl));
+    }
 
     $route = $utopia->match($request);
 
