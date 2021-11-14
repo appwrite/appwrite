@@ -139,7 +139,7 @@ Below is a list of currently supported platforms and languages. If you wish to h
 
 #### Community
 * ✅  &nbsp; [Appcelerator Titanium](https://github.com/m1ga/ti.appwrite) (Maintained by [Michael Gangolf](https://github.com/m1ga/))  
-* ✅  &nbsp; [Godot Engine](https://github.com/m1ga/ti.appwrite) (Maintained by [fenix-hub @GodotNuts](https://github.com/GodotNuts/appwrite-sdk/))  
+* ✅  &nbsp; [Godot Engine](https://github.com/GodotNuts/appwrite-sdk) (Maintained by [fenix-hub @GodotNuts](https://github.com/fenix-hub))  
 
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 
