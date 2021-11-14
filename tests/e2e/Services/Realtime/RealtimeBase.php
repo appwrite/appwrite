@@ -770,7 +770,6 @@ trait RealtimeBase
 
         /**
          * Test File Create
-         * TODO Buckets Channels
          */
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
             'content-type' => 'application/json',
