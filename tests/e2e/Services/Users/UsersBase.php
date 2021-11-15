@@ -204,14 +204,6 @@ trait UsersBase
         $this->assertEquals($sessions['headers']['status-code'], 200);
         $this->assertIsArray($sessions['body']);
 
-        $logs = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals($logs['headers']['status-code'], 200);
-        $this->assertIsArray($logs['body']);
-
         $users = $this->client->call(Client::METHOD_GET, '/users', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -426,6 +418,57 @@ trait UsersBase
         $this->assertEquals($user['headers']['status-code'], 400);
 
         return $data;
+    }
+
+
+    /**
+     * @depends testGetUser
+     */
+    public function testGetLogs(array $data): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $logs = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+
+        $logs = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 1
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
+
+        $logs = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'offset' => 1
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+
+        $logs = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'offset' => 1,
+            'limit' => 1
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
     }
 
     /**
