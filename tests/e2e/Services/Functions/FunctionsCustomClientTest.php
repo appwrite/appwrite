@@ -274,6 +274,7 @@ class FunctionsCustomClientTest extends Scope
             'cursor' => $base['body']['executions'][1]['$id'],
             'cursorDirection' => Database::CURSOR_BEFORE
         ]);
+    }
 
     public function testSynchronousExecution():array
     {
@@ -289,8 +290,9 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
+            'functionId' => 'unique()',
             'name' => 'Test',
-            'execute' => ['*'],
+            'execute' => ['role:all'],
             'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',

@@ -80,6 +80,28 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                 <div class="box margin-bottom">
                                     <ul data-ls-loop="project-function-tags.tags" data-ls-as="tag" class="list">
                                         <li class="clear">
+                                            <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-stderr-{{tag.$id}}">
+                                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                                <h2>Build Error Log</h2>
+
+                                                <div class="margin-bottom">
+                                                    <input type="hidden" data-ls-bind="{{tag.buildStderr}}" data-forms-code="bash" data-lang="bash" data-lang-label="Bash" />
+                                                </div>
+
+                                                <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                            </div>
+                                            <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-stdout-{{tag.$id}}">
+                                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                                <h2>Build Log</h2>
+
+                                                <div class="margin-bottom">
+                                                    <input type="hidden" data-ls-bind="{{tag.buildStdout}}" data-forms-code="bash" data-lang="bash" data-lang-label="Bash" />
+                                                </div>
+
+                                                <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                            </div>
                                             <form data-ls-if="{{tag.$id}} !== {{project-function.tag}}" name="functions.updateTag" class="pull-end"
                                                 data-analytics
                                                 data-analytics-activity
@@ -98,13 +120,14 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                                 <input type="hidden" name="tag" data-ls-bind="{{tag.$id}}">
                                                 <button>Activate</button>
                                             </form>
-
-                                            <p data-ls-bind="{{tag.status}}"></p>
-    
+   
                                             <b data-ls-bind="{{tag.$id}}"></b> &nbsp;
                                             <span class="text-fade" data-ls-bind="{{tag.entrypoint}}"></span>
                                             <div class="text-size-small margin-top-small clear">
-                                                <span class="pull-start" data-ls-bind="Created {{tag.dateCreated|timeSince}} &nbsp; | &nbsp; {{tag.size|humanFileSize}}{{tag.size|humanFileUnit}}"></span>
+                                                <span data-ls-if="{{tag.status}} == 'failed'" style="color: var(--config-color-danger)" class="pull-start" data-ls-bind="{{tag.status}}"></span>
+                                                <span data-ls-if="{{tag.status}} == 'ready'" style="color: var(--config-color-success)" class="pull-start" data-ls-bind="{{tag.status}}"></span>
+                                                <span data-ls-if="{{tag.status}} == 'processing' || {{tag.status}} == 'building' || {{tag.status}} == 'pending'" style="color: var(--config-color-info)" class="pull-start" data-ls-bind="{{tag.status}}"></span>
+                                                <span class="pull-start" data-ls-bind="&nbsp; | &nbsp; Created {{tag.dateCreated|timeSince}} &nbsp; | &nbsp; {{tag.size|humanFileSize}}{{tag.size|humanFileUnit}}"></span>
 
                                                 <form data-ls-if="{{tag.$id}} !== {{project-function.tag}}" name="functions.deleteTag" class="pull-start"
                                                     data-analytics
@@ -126,6 +149,9 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 
                                                     &nbsp; | &nbsp;<button type="submit" class="link text-danger text-size-small">Delete</button>
                                                 </form>
+
+                                                <span data-ls-if="{{tag.status}} == 'failed'">&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-stderr-{{tag.$id}}">Open Error</button></span>
+                                                <span data-ls-if="{{tag.status}} == 'ready'">&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-stdout-{{tag.$id}}">Open Build Logs</button></span>
                                             </div>
                                         </li>
                                     </ul>

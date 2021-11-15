@@ -127,7 +127,7 @@ App::post('/v1/cleanup/function')
     ->action(function ($functionId, $response, $dbForInternal, $projectID) {
         /** @var string $functionId */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var string $projectID */
 
         global $orchestration;
@@ -144,15 +144,7 @@ App::post('/v1/cleanup/function')
             }
 
             $results = Authorization::skip(function () use ($dbForInternal, $functionId) {
-                return $dbForInternal->getCollection([
-                    'limit' => 999,
-                    'offset' => 0,
-                    'orderType' => 'ASC',
-                    'filters' => [
-                        '$collection=' . 'tags',
-                        'functionId=' . $functionId,
-                    ],
-                ]);
+                return $dbForInternal->find('tags', [new Query('functionId', Query::TYPE_EQUAL, [$functionId])], 999);
             });
 
             // If amount is 0 then we simply return true
@@ -420,6 +412,26 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
             throw new Exception('Failed to extract tar: ' . $untarStderr);
         }
 
+        $entrypointStdout = '';
+        $entrypointStderr = '';
+
+        // Check if entrypoint file exists
+        // $entrypointTest = $orchestration->execute(
+        //     name: $container,
+        //     command: [
+        //         'tail',
+        //         '-f',
+        //         '/usr/code/'.$tag->getAttribute('entrypoint')
+        //     ],
+        //     stdout: $entrypointStdout,
+        //     stderr: $entrypointStderr,
+        //     timeout: 60
+        // );
+
+        // if ($entrypointStdout === '') {
+        //     throw new Exception('Entrypoint file not found: ' . $tag->getAttribute('entrypoint'));
+        // }
+
         // Build Code / Install Dependencies
         $buildSuccess = $orchestration->execute(
             name: $container,
@@ -476,6 +488,10 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
             throw new Exception('Failed moving file', 500);
         }
 
+        if ($buildStdout == '') {
+            $buildStdout = 'Build Successful!';
+        }
+
         $tag->setAttribute('buildPath', $path)
             ->setAttribute('status', 'ready')
             ->setAttribute('buildStdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
@@ -494,7 +510,7 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
 
         $tag->setAttribute('status', 'failed')
             ->setAttribute('buildStdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
-            ->setAttribute('buildStderr', \utf8_encode(\mb_substr($buildStderr, -4096)));
+            ->setAttribute('buildStderr', \utf8_encode(\mb_substr($e->getMessage(), -4096)));
 
         Authorization::skip(function () use ($tag, $tagID, $database) {
             return $database->updateDocument('tags', $tagID, $tag);

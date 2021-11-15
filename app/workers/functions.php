@@ -269,7 +269,7 @@ class FunctionsV1 extends Worker
             'executionId' => $executionId,
             'functionId' => $function->getId(),
             'event' => $event,
-            'eventData' => json_encode($eventData),
+            'eventData' => $eventData,
             'data' => $data,
             'webhooks' => $webhooks,
             'userId' => $userId,
