@@ -38,14 +38,7 @@
           },
           options: {
             responsive: true,
-            title: {
-              display: false,
-              text: "Stats"
-            },
-            legend: {
-              display: false
-            },
-            tooltips: {
+            tooltip: {
               mode: "index",
               intersect: false,
               caretPadding: 0
@@ -55,19 +48,21 @@
               intersect: true
             },
             scales: {
-              xAxes: [
-                {
-                  display: showXAxis
-                }
-              ],
-              yAxes: [
-                {
-                  display: showYAxis,
-                  ticks: {
-                    fontColor: "#8f8f8f"
-                  }
-                }
-              ]
+              x: {
+                display: false
+              },
+              y: {
+                display: false
+              }
+            },
+            plugins: {
+              title: {
+                display: false,
+                text: "Stats"
+              },
+              legend: {
+                display: false
+              },
             }
           }
         };
