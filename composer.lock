@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6967e92c0477a1ddae4669c7e87d7479",
+    "content-hash": "a3aad9d7aba75e837b4c6e242c7a91a3",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2669,16 +2669,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.16.1",
+            "version": "0.16.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "14212db4396c86ff79785520ba1c9d8f9fac7f50"
+                "reference": "e3a20c96a745a9c4aa048fd344650fcfbf41cf6f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/14212db4396c86ff79785520ba1c9d8f9fac7f50",
-                "reference": "14212db4396c86ff79785520ba1c9d8f9fac7f50",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/e3a20c96a745a9c4aa048fd344650fcfbf41cf6f",
+                "reference": "e3a20c96a745a9c4aa048fd344650fcfbf41cf6f",
                 "shasum": ""
             },
             "require": {
@@ -2712,9 +2712,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.16.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.16.2"
             },
-            "time": "2021-11-08T10:45:27+00:00"
+            "time": "2021-11-12T11:09:38+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
@@ -4726,16 +4726,16 @@
         },
         {
             "name": "sebastian/exporter",
-            "version": "4.0.3",
+            "version": "4.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/exporter.git",
-                "reference": "d89cc98761b8cb5a1a235a6b703ae50d34080e65"
+                "reference": "65e8b7db476c5dd267e65eea9cab77584d3cfff9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/exporter/zipball/d89cc98761b8cb5a1a235a6b703ae50d34080e65",
-                "reference": "d89cc98761b8cb5a1a235a6b703ae50d34080e65",
+                "url": "https://api.github.com/repos/sebastianbergmann/exporter/zipball/65e8b7db476c5dd267e65eea9cab77584d3cfff9",
+                "reference": "65e8b7db476c5dd267e65eea9cab77584d3cfff9",
                 "shasum": ""
             },
             "require": {
@@ -4784,14 +4784,14 @@
                 }
             ],
             "description": "Provides the functionality to export PHP variables for visualization",
-            "homepage": "http://www.github.com/sebastianbergmann/exporter",
+            "homepage": "https://www.github.com/sebastianbergmann/exporter",
             "keywords": [
                 "export",
                 "exporter"
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/exporter/issues",
-                "source": "https://github.com/sebastianbergmann/exporter/tree/4.0.3"
+                "source": "https://github.com/sebastianbergmann/exporter/tree/4.0.4"
             },
             "funding": [
                 {
@@ -4799,7 +4799,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2020-09-28T05:24:23+00:00"
+            "time": "2021-11-11T14:18:36+00:00"
         },
         {
             "name": "sebastian/global-state",
