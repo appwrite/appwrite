@@ -49,10 +49,15 @@
             },
             scales: {
               x: {
-                display: false
+                display: showXAxis
               },
               y: {
-                display: false
+                display: showYAxis,
+                ticks: {
+                  maxTicksLimit: 7,
+                  min: 7,
+                  max: 7,
+                },
               }
             },
             plugins: {
