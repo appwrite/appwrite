@@ -259,12 +259,14 @@ App::get('/v1/users/:userId/logs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('locale')
     ->inject('geodb')
     ->inject('usage')
-    ->action(function ($userId, $response, $dbForInternal, $locale, $geodb, $usage) {
+    ->action(function ($userId, $limit, $offset, $response, $dbForInternal, $locale, $geodb, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -296,7 +298,7 @@ App::get('/v1/users/:userId/logs')
             'teams.membership.create',
             'teams.membership.update',
             'teams.membership.delete',
-        ]);
+        ], $limit, $offset);
 
         $output = [];
 
