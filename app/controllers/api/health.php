@@ -46,9 +46,20 @@ App::get('/v1/health/db')
     ->action(function ($response, $utopia) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\App $utopia */
-        $utopia->getResource('db');
+        try {
+            $db = $utopia->getResource('db'); /* @var $db PDO */
 
-        $response->json(['status' => 'OK']);
+            // Run a small test to check the connection
+            $statement = $db->prepare("SELECT 1;");
+    
+            $statement->closeCursor();
+    
+            $statement->execute();
+        } catch (Exception $_e) {
+            throw new Exception('Database is not available', 500);
+        }
+
+        return $response->json(['status' => 'OK']);
     });
 
 App::get('/v1/health/cache')
@@ -64,9 +75,14 @@ App::get('/v1/health/cache')
     ->action(function ($response, $utopia) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\App $utopia */
-        $utopia->getResource('cache');
+        /** @var Redis */
+        $redis = $utopia->getResource('cache');
 
-        $response->json(['status' => 'OK']);
+        if ($redis->ping(true)) {
+            return $response->json(['status' => 'OK']);
+        } else {
+            throw new Exception('Cache is not available', 500);
+        }
     });
 
 App::get('/v1/health/time')
@@ -179,7 +195,7 @@ App::get('/v1/health/queue/usage')
     }, ['response']);
 
 App::get('/v1/health/queue/certificates')
-    ->desc('Get Certificate Queue')
+    ->desc('Get Certificates Queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])

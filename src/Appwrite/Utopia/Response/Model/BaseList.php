@@ -34,7 +34,7 @@ class BaseList extends Model
         if ($paging) {
             $this->addRule('sum', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total sum of items in the list.',
+                'description' => 'Total number of items available on the server.',
                 'default' => 0,
                 'example' => 5,
             ]);
@@ -49,7 +49,7 @@ class BaseList extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -59,7 +59,7 @@ class BaseList extends Model
 
     /**
      * Get Collection
-     * 
+     *
      * @return string
      */
     public function getType():string
