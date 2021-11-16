@@ -25,7 +25,7 @@ input, textarea {
 
 input[type=file],
 input[type=file]::-webkit-file-upload-button {
-    cursor: pointer; 
+    cursor: pointer;
 }
 
 button,
@@ -412,6 +412,7 @@ fieldset {
   width: ~"calc(100% - 2px)";
   max-height: 180px;
   visibility: visible !important;
+  object-fit: contain;
 }
 
 .video-preview {
@@ -466,7 +467,7 @@ fieldset {
     white-space: nowrap;
     background: var(--config-color-tooltip-background);
     border-radius: 5px;
-    bottom: 26px;
+    bottom: calc(100% + 6px);
     color: var(--config-color-tooltip-text);
     content: attr(data-tooltip);
     padding: 5px 15px;
@@ -483,22 +484,23 @@ fieldset {
     border: solid;
     border-color: var(--config-color-tooltip-background) transparent;
     border-width: 6px 6px 0 6px;
-    bottom: 20px;
+    bottom: 100%;
     content: "";
     position: absolute;
     z-index: 99;
-    .func-start(5px);
+    .func-start(3px);
   }
 
-  &.down:hover:after {
-    top: 26px;
-    bottom: inherit;
-  }
-
-  &.down:hover:before {
-    top: 20px;
-    border-width: 0 6px 6px 6px;
-    bottom: inherit;
+  &.down:hover {
+    &:after {
+      top: calc(100% + 6px);
+      bottom: inherit;
+    }
+    &:before {
+      top: 100%;
+      border-width: 0 6px 6px 6px;
+      bottom: inherit;
+    }
   }
 }
 
@@ -590,7 +592,7 @@ input[type=checkbox], input[type=radio] {
     color: var(--config-color-background-fade);
     background: var(--config-color-focus);
   }
-  
+
   &[type=radio] {
     &:checked:after {
       //content: '●';
@@ -649,7 +651,7 @@ input[type=checkbox], input[type=radio] {
   color: var(--config-color-fade);
   padding: 5px 15px;
   font-size: 12px;
-  
+
   form {
     display: inline-block;
   }
@@ -816,7 +818,7 @@ label.switch {
     &:focus,
     &:hover {
       background: var(--config-color-success);
-    }  
+    }
   }
 
   &:focus,
@@ -928,7 +930,7 @@ hr {
   height: 1px;
   background: var(--config-border-color)!important;
   border: none;
-  
+
   &.fade {
     opacity: .7;
   }
@@ -1298,7 +1300,7 @@ ol {
   height: 26px;
   width: 44px;
   margin: 9px 0;
-  
+
   button {
     padding: 3px;
     display: block;
@@ -1321,7 +1323,7 @@ ol {
     &.force-light {
       .pull-end;
     }
-    
+
     &.force-dark {
       .pull-start;
     }

@@ -10,6 +10,13 @@ return [
         'docs' => 'https://appwrite.io/docs/client/account?sdk=web#accountCreateSession',
         'enabled' => true,
     ],
+    'magic-url' => [
+        'name' => 'Magic URL',
+        'key' => 'usersAuthMagicURL',
+        'icon' => '/images/users/magic-url.png',
+        'docs' => 'https://appwrite.io/docs/client/account?sdk=web#accountCreateMagicURLSession',
+        'enabled' => true,
+    ],
     'anonymous' => [
         'name' => 'Anonymous',
         'key' => 'usersAuthAnonymous',
@@ -35,7 +42,6 @@ return [
         'name' => 'Phone',
         'key' => 'usersAuthPhone',
         'icon' => '/images/users/phone.png',
-        'docs' => 'https://appwrite.io/docs/client/account?sdk=web#accountCreatePhoneSession',
         'docs' => '',
         'enabled' => false,
     ],

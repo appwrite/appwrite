@@ -291,7 +291,7 @@ return [
     [
         "code" => "hi",
         "name" => "Hindi",
-        "nativeName" => "हिन्दी"
+        "nativeName" => "हिन्दी / हिंदी "
     ],
     [
         "code" => "ho",
@@ -415,7 +415,7 @@ return [
     ],
     [
         "code" => "km",
-        "name" => "Cambodian",
+        "name" => "Khmer",
         "nativeName" => "ភាសាខ្មែរ"
     ],
     [
@@ -706,7 +706,7 @@ return [
     [
         "code" => "sd",
         "name" => "Sindhi",
-        "nativeName" => "सिनधि"
+        "nativeName" => "सिन्धी / सिंधी "
     ],
     [
         "code" => "se",

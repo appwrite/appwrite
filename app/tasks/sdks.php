@@ -15,8 +15,10 @@ use Appwrite\SDK\Language\Deno;
 use Appwrite\SDK\Language\DotNet;
 use Appwrite\SDK\Language\Flutter;
 use Appwrite\SDK\Language\Go;
-use Appwrite\SDK\Language\Java;
+use Appwrite\SDK\Language\Kotlin;
+use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Swift;
+use Appwrite\SDK\Language\SwiftClient;
 
 $cli
     ->task('sdks')
@@ -28,7 +30,7 @@ $cli
         $production = ($git) ? (Console::confirm('Type "Appwrite" to push code to production git repos') == 'Appwrite') : false;
         $message = ($git) ? Console::confirm('Please enter your commit message:') : '';
 
-        if(!in_array($version, ['0.6.x', '0.7.x', '0.8.x'])) {
+        if(!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x',  '0.11.x'])) {
             throw new Exception('Unknown version given');
         }
 
@@ -134,15 +136,23 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'go':
                         $config = new Go();
                         break;
-                    case 'java':
-                        $config = new Java();
-                        break;
                     case 'swift':
                         $config = new Swift();
+                        $warning = $warning."\n\n > This is the Swift SDK for integrating with Appwrite from your Swift server-side code. If you're looking for the Apple SDK you should check [appwrite/sdk-for-apple](https://github.com/appwrite/sdk-for-apple)";
+                        break;
+                    case 'apple':
+                        $config = new SwiftClient();
                         break;
                     case 'dotnet':
                         $cover = '';
                         $config = new DotNet();
+                        break;
+                    case 'android':
+                        $config = new Android();
+                        break;
+                    case 'kotlin':
+                        $config = new Kotlin();
+                        $warning = $warning."\n\n > This is the Kotlin SDK for integrating with Appwrite from your Kotlin server-side code. If you're looking for the Android SDK you should check [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android)";
                         break;
                     default:
                         throw new Exception('Language "'.$language['key'].'" not supported');
@@ -155,9 +165,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 $sdk
                     ->setName($language['name'])
-                    ->setDescription("Appwrite is an open-source backend as a service server that abstract and simplify complex and repetitive development tasks behind a very simple to use REST API. Appwrite aims to help you develop your apps faster and in a more secure way.
-                        Use the {$language['name']} SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools.
-                        For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)")
+                    ->setNamespace('io appwrite')
+                    ->setDescription("Appwrite is an open-source backend as a service server that abstract and simplify complex and repetitive development tasks behind a very simple to use REST API. Appwrite aims to help you develop your apps faster and in a more secure way. Use the {$language['name']} SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)")
                     ->setShortDescription('Appwrite is an open-source self-hosted backend server that abstract and simplify complex and repetitive development tasks behind a very simple REST API')
                     ->setLicense($license)
                     ->setLicenseContent($licenseContent)
@@ -180,7 +189,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setTwitter(APP_SOCIAL_TWITTER_HANDLE)
                     ->setDiscord(APP_SOCIAL_DISCORD_CHANNEL, APP_SOCIAL_DISCORD)
                     ->setDefaultHeaders([
-                        'X-Appwrite-Response-Format' => '0.8.0',
+                        'X-Appwrite-Response-Format' => '0.11.0',
                     ])
                 ;
                 
@@ -193,6 +202,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 }
 
                 $gitUrl = $language['gitUrl'];
+                $gitBranch = $language['gitBranch'];
+
                 
                 if(!$production) {
                     $gitUrl = 'git@github.com:aw-tests/'.$language['gitRepoName'].'.git';
@@ -202,7 +213,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     \exec('rm -rf '.$target.' && \
                         mkdir -p '.$target.' && \
                         cd '.$target.' && \
-                        git init --initial-branch=master && \
+                        git init --initial-branch='.$gitBranch.' && \
                         git remote add origin '.$gitUrl.' && \
                         git fetch && \
                         git pull '.$gitUrl.' && \
@@ -210,7 +221,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         cp -r '.$result.'/ '.$target.'/ && \
                         git add . && \
                         git commit -m "'.$message.'" && \
-                        git push -u origin master
+                        git push -u origin '.$gitBranch.'
                     ');
 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
@@ -219,11 +230,15 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
                 }
 
-                \exec('mkdir -p '.$resultExamples.' && cp -r '.$result.'/docs/examples '.$resultExamples);
-                Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
-
-                \exec('rm -rf '.$result);
-                Console::success("Removed source code directory '{$result}' for {$language['name']} SDK");
+                $docDirectories = $language['docDirectories'] ?? [''];
+                foreach ($docDirectories as $languageTitle => $path) {
+                    $languagePath = strtolower($languageTitle !== 0 ? '/'.$languageTitle : '');
+                    \exec(
+                        'mkdir -p '.$resultExamples.$languagePath.' && \
+                        cp -r '.$result.'/docs/examples'.$languagePath.' '.$resultExamples
+                    );
+                    Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
+                }
             }
         }
 

@@ -1,4 +1,4 @@
-FROM composer:2.0 as step0
+FROM composer:2.0 as composer
 
 ARG TESTING=false
 ENV TESTING=$TESTING
@@ -12,11 +12,14 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM php:8.0-cli-alpine as step1
+FROM php:8.0-cli-alpine as compile
+
+ARG DEBUG=false
+ENV DEBUG=$DEBUG
 
 ENV PHP_REDIS_VERSION=5.3.4 \
-    PHP_SWOOLE_VERSION=v4.6.6 \
-    PHP_IMAGICK_VERSION=master \
+    PHP_SWOOLE_VERSION=v4.8.0 \
+    PHP_IMAGICK_VERSION=3.5.1 \
     PHP_YAML_VERSION=2.2.1 \
     PHP_MAXMINDDB_VERSION=v1.10.1
 
@@ -30,6 +33,7 @@ RUN \
   git \
   zlib-dev \
   brotli-dev \
+  openssl-dev \
   yaml-dev \
   imagemagick \
   imagemagick-dev \
@@ -37,51 +41,72 @@ RUN \
 
 RUN docker-php-ext-install sockets
 
+FROM compile AS redis
 RUN \
   # Redis Extension
   git clone --depth 1 --branch $PHP_REDIS_VERSION https://github.com/phpredis/phpredis.git && \
   cd phpredis && \
   phpize && \
   ./configure && \
-  make && make install && \
-  cd .. && \
-  ## Swoole Extension
+  make && make install
+
+## Swoole Extension
+FROM compile AS swoole
+RUN \
   git clone --depth 1 --branch $PHP_SWOOLE_VERSION https://github.com/swoole/swoole-src.git && \
   cd swoole-src && \
   phpize && \
-  ./configure --enable-http2 && \
+  ./configure --enable-sockets --enable-http2 --enable-openssl && \
   make && make install && \
-  cd .. && \
-  ## Imagick Extension
-  ## Last working commit https://github.com/Imagick/imagick/commit/35741750aa1cda2b7ac354bfa6128fa037e9cf32
-  git clone --branch $PHP_IMAGICK_VERSION https://github.com/Imagick/imagick && \
+  cd ..
+
+## Swoole Debugger setup
+RUN if [ "$DEBUG" == "true" ]; then \
+    cd /tmp && \
+    apk add boost-dev && \
+    git clone --depth 1 https://github.com/swoole/yasd && \
+    cd yasd && \
+    phpize && \
+    ./configure && \
+    make && make install && \
+    cd ..;\
+  fi
+
+## Imagick Extension
+FROM compile AS imagick
+RUN \
+  git clone --depth 1 --branch $PHP_IMAGICK_VERSION https://github.com/imagick/imagick && \
   cd imagick && \
-  git checkout 35741750aa1cda2b7ac354bfa6128fa037e9cf32 && \
   phpize && \
   ./configure && \
-  make && make install && \
-  cd .. && \
-  ## YAML Extension
+  make && make install
+
+## YAML Extension
+FROM compile AS yaml
+RUN \
   git clone --depth 1 --branch $PHP_YAML_VERSION https://github.com/php/pecl-file_formats-yaml && \
   cd pecl-file_formats-yaml && \
   phpize && \
   ./configure && \
-  make && make install && \
-  cd .. && \
-  ## Maxminddb extension
+  make && make install
+
+## Maxminddb extension
+FROM compile AS maxmind
+RUN \
   git clone --depth 1 --branch $PHP_MAXMINDDB_VERSION https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
   cd MaxMind-DB-Reader-php && \
   cd ext && \
   phpize && \
   ./configure && \
-  make && make install && \
-  cd ../..
+  make && make install
 
 FROM php:8.0-cli-alpine as final
 
 LABEL maintainer="team@appwrite.io"
 
 ARG VERSION=dev
+ARG DEBUG=false
+ENV DEBUG=$DEBUG
 
 ENV _APP_SERVER=swoole \
     _APP_ENV=production \
@@ -152,22 +177,29 @@ RUN \
   brotli-dev \
   yaml-dev \
   imagemagick \
+  imagemagick-dev \
   libmaxminddb-dev \
   certbot \
   docker-cli \
   docker-compose \
+  libgomp \
   && docker-php-ext-install sockets opcache pdo_mysql \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
 
+RUN \
+  if [ "$DEBUG" == "true" ]; then \
+    apk add boost boost-dev; \
+  fi
+
 WORKDIR /usr/src/code
 
-COPY --from=step0 /usr/local/src/vendor /usr/src/code/vendor
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/ 
+COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
+COPY --from=swoole /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yasd.so* /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=yaml /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=maxmind /usr/local/lib/php/extensions/no-debug-non-zts-20200930/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 
 # Add Source Code
 COPY ./app /usr/src/code/app
@@ -195,6 +227,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/maintenance && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
+    chmod +x /usr/local/bin/realtime && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/ssl && \
@@ -218,10 +251,13 @@ RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 RUN echo extension=imagick.so >> /usr/local/etc/php/conf.d/imagick.ini
 RUN echo extension=yaml.so >> /usr/local/etc/php/conf.d/yaml.ini
 RUN echo extension=maxminddb.so >> /usr/local/etc/php/conf.d/maxminddb.ini
+RUN if [ "$DEBUG" == "true" ]; then printf "zend_extension=yasd \nyasd.debug_mode=remote \nyasd.init_file=/usr/local/dev/yasd_init.php \nyasd.remote_port=9005 \nyasd.log_level=-1" >> /usr/local/etc/php/conf.d/yasd.ini; fi
 
+RUN if [ "$DEBUG" == "true" ]; then echo "opcache.enable=0" >> /usr/local/etc/php/conf.d/appwrite.ini; fi
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/appwrite.ini
+RUN echo "default_socket_timeout=-1" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.jit_buffer_size=100M" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.jit=1235" >> /usr/local/etc/php/conf.d/appwrite.ini
 

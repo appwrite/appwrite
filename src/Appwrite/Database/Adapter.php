@@ -91,11 +91,20 @@ abstract class Adapter
     /**
      * Delete Unique Key.
      *
-     * @param int $key
+     * @param string $key
      *
      * @return array
      */
     abstract public function deleteUniqueKey($key);
+
+    /**
+     * Add Unique Key.
+     *
+     * @param string $key
+     *
+     * @return array
+     */
+    abstract public function addUniqueKey($key);
 
     /**
      * Create Namespace.
@@ -121,10 +130,11 @@ abstract class Adapter
      * Filter data sets using chosen queries
      *
      * @param array $options
+     * @param array $filterTypes
      *
      * @return array
      */
-    abstract public function getCollection(array $options);
+    abstract public function getCollection(array $options, array $filterTypes = []);
 
     /**
      * @param array $options

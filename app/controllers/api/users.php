@@ -8,6 +8,7 @@ use Utopia\Validator\WhiteList;
 use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
+use Utopia\Validator\Boolean;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Appwrite\Auth\Auth;
@@ -199,14 +200,12 @@ App::get('/v1/users/:userId/sessions')
         }
 
         $sessions = $user->getAttribute('sessions', []);
-        $countries = $locale->getText('countries');
 
         foreach ($sessions as $key => $session) { 
             /** @var Document $session */
 
-            $session->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-                ? $countries[strtoupper($session->getAttribute('countryCode'))]
-                : $locale->getText('locale.country.unknown'));
+            $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+            $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', false);
 
             $sessions[$key] = $session;
@@ -231,18 +230,18 @@ App::get('/v1/users/:userId/logs')
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->inject('response')
-    ->inject('register')
     ->inject('project')
     ->inject('projectDB')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($userId, $response, $register, $project, $projectDB, $locale, $geodb) {
+    ->inject('utopia')
+    ->action(function ($userId, $response, $project, $projectDB, $locale, $geodb, $utopia) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Registry\Registry $register */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
+        /** @var Utopia\App $utopia */
         
         $user = $projectDB->getDocument($userId);
 
@@ -250,12 +249,10 @@ App::get('/v1/users/:userId/logs')
             throw new Exception('User not found', 404);
         }
 
-        $adapter = new AuditAdapter($register->get('db'));
+        $adapter = new AuditAdapter($utopia->getResource('db'));
         $adapter->setNamespace('app_'.$project->getId());
 
         $audit = new Audit($adapter);
-        
-        $countries = $locale->getText('countries');
 
         $logs = $audit->getLogsByUserAndActions($user->getId(), [
             'account.create',
@@ -321,8 +318,8 @@ App::get('/v1/users/:userId/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = (isset($countries[$record['country']['iso_code']])) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -365,6 +362,200 @@ App::patch('/v1/users/:userId/status')
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
         }
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::patch('/v1/users/:userId/verification')
+    ->desc('Update Email Verification')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.update.verification')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updateVerification')
+    ->label('sdk.description', '/docs/references/users/update-user-verification.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('emailVerification', false, new Boolean(), 'User Email Verification Status.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->action(function ($userId, $emailVerification, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+
+        $user = $projectDB->getDocument($userId);
+
+        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            throw new Exception('User not found', 404);
+        }
+
+        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
+            'emailVerification' => $emailVerification,
+        ]));
+
+        if (false === $user) {
+            throw new Exception('Failed saving user to DB', 500);
+        }
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::patch('/v1/users/:userId/name')
+    ->desc('Update Name')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.update.name')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updateName')
+    ->label('sdk.description', '/docs/references/users/update-user-name.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('audits')
+    ->action(function ($userId, $name, $response, $projectDB, $audits) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $audits */
+        
+        $user = $projectDB->getDocument($userId);
+
+        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            throw new Exception('User not found', 404);
+        }
+
+        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
+            'name' => $name,
+        ]));
+
+        if (false === $user) {
+            throw new Exception('Failed saving user to DB', 500);
+        }
+
+        $audits
+            ->setParam('userId', $user->getId())
+            ->setParam('event', 'users.update.name')
+            ->setParam('resource', 'users/'.$user->getId())
+        ;
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::patch('/v1/users/:userId/password')
+    ->desc('Update Password')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.update.password')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updatePassword')
+    ->label('sdk.description', '/docs/references/users/update-user-password.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('password', '', new Password(), 'New user password. Must be between 6 to 32 chars.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('audits')
+    ->action(function ($userId, $password, $response, $projectDB, $audits) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $audits */
+
+        $user = $projectDB->getDocument($userId);
+
+        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            throw new Exception('User not found', 404);
+        }
+
+        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
+            'password' => Auth::passwordHash($password),
+            'passwordUpdate' => \time(),
+        ]));
+
+        if (false === $user) {
+            throw new Exception('Failed saving user to DB', 500);
+        }
+
+        $audits
+            ->setParam('userId', $user->getId())
+            ->setParam('event', 'users.update.password')
+            ->setParam('resource', 'users/'.$user->getId())
+        ;
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::patch('/v1/users/:userId/email')
+    ->desc('Update Email')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.update.email')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updateEmail')
+    ->label('sdk.description', '/docs/references/users/update-user-email.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('email', '', new Email(), 'User email.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('audits')
+    ->action(function ($userId, $email, $response, $projectDB, $audits) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $audits */
+
+        $user = $projectDB->getDocument($userId);
+        
+        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            throw new Exception('User not found', 404);
+        }
+        
+        $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
+        $email = \strtolower($email);
+        $profile = $projectDB->getCollectionFirst([ // Get user by email address
+            'limit' => 1,
+            'filters' => [
+                '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                'email='.$email,
+            ],
+        ]);
+
+        if (!empty($profile)) {
+            throw new Exception('User already registered', 400);
+        }
+
+        if (!$isAnonymousUser) {
+            // Remove previous unique ID.
+            $projectDB->deleteUniqueKey(\md5($user->getArrayCopy()['$collection'].':'.'email'.'='.$user->getAttribute('email')));
+        }
+
+        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
+            'email' => $email,
+        ]));
+
+        $projectDB->addUniqueKey(\md5($user['$collection'].':'.'email'.'='.$email));
+
+        if (false === $user) {
+            throw new Exception('Failed saving user to DB', 500);
+        }
+        
+        $audits
+            ->setParam('userId', $user->getId())
+            ->setParam('event', 'account.update.email')
+            ->setParam('resource', 'users/'.$user->getId())
+        ;
 
         $response->dynamic($user, Response::MODEL_USER);
     });

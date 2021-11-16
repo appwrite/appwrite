@@ -1,23 +1,21 @@
 <?php
 
+use Appwrite\Resque\Worker;
 use Utopia\App;
 use Utopia\CLI\Console;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__ . '/../workers.php';
 
 Console::title('Webhooks V1 Worker');
+Console::success(APP_NAME . ' webhooks worker v1 has started');
 
-Console::success(APP_NAME.' webhooks worker v1 has started');
-
-class WebhooksV1
+class WebhooksV1 extends Worker
 {
-    public $args = [];
-
-    public function setUp(): void
+    public function init(): void
     {
     }
 
-    public function perform()
+    public function run(): void
     {
         $errors = [];
 
@@ -37,7 +35,7 @@ class WebhooksV1
             $name = $webhook['name'] ?? '';
             $signature = $webhook['signature'] ?? 'not-yet-implemented';
             $url = $webhook['url'] ?? '';
-            $security = (bool) $webhook['security'] ?? true;
+            $security = (bool) ($webhook['security'] ?? true);
             $httpUser = $webhook['httpUser'] ?? null;
             $httpPass = $webhook['httpPass'] ?? null;
 
@@ -47,7 +45,8 @@ class WebhooksV1
             \curl_setopt($ch, CURLOPT_POSTFIELDS, $eventData);
             \curl_setopt($ch, CURLOPT_HEADER, 0);
             \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(APP_USERAGENT,
+            \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(
+                APP_USERAGENT,
                 App::getEnv('_APP_VERSION', 'UNKNOWN'),
                 App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
             ));
@@ -56,13 +55,13 @@ class WebhooksV1
                 CURLOPT_HTTPHEADER,
                 [
                     'Content-Type: application/json',
-                    'Content-Length: '.\strlen($eventData),
-                    'X-'.APP_NAME.'-Webhook-Id: '.$id,
-                    'X-'.APP_NAME.'-Webhook-Event: '.$event,
-                    'X-'.APP_NAME.'-Webhook-Name: '.$name,
-                    'X-'.APP_NAME.'-Webhook-User-Id: '.$userId,
-                    'X-'.APP_NAME.'-Webhook-Project-Id: '.$projectId,
-                    'X-'.APP_NAME.'-Webhook-Signature: '.$signature,
+                    'Content-Length: ' . \strlen($eventData),
+                    'X-' . APP_NAME . '-Webhook-Id: ' . $id,
+                    'X-' . APP_NAME . '-Webhook-Event: ' . $event,
+                    'X-' . APP_NAME . '-Webhook-Name: ' . $name,
+                    'X-' . APP_NAME . '-Webhook-User-Id: ' . $userId,
+                    'X-' . APP_NAME . '-Webhook-Project-Id: ' . $projectId,
+                    'X-' . APP_NAME . '-Webhook-Signature: ' . $signature,
                 ]
             );
 
@@ -77,7 +76,7 @@ class WebhooksV1
             }
 
             if (false === \curl_exec($ch)) {
-                $errors[] = \curl_error($ch).' in event '.$event.' for webhook '.$name;
+                $errors[] = \curl_error($ch) . ' in event ' . $event . ' for webhook ' . $name;
             }
 
             \curl_close($ch);
@@ -88,8 +87,7 @@ class WebhooksV1
         }
     }
 
-    public function tearDown(): void
+    public function shutdown(): void
     {
-        // ... Remove environment for this job
     }
 }

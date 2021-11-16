@@ -3,23 +3,30 @@
 return [
     'af', // Afrikaans
     'ar', // Arabic
-    'ba', //Bosnian
+    'as', // Assamese
+    'az', // Azerbaijani
     'be', // Belarusian
     'bg', // Bulgarian
+    'bh', // Bihari
     'bn', // Bengali
-    'cat', // Catalan
-    'cz', // Czech
+    'bs', // Bosnian
+    'ca', // Catalan
+    'cs', // Czech
+    'da', // Danish
     'de', // German
     'en', // English
+    'eo', // Esperanto
     'es', // Spanish
     'fa', // Farsi/Persian
     'fi', // Finnish
     'fo', // Faroese
     'fr', // French
-    'gr', // Greek
-    'gu', //Gujrati
+    'el', // Greek
+    'ga', // Irish
+    'gu', // Gujrati
     'he', // Hebrew
-    'hi', // Hindi
+    'hi', // Hindi,
+    'hr', // Croatian
     'hu', // Hungarian
     'hy', // Armenian
     'id', // Indonesian
@@ -27,33 +34,40 @@ return [
     'it', // Italian
     'ja', // Japanese
     'jv', // Javanese
-    'ka', // Kannada
+    'kn', // Kannada
     'km', // Khmer
     'ko', // Korean
+    'lb', // Luxembourgish
     'lt', // Lithuanian
+    'lv', // Latvian
     'ml', // Malayalam
     'mr', // Marathi
     'ms', // Malay
+    'nb', // Norwegian - Bokmål
     'nl', // Dutch
-    'no', // Norwegian
-    'np', // Nepali
-    'od', // Odia
-    'ph', // Filipino
+    'nn', // Norwegian (nynorsk)
+    'no', // Norwegian (bokmål)
+    'ne', // Nepali
+    'or', // Oriya
+    'tl', // Filipino
     'pl', // Polish
     'pt-br', // Portuguese - Brazil	
     'pt-pt', // Portuguese - Portugal
-    'pa', //Punjabi
+    'pa', // Punjabi
     'ro', // Romanian
     'ru', // Russian
+    'sa', //Sanskrit
+    'sd', // Sindhi
     'si', // Sinhala
+    'sk', // Slovakia
     'sl', // Slovenian
     'sq', // Albanian
     'sv', // Swedish
     'ta', // Tamil
     'th', // Thai
     'tr', // Turkish
-    'ua', // Ukrainian
-    'ur', //Urdu
+    'uk', // Ukrainian
+    'ur', // Urdu
     'vi', // Vietnamese
     'zh-cn', // Chinese - China
     'zh-tw', // Chinese - Taiwan

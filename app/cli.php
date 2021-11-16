@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__.'/init.php';
+require_once __DIR__.'/workers.php';
 
 use Utopia\App;
 use Utopia\CLI\CLI;

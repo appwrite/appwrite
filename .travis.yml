@@ -1,10 +1,13 @@
-dist: xenial
+dist: focal
 
 arch:
   - amd64
-  - arm64
+  - arm64-graviton2
 
 os: linux
+
+vm:
+  size: large
 
 language: shell
 
@@ -13,23 +16,43 @@ notifications:
   - team@appwrite.io
 
 before_install:
+# Install latest Docker
 - curl -fsSL https://get.docker.com | sh
+# Enable Buildkit in Docker config
 - echo '{"experimental":"enabled"}' | sudo tee /etc/docker/daemon.json
 - mkdir -p $HOME/.docker
 - echo '{"experimental":"enabled"}' | sudo tee $HOME/.docker/config.json
 - sudo service docker start
+# Login to increase Docker Hub ratelimit
 - >
   if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
     echo "${DOCKERHUB_PULL_PASSWORD}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
   fi
 - docker --version
-- docker buildx create --use
-- chmod -R u+x ./.travis-ci
-- export COMPOSE_INTERACTIVE_NO_CLI=1
+# Install latest Compose
+- sudo rm /usr/local/bin/docker-compose
+- curl -L https://github.com/docker/compose/releases/download/1.29.2/docker-compose-`uname -s`-`uname -m` > docker-compose
+- chmod +x docker-compose
+- sudo mv docker-compose /usr/local/bin
+- docker-compose --version
+# Enable Buildkit
+- docker buildx create --name travis_builder --use
+- export COMPOSE_INTERACTIVE_NO_CLI
+- export DOCKER_BUILDKIT=1
+- export COMPOSE_DOCKER_CLI_BUILD=1
+- export BUILDKIT_PROGRESS=plain
 # Only pass a single runtime for CI stability
 - echo "_APP_FUNCTIONS_RUNTIMES=php-8.0" >> .env
+# Ensure Travis scripts are executable
+- chmod -R u+x ./.travis-ci
 
 install:
+- docker-compose pull
+# Upstream bug causes buildkit pulls to fail so prefetch base images
+# https://github.com/moby/moby/issues/41864
+- docker pull composer:2.0
+- docker pull php:8.0-cli-alpine
+- docker-compose build
 - docker-compose up -d
 - sleep 10
 
@@ -40,6 +63,13 @@ script:
 - docker-compose exec appwrite doctor
 - docker-compose exec appwrite vars
 - docker-compose exec appwrite test --debug
+
+after_script:
+# travis re-uses their build nodes so clean them up
+- docker buildx rm travis_builder
+
+after_failure:
+- docker-compose logs appwrite
 
 deploy:
   - provider: script

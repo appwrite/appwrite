@@ -96,6 +96,95 @@ trait UsersBase
     /**
      * @depends testGetUser
      */
+    public function testUpdateUserName(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/name', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Updated name',
+        ]);
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['name'], 'Updated name');
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['name'], 'Updated name');
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetUser
+     */
+    public function testUpdateUserEmail(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/email', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => 'users.service@updated.com',
+        ]);
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['email'], 'users.service@updated.com');
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['email'], 'users.service@updated.com');
+
+        return $data;
+    }
+
+    /**
+     * @depends testUpdateUserEmail
+     */
+    public function testUpdateUserPassword(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/password', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'password' => 'password2',
+        ]);
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertNotEmpty($user['body']['$id']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => 'users.service@updated.com',
+            'password' => 'password2'
+        ]);
+
+        $this->assertEquals($session['headers']['status-code'], 201);
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetUser
+     */
     public function testUpdateUserStatus(array $data):array
     {
         /**
@@ -118,6 +207,35 @@ trait UsersBase
 
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertEquals($user['body']['status'], 2);
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetUser
+     */
+    public function testUpdateEmailVerification(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/verification', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'emailVerification' => true,
+        ]);
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['emailVerification'], true);
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['emailVerification'], true);
 
         return $data;
     }

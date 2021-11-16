@@ -21,6 +21,14 @@ use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Utopia\Response;
 use Cron\CronExpression;
 
+App::init(function ($project) {
+    /** @var Utopia\Database\Document $project */
+
+    if($project->getId() !== 'console') {
+        throw new Exception('Access to this API is forbidden.', 401);
+    }
+}, ['project'], 'projects');
+
 App::post('/v1/projects')
     ->desc('Create Project')
     ->groups(['api', 'projects'])
@@ -74,6 +82,7 @@ App::post('/v1/projects')
                 'legalAddress' => $legalAddress,
                 'legalTaxId' => $legalTaxId,
                 'teamId' => $team->getId(),
+                'version' => APP_VERSION_STABLE,
                 'platforms' => [],
                 'webhooks' => [],
                 'keys' => [],
@@ -181,6 +190,8 @@ App::get('/v1/projects/:projectId/usage')
             throw new Exception('Project not found', 404);
         }
 
+        $projectDB->setNamespace('app_'.$project->getId());
+
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
 
             $period = [
@@ -211,6 +222,8 @@ App::get('/v1/projects/:projectId/usage')
             $requests = [];
             $network = [];
             $functions = [];
+            $realtimeConnections = [];
+            $realtimeMessages = [];
     
             if ($client) {
                 $start = $period[$range]['start']->format(DateTime::RFC3339);
@@ -249,16 +262,38 @@ App::get('/v1/projects/:projectId/usage')
                         'date' => \strtotime($point['time']),
                     ];
                 }
+
+                // Realtime Connections
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_realtime_clients" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $realtimeConnections[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
+                // Realtime Messages
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_realtime_messages" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $realtimeMessages[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
             }
         } else {
             $requests = [];
             $network = [];
             $functions = [];
+            $realtimeConnections = [];
+            $realtimeMessages = [];
         }
 
 
         // Users
-
         $projectDB->getCollection([
             'limit' => 0,
             'offset' => 0,
@@ -270,7 +305,6 @@ App::get('/v1/projects/:projectId/usage')
         $usersTotal = $projectDB->getSum();
 
         // Documents
-
         $collections = $projectDB->getCollection([
             'limit' => 100,
             'offset' => 0,
@@ -317,6 +351,18 @@ App::get('/v1/projects/:projectId/usage')
                 'total' => \array_sum(\array_map(function ($item) {
                     return $item['value'];
                 }, $functions)),
+            ],
+            'realtimeConnections' => [
+                'data' => $realtimeConnections,
+                'total' => \array_sum(\array_map(function ($item) {
+                    return $item['value'];
+                }, $realtimeConnections)),
+            ],
+            'realtimeMessages' => [
+                'data' => $realtimeMessages,
+                'total' => \array_sum(\array_map(function ($item) {
+                    return $item['value'];
+                }, $realtimeMessages)),
             ],
             'collections' => [
                 'data' => $collections,
@@ -1268,9 +1314,9 @@ App::post('/v1/projects/:projectId/platforms')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PLATFORM)
     ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('type', null, new WhiteList(['web', 'flutter-ios', 'flutter-android', 'flutter-linux', 'flutter-macos', 'flutter-windows', 'ios', 'android', 'unity'], true), 'Platform type.')
+    ->param('type', null, new WhiteList(['web', 'flutter-ios', 'flutter-android', 'flutter-linux', 'flutter-macos', 'flutter-windows', 'apple-ios', 'apple-macos', 'apple-watchos', 'apple-tvos', 'android', 'unity'], true), 'Platform type.')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
-    ->param('key', '', new Text(256), 'Package name for android or bundle ID for iOS. Max length: 256 chars.', true)
+    ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
     ->param('hostname', '', new Text(256), 'Platform client hostname. Max length: 256 chars.', true)
     ->inject('response')

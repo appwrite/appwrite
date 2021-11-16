@@ -39,14 +39,14 @@ App::post('/v1/functions')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('execute', [], new ArrayList(new Text(64)), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('env', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution enviornment.')
+    ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object.', true)
     ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($name, $execute, $env, $vars, $events, $schedule, $timeout, $response, $projectDB) {
+    ->action(function ($name, $execute, $runtime, $vars, $events, $schedule, $timeout, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
@@ -59,7 +59,7 @@ App::post('/v1/functions')
             'dateUpdated' => time(),
             'status' => 'disabled',
             'name' => $name,
-            'env' => $env,
+            'runtime' => $runtime,
             'tag' => '',
             'vars' => $vars,
             'events' => $events,
@@ -748,20 +748,20 @@ App::post('/v1/functions/:functionId/executions')
         $jwt = ''; // initialize
         if (!empty($user->getId())) { // If userId exists, generate a JWT for function
             
-            $tokens = $user->getAttribute('tokens', []);
-            $session = new Document();
+            $sessions = $user->getAttribute('sessions', []);
+            $current = new Document();
 
-            foreach ($tokens as $token) { /** @var Appwrite\Database\Document $token */
-                if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
-                    $session = $token;
+            foreach ($sessions as $session) { /** @var Appwrite\Database\Document $session */
+                if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                    $current = $session;
                 }
             }
 
-            if(!$session->isEmpty()) {
+            if(!$current->isEmpty()) {
                 $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
                 $jwt = $jwtObj->encode([
                     'userId' => $user->getId(),
-                    'sessionId' => $session->getId(),
+                    'sessionId' => $current->getId(),
                 ]);
             }
         }

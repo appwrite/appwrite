@@ -1,37 +1,35 @@
 <?php
 
-use Utopia\App;
-use Utopia\CLI\Console;
-use Utopia\Config\Config;
 use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\Resque\Worker;
 use Cron\CronExpression;
+use Utopia\App;
+use Utopia\CLI\Console;
+use Utopia\Config\Config;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__ . '/../workers.php';
 
 Console::title('Tasks V1 Worker');
+Console::success(APP_NAME . ' tasks worker v1 has started');
 
-Console::success(APP_NAME.' tasks worker v1 has started');
-
-class TasksV1
+class TasksV1 extends Worker
 {
-    /**
-     * @var array
-     */
-    public $args = [];
-
-    public function setUp(): void
+    public function init(): void
     {
     }
 
-    public function perform()
+    public function run(): void
     {
         global $register;
 
+        $db = $register->get('db');
+        $cache = $register->get('cache');
+
         $consoleDB = new Database();
-        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
         $consoleDB->setNamespace('app_console'); // Main DB
         $consoleDB->setMocks(Config::getParam('collections', []));
 
@@ -73,11 +71,11 @@ class TasksV1
         }
 
         if ($task->getAttribute('updated') !== $updated) { // Task have already been rescheduled by owner
-            return false;
+            return;
         }
 
         if ($task->getAttribute('status') !== 'play') { // Skip task and don't schedule again
-            return false;
+            return;
         }
 
         // Reschedule
@@ -88,8 +86,7 @@ class TasksV1
 
         $task
             ->setAttribute('next', $next)
-            ->setAttribute('previous', \time())
-        ;
+            ->setAttribute('previous', \time());
 
         ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());  // Async task rescheduale
 
@@ -103,7 +100,8 @@ class TasksV1
         \curl_setopt($ch, CURLOPT_POSTFIELDS, '');
         \curl_setopt($ch, CURLOPT_HEADER, 0);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(APP_USERAGENT,
+        \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(
+            APP_USERAGENT,
             App::getEnv('_APP_VERSION', 'UNKNOWN'),
             App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
         ));
@@ -111,8 +109,8 @@ class TasksV1
             $ch,
             CURLOPT_HTTPHEADER,
             \array_merge($headers, [
-                'X-'.APP_NAME.'-Task-ID: '.$task->getAttribute('$id', ''),
-                'X-'.APP_NAME.'-Task-Name: '.$task->getAttribute('name', ''),
+                'X-' . APP_NAME . '-Task-ID: ' . $task->getAttribute('$id', ''),
+                'X-' . APP_NAME . '-Task-Name: ' . $task->getAttribute('name', ''),
             ])
         );
         \curl_setopt($ch, CURLOPT_HEADER, true);  // we want headers
@@ -135,7 +133,7 @@ class TasksV1
         $response = \curl_exec($ch);
 
         if (false === $response) {
-            $errors[] = \curl_error($ch).'Failed to execute task';
+            $errors[] = \curl_error($ch) . 'Failed to execute task';
         }
 
         $code = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -151,22 +149,21 @@ class TasksV1
         switch ($codeFamily) {
             case '2':
             case '3':
-            break;
+                break;
             default:
-                $errors[] = 'Request failed with status code '.$code;
+                $errors[] = 'Request failed with status code ' . $code;
         }
 
         if (empty($errors)) {
             $task->setAttribute('failures', 0);
 
-            $alert = 'Task "'.$task->getAttribute('name').'" Executed Successfully';
+            $alert = 'Task "' . $task->getAttribute('name') . '" Executed Successfully';
         } else {
             $task
                 ->setAttribute('failures', $task->getAttribute('failures', 0) + 1)
-                ->setAttribute('status', ($task->getAttribute('failures') >= $errorLimit) ? 'pause' : 'play')
-            ;
+                ->setAttribute('status', ($task->getAttribute('failures') >= $errorLimit) ? 'pause' : 'play');
 
-            $alert = 'Task "'.$task->getAttribute('name').'" failed to execute with the following errors: '.\implode("\n", $errors);
+            $alert = 'Task "' . $task->getAttribute('name') . '" failed to execute with the following errors: ' . \implode("\n", $errors);
         }
 
         $log = \json_decode($task->getAttribute('log', '{}'), true);
@@ -187,8 +184,7 @@ class TasksV1
         $task
             ->setAttribute('log', \json_encode($log))
             ->setAttribute('duration', $totalTime)
-            ->setAttribute('delay', $delay)
-        ;
+            ->setAttribute('delay', $delay);
 
         Authorization::disable();
 
@@ -202,11 +198,10 @@ class TasksV1
 
         // Send alert if needed (use SMTP as default for now)
 
-        return true;
+        return;
     }
 
-    public function tearDown(): void
+    public function shutdown(): void
     {
-        // ... Remove environment for this job
     }
 }

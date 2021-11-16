@@ -47,9 +47,9 @@ class Func extends Model
                 'default' => '',
                 'example' => 'enabled',
             ])
-            ->addRule('env', [
+            ->addRule('runtime', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function execution environment.',
+                'description' => 'Function execution runtime.',
                 'default' => '',
                 'example' => 'python-3.8',
             ])
@@ -101,7 +101,7 @@ class Func extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -111,7 +111,7 @@ class Func extends Model
 
     /**
      * Get Collection
-     * 
+     *
      * @return string
      */
     public function getType():string

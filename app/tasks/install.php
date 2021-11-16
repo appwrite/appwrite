@@ -73,7 +73,15 @@ $cli
             $compose = new Compose($data);
             $appwrite = $compose->getService('appwrite');
             $oldVersion = ($appwrite) ? $appwrite->getImageVersion() : null;
-            $ports = $compose->getService('traefik')->getPorts();
+            try {
+                $ports = $compose->getService('traefik')->getPorts();
+            } catch (\Throwable $th) {
+                $ports = [
+                    $defaultHTTPPort => $defaultHTTPPort,
+                    $defaultHTTPSPort => $defaultHTTPSPort
+                ];
+                Console::warning('Traefik not found. Falling back to default ports.');
+            }
 
             if($oldVersion) {
                 foreach($compose->getServices() as $service) { // Fetch all env vars from previous compose file
@@ -129,7 +137,7 @@ $cli
             $httpsPort = Console::confirm('Choose your server HTTPS port: (default: '.$defaultHTTPSPort.')');
             $httpsPort = ($httpsPort) ? $httpsPort : $defaultHTTPSPort;
         }
-    
+
         $input = [];
 
         foreach($vars as $key => $var) {
@@ -171,7 +179,7 @@ $cli
             ->setParam('organization', $organization)
             ->setParam('image', $image)
         ;
-        
+
         $templateForEnv
             ->setParam('vars', $input)
         ;
@@ -196,7 +204,7 @@ $cli
 
         foreach ($input as $key => $value) {
             if($value) {
-                $env .= $key.'='.$value.' ';
+                $env .= $key.'='.\escapeshellarg($value).' ';
             }
         }
 

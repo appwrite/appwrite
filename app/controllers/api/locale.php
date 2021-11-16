@@ -31,8 +31,6 @@ App::get('/v1/locale')
         $output = [];
         $ip = $request->getIP();
         $time = (60 * 60 * 24 * 45); // 45 days cache
-        $countries = $locale->getText('countries');
-        $continents = $locale->getText('continents');
 
         $output['ip'] = $ip;
 
@@ -42,7 +40,8 @@ App::get('/v1/locale')
 
         if ($record) {
             $output['countryCode'] = $record['country']['iso_code'];
-            $output['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+            $output['country'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+            $output['continent'] = $locale->getText('continents.'.strtolower($record['continent']['code']), $locale->getText('locale.country.unknown'));
             $output['continent'] = (isset($continents[$record['continent']['code']])) ? $continents[$record['continent']['code']] : $locale->getText('locale.country.unknown');
             $output['continentCode'] = $record['continent']['code'];
             $output['eu'] = (\in_array($record['country']['iso_code'], $eu)) ? true : false;
@@ -87,17 +86,19 @@ App::get('/v1/locale/countries')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
 
-        $list = $locale->getText('countries'); /* @var $list array */
+        $list = Config::getParam('locale-countries'); /* @var $list array */
         $output = [];
 
-        \asort($list); // sort by abc per locale
-
-        foreach ($list as $key => $value) {
+        foreach ($list as $value) {
             $output[] = new Document([
-                'name' => $value,
-                'code' => $key,
+                'name' => $locale->getText('countries.'.strtolower($value)),
+                'code' => $value,
             ]);
         }
+
+        usort($output, function ($a, $b) {
+            return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
+        });
 
         $response->dynamic(new Document(['countries' => $output, 'sum' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     });
@@ -119,20 +120,21 @@ App::get('/v1/locale/countries/eu')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
 
-        $list = $locale->getText('countries'); /* @var $countries array */
         $eu = Config::getParam('locale-eu');
         $output = [];
 
-        \asort($list);
-
         foreach ($eu as $code) {
-            if (\array_key_exists($code, $list)) {
+            if ($locale->getText('countries.'.strtolower($code), false) !== false) {
                 $output[] = new Document([
-                    'name' => $list[$code],
+                    'name' => $locale->getText('countries.'.strtolower($code)),
                     'code' => $code,
                 ]);
             }
         }
+
+        usort($output, function ($a, $b) {
+            return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
+        });
 
         $response->dynamic(new Document(['countries' => $output, 'sum' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     });
@@ -155,17 +157,16 @@ App::get('/v1/locale/countries/phones')
         /** @var Utopia\Locale\Locale $locale */
 
         $list = Config::getParam('locale-phones'); /* @var $list array */
-        $countries = $locale->getText('countries'); /* @var $countries array */
         $output = [];
-        
+
         \asort($list);
 
         foreach ($list as $code => $name) {
-            if (\array_key_exists($code, $countries)) {
+            if ($locale->getText('countries.'.strtolower($code), false) !== false) {
                 $output[] = new Document([
                     'code' => '+'.$list[$code],
                     'countryCode' => $code,
-                    'countryName' => $countries[$code],
+                    'countryName' => $locale->getText('countries.'.strtolower($code)),
                 ]);
             }
         }
@@ -189,17 +190,19 @@ App::get('/v1/locale/continents')
     ->action(function ($response, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
-        
-        $list = $locale->getText('continents'); /* @var $list array */
 
-        \asort($list);
+        $list = Config::getParam('locale-continents'); /* @var $list array */
         
         foreach ($list as $key => $value) {
             $output[] = new Document([
-                'name' => $value,
-                'code' => $key,
+                'name' => $locale->getText('continents.'.strtolower($value)),
+                'code' => $value,
             ]);
         }
+
+        usort($output, function ($a, $b) {
+            return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
+        });
 
         $response->dynamic(new Document(['continents' => $output, 'sum' => \count($output)]), Response::MODEL_CONTINENT_LIST);
     });

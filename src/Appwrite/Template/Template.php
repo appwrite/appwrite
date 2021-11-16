@@ -8,6 +8,52 @@ use Utopia\View;
 class Template extends View
 {
     /**
+     * @var string
+     */
+    protected string $content = '';
+
+    /**
+     * fromFile
+     *
+     * Creates a new Template() from the file at $path
+     *
+     * @param string $path
+     *
+     * @return self
+     *
+     */
+    public static function fromFile(string $path): self
+    {
+        if (!\is_readable($path)) {
+            throw new Exception("$path view template is not readable.");
+        }
+
+        $template = new Template();
+        return $template->setPath($path);
+    }
+
+    /**
+     * fromString
+     *
+     * Creates a new Template() using a raw string
+     *
+     * @param string $content
+     *
+     * @return self
+     *
+     */
+    public static function fromString(string $content): self
+    {
+        if (empty($content)) {
+            throw new Exception('Empty string');
+        }
+
+        $template = new Template();
+        $template->content = $content;
+        return $template;
+    }
+
+    /**
      * Render.
      *
      * Render view .phtml template file if template has not been set as rendered yet using $this->setRendered(true).
@@ -25,10 +71,14 @@ class Template extends View
 
         if (\is_readable($this->path)) {
             $template = \file_get_contents($this->path); // Include template file
+        } elseif (!empty($this->content)) {
+            $template = $this->print($this->content, self::FILTER_NL2P);
         } else {
             throw new Exception('"'.$this->path.'" template is not readable or not found');
         }
 
+        // First replace the variables inside the params. Then replace the variables in the template
+        $this->params = array_merge($this->params, \str_replace(\array_keys($this->params), \array_values($this->params), $this->params));
         $template = \str_replace(\array_keys($this->params), \array_values($this->params), $template);
 
         return $template;
@@ -64,7 +114,7 @@ class Template extends View
         $port = isset($url['port']) ? ':'.$url['port'] : '';
 
         $user = isset($url['user']) ? $url['user'] : '';
-        $pass = isset($url['pass']) ? ':'.$url['pass']  : '';
+        $pass = isset($url['pass']) ? ':'.$url['pass'] : '';
         $pass = ($user || $pass) ? "$pass@" : '';
 
         $path = isset($url['path']) ? $url['path'] : '';
@@ -98,9 +148,9 @@ class Template extends View
 
     /**
      * From Camel Case
-     * 
+     *
      * @var string $input
-     * 
+     *
      * @return string
      */
     public static function fromCamelCaseToSnake($input): string
@@ -116,9 +166,9 @@ class Template extends View
 
     /**
      * From Camel Case to Dash Case
-     * 
+     *
      * @var string $input
-     * 
+     *
      * @return string
      */
     public static function fromCamelCaseToDash($input): string

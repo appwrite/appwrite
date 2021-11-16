@@ -46,9 +46,9 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                         <div class="box margin-bottom-large">
                             <div class="text-align-center">
-                                <img src="" data-ls-attrs="src=/images/runtimes/{{project-function.env|envLogo}}" alt="Function Env." class="avatar huge margin-top-negative-xxl" />
+                                <img src="" data-ls-attrs="src=/images/runtimes/{{project-function.runtime|runtimeLogo}}" alt="Function Runtime" class="avatar huge margin-top-negative-xxl" />
 
-                                <p class="text-fade margin-bottom-small" data-ls-bind="{{project-function.env|envName}} {{project-function.env|envVersion}}">
+                                <p class="text-fade margin-bottom-small" data-ls-bind="{{project-function.runtime|runtimeName}} {{project-function.runtime|runtimeVersion}}">
                                 </p>
                                 <div data-ls-if="{{project-function.tag}} !== ''" class="margin-top">
                                     <button data-ls-ui-trigger="execute-now">Execute Now</button> &nbsp; <a data-ls-attrs="href=/console/functions/function/logs?id={{router.params.id}}&project={{router.params.project}}" class="button reverse" style="vertical-align: top;">View Logs</a>
@@ -612,7 +612,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
     --code='/myrepo/myfunction'" data-forms-code="powershell" data-lang="powershell" data-lang-label="PowerShell"></textarea>
             </div>
 
-            <p>Learn more about <a href="" target="_blank">creating tags</a>, installing and using the <a href="" target="_blank">Appwrite CLI</a>.</p>
+            <p>Learn more about <a href="https://appwrite.io/docs/server/functions#functionsCreateTag" target="_blank">creating tags</a>, installing and using the <a href="https://appwrite.io/docs/command-line" target="_blank">Appwrite CLI</a>.</p>
         </li>
         <li>
             <h2 style="display: none">Manual</h2>

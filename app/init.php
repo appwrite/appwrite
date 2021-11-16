@@ -11,6 +11,12 @@ if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
     require_once __DIR__.'/../vendor/autoload.php';
 }
 
+ini_set('memory_limit','512M');
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+ini_set('default_socket_timeout', -1);
+error_reporting(E_ALL);
+
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
@@ -20,8 +26,6 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
-use Appwrite\Extend\PDO;
-use Appwrite\GraphQL\Builder;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
 use Utopia\View;
@@ -30,8 +34,10 @@ use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
-use PDO as PDONative;
-use Utopia\CLI\Console;
+use Swoole\Database\PDOConfig;
+use Swoole\Database\PDOPool;
+use Swoole\Database\RedisConfig;
+use Swoole\Database\RedisPool;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -41,8 +47,8 @@ const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
-const APP_CACHE_BUSTER = 148;
-const APP_VERSION_STABLE = '0.8.0';
+const APP_CACHE_BUSTER = 170;
+const APP_VERSION_STABLE = '0.11.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -58,12 +64,20 @@ const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
 const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
+const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite';
+
 // Deletion Types
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_CERTIFICATES = 'certificates';
+const DELETE_TYPE_REALTIME = 'realtime';
+// Mail Types
+const MAIL_TYPE_VERIFICATION = 'verification';
+const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
+const MAIL_TYPE_RECOVERY = 'recovery';
+const MAIL_TYPE_INVITATION = 'invitation';
 // Auth Types
 const APP_AUTH_TYPE_SESSION = 'Session';
 const APP_AUTH_TYPE_JWT = 'JWT';
@@ -95,6 +109,8 @@ Config::load('locale-currencies', __DIR__.'/config/locale/currencies.php');
 Config::load('locale-eu', __DIR__.'/config/locale/eu.php'); 
 Config::load('locale-languages', __DIR__.'/config/locale/languages.php'); 
 Config::load('locale-phones', __DIR__.'/config/locale/phones.php'); 
+Config::load('locale-countries', __DIR__.'/config/locale/countries.php');
+Config::load('locale-continents', __DIR__.'/config/locale/continents.php');
 Config::load('storage-logos', __DIR__.'/config/storage/logos.php'); 
 Config::load('storage-mimes', __DIR__.'/config/storage/mimes.php'); 
 Config::load('storage-inputs', __DIR__.'/config/storage/inputs.php'); 
@@ -147,23 +163,46 @@ Database::addFilter('encrypt',
 /*
  * Registry
  */
-$register->set('db', function () { // Register DB connection
+$register->set('dbPool', function () { // Register DB connection
     $dbHost = App::getEnv('_APP_DB_HOST', '');
+    $dbPort = App::getEnv('_APP_DB_PORT', '');
     $dbUser = App::getEnv('_APP_DB_USER', '');
     $dbPass = App::getEnv('_APP_DB_PASS', '');
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
-    $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
-        PDONative::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
-        PDONative::ATTR_TIMEOUT => 3, // Seconds
-        PDONative::ATTR_PERSISTENT => true
-    ));
+    $pool = new PDOPool((new PDOConfig())
+        ->withHost($dbHost)
+        ->withPort($dbPort)
+        ->withDbName($dbScheme)
+        ->withCharset('utf8mb4')
+        ->withUsername($dbUser)
+        ->withPassword($dbPass)
+        ->withOptions([
+            PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+        ])
+    , 16);
 
-    // Connection settings
-    $pdo->setAttribute(PDONative::ATTR_DEFAULT_FETCH_MODE, PDONative::FETCH_ASSOC);   // Return arrays
-    $pdo->setAttribute(PDONative::ATTR_ERRMODE, PDONative::ERRMODE_EXCEPTION);        // Handle all errors with exceptions
+    return $pool;
+});
+$register->set('redisPool', function () {
+    $redisHost = App::getEnv('_APP_REDIS_HOST', '');
+    $redisPort = App::getEnv('_APP_REDIS_PORT', '');
+    $redisUser = App::getEnv('_APP_REDIS_USER', '');
+    $redisPass = App::getEnv('_APP_REDIS_PASS', '');
+    $redisAuth = '';
 
-    return $pdo;
+    if ($redisUser && $redisPass) {
+        $redisAuth = $redisUser.':'.$redisPass;
+    }
+
+    $pool = new RedisPool((new RedisConfig)
+        ->withHost($redisHost)
+        ->withPort($redisPort)
+        ->withAuth($redisAuth)
+        ->withDbIndex(0)
+    , 16);
+
+    return $pool;
 });
 $register->set('influxdb', function () { // Register DB connection
     $host = App::getEnv('_APP_INFLUXDB_HOST', '');
@@ -186,25 +225,6 @@ $register->set('statsd', function () { // Register DB connection
     $statsd = new \Domnikl\Statsd\Client($connection);
 
     return $statsd;
-});
-$register->set('cache', function () { // Register cache connection
-    $redis = new Redis();
-    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
-    $user = App::getEnv('_APP_REDIS_USER','');
-    $pass = App::getEnv('_APP_REDIS_PASS','');
-    $auth = [];
-    if(!empty($user)) {
-        $auth["user"] = $user;
-    }
-    if(!empty($pass)) {
-        $auth["pass"] = $pass;
-    }
-    if(!empty($auth)) {
-        $redis->auth($auth);
-    }
-    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
-
-    return $redis;
 });
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
@@ -235,69 +255,83 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-06.mmdb');
+    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-10.mmdb');
 });
 
 /*
  * Localization
  */
 Locale::$exceptions = false;
-Locale::setLanguage('af', include __DIR__.'/config/locale/translations/af.php');
-Locale::setLanguage('ar', include __DIR__.'/config/locale/translations/ar.php');
-Locale::setLanguage('ba', include __DIR__.'/config/locale/translations/ba.php');
-Locale::setLanguage('be', include __DIR__.'/config/locale/translations/be.php');
-Locale::setLanguage('bg', include __DIR__.'/config/locale/translations/bg.php');
-Locale::setLanguage('bn', include __DIR__.'/config/locale/translations/bn.php');
-Locale::setLanguage('cat', include __DIR__.'/config/locale/translations/cat.php');
-Locale::setLanguage('cz', include __DIR__.'/config/locale/translations/cz.php');
-Locale::setLanguage('de', include __DIR__.'/config/locale/translations/de.php');
-Locale::setLanguage('en', include __DIR__.'/config/locale/translations/en.php');
-Locale::setLanguage('es', include __DIR__.'/config/locale/translations/es.php');
-Locale::setLanguage('fa', include __DIR__.'/config/locale/translations/fa.php');
-Locale::setLanguage('fi', include __DIR__.'/config/locale/translations/fi.php');
-Locale::setLanguage('fo', include __DIR__.'/config/locale/translations/fo.php');
-Locale::setLanguage('fr', include __DIR__.'/config/locale/translations/fr.php');
-Locale::setLanguage('gr', include __DIR__.'/config/locale/translations/gr.php');
-Locale::setLanguage('gu', include __DIR__.'/config/locale/translations/gu.php');
-Locale::setLanguage('he', include __DIR__.'/config/locale/translations/he.php');
-Locale::setLanguage('hi', include __DIR__.'/config/locale/translations/hi.php');
-Locale::setLanguage('hu', include __DIR__.'/config/locale/translations/hu.php');
-Locale::setLanguage('hy', include __DIR__.'/config/locale/translations/hy.php');
-Locale::setLanguage('id', include __DIR__.'/config/locale/translations/id.php');
-Locale::setLanguage('is', include __DIR__.'/config/locale/translations/is.php');
-Locale::setLanguage('it', include __DIR__.'/config/locale/translations/it.php');
-Locale::setLanguage('ja', include __DIR__.'/config/locale/translations/ja.php');
-Locale::setLanguage('jv', include __DIR__.'/config/locale/translations/jv.php');
-Locale::setLanguage('ka', include __DIR__.'/config/locale/translations/ka.php');
-Locale::setLanguage('km', include __DIR__.'/config/locale/translations/km.php');
-Locale::setLanguage('ko', include __DIR__.'/config/locale/translations/ko.php');
-Locale::setLanguage('lt', include __DIR__.'/config/locale/translations/lt.php');
-Locale::setLanguage('ml', include __DIR__.'/config/locale/translations/ml.php');
-Locale::setLanguage('mr', include __DIR__.'/config/locale/translations/mr.php');
-Locale::setLanguage('ms', include __DIR__.'/config/locale/translations/ms.php');
-Locale::setLanguage('nl', include __DIR__.'/config/locale/translations/nl.php');
-Locale::setLanguage('no', include __DIR__.'/config/locale/translations/no.php');
-Locale::setLanguage('np', include __DIR__.'/config/locale/translations/np.php');
-Locale::setLanguage('od', include __DIR__.'/config/locale/translations/od.php');
-Locale::setLanguage('ph', include __DIR__.'/config/locale/translations/ph.php');
-Locale::setLanguage('pl', include __DIR__.'/config/locale/translations/pl.php');
-Locale::setLanguage('pt-br', include __DIR__.'/config/locale/translations/pt-br.php');
-Locale::setLanguage('pt-pt', include __DIR__.'/config/locale/translations/pt-pt.php');
-Locale::setLanguage('pa', include __DIR__.'/config/locale/translations/pa.php');
-Locale::setLanguage('ro', include __DIR__.'/config/locale/translations/ro.php');
-Locale::setLanguage('ru', include __DIR__ . '/config/locale/translations/ru.php');
-Locale::setLanguage('si', include __DIR__ . '/config/locale/translations/si.php');
-Locale::setLanguage('sl', include __DIR__ . '/config/locale/translations/sl.php');
-Locale::setLanguage('sq', include __DIR__ . '/config/locale/translations/sq.php');
-Locale::setLanguage('sv', include __DIR__ . '/config/locale/translations/sv.php');
-Locale::setLanguage('ta', include __DIR__ . '/config/locale/translations/ta.php');
-Locale::setLanguage('th', include __DIR__.'/config/locale/translations/th.php');
-Locale::setLanguage('tr', include __DIR__.'/config/locale/translations/tr.php');
-Locale::setLanguage('ua', include __DIR__.'/config/locale/translations/ua.php');
-Locale::setLanguage('ur', include __DIR__.'/config/locale/translations/ur.php');
-Locale::setLanguage('vi', include __DIR__.'/config/locale/translations/vi.php');
-Locale::setLanguage('zh-cn', include __DIR__.'/config/locale/translations/zh-cn.php');
-Locale::setLanguage('zh-tw', include __DIR__.'/config/locale/translations/zh-tw.php');
+Locale::setLanguageFromJSON('af', __DIR__.'/config/locale/translations/af.json');
+Locale::setLanguageFromJSON('ar', __DIR__.'/config/locale/translations/ar.json');
+Locale::setLanguageFromJSON('as', __DIR__.'/config/locale/translations/as.json');
+Locale::setLanguageFromJSON('az', __DIR__.'/config/locale/translations/az.json');
+Locale::setLanguageFromJSON('be', __DIR__.'/config/locale/translations/be.json');
+Locale::setLanguageFromJSON('bg', __DIR__.'/config/locale/translations/bg.json');
+Locale::setLanguageFromJSON('bh', __DIR__.'/config/locale/translations/bh.json');
+Locale::setLanguageFromJSON('bn', __DIR__.'/config/locale/translations/bn.json');
+Locale::setLanguageFromJSON('bs', __DIR__.'/config/locale/translations/bs.json');
+Locale::setLanguageFromJSON('ca', __DIR__.'/config/locale/translations/ca.json');
+Locale::setLanguageFromJSON('cs', __DIR__.'/config/locale/translations/cs.json');
+Locale::setLanguageFromJSON('da', __DIR__.'/config/locale/translations/da.json');
+Locale::setLanguageFromJSON('de', __DIR__.'/config/locale/translations/de.json');
+Locale::setLanguageFromJSON('el', __DIR__.'/config/locale/translations/el.json');
+Locale::setLanguageFromJSON('en', __DIR__.'/config/locale/translations/en.json');
+Locale::setLanguageFromJSON('eo', __DIR__.'/config/locale/translations/eo.json');
+Locale::setLanguageFromJSON('es', __DIR__.'/config/locale/translations/es.json');
+Locale::setLanguageFromJSON('fa', __DIR__.'/config/locale/translations/fa.json');
+Locale::setLanguageFromJSON('fi', __DIR__.'/config/locale/translations/fi.json');
+Locale::setLanguageFromJSON('fo', __DIR__.'/config/locale/translations/fo.json');
+Locale::setLanguageFromJSON('fr', __DIR__.'/config/locale/translations/fr.json');
+Locale::setLanguageFromJSON('ga', __DIR__.'/config/locale/translations/ga.json');
+Locale::setLanguageFromJSON('gu', __DIR__.'/config/locale/translations/gu.json');
+Locale::setLanguageFromJSON('he', __DIR__.'/config/locale/translations/he.json');
+Locale::setLanguageFromJSON('hi', __DIR__.'/config/locale/translations/hi.json');
+Locale::setLanguageFromJSON('hr', __DIR__.'/config/locale/translations/hr.json');
+Locale::setLanguageFromJSON('hu', __DIR__.'/config/locale/translations/hu.json');
+Locale::setLanguageFromJSON('hy', __DIR__.'/config/locale/translations/hy.json');
+Locale::setLanguageFromJSON('id', __DIR__.'/config/locale/translations/id.json');
+Locale::setLanguageFromJSON('is', __DIR__.'/config/locale/translations/is.json');
+Locale::setLanguageFromJSON('it', __DIR__.'/config/locale/translations/it.json');
+Locale::setLanguageFromJSON('ja', __DIR__.'/config/locale/translations/ja.json');
+Locale::setLanguageFromJSON('jv', __DIR__.'/config/locale/translations/jv.json');
+Locale::setLanguageFromJSON('kn', __DIR__.'/config/locale/translations/kn.json');
+Locale::setLanguageFromJSON('km', __DIR__.'/config/locale/translations/km.json');
+Locale::setLanguageFromJSON('ko', __DIR__.'/config/locale/translations/ko.json');
+Locale::setLanguageFromJSON('lb', __DIR__.'/config/locale/translations/lb.json');
+Locale::setLanguageFromJSON('lt', __DIR__.'/config/locale/translations/lt.json');
+Locale::setLanguageFromJSON('lv', __DIR__.'/config/locale/translations/lv.json');
+Locale::setLanguageFromJSON('ml', __DIR__.'/config/locale/translations/ml.json');
+Locale::setLanguageFromJSON('mr', __DIR__.'/config/locale/translations/mr.json');
+Locale::setLanguageFromJSON('ms', __DIR__.'/config/locale/translations/ms.json');
+Locale::setLanguageFromJSON('nb', __DIR__.'/config/locale/translations/nb.json');
+Locale::setLanguageFromJSON('ne', __DIR__.'/config/locale/translations/ne.json');
+Locale::setLanguageFromJSON('nl', __DIR__.'/config/locale/translations/nl.json');
+Locale::setLanguageFromJSON('nn', __DIR__.'/config/locale/translations/nn.json');
+Locale::setLanguageFromJSON('no', __DIR__.'/config/locale/translations/no.json');
+Locale::setLanguageFromJSON('or', __DIR__.'/config/locale/translations/or.json');
+Locale::setLanguageFromJSON('pa', __DIR__.'/config/locale/translations/pa.json');
+Locale::setLanguageFromJSON('pl', __DIR__.'/config/locale/translations/pl.json');
+Locale::setLanguageFromJSON('pt-br', __DIR__.'/config/locale/translations/pt-br.json');
+Locale::setLanguageFromJSON('pt-pt', __DIR__.'/config/locale/translations/pt-pt.json');
+Locale::setLanguageFromJSON('ro', __DIR__.'/config/locale/translations/ro.json');
+Locale::setLanguageFromJSON('ru', __DIR__ . '/config/locale/translations/ru.json');
+Locale::setLanguageFromJSON('sa', __DIR__ . '/config/locale/translations/sa.json');
+Locale::setLanguageFromJSON('sd', __DIR__ . '/config/locale/translations/sd.json');
+Locale::setLanguageFromJSON('si', __DIR__ . '/config/locale/translations/si.json');
+Locale::setLanguageFromJSON('sk', __DIR__ . '/config/locale/translations/sk.json');
+Locale::setLanguageFromJSON('sl', __DIR__ . '/config/locale/translations/sl.json');
+Locale::setLanguageFromJSON('sq', __DIR__ . '/config/locale/translations/sq.json');
+Locale::setLanguageFromJSON('sv', __DIR__ . '/config/locale/translations/sv.json');
+Locale::setLanguageFromJSON('ta', __DIR__ . '/config/locale/translations/ta.json');
+Locale::setLanguageFromJSON('th', __DIR__.'/config/locale/translations/th.json');
+Locale::setLanguageFromJSON('tl', __DIR__.'/config/locale/translations/tl.json');
+Locale::setLanguageFromJSON('tr', __DIR__.'/config/locale/translations/tr.json');
+Locale::setLanguageFromJSON('uk', __DIR__.'/config/locale/translations/uk.json');
+Locale::setLanguageFromJSON('ur', __DIR__.'/config/locale/translations/ur.json');
+Locale::setLanguageFromJSON('vi', __DIR__.'/config/locale/translations/vi.json');
+Locale::setLanguageFromJSON('zh-cn', __DIR__.'/config/locale/translations/zh-cn.json');
+Locale::setLanguageFromJSON('zh-tw', __DIR__.'/config/locale/translations/zh-tw.json');
 
 \stream_context_set_default([ // Set global user agent and http settings
     'http' => [
@@ -389,7 +423,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Database\Database $consoleDB */
     /** @var Appwrite\Database\Database $projectDB */
-    /** @var bool $mode */
+    /** @var string $mode */
 
     Authorization::setDefaultStatus(true);
 
@@ -404,10 +438,10 @@ App::setResource('user', function($mode, $project, $console, $request, $response
             $request->getCookie(Auth::$cookieName.'_legacy', '')));// Get fallback session from old clients (no SameSite support)
 
     // Get fallback session from clients who block 3rd-party cookies
-    $response->addHeader('X-Debug-Fallback', 'false');
+    if($response) $response->addHeader('X-Debug-Fallback', 'false');
 
     if(empty($session['id']) && empty($session['secret'])) {
-        $response->addHeader('X-Debug-Fallback', 'true');
+        if($response) $response->addHeader('X-Debug-Fallback', 'true');
         $fallback = $request->getHeader('x-fallback-cookies', '');
         $fallback = \json_decode($fallback, true);
         $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
@@ -418,8 +452,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     if (APP_MODE_ADMIN !== $mode) {
         $user = $projectDB->getDocument(Auth::$unique);
-    }
-    else {
+    } else {
         $user = $consoleDB->getDocument(Auth::$unique);
 
         $user
@@ -451,7 +484,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         } catch (JWTException $error) {
             throw new Exception('Failed to verify JWT. '.$error->getMessage(), 401);
         }
-        
+
         $jwtUserId = $payload['userId'] ?? '';
         $jwtSessionId = $payload['sessionId'] ?? '';
 
@@ -459,7 +492,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
             $user = $projectDB->getDocument($jwtUserId);
         }
 
-        if (empty($user->search('$id', $jwtSessionId, $user->getAttribute('tokens')))) { // Match JWT to active token
+        if (empty($user->search('$id', $jwtSessionId, $user->getAttribute('sessions')))) { // Match JWT to active token
             $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
         }
     }
@@ -485,23 +518,23 @@ App::setResource('console', function($consoleDB) {
     return $consoleDB->getDocument('console');
 }, ['consoleDB']);
 
-App::setResource('consoleDB', function($register) {
+App::setResource('consoleDB', function($db, $cache) {
     $consoleDB = new Database();
-    $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+    $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
     $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
     $consoleDB->setMocks(Config::getParam('collections', []));
 
     return $consoleDB;
-}, ['register']);
+}, ['db', 'cache']);
 
-App::setResource('projectDB', function($register, $project) {
+App::setResource('projectDB', function($db, $cache, $project) {
     $projectDB = new Database();
-    $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+    $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
     $projectDB->setNamespace('app_'.$project->getId());
     $projectDB->setMocks(Config::getParam('collections', []));
 
     return $projectDB;
-}, ['register', 'project']);
+}, ['db', 'cache', 'project']);
 
 App::setResource('mode', function($request) {
     /** @var Utopia\Swoole\Request $request */

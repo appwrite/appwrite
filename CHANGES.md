@@ -1,24 +1,198 @@
-# NOT PUBLISHED YET
+# Version 0.11.0
 
 ## Features
+- Added Swift Platform Support
+- Added new Cloud Functions Runtimes:
+  - Swift 5.5
+  - Java 17
+  - Python 3.10
+  - Deno 1.12
+  - Deno 1.13
+  - Deno 1.14
+- Added translations:
+  - German `de` by @SoftCreatR in https://github.com/appwrite/appwrite/pull/1790
+  - Hebrew `he` by @Kokoden in https://github.com/appwrite/appwrite/pull/1846
+  - Oriya `or` by @Rutam21 in https://github.com/appwrite/appwrite/pull/1827
+  - Italian `it` by @ilmalte in https://github.com/appwrite/appwrite/pull/1824
+  - Portugese (Portugal) `pt-PT` by @OscarRG in https://github.com/appwrite/appwrite/pull/1820
+  - Portugese (Brazil) `pt-BR` by @renato04 in https://github.com/appwrite/appwrite/pull/1817
+  - Indonesian `id` by @Hrdtr in https://github.com/appwrite/appwrite/pull/1816
+  - Korean `ko` by @ssong in https://github.com/appwrite/appwrite/pull/1814
+  - Ukrainian `uk` by @daniloff200 in https://github.com/appwrite/appwrite/pull/1794
+  - Russian `ru` by @daniloff200 in https://github.com/appwrite/appwrite/pull/1795
+  - Belarusian `be` by @daniloff200 in https://github.com/appwrite/appwrite/pull/1796
+  - Arabic `ar` by @arsangamal in https://github.com/appwrite/appwrite/pull/1800
+  - Malay `ms` by @izqalan in https://github.com/appwrite/appwrite/pull/1806
+  - Gujarati `gu` by @honeykpatel in https://github.com/appwrite/appwrite/pull/1808
+  - Polish `pl` by @achromik in https://github.com/appwrite/appwrite/pull/1811
+  - Malayalam `ml` by @anoopmsivadas in https://github.com/appwrite/appwrite/pull/1813
+  - Croatian `hr` by @mbos2 in https://github.com/appwrite/appwrite/pull/1825
+  - Danish `da` by @Ganzabahl in https://github.com/appwrite/appwrite/pull/1829
+  - French `fr` by @Olyno in https://github.com/appwrite/appwrite/pull/1771
+  - Spanish `es` by @chuiizeet in https://github.com/appwrite/appwrite/pull/1833
+  - Vietnamese `vt` by @hdkhoasgt in https://github.com/appwrite/appwrite/pull/1880
+  - Kannada `kn` by @Nikhil-1503 in https://github.com/appwrite/appwrite/pull/1840
+  - Finnish `fi` by @minna-xD in https://github.com/appwrite/appwrite/pull/1847
+  - Thai `th` by @teeradon43 in https://github.com/appwrite/appwrite/pull/1851
+  - Persian `fa` by @aerabi in https://github.com/appwrite/appwrite/pull/1878
+  - Norwegian `no` by @NeonSpork in https://github.com/appwrite/appwrite/pull/1871
+  - Norwegian (Nynorsk) `nn` by @NeonSpork in https://github.com/appwrite/appwrite/pull/2019
+  - Norwegian (Bokmål) `nb` by @Exouxas in https://github.com/appwrite/appwrite/pull/1877
+  - Dutch `nl` by @ArtixAllMighty in https://github.com/appwrite/appwrite/pull/1879
+  - Sanskrit `sa` by @Rutam21 in https://github.com/appwrite/appwrite/pull/1895
+  - Nepali `ne` by @TheLearneer in https://github.com/appwrite/appwrite/pull/1807
+  - Swedish `sv` by @didair in https://github.com/appwrite/appwrite/pull/1948
+  - Hindi `hi` by @willtryagain in https://github.com/appwrite/appwrite/pull/1810
+  - Luxembourgish `lb` by @OscarRG in https://github.com/appwrite/appwrite/pull/1857
+  - Catalan `ca` by @und1n3 in https://github.com/appwrite/appwrite/pull/1875
+  - Chinese (Taiwan) `zh-TW` by @HelloSeaNation in https://github.com/appwrite/appwrite/pull/2134
+  - Chinese (PRC)	`zh-CN` by @HelloSeaNation in https://github.com/appwrite/appwrite/pull/1836
+  - Bihari `bh` by @dazzlerkumar in https://github.com/appwrite/appwrite/pull/1841
+  - Romanian `ro` by @cristina-sirbu in https://github.com/appwrite/appwrite/pull/1868
+  - Slovak `sk` by @jakubhi in https://github.com/appwrite/appwrite/pull/1958
+  - Greek `el` by @kostapappas in https://github.com/appwrite/appwrite/pull/1992
+  - Assamese `as` by @PrerakMathur20 in https://github.com/appwrite/appwrite/pull/2023
+  - Esperanto `eo` by @tacoelho in https://github.com/appwrite/appwrite/pull/1927
+  - Irish `ga` by @ivernus in https://github.com/appwrite/appwrite/pull/2178
+  - Azerbaijani `az` by @aerabi in https://github.com/appwrite/appwrite/pull/2129
+  - Latvian `lv` by @RReiso in https://github.com/appwrite/appwrite/pull/2022
+  - Lithuanian `lt` by @mantasio in https://github.com/appwrite/appwrite/pull/2018
+  - Japanese `jp` by @takmar in https://github.com/appwrite/appwrite/pull/2177
+- Added new audio mime-types for viewing audio files on browsers by @eldadfux in https://github.com/appwrite/appwrite/pull/2239
 
-- Added file created date to file info on the console
-- Added file size to file info on the console
-- Refactored Devices page in Console:
-  - Renamed *Devices* to *Sessions*
-  - Add Provider Icon to each Session
-  - Add Anonymous Account Placeholder
-- Upgraded telegraf docker image version to v1.1.0
+## Bugs
+- Fixed `sum` description by @eldadfux in https://github.com/appwrite/appwrite/pull/1659
+- Fixed `Add Team Membership` parameter order by @deshankoswatte in https://github.com/appwrite/appwrite/pull/1818
+- Fixed Storage File Preview on mobile devices by @m1ga in https://github.com/appwrite/appwrite/pull/2230
+- Fixed `top-left` gravity on `Get File Preview` endpoint by @lohanidamodar in https://github.com/appwrite/appwrite/pull/2249
+
+# Version 0.10.4
+
+## Bugs
+- Fixed another memory leak in realtime service (#1627)
+
+# Version 0.10.3
+
+## Bugs
+- Fixed memory leak in realtime service (#1606)
+- Fixed function execution output now being UTF-8 encoded before saved (#1607)
+
+# Version 0.10.2
+
+## Bugs
+- Fixed SSL certificates status not being updated (#1592)
+- Fixed failing team invites on console (#1580)
+
+# Version 0.10.1
+
+## Bugs
+- Improved error messages on Migration regarding invalid document structures (#1576)
+- Fixed Console SDK endpoint to work with multiple proxies (#1575)
+- Fixed last function environments variables being corrupt (#1577)
+- Fixed `_APP_FUNCTIONS_CPUS` variable for cloud functions (#1568)
+
+# Version 0.10.0
+
+## Features
+- Added Realtime (#948)
+- Added Realtime statistics to the console (#948)
+- Added Magic URL login (#1552)
+- Refactored E-Mail template (#1422)
+- Improved locale management (#1440)
+- Added `$permissions` to execution response (#948)
+- Switch from using Docker CLI to Docker API by intergrating [utopia-php/orchestration](https://github.com/utopia-php/orchestration) (#1420)
+- Added DOCKERHUB_PULL_USERNAME, DOCKERHUB_PULL_PASSWORD and DOCKERHUB_PULL_EMAIL env variables for pulling from private DockerHub repos (#1420)
+- Added `updateName`, `updateEmail` and `updatePassword` to Users service and console (#1547)
+
+## Bugs
+- Fixed MariaDB timeout after 24 hours (#1510)
+- Fixed upgrading installation with customized `docker-compose.yml` file (#1513)
+- Fixed usage stats on the dashboard displaying invalid total users count (#1514)
+
+# Version 0.9.4
+
+## Security
+
+- Fixed security vulnerability that exposes project ID's from other admin users (#1453)
+
+
+# Version 0.9.3
 
 ## Bugs
 
-- Fixed bug when removing a project member on the Appwrite console (#1214)
+- Fixed Abuse Limit keys for JWT and E-Mail confirmation (#1434)
+
+# Version 0.9.2
+
+## Bugs
+
+- Fixed JWT session validation (#1408)
+- Fixed passing valid JWT session to Cloud Functions (#1421)
+- Fixed race condition when uploading and extracting bigger Cloud Functions (#1419)
+
+# Version 0.9.1
+
+## Bugs
+
+- Fixed PDO Connection timeout (#1385)
+- Removed unnecessary `app` resource and replace with `utopia` (#1384)
+- Fixed missing quote in Functions Worker logs (#1375)
+
+# Version 0.9.0
+
+## Features
+
+- Added support for Android
+- Added a new Cloud Functions runtime for
+  - Java 16.0
+  - Java 11.0
+  - Node 16.0
+  - Dart 2.13
+- Added a new gravity option when croping storage images using the file preview endpoint (#1260)
+- Upgraded GEOIP DB file to Jun 2021 release (#1256)
+- Added file created date to file info on the console (#1183)
+- Added file size to file info on the console (#1183)
+- Added internal support for connection pools for improved performance (#1278)
+- Added new abstraction for workers executable files (#1276)
+- Added a new API in the Users API to allow you to force update your user verification status (#1223)
+- Using a fixed commit to avoid breaking changes for imagemagick extenstion (#1274)
+- Updated the design of all the email templates (#1225)
+- Refactored Devices page in Console: (#1167)
+  - Renamed *Devices* to *Sessions*
+  - Add Provider Icon to each Session
+  - Add Anonymous Account Placeholder
+- Upgraded phpmailer version to 6.5.0 (#1317)
+- Upgraded telegraf docker image version to v1.2.0
+- Added new environment variables to the `telegraf` service: (#1202)
+  - _APP_INFLUXDB_HOST
+  - _APP_INFLUXDB_PORT
+- Added `expires` parameter to Account Recovery and Email Validation URL's
+- Added new endpoint to get a session based on it's ID (#1294)
+- Added added a new version param to the migration script (#1342)
+- Improved Queue Interval for all workers from 5 seconds to 1 (#1308 Thanks to @Meldiron)
+
+## Breaking Changes (Read before upgrading!)
+- Renamed `env` param on `/v1/functions` to `runtime` (#1314)
+- Renamed `deleteUser` method in all SDKs to `delete` (#1216)
+
+## Bugs
+
+- Fixed bug causing runtimes conflict and hanging executions when max Functions containers limit passed (#1288)
+- Fixed 404 error when removing a project member on the Appwrite console (#1214)
 - Fixed Swoole buffer output size to allow downloading files bigger than allowed size (#1189)
 - Fixed ClamAV status when anti virus is not running (#1188)
 - Fixed deleteSession which was removing cookieFallback from the localstorage on any logout instead of current session (#1206)
 - Fixed Nepal flag (#1173)
 - Fixed a bug in the Twitch OAuth adapter (#1209)
 - Fixed missing session object when OAuth session creation event is triggered (#1208)
+- Fixed bug where we didn't ignore the email case, converted all emails to lowercase internally (#1243)
+- Fixed a console bug where you can't click a user with no name, added a placehoder for anonyomous users (#1220)
+- Fixed unique keys not being updated when changing a user's email address (#1301)
+- Fixed a bug where decimal integers where wrongly used with database filters (#1349)
+
+## Security
+
+- Fixed potential XSS injection on the console
 
 # Version 0.8.0
 

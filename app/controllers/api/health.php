@@ -42,12 +42,11 @@ App::get('/v1/health/db')
     ->label('sdk.method', 'getDB')
     ->label('sdk.description', '/docs/references/health/get-db.md')
     ->inject('response')
-    ->inject('register')
-    ->action(function ($response, $register) {
+    ->inject('utopia')
+    ->action(function ($response, $utopia) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Registry\Registry $register */
-
-        $register->get('db'); /* @var $db PDO */
+        /** @var Utopia\App $utopia */
+        $utopia->getResource('db');
 
         $response->json(['status' => 'OK']);
     });
@@ -61,11 +60,11 @@ App::get('/v1/health/cache')
     ->label('sdk.method', 'getCache')
     ->label('sdk.description', '/docs/references/health/get-cache.md')
     ->inject('response')
-    ->inject('register')
-    ->action(function ($response, $register) {
+    ->inject('utopia')
+    ->action(function ($response, $utopia) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Registry\Registry $register */
-        $register->get('cache'); /* @var $cache Predis\Client */
+        /** @var Utopia\App $utopia */
+        $utopia->getResource('cache');
 
         $response->json(['status' => 'OK']);
     });
@@ -180,7 +179,7 @@ App::get('/v1/health/queue/usage')
     }, ['response']);
 
 App::get('/v1/health/queue/certificates')
-    ->desc('Get Certificate Queue')
+    ->desc('Get Certificates Queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])

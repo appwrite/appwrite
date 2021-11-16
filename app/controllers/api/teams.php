@@ -37,10 +37,12 @@ App::post('/v1/teams')
     ->inject('response')
     ->inject('user')
     ->inject('projectDB')
-    ->action(function ($name, $roles, $response, $user, $projectDB) {
+    ->inject('events')
+    ->action(function ($name, $roles, $response, $user, $projectDB, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $events */
 
         Authorization::disable();
 
@@ -88,6 +90,10 @@ App::post('/v1/teams')
             if (false === $user) {
                 throw new Exception('Failed saving user to DB', 500);
             }
+        }
+
+        if (!empty($user->getId())) {
+            $events->setParam('userId', $user->getId());
         }
 
         $response
@@ -212,7 +218,8 @@ App::delete('/v1/teams/:teamId')
     ->inject('response')
     ->inject('projectDB')
     ->inject('events')
-    ->action(function ($teamId, $response, $projectDB, $events) {
+    ->inject('deletes')
+    ->action(function ($teamId, $response, $projectDB, $events, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $events */
@@ -223,24 +230,14 @@ App::delete('/v1/teams/:teamId')
             throw new Exception('Team not found', 404);
         }
 
-        $memberships = $projectDB->getCollection([
-            'limit' => 2000, // TODO add members limit
-            'offset' => 0,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-                'teamId='.$teamId,
-            ],
-        ]);
-
-        foreach ($memberships as $member) {
-            if (!$projectDB->deleteDocument($member->getId())) {
-                throw new Exception('Failed to remove membership for team from DB', 500);
-            }
-        }
-
         if (!$projectDB->deleteDocument($teamId)) {
             throw new Exception('Failed to remove team from DB', 500);
         }
+
+        $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $team)
+        ;
 
         $events
             ->setParam('eventData', $response->output($team, Response::MODEL_TEAM))
@@ -265,9 +262,9 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('abuse-limit', 10)
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('email', '', new Email(), 'New team member email.')
-    ->param('name', '', new Text(128), 'New team member name. Max length: 128 chars.', true)
     ->param('roles', [], new ArrayList(new Key()), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
+    ->param('name', '', new Text(128), 'New team member name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
     ->inject('user')
@@ -275,7 +272,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('locale')
     ->inject('audits')
     ->inject('mails')
-    ->action(function ($teamId, $email, $name, $roles, $url, $response, $project, $user, $projectDB, $locale, $audits, $mails) {
+    ->action(function ($teamId, $email, $roles, $url, $name, $response, $project, $user, $projectDB, $locale, $audits, $mails) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
@@ -283,6 +280,10 @@ App::post('/v1/teams/:teamId/memberships')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $mails */
 
+        if(empty(App::getEnv('_APP_SMTP_HOST'))) {
+            throw new Exception('SMTP Disabled', 503);
+        }
+        
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
         
@@ -425,39 +426,21 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
         $url = Template::unParseURL($url);
-
-        $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
-        $content = new Template(__DIR__.'/../../config/locale/translations/templates/'.$locale->getText('account.emails.invitation.body'));
-        $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
-        $title = \sprintf($locale->getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
-        
-        $body
-            ->setParam('{{content}}', $content->render())
-            ->setParam('{{cta}}', $cta->render())
-            ->setParam('{{title}}', $title)
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
-            ->setParam('{{team}}', $team->getAttribute('name', '[TEAM-NAME]'))
-            ->setParam('{{owner}}', $user->getAttribute('name', ''))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f6f6f6')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#3498db')
-            ->setParam('{{bg-cta-hover}}', '#34495e')
-            ->setParam('{{text-content}}', '#000000')
-            ->setParam('{{text-cta}}', '#ffffff')
-        ;
 
         if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
             $mails
                 ->setParam('event', 'teams.memberships.create')
-                ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
+                ->setParam('from', $project->getId())
                 ->setParam('recipient', $email)
                 ->setParam('name', $name)
-                ->setParam('subject', $title)
-                ->setParam('body', $body->render())
+                ->setParam('url', $url)
+                ->setParam('locale', $locale->default)
+                ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))
+                ->setParam('owner', $user->getAttribute('name', ''))
+                ->setParam('team', $team->getAttribute('name', '[TEAM-NAME]'))
+                ->setParam('type', MAIL_TYPE_INVITATION)
                 ->trigger()
             ;
         }

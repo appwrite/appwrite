@@ -41,6 +41,9 @@ class Database
     const SYSTEM_COLLECTION_FUNCTIONS = 'functions';
     const SYSTEM_COLLECTION_TAGS = 'tags';
     const SYSTEM_COLLECTION_EXECUTIONS = 'executions';
+
+    // Realtime
+    const SYSTEM_COLLECTION_CONNECTIONS = 'connections';
     
     // Var Types
     const SYSTEM_VAR_TYPE_TEXT = 'text';
@@ -56,12 +59,12 @@ class Database
     /**
      * @var array
      */
-    static protected $filters = [];
+    protected static $filters = [];
 
     /**
      * @var bool
      */
-    static protected $statusFilters = true;
+    protected static $statusFilters = true;
 
     /**
      * @var array
@@ -145,10 +148,11 @@ class Database
 
     /**
      * @param array $options
+     * @param array $filterTypes
      *
      * @return Document[]
      */
-    public function getCollection(array $options)
+    public function getCollection(array $options, array $filterTypes = [])
     {
         $options = \array_merge([
             'offset' => 0,
@@ -161,7 +165,7 @@ class Database
             'filters' => [],
         ], $options);
 
-        $results = $this->adapter->getCollection($options);
+        $results = $this->adapter->getCollection($options, $filterTypes);
 
         foreach ($results as &$node) {
             $node = $this->decode(new Document($node));
@@ -371,6 +375,18 @@ class Database
     }
 
     /**
+     * @param int $key
+     *
+     * @return Document|false
+     *
+     * @throws AuthorizationException
+     */
+    public function addUniqueKey($key)
+    {
+        return new Document($this->adapter->addUniqueKey($key));
+    }
+
+    /**
      * @return array
      */
     public function getDebug()
@@ -446,7 +462,7 @@ class Database
      *
      * @return void
      */
-    static public function addFilter(string $name, callable $encode, callable $decode): void
+    public static function addFilter(string $name, callable $encode, callable $decode): void
     {
         self::$filters[$name] = [
             'encode' => $encode,
@@ -480,7 +496,7 @@ class Database
             return $document;
         }
 
-        $collection = $this->getDocument($document->getCollection(), true , false);
+        $collection = $this->getDocument($document->getCollection(), true, false);
         $rules = $collection->getAttribute('rules', []);
 
         foreach ($rules as $key => $rule) {
@@ -492,7 +508,7 @@ class Database
 
             if (($value !== null)) {
                 if ($type === self::SYSTEM_VAR_TYPE_DOCUMENT) {
-                    if($array) {
+                    if ($array) {
                         $list = [];
                         foreach ($value as $child) {
                             $list[] = $this->encode($child);
@@ -520,7 +536,7 @@ class Database
             return $document;
         }
 
-        $collection = $this->getDocument($document->getCollection(), true , false);
+        $collection = $this->getDocument($document->getCollection(), true, false);
         $rules = $collection->getAttribute('rules', []);
 
         foreach ($rules as $key => $rule) {
@@ -532,7 +548,7 @@ class Database
 
             if (($value !== null)) {
                 if ($type === self::SYSTEM_VAR_TYPE_DOCUMENT) {
-                    if($array) {
+                    if ($array) {
                         $list = [];
                         foreach ($value as $child) {
                             $list[] = $this->decode($child);
@@ -556,11 +572,11 @@ class Database
 
     /**
      * Encode Attribute
-     * 
+     *
      * @param string $name
      * @param mixed $value
      */
-    static protected function encodeAttribute(string $name, $value)
+    protected static function encodeAttribute(string $name, $value)
     {
         if (!isset(self::$filters[$name])) {
             return $value;
@@ -578,11 +594,11 @@ class Database
 
     /**
      * Decode Attribute
-     * 
+     *
      * @param string $name
      * @param mixed $value
      */
-    static protected function decodeAttribute(string $name, $value)
+    protected static function decodeAttribute(string $name, $value)
     {
         if (!isset(self::$filters[$name])) {
             return $value;

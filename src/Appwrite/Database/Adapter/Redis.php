@@ -2,7 +2,6 @@
 
 namespace Appwrite\Database\Adapter;
 
-use Utopia\Registry\Registry;
 use Appwrite\Database\Adapter;
 use Exception;
 use Redis as Client;
@@ -10,9 +9,9 @@ use Redis as Client;
 class Redis extends Adapter
 {
     /**
-     * @var Registry
+     * @var Client
      */
-    protected $register;
+    protected $redis;
 
     /**
      * @var Adapter
@@ -23,11 +22,11 @@ class Redis extends Adapter
      * Redis constructor.
      *
      * @param Adapter  $adapter
-     * @param Registry $register
+     * @param Client $redis
      */
-    public function __construct(Adapter $adapter, Registry $register)
+    public function __construct(Adapter $adapter, Client $redis)
     {
-        $this->register = $register;
+        $this->redis = $redis;
         $this->adapter = $adapter;
     }
 
@@ -170,6 +169,22 @@ class Redis extends Adapter
     }
 
     /**
+     * Add Unique Key.
+     *
+     * @param $key
+     *
+     * @return array
+     *
+     * @throws Exception
+     */
+    public function addUniqueKey($key)
+    {
+        $data = $this->adapter->addUniqueKey($key);
+
+        return $data;
+    }
+
+    /**
      * Create Namespace.
      *
      * @param string $namespace
@@ -195,14 +210,15 @@ class Redis extends Adapter
 
     /**
      * @param array $options
+     * @param array $filterTypes
      *
      * @return array
      *
      * @throws Exception
      */
-    public function getCollection(array $options)
+    public function getCollection(array $options, array $filterTypes = [])
     {
-        $data = $this->adapter->getCollection($options);
+        $data = $this->adapter->getCollection($options, $filterTypes);
         $keys = [];
 
         foreach ($data as $node) {
@@ -261,7 +277,7 @@ class Redis extends Adapter
      */
     protected function getRedis(): Client
     {
-        return $this->register->get('cache');
+        return $this->redis;
     }
 
     /**

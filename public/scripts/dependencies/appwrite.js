@@ -1,4 +1,4 @@
-var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
+(function (exports, isomorphicFormData, crossFetch) {
     'use strict';
 
     /*! *****************************************************************************
@@ -39,6 +39,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
         constructor() {
             this.config = {
                 endpoint: 'https://appwrite.io/v1',
+                endpointRealtime: '',
                 project: '',
                 key: '',
                 jwt: '',
@@ -46,8 +47,135 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                 mode: '',
             };
             this.headers = {
-                'x-sdk-version': 'appwrite:web:2.0.0',
-                'X-Appwrite-Response-Format': '0.8.0',
+                'x-sdk-version': 'appwrite:web:4.0.1',
+                'X-Appwrite-Response-Format': '0.10.0',
+            };
+            this.realtime = {
+                socket: undefined,
+                timeout: undefined,
+                url: '',
+                channels: new Set(),
+                subscriptions: new Map(),
+                subscriptionsCounter: 0,
+                reconnect: true,
+                reconnectAttempts: 0,
+                lastMessage: undefined,
+                connect: () => {
+                    clearTimeout(this.realtime.timeout);
+                    this.realtime.timeout = window === null || window === void 0 ? void 0 : window.setTimeout(() => {
+                        this.realtime.createSocket();
+                    }, 50);
+                },
+                getTimeout: () => {
+                    switch (true) {
+                        case this.realtime.reconnectAttempts < 5:
+                            return 1000;
+                        case this.realtime.reconnectAttempts < 15:
+                            return 5000;
+                        case this.realtime.reconnectAttempts < 100:
+                            return 10000;
+                        default:
+                            return 60000;
+                    }
+                },
+                createSocket: () => {
+                    var _a, _b;
+                    if (this.realtime.channels.size < 1)
+                        return;
+                    const channels = new URLSearchParams();
+                    channels.set('project', this.config.project);
+                    this.realtime.channels.forEach(channel => {
+                        channels.append('channels[]', channel);
+                    });
+                    const url = this.config.endpointRealtime + '/realtime?' + channels.toString();
+                    if (url !== this.realtime.url || // Check if URL is present
+                        !this.realtime.socket || // Check if WebSocket has not been created
+                        ((_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.readyState) > WebSocket.OPEN // Check if WebSocket is CLOSING (3) or CLOSED (4)
+                    ) {
+                        if (this.realtime.socket &&
+                            ((_b = this.realtime.socket) === null || _b === void 0 ? void 0 : _b.readyState) < WebSocket.CLOSING // Close WebSocket if it is CONNECTING (0) or OPEN (1)
+                        ) {
+                            this.realtime.reconnect = false;
+                            this.realtime.socket.close();
+                        }
+                        this.realtime.url = url;
+                        this.realtime.socket = new WebSocket(url);
+                        this.realtime.socket.addEventListener('message', this.realtime.onMessage);
+                        this.realtime.socket.addEventListener('open', _event => {
+                            this.realtime.reconnectAttempts = 0;
+                        });
+                        this.realtime.socket.addEventListener('close', event => {
+                            var _a, _b, _c;
+                            if (!this.realtime.reconnect ||
+                                (((_b = (_a = this.realtime) === null || _a === void 0 ? void 0 : _a.lastMessage) === null || _b === void 0 ? void 0 : _b.type) === 'error' && // Check if last message was of type error
+                                    ((_c = this.realtime) === null || _c === void 0 ? void 0 : _c.lastMessage.data).code === 1008 // Check for policy violation 1008
+                                )) {
+                                this.realtime.reconnect = true;
+                                return;
+                            }
+                            const timeout = this.realtime.getTimeout();
+                            console.error(`Realtime got disconnected. Reconnect will be attempted in ${timeout / 1000} seconds.`, event.reason);
+                            setTimeout(() => {
+                                this.realtime.reconnectAttempts++;
+                                this.realtime.createSocket();
+                            }, timeout);
+                        });
+                    }
+                },
+                onMessage: (event) => {
+                    var _a, _b;
+                    try {
+                        const message = JSON.parse(event.data);
+                        this.realtime.lastMessage = message;
+                        switch (message.type) {
+                            case 'connected':
+                                const cookie = JSON.parse((_a = window.localStorage.getItem('cookieFallback')) !== null && _a !== void 0 ? _a : '{}');
+                                const session = cookie === null || cookie === void 0 ? void 0 : cookie[`a_session_${this.config.project}`];
+                                const messageData = message.data;
+                                if (session && !messageData.user) {
+                                    (_b = this.realtime.socket) === null || _b === void 0 ? void 0 : _b.send(JSON.stringify({
+                                        type: 'authentication',
+                                        data: {
+                                            session
+                                        }
+                                    }));
+                                }
+                                break;
+                            case 'event':
+                                let data = message.data;
+                                if (data === null || data === void 0 ? void 0 : data.channels) {
+                                    const isSubscribed = data.channels.some(channel => this.realtime.channels.has(channel));
+                                    if (!isSubscribed)
+                                        return;
+                                    this.realtime.subscriptions.forEach(subscription => {
+                                        if (data.channels.some(channel => subscription.channels.includes(channel))) {
+                                            setTimeout(() => subscription.callback(data));
+                                        }
+                                    });
+                                }
+                                break;
+                            case 'error':
+                                throw message.data;
+                            default:
+                                break;
+                        }
+                    }
+                    catch (e) {
+                        console.error(e);
+                    }
+                },
+                cleanUp: channels => {
+                    this.realtime.channels.forEach(channel => {
+                        if (channels.includes(channel)) {
+                            let found = Array.from(this.realtime.subscriptions).some(([_key, subscription]) => {
+                                return subscription.channels.includes(channel);
+                            });
+                            if (!found) {
+                                this.realtime.channels.delete(channel);
+                            }
+                        }
+                    });
+                }
             };
             this.account = {
                 /**
@@ -82,11 +210,11 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                create: (email, password, name = '') => __awaiter(this, void 0, void 0, function* () {
-                    if (email === undefined) {
+                create: (email, password, name) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof email === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "email"');
                     }
-                    if (password === undefined) {
+                    if (typeof password === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "password"');
                     }
                     let path = '/account';
@@ -141,10 +269,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 updateEmail: (email, password) => __awaiter(this, void 0, void 0, function* () {
-                    if (email === undefined) {
+                    if (typeof email === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "email"');
                     }
-                    if (password === undefined) {
+                    if (typeof password === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "password"');
                     }
                     let path = '/account/email';
@@ -166,7 +294,8 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * Use this endpoint to create a JSON Web Token. You can use the resulting JWT
                  * to authenticate on behalf of the current user when working with the
                  * Appwrite server-side API and SDKs. The JWT secret is valid for 15 minutes
-                 * from its creation and will be invalid if the user will logout.
+                 * from its creation and will be invalid if the user will logout in that time
+                 * frame.
                  *
                  * @throws {AppwriteException}
                  * @returns {Promise}
@@ -206,7 +335,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 updateName: (name) => __awaiter(this, void 0, void 0, function* () {
-                    if (name === undefined) {
+                    if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
                     let path = '/account/name';
@@ -231,8 +360,8 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updatePassword: (password, oldPassword = '') => __awaiter(this, void 0, void 0, function* () {
-                    if (password === undefined) {
+                updatePassword: (password, oldPassword) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof password === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "password"');
                     }
                     let path = '/account/password';
@@ -275,7 +404,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 updatePrefs: (prefs) => __awaiter(this, void 0, void 0, function* () {
-                    if (prefs === undefined) {
+                    if (typeof prefs === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "prefs"');
                     }
                     let path = '/account/prefs';
@@ -306,10 +435,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 createRecovery: (email, url) => __awaiter(this, void 0, void 0, function* () {
-                    if (email === undefined) {
+                    if (typeof email === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "email"');
                     }
-                    if (url === undefined) {
+                    if (typeof url === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "url"');
                     }
                     let path = '/account/recovery';
@@ -326,7 +455,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                     }, payload);
                 }),
                 /**
-                 * Complete Password Recovery
+                 * Create Password Recovery (confirmation)
                  *
                  * Use this endpoint to complete the user account password reset. Both the
                  * **userId** and **secret** arguments will be passed as query parameters to
@@ -346,16 +475,16 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 updateRecovery: (userId, secret, password, passwordAgain) => __awaiter(this, void 0, void 0, function* () {
-                    if (userId === undefined) {
+                    if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
-                    if (secret === undefined) {
+                    if (typeof secret === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "secret"');
                     }
-                    if (password === undefined) {
+                    if (typeof password === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "password"');
                     }
-                    if (passwordAgain === undefined) {
+                    if (typeof passwordAgain === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "passwordAgain"');
                     }
                     let path = '/account/recovery';
@@ -406,10 +535,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 createSession: (email, password) => __awaiter(this, void 0, void 0, function* () {
-                    if (email === undefined) {
+                    if (typeof email === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "email"');
                     }
-                    if (password === undefined) {
+                    if (typeof password === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "password"');
                     }
                     let path = '/account/sessions';
@@ -447,9 +576,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  *
                  * Use this endpoint to allow a new user to register an anonymous account in
                  * your project. This route will also create a new session for the user. To
-                 * allow the new user to convert an anonymous account to a normal account
-                 * account, you need to update its [email and
-                 * password](/docs/client/account#accountUpdateEmail).
+                 * allow the new user to convert an anonymous account to a normal account, you
+                 * need to update its [email and
+                 * password](/docs/client/account#accountUpdateEmail) or create an [OAuth2
+                 * session](/docs/client/account#accountCreateOAuth2Session).
                  *
                  * @throws {AppwriteException}
                  * @returns {Promise}
@@ -463,12 +593,96 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                     }, payload);
                 }),
                 /**
+                 * Create Magic URL session
+                 *
+                 * Sends the user an email with a secret key for creating a session. When the
+                 * user clicks the link in the email, the user is redirected back to the URL
+                 * you provided with the secret key and userId values attached to the URL
+                 * query string. Use the query string parameters to submit a request to the
+                 * [PUT
+                 * /account/sessions/magic-url](/docs/client/account#accountUpdateMagicURLSession)
+                 * endpoint to complete the login process. The link sent to the user's email
+                 * address is valid for 1 hour. If you are on a mobile device you can leave
+                 * the URL parameter empty, so that the login completion will be handled by
+                 * your Appwrite instance by default.
+                 *
+                 * @param {string} email
+                 * @param {string} url
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createMagicURLSession: (email, url) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof email === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "email"');
+                    }
+                    let path = '/account/sessions/magic-url';
+                    let payload = {};
+                    if (typeof email !== 'undefined') {
+                        payload['email'] = email;
+                    }
+                    if (typeof url !== 'undefined') {
+                        payload['url'] = url;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Magic URL session (confirmation)
+                 *
+                 * Use this endpoint to complete creating the session with the Magic URL. Both
+                 * the **userId** and **secret** arguments will be passed as query parameters
+                 * to the redirect URL you have provided when sending your request to the
+                 * [POST
+                 * /account/sessions/magic-url](/docs/client/account#accountCreateMagicURLSession)
+                 * endpoint.
+                 *
+                 * Please note that in order to avoid a [Redirect
+                 * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+                 * the only valid redirect URLs are the ones from domains you have set when
+                 * adding your platforms in the console interface.
+                 *
+                 * @param {string} userId
+                 * @param {string} secret
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateMagicURLSession: (userId, secret) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof secret === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "secret"');
+                    }
+                    let path = '/account/sessions/magic-url';
+                    let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
+                    if (typeof secret !== 'undefined') {
+                        payload['secret'] = secret;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('put', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Create Account Session with OAuth2
                  *
                  * Allow the user to login to their account using the OAuth2 provider of their
                  * choice. Each OAuth2 provider should be enabled from the Appwrite console
                  * first. Use the success and failure arguments to provide a redirect URL's
                  * back to your app when login is completed.
+                 *
+                 * If there is already an active session, the new session will be attached to
+                 * the logged-in account. If there are no active sessions, the server will
+                 * attempt to look for a user with the same email address as the email
+                 * received from the OAuth2 provider and attach the new session to the
+                 * existing user. If no matching user is found - the server will create a new
+                 * user..
+                 *
                  *
                  * @param {string} provider
                  * @param {string} success
@@ -477,19 +691,19 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {void|string}
                  */
-                createOAuth2Session: (provider, success = 'https://appwrite.io/auth/oauth2/success', failure = 'https://appwrite.io/auth/oauth2/failure', scopes = []) => {
-                    if (provider === undefined) {
+                createOAuth2Session: (provider, success, failure, scopes) => {
+                    if (typeof provider === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "provider"');
                     }
                     let path = '/account/sessions/oauth2/{provider}'.replace('{provider}', provider);
                     let payload = {};
-                    if (success) {
+                    if (typeof success !== 'undefined') {
                         payload['success'] = success;
                     }
-                    if (failure) {
+                    if (typeof failure !== 'undefined') {
                         payload['failure'] = failure;
                     }
-                    if (scopes) {
+                    if (typeof scopes !== 'undefined') {
                         payload['scopes'] = scopes;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -505,6 +719,27 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                     }
                 },
                 /**
+                 * Get Session By ID
+                 *
+                 * Use this endpoint to get a logged in user's session using a Session ID.
+                 * Inputting 'current' will return the current session being used.
+                 *
+                 * @param {string} sessionId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getSession: (sessionId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof sessionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "sessionId"');
+                    }
+                    let path = '/account/sessions/{sessionId}'.replace('{sessionId}', sessionId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Delete Account Session
                  *
                  * Use this endpoint to log out the currently logged in user from all their
@@ -516,7 +751,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 deleteSession: (sessionId) => __awaiter(this, void 0, void 0, function* () {
-                    if (sessionId === undefined) {
+                    if (typeof sessionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "sessionId"');
                     }
                     let path = '/account/sessions/{sessionId}'.replace('{sessionId}', sessionId);
@@ -550,7 +785,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 createVerification: (url) => __awaiter(this, void 0, void 0, function* () {
-                    if (url === undefined) {
+                    if (typeof url === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "url"');
                     }
                     let path = '/account/verification';
@@ -564,7 +799,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                     }, payload);
                 }),
                 /**
-                 * Complete Email Verification
+                 * Create Email Verification (confirmation)
                  *
                  * Use this endpoint to complete the user email verification process. Use both
                  * the **userId** and **secret** parameters that were attached to your app URL
@@ -577,10 +812,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 updateVerification: (userId, secret) => __awaiter(this, void 0, void 0, function* () {
-                    if (userId === undefined) {
+                    if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
-                    if (secret === undefined) {
+                    if (typeof secret === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "secret"');
                     }
                     let path = '/account/verification';
@@ -613,19 +848,19 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {URL}
                  */
-                getBrowser: (code, width = 100, height = 100, quality = 100) => {
-                    if (code === undefined) {
+                getBrowser: (code, width, height, quality) => {
+                    if (typeof code === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "code"');
                     }
                     let path = '/avatars/browsers/{code}'.replace('{code}', code);
                     let payload = {};
-                    if (width) {
+                    if (typeof width !== 'undefined') {
                         payload['width'] = width;
                     }
-                    if (height) {
+                    if (typeof height !== 'undefined') {
                         payload['height'] = height;
                     }
-                    if (quality) {
+                    if (typeof quality !== 'undefined') {
                         payload['quality'] = quality;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -649,19 +884,19 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {URL}
                  */
-                getCreditCard: (code, width = 100, height = 100, quality = 100) => {
-                    if (code === undefined) {
+                getCreditCard: (code, width, height, quality) => {
+                    if (typeof code === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "code"');
                     }
                     let path = '/avatars/credit-cards/{code}'.replace('{code}', code);
                     let payload = {};
-                    if (width) {
+                    if (typeof width !== 'undefined') {
                         payload['width'] = width;
                     }
-                    if (height) {
+                    if (typeof height !== 'undefined') {
                         payload['height'] = height;
                     }
-                    if (quality) {
+                    if (typeof quality !== 'undefined') {
                         payload['quality'] = quality;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -683,12 +918,12 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {URL}
                  */
                 getFavicon: (url) => {
-                    if (url === undefined) {
+                    if (typeof url === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "url"');
                     }
                     let path = '/avatars/favicon';
                     let payload = {};
-                    if (url) {
+                    if (typeof url !== 'undefined') {
                         payload['url'] = url;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -712,19 +947,19 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {URL}
                  */
-                getFlag: (code, width = 100, height = 100, quality = 100) => {
-                    if (code === undefined) {
+                getFlag: (code, width, height, quality) => {
+                    if (typeof code === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "code"');
                     }
                     let path = '/avatars/flags/{code}'.replace('{code}', code);
                     let payload = {};
-                    if (width) {
+                    if (typeof width !== 'undefined') {
                         payload['width'] = width;
                     }
-                    if (height) {
+                    if (typeof height !== 'undefined') {
                         payload['height'] = height;
                     }
-                    if (quality) {
+                    if (typeof quality !== 'undefined') {
                         payload['quality'] = quality;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -748,19 +983,19 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {URL}
                  */
-                getImage: (url, width = 400, height = 400) => {
-                    if (url === undefined) {
+                getImage: (url, width, height) => {
+                    if (typeof url === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "url"');
                     }
                     let path = '/avatars/image';
                     let payload = {};
-                    if (url) {
+                    if (typeof url !== 'undefined') {
                         payload['url'] = url;
                     }
-                    if (width) {
+                    if (typeof width !== 'undefined') {
                         payload['width'] = width;
                     }
-                    if (height) {
+                    if (typeof height !== 'undefined') {
                         payload['height'] = height;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -792,22 +1027,22 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {URL}
                  */
-                getInitials: (name = '', width = 500, height = 500, color = '', background = '') => {
+                getInitials: (name, width, height, color, background) => {
                     let path = '/avatars/initials';
                     let payload = {};
-                    if (name) {
+                    if (typeof name !== 'undefined') {
                         payload['name'] = name;
                     }
-                    if (width) {
+                    if (typeof width !== 'undefined') {
                         payload['width'] = width;
                     }
-                    if (height) {
+                    if (typeof height !== 'undefined') {
                         payload['height'] = height;
                     }
-                    if (color) {
+                    if (typeof color !== 'undefined') {
                         payload['color'] = color;
                     }
-                    if (background) {
+                    if (typeof background !== 'undefined') {
                         payload['background'] = background;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -830,22 +1065,22 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {URL}
                  */
-                getQR: (text, size = 400, margin = 1, download = false) => {
-                    if (text === undefined) {
+                getQR: (text, size, margin, download) => {
+                    if (typeof text === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "text"');
                     }
                     let path = '/avatars/qr';
                     let payload = {};
-                    if (text) {
+                    if (typeof text !== 'undefined') {
                         payload['text'] = text;
                     }
-                    if (size) {
+                    if (typeof size !== 'undefined') {
                         payload['size'] = size;
                     }
-                    if (margin) {
+                    if (typeof margin !== 'undefined') {
                         payload['margin'] = margin;
                     }
-                    if (download) {
+                    if (typeof download !== 'undefined') {
                         payload['download'] = download;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -872,19 +1107,19 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listCollections: (search = '', limit = 25, offset = 0, orderType = 'ASC') => __awaiter(this, void 0, void 0, function* () {
+                listCollections: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/database/collections';
                     let payload = {};
-                    if (search) {
+                    if (typeof search !== 'undefined') {
                         payload['search'] = search;
                     }
-                    if (limit) {
+                    if (typeof limit !== 'undefined') {
                         payload['limit'] = limit;
                     }
-                    if (offset) {
+                    if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (orderType) {
+                    if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -905,16 +1140,16 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 createCollection: (name, read, write, rules) => __awaiter(this, void 0, void 0, function* () {
-                    if (name === undefined) {
+                    if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
-                    if (read === undefined) {
+                    if (typeof read === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "read"');
                     }
-                    if (write === undefined) {
+                    if (typeof write === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "write"');
                     }
-                    if (rules === undefined) {
+                    if (typeof rules === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "rules"');
                     }
                     let path = '/database/collections';
@@ -947,7 +1182,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 getCollection: (collectionId) => __awaiter(this, void 0, void 0, function* () {
-                    if (collectionId === undefined) {
+                    if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
                     let path = '/database/collections/{collectionId}'.replace('{collectionId}', collectionId);
@@ -970,11 +1205,11 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateCollection: (collectionId, name, read = [], write = [], rules = []) => __awaiter(this, void 0, void 0, function* () {
-                    if (collectionId === undefined) {
+                updateCollection: (collectionId, name, read, write, rules) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (name === undefined) {
+                    if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
                     let path = '/database/collections/{collectionId}'.replace('{collectionId}', collectionId);
@@ -1007,7 +1242,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 deleteCollection: (collectionId) => __awaiter(this, void 0, void 0, function* () {
-                    if (collectionId === undefined) {
+                    if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
                     let path = '/database/collections/{collectionId}'.replace('{collectionId}', collectionId);
@@ -1036,31 +1271,31 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listDocuments: (collectionId, filters = [], limit = 25, offset = 0, orderField = '', orderType = 'ASC', orderCast = 'string', search = '') => __awaiter(this, void 0, void 0, function* () {
-                    if (collectionId === undefined) {
+                listDocuments: (collectionId, filters, limit, offset, orderField, orderType, orderCast, search) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
                     let path = '/database/collections/{collectionId}/documents'.replace('{collectionId}', collectionId);
                     let payload = {};
-                    if (filters) {
+                    if (typeof filters !== 'undefined') {
                         payload['filters'] = filters;
                     }
-                    if (limit) {
+                    if (typeof limit !== 'undefined') {
                         payload['limit'] = limit;
                     }
-                    if (offset) {
+                    if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (orderField) {
+                    if (typeof orderField !== 'undefined') {
                         payload['orderField'] = orderField;
                     }
-                    if (orderType) {
+                    if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
                     }
-                    if (orderCast) {
+                    if (typeof orderCast !== 'undefined') {
                         payload['orderCast'] = orderCast;
                     }
-                    if (search) {
+                    if (typeof search !== 'undefined') {
                         payload['search'] = search;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -1086,11 +1321,11 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createDocument: (collectionId, data, read = [], write = [], parentDocument = '', parentProperty = '', parentPropertyType = 'assign') => __awaiter(this, void 0, void 0, function* () {
-                    if (collectionId === undefined) {
+                createDocument: (collectionId, data, read, write, parentDocument, parentProperty, parentPropertyType) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (data === undefined) {
+                    if (typeof data === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "data"');
                     }
                     let path = '/database/collections/{collectionId}/documents'.replace('{collectionId}', collectionId);
@@ -1130,10 +1365,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 getDocument: (collectionId, documentId) => __awaiter(this, void 0, void 0, function* () {
-                    if (collectionId === undefined) {
+                    if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (documentId === undefined) {
+                    if (typeof documentId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "documentId"');
                     }
                     let path = '/database/collections/{collectionId}/documents/{documentId}'.replace('{collectionId}', collectionId).replace('{documentId}', documentId);
@@ -1157,14 +1392,14 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateDocument: (collectionId, documentId, data, read = [], write = []) => __awaiter(this, void 0, void 0, function* () {
-                    if (collectionId === undefined) {
+                updateDocument: (collectionId, documentId, data, read, write) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (documentId === undefined) {
+                    if (typeof documentId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "documentId"');
                     }
-                    if (data === undefined) {
+                    if (typeof data === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "data"');
                     }
                     let path = '/database/collections/{collectionId}/documents/{documentId}'.replace('{collectionId}', collectionId).replace('{documentId}', documentId);
@@ -1196,10 +1431,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 deleteDocument: (collectionId, documentId) => __awaiter(this, void 0, void 0, function* () {
-                    if (collectionId === undefined) {
+                    if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (documentId === undefined) {
+                    if (typeof documentId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "documentId"');
                     }
                     let path = '/database/collections/{collectionId}/documents/{documentId}'.replace('{collectionId}', collectionId).replace('{documentId}', documentId);
@@ -1224,19 +1459,19 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search = '', limit = 25, offset = 0, orderType = 'ASC') => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/functions';
                     let payload = {};
-                    if (search) {
+                    if (typeof search !== 'undefined') {
                         payload['search'] = search;
                     }
-                    if (limit) {
+                    if (typeof limit !== 'undefined') {
                         payload['limit'] = limit;
                     }
-                    if (offset) {
+                    if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (orderType) {
+                    if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -1253,7 +1488,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  *
                  * @param {string} name
                  * @param {string[]} execute
-                 * @param {string} env
+                 * @param {string} runtime
                  * @param {object} vars
                  * @param {string[]} events
                  * @param {string} schedule
@@ -1261,15 +1496,15 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                create: (name, execute, env, vars = {}, events = [], schedule = '', timeout = 15) => __awaiter(this, void 0, void 0, function* () {
-                    if (name === undefined) {
+                create: (name, execute, runtime, vars, events, schedule, timeout) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
-                    if (execute === undefined) {
+                    if (typeof execute === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "execute"');
                     }
-                    if (env === undefined) {
-                        throw new AppwriteException('Missing required parameter: "env"');
+                    if (typeof runtime === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "runtime"');
                     }
                     let path = '/functions';
                     let payload = {};
@@ -1279,8 +1514,8 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                     if (typeof execute !== 'undefined') {
                         payload['execute'] = execute;
                     }
-                    if (typeof env !== 'undefined') {
-                        payload['env'] = env;
+                    if (typeof runtime !== 'undefined') {
+                        payload['runtime'] = runtime;
                     }
                     if (typeof vars !== 'undefined') {
                         payload['vars'] = vars;
@@ -1309,7 +1544,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 get: (functionId) => __awaiter(this, void 0, void 0, function* () {
-                    if (functionId === undefined) {
+                    if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
                     let path = '/functions/{functionId}'.replace('{functionId}', functionId);
@@ -1334,14 +1569,14 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                update: (functionId, name, execute, vars = {}, events = [], schedule = '', timeout = 15) => __awaiter(this, void 0, void 0, function* () {
-                    if (functionId === undefined) {
+                update: (functionId, name, execute, vars, events, schedule, timeout) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
-                    if (name === undefined) {
+                    if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
-                    if (execute === undefined) {
+                    if (typeof execute === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "execute"');
                     }
                     let path = '/functions/{functionId}'.replace('{functionId}', functionId);
@@ -1379,7 +1614,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 delete: (functionId) => __awaiter(this, void 0, void 0, function* () {
-                    if (functionId === undefined) {
+                    if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
                     let path = '/functions/{functionId}'.replace('{functionId}', functionId);
@@ -1405,22 +1640,22 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listExecutions: (functionId, search = '', limit = 25, offset = 0, orderType = 'ASC') => __awaiter(this, void 0, void 0, function* () {
-                    if (functionId === undefined) {
+                listExecutions: (functionId, search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
                     let path = '/functions/{functionId}/executions'.replace('{functionId}', functionId);
                     let payload = {};
-                    if (search) {
+                    if (typeof search !== 'undefined') {
                         payload['search'] = search;
                     }
-                    if (limit) {
+                    if (typeof limit !== 'undefined') {
                         payload['limit'] = limit;
                     }
-                    if (offset) {
+                    if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (orderType) {
+                    if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -1441,8 +1676,8 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createExecution: (functionId, data = '') => __awaiter(this, void 0, void 0, function* () {
-                    if (functionId === undefined) {
+                createExecution: (functionId, data) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
                     let path = '/functions/{functionId}/executions'.replace('{functionId}', functionId);
@@ -1466,10 +1701,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 getExecution: (functionId, executionId) => __awaiter(this, void 0, void 0, function* () {
-                    if (functionId === undefined) {
+                    if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
-                    if (executionId === undefined) {
+                    if (typeof executionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "executionId"');
                     }
                     let path = '/functions/{functionId}/executions/{executionId}'.replace('{functionId}', functionId).replace('{executionId}', executionId);
@@ -1492,10 +1727,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 updateTag: (functionId, tag) => __awaiter(this, void 0, void 0, function* () {
-                    if (functionId === undefined) {
+                    if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
-                    if (tag === undefined) {
+                    if (typeof tag === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "tag"');
                     }
                     let path = '/functions/{functionId}/tag'.replace('{functionId}', functionId);
@@ -1522,22 +1757,22 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listTags: (functionId, search = '', limit = 25, offset = 0, orderType = 'ASC') => __awaiter(this, void 0, void 0, function* () {
-                    if (functionId === undefined) {
+                listTags: (functionId, search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
                     let path = '/functions/{functionId}/tags'.replace('{functionId}', functionId);
                     let payload = {};
-                    if (search) {
+                    if (typeof search !== 'undefined') {
                         payload['search'] = search;
                     }
-                    if (limit) {
+                    if (typeof limit !== 'undefined') {
                         payload['limit'] = limit;
                     }
-                    if (offset) {
+                    if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (orderType) {
+                    if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -1566,13 +1801,13 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 createTag: (functionId, command, code) => __awaiter(this, void 0, void 0, function* () {
-                    if (functionId === undefined) {
+                    if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
-                    if (command === undefined) {
+                    if (typeof command === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "command"');
                     }
-                    if (code === undefined) {
+                    if (typeof code === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "code"');
                     }
                     let path = '/functions/{functionId}/tags'.replace('{functionId}', functionId);
@@ -1599,10 +1834,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 getTag: (functionId, tagId) => __awaiter(this, void 0, void 0, function* () {
-                    if (functionId === undefined) {
+                    if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
-                    if (tagId === undefined) {
+                    if (typeof tagId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "tagId"');
                     }
                     let path = '/functions/{functionId}/tags/{tagId}'.replace('{functionId}', functionId).replace('{tagId}', tagId);
@@ -1623,10 +1858,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 deleteTag: (functionId, tagId) => __awaiter(this, void 0, void 0, function* () {
-                    if (functionId === undefined) {
+                    if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
-                    if (tagId === undefined) {
+                    if (typeof tagId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "tagId"');
                     }
                     let path = '/functions/{functionId}/tags/{tagId}'.replace('{functionId}', functionId).replace('{tagId}', tagId);
@@ -1645,13 +1880,13 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getUsage: (functionId, range = '30d') => __awaiter(this, void 0, void 0, function* () {
-                    if (functionId === undefined) {
+                getUsage: (functionId, range) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
                     let path = '/functions/{functionId}/usage'.replace('{functionId}', functionId);
                     let payload = {};
-                    if (range) {
+                    if (typeof range !== 'undefined') {
                         payload['range'] = range;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -2004,19 +2239,19 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search = '', limit = 25, offset = 0, orderType = 'ASC') => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/projects';
                     let payload = {};
-                    if (search) {
+                    if (typeof search !== 'undefined') {
                         payload['search'] = search;
                     }
-                    if (limit) {
+                    if (typeof limit !== 'undefined') {
                         payload['limit'] = limit;
                     }
-                    if (offset) {
+                    if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (orderType) {
+                    if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -2042,11 +2277,11 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                create: (name, teamId, description = '', logo = '', url = '', legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '') => __awaiter(this, void 0, void 0, function* () {
-                    if (name === undefined) {
+                create: (name, teamId, description, logo, url, legalName, legalCountry, legalState, legalCity, legalAddress, legalTaxId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
-                    if (teamId === undefined) {
+                    if (typeof teamId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "teamId"');
                     }
                     let path = '/projects';
@@ -2098,7 +2333,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 get: (projectId) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
                     let path = '/projects/{projectId}'.replace('{projectId}', projectId);
@@ -2126,11 +2361,11 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                update: (projectId, name, description = '', logo = '', url = '', legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '') => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                update: (projectId, name, description, logo, url, legalName, legalCountry, legalState, legalCity, legalAddress, legalTaxId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (name === undefined) {
+                    if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
                     let path = '/projects/{projectId}'.replace('{projectId}', projectId);
@@ -2180,10 +2415,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 delete: (projectId, password) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (password === undefined) {
+                    if (typeof password === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "password"');
                     }
                     let path = '/projects/{projectId}'.replace('{projectId}', projectId);
@@ -2201,15 +2436,15 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  *
                  *
                  * @param {string} projectId
-                 * @param {string} limit
+                 * @param {number} limit
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
                 updateAuthLimit: (projectId, limit) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (limit === undefined) {
+                    if (typeof limit === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "limit"');
                     }
                     let path = '/projects/{projectId}/auth/limit'.replace('{projectId}', projectId);
@@ -2233,13 +2468,13 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 updateAuthStatus: (projectId, method, status) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (method === undefined) {
+                    if (typeof method === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "method"');
                     }
-                    if (status === undefined) {
+                    if (typeof status === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "status"');
                     }
                     let path = '/projects/{projectId}/auth/{method}'.replace('{projectId}', projectId).replace('{method}', method);
@@ -2261,7 +2496,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 listDomains: (projectId) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
                     let path = '/projects/{projectId}/domains'.replace('{projectId}', projectId);
@@ -2281,10 +2516,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 createDomain: (projectId, domain) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (domain === undefined) {
+                    if (typeof domain === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "domain"');
                     }
                     let path = '/projects/{projectId}/domains'.replace('{projectId}', projectId);
@@ -2307,10 +2542,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 getDomain: (projectId, domainId) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (domainId === undefined) {
+                    if (typeof domainId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "domainId"');
                     }
                     let path = '/projects/{projectId}/domains/{domainId}'.replace('{projectId}', projectId).replace('{domainId}', domainId);
@@ -2330,10 +2565,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 deleteDomain: (projectId, domainId) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (domainId === undefined) {
+                    if (typeof domainId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "domainId"');
                     }
                     let path = '/projects/{projectId}/domains/{domainId}'.replace('{projectId}', projectId).replace('{domainId}', domainId);
@@ -2353,10 +2588,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 updateDomainVerification: (projectId, domainId) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (domainId === undefined) {
+                    if (typeof domainId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "domainId"');
                     }
                     let path = '/projects/{projectId}/domains/{domainId}/verification'.replace('{projectId}', projectId).replace('{domainId}', domainId);
@@ -2375,7 +2610,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 listKeys: (projectId) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
                     let path = '/projects/{projectId}/keys'.replace('{projectId}', projectId);
@@ -2396,13 +2631,13 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 createKey: (projectId, name, scopes) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (name === undefined) {
+                    if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
-                    if (scopes === undefined) {
+                    if (typeof scopes === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "scopes"');
                     }
                     let path = '/projects/{projectId}/keys'.replace('{projectId}', projectId);
@@ -2428,10 +2663,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 getKey: (projectId, keyId) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (keyId === undefined) {
+                    if (typeof keyId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "keyId"');
                     }
                     let path = '/projects/{projectId}/keys/{keyId}'.replace('{projectId}', projectId).replace('{keyId}', keyId);
@@ -2453,16 +2688,16 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 updateKey: (projectId, keyId, name, scopes) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (keyId === undefined) {
+                    if (typeof keyId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "keyId"');
                     }
-                    if (name === undefined) {
+                    if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
-                    if (scopes === undefined) {
+                    if (typeof scopes === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "scopes"');
                     }
                     let path = '/projects/{projectId}/keys/{keyId}'.replace('{projectId}', projectId).replace('{keyId}', keyId);
@@ -2488,10 +2723,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 deleteKey: (projectId, keyId) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (keyId === undefined) {
+                    if (typeof keyId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "keyId"');
                     }
                     let path = '/projects/{projectId}/keys/{keyId}'.replace('{projectId}', projectId).replace('{keyId}', keyId);
@@ -2512,11 +2747,11 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateOAuth2: (projectId, provider, appId = '', secret = '') => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                updateOAuth2: (projectId, provider, appId, secret) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (provider === undefined) {
+                    if (typeof provider === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "provider"');
                     }
                     let path = '/projects/{projectId}/oauth2'.replace('{projectId}', projectId);
@@ -2544,7 +2779,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 listPlatforms: (projectId) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
                     let path = '/projects/{projectId}/platforms'.replace('{projectId}', projectId);
@@ -2567,14 +2802,14 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createPlatform: (projectId, type, name, key = '', store = '', hostname = '') => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                createPlatform: (projectId, type, name, key, store, hostname) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (type === undefined) {
+                    if (typeof type === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "type"');
                     }
-                    if (name === undefined) {
+                    if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
                     let path = '/projects/{projectId}/platforms'.replace('{projectId}', projectId);
@@ -2609,10 +2844,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 getPlatform: (projectId, platformId) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (platformId === undefined) {
+                    if (typeof platformId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "platformId"');
                     }
                     let path = '/projects/{projectId}/platforms/{platformId}'.replace('{projectId}', projectId).replace('{platformId}', platformId);
@@ -2635,14 +2870,14 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updatePlatform: (projectId, platformId, name, key = '', store = '', hostname = '') => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                updatePlatform: (projectId, platformId, name, key, store, hostname) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (platformId === undefined) {
+                    if (typeof platformId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "platformId"');
                     }
-                    if (name === undefined) {
+                    if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
                     let path = '/projects/{projectId}/platforms/{platformId}'.replace('{projectId}', projectId).replace('{platformId}', platformId);
@@ -2674,10 +2909,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 deletePlatform: (projectId, platformId) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (platformId === undefined) {
+                    if (typeof platformId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "platformId"');
                     }
                     let path = '/projects/{projectId}/platforms/{platformId}'.replace('{projectId}', projectId).replace('{platformId}', platformId);
@@ -2696,7 +2931,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 listTasks: (projectId) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
                     let path = '/projects/{projectId}/tasks'.replace('{projectId}', projectId);
@@ -2723,26 +2958,26 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createTask: (projectId, name, status, schedule, security, httpMethod, httpUrl, httpHeaders = [], httpUser = '', httpPass = '') => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                createTask: (projectId, name, status, schedule, security, httpMethod, httpUrl, httpHeaders, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (name === undefined) {
+                    if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
-                    if (status === undefined) {
+                    if (typeof status === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "status"');
                     }
-                    if (schedule === undefined) {
+                    if (typeof schedule === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "schedule"');
                     }
-                    if (security === undefined) {
+                    if (typeof security === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "security"');
                     }
-                    if (httpMethod === undefined) {
+                    if (typeof httpMethod === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "httpMethod"');
                     }
-                    if (httpUrl === undefined) {
+                    if (typeof httpUrl === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "httpUrl"');
                     }
                     let path = '/projects/{projectId}/tasks'.replace('{projectId}', projectId);
@@ -2789,10 +3024,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 getTask: (projectId, taskId) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (taskId === undefined) {
+                    if (typeof taskId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "taskId"');
                     }
                     let path = '/projects/{projectId}/tasks/{taskId}'.replace('{projectId}', projectId).replace('{taskId}', taskId);
@@ -2820,29 +3055,29 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateTask: (projectId, taskId, name, status, schedule, security, httpMethod, httpUrl, httpHeaders = [], httpUser = '', httpPass = '') => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                updateTask: (projectId, taskId, name, status, schedule, security, httpMethod, httpUrl, httpHeaders, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (taskId === undefined) {
+                    if (typeof taskId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "taskId"');
                     }
-                    if (name === undefined) {
+                    if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
-                    if (status === undefined) {
+                    if (typeof status === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "status"');
                     }
-                    if (schedule === undefined) {
+                    if (typeof schedule === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "schedule"');
                     }
-                    if (security === undefined) {
+                    if (typeof security === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "security"');
                     }
-                    if (httpMethod === undefined) {
+                    if (typeof httpMethod === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "httpMethod"');
                     }
-                    if (httpUrl === undefined) {
+                    if (typeof httpUrl === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "httpUrl"');
                     }
                     let path = '/projects/{projectId}/tasks/{taskId}'.replace('{projectId}', projectId).replace('{taskId}', taskId);
@@ -2889,10 +3124,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 deleteTask: (projectId, taskId) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (taskId === undefined) {
+                    if (typeof taskId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "taskId"');
                     }
                     let path = '/projects/{projectId}/tasks/{taskId}'.replace('{projectId}', projectId).replace('{taskId}', taskId);
@@ -2911,13 +3146,13 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getUsage: (projectId, range = '30d') => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                getUsage: (projectId, range) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
                     let path = '/projects/{projectId}/usage'.replace('{projectId}', projectId);
                     let payload = {};
-                    if (range) {
+                    if (typeof range !== 'undefined') {
                         payload['range'] = range;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -2934,7 +3169,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 listWebhooks: (projectId) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
                     let path = '/projects/{projectId}/webhooks'.replace('{projectId}', projectId);
@@ -2958,20 +3193,20 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createWebhook: (projectId, name, events, url, security, httpUser = '', httpPass = '') => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                createWebhook: (projectId, name, events, url, security, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (name === undefined) {
+                    if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
-                    if (events === undefined) {
+                    if (typeof events === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "events"');
                     }
-                    if (url === undefined) {
+                    if (typeof url === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "url"');
                     }
-                    if (security === undefined) {
+                    if (typeof security === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "security"');
                     }
                     let path = '/projects/{projectId}/webhooks'.replace('{projectId}', projectId);
@@ -3009,10 +3244,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 getWebhook: (projectId, webhookId) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (webhookId === undefined) {
+                    if (typeof webhookId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "webhookId"');
                     }
                     let path = '/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}', projectId).replace('{webhookId}', webhookId);
@@ -3037,23 +3272,23 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateWebhook: (projectId, webhookId, name, events, url, security, httpUser = '', httpPass = '') => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                updateWebhook: (projectId, webhookId, name, events, url, security, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (webhookId === undefined) {
+                    if (typeof webhookId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "webhookId"');
                     }
-                    if (name === undefined) {
+                    if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
-                    if (events === undefined) {
+                    if (typeof events === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "events"');
                     }
-                    if (url === undefined) {
+                    if (typeof url === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "url"');
                     }
-                    if (security === undefined) {
+                    if (typeof security === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "security"');
                     }
                     let path = '/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}', projectId).replace('{webhookId}', webhookId);
@@ -3091,10 +3326,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 deleteWebhook: (projectId, webhookId) => __awaiter(this, void 0, void 0, function* () {
-                    if (projectId === undefined) {
+                    if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    if (webhookId === undefined) {
+                    if (typeof webhookId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "webhookId"');
                     }
                     let path = '/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}', projectId).replace('{webhookId}', webhookId);
@@ -3120,19 +3355,19 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listFiles: (search = '', limit = 25, offset = 0, orderType = 'ASC') => __awaiter(this, void 0, void 0, function* () {
+                listFiles: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/storage/files';
                     let payload = {};
-                    if (search) {
+                    if (typeof search !== 'undefined') {
                         payload['search'] = search;
                     }
-                    if (limit) {
+                    if (typeof limit !== 'undefined') {
                         payload['limit'] = limit;
                     }
-                    if (offset) {
+                    if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (orderType) {
+                    if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -3153,8 +3388,8 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createFile: (file, read = [], write = []) => __awaiter(this, void 0, void 0, function* () {
-                    if (file === undefined) {
+                createFile: (file, read, write) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof file === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "file"');
                     }
                     let path = '/storage/files';
@@ -3184,7 +3419,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 getFile: (fileId) => __awaiter(this, void 0, void 0, function* () {
-                    if (fileId === undefined) {
+                    if (typeof fileId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "fileId"');
                     }
                     let path = '/storage/files/{fileId}'.replace('{fileId}', fileId);
@@ -3207,13 +3442,13 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 updateFile: (fileId, read, write) => __awaiter(this, void 0, void 0, function* () {
-                    if (fileId === undefined) {
+                    if (typeof fileId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "fileId"');
                     }
-                    if (read === undefined) {
+                    if (typeof read === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "read"');
                     }
-                    if (write === undefined) {
+                    if (typeof write === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "write"');
                     }
                     let path = '/storage/files/{fileId}'.replace('{fileId}', fileId);
@@ -3240,7 +3475,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 deleteFile: (fileId) => __awaiter(this, void 0, void 0, function* () {
-                    if (fileId === undefined) {
+                    if (typeof fileId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "fileId"');
                     }
                     let path = '/storage/files/{fileId}'.replace('{fileId}', fileId);
@@ -3262,7 +3497,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {URL}
                  */
                 getFileDownload: (fileId) => {
-                    if (fileId === undefined) {
+                    if (typeof fileId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "fileId"');
                     }
                     let path = '/storage/files/{fileId}/download'.replace('{fileId}', fileId);
@@ -3285,6 +3520,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @param {string} fileId
                  * @param {number} width
                  * @param {number} height
+                 * @param {string} gravity
                  * @param {number} quality
                  * @param {number} borderWidth
                  * @param {string} borderColor
@@ -3296,40 +3532,43 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {URL}
                  */
-                getFilePreview: (fileId, width = 0, height = 0, quality = 100, borderWidth = 0, borderColor = '', borderRadius = 0, opacity = 1, rotation = 0, background = '', output = '') => {
-                    if (fileId === undefined) {
+                getFilePreview: (fileId, width, height, gravity, quality, borderWidth, borderColor, borderRadius, opacity, rotation, background, output) => {
+                    if (typeof fileId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "fileId"');
                     }
                     let path = '/storage/files/{fileId}/preview'.replace('{fileId}', fileId);
                     let payload = {};
-                    if (width) {
+                    if (typeof width !== 'undefined') {
                         payload['width'] = width;
                     }
-                    if (height) {
+                    if (typeof height !== 'undefined') {
                         payload['height'] = height;
                     }
-                    if (quality) {
+                    if (typeof gravity !== 'undefined') {
+                        payload['gravity'] = gravity;
+                    }
+                    if (typeof quality !== 'undefined') {
                         payload['quality'] = quality;
                     }
-                    if (borderWidth) {
+                    if (typeof borderWidth !== 'undefined') {
                         payload['borderWidth'] = borderWidth;
                     }
-                    if (borderColor) {
+                    if (typeof borderColor !== 'undefined') {
                         payload['borderColor'] = borderColor;
                     }
-                    if (borderRadius) {
+                    if (typeof borderRadius !== 'undefined') {
                         payload['borderRadius'] = borderRadius;
                     }
-                    if (opacity) {
+                    if (typeof opacity !== 'undefined') {
                         payload['opacity'] = opacity;
                     }
-                    if (rotation) {
+                    if (typeof rotation !== 'undefined') {
                         payload['rotation'] = rotation;
                     }
-                    if (background) {
+                    if (typeof background !== 'undefined') {
                         payload['background'] = background;
                     }
-                    if (output) {
+                    if (typeof output !== 'undefined') {
                         payload['output'] = output;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -3351,7 +3590,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {URL}
                  */
                 getFileView: (fileId) => {
-                    if (fileId === undefined) {
+                    if (typeof fileId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "fileId"');
                     }
                     let path = '/storage/files/{fileId}/view'.replace('{fileId}', fileId);
@@ -3380,19 +3619,19 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search = '', limit = 25, offset = 0, orderType = 'ASC') => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/teams';
                     let payload = {};
-                    if (search) {
+                    if (typeof search !== 'undefined') {
                         payload['search'] = search;
                     }
-                    if (limit) {
+                    if (typeof limit !== 'undefined') {
                         payload['limit'] = limit;
                     }
-                    if (offset) {
+                    if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (orderType) {
+                    if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -3413,8 +3652,8 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                create: (name, roles = ["owner"]) => __awaiter(this, void 0, void 0, function* () {
-                    if (name === undefined) {
+                create: (name, roles) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
                     let path = '/teams';
@@ -3441,7 +3680,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 get: (teamId) => __awaiter(this, void 0, void 0, function* () {
-                    if (teamId === undefined) {
+                    if (typeof teamId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "teamId"');
                     }
                     let path = '/teams/{teamId}'.replace('{teamId}', teamId);
@@ -3463,10 +3702,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 update: (teamId, name) => __awaiter(this, void 0, void 0, function* () {
-                    if (teamId === undefined) {
+                    if (typeof teamId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "teamId"');
                     }
-                    if (name === undefined) {
+                    if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
                     let path = '/teams/{teamId}'.replace('{teamId}', teamId);
@@ -3490,7 +3729,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 delete: (teamId) => __awaiter(this, void 0, void 0, function* () {
-                    if (teamId === undefined) {
+                    if (typeof teamId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "teamId"');
                     }
                     let path = '/teams/{teamId}'.replace('{teamId}', teamId);
@@ -3514,22 +3753,22 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getMemberships: (teamId, search = '', limit = 25, offset = 0, orderType = 'ASC') => __awaiter(this, void 0, void 0, function* () {
-                    if (teamId === undefined) {
+                getMemberships: (teamId, search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof teamId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "teamId"');
                     }
                     let path = '/teams/{teamId}/memberships'.replace('{teamId}', teamId);
                     let payload = {};
-                    if (search) {
+                    if (typeof search !== 'undefined') {
                         payload['search'] = search;
                     }
-                    if (limit) {
+                    if (typeof limit !== 'undefined') {
                         payload['limit'] = limit;
                     }
-                    if (offset) {
+                    if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (orderType) {
+                    if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -3540,14 +3779,17 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                 /**
                  * Create Team Membership
                  *
-                 * Use this endpoint to invite a new member to join your team. An email with a
-                 * link to join the team will be sent to the new member email address if the
-                 * member doesn't exist in the project it will be created automatically.
+                 * Use this endpoint to invite a new member to join your team. If initiated
+                 * from Client SDK, an email with a link to join the team will be sent to the
+                 * new member's email address if the member doesn't exist in the project it
+                 * will be created automatically. If initiated from server side SDKs, new
+                 * member will automatically be added to the team.
                  *
                  * Use the 'URL' parameter to redirect the user from the invitation email back
                  * to your app. When the user is redirected, use the [Update Team Membership
                  * Status](/docs/client/teams#teamsUpdateMembershipStatus) endpoint to allow
-                 * the user to accept the invitation to the team.
+                 * the user to accept the invitation to the team.  While calling from side
+                 * SDKs the redirect url can be empty string.
                  *
                  * Please note that in order to avoid a [Redirect
                  * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
@@ -3562,17 +3804,17 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createMembership: (teamId, email, roles, url, name = '') => __awaiter(this, void 0, void 0, function* () {
-                    if (teamId === undefined) {
+                createMembership: (teamId, email, roles, url, name) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof teamId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "teamId"');
                     }
-                    if (email === undefined) {
+                    if (typeof email === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "email"');
                     }
-                    if (roles === undefined) {
+                    if (typeof roles === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "roles"');
                     }
-                    if (url === undefined) {
+                    if (typeof url === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "url"');
                     }
                     let path = '/teams/{teamId}/memberships'.replace('{teamId}', teamId);
@@ -3605,13 +3847,13 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 updateMembershipRoles: (teamId, membershipId, roles) => __awaiter(this, void 0, void 0, function* () {
-                    if (teamId === undefined) {
+                    if (typeof teamId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "teamId"');
                     }
-                    if (membershipId === undefined) {
+                    if (typeof membershipId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "membershipId"');
                     }
-                    if (roles === undefined) {
+                    if (typeof roles === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "roles"');
                     }
                     let path = '/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
@@ -3637,10 +3879,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 deleteMembership: (teamId, membershipId) => __awaiter(this, void 0, void 0, function* () {
-                    if (teamId === undefined) {
+                    if (typeof teamId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "teamId"');
                     }
-                    if (membershipId === undefined) {
+                    if (typeof membershipId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "membershipId"');
                     }
                     let path = '/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
@@ -3665,16 +3907,16 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 updateMembershipStatus: (teamId, membershipId, userId, secret) => __awaiter(this, void 0, void 0, function* () {
-                    if (teamId === undefined) {
+                    if (typeof teamId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "teamId"');
                     }
-                    if (membershipId === undefined) {
+                    if (typeof membershipId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "membershipId"');
                     }
-                    if (userId === undefined) {
+                    if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
-                    if (secret === undefined) {
+                    if (typeof secret === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "secret"');
                     }
                     let path = '/teams/{teamId}/memberships/{membershipId}/status'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
@@ -3705,19 +3947,19 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search = '', limit = 25, offset = 0, orderType = 'ASC') => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/users';
                     let payload = {};
-                    if (search) {
+                    if (typeof search !== 'undefined') {
                         payload['search'] = search;
                     }
-                    if (limit) {
+                    if (typeof limit !== 'undefined') {
                         payload['limit'] = limit;
                     }
-                    if (offset) {
+                    if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (orderType) {
+                    if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
                     }
                     const uri = new URL(this.config.endpoint + path);
@@ -3736,11 +3978,11 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                create: (email, password, name = '') => __awaiter(this, void 0, void 0, function* () {
-                    if (email === undefined) {
+                create: (email, password, name) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof email === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "email"');
                     }
-                    if (password === undefined) {
+                    if (typeof password === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "password"');
                     }
                     let path = '/users';
@@ -3769,7 +4011,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 get: (userId) => __awaiter(this, void 0, void 0, function* () {
-                    if (userId === undefined) {
+                    if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
                     let path = '/users/{userId}'.replace('{userId}', userId);
@@ -3789,13 +4031,40 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 delete: (userId) => __awaiter(this, void 0, void 0, function* () {
-                    if (userId === undefined) {
+                    if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
                     let path = '/users/{userId}'.replace('{userId}', userId);
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('delete', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Email
+                 *
+                 * Update the user email by its unique ID.
+                 *
+                 * @param {string} userId
+                 * @param {string} email
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateEmail: (userId, email) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof email === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "email"');
+                    }
+                    let path = '/users/{userId}/email'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof email !== 'undefined') {
+                        payload['email'] = email;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
@@ -3809,13 +4078,67 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 getLogs: (userId) => __awaiter(this, void 0, void 0, function* () {
-                    if (userId === undefined) {
+                    if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
                     let path = '/users/{userId}/logs'.replace('{userId}', userId);
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Name
+                 *
+                 * Update the user name by its unique ID.
+                 *
+                 * @param {string} userId
+                 * @param {string} name
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateName: (userId, name) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof name === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "name"');
+                    }
+                    let path = '/users/{userId}/name'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof name !== 'undefined') {
+                        payload['name'] = name;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Password
+                 *
+                 * Update the user password by its unique ID.
+                 *
+                 * @param {string} userId
+                 * @param {string} password
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updatePassword: (userId, password) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof password === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "password"');
+                    }
+                    let path = '/users/{userId}/password'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof password !== 'undefined') {
+                        payload['password'] = password;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
@@ -3829,7 +4152,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 getPrefs: (userId) => __awaiter(this, void 0, void 0, function* () {
-                    if (userId === undefined) {
+                    if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
                     let path = '/users/{userId}/prefs'.replace('{userId}', userId);
@@ -3851,10 +4174,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 updatePrefs: (userId, prefs) => __awaiter(this, void 0, void 0, function* () {
-                    if (userId === undefined) {
+                    if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
-                    if (prefs === undefined) {
+                    if (typeof prefs === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "prefs"');
                     }
                     let path = '/users/{userId}/prefs'.replace('{userId}', userId);
@@ -3877,7 +4200,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 getSessions: (userId) => __awaiter(this, void 0, void 0, function* () {
-                    if (userId === undefined) {
+                    if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
                     let path = '/users/{userId}/sessions'.replace('{userId}', userId);
@@ -3897,7 +4220,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 deleteSessions: (userId) => __awaiter(this, void 0, void 0, function* () {
-                    if (userId === undefined) {
+                    if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
                     let path = '/users/{userId}/sessions'.replace('{userId}', userId);
@@ -3918,10 +4241,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 deleteSession: (userId, sessionId) => __awaiter(this, void 0, void 0, function* () {
-                    if (userId === undefined) {
+                    if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
-                    if (sessionId === undefined) {
+                    if (typeof sessionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "sessionId"');
                     }
                     let path = '/users/{userId}/sessions/{sessionId}'.replace('{userId}', userId).replace('{sessionId}', sessionId);
@@ -3942,10 +4265,10 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                  * @returns {Promise}
                  */
                 updateStatus: (userId, status) => __awaiter(this, void 0, void 0, function* () {
-                    if (userId === undefined) {
+                    if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
-                    if (status === undefined) {
+                    if (typeof status === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "status"');
                     }
                     let path = '/users/{userId}/status'.replace('{userId}', userId);
@@ -3957,13 +4280,40 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                     return yield this.call('patch', uri, {
                         'content-type': 'application/json',
                     }, payload);
+                }),
+                /**
+                 * Update Email Verification
+                 *
+                 * Update the user email verification status by its unique ID.
+                 *
+                 * @param {string} userId
+                 * @param {boolean} emailVerification
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateVerification: (userId, emailVerification) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof emailVerification === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "emailVerification"');
+                    }
+                    let path = '/users/{userId}/verification'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof emailVerification !== 'undefined') {
+                        payload['emailVerification'] = emailVerification;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
                 })
             };
         }
         /**
          * Set Endpoint
          *
-         * Your project ID
+         * Your project endpoint
          *
          * @param {string} endpoint
          *
@@ -3971,6 +4321,18 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
          */
         setEndpoint(endpoint) {
             this.config.endpoint = endpoint;
+            this.config.endpointRealtime = this.config.endpointRealtime || this.config.endpoint.replace('https://', 'wss://').replace('http://', 'ws://');
+            return this;
+        }
+        /**
+         * Set Realtime Endpoint
+         *
+         * @param {string} endpointRealtime
+         *
+         * @returns {this}
+         */
+        setEndpointRealtime(endpointRealtime) {
+            this.config.endpointRealtime = endpointRealtime;
             return this;
         }
         /**
@@ -4039,6 +4401,46 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
             this.config.mode = value;
             return this;
         }
+        /**
+         * Subscribes to Appwrite events and passes you the payload in realtime.
+         *
+         * @param {string|string[]} channels
+         * Channel to subscribe - pass a single channel as a string or multiple with an array of strings.
+         *
+         * Possible channels are:
+         * - account
+         * - collections
+         * - collections.[ID]
+         * - collections.[ID].documents
+         * - documents
+         * - documents.[ID]
+         * - files
+         * - files.[ID]
+         * - executions
+         * - executions.[ID]
+         * - functions.[ID]
+         * - teams
+         * - teams.[ID]
+         * - memberships
+         * - memberships.[ID]
+         * @param {(payload: RealtimeMessage) => void} callback Is called on every realtime update.
+         * @returns {() => void} Unsubscribes from events.
+         */
+        subscribe(channels, callback) {
+            let channelArray = typeof channels === 'string' ? [channels] : channels;
+            channelArray.forEach(channel => this.realtime.channels.add(channel));
+            const counter = this.realtime.subscriptionsCounter++;
+            this.realtime.subscriptions.set(counter, {
+                channels: channelArray,
+                callback
+            });
+            this.realtime.connect();
+            return () => {
+                this.realtime.subscriptions.delete(counter);
+                this.realtime.cleanUp(channelArray);
+                this.realtime.connect();
+            };
+        }
         call(method, url, headers = {}, params = {}) {
             var _a, _b;
             return __awaiter(this, void 0, void 0, function* () {
@@ -4050,7 +4452,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                     credentials: 'include'
                 };
                 if (typeof window !== 'undefined' && window.localStorage) {
-                    headers['X-Fallback-Cookies'] = (_a = window.localStorage.getItem('cookieFallback')) !== null && _a !== void 0 ? _a : "";
+                    headers['X-Fallback-Cookies'] = (_a = window.localStorage.getItem('cookieFallback')) !== null && _a !== void 0 ? _a : '';
                 }
                 if (method === 'GET') {
                     for (const [key, value] of Object.entries(this.flatten(params))) {
@@ -4066,7 +4468,9 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                             let formData = new FormData();
                             for (const key in params) {
                                 if (Array.isArray(params[key])) {
-                                    formData.append(key + '[]', params[key].join(','));
+                                    params[key].forEach((value) => {
+                                        formData.append(key + '[]', value);
+                                    });
                                 }
                                 else {
                                     formData.append(key, params[key]);
@@ -4080,7 +4484,7 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                 try {
                     let data = null;
                     const response = yield crossFetch.fetch(url.toString(), options);
-                    if ((_b = response.headers.get("content-type")) === null || _b === void 0 ? void 0 : _b.includes("application/json")) {
+                    if ((_b = response.headers.get('content-type')) === null || _b === void 0 ? void 0 : _b.includes('application/json')) {
                         data = yield response.json();
                     }
                     else {
@@ -4099,6 +4503,9 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
                     return data;
                 }
                 catch (e) {
+                    if (e instanceof AppwriteException) {
+                        throw e;
+                    }
                     throw new AppwriteException(e.message);
                 }
             });
@@ -4121,6 +4528,6 @@ var Appwrite = (function (exports, isomorphicFormData, crossFetch) {
 
     exports.Appwrite = Appwrite;
 
-    return exports;
+    Object.defineProperty(exports, '__esModule', { value: true });
 
-}({}, null, window));
+}(this.window = this.window || {}, null, window));

@@ -326,6 +326,7 @@ App::get('/console/users')
         $page
             ->setParam('auth', Config::getParam('auth'))
             ->setParam('providers', Config::getParam('providers'))
+            ->setParam('smtpEnabled', (!empty(App::getEnv('_APP_SMTP_HOST'))))
         ;
 
         $layout

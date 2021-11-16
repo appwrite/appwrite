@@ -67,7 +67,7 @@ return [
                 'introduction' => '',
                 'default' => 'localhost',
                 'required' => true,
-                'question' => 'Enter a DNS A record hostname to serve as a CNAME for your custom domains.\nYou can use the same value as used for the Appwrite hostname.',
+                'question' => 'Enter a DNS A record hostname to serve as a CNAME for your custom domains.' . PHP_EOL . 'You can use the same value as used for the Appwrite hostname.',
                 'filter' => ''
             ],
             [
@@ -448,7 +448,7 @@ return [
                 'name' => '_APP_FUNCTIONS_RUNTIMES',
                 'description' => "This option allows you to limit the available environments for cloud functions. This option is very useful for low-cost servers to safe disk space.\n\nTo enable/activate this option, pass a list of allowed environments separated by a comma.\n\nCurrently, supported environments are: " . \implode(', ', \array_keys(Config::getParam('runtimes'))),
                 'introduction' => '0.8.0',
-                'default' => 'node-15.5,deno-1.8,php-8.0,python-3.9,ruby-3.0,dotnet-5.0',
+                'default' => 'node-16.0,php-8.0,python-3.9,ruby-3.0,java-16.0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -457,7 +457,34 @@ return [
                 'name' => '_APP_FUNCTIONS_ENVS',
                 'description' => 'Deprectated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead!',
                 'introduction' => '0.7.0',
-                'default' => 'node-14.5,deno-1.8,php-7.4,python-3.9,ruby-3.0,dotnet-5.0',
+                'default' => 'node-16.0,php-7.4,python-3.9,ruby-3.0,java-16.0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => 'DOCKERHUB_PULL_USERNAME',
+                'description' => 'The username for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'introduction' => '0.10.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => 'DOCKERHUB_PULL_PASSWORD',
+                'description' => 'The password for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'introduction' => '0.10.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => 'DOCKERHUB_PULL_EMAIL',
+                'description' => 'The email for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'introduction' => '0.10.0',
+                'default' => '',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

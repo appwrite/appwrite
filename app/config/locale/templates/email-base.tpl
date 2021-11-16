@@ -4,7 +4,7 @@
 <head>
   <meta name="viewport" content="width=device-width" />
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <title>{{title}}</title>
+  <title>{{subject}}</title>
   <style>
     body {
       background-color: {{bg-body}};
@@ -56,13 +56,13 @@
 
     .main {
       background: {{bg-content}};
-      border-radius: 3px;
+      border-radius: 10px;
       width: 100%;
     }
 
     .wrapper {
       box-sizing: border-box;
-      padding: 20px;
+      padding: 30px 30px 15px 30px;
     }
 
     .content-block {
@@ -82,86 +82,10 @@
       word-break: break-all;
     }
 
-    .btn {
-      box-sizing: border-box;
-      width: 100%;
-    }
-
-    .btn>tbody>tr>td {
-      padding-bottom: 15px;
-    }
-
-    .btn table {
-      width: auto;
-    }
-
-    .btn table td {
-      background-color: {{bg-content}};
-      border-radius: 5px;
-      text-align: center;
-    }
-
-    .btn a {
-      background-color: {{bg-content}};
-      border: solid 1px {{bg-cta}};
-      border-radius: 5px;
-      box-sizing: border-box;
-      color: #3498db;
-      cursor: pointer;
-      display: inline-block;
-      font-size: 14px;
-      font-weight: bold;
-      margin: 0;
-      padding: 12px 25px;
-      text-decoration: none;
-      text-transform: capitalize;
-    }
-
-    .btn-primary table td {
-      background-color: {{bg-cta}};
-    }
-
-    .btn-primary a {
-      background-color: {{bg-cta}};
-      border-color: {{bg-cta}};
-      color: {{text-cta}};
-    }
-
     @media only screen and (max-width: 620px) {
-      table[class=body] h1 {
-        font-size: 28px !important;
-        margin-bottom: 10px !important;
-      }
-
-      table[class=body] p {
-        font-size: 16px !important;
-      }
-
-      table[class=body] .wrapper {
-        padding: 10px !important;
-      }
-
-      table[class=body] .content {
-        padding: 0 !important;
-      }
-
-      table[class=body] .container {
-        padding: 0 !important;
-        width: 100% !important;
-      }
-
-      table[class=body] .main {
-        border-left-width: 0 !important;
-        border-radius: 0 !important;
-        border-right-width: 0 !important;
-      }
-
-      table[class=body] .btn table {
-        width: 100% !important;
-      }
-
-      table[class=body] .btn a {
-        width: 100% !important;
+      .container {
+        padding: 0;
+        width: 100%;
       }
     }
 
@@ -197,14 +121,6 @@
         line-height: inherit;
       }
 
-      .btn-primary table td:hover {
-        background-color: {{bg-cta-hover}} !important;
-      }
-
-      .btn-primary a:hover {
-        background-color: {{bg-cta-hover}} !important;
-        border-color: {{bg-cta-hover}} !important;
-      }
     }
   </style>
 </head>
@@ -221,7 +137,14 @@
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                   <tr>
                     <td>
-                      {{content}}
+                      <p>{{hello}}</p>
+                      <p>{{body}}</p>
+                      <a href="{{redirect}}" target="_blank">{{redirect}}</a>
+                      <p></br>{{footer}}</p>
+                      <p>{{thanks}}
+                      </br>
+                      {{signature}}
+                      </p>
                     </td>
                   </tr>
                 </table>
@@ -229,6 +152,10 @@
             </tr>
           </table>
         </div>
+
+        <!-- <div style="text-align: center; line-height: 25px; margin: 15px 0; font-size: 12px; color: #40404c;">
+          <a href="https://appwrite.io" style="text-decoration: none; color: #40404c;">Powered by <img src="https://appwrite.io/images/appwrite-footer-light.svg" height="15" style="margin: -3px 0" /></a>
+        </div> -->
       </td>
       <td>&nbsp;</td>
     </tr>

@@ -436,6 +436,12 @@ App::get('/v1/database/collections/:collectionId/documents')
             throw new Exception('Collection not found', 404);
         }
 
+        $types = [];
+        foreach ($collection->getAttribute('rules', []) as $rule) {
+            /** @var Document $rule */
+            $types[$rule->getAttribute('key')] = $rule->getAttribute('type');
+        }
+
         $list = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
@@ -446,7 +452,7 @@ App::get('/v1/database/collections/:collectionId/documents')
             'filters' => \array_merge($filters, [
                 '$collection='.$collectionId,
             ]),
-        ]);
+        ], $types);
 
         // if (App::isDevelopment()) {
         //     $collection

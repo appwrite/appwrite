@@ -16,6 +16,13 @@ class Execution extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('$permissions', [
+                'type' => Response::MODEL_PERMISSIONS,
+                'description' => 'Execution permissions.',
+                'default' => new \stdClass,
+                'example' => new \stdClass,
+                'array' => false,
+            ])
             ->addRule('functionId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function ID.',
@@ -48,13 +55,13 @@ class Execution extends Model
             ])
             ->addRule('stdout', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The script stdout output string.',
+                'description' => 'The script stdout output string. Logs the last 4,000 characters of the execution stdout output.',
                 'default' => '',
                 'example' => '',
             ])
             ->addRule('stderr', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The script stderr output string.',
+                'description' => 'The script stderr output string. Logs the last 4,000 characters of the execution stderr output',
                 'default' => '',
                 'example' => '',
             ])
@@ -69,7 +76,7 @@ class Execution extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -79,7 +86,7 @@ class Execution extends Model
 
     /**
      * Get Collection
-     * 
+     *
      * @return string
      */
     public function getType():string

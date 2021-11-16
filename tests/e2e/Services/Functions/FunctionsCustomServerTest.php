@@ -24,7 +24,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Test',
-            'env' => 'php-8.0',
+            'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',
                 'funcKey2' => 'funcValue2',
@@ -43,7 +43,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $response1['headers']['status-code']);
         $this->assertNotEmpty($response1['body']['$id']);
         $this->assertEquals('Test', $response1['body']['name']);
-        $this->assertEquals('php-8.0', $response1['body']['env']);
+        $this->assertEquals('php-8.0', $response1['body']['runtime']);
         $this->assertIsInt($response1['body']['dateCreated']);
         $this->assertIsInt($response1['body']['dateUpdated']);
         $this->assertEquals('', $response1['body']['tag']);
@@ -326,8 +326,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('http', $execution['body']['stdout']);
         $this->assertStringContainsString('PHP', $execution['body']['stdout']);
         $this->assertStringContainsString('8.0', $execution['body']['stdout']);
+        $this->assertStringContainsString('êä', $execution['body']['stdout']); // tests unknown utf-8 chars
         $this->assertEquals('', $execution['body']['stderr']);
-        $this->assertGreaterThan(0.100, $execution['body']['time']);
+        $this->assertGreaterThan(0.05, $execution['body']['time']);
         $this->assertLessThan(0.500, $execution['body']['time']);
 
         /**
@@ -462,7 +463,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Test '.$name,
-            'env' => $name,
+            'runtime' => $name,
             'vars' => [],
             'events' => [],
             'schedule' => '',
@@ -518,7 +519,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
         $this->assertEquals($executions['body']['executions'][0]['status'], 'failed');
-        $this->assertEquals($executions['body']['executions'][0]['exitCode'], 1);
+        $this->assertEquals($executions['body']['executions'][0]['exitCode'], 124);
         $this->assertGreaterThan(2, $executions['body']['executions'][0]['time']);
         $this->assertLessThan(3, $executions['body']['executions'][0]['time']);
         $this->assertEquals($executions['body']['executions'][0]['stdout'], '');
@@ -540,7 +541,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Test '.$name,
-            'env' => $name,
+            'runtime' => $name,
             'vars' => [],
             'events' => [],
             'schedule' => '',
@@ -582,7 +583,31 @@ class FunctionsCustomServerTest extends Scope
         
         $this->assertEquals(201, $execution['headers']['status-code']);
 
+        $executionId = $execution['body']['$id'] ?? '';
+        
         sleep(10);
+
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions/'.$executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $output = json_decode($executions['body']['stdout'], true);
+
+        $this->assertEquals(200, $executions['headers']['status-code']);
+        $this->assertEquals('completed', $executions['body']['status']);
+        $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
+        $this->assertEquals('Test '.$name, $output['APPWRITE_FUNCTION_NAME']);
+        $this->assertEquals($tagId, $output['APPWRITE_FUNCTION_TAG']);
+        $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
+        $this->assertEquals('PHP', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
+        $this->assertEquals('8.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
+        $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
+        $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT_DATA']);
+        $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);
+        $this->assertEquals('', $output['APPWRITE_FUNCTION_USER_ID']);
+        $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
+        $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',
