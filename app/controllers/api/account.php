@@ -20,6 +20,7 @@ use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Detector\Detector;
+use Appwrite\Event\Event;
 use Appwrite\Template\Template;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as URLParser;
@@ -524,7 +525,34 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'registration' => \time(),
                         'reset' => false,
                         'name' => $name,
+                        'prefs' => [],
                     ], ['email' => $email]);
+
+                    $createUserEvent = clone $audits;
+
+                    $createUserEvent
+                        ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+                        ->setParam('event', 'account.create')
+                        ->setParam('userId', $user->getId())
+                        ->setParam('resource', 'users/'.$user->getId())
+                        ->setParam('data', ['provider' => $provider])
+                        ->trigger();
+
+                    $functionsEvent = clone $events;
+
+                    $functionsEvent
+                        ->setQueue('v1-functions')
+                        ->setClass('FunctionsV1')
+                        ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+                        ->trigger();
+
+                    $webhookEvent = clone $events;
+
+                    $webhookEvent
+                        ->setQueue('v1-webhooks')
+                        ->setClass('WebhooksV1')
+                        ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+                        ->trigger();
                 } catch (Duplicate $th) {
                     throw new Exception('Account already exists', 409);
                 }
