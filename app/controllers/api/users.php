@@ -261,12 +261,13 @@ App::get('/v1/users/:userId/logs')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
+    ->param('after', '', new UID(), 'ID of the log used as the starting point for the query, excluding the document itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('locale')
     ->inject('geodb')
     ->inject('usage')
-    ->action(function ($userId, $limit, $offset, $response, $dbForInternal, $locale, $geodb, $usage) {
+    ->action(function ($userId, $limit, $offset, $after, $response, $dbForInternal, $locale, $geodb, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -278,6 +279,14 @@ App::get('/v1/users/:userId/logs')
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
+        }
+
+        if (!empty($after)) {
+            $afterLog = $dbForInternal->getDocument('audit', $after);
+
+            if ($afterLog->isEmpty()) {
+                throw new Exception("Log '{$after}' for the 'after' value not found.", 400);
+            }
         }
 
         $audit = new Audit($dbForInternal);
@@ -298,7 +307,7 @@ App::get('/v1/users/:userId/logs')
             'teams.membership.create',
             'teams.membership.update',
             'teams.membership.delete',
-        ], $limit, $offset);
+        ], $limit, $offset, $afterLog ?? null);
 
         $output = [];
 
