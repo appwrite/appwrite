@@ -10,12 +10,6 @@ class Log extends Model
     public function __construct()
     {
         $this
-            ->addRule('$id', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Log ID.',
-                'default' => '',
-                'example' => '5e5ea5c16897e',
-            ])
             ->addRule('event', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Event name.',
