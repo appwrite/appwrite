@@ -590,7 +590,7 @@ services:
     networks:
       - appwrite
     ports: 
-      - 9506:3000
+      - 9509:3000
     environment:
       - SERVER_URL=http://localhost/v1/graphql
 

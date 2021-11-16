@@ -90,7 +90,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
 
     $route = $utopia->match($request);
 
-    // var_dump("*********** In general.php init with route {$route->getURL()} *************");
+    var_dump("*********** In general.php init with route {$route->getPath()} *************");
 
     if (!empty($route->getLabel('sdk.auth', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
         throw new Exception('Missing or unknown project ID', 400);
