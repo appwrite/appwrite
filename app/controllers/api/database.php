@@ -480,8 +480,8 @@ App::get('/v1/database/collections/:collectionId/logs')
         }
 
         $audit = new Audit($dbForInternal);
-
-        $logs = $audit->getLogsByResource('collection/'.$collection->getId(), $limit, $offset);
+        $resource = 'collection/'.$collection->getId();
+        $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
         $output = [];
 
@@ -541,7 +541,10 @@ App::get('/v1/database/collections/:collectionId/logs')
             }
         }
 
-        $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
+        $response->dynamic(new Document([
+            'sum' => $audit->getLogsByResourceCount($resource),
+            'logs' => $output,
+        ]), Response::MODEL_LOG_LIST);
     });
 
 App::put('/v1/database/collections/:collectionId')

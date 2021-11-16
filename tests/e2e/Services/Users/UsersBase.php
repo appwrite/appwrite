@@ -436,6 +436,7 @@ trait UsersBase
 
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']['logs']);
+        $this->assertIsNumeric($logs['body']['sum']);
 
         $logs = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
             'content-type' => 'application/json',
@@ -447,6 +448,7 @@ trait UsersBase
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
+        $this->assertIsNumeric($logs['body']['sum']);
 
         $logs = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
             'content-type' => 'application/json',
@@ -457,6 +459,7 @@ trait UsersBase
 
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']['logs']);
+        $this->assertIsNumeric($logs['body']['sum']);
 
         $logs = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
             'content-type' => 'application/json',
@@ -469,6 +472,7 @@ trait UsersBase
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
+        $this->assertIsNumeric($logs['body']['sum']);
     }
 
     /**

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fa378feaffc446f557a140035a1c77b6",
+    "content-hash": "14a12f23c3f26ad7650eb3ad912fd078",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1928,16 +1928,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.6.3",
+            "version": "dev-feat-count-methods",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "d79b467fbc7d03e5e02f12cdeb08761507a60ca0"
+                "reference": "e9a811cf3b7705e75649db8b5f255a12e0388220"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/d79b467fbc7d03e5e02f12cdeb08761507a60ca0",
-                "reference": "d79b467fbc7d03e5e02f12cdeb08761507a60ca0",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/e9a811cf3b7705e75649db8b5f255a12e0388220",
+                "reference": "e9a811cf3b7705e75649db8b5f255a12e0388220",
                 "shasum": ""
             },
             "require": {
@@ -1975,9 +1975,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.6.3"
+                "source": "https://github.com/utopia-php/audit/tree/feat-count-methods"
             },
-            "time": "2021-08-16T18:49:55+00:00"
+            "time": "2021-11-16T14:45:05+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -6507,7 +6507,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/audit": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

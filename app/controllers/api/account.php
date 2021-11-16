@@ -1201,8 +1201,7 @@ App::get('/v1/account/logs')
         /** @var Appwrite\Stats\Stats $usage */
 
         $audit = new Audit($dbForInternal);
-
-        $logs = $audit->getLogsByUserAndEvents($user->getId(), [
+        $auditEvents = [
             'account.create',
             'account.delete',
             'account.update.name',
@@ -1218,7 +1217,9 @@ App::get('/v1/account/logs')
             'teams.membership.create',
             'teams.membership.update',
             'teams.membership.delete',
-        ], $limit, $offset);
+        ];
+
+        $logs = $audit->getLogsByUserAndEvents($user->getId(), $auditEvents, $limit, $offset);
 
         $output = [];
 
@@ -1248,7 +1249,11 @@ App::get('/v1/account/logs')
         $usage
             ->setParam('users.read', 1)
         ;
-        $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
+
+        $response->dynamic(new Document([
+            'sum' => $audit->getLogsByUserAndEventsCount($user->getId(), $auditEvents),
+            'logs' => $output,
+        ]), Response::MODEL_LOG_LIST);
     });
 
 App::get('/v1/account/sessions/:sessionId')

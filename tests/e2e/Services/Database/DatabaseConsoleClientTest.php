@@ -138,6 +138,7 @@ class DatabaseConsoleClientTest extends Scope
 
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']['logs']);
+        $this->assertIsNumeric($logs['body']['sum']);
 
         $logs = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/logs', array_merge([
             'content-type' => 'application/json',
@@ -149,6 +150,7 @@ class DatabaseConsoleClientTest extends Scope
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
+        $this->assertIsNumeric($logs['body']['sum']);
 
         $logs = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/logs', array_merge([
             'content-type' => 'application/json',
@@ -159,6 +161,7 @@ class DatabaseConsoleClientTest extends Scope
 
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']['logs']);
+        $this->assertIsNumeric($logs['body']['sum']);
 
         $logs = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/logs', array_merge([
             'content-type' => 'application/json',
@@ -171,5 +174,6 @@ class DatabaseConsoleClientTest extends Scope
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
+        $this->assertIsNumeric($logs['body']['sum']);
     }
 }
