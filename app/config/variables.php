@@ -404,7 +404,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DEVICE',
-                'description' => 'Select default storage device. The default value is \'Local\'. List of supported adapters are \'Local\' and \'S3\'.',
+                'description' => 'Select default storage device. The default value is \'Local\'. List of supported adapters are \'Local\', \'S3\' and \'DoSpaces\'.',
                 'introduction' => '0.12.0',
                 'default' => 'Local',
                 'required' => false,
