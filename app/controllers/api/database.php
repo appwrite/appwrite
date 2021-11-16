@@ -496,12 +496,14 @@ App::get('/v1/database/collections/:collectionId/logs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($collectionId, $response, $dbForInternal, $dbForExternal, $locale, $geodb) {
+    ->action(function ($collectionId, $limit, $offset, $response, $dbForInternal, $dbForExternal, $locale, $geodb) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -516,8 +518,8 @@ App::get('/v1/database/collections/:collectionId/logs')
         }
 
         $audit = new Audit($dbForInternal);
-
-        $logs = $audit->getLogsByResource('collection/'.$collection->getId());
+        $resource = 'collection/'.$collection->getId();
+        $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
         $output = [];
 
@@ -577,7 +579,10 @@ App::get('/v1/database/collections/:collectionId/logs')
             }
         }
 
-        $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
+        $response->dynamic(new Document([
+            'sum' => $audit->getLogsByResourceCount($resource),
+            'logs' => $output,
+        ]), Response::MODEL_LOG_LIST);
     });
 
 App::put('/v1/database/collections/:collectionId')
