@@ -330,9 +330,9 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 
                 <h2>Usage</h2>
 
-                <h3 class="margin-bottom-tiny">Objects</h3>
-                <p class="text-fade">Count of files over time</p>
                 <div data-service="storage.getBucketUsage" data-event="load" data-name="usage" data-param-bucket-id="{{router.params.id}}">
+                    <h3 class="margin-bottom-tiny">Objects</h3>
+                    <p class="text-fade">Count of files over time</p>
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart background-image-no border-no margin-bottom-no">
@@ -356,10 +356,10 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                     </div>
 
                     <ul class="chart-notes crud margin-bottom-large">
-                        <li class="green">Create <span data-ls-bind="({{usage.filesCreate|statsGetLast|statsTotal}})"></span></li>
-                        <li class="green">Read <span data-ls-bind="({{usage.filesRead|statsGetLast|statsTotal}})"></span></li>
-                        <li class="green">Update <span data-ls-bind="({{usage.filesUpdate|statsGetLast|statsTotal}})"></span></li>
-                        <li class="green">Delete <span data-ls-bind="({{usage.filesDelete|statsGetLast|statsTotal}})"></span></li>
+                        <li>Create <span data-ls-bind="({{usage.filesCreate|statsGetLast|statsTotal}})"></span></li>
+                        <li>Read <span data-ls-bind="({{usage.filesRead|statsGetLast|statsTotal}})"></span></li>
+                        <li>Update <span data-ls-bind="({{usage.filesUpdate|statsGetLast|statsTotal}})"></span></li>
+                        <li>Delete <span data-ls-bind="({{usage.filesDelete|statsGetLast|statsTotal}})"></span></li>
                     </ul>
                 </div>
             </li>
