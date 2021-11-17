@@ -37,15 +37,11 @@ return [
     'kn', // Kannada
     'km', // Khmer
     'ko', // Korean
-<<<<<<< HEAD
     'la', // Latin
-    'lt', // Lithuanian
-=======
     'lb', // Luxembourgish
     'lt', // Lithuanian
     'la', // Latin
     'lv', // Latvian
->>>>>>> 09d2ed9586c390ab66221848c871df130ae7916e
     'ml', // Malayalam
     'mr', // Marathi
     'ms', // Malay
