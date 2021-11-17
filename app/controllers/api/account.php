@@ -1251,7 +1251,7 @@ App::get('/v1/account/logs')
         ;
 
         $response->dynamic(new Document([
-            'sum' => $audit->getLogsByUserAndEventsCount($user->getId(), $auditEvents),
+            'sum' => $audit->countLogsByUserAndEvents($user->getId(), $auditEvents),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });

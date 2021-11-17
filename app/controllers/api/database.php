@@ -542,7 +542,7 @@ App::get('/v1/database/collections/:collectionId/logs')
         }
 
         $response->dynamic(new Document([
-            'sum' => $audit->getLogsByResourceCount($resource),
+            'sum' => $audit->countLogsByResource($resource),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
