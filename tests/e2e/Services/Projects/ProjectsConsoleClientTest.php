@@ -1399,6 +1399,90 @@ class ProjectsConsoleClientTest extends Scope
         
         $data = array_merge($data, ['platformFultterAndroidId' => $response['body']['$id']]);
 
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'apple-ios',
+            'name' => 'iOS App',
+            'key' => 'com.example.ios',
+            'store' => '',
+            'hostname' => '',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('apple-ios', $response['body']['type']);
+        $this->assertEquals('iOS App', $response['body']['name']);
+        $this->assertEquals('com.example.ios', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+
+        $data = array_merge($data, ['platformAppleIosId' => $response['body']['$id']]);
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'apple-macos',
+            'name' => 'macOS App',
+            'key' => 'com.example.macos',
+            'store' => '',
+            'hostname' => '',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('apple-macos', $response['body']['type']);
+        $this->assertEquals('macOS App', $response['body']['name']);
+        $this->assertEquals('com.example.macos', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+
+        $data = array_merge($data, ['platformAppleMacOsId' => $response['body']['$id']]);
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'apple-watchos',
+            'name' => 'watchOS App',
+            'key' => 'com.example.watchos',
+            'store' => '',
+            'hostname' => '',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('apple-watchos', $response['body']['type']);
+        $this->assertEquals('watchOS App', $response['body']['name']);
+        $this->assertEquals('com.example.watchos', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+
+        $data = array_merge($data, ['platformAppleWatchOsId' => $response['body']['$id']]);
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'apple-tvos',
+            'name' => 'tvOS App',
+            'key' => 'com.example.tvos',
+            'store' => '',
+            'hostname' => '',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('apple-tvos', $response['body']['type']);
+        $this->assertEquals('tvOS App', $response['body']['name']);
+        $this->assertEquals('com.example.tvos', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+
+        $data = array_merge($data, ['platformAppleTvOsId' => $response['body']['$id']]);
+
         /**
          * Test for FAILURE
          */
@@ -1444,7 +1528,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(3, $response['body']['sum']);
+        $this->assertEquals(7, $response['body']['sum']);
 
         /**
          * Test for FAILURE
@@ -1507,7 +1591,71 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('com.example.android', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
-        
+
+        $platformAppleIosId = $data['platformAppleIosId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformAppleIosId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformAppleIosId, $response['body']['$id']);
+        $this->assertEquals('apple-ios', $response['body']['type']);
+        $this->assertEquals('iOS App', $response['body']['name']);
+        $this->assertEquals('com.example.ios', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+
+        $platformAppleMacOsId = $data['platformAppleMacOsId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformAppleMacOsId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformAppleMacOsId, $response['body']['$id']);
+        $this->assertEquals('apple-macos', $response['body']['type']);
+        $this->assertEquals('macOS App', $response['body']['name']);
+        $this->assertEquals('com.example.macos', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+
+        $platformAppleWatchOsId = $data['platformAppleWatchOsId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformAppleWatchOsId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformAppleWatchOsId, $response['body']['$id']);
+        $this->assertEquals('apple-watchos', $response['body']['type']);
+        $this->assertEquals('watchOS App', $response['body']['name']);
+        $this->assertEquals('com.example.watchos', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+
+        $platformAppleTvOsId = $data['platformAppleTvOsId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformAppleTvOsId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformAppleTvOsId, $response['body']['$id']);
+        $this->assertEquals('apple-tvos', $response['body']['type']);
+        $this->assertEquals('tvOS App', $response['body']['name']);
+        $this->assertEquals('com.example.tvos', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+
         /**
          * Test for FAILURE
          */
@@ -1591,6 +1739,90 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
+        $platformAppleIosId = $data['platformAppleIosId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/platforms/'.$platformAppleIosId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'iOS App 2',
+            'key' => 'com.example.ios2',
+            'store' => '',
+            'hostname' => '',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformAppleIosId, $response['body']['$id']);
+        $this->assertEquals('apple-ios', $response['body']['type']);
+        $this->assertEquals('iOS App 2', $response['body']['name']);
+        $this->assertEquals('com.example.ios2', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+
+        $platformAppleMacOsId = $data['platformAppleMacOsId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/platforms/'.$platformAppleMacOsId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'macOS App 2',
+            'key' => 'com.example.macos2',
+            'store' => '',
+            'hostname' => '',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformAppleMacOsId, $response['body']['$id']);
+        $this->assertEquals('apple-macos', $response['body']['type']);
+        $this->assertEquals('macOS App 2', $response['body']['name']);
+        $this->assertEquals('com.example.macos2', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+
+        $platformAppleWatchOsId = $data['platformAppleWatchOsId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/platforms/'.$platformAppleWatchOsId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'watchOS App 2',
+            'key' => 'com.example.watchos2',
+            'store' => '',
+            'hostname' => '',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformAppleWatchOsId, $response['body']['$id']);
+        $this->assertEquals('apple-watchos', $response['body']['type']);
+        $this->assertEquals('watchOS App 2', $response['body']['name']);
+        $this->assertEquals('com.example.watchos2', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+
+        $platformAppleTvOsId = $data['platformAppleTvOsId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/platforms/'.$platformAppleTvOsId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'tvOS App 2',
+            'key' => 'com.example.tvos2',
+            'store' => '',
+            'hostname' => '',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformAppleTvOsId, $response['body']['$id']);
+        $this->assertEquals('apple-tvos', $response['body']['type']);
+        $this->assertEquals('tvOS App 2', $response['body']['name']);
+        $this->assertEquals('com.example.tvos2', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+
         /**
          * Test for FAILURE
          */
@@ -1650,6 +1882,74 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformFultterAndroidId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $platformAppleIosId = $data['platformAppleIosId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/platforms/'.$platformAppleIosId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformAppleIosId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $platformAppleMacOsId = $data['platformAppleMacOsId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/platforms/'.$platformAppleMacOsId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformAppleMacOsId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $platformAppleWatchOsId = $data['platformAppleWatchOsId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/platforms/'.$platformAppleWatchOsId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformAppleWatchOsId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $platformAppleTvOsId = $data['platformAppleTvOsId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/platforms/'.$platformAppleTvOsId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformAppleTvOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);

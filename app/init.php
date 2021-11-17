@@ -26,7 +26,6 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
-use Appwrite\Event\Realtime;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
 use Utopia\View;
@@ -48,8 +47,8 @@ const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
-const APP_CACHE_BUSTER = 160;
-const APP_VERSION_STABLE = '0.10.4';
+const APP_CACHE_BUSTER = 170;
+const APP_VERSION_STABLE = '0.11.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -65,6 +64,8 @@ const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
 const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
+const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite';
+
 // Deletion Types
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_EXECUTIONS = 'executions';
@@ -254,7 +255,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-06.mmdb');
+    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-10.mmdb');
 });
 
 /*
@@ -307,6 +308,7 @@ Locale::setLanguageFromJSON('ms', __DIR__.'/config/locale/translations/ms.json')
 Locale::setLanguageFromJSON('nb', __DIR__.'/config/locale/translations/nb.json');
 Locale::setLanguageFromJSON('ne', __DIR__.'/config/locale/translations/ne.json');
 Locale::setLanguageFromJSON('nl', __DIR__.'/config/locale/translations/nl.json');
+Locale::setLanguageFromJSON('nn', __DIR__.'/config/locale/translations/nn.json');
 Locale::setLanguageFromJSON('no', __DIR__.'/config/locale/translations/no.json');
 Locale::setLanguageFromJSON('or', __DIR__.'/config/locale/translations/or.json');
 Locale::setLanguageFromJSON('pa', __DIR__.'/config/locale/translations/pa.json');
@@ -316,6 +318,7 @@ Locale::setLanguageFromJSON('pt-pt', __DIR__.'/config/locale/translations/pt-pt.
 Locale::setLanguageFromJSON('ro', __DIR__.'/config/locale/translations/ro.json');
 Locale::setLanguageFromJSON('ru', __DIR__ . '/config/locale/translations/ru.json');
 Locale::setLanguageFromJSON('sa', __DIR__ . '/config/locale/translations/sa.json');
+Locale::setLanguageFromJSON('sd', __DIR__ . '/config/locale/translations/sd.json');
 Locale::setLanguageFromJSON('si', __DIR__ . '/config/locale/translations/si.json');
 Locale::setLanguageFromJSON('sk', __DIR__ . '/config/locale/translations/sk.json');
 Locale::setLanguageFromJSON('sl', __DIR__ . '/config/locale/translations/sl.json');

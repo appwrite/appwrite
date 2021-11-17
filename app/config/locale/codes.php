@@ -51,7 +51,8 @@ return [
     'ms', // Malay
     'nb', // Norwegian - Bokmål
     'nl', // Dutch
-    'no', // Norwegian
+    'nn', // Norwegian (nynorsk)
+    'no', // Norwegian (bokmål)
     'ne', // Nepali
     'or', // Oriya
     'tl', // Filipino
@@ -62,6 +63,7 @@ return [
     'ro', // Romanian
     'ru', // Russian
     'sa', //Sanskrit
+    'sd', // Sindhi
     'si', // Sinhala
     'sk', // Slovakia
     'sl', // Slovenian
