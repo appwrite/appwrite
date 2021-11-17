@@ -543,7 +543,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $functionsEvent
                         ->setQueue('v1-functions')
                         ->setClass('FunctionsV1')
+                        ->setParam('event', 'account.create')
                         ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+                        ->setParam('userId', $user->getId())
+                        ->setParam('resource', 'users/'.$user->getId())
                         ->trigger();
 
                     $webhookEvent = clone $events;
@@ -551,7 +554,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $webhookEvent
                         ->setQueue('v1-webhooks')
                         ->setClass('WebhooksV1')
+                        ->setParam('event', 'account.create')
                         ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+                        ->setParam('userId', $user->getId())
+                        ->setParam('resource', 'users/'.$user->getId())
                         ->trigger();
                 } catch (Duplicate $th) {
                     throw new Exception('Account already exists', 409);
