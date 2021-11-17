@@ -331,7 +331,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                 <h2>Usage</h2>
 
                 <div data-service="storage.getBucketUsage" data-event="load" data-name="usage" data-param-bucket-id="{{router.params.id}}">
-                    <h3 class="margin-bottom-tiny">Objects</h3>
+                    <h3 class="margin-bottom-tiny">Files</h3>
                     <p class="text-fade">Count of files over time</p>
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
@@ -345,7 +345,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                         <li>Files <span data-ls-bind="({{usage.filesCount|statsGetLast|statsTotal}})"></span></li>
                     </ul>
 
-                    <h3 class="margin-bottom-tiny">Files</h3>
+                    <h3 class="margin-bottom-tiny">Operations</h3>
                     <p class="text-fade">Count of files create, read, update and delete operations over time</p>
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
