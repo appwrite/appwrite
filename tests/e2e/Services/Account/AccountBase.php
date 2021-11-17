@@ -388,7 +388,6 @@ trait AccountBase
 
         $this->assertEquals($response['body']['logs'][0], $responseLimit['body']['logs'][0]);
 
-
         $responseOffset = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
