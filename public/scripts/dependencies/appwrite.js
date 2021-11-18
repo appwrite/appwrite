@@ -48,134 +48,7 @@
             };
             this.headers = {
                 'x-sdk-version': 'appwrite:web:4.0.4',
-                'X-Appwrite-Response-Format': '0.12.0',
-            };
-            this.realtime = {
-                socket: undefined,
-                timeout: undefined,
-                url: '',
-                channels: new Set(),
-                subscriptions: new Map(),
-                subscriptionsCounter: 0,
-                reconnect: true,
-                reconnectAttempts: 0,
-                lastMessage: undefined,
-                connect: () => {
-                    clearTimeout(this.realtime.timeout);
-                    this.realtime.timeout = window === null || window === void 0 ? void 0 : window.setTimeout(() => {
-                        this.realtime.createSocket();
-                    }, 50);
-                },
-                getTimeout: () => {
-                    switch (true) {
-                        case this.realtime.reconnectAttempts < 5:
-                            return 1000;
-                        case this.realtime.reconnectAttempts < 15:
-                            return 5000;
-                        case this.realtime.reconnectAttempts < 100:
-                            return 10000;
-                        default:
-                            return 60000;
-                    }
-                },
-                createSocket: () => {
-                    var _a, _b;
-                    if (this.realtime.channels.size < 1)
-                        return;
-                    const channels = new URLSearchParams();
-                    channels.set('project', this.config.project);
-                    this.realtime.channels.forEach(channel => {
-                        channels.append('channels[]', channel);
-                    });
-                    const url = this.config.endpointRealtime + '/realtime?' + channels.toString();
-                    if (url !== this.realtime.url || // Check if URL is present
-                        !this.realtime.socket || // Check if WebSocket has not been created
-                        ((_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.readyState) > WebSocket.OPEN // Check if WebSocket is CLOSING (3) or CLOSED (4)
-                    ) {
-                        if (this.realtime.socket &&
-                            ((_b = this.realtime.socket) === null || _b === void 0 ? void 0 : _b.readyState) < WebSocket.CLOSING // Close WebSocket if it is CONNECTING (0) or OPEN (1)
-                        ) {
-                            this.realtime.reconnect = false;
-                            this.realtime.socket.close();
-                        }
-                        this.realtime.url = url;
-                        this.realtime.socket = new WebSocket(url);
-                        this.realtime.socket.addEventListener('message', this.realtime.onMessage);
-                        this.realtime.socket.addEventListener('open', _event => {
-                            this.realtime.reconnectAttempts = 0;
-                        });
-                        this.realtime.socket.addEventListener('close', event => {
-                            var _a, _b, _c;
-                            if (!this.realtime.reconnect ||
-                                (((_b = (_a = this.realtime) === null || _a === void 0 ? void 0 : _a.lastMessage) === null || _b === void 0 ? void 0 : _b.type) === 'error' && // Check if last message was of type error
-                                    ((_c = this.realtime) === null || _c === void 0 ? void 0 : _c.lastMessage.data).code === 1008 // Check for policy violation 1008
-                                )) {
-                                this.realtime.reconnect = true;
-                                return;
-                            }
-                            const timeout = this.realtime.getTimeout();
-                            console.error(`Realtime got disconnected. Reconnect will be attempted in ${timeout / 1000} seconds.`, event.reason);
-                            setTimeout(() => {
-                                this.realtime.reconnectAttempts++;
-                                this.realtime.createSocket();
-                            }, timeout);
-                        });
-                    }
-                },
-                onMessage: (event) => {
-                    var _a, _b;
-                    try {
-                        const message = JSON.parse(event.data);
-                        this.realtime.lastMessage = message;
-                        switch (message.type) {
-                            case 'connected':
-                                const cookie = JSON.parse((_a = window.localStorage.getItem('cookieFallback')) !== null && _a !== void 0 ? _a : '{}');
-                                const session = cookie === null || cookie === void 0 ? void 0 : cookie[`a_session_${this.config.project}`];
-                                const messageData = message.data;
-                                if (session && !messageData.user) {
-                                    (_b = this.realtime.socket) === null || _b === void 0 ? void 0 : _b.send(JSON.stringify({
-                                        type: 'authentication',
-                                        data: {
-                                            session
-                                        }
-                                    }));
-                                }
-                                break;
-                            case 'event':
-                                let data = message.data;
-                                if (data === null || data === void 0 ? void 0 : data.channels) {
-                                    const isSubscribed = data.channels.some(channel => this.realtime.channels.has(channel));
-                                    if (!isSubscribed)
-                                        return;
-                                    this.realtime.subscriptions.forEach(subscription => {
-                                        if (data.channels.some(channel => subscription.channels.includes(channel))) {
-                                            setTimeout(() => subscription.callback(data));
-                                        }
-                                    });
-                                }
-                                break;
-                            case 'error':
-                                throw message.data;
-                            default:
-                                break;
-                        }
-                    }
-                    catch (e) {
-                        console.error(e);
-                    }
-                },
-                cleanUp: channels => {
-                    this.realtime.channels.forEach(channel => {
-                        if (channels.includes(channel)) {
-                            let found = Array.from(this.realtime.subscriptions).some(([_key, subscription]) => {
-                                return subscription.channels.includes(channel);
-                            });
-                            if (!found) {
-                                this.realtime.channels.delete(channel);
-                            }
-                        }
-                    });
-                }
+                'X-Appwrite-Response-Format': '0.11.0',
             };
             this.realtime = {
                 socket: undefined,
@@ -448,12 +321,20 @@
                  * Get currently logged in user list of latest security activity logs. Each
                  * log returns user IP address, location and date and time of log.
                  *
+                 * @param {number} limit
+                 * @param {number} offset
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getLogs: () => __awaiter(this, void 0, void 0, function* () {
+                getLogs: (limit, offset) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/account/logs';
                     let payload = {};
+                    if (typeof limit !== 'undefined') {
+                        payload['limit'] = limit;
+                    }
+                    if (typeof offset !== 'undefined') {
+                        payload['offset'] = offset;
+                    }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
                         'content-type': 'application/json',
@@ -1433,6 +1314,8 @@
                 /**
                  * Create Boolean Attribute
                  *
+                 * Create a boolean attribute.
+                 *
                  *
                  * @param {string} collectionId
                  * @param {string} attributeId
@@ -1473,6 +1356,8 @@
                 }),
                 /**
                  * Create Email Attribute
+                 *
+                 * Create an email attribute.
                  *
                  *
                  * @param {string} collectionId
@@ -1563,6 +1448,9 @@
                 /**
                  * Create Float Attribute
                  *
+                 * Create a float attribute. Optionally, minimum and maximum values can be
+                 * provided.
+                 *
                  *
                  * @param {string} collectionId
                  * @param {string} attributeId
@@ -1611,6 +1499,9 @@
                 }),
                 /**
                  * Create Integer Attribute
+                 *
+                 * Create an integer attribute. Optionally, minimum and maximum values can be
+                 * provided.
                  *
                  *
                  * @param {string} collectionId
@@ -1661,6 +1552,8 @@
                 /**
                  * Create IP Address Attribute
                  *
+                 * Create IP address attribute.
+                 *
                  *
                  * @param {string} collectionId
                  * @param {string} attributeId
@@ -1701,6 +1594,8 @@
                 }),
                 /**
                  * Create String Attribute
+                 *
+                 * Create a new string attribute.
                  *
                  *
                  * @param {string} collectionId
@@ -1749,6 +1644,8 @@
                 }),
                 /**
                  * Create URL Attribute
+                 *
+                 * Create a URL attribute.
                  *
                  *
                  * @param {string} collectionId
@@ -2028,10 +1925,12 @@
                  *
                  * @param {string} collectionId
                  * @param {string} documentId
+                 * @param {number} limit
+                 * @param {number} offset
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listDocumentLogs: (collectionId, documentId) => __awaiter(this, void 0, void 0, function* () {
+                listDocumentLogs: (collectionId, documentId, limit, offset) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
@@ -2040,6 +1939,12 @@
                     }
                     let path = '/database/collections/{collectionId}/documents/{documentId}/logs'.replace('{collectionId}', collectionId).replace('{documentId}', documentId);
                     let payload = {};
+                    if (typeof limit !== 'undefined') {
+                        payload['limit'] = limit;
+                    }
+                    if (typeof offset !== 'undefined') {
+                        payload['offset'] = offset;
+                    }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
                         'content-type': 'application/json',
@@ -2160,15 +2065,23 @@
                  * Get the collection activity logs list by its unique ID.
                  *
                  * @param {string} collectionId
+                 * @param {number} limit
+                 * @param {number} offset
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listCollectionLogs: (collectionId) => __awaiter(this, void 0, void 0, function* () {
+                listCollectionLogs: (collectionId, limit, offset) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
                     let path = '/database/collections/{collectionId}/logs'.replace('{collectionId}', collectionId);
                     let payload = {};
+                    if (typeof limit !== 'undefined') {
+                        payload['limit'] = limit;
+                    }
+                    if (typeof offset !== 'undefined') {
+                        payload['offset'] = offset;
+                    }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
                         'content-type': 'application/json',
@@ -4832,15 +4745,23 @@
                  * Get the user activity logs list by its unique ID.
                  *
                  * @param {string} userId
+                 * @param {number} limit
+                 * @param {number} offset
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getLogs: (userId) => __awaiter(this, void 0, void 0, function* () {
+                getLogs: (userId, limit, offset) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
                     let path = '/users/{userId}/logs'.replace('{userId}', userId);
                     let payload = {};
+                    if (typeof limit !== 'undefined') {
+                        payload['limit'] = limit;
+                    }
+                    if (typeof offset !== 'undefined') {
+                        payload['offset'] = offset;
+                    }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
                         'content-type': 'application/json',

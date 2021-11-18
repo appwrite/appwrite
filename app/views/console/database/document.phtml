@@ -197,7 +197,7 @@ $logs = $this->getParam('logs', null);
                 </li>
                 <?php if(!$new): ?>
                     <li data-state="/console/database/document/activity?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}">
-                        <h2>Activity <span class="badge" data-ls-bind="{{logs.logs.length}}"></span></h2>
+                        <h2>Activity <span class="badge" data-ls-bind="{{logs.sum}}"></span></h2>
 
                         <?php echo $logs->render(); ?>
                     </li>

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "14a12f23c3f26ad7650eb3ad912fd078",
+    "content-hash": "39575a40b499d30b98e675990889be87",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1928,22 +1928,22 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "dev-feat-count-methods",
+            "version": "0.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "e9a811cf3b7705e75649db8b5f255a12e0388220"
+                "reference": "485cdd2354db7eb8f7aa74bbe39c39b583e99c04"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/e9a811cf3b7705e75649db8b5f255a12e0388220",
-                "reference": "e9a811cf3b7705e75649db8b5f255a12e0388220",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/485cdd2354db7eb8f7aa74bbe39c39b583e99c04",
+                "reference": "485cdd2354db7eb8f7aa74bbe39c39b583e99c04",
                 "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=7.4",
-                "utopia-php/database": ">=0.6 <1.0"
+                "utopia-php/database": ">=0.11 <1.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1975,9 +1975,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/feat-count-methods"
+                "source": "https://github.com/utopia-php/audit/tree/0.7.0"
             },
-            "time": "2021-11-16T14:45:05+00:00"
+            "time": "2021-11-17T17:23:42+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -2138,16 +2138,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.10.1",
+            "version": "0.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "9b4697612a2cd1ad55beeb6a02570f6ffe26dc1e"
+                "reference": "5fc0476d05567d1a156b00e17033f32148c93a38"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/9b4697612a2cd1ad55beeb6a02570f6ffe26dc1e",
-                "reference": "9b4697612a2cd1ad55beeb6a02570f6ffe26dc1e",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/5fc0476d05567d1a156b00e17033f32148c93a38",
+                "reference": "5fc0476d05567d1a156b00e17033f32148c93a38",
                 "shasum": ""
             },
             "require": {
@@ -2195,9 +2195,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.10.1"
+                "source": "https://github.com/utopia-php/database/tree/0.11.0"
             },
-            "time": "2021-11-02T15:10:39+00:00"
+            "time": "2021-11-17T09:53:02+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -6507,9 +6507,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/audit": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

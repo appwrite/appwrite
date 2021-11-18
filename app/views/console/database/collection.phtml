@@ -153,6 +153,7 @@ $logs = $this->getParam('logs', null);
                                     <i data-ls-if="!{{attribute.format}}" data-ls-attrs="class=icon-{{attribute.type}}"></i>
                                     <i data-ls-if="{{attribute.format}}" data-ls-attrs="class=icon-{{attribute.format}}"></i>
                                 </td>
+
                                 <td data-title="Status">
                                     <span data-ls-if="{{attribute.status}} == 'available'" class="text-size-small text-success">available&nbsp;</span>
                                     <span data-ls-if="{{attribute.status}} == 'processing'" class="text-size-small text-info">processing&nbsp;</span>
@@ -162,7 +163,7 @@ $logs = $this->getParam('logs', null);
                                 </td>
 
                                 <td data-title="Attribute ID: ">
-                                    <span class="text-size-small" data-ls-bind="{{attribute.key}}"></span><span class="text-size-small" data-ls-if="{{attribute.size}}" data-ls-bind=" ({{attribute.size}})"></span>
+                                    <span class="text-size-small" data-ls-bind="{{attribute.key}}"></span><span class="text-size-small" data-ls-if="{{attribute.size}}" data-ls-bind="({{attribute.size}})"></span>
                                 </td>
 
                                 <td data-title="Type:">
@@ -328,7 +329,7 @@ $logs = $this->getParam('logs', null);
                 <button class="new-index">Add Index</button>
             </li>
             <li data-state="/console/database/collection/activity?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>Activity <span class="badge" data-ls-bind="{{logs.logs.length}}"></span></h2>
+                <h2>Activity <span class="badge" data-ls-bind="{{logs.sum}}"></span></h2>
 
                 <?php echo $logs->render(); ?>
             </li>
@@ -371,10 +372,12 @@ $logs = $this->getParam('logs', null);
                 <h2>Usage</h2>
 
                 <div data-service="database.getCollectionUsage" data-event="load" data-name="usage" data-param-collection-id="{{router.params.id}}">
+                    <h3 class="margin-bottom-tiny">Documents</h3>
+                    <p class="text-fade">Count of documents over time</p>
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Documents=documentsCount" data-height="140" />
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Documents=documentsCount" data-show-y-axis="true" data-height="140" />
                             </div>
                         </div>
                     </div>
@@ -383,52 +386,27 @@ $logs = $this->getParam('logs', null);
                         <li>Documents <span data-ls-bind="({{usage.documentsCount|statsGetLast|statsTotal}})"></span></li>
                     </ul>
 
+                    <h3 class="margin-bottom-tiny">Operations</h3>
+                    <p class="text-fade">Count of documents create, read, update and delete operations over time</p>
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Created=documentsCreate" data-colors="orange" data-height="140" />
+                                <input 
+                                    type="hidden" 
+                                    data-ls-bind="{{usage}}"
+                                    data-forms-chart="Created=documentsCreate,Read=documentsRead,Updated=documentsUpdate,Deleted=documentsDelete"
+                                    data-show-y-axis="true"
+                                    data-colors="create,read,update,delete"
+                                    data-height="140" />
                             </div>
                         </div>
                     </div>
 
-                    <ul class="chart-notes margin-bottom-large">
-                        <li class="orange">Created <span data-ls-bind="({{usage.documentsCreate|statsGetLast|statsTotal}})"></span></li>
-                    </ul>
-
-                    <div class="box margin-bottom-small">
-                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Read=documentsRead" data-colors="green" data-height="140" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <ul class="chart-notes margin-bottom-large">
-                        <li class="green">Read <span data-ls-bind="({{usage.documentsRead|statsGetLast|statsTotal}})"></span></li>
-                    </ul>
-
-                    <div class="box margin-bottom-small">
-                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Updated=documentsUpdate" data-colors="blue" data-height="140" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <ul class="chart-notes margin-bottom-large">
-                        <li class="blue">Updated <span data-ls-bind="({{usage.documentsUpdate|statsGetLast|statsTotal}})"></span></li>
-                    </ul>
-
-                    <div class="box margin-bottom-small">
-                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Deleted=documentsDelete" data-colors="red" data-height="140" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <ul class="chart-notes margin-bottom-large">
-                        <li class="red">Deleted <span data-ls-bind="({{usage.documentsDelete|statsGetLast|statsTotal}})"></span></li>
+                    <ul class="chart-notes margin-bottom-large crud">
+                        <li>Created <span data-ls-bind="({{usage.documentsCreate|statsGetLast|statsTotal}})"></span></li>
+                        <li>Read <span data-ls-bind="({{usage.documentsRead|statsGetLast|statsTotal}})"></span></li>
+                        <li>Updated <span data-ls-bind="({{usage.documentsUpdate|statsGetLast|statsTotal}})"></span></li>
+                        <li>Deleted <span data-ls-bind="({{usage.documentsDelete|statsGetLast|statsTotal}})"></span></li>
                     </ul>
                 </div>
             </li>

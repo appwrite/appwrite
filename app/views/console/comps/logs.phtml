@@ -5,10 +5,10 @@ $params = $this->getParam('params', []);
 ?>
 <div
     data-service="<?php echo $method; ?>"
-    data-service="database.listCollectionLogs"
     <?php foreach($params as $key => $value): ?>
     data-param-<?php echo $key; ?>="<?php echo $value; ?>"
     <?php endforeach; ?>
+    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
     data-scope="sdk"
     data-event="load"
     data-name="logs">
@@ -51,7 +51,7 @@ $params = $this->getParam('params', []);
         </table>
     </div>
 
-    <div data-ls-if="0 != {{logs.logs.length}}">
+    <div data-ls-if="0 != {{logs.sum}}">
         <div class="margin-bottom-small margin-top-negative text-align-end text-size-small text-fade">Showing logs from the last <?php echo $this->escape($interval); ?> days</div>
 
         <div class="box margin-bottom">
@@ -90,7 +90,10 @@ $params = $this->getParam('params', []);
 
         <div class="pull-end text-align-center paging">
             <form
-                data-service="database.listCollectionLogs"
+                data-service="<?php echo $method; ?>"
+                <?php foreach($params as $key => $value): ?>
+                data-param-<?php echo $key; ?>="<?php echo $value; ?>"
+                <?php endforeach; ?> 
                 data-event="submit"
                 data-param-collection-id="{{router.params.id}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -102,8 +105,13 @@ $params = $this->getParam('params', []);
                 <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{logs.sum}}" class="margin-end-small round small" aria-label="Back"><i class="icon-left-open"></i></button>
             </form>
 
+            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{logs.sum|pageTotal}}"></span>
+
             <form
-                data-service="database.listCollectionLogs"
+                data-service="<?php echo $method; ?>"
+                <?php foreach($params as $key => $value): ?>
+                data-param-<?php echo $key; ?>="<?php echo $value; ?>"
+                <?php endforeach; ?> 
                 data-event="submit"
                 data-param-collection-id="{{router.params.id}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"

@@ -154,69 +154,71 @@
                     data-service="database.getUsage"
                     data-event="load"
                     data-name="usage">
+                    <h3 class="margin-bottom-tiny">Objects</h3>
+                    <p class="text-fade">Count of collections and documents over time</p>
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Total Documents=documentsCount,Total Collections=collectionsCount" data-height="140" />
+                                <input 
+                                type="hidden" 
+                                data-ls-bind="{{usage}}" 
+                                data-forms-chart="Collections=collectionsCount,Documents=documentsCount" 
+                                data-show-y-axis="true"
+                                data-height="140" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li>Total Documents <span data-ls-bind="({{usage.documentsCount|statsGetLast|statsTotal}})"></span></li>
                         <li>Total Collections <span data-ls-bind="({{usage.collectionsCount|statsGetLast|statsTotal}})"></span></li>
+                        <li>Total Documents <span data-ls-bind="({{usage.documentsCount|statsGetLast|statsTotal}})"></span></li>
                     </ul>
 
+
+                    <h3 class="margin-bottom-tiny">Collections</h3>
+                    <p class="text-fade">Count of collections create, read, update and delete operations over time</p>
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Documents created=documentsCreate,Collections created=collectionsCreate" data-height="140" />
+                                <input 
+                                    type="hidden"
+                                    data-ls-bind="{{usage}}"
+                                    data-forms-chart="Created=collectionsCreate,Read=collectionsRead,Updated=collectionsUpdate,Deleted=collectionsDelete"
+                                    data-show-y-axis="true"
+                                    data-colors="create,read,update,delete"
+                                    data-height="140" />
                             </div>
                         </div>
                     </div>
 
-                    <ul class="chart-notes margin-bottom-large">
-                        <li>Documents created</li>
-                        <li>Collections created</li>
+                    <ul class="chart-notes margin-bottom-large crud">
+                        <li>Created <span data-ls-bind="({{usage.collectionsCreate|statsGetLast|statsTotal}})"></span></li>
+                        <li>Read <span data-ls-bind="({{usage.collectionsRead|statsGetLast|statsTotal}})"></span></li>
+                        <li>Updated <span data-ls-bind="({{usage.collectionsUpdate|statsGetLast|statsTotal}})"></span></li>
+                        <li>Deleted <span data-ls-bind="({{usage.collectionsDelete|statsGetLast|statsTotal}})"></span></li>
                     </ul>
 
+                    <h3 class="margin-bottom-tiny">Documents</h3>
+                    <p class="text-fade">Count of documents create, read, update and delete operations over time</p>
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Documents read=documentsRead,Collections read=collectionsRead" data-height="140" />
+                                <input
+                                    type="hidden"
+                                    data-ls-bind="{{usage}}"
+                                    data-forms-chart="Created=documentsCreate,Read=documentsRead,Updated=documentsUpdate,Deleted=documentsDelete"
+                                    data-show-y-axis="true"
+                                    data-colors="create,read,update,delete"
+                                    data-height="140" />
                             </div>
                         </div>
                     </div>
 
-                    <ul class="chart-notes margin-bottom-large">
-                        <li>Documents read</li>
-                        <li>Collections read</li>
-                    </ul>
-
-                    <div class="box margin-bottom-small">
-                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Documents updated=documentsUpdate,Collections updated=collectionsUpdate" data-height="140" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <ul class="chart-notes margin-bottom-large">
-                        <li>Documents updated</li>
-                        <li>Collections updated</li>
-                    </ul>
-
-                    <div class="box margin-bottom-small">
-                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Documents deleted=documentsDelete,Collections deleted=collectionsDelete" data-height="140" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <ul class="chart-notes margin-bottom-large">
-                        <li>Documents deleted</li>
-                        <li>Collections deleted</li>
+                    <ul class="chart-notes margin-bottom-large crud">
+                        <li>Created <span data-ls-bind="({{usage.documentsCreate|statsGetLast|statsTotal}})"></span></li>
+                        <li>Read <span data-ls-bind="({{usage.documentsRead|statsGetLast|statsTotal}})"></span></li>
+                        <li>Updated <span data-ls-bind="({{usage.documentsUpdate|statsGetLast|statsTotal}})"></span></li>
+                        <li>Deleted <span data-ls-bind="({{usage.documentsDelete|statsGetLast|statsTotal}})"></span></li>
                     </ul>
                 </div>
             </li>
