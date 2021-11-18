@@ -38,14 +38,7 @@
           },
           options: {
             responsive: true,
-            title: {
-              display: false,
-              text: "Stats"
-            },
-            legend: {
-              display: false
-            },
-            tooltips: {
+            tooltip: {
               mode: "index",
               intersect: false,
               caretPadding: 0
