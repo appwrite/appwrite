@@ -246,17 +246,19 @@ $cli
                 $max = 10;
                 $sleep = 1;
 
-                $database = $client->selectDB('telegraf');
                 do { // check if telegraf database is ready
-                    $attempts++;
-                    if(!in_array('telegraf', $client->listDatabases())) {
+                    try {
+                        $attempts++;
+                        $database = $client->selectDB('telegraf');
+                        if(in_array('telegraf', $client->listDatabases())) {
+                            break; // leave the do-while if successful
+                        }
+                    } catch (\Throwable $th) {
                         Console::warning("InfluxDB not ready. Retrying connection ({$attempts})...");
                         if($attempts >= $max) {
                             throw new \Exception('InfluxDB database not ready yet');
                         }
                         sleep($sleep);
-                    } else {
-                        break; // leave the do-while if successful
                     }
                 } while ($attempts < $max);
 
@@ -382,7 +384,7 @@ $cli
                             $dbForProject->updateDocument('stats', $document->getId(),
                                 $document->setAttribute('value', $storageTotal));
                         }
-                        
+
                         $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
                         $id = \md5($time . '_1d_storage.total'); //Construct unique id for each metric using time, period and metric
                         $document = $dbForProject->getDocument('stats', $id);
