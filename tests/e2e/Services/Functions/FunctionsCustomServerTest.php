@@ -441,6 +441,7 @@ class FunctionsCustomServerTest extends Scope
         $latestExecution = $executions['body']['executions'][1];
 
         $this->assertEquals('event', $latestExecution['trigger']);
+        $this->assertStringContainsString('account.create', $latestExecution['stdout']);
 
         return [];
     }

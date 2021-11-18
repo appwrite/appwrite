@@ -529,9 +529,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     ], ['email' => $email]);
 
                     $createUserEvent = clone $audits;
+                    $eventData = $response->output($user, Response::MODEL_USER);
 
                     $createUserEvent
-                        ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+                        ->setParam('eventData', $eventData)
                         ->setParam('event', 'account.create')
                         ->setParam('userId', $user->getId())
                         ->setParam('resource', 'users/'.$user->getId())
@@ -544,7 +545,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         ->setQueue('v1-functions')
                         ->setClass('FunctionsV1')
                         ->setParam('event', 'account.create')
-                        ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+                        ->setParam('eventData', $eventData)
                         ->setParam('userId', $user->getId())
                         ->setParam('resource', 'users/'.$user->getId())
                         ->trigger();
@@ -555,7 +556,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         ->setQueue('v1-webhooks')
                         ->setClass('WebhooksV1')
                         ->setParam('event', 'account.create')
-                        ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+                        ->setParam('eventData', $eventData)
                         ->setParam('userId', $user->getId())
                         ->setParam('resource', 'users/'.$user->getId())
                         ->trigger();
