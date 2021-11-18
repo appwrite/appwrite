@@ -259,12 +259,14 @@ App::get('/v1/users/:userId/logs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('locale')
     ->inject('geodb')
     ->inject('usage')
-    ->action(function ($userId, $response, $dbForInternal, $locale, $geodb, $usage) {
+    ->action(function ($userId, $limit, $offset, $response, $dbForInternal, $locale, $geodb, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -279,8 +281,7 @@ App::get('/v1/users/:userId/logs')
         }
 
         $audit = new Audit($dbForInternal);
-
-        $logs = $audit->getLogsByUserAndEvents($user->getId(), [
+        $auditEvents = [
             'account.create',
             'account.delete',
             'account.update.name',
@@ -296,7 +297,9 @@ App::get('/v1/users/:userId/logs')
             'teams.membership.create',
             'teams.membership.update',
             'teams.membership.delete',
-        ]);
+        ];
+
+        $logs = $audit->getLogsByUserAndEvents($user->getId(), $auditEvents, $limit, $offset);
 
         $output = [];
 
@@ -355,7 +358,11 @@ App::get('/v1/users/:userId/logs')
         $usage
             ->setParam('users.read', 1)
         ;
-        $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
+
+        $response->dynamic(new Document([
+            'sum' => $audit->countLogsByUserAndEvents($user->getId(), $auditEvents),
+            'logs' => $output,
+        ]), Response::MODEL_LOG_LIST);
     });
 
 App::patch('/v1/users/:userId/status')
