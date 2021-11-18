@@ -17,7 +17,7 @@ class Func extends Model
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$permissions', [
-                'type' => Response::MODEL_PERMISSIONS,
+                'type' => Response::MODEL_FUNC_PERMISSIONS,
                 'description' => 'Function permissions.',
                 'default' => new \stdClass,
                 'example' => new \stdClass,
