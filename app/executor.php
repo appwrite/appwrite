@@ -30,14 +30,14 @@ use Utopia\Storage\Storage;
 use Swoole\Coroutine as Co;
 use Utopia\Cache\Cache;
 use Utopia\Database\Query;
-use Utopia\Orchestration\Adapter\DockerCLI;
+use Utopia\Orchestration\Adapter\DockerAPI;
 
 require_once __DIR__ . '/init.php';
 
 $dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
 $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
 $dockerEmail = App::getEnv('DOCKERHUB_PULL_EMAIL', null);
-$orchestration = new Orchestration(new DockerCLI($dockerUser, $dockerPass));
+$orchestration = new Orchestration(new DockerAPI($dockerUser, $dockerPass));
 
 $runtimes = Config::getParam('runtimes');
 
@@ -858,7 +858,8 @@ function execute(string $trigger, string $projectId, string $executionId, string
         \curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
             'Content-Length: ' . \strlen($body),
-            'x-internal-challenge: ' . $key
+            'x-internal-challenge: ' . $key,
+            'host: ' . null
         ]);
 
         $executorResponse = \curl_exec($ch);
