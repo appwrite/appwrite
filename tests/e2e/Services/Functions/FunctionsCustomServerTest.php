@@ -140,6 +140,7 @@ class FunctionsCustomServerTest extends Scope
             'events' => [
                 'account.update.name',
                 'account.update.email',
+                'account.create'
             ],
             'schedule' => '0 0 1 1 *',
             'timeout' => 5,
@@ -159,6 +160,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals([
             'account.update.name',
             'account.update.email',
+            'account.create'
         ], $response1['body']['events']);
         $this->assertEquals('0 0 1 1 *', $response1['body']['schedule']);
         $this->assertEquals(5, $response1['body']['timeout']);
@@ -389,6 +391,56 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($function['headers']['status-code'], 404);
 
         return $data;
+    }
+
+    /**
+     * @depends testGetExecution
+     */
+    public function testOAuthCreateEvent($data):array
+    {
+        // Fire Mock OAuth Creation
+        $provider = 'mock';
+        $appId = '1';
+        $secret = '123456';
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$this->getProject()['$id'].'/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'appId' => $appId,
+            'secret' => $secret,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/'.$provider, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('success', $response['body']['result']);
+
+        // Check if function got executed.
+
+        // Get latest execution logs
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $latestExecution = $executions['body']['executions'][1];
+
+        $this->assertEquals('event', $latestExecution['trigger']);
+
+        return [];
     }
 
     /**
