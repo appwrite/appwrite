@@ -1,9 +1,9 @@
-(function(window) {
+(function (window) {
   "use strict";
 
   window.ls.container.get("view").add({
     selector: "data-forms-chart",
-    controller: function(element, container, date, document) {
+    controller: function (element, container, date, document) {
       let wrapper = document.createElement("div");
       let child = document.createElement("canvas");
       let sources = element.getAttribute('data-forms-chart');
@@ -12,13 +12,13 @@
       let showXAxis = element.getAttribute('data-show-x-axis') || false;
       let showYAxis = element.getAttribute('data-show-y-axis') || false;
       let colors = (element.getAttribute('data-colors') || 'blue,green,orange,red').split(',');
-      let themes = {'blue': '#29b5d9', 'green': '#4eb55b', 'orange': '#fba233', 'red': '#dc3232', 'create': '#00b680', 'read': '#009cde', 'update': '#696fd7', 'delete': '#da5d95',};
-      let range = {'24h': 'H:i', '7d': 'd F Y', '30d': 'd F Y', '90d': 'd F Y'}
+      let themes = { 'blue': '#29b5d9', 'green': '#4eb55b', 'orange': '#fba233', 'red': '#dc3232', 'create': '#00b680', 'read': '#009cde', 'update': '#696fd7', 'delete': '#da5d95', };
+      let range = { '24h': 'H:i', '7d': 'd F Y', '30d': 'd F Y', '90d': 'd F Y' }
 
       element.parentNode.insertBefore(wrapper, element.nextSibling);
 
       wrapper.classList.add('content');
-      
+
       child.width = width;
       child.height = height;
 
@@ -28,7 +28,7 @@
 
       let chart = null;
 
-      let check = function() {
+      let check = function () {
 
         let config = {
           type: "line",
@@ -38,29 +38,34 @@
           },
           options: {
             responsive: true,
-            tooltip: {
-              mode: "index",
-              intersect: false,
-              caretPadding: 0
-            },
             hover: {
               mode: "nearest",
-              intersect: true
+              intersect: false
             },
             scales: {
-              xAxes: [
-                {
-                  display: showXAxis
+              x: {
+                display: showXAxis
+              },
+              y: {
+                display: showYAxis,
+                ticks: {
+                  fontColor: "#8f8f8f"
                 }
-              ],
-              yAxes: [
-                {
-                  display: showYAxis,
-                  ticks: {
-                    fontColor: "#8f8f8f"
-                  }
-                }
-              ]
+              }
+            },
+            plugins: {
+              title: {
+                display: false,
+                text: "Stats"
+              },
+              legend: {
+                display: false
+              },
+              tooltip: {
+                mode: "index",
+                intersect: false,
+                caretPadding: 0
+              }
             }
           }
         };
@@ -81,19 +86,19 @@
           config.data.datasets[i].data = [0, 0, 0, 0, 0, 0, 0];
           config.data.datasets[i].fill = true;
 
-          if(!data) {
+          if (!data) {
             return;
           }
 
           let dateFormat = (value.range && range[value.range]) ? range[value.range] : 'd F Y';
-          
+
           for (let x = 0; x < data.length; x++) {
             config.data.datasets[i].data[x] = data[x].value;
             config.data.labels[x] = date.format(dateFormat, data[x].date);
           }
         }
-        
-        if(chart) {
+
+        if (chart) {
           chart.destroy();
         }
         else {
