@@ -428,6 +428,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('success', $response['body']['result']);
 
+        sleep(5);
+
         // Check if function got executed.
 
         // Get latest execution logs
