@@ -694,7 +694,8 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($bucketId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
@@ -776,7 +777,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
@@ -844,7 +846,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->inject('project')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForInternal, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForInternal, $usage, $mode) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
@@ -1014,7 +1017,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
@@ -1102,7 +1106,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
@@ -1204,7 +1209,8 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('dbForInternal')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $read, $write, $response, $dbForInternal, $audits, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $read, $write, $response, $dbForInternal, $audits, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
@@ -1283,7 +1289,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $events, $audits, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $events, $audits, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $events */
