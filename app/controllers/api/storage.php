@@ -513,7 +513,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('user')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $file, $read, $write, $request, $response, $dbForInternal, $dbForExternal, $user, $audits, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $file, $read, $write, $request, $response, $dbForInternal, $dbForExternal, $user, $audits, $usage, $mode) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -524,7 +525,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if($bucket->isEmpty()) {
+        if($bucket->isEmpty() 
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -697,7 +699,8 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->inject('usage')
-    ->action(function ($bucketId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $dbForExternal, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $dbForExternal, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
@@ -705,7 +708,8 @@ App::get('/v1/storage/buckets/:bucketId/files')
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if($bucket->isEmpty()) {
+        if($bucket->isEmpty() 
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -780,7 +784,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $dbForExternal, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $dbForExternal, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
@@ -788,7 +793,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if($bucket->isEmpty()) {
+        if($bucket->isEmpty() 
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -849,7 +855,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForInternal, $dbForExternal, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForInternal, $dbForExternal, $usage, $mode) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
@@ -868,7 +875,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if($bucket->isEmpty()) {
+        if($bucket->isEmpty() 
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -1020,7 +1028,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $dbForExternal, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $dbForExternal, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
@@ -1028,7 +1037,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if($bucket->isEmpty()) {
+        if($bucket->isEmpty() 
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -1109,14 +1119,16 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $dbForExternal, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $dbForExternal, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if($bucket->isEmpty()) {
+        if($bucket->isEmpty() 
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -1211,7 +1223,8 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('dbForExternal')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $read, $write, $response, $dbForInternal, $dbForExternal, $audits, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $read, $write, $response, $dbForInternal, $dbForExternal, $audits, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
@@ -1219,7 +1232,8 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if($bucket->isEmpty()) {
+        if($bucket->isEmpty() 
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -1290,7 +1304,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $dbForExternal, $events, $audits, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $dbForExternal, $events, $audits, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
@@ -1300,7 +1315,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if($bucket->isEmpty()) {
+        if($bucket->isEmpty() 
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
         }
 

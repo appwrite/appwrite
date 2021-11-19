@@ -410,7 +410,7 @@ class DeletesV1 extends Worker
         
         $this->deleteByGroup('files',[
             new Query('bucketId', Query::TYPE_EQUAL, [$bucketId])
-        ], $this->getInternalDB($projectId));
+        ], $this->getExternalDB($projectId));
 
         $device = new Local(APP_STORAGE_UPLOADS.'/app-'.$projectId);
         $device->deletePath($device->getRoot() . DIRECTORY_SEPARATOR . $bucketId);

@@ -347,6 +347,17 @@ trait WebhooksBase
      */
     public function testCreateBucketFile(array $data): array
     {
+        //enable bucket
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $data['bucketId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Test Bucket Updated',
+            'enabled' => true,
+        ]);
+        
+        $this->assertEquals($bucket['headers']['status-code'], 200);
         /**
          * Test for SUCCESS
          */
@@ -498,7 +509,7 @@ trait WebhooksBase
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals('Test Bucket Updated', $webhook['data']['name']);
-        $this->assertEquals(false, $webhook['data']['enabled']);
+        $this->assertEquals(true, $webhook['data']['enabled']);
         $this->assertIsArray($webhook['data']['$read']);
         $this->assertIsArray($webhook['data']['$write']);
     }
