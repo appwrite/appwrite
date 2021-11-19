@@ -460,11 +460,11 @@ $logs = $this->getParam('logs', null);
                                         <p class="text-fade margin-top-tiny">Nulla elementum nisi eu tempor varius. Vivamus lacinia justo orci. Donec libero felis, blandit eu aliquet eu, ultrices eget lectus. Suspendisse dignissim, arcu in malesuada venenatis, tellus felis lobortis dui, quis condimentum purus libero at nunc. Pellentesque luctus sit amet metus ut tincidunt.</p>
 
                                         <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
-                                        <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.read}}" placeholder="User ID, Team ID or Role" />
+                                        <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$read}}" placeholder="User ID, Team ID or Role" />
                                         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
 
                                         <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                        <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.write}}" placeholder="User ID, Team ID or Role" />
+                                        <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$write}}" placeholder="User ID, Team ID or Role" />
                                         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
                                     </div>
                                 </div>
