@@ -39,11 +39,6 @@
           },
           options: {
             responsive: true,
-            tooltip: {
-              mode: "index",
-              intersect: false,
-              caretPadding: 0
-            },
             hover: {
               mode: "nearest",
               intersect: true
@@ -67,6 +62,11 @@
               },
               legend: {
                 display: false
+              },
+              tooltip: {
+                mode: "index",
+                intersect: false,
+                caretPadding: 0
               },
             }
           }
