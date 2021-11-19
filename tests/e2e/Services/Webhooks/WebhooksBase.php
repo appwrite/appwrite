@@ -509,7 +509,7 @@ trait WebhooksBase
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals('Test Bucket Updated', $webhook['data']['name']);
-        $this->assertEquals(false, $webhook['data']['enabled']);
+        $this->assertEquals(true, $webhook['data']['enabled']);
         $this->assertIsArray($webhook['data']['$read']);
         $this->assertIsArray($webhook['data']['$write']);
     }
