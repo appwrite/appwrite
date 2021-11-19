@@ -353,6 +353,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
+            'name' => 'Test Bucket Updated',
             'enabled' => true,
         ]);
         
