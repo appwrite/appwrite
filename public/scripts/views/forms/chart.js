@@ -14,6 +14,7 @@
       let colors = (element.getAttribute('data-colors') || 'blue,green,orange,red').split(',');
       let themes = {'blue': '#29b5d9', 'green': '#4eb55b', 'orange': '#fba233', 'red': '#dc3232', 'create': '#00b680', 'read': '#009cde', 'update': '#696fd7', 'delete': '#da5d95',};
       let range = {'24h': 'H:i', '7d': 'd F Y', '30d': 'd F Y', '90d': 'd F Y'}
+      let ticksCount = 5;
 
       element.parentNode.insertBefore(wrapper, element.nextSibling);
 
@@ -38,40 +39,40 @@
           },
           options: {
             responsive: true,
-            title: {
-              display: false,
-              text: "Stats"
-            },
-            legend: {
-              display: false
-            },
-            tooltips: {
-              mode: "index",
-              intersect: false,
-              caretPadding: 0
-            },
             hover: {
               mode: "nearest",
               intersect: true
             },
             scales: {
-              xAxes: [
-                {
-                  display: showXAxis
-                }
-              ],
-              yAxes: [
-                {
-                  display: showYAxis,
-                  ticks: {
-                    fontColor: "#8f8f8f"
-                  }
-                }
-              ]
+              x: {
+                display: showXAxis
+              },
+              y: {
+                display: showYAxis,
+                min: 0,
+                ticks: {
+                  count: ticksCount,
+                },
+              }
+            },
+            plugins: {
+              title: {
+                display: false,
+                text: "Stats"
+              },
+              legend: {
+                display: false
+              },
+              tooltip: {
+                mode: "index",
+                intersect: false,
+                caretPadding: 0
+              },
             }
           }
         };
 
+        let highest = 0;
         for (let i = 0; i < sources.length; i++) {
           let label = sources[i].substring(0, sources[i].indexOf('='));
           let path = sources[i].substring(sources[i].indexOf('=') + 1);
@@ -95,9 +96,22 @@
           let dateFormat = (value.range && range[value.range]) ? range[value.range] : 'd F Y';
           
           for (let x = 0; x < data.length; x++) {
+            if(data[x].value > highest) {
+              highest = data[x].value;
+            }
             config.data.datasets[i].data[x] = data[x].value;
             config.data.labels[x] = date.format(dateFormat, data[x].date);
           }
+        }
+
+        if(highest == 0) {
+          config.options.scales.y.ticks.stepSize = 1;
+          config.options.scales.y.max = ticksCount;
+        } else {
+          // ceiling of the highest value
+          highest = Math.ceil(highest / ticksCount) * ticksCount;
+          config.options.scales.y.ticks.stepSize = highest / ticksCount;
+          config.options.scales.y.max = highest;
         }
         
         if(chart) {

@@ -18,7 +18,7 @@
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                 data-param-offset="{{router.params.offset}}"
-                data-param-order-type="ASC"
+                data-param-order-type="DESC"
                 data-scope="sdk"
                 data-name="project-buckets">
 
@@ -160,7 +160,7 @@
                     <div class="box">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart background-image-no border-no margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-show-y-axis="true" data-forms-chart="Total Files=filesCount,Total Buckets=bucketsCount"/>
+                                <input type="hidden" data-ls-bind="{{usage}}" data-show-y-axis="true" data-forms-chart="Total Files=filesCount,Total Buckets=bucketsCount" data-height="140" />
                             </div>
                         </div>
                     </div>
