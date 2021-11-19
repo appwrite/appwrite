@@ -347,6 +347,16 @@ trait WebhooksBase
      */
     public function testCreateBucketFile(array $data): array
     {
+        //enable bucket
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $data['bucketId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'enabled' => true,
+        ]);
+        
+        $this->assertEquals($bucket['headers']['status-code'], 200);
         /**
          * Test for SUCCESS
          */
