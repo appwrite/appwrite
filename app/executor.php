@@ -519,6 +519,8 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
         // also remove the container if it exists
         if ($id) {
             $orchestration->remove($id, true);
+        } else {
+            $id = ''
         }
     }
 
