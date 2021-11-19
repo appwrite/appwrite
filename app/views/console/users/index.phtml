@@ -523,5 +523,79 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                 </ul>
             </div>
         </li>
+        <li data-state="/console/users/usage?project={{router.params.project}}">
+                <form
+                    class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
+                    data-service="users.getUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-range="90d">
+                    <button class="tick">90d</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
+
+                <form
+                    class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '30d'"
+                    data-service="users.getUsage"
+                    data-event="submit"
+                    data-name="usage">
+                    <button class="tick">30d</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
+
+                <form
+                    class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '24h'"
+                    data-service="users.getUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-range="24h">
+                    <button class="tick">24h</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
+
+                <h2>Usage</h2>
+
+                <div data-service="users.getUsage" data-event="load" data-name="usage">
+                    <h3 class="margin-bottom-tiny">Users</h3>
+                    <p class="text-fade">Count of users over time</p>
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Users=usersCount" data-show-y-axis="true" data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large">
+                        <li>Users <span data-ls-bind="({{usage.usersCount|statsGetLast|statsTotal}})"></span></li>
+                    </ul>
+
+                    <h3 class="margin-bottom-tiny">Operations</h3>
+                    <p class="text-fade">Count of users create, read, update and delete operations over time</p>
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input 
+                                    type="hidden" 
+                                    data-ls-bind="{{usage}}"
+                                    data-forms-chart="Created=usersCreate,Read=usersRead,Updated=usersUpdate,Deleted=usersDelete"
+                                    data-show-y-axis="true"
+                                    data-colors="create,read,update,delete"
+                                    data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large crud">
+                        <li>Created</li>
+                        <li>Read</li>
+                        <li>Updated</li>
+                        <li>Deleted</li>
+                    </ul>
+                </div>
+            </li>
     </ul>
 </div>
