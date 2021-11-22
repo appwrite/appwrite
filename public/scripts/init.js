@@ -175,4 +175,14 @@ window.formValidation = (form, fields) => {
           }
       }
   }
+  form.addEventListener("reset", () => {
+    for (const key in fields) {
+        if (Object.hasOwnProperty.call(fields, key)) {
+            const element = form.elements[key];
+            element.setAttribute("value", "");
+            element.removeAttribute("disabled");
+            element.dispatchEvent(new Event("change"));
+        }
+    }
+});
 };

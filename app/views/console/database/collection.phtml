@@ -590,7 +590,7 @@ $logs = $this->getParam('logs', null);
                 }
             };
 
-            form.addEventListener('change', event => {
+            form.addEventListener("change", event => {
                 formValidation(form, fields);
             });
         })();
@@ -680,7 +680,7 @@ $logs = $this->getParam('logs', null);
                 }
             };
 
-            form.addEventListener('change', event => {
+            form.addEventListener("change", event => {
                 formValidation(form, fields);
             });
         })();
@@ -768,7 +768,7 @@ $logs = $this->getParam('logs', null);
                 }
             };
 
-            form.addEventListener('change', event => {
+            form.addEventListener("change", event => {
                 formValidation(form, fields);
             });
         })();
@@ -845,7 +845,7 @@ $logs = $this->getParam('logs', null);
                 }
             };
 
-            form.addEventListener('change', event => {
+            form.addEventListener("change", event => {
                 formValidation(form, fields);
             });
         })();
@@ -924,7 +924,7 @@ $logs = $this->getParam('logs', null);
                 }
             };
 
-            form.addEventListener('change', event => {
+            form.addEventListener("change", event => {
                 formValidation(form, fields);
             });
         })();
@@ -1002,7 +1002,7 @@ $logs = $this->getParam('logs', null);
                 }
             };
 
-            form.addEventListener('change', event => {
+            form.addEventListener("change", event => {
                 formValidation(form, fields);
             });
         })();
@@ -1014,22 +1014,22 @@ $logs = $this->getParam('logs', null);
 
     <h1>Add URL Attribute</h1>
 
-        <form
-            id="add-url-attribute"
-            data-analytics
-            data-analytics-activity
-            data-analytics-event="submit"
-            data-analytics-category="console"
-            data-analytics-label="Create Collection Attribute (url)"
-            data-service="database.createUrlAttribute"
-            data-scope="sdk"
-            data-event="submit"
-            data-success="alert,trigger,reset"
-            data-success-param-alert-text="Created new attribute successfully"
-            data-success-param-trigger-events="database.createAttribute"
-            data-failure="alert"
-            data-failure-param-alert-text="Failed to create attribute"
-            data-failure-param-alert-classname="error">
+    <form
+        id="add-url-attribute"
+        data-analytics
+        data-analytics-activity
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Create Collection Attribute (url)"
+        data-service="database.createUrlAttribute"
+        data-scope="sdk"
+        data-event="submit"
+        data-success="alert,trigger,reset"
+        data-success-param-alert-text="Created new attribute successfully"
+        data-success-param-trigger-events="database.createAttribute"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to create attribute"
+        data-failure-param-alert-classname="error">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
@@ -1079,7 +1079,7 @@ $logs = $this->getParam('logs', null);
                 }
             };
 
-            form.addEventListener('change', event => {
+            form.addEventListener("change", event => {
                 formValidation(form, fields);
             });
         })();
@@ -1091,28 +1091,28 @@ $logs = $this->getParam('logs', null);
 
     <h1>Add Enum Attribute</h1>
 
-        <form
-            id="add-enum-attribute"
-            data-analytics
-            data-analytics-activity
-            data-analytics-event="submit"
-            data-analytics-category="console"
-            data-analytics-label="Create Collection Attribute (enum)"
-            data-service="database.createEnumAttribute"
-            data-scope="sdk"
-            data-event="submit"
-            data-success="alert,trigger,reset"
-            data-success-param-alert-text="Created new attribute successfully"
-            data-success-param-trigger-events="database.createAttribute"
-            data-failure="alert"
-            data-failure-param-alert-text="Failed to create attribute"
-            data-failure-param-alert-classname="error">
+    <form
+        id="add-enum-attribute"
+        data-analytics
+        data-analytics-activity
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Create Collection Attribute (enum)"
+        data-service="database.createEnumAttribute"
+        data-scope="sdk"
+        data-event="submit"
+        data-success="alert,trigger,reset"
+        data-success-param-alert-text="Created new attribute successfully"
+        data-success-param-trigger-events="database.createAttribute"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to create attribute"
+        data-failure-param-alert-classname="error">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-        <label for="string-attributeId">Attribute ID</label>
-        <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+        <label for="enum-attributeId">Attribute ID</label>
+        <input id="enum-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
 
         <label>Elements</label>
 
@@ -1139,8 +1139,8 @@ $logs = $this->getParam('logs', null);
             <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
         </div>
 
-        <label for="string-default">Default Value</label>
-        <input id="string-default" name="xdefault" type="url" pattern="https://.*" title="Valid URL address" class="margin-bottom-large" autocomplete="off">
+        <label for="enunm-default">Default Value</label>
+        <input id="enum-default" name="xdefault" type="text" class="margin-bottom-large" autocomplete="off">
 
         <footer>
             <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
@@ -1148,7 +1148,7 @@ $logs = $this->getParam('logs', null);
     </form>
     <script type="text/javascript">
         (() => {
-            const form = document.getElementById("add-url-attribute");
+            const form = document.getElementById("add-enum-attribute");
             const fields = {
                 required: {
                     array: ["disable", "uncheck"],
@@ -1173,7 +1173,7 @@ $logs = $this->getParam('logs', null);
                 }
             };
 
-            form.addEventListener('change', event => {
+            form.addEventListener("change", event => {
                 formValidation(form, fields);
             });
         })();
