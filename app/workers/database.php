@@ -83,7 +83,7 @@ class DatabaseV1 extends Worker
         $filters = $attribute->getAttribute('filters', []);
 
         try {
-            if(!$dbForExternal->createAttribute($collectionId, $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
+            if(!$dbForExternal->createAttribute('collections_' . $collectionId, $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
                 throw new Exception('Failed to create Attribute');
             }
             $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
@@ -108,7 +108,7 @@ class DatabaseV1 extends Worker
         $key = $attribute->getAttribute('key', '');
 
         try {
-            if(!$dbForExternal->deleteAttribute($collectionId, $key) && $attribute->getAttribute('status') !== 'failed') {
+            if(!$dbForExternal->deleteAttribute('collections_' . $collectionId, $key) && $attribute->getAttribute('status') !== 'failed') {
                 throw new Exception('Failed to delete Attribute');
             }
 
@@ -190,7 +190,7 @@ class DatabaseV1 extends Worker
         $orders = $index->getAttribute('orders', []);
 
         try {
-            if(!$dbForExternal->createIndex($collectionId, $key, $type, $attributes, $lengths, $orders)) {
+            if(!$dbForExternal->createIndex('collections_' . $collectionId, $key, $type, $attributes, $lengths, $orders)) {
                 throw new Exception('Failed to create Index');
             }
             $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
@@ -216,7 +216,7 @@ class DatabaseV1 extends Worker
         $key = $index->getAttribute('key');
 
         try {
-            if(!$dbForExternal->deleteIndex($collectionId, $key) && $index->getAttribute('status') !== 'failed') {
+            if(!$dbForExternal->deleteIndex('collections_' . $collectionId, $key) && $index->getAttribute('status') !== 'failed') {
                 throw new Exception('Failed to delete index');
             }
 

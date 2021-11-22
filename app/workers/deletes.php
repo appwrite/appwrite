@@ -113,7 +113,7 @@ class DeletesV1 extends Worker
             new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])
         ], $dbForInternal);
 
-        $dbForExternal->deleteCollection($collectionId);
+        $dbForExternal->deleteCollection('collections_' . $collectionId);
     }
 
     /**
