@@ -3,6 +3,7 @@
 global $cli;
 
 use Appwrite\ClamAV\Network;
+use Utopia\Logger\Logger;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\App;
@@ -80,6 +81,16 @@ $cli
         }
         else {
             Console::log('🟢 HTTPS force option is enabled');
+        }
+
+
+        $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
+        $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
+
+        if(\empty($providerName) || \empty($providerConfig) || !Logger::hasProvider($providerName)) {
+            Console::log('🔴 Logging adapter is disabled');
+        } else {
+            Console::log('🟢 Logging adapter is enabled (' . $providerName . ')');
         }
 
         \sleep(0.2);

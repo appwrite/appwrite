@@ -149,6 +149,23 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_LOGGING_PROVIDER',
+                'description' => 'This variable allows you to enable logging errors to 3rd party providers. This value is empty by default, to enable the logger set the value to one of \'sentry\', \'raygun\', \'appsignal\'',
+                'introduction' => '0.12.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ], [
+                'name' => '_APP_LOGGING_CONFIG',
+                'description' => 'This variable configured authentication to 3rd party error loggin providers. If using Sentry, this should be \'SENTRY_API_KEY;SENTRY_APP_ID\'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key.',
+                'introduction' => '0.12.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],

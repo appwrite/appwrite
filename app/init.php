@@ -28,6 +28,7 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
+use Utopia\Logger\Logger;
 use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
@@ -114,7 +115,7 @@ Config::load('locale-continents', __DIR__.'/config/locale/continents.php');
 Config::load('storage-logos', __DIR__.'/config/storage/logos.php'); 
 Config::load('storage-mimes', __DIR__.'/config/storage/mimes.php'); 
 Config::load('storage-inputs', __DIR__.'/config/storage/inputs.php'); 
-Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php'); 
+Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php');
 
 $user = App::getEnv('_APP_REDIS_USER','');
 $pass = App::getEnv('_APP_REDIS_PASS','');
@@ -163,6 +164,23 @@ Database::addFilter('encrypt',
 /*
  * Registry
  */
+$register->set('logger', function () { // Register error logger
+    $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
+    $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
+
+    if(\empty($providerName) || \empty($providerConfig)) {
+        return;
+    }
+
+    if(!Logger::hasProvider($providerName)) {
+        throw new Exception("Logging provider not supported. Logging disabled.");
+        return;
+    }
+
+    $classname = '\\Utopia\\Logger\\Adapter\\'.\ucfirst($providerName);
+    $adapter = new $classname($providerConfig);
+    return new Logger($adapter);
+});
 $register->set('dbPool', function () { // Register DB connection
     $dbHost = App::getEnv('_APP_DB_HOST', '');
     $dbPort = App::getEnv('_APP_DB_PORT', '');
@@ -344,6 +362,10 @@ Locale::setLanguageFromJSON('zh-tw', __DIR__.'/config/locale/translations/zh-tw.
 ]);
 
 // Runtime Execution
+App::setResource('logger', function($register) {
+    return $register->get('logger');
+}, ['register']);
+
 
 App::setResource('register', function() use ($register) {
     return $register;
