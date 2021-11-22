@@ -83,7 +83,7 @@ docker run -it --rm ,
     appwrite/appwrite:0.11.0
 ```
 
-Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-linux native hosts, the server might take a few minutes to start after installation completes.
+Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after installation completes.
 
 
 For advanced production and custom installation, check out our Docker [environment variables](https://appwrite.io/docs/environment-variables) docs. You can also use our public [docker-compose.yml](https://gist.github.com/eldadfux/977869ff6bdd7312adfd4e629ee15cc5#file-docker-compose-yml) file to manually set up an environment.
@@ -94,7 +94,7 @@ If you are upgrading your Appwrite server from an older version, you should use 
 
 ## Getting Started
 
-Getting started with Appwrite is as easy as creating a new project, choosing your platform, and integrating its SDK in your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
+Getting started with Appwrite is as easy as creating a new project, choosing your platform, and integrating its SDK into your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
 
 * [Getting Started for Web](https://appwrite.io/docs/getting-started-for-web)
 * [Getting Started for Flutter](https://appwrite.io/docs/getting-started-for-flutter)
@@ -102,7 +102,6 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 * [Getting Started for Android](https://appwrite.io/docs/getting-started-for-android)
 * [Getting Started for Server](https://appwrite.io/docs/getting-started-for-server)
 * [Getting Started for CLI](https://appwrite.io/docs/command-line)
-* Getting Started for iOS (Coming soon...)
 
 ### Services
 
@@ -130,7 +129,7 @@ Below is a list of currently supported platforms and languages. If you wish to h
 #### Server
 * ✅  &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node) (Maintained by the Appwrite Team)
 * ✅  &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
-* ✅  &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) - **Beta** (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) - (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) - **Beta** (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Python](https://github.com/appwrite/sdk-for-python) (Maintained by the Appwrite Team)
@@ -139,8 +138,9 @@ Below is a list of currently supported platforms and languages. If you wish to h
 * ✅  &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **Experimental** (Maintained by the Appwrite Team)
 
 #### Community
-* ✅  &nbsp; [Appcelerator Titanium](https://github.com/m1ga/ti.appwrite) (Maintained by [Michael Gangolf](https://github.com/m1ga/))    
-    
+* ✅  &nbsp; [Appcelerator Titanium](https://github.com/m1ga/ti.appwrite) (Maintained by [Michael Gangolf](https://github.com/m1ga/))  
+* ✅  &nbsp; [Godot Engine](https://github.com/GodotNuts/appwrite-sdk) (Maintained by [fenix-hub @GodotNuts](https://github.com/fenix-hub))  
+
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 
 ## Contributing

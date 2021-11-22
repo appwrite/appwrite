@@ -15,7 +15,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Web',
-                'version' => '4.0.4',
+                'version' => '5.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-web',
                 'package' => 'https://www.npmjs.com/package/appwrite',
                 'enabled' => true,
@@ -81,7 +81,7 @@ return [
             [
                 'key' => 'apple',
                 'name' => 'Apple',
-                'version' => '0.1.0',
+                'version' => '0.1.1',
                 'url' => 'https://github.com/appwrite/sdk-for-apple',
                 'package' => 'https://github.com/appwrite/sdk-for-apple',
                 'enabled' => true,
@@ -190,7 +190,7 @@ return [
             [
                 'key' => 'nodejs',
                 'name' => 'Node.js',
-                'version' => '2.5.1',
+                'version' => '3.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-node',
                 'package' => 'https://www.npmjs.com/package/node-appwrite',
                 'enabled' => true,
@@ -208,11 +208,11 @@ return [
             [
                 'key' => 'deno',
                 'name' => 'Deno',
-                'version' => '0.4.1',
+                'version' => '1.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-deno',
                 'package' => 'https://deno.land/x/appwrite',
                 'enabled' => true,
-                'beta' => true,
+                'beta' => false,
                 'dev' => false,
                 'hidden' => false,
                 'family' => APP_PLATFORM_SERVER,
