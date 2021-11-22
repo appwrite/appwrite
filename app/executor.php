@@ -30,14 +30,14 @@ use Utopia\Storage\Storage;
 use Swoole\Coroutine as Co;
 use Utopia\Cache\Cache;
 use Utopia\Database\Query;
-use Utopia\Orchestration\Adapter\DockerAPI;
+use Utopia\Orchestration\Adapter\DockerCLI;
 
 require_once __DIR__ . '/init.php';
 
 $dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
 $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
 $dockerEmail = App::getEnv('DOCKERHUB_PULL_EMAIL', null);
-$orchestration = new Orchestration(new DockerAPI($dockerUser, $dockerPass));
+$orchestration = new Orchestration(new DockerCLI($dockerUser, $dockerPass));
 
 $runtimes = Config::getParam('runtimes');
 
@@ -392,6 +392,10 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
             ]
         );
 
+    if (empty($id)) {
+            throw new Exception('Failed to start build container');
+        }
+
         // Extract user code into build container
         $untarStdout = '';
         $untarStderr = '';
@@ -519,8 +523,6 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
         // also remove the container if it exists
         if ($id) {
             $orchestration->remove($id, true);
-        } else {
-            $id = ''
         }
     }
 
@@ -654,6 +656,10 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
             hostname: $container,
             mountFolder: $tagPathTargetDir,
         );
+
+        if (empty($id)) {
+            throw new Exception('Failed to create container');
+        }
 
         // Add to network
         $orchestration->networkConnect($container, 'appwrite_runtimes');
@@ -861,7 +867,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
             'Content-Type: application/json',
             'Content-Length: ' . \strlen($body),
             'x-internal-challenge: ' . $key,
-            'host: ' . null
+            'host: null'
         ]);
 
         $executorResponse = \curl_exec($ch);
