@@ -11,6 +11,10 @@ Console::success(APP_NAME . ' webhooks worker v1 has started');
 
 class WebhooksV1 extends Worker
 {
+    public function getWorkerName(): string {
+        return "webhooks";
+    }
+
     public function init(): void
     {
     }

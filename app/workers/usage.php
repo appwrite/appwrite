@@ -11,6 +11,10 @@ Console::success(APP_NAME . ' usage worker v1 has started');
 
 class UsageV1 extends Worker
 {
+    public function getWorkerName(): string {
+        return "usage";
+    }
+
     public function init(): void
     {
     }

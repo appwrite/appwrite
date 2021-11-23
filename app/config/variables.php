@@ -158,11 +158,21 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
-            ], [
+            ],
+            [
                 'name' => '_APP_LOGGING_CONFIG',
-                'description' => 'This variable configured authentication to 3rd party error loggin providers. If using Sentry, this should be \'SENTRY_API_KEY;SENTRY_APP_ID\'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key.',
+                'description' => 'This variable configures authentication to 3rd party error logging providers. If using Sentry, this should be \'SENTRY_API_KEY;SENTRY_APP_ID\'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key.',
                 'introduction' => '0.12.0',
                 'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LOGGING_SERVERNAME',
+                'description' => 'This variable configures name of the server in error logging for identification reasons in scaled solution.',
+                'introduction' => '0.12.0',
+                'default' => 'selfhosted-001',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

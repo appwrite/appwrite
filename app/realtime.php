@@ -19,6 +19,7 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Logger\Log;
 use Utopia\Swoole\Request;
 use Utopia\WebSocket\Server;
 use Utopia\WebSocket\Adapter;
@@ -26,6 +27,40 @@ use Utopia\WebSocket\Adapter;
 require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+
+function logError($register, \Throwable $error, $action) {
+    $logger = $register->get('logger');
+
+    $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+
+    $log = new Log();
+    $log->setNamespace("realtime");
+    $log->setServer(App::getEnv("_APP_LOGGING_SERVERNAME", "selfhosted-001"));
+    $log->setVersion($version);
+    $log->setType(Log::TYPE_ERROR);
+    $log->setMessage($error->getMessage());
+
+    $log->setTags([
+        'code' => $error->getCode(),
+        'verbose_type' => get_class($error),
+    ]);
+
+    $log->setExtra([
+        'file' => $error->getFile(),
+        'line' => $error->getLine(),
+        'trace' => $error->getTraceAsString(),
+    ]);
+
+    $log->setAction($action);
+
+    $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+    $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+    $log->setBreadcrumbs([]);
+
+    $responseCode = $logger->addLog($log);
+    Console::info('Realtime log pushed with status code: '.$responseCode);
+}
 
 $realtime = new Realtime();
 
@@ -72,7 +107,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
     /**
      * Create document for this worker to share stats across Containers.
      */
-    go(function () use ($getConsoleDb, $containerId, &$documentId) {
+    go(function () use ($getConsoleDb, $containerId, &$documentId, $register) {
         try {
             [$consoleDb, $returnConsoleDb] = call_user_func($getConsoleDb);
             $document = [
@@ -90,6 +125,8 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
             Authorization::enable();
             $documentId = $document->getId();
         } catch (\Throwable $th) {
+            logError($register, $th, "onStart.createDocument");
+
             Console::error('[Error] Type: ' . get_class($th));
             Console::error('[Error] Message: ' . $th->getMessage());
             Console::error('[Error] File: ' . $th->getFile());
@@ -102,7 +139,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
     /**
      * Save current connections to the Database every 5 seconds.
      */
-    Timer::tick(5000, function () use ($stats, $getConsoleDb, $containerId, &$documentId) {
+    Timer::tick(5000, function () use ($stats, $getConsoleDb, $containerId, &$documentId, $register) {
         foreach ($stats as $projectId => $value) {
             if (empty($value['connections']) && empty($value['messages'])) {
                 continue;
@@ -153,6 +190,8 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
                 'value' => json_encode($payload)
             ]);
         } catch (\Throwable $th) {
+            logError($register, $th, "onStart.updateDocument");
+
             Console::error('[Error] Type: ' . get_class($th));
             Console::error('[Error] Message: ' . $th->getMessage());
             Console::error('[Error] File: ' . $th->getFile());
@@ -326,6 +365,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 }
             });
         } catch (\Throwable $th) {
+            logError($register, $th, "onWorkerStart.pubSubConnection");
+
             Console::error('Pub/sub error: ' . $th->getMessage());
             $register->get('redisPool')->put($redis);
             $attempts++;
@@ -442,6 +483,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $stats->incr($project->getId(), 'connections');
         $stats->incr($project->getId(), 'connectionsTotal');
     } catch (\Throwable $th) {
+        logError($register, $th, "onOpen.init");
+
         $response = [
             'type' => 'error',
             'data' => [

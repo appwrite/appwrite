@@ -12,6 +12,10 @@ Console::success(APP_NAME . ' audits worker v1 has started');
 
 class AuditsV1 extends Worker
 {
+    public function getWorkerName(): string {
+        return "audits";
+    }
+
     public function init(): void
     {
     }

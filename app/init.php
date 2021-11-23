@@ -168,7 +168,7 @@ $register->set('logger', function () { // Register error logger
     $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
     $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
 
-    if(\empty($providerName) || \empty($providerConfig)) {
+    if(empty($providerName) || empty($providerConfig)) {
         return;
     }
 
@@ -366,6 +366,9 @@ App::setResource('logger', function($register) {
     return $register->get('logger');
 }, ['register']);
 
+App::setResource('loggerBreadcrumb', function() {
+    return [];
+});
 
 App::setResource('register', function() use ($register) {
     return $register;

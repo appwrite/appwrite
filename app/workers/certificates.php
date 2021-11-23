@@ -18,6 +18,10 @@ Console::success(APP_NAME . ' certificates worker v1 has started');
 
 class CertificatesV1 extends Worker
 {
+    public function getWorkerName(): string {
+        return "certificates";
+    }
+
     public function init(): void
     {
     }

@@ -17,6 +17,10 @@ Console::success(APP_NAME . ' tasks worker v1 has started');
 
 class TasksV1 extends Worker
 {
+    public function getWorkerName(): string {
+        return "tasks";
+    }
+
     public function init(): void
     {
     }

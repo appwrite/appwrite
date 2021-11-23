@@ -13,6 +13,10 @@ Console::success(APP_NAME . ' mails worker v1 has started' . "\n");
 
 class MailsV1 extends Worker
 {
+    public function getWorkerName(): string {
+        return "mails";
+    }
+
     public function init(): void
     {
     }

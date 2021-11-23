@@ -3,6 +3,8 @@
 require_once __DIR__.'/../init.php';
 
 use Utopia\App;
+use Utopia\Logger\Log;
+use Utopia\Logger\Log\User;
 use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
 use Utopia\View;
@@ -289,19 +291,66 @@ App::options(function ($request, $response) {
         ->noContent();
 }, ['request', 'response']);
 
-App::error(function ($error, $utopia, $request, $response, $layout, $project) {
+App::error(function ($error, $utopia, $request, $response, $layout, $project, $logger, $user, $loggerBreadcrumb) {
     /** @var Exception $error */
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\View $layout */
     /** @var Appwrite\Database\Document $project */
+    /** @var Utopia\Logger\Logger $logger */
+    /** @var Appwrite\Database\Document $user */
+
+    $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+    $route = $utopia->match($request);
+
+    if($error->getCode() >= 500 || $error->getCode() === 0) {
+        $log = new Utopia\Logger\Log();
+
+        if(!$user->isEmpty()) {
+            $log->setUser(new User($user->getId()));
+        }
+
+        $log->setNamespace("http");
+        $log->setServer(App::getEnv("_APP_LOGGING_SERVERNAME", "selfhosted-001"));
+        $log->setVersion($version);
+        $log->setType(Log::TYPE_ERROR);
+        $log->setMessage($error->getMessage());
+
+        $log->setTags([
+            'method' => $route->getMethod(),
+            'url' => $route->getPath(),
+            'code' => $error->getCode(),
+            'verbose_type' => get_class($error),
+            'projectId' => $project->getId(),
+            'hostname' => $request->getHostname(),
+            'locale' => (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')),
+        ]);
+
+        $log->setExtra([
+            'file' => $error->getFile(),
+            'line' => $error->getLine(),
+            'trace' => $error->getTraceAsString(),
+            'roles' => Authorization::$roles
+        ]);
+
+        $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
+        $log->setAction($action);
+
+        $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+        $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+        $log->setBreadcrumbs($loggerBreadcrumb);
+
+        $responseCode = $logger->addLog($log);
+        Console::info('Log pushed with status code: '.$responseCode);
+    }
+
 
     if ($error instanceof PDOException) {
         throw $error;
     }
 
-    $route = $utopia->match($request);
     $template = ($route) ? $route->getLabel('error', null) : null;
 
     if (php_sapi_name() === 'cli') {
@@ -317,8 +366,6 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         Console::error('[Error] File: '.$error->getFile());
         Console::error('[Error] Line: '.$error->getLine());
     }
-
-    $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
     switch ($error->getCode()) { // Don't show 500 errors!
         case 400: // Error allowed publicly
@@ -384,7 +431,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
 
     $response->dynamic(new Document($output),
         $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR);
-}, ['error', 'utopia', 'request', 'response', 'layout', 'project']);
+}, ['error', 'utopia', 'request', 'response', 'layout', 'project', 'logger', 'user', 'loggerBreadcrumb']);
 
 App::get('/manifest.json')
     ->desc('Progressive app manifest file')

@@ -87,7 +87,7 @@ $cli
         $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
         $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
 
-        if(\empty($providerName) || \empty($providerConfig) || !Logger::hasProvider($providerName)) {
+        if(empty($providerName) || empty($providerConfig) || !Logger::hasProvider($providerName)) {
             Console::log('🔴 Logging adapter is disabled');
         } else {
             Console::log('🟢 Logging adapter is enabled (' . $providerName . ')');
