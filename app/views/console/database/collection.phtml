@@ -56,7 +56,6 @@ $logs = $this->getParam('logs', null);
 
                     <div data-ls-if="({{project-documents.sum}})" class="margin-top-negative">
                         <div class="margin-bottom-small text-align-end text-size-small text-fade"><span data-ls-bind="{{project-documents.sum}}"></span><span data-ls-if="{{project-documents.sum}} == <?php echo APP_LIMIT_COUNT; ?>">+</span> documents found</div>
-
                         <div class="box margin-bottom y-scroll text-size-small">
                             <table class="vertical borders">
                                 <thead>
@@ -237,7 +236,7 @@ $logs = $this->getParam('logs', null);
                             <div class="link new-attribute-ip"><i class="avatar icon-ip"></i> New IP Attribute</div>
                         </li>
                         <li>
-                            <div class="link new-attribute-enum"><i class="avatar icon-string"></i> New Enum Attribute</div>
+                            <div class="link new-attribute-enum"><i class="avatar icon-enum"></i> New Enum Attribute</div>
                         </li>
                     </ul>
                 </div>
