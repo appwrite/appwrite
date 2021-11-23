@@ -283,7 +283,8 @@ else if(undefined!==element.value){if((json[name]!==undefined)&&(!Array.isArray(
 if(Array.isArray(json[name])){json[name].push(element.value);}
 else{json[name]=element.value;}}
 json[name]=cast(json[name],castTo);}}
-for(let i=0;i<element.children.length;i++){if(Array.isArray(ref)){ref.push({});toJson(element.children[i],ref[ref.length]);}
+for(let i=0;i<element.children.length;i++){if(element.children[i].disabled){return;}
+if(Array.isArray(ref)){ref.push({});toJson(element.children[i],ref[ref.length]);}
 else{toJson(element.children[i],ref);}}
 return json;}
 return{'toJson':toJson}},true,false);})(window);(function(window){"use strict";window.ls.container.set('markdown',function(window){var md=window.markdownit();function renderEm(tokens,idx,opts,_,slf){var token=tokens[idx];if(token.markup==='__'){token.tag='u';}

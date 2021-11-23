@@ -120,6 +120,9 @@
             }
 
             for (let i = 0; i < element.children.length; i++) {
+                if (element.children[i].disabled) {
+                    return;
+                }
                 if (Array.isArray(ref)) {
                     ref.push({});
                     toJson(element.children[i], ref[ref.length]);
