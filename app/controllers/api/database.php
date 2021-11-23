@@ -1189,13 +1189,15 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->inject('response')
     ->inject('dbForInternal')
+    ->inject('dbForExternal')
     ->inject('database')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $response, $dbForInternal, $database, $events, $audits, $usage) {
+    ->action(function ($collectionId, $attributeId, $response, $dbForInternal, $dbForExternal, $database, $events, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
@@ -1219,6 +1221,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
         }
 
         $dbForInternal->deleteCachedDocument('collections', $collectionId);
+        $dbForExternal->deleteCachedCollection($collection->getId());
 
         $database
             ->setParam('type', DATABASE_TYPE_DELETE_ATTRIBUTE)
