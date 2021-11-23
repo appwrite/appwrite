@@ -120,7 +120,8 @@ class DeletesV1 extends Worker
      */
     protected function deleteUsageStats(int $timestamp1d, int $timestamp30m)
     {
-        $this->deleteForProjectIds(function (string $projectId, Database $dbForInternal, Database $dbForExternal) use ($timestamp1d, $timestamp30m) {
+        $this->deleteForProjectIds(function (string $projectId) use ($timestamp1d, $timestamp30m) {
+            $dbForInternal = $this->getInternalDB($projectId);
             // Delete Usage stats
             $this->deleteByGroup('stats', [
                 new Query('time', Query::TYPE_LESSER, [$timestamp1d]),
@@ -198,7 +199,8 @@ class DeletesV1 extends Worker
      */
     protected function deleteExecutionLogs(int $timestamp): void
     {
-        $this->deleteForProjectIds(function (string $projectId, Database $dbForInternal, Database $dbForExternal) use ($timestamp) {
+        $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
+            $dbForInternal = $this->getInternalDB($projectId);
             // Delete Executions
             $this->deleteByGroup('executions', [
                 new Query('dateCreated', Query::TYPE_LESSER, [$timestamp])
@@ -211,7 +213,8 @@ class DeletesV1 extends Worker
      */
     protected function deleteRealtimeUsage(int $timestamp): void
     {
-        $this->deleteForProjectIds(function (string $projectId, Database $dbForInternal, Database $dbForExternal) use ($timestamp) {
+        $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
+            $dbForInternal = $this->getInternalDB($projectId);
             // Delete Dead Realtime Logs
             $this->deleteByGroup('realtime', [
                 new Query('timestamp', Query::TYPE_LESSER, [$timestamp])
@@ -228,7 +231,8 @@ class DeletesV1 extends Worker
             throw new Exception('Failed to delete audit logs. No timestamp provided');
         }
 
-        $this->deleteForProjectIds(function (string $projectId, Database $dbForInternal, Database $dbForExternal) use ($timestamp) {
+        $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
+            $dbForInternal = $this->getInternalDB($projectId);
             $timeLimit = new TimeLimit("", 0, 1, $dbForInternal);
             $abuse = new Abuse($timeLimit);
 
@@ -247,7 +251,8 @@ class DeletesV1 extends Worker
         if ($timestamp == 0) {
             throw new Exception('Failed to delete audit logs. No timestamp provided');
         }
-        $this->deleteForProjectIds(function (string $projectId, Database $dbForInternal, Database $dbForExternal) use ($timestamp) {
+        $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
+            $dbForInternal = $this->getInternalDB($projectId);
             $audit = new Audit($dbForInternal);
             $status = $audit->cleanup($timestamp);
             if (!$status) {
@@ -338,14 +343,7 @@ class DeletesV1 extends Worker
 
             Console::info('Executing delete function for chunk #' . $chunk . '. Found ' . $sum . ' projects');
             foreach ($projectIds as $projectId) {
-                if (!($dbForInternal = $this->getInternalDB($projectId))) {
-                    throw new Exception('Failed to get projectDB for project ' . $projectId);
-                }
-
-                if (!($dbForExternal = $this->getExternalDB($projectId))) {
-                    throw new Exception('Failed to get projectDB for project ' . $projectId);
-                }
-                $callback($projectId, $dbForInternal, $dbForExternal);
+                $callback($projectId);
                 $count++;
             }
         }
