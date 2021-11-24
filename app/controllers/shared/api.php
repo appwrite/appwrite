@@ -40,9 +40,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
     $timeLimitArray = [];
 
-    if (!is_array($abuseKeyLabel)) {
-        $abuseKeyLabel = [$abuseKeyLabel];
-    }
+    $abuseKeyLabel = (!is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
     foreach ($abuseKeyLabel as $abuseKey) {
         $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $db);
