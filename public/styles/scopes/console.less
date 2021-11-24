@@ -589,7 +589,13 @@
     background-repeat: round;	
     border: solid 1px var(--config-border-color);	
     border-right: solid 1px transparent;	
-    border-bottom: solid 1px transparent;	
+    border-bottom: solid 1px transparent;
+    &.background-image-no {
+      background-image: none;
+    }	
+    &.border-no {
+      border: none;
+    }
     @media @tablets, @phones {	
       width: 100%;	
       padding-bottom: 32%;	
@@ -607,6 +613,41 @@
 
   .chart-notes {
     font-size: 12px;
+
+    &.crud li {
+      &:nth-child(1), &.create {
+        color: #00b680;
+
+        &::before {
+          background: #00b680;
+        }
+      }
+      
+      &:nth-child(2), &.read {
+        color: #009cde;
+
+        &::before {
+          background: #009cde;
+        }
+      }
+
+      &:nth-child(3), &.update {
+        color: #696fd7;
+
+        &::before {
+          background: #696fd7;
+        }
+      }
+
+      &:nth-child(4), &.delete {
+        color: #da5d95;
+
+        &::before {
+          background: #da5d95;
+        }
+      
+      }
+    }
 
     li {
       line-height: 20px;

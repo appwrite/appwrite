@@ -16,56 +16,56 @@ class UsageUsers extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('users.count', [
+            ->addRule('usersCount', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for total number of users.',
                 'default' => [],
                 'example' => new \stdClass,
                 'array' => true 
             ])
-            ->addRule('users.create', [
+            ->addRule('usersCreate', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for users created.',
                 'default' => [],
                 'example' => new \stdClass,
                 'array' => true 
             ])
-            ->addRule('users.read', [
+            ->addRule('usersRead', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for users read.',
                 'default' => [],
                 'example' => new \stdClass,
                 'array' => true 
             ])
-            ->addRule('users.update', [
+            ->addRule('usersUpdate', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for users updated.',
                 'default' => [],
                 'example' => new \stdClass,
                 'array' => true 
             ])
-            ->addRule('users.delete', [
+            ->addRule('usersDelete', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for users deleted.',
                 'default' => [],
                 'example' => new \stdClass,
                 'array' => true 
             ])
-            ->addRule('sessions.create', [
+            ->addRule('sessionsCreate', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for sessions created.',
                 'default' => [],
                 'example' => new \stdClass,
                 'array' => true 
             ])
-            ->addRule('sessions.provider.create', [
+            ->addRule('sessionsProviderCreate', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for sessions created for a provider ( email, anonymous or oauth2 ).',
                 'default' => [],
                 'example' => new \stdClass,
                 'array' => true 
             ])
-            ->addRule('sessions.delete', [
+            ->addRule('sessionsDelete', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for sessions deleted.',
                 'default' => [],

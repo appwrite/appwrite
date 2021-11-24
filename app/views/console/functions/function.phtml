@@ -247,37 +247,37 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Executions=usage.executions.data" data-height="140" />
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Executions=functionsExecutions" data-height="140" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li>Executions <span data-ls-bind="({{usage.executions.total}})"></span></li>
+                        <li>Executions <span data-ls-bind="({{usage.functionsExecutions|statsGetLast|statsTotal}})"></span></li>
                     </ul>
 
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="CPU Time (seconds)=usage.compute.data" data-colors="orange" data-height="140" />
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="CPU Time (seconds)=functionsCompute" data-colors="orange" data-height="140" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li class="orange">CPU Time <span data-ls-bind="({{usage.compute.total|seconds2hum}})"></span></li>
+                        <li class="orange">CPU Time <span data-ls-bind="({{usage.functionsCompute|statsGetLast|seconds2hum}})"></span></li>
                     </ul>
 
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Failures=usage.failures.data" data-colors="red" data-height="140" />
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Failures=functionsFailures" data-colors="red" data-height="140" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li class="red">Errors <span data-ls-bind="({{usage.failures.total}})"></span></li>
+                        <li class="red">Errors <span data-ls-bind="({{usage.functionsFailures|statsGetLast|statsTotal}})"></span></li>
                     </ul>
                 </div>
             </li>

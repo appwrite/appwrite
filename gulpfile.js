@@ -13,6 +13,7 @@ const configApp  = {
     mainFile: 'app.js',
     src: [
         'public/scripts/dependencies/litespeed.js',
+        'public/scripts/dependencies/alpine.js',
 
         'public/scripts/init.js',
 
@@ -59,9 +60,11 @@ const configApp  = {
         'public/scripts/views/forms/oauth-apple.js',
         'public/scripts/views/forms/password-meter.js',
         'public/scripts/views/forms/pell.js',
+        'public/scripts/views/forms/required.js',
         'public/scripts/views/forms/remove.js',
         'public/scripts/views/forms/run.js',
         'public/scripts/views/forms/select-all.js',
+        'public/scripts/views/forms/selected.js',
         'public/scripts/views/forms/show-secret.js',
         'public/scripts/views/forms/switch.js',
         'public/scripts/views/forms/tags.js',

@@ -218,6 +218,8 @@ App::post('/v1/account/sessions')
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.sessions.create')
             ->setParam('resource', 'user/' . $profile->getId())
+            ->setParam('userEmail', $profile->getAttribute('email', ''))
+            ->setParam('userName', $profile->getAttribute('name', ''))
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -1228,17 +1230,19 @@ App::get('/v1/account/logs')
 
             $detector = new Detector($log['userAgent']);
 
-            $output[$i] = new Document(array_merge([
-                'event' => $log['event'],
-                'ip' => $log['ip'],
-                'time' => $log['time'],
-            ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
+            $output[$i] = new Document(array_merge(
+                $log->getArrayCopy(),
+                $log['data'],
+                $detector->getOS(),
+                $detector->getClient(),
+                $detector->getDevice()
+            ));
 
             $record = $geodb->get($log['ip']);
 
             if ($record) {
                 $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));        
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');

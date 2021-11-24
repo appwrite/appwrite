@@ -301,7 +301,7 @@
                 data-name="securityLogs"
                 data-event="load">
 
-                <div class="box">
+                <div class="box margin-bottom">
                     <table class="vertical small">
                         <thead>
                             <tr>
@@ -329,6 +329,33 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+                <div class="pull-end text-align-center paging">
+                    <form
+                        data-service="account.getLogs"
+                        data-event="submit"
+                        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                        data-param-offset="{{router.params.offset}}"
+                        data-scope="console"
+                        data-name="securityLogs"
+                        data-success="state"
+                        data-success-param-state-keys="offset">
+                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{securityLogs.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                    </form>
+
+                    <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{securityLogs.sum|pageTotal}}"></span>
+
+                    <form
+                        data-service="account.getLogs"
+                        data-event="submit"
+                        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                        data-param-offset="{{router.params.offset}}"
+                        data-scope="console"
+                        data-name="securityLogs"
+                        data-success="state"
+                        data-success-param-state-keys="offset">
+                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{securityLogs.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                    </form>
                 </div>
             </div>
         </li>

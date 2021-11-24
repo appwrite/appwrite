@@ -95,6 +95,7 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
             'array' => $array,
             'format' => $format,
             'formatOptions' => $formatOptions,
+            'filters' => $filters,
         ]);
 
         $dbForInternal->checkAttribute($collection, $attribute);
@@ -289,7 +290,7 @@ App::get('/v1/database/usage')
 
         $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $period = [
+            $periods = [
                 '24h' => [
                     'period' => '30m',
                     'limit' => 48,
@@ -323,13 +324,16 @@ App::get('/v1/database/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+            Authorization::skip(function() use ($dbForInternal, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
+                    $limit = $periods[$range]['limit'];
+                    $period = $periods[$range]['period'];
+
                     $requestDocs = $dbForInternal->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
-    
+                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
                         $stats[$metric][] = [
@@ -337,22 +341,38 @@ App::get('/v1/database/usage')
                             'date' => $requestDoc->getAttribute('time'),
                         ];
                     }
+
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                            '30m' => 1800,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                        ];
+                        $backfill--;
+                    }
+                    // TODO@kodumbeats explore performance if query is ordered by time ASC
                     $stats[$metric] = array_reverse($stats[$metric]);
-                }    
+                }
             });
 
             $usage = new Document([
                 'range' => $range,
-                'documents.count' => $stats["database.documents.count"],
-                'collections.count' => $stats["database.collections.count"],
-                'documents.create' =>  $stats["database.documents.create"],
-                'documents.read' =>  $stats["database.documents.read"],
-                'documents.update' => $stats["database.documents.update"],
-                'documents.delete' => $stats["database.documents.delete"],
-                'collections.create' => $stats["database.collections.create"],
-                'collections.read' =>  $stats["database.collections.read"],
-                'collections.update' => $stats["database.collections.update"],
-                'collections.delete' => $stats["database.collections.delete"],
+                'documentsCount' => $stats["database.documents.count"],
+                'collectionsCount' => $stats["database.collections.count"],
+                'documentsCreate' =>  $stats["database.documents.create"],
+                'documentsRead' =>  $stats["database.documents.read"],
+                'documentsUpdate' => $stats["database.documents.update"],
+                'documentsDelete' => $stats["database.documents.delete"],
+                'collectionsCreate' => $stats["database.collections.create"],
+                'collectionsRead' =>  $stats["database.collections.read"],
+                'collectionsUpdate' => $stats["database.collections.update"],
+                'collectionsDelete' => $stats["database.collections.delete"],
             ]);
         }
 
@@ -388,7 +408,7 @@ App::get('/v1/database/:collectionId/usage')
         
         $usage = [];
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $period = [
+            $periods = [
                 '24h' => [
                     'period' => '30m',
                     'limit' => 48,
@@ -417,13 +437,16 @@ App::get('/v1/database/:collectionId/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+            Authorization::skip(function() use ($dbForInternal, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
+                    $limit = $periods[$range]['limit'];
+                    $period = $periods[$range]['period'];
+
                     $requestDocs = $dbForInternal->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
-    
+                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
                         $stats[$metric][] = [
@@ -431,17 +454,32 @@ App::get('/v1/database/:collectionId/usage')
                             'date' => $requestDoc->getAttribute('time'),
                         ];
                     }
+
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                            '30m' => 1800,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                        ];
+                        $backfill--;
+                    }
                     $stats[$metric] = array_reverse($stats[$metric]);
                 }    
             });
 
             $usage = new Document([
                 'range' => $range,
-                'documents.count' => $stats["database.collections.$collectionId.documents.count"],
-                'documents.create' => $stats["database.collections.$collectionId.documents.create"],
-                'documents.read' => $stats["database.collections.$collectionId.documents.read"],
-                'documents.update' =>  $stats["database.collections.$collectionId.documents.update"],
-                'documents.delete' =>  $stats["database.collections.$collectionId.documents.delete"]
+                'documentsCount' => $stats["database.collections.$collectionId.documents.count"],
+                'documentsCreate' => $stats["database.collections.$collectionId.documents.create"],
+                'documentsRead' => $stats["database.collections.$collectionId.documents.read"],
+                'documentsUpdate' =>  $stats["database.collections.$collectionId.documents.update"],
+                'documentsDelete' =>  $stats["database.collections.$collectionId.documents.delete"]
             ]);
         }
 
@@ -649,6 +687,8 @@ App::delete('/v1/database/collections/:collectionId')
         if (!$dbForInternal->deleteDocument('collections', $collectionId)) {
             throw new Exception('Failed to remove collection from DB', 500);
         }
+
+        $dbForExternal->deleteCachedCollection($collection->getId());
 
         $deletes
             ->setParam('type', DELETE_TYPE_DOCUMENT)
@@ -1013,7 +1053,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
         /** @var Appwrite\Stats\Stats $usage */
 
         // Ensure attribute default is within range
-        $min = (is_null($min)) ? PHP_FLOAT_MIN : \floatval($min);
+        $min = (is_null($min)) ? -PHP_FLOAT_MAX : \floatval($min);
         $max = (is_null($max)) ? PHP_FLOAT_MAX : \floatval($max);
 
         if ($min > $max) {
@@ -1771,6 +1811,113 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
+App::get('/v1/database/collections/:collectionId/documents/:documentId/logs')
+    ->desc('List Document Logs')
+    ->groups(['api', 'database'])
+    ->label('scope', 'documents.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.method', 'listDocumentLogs')
+    ->label('sdk.description', '/docs/references/database/get-document-logs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->param('collectionId', '', new UID(), 'Collection unique ID.')
+    ->param('documentId', null, new UID(), 'Document unique ID.')
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->inject('dbForExternal')
+    ->inject('locale')
+    ->inject('geodb')
+    ->action(function ($collectionId, $documentId, $limit, $offset, $response, $dbForInternal, $dbForExternal, $locale, $geodb) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Document $project */
+        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Utopia\Locale\Locale $locale */
+        /** @var MaxMind\Db\Reader $geodb */
+
+        $collection = $dbForInternal->getDocument('collections', $collectionId);
+
+        if ($collection->isEmpty()) {
+            throw new Exception('Collection not found', 404);
+        }
+
+        $document = $dbForExternal->getDocument($collectionId, $documentId);
+
+        if ($document->isEmpty()) {
+            throw new Exception('No document found', 404);
+        }
+
+        $audit = new Audit($dbForInternal);
+        $resource = 'document/'.$document->getId();
+        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+
+        $output = [];
+
+        foreach ($logs as $i => &$log) {
+            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+
+            $dd = new DeviceDetector($log['userAgent']);
+
+            $dd->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+            $dd->parse();
+
+            $os = $dd->getOs();
+            $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
+            $osName = (isset($os['name'])) ? $os['name'] : '';
+            $osVersion = (isset($os['version'])) ? $os['version'] : '';
+
+            $client = $dd->getClient();
+            $clientType = (isset($client['type'])) ? $client['type'] : '';
+            $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
+            $clientName = (isset($client['name'])) ? $client['name'] : '';
+            $clientVersion = (isset($client['version'])) ? $client['version'] : '';
+            $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
+            $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
+
+            $output[$i] = new Document([
+                'event' => $log['event'],
+                'userId' => $log['userId'],
+                'userEmail' => $log['data']['userEmail'] ?? null,
+                'userName' => $log['data']['userName'] ?? null,
+                'mode' => $log['data']['mode'] ?? null,
+                'ip' => $log['ip'],
+                'time' => $log['time'],
+
+                'osCode' => $osCode,
+                'osName' => $osName,
+                'osVersion' => $osVersion,
+                'clientType' => $clientType,
+                'clientCode' => $clientCode,
+                'clientName' => $clientName,
+                'clientVersion' => $clientVersion,
+                'clientEngine' => $clientEngine,
+                'clientEngineVersion' => $clientEngineVersion,
+                'deviceName' => $dd->getDeviceName(),
+                'deviceBrand' => $dd->getBrandName(),
+                'deviceModel' => $dd->getModel(),
+            ]);
+
+            $record = $geodb->get($log['ip']);
+
+            if ($record) {
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+            } else {
+                $output[$i]['countryCode'] = '--';
+                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
+            }
+        }
+        $response->dynamic(new Document([
+            'sum' => $audit->countLogsByResource($resource),
+            'logs' => $output,
+        ]), Response::MODEL_LOG_LIST);
+    });
+
 App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Update Document')
     ->groups(['api', 'database'])
@@ -1925,6 +2072,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         }
 
         $dbForExternal->deleteDocument($collectionId, $documentId);
+        $dbForExternal->deleteCachedDocument($collectionId, $documentId);
 
         $usage
             ->setParam('database.documents.delete', 1)

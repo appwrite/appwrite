@@ -12,7 +12,7 @@ class DatabaseConsoleClientTest extends Scope
     use ProjectCustom;
     use SideConsole;
 
-    public function testCreateCollection():array
+    public function testCreateCollection(): array
     {
         /**
          * Test for SUCCESS
@@ -63,16 +63,16 @@ class DatabaseConsoleClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertEquals(count($response['body']), 11);
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['documents.count']);
-        $this->assertIsArray($response['body']['collections.count']);
-        $this->assertIsArray($response['body']['documents.create']);
-        $this->assertIsArray($response['body']['documents.read']);
-        $this->assertIsArray($response['body']['documents.update']);
-        $this->assertIsArray($response['body']['documents.delete']);
-        $this->assertIsArray($response['body']['collections.create']);
-        $this->assertIsArray($response['body']['collections.read']);
-        $this->assertIsArray($response['body']['collections.update']);
-        $this->assertIsArray($response['body']['collections.delete']);
+        $this->assertIsArray($response['body']['documentsCount']);
+        $this->assertIsArray($response['body']['collectionsCount']);
+        $this->assertIsArray($response['body']['documentsCreate']);
+        $this->assertIsArray($response['body']['documentsRead']);
+        $this->assertIsArray($response['body']['documentsUpdate']);
+        $this->assertIsArray($response['body']['documentsDelete']);
+        $this->assertIsArray($response['body']['collectionsCreate']);
+        $this->assertIsArray($response['body']['collectionsRead']);
+        $this->assertIsArray($response['body']['collectionsUpdate']);
+        $this->assertIsArray($response['body']['collectionsDelete']);
     }
 
 
@@ -85,7 +85,7 @@ class DatabaseConsoleClientTest extends Scope
          * Test for FAILURE
          */
 
-        $response = $this->client->call(Client::METHOD_GET, '/database/'.$data['moviesId'].'/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -106,7 +106,7 @@ class DatabaseConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/database/'.$data['moviesId'].'/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -116,11 +116,11 @@ class DatabaseConsoleClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertEquals(count($response['body']), 6);
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['documents.count']);
-        $this->assertIsArray($response['body']['documents.create']);
-        $this->assertIsArray($response['body']['documents.read']);
-        $this->assertIsArray($response['body']['documents.update']);
-        $this->assertIsArray($response['body']['documents.delete']);
+        $this->assertIsArray($response['body']['documentsCount']);
+        $this->assertIsArray($response['body']['documentsCreate']);
+        $this->assertIsArray($response['body']['documentsRead']);
+        $this->assertIsArray($response['body']['documentsUpdate']);
+        $this->assertIsArray($response['body']['documentsDelete']);
     }
 
     /**

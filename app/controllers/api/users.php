@@ -787,7 +787,7 @@ App::get('/v1/users/usage')
 
         $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $period = [
+            $periods = [
                 '24h' => [
                     'period' => '30m',
                     'limit' => 48,
@@ -819,12 +819,15 @@ App::get('/v1/users/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+            Authorization::skip(function() use ($dbForInternal, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
+                    $limit = $periods[$range]['limit'];
+                    $period = $periods[$range]['period'];
+
                     $requestDocs = $dbForInternal->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
     
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -833,20 +836,36 @@ App::get('/v1/users/usage')
                             'date' => $requestDoc->getAttribute('time'),
                         ];
                     }
+
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                            '30m' => 1800,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                        ];
+                        $backfill--;
+                    }
                     $stats[$metric] = array_reverse($stats[$metric]);
                 }    
             });
 
             $usage = new Document([
                 'range' => $range,
-                'users.count' => $stats["users.count"],
-                'users.create' => $stats["users.create"],
-                'users.read' => $stats["users.read"],
-                'users.update' => $stats["users.update"],
-                'users.delete' => $stats["users.delete"],
-                'sessions.create' => $stats["users.sessions.create"],
-                'sessions.provider.create' => $stats["users.sessions.$provider.create"],
-                'sessions.delete' => $stats["users.sessions.delete"]
+                'usersCount' => $stats["users.count"],
+                'usersCreate' => $stats["users.create"],
+                'usersRead' => $stats["users.read"],
+                'usersUpdate' => $stats["users.update"],
+                'usersDelete' => $stats["users.delete"],
+                'sessionsCreate' => $stats["users.sessions.create"],
+                'sessionsProviderCreate' => $stats["users.sessions.$provider.create"],
+                'sessionsDelete' => $stats["users.sessions.delete"]
             ]);
 
         }
