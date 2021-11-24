@@ -1678,11 +1678,11 @@ App::get('/v1/database/collections/:collectionId/documents')
             return Query::parse($query);
         }, $queries);
 
-        // TODO@kodumbeats use strict query validation
-        $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []), false);
-
-        if (!$validator->isValid($queries)) {
-            throw new Exception($validator->getDescription(), 400);
+        if (!empty($queries)) {
+            $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []), true);
+            if (!$validator->isValid($queries)) {
+                throw new Exception($validator->getDescription(), 400);
+            }
         }
 
         $cursorDocument = null;
