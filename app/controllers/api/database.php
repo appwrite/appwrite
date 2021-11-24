@@ -40,13 +40,14 @@ use DeviceDetector\DeviceDetector;
  * @param Utopia\Database\Document $attribute
  * @param Appwrite\Utopia\Response $response
  * @param Utopia\Database\Database $dbForInternal
+ * @param Utopia\Database\Database $dbForExternal
  * @param Appwrite\Event\Event $database
  * @param Appwrite\Event\Event $audits
  * @param Appwrite\Stats\Stats $usage
  *
  * @return Document Newly created attribute document
  */
-function createAttribute($collectionId, $attribute, $response, $dbForInternal, $database, $audits, $usage): Document
+function createAttribute($collectionId, $attribute, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage): Document
 {
     $attributeId = $attribute->getId();
     $type = $attribute->getAttribute('type', '');
@@ -108,6 +109,7 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
     }
 
     $dbForInternal->deleteCachedDocument('collections', $collectionId);
+    $dbForExternal->deleteCachedCollection($collectionId);
 
     // Pass clone of $attribute object to workers
     // so we can later modify Document to fit response model
@@ -728,12 +730,14 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
+    ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $size, $required, $default, $array, $response, $dbForInternal, $database, $audits, $usage) {
+    ->action(function ($collectionId, $attributeId, $size, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
+        /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
@@ -751,7 +755,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-        ]), $response, $dbForInternal, $database, $audits, $usage);
+        ]), $response, $dbForInternal, $dbForExternal, $database, $audits, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
     });
@@ -775,12 +779,14 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
+    ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $database, $audits, $usage) {
+    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
+        /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
@@ -793,7 +799,7 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_EMAIL,
-        ]), $response, $dbForInternal, $database, $audits, $usage);
+        ]), $response, $dbForInternal, $dbForExternal, $database, $audits, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
     });
@@ -818,12 +824,14 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
+    ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $elements, $required, $default, $array, $response, $dbForInternal, $database, $audits, $usage) {
+    ->action(function ($collectionId, $attributeId, $elements, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
+        /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
@@ -848,7 +856,7 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_ENUM,
             'formatOptions' => ['elements' => $elements],
-        ]), $response, $dbForInternal, $database, $audits, $usage);
+        ]), $response, $dbForInternal, $dbForExternal, $database, $audits, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
     });
@@ -872,12 +880,14 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
+    ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $database, $audits, $usage) {
+    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
+        /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
@@ -890,7 +900,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_IP,
-        ]), $response, $dbForInternal, $database, $audits, $usage);
+        ]), $response, $dbForInternal, $dbForExternal, $database, $audits, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
     });
@@ -914,10 +924,11 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
+    ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $database, $audits, $usage) {
+    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
@@ -932,7 +943,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_URL,
-        ]), $response, $dbForInternal, $database, $audits, $usage);
+        ]), $response, $dbForInternal, $dbForExternal, $database, $audits, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
     });
@@ -958,12 +969,14 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
+    ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForInternal, $database, $audits, $usage) {
+    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
+        /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
@@ -994,7 +1007,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
                 'min' => $min,
                 'max' => $max,
             ],
-        ]), $response, $dbForInternal, $database, $audits, $usage);
+        ]), $response, $dbForInternal, $dbForExternal, $database, $audits, $usage);
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
 
@@ -1027,12 +1040,14 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
+    ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForInternal, $database, $audits, $usage) {
+    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForInternal, $dbForExternal,$database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
+        /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
@@ -1063,7 +1078,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
                 'min' => $min,
                 'max' => $max,
             ],
-        ]), $response, $dbForInternal, $database, $audits, $usage);
+        ]), $response, $dbForInternal, $dbForExternal, $database, $audits, $usage);
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
 
@@ -1094,10 +1109,11 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
+    ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $database, $audits, $usage) {
+    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
         /** @var Appwrite\Event\Event $database */
@@ -1111,7 +1127,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-        ]), $response, $dbForInternal, $database, $audits, $usage);
+        ]), $response, $dbForInternal, $dbForExternal, $database, $audits, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
@@ -1229,13 +1245,15 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->inject('response')
     ->inject('dbForInternal')
+    ->inject('dbForExternal')
     ->inject('database')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $response, $dbForInternal, $database, $events, $audits, $usage) {
+    ->action(function ($collectionId, $attributeId, $response, $dbForInternal, $dbForExternal, $database, $events, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
@@ -1259,6 +1277,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
         }
 
         $dbForInternal->deleteCachedDocument('collections', $collectionId);
+        $dbForExternal->deleteCachedCollection($collection->getId());
 
         $database
             ->setParam('type', DATABASE_TYPE_DELETE_ATTRIBUTE)
