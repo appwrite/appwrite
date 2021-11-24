@@ -13,6 +13,7 @@ const configApp  = {
     mainFile: 'app.js',
     src: [
         'public/scripts/dependencies/litespeed.js',
+        'public/scripts/dependencies/alpine.js',
 
         'public/scripts/init.js',
 
