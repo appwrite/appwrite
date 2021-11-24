@@ -163,7 +163,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                             data-validator="users.get"
                             required
                             maxlength="36"
-                            pattern="^[a-z0-9][a-z0-9_-]{1,36}$"
+                            pattern="^[a-zA-Z0-9][a-z0-9_-]{1,36}$"
                             id="userId"
                             name="userId" />
 
@@ -311,7 +311,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                             data-validator="teams.get"
                             required
                             maxlength="36"
-                            pattern="^[a-z0-9][a-z0-9_-]{1,36}$"
+                            pattern="^[a-zA-Z0-9][a-z0-9_-]{1,36}$"
                             id="teamId"
                             name="teamId" />
 

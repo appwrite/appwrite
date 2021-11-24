@@ -155,7 +155,8 @@ $logs = $this->getParam('logs', null);
                                 <th width="100"></th>
                                 <th width="130">Attribute ID</th>
                                 <th width="100">Type</th>
-                                <th width="180">Default</th>
+                                <th>Length</th>
+                                <th>Default</th>
                                 <th></th>
                                 <th width="80"></th>
                             </tr>
@@ -176,13 +177,17 @@ $logs = $this->getParam('logs', null);
                                 </td>
 
                                 <td data-title="Attribute ID: ">
-                                    <span class="text-size-small" data-ls-bind="{{attribute.key}}"></span><span class="text-size-small" data-ls-if="{{attribute.size}}" data-ls-bind="({{attribute.size}})"></span>
+                                    <span class="text-size-small" data-ls-bind="{{attribute.key}}"></span>
                                 </td>
 
                                 <td data-title="Type:">
-                                    <span class="text-size-small" data-ls-bind="{{attribute.type}}"></span>
-                                    <span class="text-size-small" data-ls-if="{{attribute.array}}">[]</span>
+                                    <span class="text-size-small" data-ls-if="!{{attribute.array}}" data-ls-bind="{{attribute.type}}"></span>
+                                    <span class="text-size-small" data-ls-if="{{attribute.array}}" data-ls-bind="{{attribute.type}}[]"></span>
                                     <span class="text-size-small" data-ls-if="{{attribute.format}}" data-ls-bind="({{attribute.format}})"></span>
+                                </td>
+
+                                <td data-title="Length:">
+                                    <span class="text-size-small" data-ls-if="{{attribute.size}}" data-ls-bind="{{attribute.size}}"></span>
                                 </td>
 
                                 <td data-title="Default:">
@@ -553,7 +558,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="string-attributeId">Attribute ID</label>
-        <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <label for="string-length">Size</label>
@@ -638,7 +643,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="integer-attributeId">Attribute ID</label>
-        <input id="integer-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <input id="integer-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
@@ -728,7 +733,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="float-attributeId">Attribute ID</label>
-        <input id="float-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <input id="float-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
@@ -817,7 +822,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="email-attributeId">Attribute ID</label>
-        <input id="email-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <input id="email-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" maxlength="36" pattern="^[a-zA-Z0-9][a-z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
@@ -895,7 +900,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="boolean-attributeId">Attribute ID</label>
-        <input id="boolean-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <input id="boolean-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
@@ -976,7 +981,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="ip-attributeId">Attribute ID</label>
-        <input id="ip-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <input id="ip-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
@@ -1054,7 +1059,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="url-attributeId">Attribute ID</label>
-        <input id="url-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <input id="url-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
@@ -1132,7 +1137,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="enum-attributeId">Attribute ID</label>
-        <input id="enum-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <input id="enum-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <label>Elements</label>
@@ -1237,7 +1242,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="index-indexId">Index ID</label>
-        <input id="index-indexId" type="text" class="full-width" name="indexId" required autocomplete="off" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <input id="index-indexId" type="text" class="full-width" name="indexId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <label for="index-type">Type</label>
