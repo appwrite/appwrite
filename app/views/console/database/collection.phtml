@@ -46,7 +46,8 @@ $logs = $this->getParam('logs', null);
                     data-param-order-types="DESC"
                     data-param-order-types-cast-to="array"
                     data-scope="sdk"
-                    data-name="project-documents">
+                    data-name="project-documents"
+                    x-data="{project: new URLSearchParams(location.search).get('project')}">
 
                     <div data-ls-if="0 == {{project-documents.sum}}" class="box margin-bottom">
                         <h3 class="margin-bottom-small text-bold">No Documents Found</h3>
@@ -57,28 +58,41 @@ $logs = $this->getParam('logs', null);
                     <div data-ls-if="({{project-documents.sum}})" class="margin-top-negative">
                         <div class="margin-bottom-small text-align-end text-size-small text-fade"><span data-ls-bind="{{project-documents.sum}}"></span><span data-ls-if="{{project-documents.sum}} == <?php echo APP_LIMIT_COUNT; ?>">+</span> documents found</div>
                         <div class="box margin-bottom y-scroll text-size-small">
-                            <table class="vertical borders">
+                            <!-- Alpine.js Start -->
+                            <table
+                                data-ls-attrs="x-init=attributes = {{project-collection.attributes}}"
+                                x-data="{attributes: []}"
+                                class="vertical borders">
                                 <thead>
-                                    <tr data-ls-loop="project-collection.attributes" data-ls-as="attribute" data-ls-prefix="template-attribute-title-first" data-ls-limit="20" data-ls-ignore-path-bind="1">
-                                        <td data-ls-if="{{attribute.status}} === 'available'" style="width: 170px">
-                                            <i data-ls-if="{{attribute.format}}" data-ls-attrs="class=pull-end icon-{{attribute.format}} text-size-xs"></i>
-                                            <i data-ls-if="!{{attribute.format}}" data-ls-attrs="class=pull-end icon-{{attribute.type}} text-size-xs"></i>
-                                            <span class="text-bold" data-ls-bind="{{attribute.key}}"></span>
-                                            <span class="text-size-small" data-ls-if="{{attribute.array}}">[]</span>
-                                        </td>
+                                    <tr>
+                                        <td style="width: 170px">$id <i class="pull-end text-size-xs icon-key"></i></td>
+                                        <template x-for="attr in attributes">
+                                            <td x-show="attr.status === 'available'" style="width: 170px">
+                                                <i :class="'icon-' + (attr.format ? attr.format : attr.type)" class="pull-end text-size-xs"></i>
+                                                <span x-text="attr.key" class="text-bold"></span>
+                                                <span x-show="attr.array" class="text-size-small">[]</span>
+                                            </td>
+                                        </template>
                                     </tr>
                                 </thead>
-                                <tbody data-ls-loop="project-documents.documents" data-ls-as="node" data-ls-ignore-path-bind="1">
-                                    <tr data-ls-loop="project-collection.attributes" data-ls-as="attribute" data-ls-prefix="template-attribute-body-first" data-ls-limit="20" data-ls-ignore-path-bind="1">
-                                        <td data-ls-if="{{attribute.status}} === 'available'" data-ls-attrs="data-title={{attribute.key}}">
-                                            <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{node.$collection}}&project={{router.params.project}}">
-                                                <span data-ls-if="{{node|documentAttribute}}" data-ls-bind="{{node|documentAttribute}}"></span>
-                                                <span data-ls-if="!{{node|documentAttribute}}" class="text-fade">n/a</span>
-                                            </a>
-                                        </td>
-                                    </tr>
+                                <tbody data-ls-attrs="x-init=documents = {{project-documents.documents}}" x-data="{documents: []}">
+                                    <template x-for="doc in documents">
+                                        <tr>
+                                            <td>
+                                                <a :href="`/console/database/document?id=${doc.$id}&collection=${doc.$collection}&project=${project}`" x-text="doc.$id"></a>
+                                            </td>
+                                            <template x-for="attr in attributes">
+                                                <td x-show="attr.status === 'available'" style="width: 170px">
+                                                    <a :href="`/console/database/document?id=${doc.$id}&collection=${doc.$collection}&project=${project}`">
+                                                        <span x-text="doc[attr.key] ?? 'n/a'"></span>
+                                                    </a>
+                                                </td>
+                                            </template>
+                                        </tr>
+                                    </template>
                                 </tbody>
                             </table>
+                            <!-- Alpine.js End -->
                         </div>
                     </div>
 
@@ -539,7 +553,8 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="string-attributeId">Attribute ID</label>
-        <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+        <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <label for="string-length">Size</label>
         <input id="string-length" name="size" type="number" class="margin-bottom" autocomplete="off" required value="255" data-cast-to="integer" />
@@ -623,7 +638,8 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="integer-attributeId">Attribute ID</label>
-        <input id="integer-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+        <input id="integer-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
             <input type="hidden" name="required" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
@@ -711,8 +727,9 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-        <label for="attributeId">Attribute ID</label>
-        <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+        <label for="float-attributeId">Attribute ID</label>
+        <input id="float-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
             <input type="hidden" name="required" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
@@ -799,8 +816,9 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-        <label for="string-attributeId">Attribute ID</label>
-        <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+        <label for="email-attributeId">Attribute ID</label>
+        <input id="email-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
             <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
@@ -876,8 +894,9 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-        <label for="string-attributeId">Attribute ID</label>
-        <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+        <label for="boolean-attributeId">Attribute ID</label>
+        <input id="boolean-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
             <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
@@ -956,8 +975,9 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-        <label for="string-attributeId">Attribute ID</label>
-        <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+        <label for="ip-attributeId">Attribute ID</label>
+        <input id="ip-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
             <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
@@ -1033,8 +1053,9 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-        <label for="string-attributeId">Attribute ID</label>
-        <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+        <label for="url-attributeId">Attribute ID</label>
+        <input id="url-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
             <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
@@ -1111,7 +1132,8 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="enum-attributeId">Attribute ID</label>
-        <input id="enum-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+        <input id="enum-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <label>Elements</label>
 
@@ -1215,7 +1237,8 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="index-indexId">Index ID</label>
-        <input id="index-indexId" type="text" class="full-width" name="indexId" required autocomplete="off" maxlength="128" />
+        <input id="index-indexId" type="text" class="full-width" name="indexId" required autocomplete="off" maxlength="36" pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <label for="index-type">Type</label>
         <select id="index-type" name="type">
