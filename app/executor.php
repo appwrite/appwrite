@@ -529,7 +529,7 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
     return $tag;
 }
 
-function createRuntimeServer(string $functionId, string $projectId, Document $tag, Database $database)
+function createRuntimeServer(string $functionId, string $projectId, Document $tag, Database $database): void
 {
     global $orchestration;
     global $runtimes;

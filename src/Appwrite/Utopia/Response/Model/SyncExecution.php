@@ -14,7 +14,7 @@ class SyncExecution extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Execution Status.',
                 'default' => '',
-                'example' => '5e5ea5c16897e',
+                'example' => 'completed',
             ])
             ->addRule('response', [
                 'type' => self::TYPE_STRING,

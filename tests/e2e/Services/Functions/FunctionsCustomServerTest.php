@@ -535,6 +535,33 @@ class FunctionsCustomServerTest extends Scope
     }
 
     /**
+     * @depends testUpdateTag
+     */
+    public function testSyncCreateExecution($data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => 0,
+        ]);
+
+        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertStringContainsString($data['tagId'], $execution['body']['response']);
+        $this->assertStringContainsString('Test1', $execution['body']['response']);
+        $this->assertStringContainsString('http', $execution['body']['response']);
+        $this->assertStringContainsString('PHP', $execution['body']['response']);
+        $this->assertStringContainsString('8.0', $execution['body']['response']);
+        // $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
+        $this->assertLessThan(0.500, $execution['body']['time']);
+
+        return $data;
+    }
+
+    /**
      * @depends testListExecutions
      */
     public function testGetExecution(array $data):array
