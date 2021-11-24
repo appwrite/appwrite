@@ -58,14 +58,16 @@ For **Windows** add your app <u>name</u> and <u>package name</u>, Your package n
 
 ```dart
 import 'package:appwrite/appwrite.dart';
-Client client = Client();
 
+void main() {
+  Client client = Client();
 
-client
-  .setEndpoint('https://localhost/v1') // Your Appwrite Endpoint
-  .setProject('5e8cf4f46b5e8') // Your project ID
-  .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
-;
+  client
+    .setEndpoint('https://localhost/v1') // Your Appwrite Endpoint
+    .setProject('5e8cf4f46b5e8') // Your project ID
+    .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
+  ;
+}
 ```
 
 Before starting to send any API calls to your new Appwrite instance, make sure your Android or iOS emulators has network access to the Appwrite server hostname or IP address.
@@ -91,25 +93,28 @@ Response user = await account
 
 ```dart
 import 'package:appwrite/appwrite.dart';
-Client client = Client();
+
+void main() {
+  Client client = Client();
 
 
-client
-  .setEndpoint('https://localhost/v1') // Your Appwrite Endpoint
-  .setProject('5e8cf4f46b5e8') // Your project ID
-  .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
-  ;
+  client
+    .setEndpoint('https://localhost/v1') // Your Appwrite Endpoint
+    .setProject('5e8cf4f46b5e8') // Your project ID
+    .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
+    ;
 
 
-// Register User
-Account account = Account(client);
+  // Register User
+  Account account = Account(client);
 
-Response user = await account
-  .create(
-    email: 'me@appwrite.io',
-    password: 'password',
-    name: 'My Name'
-  );
+  Response user = await account
+    .create(
+      email: 'me@appwrite.io',
+      password: 'password',
+      name: 'My Name'
+    );
+}
 ```
 
 ### Error Handling
