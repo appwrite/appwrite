@@ -60,7 +60,7 @@ trait RealtimeBase
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
 
-        $client = new WebSocketClient('ws://appwrite-traefik/v1/realtime', [
+        $client = new WebSocketClient('ws://appwrite-traefik/v1/realtime?channels[]=files"', [
             'headers' => [
                 'Origin' => 'appwrite.test'
             ]
