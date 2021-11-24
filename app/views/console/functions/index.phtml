@@ -113,6 +113,7 @@ $runtimes = $this->getParam('runtimes', []);
                                 data-validator="functions.get"
                                 required
                                 maxlength="36"
+                                pattern="^[a-z0-9][a-z0-9_-]{1,36}$"
                                 name="functionId" />
 
                             <label for="name">Name</label>
@@ -125,7 +126,7 @@ $runtimes = $this->getParam('runtimes', []);
                                 <?php endforeach;?>
                             </select>
 
-                            <input id="execute" name="execute" value="" hidden/>
+                            <input id="execute" name="execute" value="" hidden />
 
                             <footer>
                                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>

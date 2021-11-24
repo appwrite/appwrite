@@ -81,7 +81,9 @@ $logs = $this->getParam('logs', null);
                                             required
                                             maxlength="36"
                                             name="documentId"
-                                            id="documentId" />
+                                            id="documentId"
+                                            maxlength="36"
+                                            pattern="^[a-z0-9][a-z0-9_-]{1,36}$" />
                                     <?php endif; ?>
 
                                     <fieldset name="data" data-cast-to="object">
