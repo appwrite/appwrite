@@ -160,8 +160,7 @@ ENV _APP_SERVER=swoole \
     _APP_MAINTENANCE_RETENTION_ABUSE=86400 \
     _APP_MAINTENANCE_INTERVAL=86400 \
     _APP_LOGGING_PROVIDER= \
-    _APP_LOGGING_CONFIG= \
-    _APP_LOGGING_SERVERNAME=selfhosted-001
+    _APP_LOGGING_CONFIG=
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 

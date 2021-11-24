@@ -174,7 +174,6 @@ $register->set('logger', function () { // Register error logger
 
     if(!Logger::hasProvider($providerName)) {
         throw new Exception("Logging provider not supported. Logging disabled.");
-        return;
     }
 
     $classname = '\\Utopia\\Logger\\Adapter\\'.\ucfirst($providerName);
@@ -366,7 +365,7 @@ App::setResource('logger', function($register) {
     return $register->get('logger');
 }, ['register']);
 
-App::setResource('loggerBreadcrumb', function() {
+App::setResource('loggerBreadcrumbs', function() {
     return [];
 });
 

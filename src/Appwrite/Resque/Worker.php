@@ -11,7 +11,7 @@ abstract class Worker
 {
     public array $args = [];
 
-    abstract public function getWorkerName(): string;
+    abstract public function getName(): string;
 
     abstract public function init(): void;
 
@@ -28,12 +28,12 @@ abstract class Worker
             $logger = $register->get('logger');
 
             $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
-            $workerType = $this->getWorkerName();
+            $workerType = $this->getName();
 
             $log = new Log();
 
             $log->setNamespace("worker-" . $workerType);
-            $log->setServer(App::getEnv("_APP_LOGGING_SERVERNAME", "selfhosted-001"));
+            $log->setServer(\gethostname());
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
@@ -44,12 +44,10 @@ abstract class Worker
                 'verbose_type' => get_class($error),
             ]);
 
-            $log->setExtra([
-                'file' => $error->getFile(),
-                'line' => $error->getLine(),
-                'trace' => $error->getTraceAsString(),
-                'args' => $this->args
-            ]);
+            $log->addExtra('file', $error->getFile());
+            $log->addExtra('line', $error->getLine());
+            $log->addExtra('trace', $error->getTraceAsString());
+            $log->addExtra('args', $this->args);
 
             $action = 'worker.' . $workerType . '.setUp';
             $log->setAction($action);
@@ -74,12 +72,12 @@ abstract class Worker
             global $register;
             $logger = $register->get('logger');
             $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
-            $workerType = $this->getWorkerName();
+            $workerType = $this->getName();
 
             $log = new Log();
 
             $log->setNamespace("worker-" . $workerType);
-            $log->setServer(App::getEnv("_APP_LOGGING_SERVERNAME", "selfhosted-001"));
+            $log->setServer(\gethostname());
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
@@ -90,11 +88,9 @@ abstract class Worker
                 'verbose_type' => get_class($error),
             ]);
 
-            $log->setExtra([
-                'file' => $error->getFile(),
-                'line' => $error->getLine(),
-                'trace' => $error->getTraceAsString()
-            ]);
+            $log->addExtra('file', $error->getFile());
+            $log->addExtra('line', $error->getLine());
+            $log->addExtra('trace', $error->getTraceAsString());
 
             $action = 'worker.' . $workerType . '.perform';
             $log->setAction($action);
@@ -119,12 +115,12 @@ abstract class Worker
             global $register;
             $logger = $register->get('logger');
             $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
-            $workerType = $this->getWorkerName();
+            $workerType = $this->getName();
 
             $log = new Log();
 
             $log->setNamespace("worker-" . $workerType);
-            $log->setServer(App::getEnv("_APP_LOGGING_SERVERNAME", "selfhosted-001"));
+            $log->setServer(\gethostname());
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
@@ -135,11 +131,9 @@ abstract class Worker
                 'verbose_type' => get_class($error),
             ]);
 
-            $log->setExtra([
-                'file' => $error->getFile(),
-                'line' => $error->getLine(),
-                'trace' => $error->getTraceAsString()
-            ]);
+            $log->addExtra('file', $error->getFile());
+            $log->addExtra('line', $error->getLine());
+            $log->addExtra('trace', $error->getTraceAsString());
 
             $action = 'worker.' . $workerType . '.tearDown';
             $log->setAction($action);

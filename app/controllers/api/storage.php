@@ -115,7 +115,7 @@ App::post('/v1/storage/files')
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
 
-        if (!$device->write($path . "/rewerwerwerw.asdas", $data, $mimeType)) {
+        if (!$device->write($path, $data, $mimeType)) {
             throw new Exception('Failed to save file', 500);
         }
 

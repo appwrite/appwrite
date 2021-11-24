@@ -167,15 +167,6 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
-            ],
-            [
-                'name' => '_APP_LOGGING_SERVERNAME',
-                'description' => 'This variable configures name of the server in error logging for identification reasons in scaled solution.',
-                'introduction' => '0.12.0',
-                'default' => 'selfhosted-001',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
             ]
         ],
     ],

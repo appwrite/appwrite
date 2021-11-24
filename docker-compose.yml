@@ -131,7 +131,6 @@ services:
       - _APP_FUNCTIONS_RUNTIMES
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_LOGGING_SERVERNAME
 
   appwrite-realtime:
     entrypoint: realtime
@@ -178,7 +177,6 @@ services:
       - _APP_USAGE_STATS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_LOGGING_SERVERNAME
 
   appwrite-worker-usage:
     entrypoint: worker-usage
@@ -203,7 +201,6 @@ services:
       - _APP_STATSD_PORT
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_LOGGING_SERVERNAME
 
   appwrite-worker-audits:
     entrypoint: worker-audits
@@ -231,7 +228,6 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_LOGGING_SERVERNAME
 
   appwrite-worker-webhooks:
     entrypoint: worker-webhooks
@@ -256,7 +252,6 @@ services:
       - _APP_REDIS_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_LOGGING_SERVERNAME
 
   appwrite-worker-tasks:
     entrypoint: worker-tasks
@@ -286,7 +281,6 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_LOGGING_SERVERNAME
 
   appwrite-worker-deletes:
     entrypoint: worker-deletes
@@ -318,7 +312,6 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_LOGGING_SERVERNAME
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates
@@ -349,7 +342,6 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_LOGGING_SERVERNAME
 
   appwrite-worker-functions:
     entrypoint: worker-functions
@@ -391,7 +383,6 @@ services:
       - DOCKERHUB_PULL_PASSWORD
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_LOGGING_SERVERNAME
 
   appwrite-worker-mails:
     entrypoint: worker-mails
@@ -422,7 +413,6 @@ services:
       - _APP_SMTP_PASSWORD
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_LOGGING_SERVERNAME
 
   appwrite-maintenance:
     entrypoint: maintenance

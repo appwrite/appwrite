@@ -101,7 +101,7 @@ class FunctionsV1 extends Worker
 
     public array $allowed = [];
 
-    public function getWorkerName(): string {
+    public function getName(): string {
         return "functions";
     }
 

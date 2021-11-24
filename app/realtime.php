@@ -35,7 +35,7 @@ function logError($register, \Throwable $error, $action) {
 
     $log = new Log();
     $log->setNamespace("realtime");
-    $log->setServer(App::getEnv("_APP_LOGGING_SERVERNAME", "selfhosted-001"));
+    $log->setServer(\gethostname());
     $log->setVersion($version);
     $log->setType(Log::TYPE_ERROR);
     $log->setMessage($error->getMessage());
@@ -45,11 +45,9 @@ function logError($register, \Throwable $error, $action) {
         'verbose_type' => get_class($error),
     ]);
 
-    $log->setExtra([
-        'file' => $error->getFile(),
-        'line' => $error->getLine(),
-        'trace' => $error->getTraceAsString(),
-    ]);
+    $log->addExtra('file', $error->getFile());
+    $log->addExtra('line', $error->getLine());
+    $log->addExtra('trace', $error->getTraceAsString());
 
     $log->setAction($action);
 

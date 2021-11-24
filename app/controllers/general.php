@@ -291,7 +291,7 @@ App::options(function ($request, $response) {
         ->noContent();
 }, ['request', 'response']);
 
-App::error(function ($error, $utopia, $request, $response, $layout, $project, $logger, $user, $loggerBreadcrumb) {
+App::error(function ($error, $utopia, $request, $response, $layout, $project, $logger, $user, $loggerBreadcrumbs) {
     /** @var Exception $error */
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
@@ -312,7 +312,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         }
 
         $log->setNamespace("http");
-        $log->setServer(App::getEnv("_APP_LOGGING_SERVERNAME", "selfhosted-001"));
+        $log->setServer(\gethostname());
         $log->setVersion($version);
         $log->setType(Log::TYPE_ERROR);
         $log->setMessage($error->getMessage());
@@ -327,12 +327,10 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
             'locale' => (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')),
         ]);
 
-        $log->setExtra([
-            'file' => $error->getFile(),
-            'line' => $error->getLine(),
-            'trace' => $error->getTraceAsString(),
-            'roles' => Authorization::$roles
-        ]);
+        $log->addExtra('file', $error->getFile());
+        $log->addExtra('line', $error->getLine());
+        $log->addExtra('trace', $error->getTraceAsString());
+        $log->addExtra('roles', Authorization::$roles);
 
         $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
         $log->setAction($action);
@@ -340,7 +338,9 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
         $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-        $log->setBreadcrumbs($loggerBreadcrumb);
+        foreach($loggerBreadcrumbs as $loggerBreadcrumb) {
+            $log->addBreadcrumb($loggerBreadcrumb);
+        }
 
         $responseCode = $logger->addLog($log);
         Console::info('Log pushed with status code: '.$responseCode);
@@ -431,7 +431,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
 
     $response->dynamic(new Document($output),
         $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR);
-}, ['error', 'utopia', 'request', 'response', 'layout', 'project', 'logger', 'user', 'loggerBreadcrumb']);
+}, ['error', 'utopia', 'request', 'response', 'layout', 'project', 'logger', 'user', 'loggerBreadcrumbs']);
 
 App::get('/manifest.json')
     ->desc('Progressive app manifest file')
