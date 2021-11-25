@@ -412,7 +412,7 @@ class DeletesV1 extends Worker
     {
         $bucketId = $document->getId();
         
-        $this->deleteByGroup('files',[
+        $this->deleteByGroup($bucketId . '_files',[
             new Query('bucketId', Query::TYPE_EQUAL, [$bucketId])
         ], $this->getExternalDB($projectId));
 
