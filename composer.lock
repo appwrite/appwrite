@@ -2554,7 +2554,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage",
-                "reference": "840198dc1e3223349f93a168e7ca3f3f3f85b612"
+                "reference": "1f8781dd92b9b4153379bfc8b0914a76b09bfb22"
             },
             "require": {
                 "php": ">=8.0",
@@ -2587,7 +2587,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2021-11-24T07:10:01+00:00"
+            "time": "2021-11-25T07:37:57+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -5394,7 +5394,6 @@
                     "type": "github"
                 }
             ],
-            "abandoned": true,
             "time": "2020-09-28T06:45:17+00:00"
         },
         {
