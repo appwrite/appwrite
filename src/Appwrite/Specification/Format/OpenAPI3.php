@@ -335,6 +335,12 @@ class OpenAPI3 extends Format
                             'type' => 'string',
                         ];
                         break;
+                    case 'Utopia\Database\Validator\Permissions':
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['items'] = [
+                            'type' => 'string',
+                        ];
+                        break;
                     case 'Appwrite\Auth\Validator\Password':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'password';

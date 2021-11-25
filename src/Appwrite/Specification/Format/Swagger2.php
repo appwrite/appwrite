@@ -323,6 +323,14 @@ class Swagger2 extends Format
                             'type' => 'string',
                         ];
                         break;
+                    case 'Utopia\Database\Validator\Permissions':
+                        $node['type'] = $validator->getType();
+                        $node['collectionFormat'] = 'multi';
+                        $node['items'] = [
+                            'type' => 'string',
+                        ];
+                        $node['x-example'] = '["role:all"]';
+                        break;
                     case 'Appwrite\Auth\Validator\Password':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'password';
