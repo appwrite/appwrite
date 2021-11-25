@@ -362,7 +362,7 @@
 
             </li>
             <li data-state="/console/users/user/audit?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>Activity</h2>
+                <h2>Activity <span class="badge" data-ls-bind="{{logs.sum}}"></span></h2>
 
                 <div
                     data-service="users.getLogs"
