@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5f9aa807864b9d84a96685c1735ee30e",
+    "content-hash": "d16e7eb6e8b85d414f22270af7cfb314",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2440,16 +2440,16 @@
         },
         {
             "name": "utopia-php/websocket",
-            "version": "0.0.1",
+            "version": "dev-feat-onerror-callback",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/websocket.git",
-                "reference": "808317ef4ea0683c2c82dee5d543b1c8378e2e1b"
+                "reference": "917f82f617bda5a0b63b4c94f32cada43acc7fb0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/808317ef4ea0683c2c82dee5d543b1c8378e2e1b",
-                "reference": "808317ef4ea0683c2c82dee5d543b1c8378e2e1b",
+                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/917f82f617bda5a0b63b4c94f32cada43acc7fb0",
+                "reference": "917f82f617bda5a0b63b4c94f32cada43acc7fb0",
                 "shasum": ""
             },
             "require": {
@@ -2492,9 +2492,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/websocket/issues",
-                "source": "https://github.com/utopia-php/websocket/tree/0.0.1"
+                "source": "https://github.com/utopia-php/websocket/tree/feat-onerror-callback"
             },
-            "time": "2021-07-11T13:09:44+00:00"
+            "time": "2021-11-24T12:04:35+00:00"
         },
         {
             "name": "webmozart/assert",
@@ -6378,7 +6378,8 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/logger": 20
+        "utopia-php/logger": 20,
+        "utopia-php/websocket": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

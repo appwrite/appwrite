@@ -28,7 +28,28 @@ require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-function logError($register, \Throwable $error, $action) {
+$realtime = new Realtime();
+
+/**
+ * Table for statistics across all workers.
+ */
+$stats = new Table(4096, 1);
+$stats->column('projectId', Table::TYPE_STRING, 64);
+$stats->column('teamId', Table::TYPE_STRING, 64);
+$stats->column('connections', Table::TYPE_INT);
+$stats->column('connectionsTotal', Table::TYPE_INT);
+$stats->column('messages', Table::TYPE_INT);
+$stats->create();
+
+$containerId = uniqid();
+$documentId = null;
+
+$adapter = new Adapter\Swoole(port: App::getEnv('PORT', 80));
+$adapter->setPackageMaxLength(64000); // Default maximum Package Size (64kb)
+
+$server = new Server($adapter);
+
+function logError(Throwable $error, string $action) use ($register) {
     $logger = $register->get('logger');
 
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
@@ -60,26 +81,7 @@ function logError($register, \Throwable $error, $action) {
     Console::info('Realtime log pushed with status code: '.$responseCode);
 }
 
-$realtime = new Realtime();
-
-/**
- * Table for statistics across all workers.
- */
-$stats = new Table(4096, 1);
-$stats->column('projectId', Table::TYPE_STRING, 64);
-$stats->column('teamId', Table::TYPE_STRING, 64);
-$stats->column('connections', Table::TYPE_INT);
-$stats->column('connectionsTotal', Table::TYPE_INT);
-$stats->column('messages', Table::TYPE_INT);
-$stats->create();
-
-$containerId = uniqid();
-$documentId = null;
-
-$adapter = new Adapter\Swoole(port: App::getEnv('PORT', 80));
-$adapter->setPackageMaxLength(64000); // Default maximum Package Size (64kb)
-
-$server = new Server($adapter);
+$server->onError(logError());
 
 $server->onStart(function () use ($stats, $register, $containerId, &$documentId) {
     Console::success('Server started succefully');
