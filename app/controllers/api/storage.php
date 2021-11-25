@@ -139,6 +139,17 @@ App::post('/v1/storage/buckets')
                     'filters' => [],
                 ]),
                 new Document([
+                    '$id' => 'metadata',
+                    'type' => Database::VAR_STRING,
+                    'format' => '',
+                    'size' => 16384, // https://tools.ietf.org/html/rfc4288#section-4.2
+                    'signed' => true,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => ['json'],
+                ]),
+                new Document([
                     '$id' => 'sizeOriginal',
                     'type' => Database::VAR_INTEGER,
                     'format' => '',
@@ -604,7 +615,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             } else {
                 // Calculate total number of chunks based on the chunk size i.e ($rangeEnd - $rangeStart)
                 $chunks = (int) ceil($size / ($end + 1 - $start));
-                $chunk = (int) ($start / ($end + 1 - $start));
+                $chunk = (int) ($start / ($end + 1 - $start)) + 1;
             }
         }
 
@@ -636,15 +647,18 @@ App::post('/v1/storage/buckets/:bucketId/files')
         } else {
             $file = $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
         }
-
+        var_dump($chunks, $chunk);
+        $metadata = ['content_type' => $localDevice->getFileMimeType($fileTmpName)];
         if (!$file->isEmpty()) {
             $chunks = $file->getAttribute('chunksTotal', 1);
+            $metadata = $file->getAttribute('metadata', []);
             if ($chunk == -1) {
-                $chunk = $chunks - 1;
+                $chunk = $chunks;
             }
         }
 
-        $chunksUploaded = $device->upload($fileTmpName, $path, $chunk, $chunks);
+        $chunksUploaded = $device->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
+        var_dump($metadata);
         if (empty($chunksUploaded)) {
             throw new Exception('Failed uploading file', 500);
         }
@@ -721,6 +735,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'openSSLTag' => $openSSLTag,
                         'openSSLIV' => $openSSLIV,
                         'search' => implode(' ', [$fileId, $fileName,]),
+                        'metadata' => $metadata,
                     ]);
                     if($permissionBucket) {
                         $file = Authorization::skip(function() use ($dbForExternal, $bucketId, $doc) {
@@ -740,7 +755,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('openSSLVersion', $openSSLVersion)
                         ->setAttribute('openSSLCipher', $openSSLCipher)
                         ->setAttribute('openSSLTag', $openSSLTag)
-                        ->setAttribute('openSSLIV', $openSSLIV);
+                        ->setAttribute('openSSLIV', $openSSLIV)
+                        ->setAttribute('metadata', $metadata);
 
                     if($permissionBucket) {
                         $file = Authorization::skip(function() use ($dbForExternal, $bucketId, $fileId, $file) {
@@ -778,6 +794,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'chunksTotal' => $chunks,
                         'chunksUploaded' => $chunksUploaded,
                         'search' => implode(' ', [$fileId, $fileName,]),
+                        'metadata' => $metadata,
                     ]);
                     if($permissionBucket) {
                         $file = Authorization::skip(function() use ($dbForExternal, $bucketId, $doc) {
@@ -788,7 +805,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     }
                 } else {
                     $file = $file
-                        ->setAttribute('chunksUploaded', $chunksUploaded);
+                        ->setAttribute('chunksUploaded', $chunksUploaded)
+                        ->setAttribute('metadata', $metadata);
 
                     if($permissionBucket) {
                         $file = Authorization::skip(function() use ($dbForExternal, $bucketId, $fileId, $file) {
@@ -806,6 +824,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 throw new Exception('Document already exists', 409);
             }
         }
+
+        $metadata = null; // was causing leaks as it was passed by reference
 
         $audits
             ->setParam('event', 'storage.files.create')
@@ -1020,7 +1040,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception('No such storage device', 400);
         }
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
-
+        var_dump($bucket);
         if($bucket->isEmpty() 
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
@@ -1184,7 +1204,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         /** @var Appwrite\Stats\Stats $usage */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
-
+        var_dump($bucket);
         if($bucket->isEmpty() 
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
