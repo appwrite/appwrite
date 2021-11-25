@@ -218,6 +218,10 @@ App::get('/console/database/collection')
 
         $logs
             ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 0))
+            ->setParam('method', 'database.listCollectionLogs')
+            ->setParam('params', [
+                'collection-id' => '{{router.params.id}}',
+            ])
         ;
 
         $page = new View(__DIR__.'/../../views/console/database/collection.phtml');
@@ -245,14 +249,45 @@ App::get('/console/database/document')
     ->action(function ($collection, $layout) {
         /** @var Utopia\View $layout */
 
+        $logs = new View(__DIR__.'/../../views/console/comps/logs.phtml');
+
+        $logs
+            ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 0))
+            ->setParam('method', 'database.listDocumentLogs')
+            ->setParam('params', [
+                'collection-id' => '{{router.params.collection}}',
+                'document-id' => '{{router.params.id}}',
+            ])
+        ;
+
         $page = new View(__DIR__.'/../../views/console/database/document.phtml');
-        $searchFiles = new View(__DIR__.'/../../views/console/database/search/files.phtml');
-        $searchDocuments = new View(__DIR__.'/../../views/console/database/search/documents.phtml');
 
         $page
+            ->setParam('new', false)
             ->setParam('collection', $collection)
-            ->setParam('searchFiles', $searchFiles)
-            ->setParam('searchDocuments', $searchDocuments)
+            ->setParam('logs', $logs)
+        ;
+
+        $layout
+            ->setParam('title', APP_NAME.' - Database Document')
+            ->setParam('body', $page);
+    });
+
+App::get('/console/database/document/new')
+    ->groups(['web', 'console'])
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->param('collection', '', new UID(), 'Collection unique ID.')
+    ->inject('layout')
+    ->action(function ($collection, $layout) {
+        /** @var Utopia\View $layout */
+
+        $page = new View(__DIR__.'/../../views/console/database/document.phtml');
+
+        $page
+            ->setParam('new', true)
+            ->setParam('collection', $collection)
+            ->setParam('logs', new View())
         ;
 
         $layout

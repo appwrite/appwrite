@@ -26,7 +26,7 @@ class StorageConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
-        
+
         /**
          * Test for SUCCESS
          */

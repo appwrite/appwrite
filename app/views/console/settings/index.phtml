@@ -64,7 +64,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
 
                                 <!-- <div data-ls-if="0 !== {{console-domains|activeDomainsCount}}">
                                     <label for="name">Custom API Endpoints</label>
-                                    
+
                                     <ul data-ls-loop="console-domains" data-ls-as="domain">
                                         <li>
                                             <div class="input-copy" data-ls-if="true === {{domain.verification}} && {{domain.certificateId}}">
@@ -73,7 +73,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                         </li>
                                     </ul>
                                 </div> -->
-                                
+
 
                                 <button class="" type="submit">Update</button>
                             </form>
@@ -110,14 +110,14 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
 
                                 <div data-ui-modal class="modal box close width-small height-small" data-button-text="Delete Project" data-button-class="danger reverse">
                                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
-                                    
+
                                     <h3>Confirm Password</h3>
-                                    
+
                                     <hr />
 
                                     <label>Password</label>
                                     <input name="password" type="password" class="full-width" autocomplete="off" placeholder="" required>
-                                    
+
                                     <hr />
 
                                     <button type="submit" class="margin-bottom-no danger fill">Delete Project</button>
@@ -232,7 +232,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                 </form>
 
                                 <img src="<?php echo $this->escape($icon); ?>?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="" class="pull-start provider margin-end" />
-                                        
+
                                 <span class="text-size-small text-bold"><?php echo $this->escape($name); ?></span>
 
                                 <?php if($docs): ?>
@@ -241,7 +241,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                 </p>
                                 <?php endif; ?>
                             </div>
-                            
+
                             <hr />
 
                             <div class="text-align-center text-size-small text-bold text-success" data-ls-if="!!({{console-project.serviceStatusFor<?php echo ucFirst($this->escape($key)); ?>}})">Enabled</div>
@@ -252,15 +252,15 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                 </ul>
             </li>
             <li data-state="/console/settings/domains?project={{router.params.project}}">
-                
+
                 <?php if(!$customDomainsEnabled): ?>
                     <h2 style="display: none;">Custom Domains</h2>
 
                     <div class="box line margin-bottom">
                         <h3>Enable Custom Domains</h3>
-                        
+
                         <p>To enable <?php echo APP_NAME; ?>'s custom domain feature, you have to start your server instance with a public accessible domain name.</p>
-                        
+
                         <p>Start your <?php echo APP_NAME; ?> server container with the <b>_APP_DOMAIN_TARGET</b> environment variable set with a public accessible domain name that resolves to your <?php echo APP_NAME; ?> server setup.</p>
                         <p class="margin-bottom-no">The <?php echo APP_NAME; ?> server will use your target domain to validate new custom domains and will automatically generate SSL certificates for your new domains using Let'sencrypt Certbot.</p>
                     </div>
@@ -312,7 +312,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                         <td data-title="">
                                             <button class="link text-size-small" data-ls-if="true === {{domain.verification}}" data-ls-ui-trigger="dns-settings-{{domain.$id}}">DNS Settings</button>
                                             <button class="link text-size-small" data-ls-if="true !== {{domain.verification}}" data-ls-ui-trigger="dns-settings-{{domain.$id}}">Verify Domain</button>
-                                            
+
                                             <div data-ui-modal class="modal box close" data-button-alias="none" data-open-event="dns-settings-{{domain.$id}}" xdata-close-event="dns-settings-close-{{domain.$id}}">
                                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
@@ -326,7 +326,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                                 <ol class="bullets">
                                                     <li>
                                                         <p>Add a new CNAME record in your DNS providers settings to point your new subdomain to your <?php echo APP_NAME; ?> server with the following value:</p>
-                                                        
+
                                                         <div class="ide margin-bottom-small">
                                                             <pre class="line-numbers"><code class="prism language-javascript" data-prism><?php echo $this->print($customDomainsTarget, 'escape'); ?></code></pre>
                                                         </div>
@@ -359,7 +359,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
 
                                                             <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                                                             <input type="hidden" name="domainId" data-ls-bind="{{domain.$id}}" />
-                                                            
+
                                                             <button class="margin-top-small">Confirm & Verify</button>
                                                         </form>
                                                     </li>
@@ -428,7 +428,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
 
                                     <label for="name">Domain Name</label>
                                     <input type="text" class="full-width" id="domain" name="domain" placeholder="appwrite.example.com" required autocomplete="off" title="Enter a valid domain name" pattern="^([a-zA-Z0-9][a-zA-Z0-9-_]*\.)*[a-zA-Z0-9]*[a-zA-Z0-9-_]*[[a-zA-Z0-9]+$" />
-                                    
+
                                     <hr />
 
                                     <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
@@ -463,6 +463,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                     data-scope="console"
                                     data-event="submit"
                                     data-success="alert,trigger"
+                                    data-confirm="Are you sure you want to remove that user from the team?"
                                     data-success-param-alert-text="Member Removed Successfully"
                                     data-success-param-trigger-events="teams.deleteMembership"
                                     data-failure="alert"
@@ -474,7 +475,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
 
                                     <button class="danger">Leave</button>
                                 </form>
-                                
+
                                 <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end">
                                     <form class="pull-end"
                                         data-analytics
@@ -553,7 +554,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
 
                             <label for="email">Email</label>
                             <input name="email" id="email" type="email" autocomplete="email" required>
-                            
+
                             <label for="team-name">Name <small>(optional)</small></label>
                             <input name="name" id="team-name" type="text" autocomplete="name" maxlength="128" />
 

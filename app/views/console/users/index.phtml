@@ -163,6 +163,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                             data-validator="users.get"
                             required
                             maxlength="36"
+                            pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$"
                             id="userId"
                             name="userId" />
 
@@ -310,6 +311,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                             data-validator="teams.get"
                             required
                             maxlength="36"
+                            pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$"
                             id="teamId"
                             name="teamId" />
 
@@ -327,7 +329,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
         <li data-state="/console/users/providers?project={{router.params.project}}">
             <p data-ls-if="{{console-project.authLimit}} == 0" class="text-fade text-size-small margin-bottom pull-end">Unlimited Users <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Set Limit</a></p>
             <p data-ls-if="{{console-project.authLimit}} != 0" class="text-fade text-size-small margin-bottom pull-end"><span data-ls-bind="{{console-project.authLimit|statsTotal}}"></span> Users allowed <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Change Limit</a></p>
-            
+
             <h2>Settings</h2>
 
             <div data-ui-modal class="modal close" data-button-alias="none" data-open-event="project-update-auth-users-limit">
@@ -335,8 +337,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
 
                 <h1>Max Allowed Users</h1>
 
-                <form data-debug="1"
-                    data-analytics
+                <form data-analytics
                     data-analytics-activity
                     data-analytics-event="submit"
                     data-analytics-category="console"
@@ -369,7 +370,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
 
             <ul class="tiles cell-3 margin-bottom-small">
                 <?php foreach($auth as $index => $method):
-                    $key = $method['key'] ?? '';
+                    $key = ucfirst($method['key'] ?? '');
                     $name = $method['name'] ?? '';
                     $icon = $method['icon'] ?? '';
                     $docs = $method['docs'] ?? '';
@@ -394,17 +395,17 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                 data-failure="alert"
                                 data-failure-param-alert-text="Failed to update project auth status settings"
                                 data-failure-param-alert-classname="error">
-                                <input name="method" id="<?php echo $this->escape($key); ?>" type="hidden" autocomplete="off" value="<?php echo $this->escape($index); ?>">
+                                <input name="method" id="auth<?php echo $this->escape($key); ?>" type="hidden" autocomplete="off" value="<?php echo $this->escape($index); ?>">
                                 <?php if( !(in_array($key, ['usersAuthMagicURL', 'usersAuthInvites']) && !$smtpEnabled)): ?>
-                                    <input name="status" type="hidden" data-forms-switch data-ls-bind="{{console-project.<?php echo $this->escape($key); ?>}}" data-cast-to="boolean" class="pull-end" />
+                                    <input name="status" type="hidden" data-forms-switch data-ls-bind="{{console-project.auth<?php echo $this->escape($key); ?>}}" data-cast-to="boolean" class="pull-end" />
                                 <?php endif; ?>
                             </form>
                         <?php endif; ?>
-                        
+
                         <img src="<?php echo $this->escape($icon); ?>?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="Email/Password Logo" class="pull-start provider margin-end" />
-                                
+
                         <span class="text-size-small"><?php echo $this->escape($name); ?><?php if(!$enabled): ?> <spann class="text-fade text-size-xs">soon</span><?php endif; ?>
-                        
+
                         <?php if( in_array($key, ['usersAuthMagicURL', 'usersAuthInvites']) && !$smtpEnabled): ?>
                             <p class="margin-bottom-no text-one-liner text-size-small text-danger">
                                 SMTP Disabled
@@ -431,18 +432,18 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                 data-scope="console">
                 <ul class="tiles cell-3 margin-bottom-small">
                     <?php foreach ($providers as $provider => $data):
-                        if (isset($data['enabled']) && !$data['enabled']) {continue;}
-                        // if (isset($data['mock']) && $data['mock']) {continue;}
+                    if (isset($data['enabled']) && !$data['enabled']) {continue;}
+                        if (isset($data['mock']) && $data['mock']) {continue;}
                         $sandbox = $data['sandbox'] ?? false;
                         $form = $data['form'] ?? false;
                         $name = $data['name'] ?? 'Unknown';
                         $beta = $data['beta'] ?? false;
-                        ?>
-	                        <li class="<?php echo (isset($data['enabled']) && !$data['enabled']) ? 'dev-feature' : ''; ?>">
-	                            <div data-ui-modal class="modal close" data-button-alias="none" data-open-event="provider-update-<?php echo $provider; ?>">
-	                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+                    ?>
+                        <li class="<?php echo (isset($data['enabled']) && !$data['enabled']) ? 'dev-feature' : ''; ?>">
+                            <div data-ui-modal class="modal close" data-button-alias="none" data-open-event="provider-update-<?php echo $provider; ?>">
+                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-	                                <h1><?php echo $this->escape($name); ?> <?php if ($sandbox): ?>Sandbox<?php endif;?> OAuth2 Settings</h1>
+                                <h1><?php echo $this->escape($name); ?> <?php if ($sandbox): ?>Sandbox<?php endif;?> OAuth2 Settings</h1>
 
                                 <form
                                     autocomplete="off"
@@ -470,7 +471,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                     <?php if (!$form): ?>
                                         <label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid">App ID</label>
                                         <input name="appId" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Appid}}">
-                                    
+
                                         <label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret">App Secret</label>
                                         <input name="secret" data-forms-show-secret id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret" type="password" autocomplete="off" data-ls-bind="{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
                                     <?php else: ?>
@@ -524,5 +525,79 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                 </ul>
             </div>
         </li>
+        <li data-state="/console/users/usage?project={{router.params.project}}">
+                <form
+                    class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
+                    data-service="users.getUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-range="90d">
+                    <button class="tick">90d</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
+
+                <form
+                    class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '30d'"
+                    data-service="users.getUsage"
+                    data-event="submit"
+                    data-name="usage">
+                    <button class="tick">30d</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
+
+                <form
+                    class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '24h'"
+                    data-service="users.getUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-range="24h">
+                    <button class="tick">24h</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
+
+                <h2>Usage</h2>
+
+                <div data-service="users.getUsage" data-event="load" data-name="usage">
+                    <h3 class="margin-bottom-tiny">Users</h3>
+                    <p class="text-fade">Count of users over time</p>
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Users=usersCount" data-show-y-axis="true" data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large">
+                        <li>Users <span data-ls-bind="({{usage.usersCount|statsGetLast|statsTotal}})"></span></li>
+                    </ul>
+
+                    <h3 class="margin-bottom-tiny">Operations</h3>
+                    <p class="text-fade">Count of users create, read, update and delete operations over time</p>
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input 
+                                    type="hidden" 
+                                    data-ls-bind="{{usage}}"
+                                    data-forms-chart="Created=usersCreate,Read=usersRead,Updated=usersUpdate,Deleted=usersDelete"
+                                    data-show-y-axis="true"
+                                    data-colors="create,read,update,delete"
+                                    data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large crud">
+                        <li>Created</li>
+                        <li>Read</li>
+                        <li>Updated</li>
+                        <li>Deleted</li>
+                    </ul>
+                </div>
+            </li>
     </ul>
 </div>

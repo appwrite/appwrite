@@ -321,12 +321,20 @@
                  * Get currently logged in user list of latest security activity logs. Each
                  * log returns user IP address, location and date and time of log.
                  *
+                 * @param {number} limit
+                 * @param {number} offset
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getLogs: () => __awaiter(this, void 0, void 0, function* () {
+                getLogs: (limit, offset) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/account/logs';
                     let payload = {};
+                    if (typeof limit !== 'undefined') {
+                        payload['limit'] = limit;
+                    }
+                    if (typeof offset !== 'undefined') {
+                        payload['offset'] = offset;
+                    }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
                         'content-type': 'application/json',
@@ -1911,6 +1919,38 @@
                     }, payload);
                 }),
                 /**
+                 * List Document Logs
+                 *
+                 * Get the document activity logs list by its unique ID.
+                 *
+                 * @param {string} collectionId
+                 * @param {string} documentId
+                 * @param {number} limit
+                 * @param {number} offset
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                listDocumentLogs: (collectionId, documentId, limit, offset) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof documentId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "documentId"');
+                    }
+                    let path = '/database/collections/{collectionId}/documents/{documentId}/logs'.replace('{collectionId}', collectionId).replace('{documentId}', documentId);
+                    let payload = {};
+                    if (typeof limit !== 'undefined') {
+                        payload['limit'] = limit;
+                    }
+                    if (typeof offset !== 'undefined') {
+                        payload['offset'] = offset;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * List Indexes
                  *
                  *
@@ -2025,15 +2065,23 @@
                  * Get the collection activity logs list by its unique ID.
                  *
                  * @param {string} collectionId
+                 * @param {number} limit
+                 * @param {number} offset
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listCollectionLogs: (collectionId) => __awaiter(this, void 0, void 0, function* () {
+                listCollectionLogs: (collectionId, limit, offset) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
                     let path = '/database/collections/{collectionId}/logs'.replace('{collectionId}', collectionId);
                     let payload = {};
+                    if (typeof limit !== 'undefined') {
+                        payload['limit'] = limit;
+                    }
+                    if (typeof offset !== 'undefined') {
+                        payload['offset'] = offset;
+                    }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
                         'content-type': 'application/json',
@@ -4935,15 +4983,23 @@
                  * Get the user activity logs list by its unique ID.
                  *
                  * @param {string} userId
+                 * @param {number} limit
+                 * @param {number} offset
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getLogs: (userId) => __awaiter(this, void 0, void 0, function* () {
+                getLogs: (userId, limit, offset) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
                     let path = '/users/{userId}/logs'.replace('{userId}', userId);
                     let payload = {};
+                    if (typeof limit !== 'undefined') {
+                        payload['limit'] = limit;
+                    }
+                    if (typeof offset !== 'undefined') {
+                        payload['offset'] = offset;
+                    }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
                         'content-type': 'application/json',

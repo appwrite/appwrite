@@ -106,12 +106,18 @@ class DatabaseV1 extends Worker
         $dbForExternal = $this->getExternalDB($projectId);
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
+        $status = $attribute->getAttribute('status', '');
 
+        // possible states at this point:
+        // - available: should not land in queue; controller flips these to 'deleting'
+        // - processing: hasn't finished creating
+        // - deleting: was available, in deletion queue for first time
+        // - failed: attribute was never created
+        // - stuck: attribute was available but cannot be removed
         try {
-            if(!$dbForExternal->deleteAttribute($collectionId, $key) && $attribute->getAttribute('status') !== 'failed') {
+            if($status !== 'failed' && !$dbForExternal->deleteAttribute($collectionId, $key)) {
                 throw new Exception('Failed to delete Attribute');
             }
-
             $dbForInternal->deleteDocument('attributes', $attribute->getId());
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
@@ -214,12 +220,12 @@ class DatabaseV1 extends Worker
 
         $collectionId = $collection->getId();
         $key = $index->getAttribute('key');
+        $status = $index->getAttribute('status', '');
 
         try {
-            if(!$dbForExternal->deleteIndex($collectionId, $key) && $index->getAttribute('status') !== 'failed') {
+            if($status !== 'failed' && !$dbForExternal->deleteIndex($collectionId, $key)) {
                 throw new Exception('Failed to delete index');
             }
-
             $dbForInternal->deleteDocument('indexes', $index->getId());
         } catch (\Throwable $th) {
             Console::error($th->getMessage());

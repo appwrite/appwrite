@@ -1,9 +1,9 @@
-(function(window) {
+(function (window) {
   "use strict";
 
   window.ls.container.get("view").add({
     selector: "data-forms-chart",
-    controller: function(element, container, date, document) {
+    controller: function (element, container, date, document) {
       let wrapper = document.createElement("div");
       let child = document.createElement("canvas");
       let sources = element.getAttribute('data-forms-chart');
@@ -19,7 +19,7 @@
       element.parentNode.insertBefore(wrapper, element.nextSibling);
 
       wrapper.classList.add('content');
-      
+
       child.width = width;
       child.height = height;
 
@@ -29,7 +29,7 @@
 
       let chart = null;
 
-      let check = function() {
+      let check = function () {
 
         let config = {
           type: "line",
@@ -41,7 +41,7 @@
             responsive: true,
             hover: {
               mode: "nearest",
-              intersect: true
+              intersect: false
             },
             scales: {
               x: {
@@ -52,6 +52,7 @@
                 min: 0,
                 ticks: {
                   count: ticksCount,
+                  fontColor: "#8f8f8f"
                 },
               }
             },
@@ -89,12 +90,12 @@
           config.data.datasets[i].data = [0, 0, 0, 0, 0, 0, 0];
           config.data.datasets[i].fill = true;
 
-          if(!data) {
+          if (!data) {
             return;
           }
 
           let dateFormat = (value.range && range[value.range]) ? range[value.range] : 'd F Y';
-          
+
           for (let x = 0; x < data.length; x++) {
             if(data[x].value > highest) {
               highest = data[x].value;

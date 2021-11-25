@@ -113,6 +113,13 @@ window.ls.router
     scope: "console",
     project: true
   })
+  .add("/console/database/usage", {
+    template: function(window) {
+      return window.location.pathname + window.location.search + '&version=' + APP_ENV.CACHEBUSTER;
+    },
+    scope: "console",
+    project: true
+  })
   .add("/console/database/collection", {
     template: function(window) {
       return window.location.pathname + window.location.search + '&version=' + APP_ENV.CACHEBUSTER;

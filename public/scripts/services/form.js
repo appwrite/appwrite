@@ -13,11 +13,20 @@
                 case 'integer':
                     value = parseInt(value);
                     break;
+                case 'float':
+                    value = parseFloat(parseFloat(value).toFixed(2));
+                    break;
                 case 'numeric':
                     value = Number(value);
                     break;
+                case 'float':
+                    value = parseFloat(value);
+                    break;
                 case 'string':
                     value = value.toString();
+                    if (value.length === 0) {
+                        value = null;
+                    }
                     break;
                 case 'json':
                     value = (value) ? JSON.parse(value) : [];
@@ -105,7 +114,7 @@
                             json[name] = element.value;
                         }
                     }
-                    
+
                     json[name] = cast(json[name], castTo); // Apply casting
                 }
             }
