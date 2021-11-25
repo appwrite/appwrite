@@ -304,7 +304,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
     $route = $utopia->match($request);
 
-    if($error->getCode() >= 500 || $error->getCode() === 0) {
+    if($error->getCode() >= 500 || $error->getCode() === 0 && !$logger) {
         $log = new Utopia\Logger\Log();
 
         if(!$user->isEmpty()) {
@@ -317,15 +317,13 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         $log->setType(Log::TYPE_ERROR);
         $log->setMessage($error->getMessage());
 
-        $log->setTags([
-            'method' => $route->getMethod(),
-            'url' => $route->getPath(),
-            'code' => $error->getCode(),
-            'verbose_type' => get_class($error),
-            'projectId' => $project->getId(),
-            'hostname' => $request->getHostname(),
-            'locale' => (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')),
-        ]);
+        $log->addTag('method', $route->getMethod());
+        $log->addTag('url',  $error->getCode());
+        $log->addTag('code', get_class($error));
+        $log->addTag('verbose_type', $route->getPath());
+        $log->addTag('projectId', $project->getId());
+        $log->addTag('hostname', $request->getHostname());
+        $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
 
         $log->addExtra('file', $error->getFile());
         $log->addExtra('line', $error->getLine());

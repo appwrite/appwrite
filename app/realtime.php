@@ -49,8 +49,12 @@ $adapter->setPackageMaxLength(64000); // Default maximum Package Size (64kb)
 
 $server = new Server($adapter);
 
-function logError(Throwable $error, string $action) use ($register) {
+$logError = function(Throwable $error, string $action) use ($register) {
     $logger = $register->get('logger');
+
+    if(!$logger) {
+        return;
+    }
 
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
@@ -61,10 +65,8 @@ function logError(Throwable $error, string $action) use ($register) {
     $log->setType(Log::TYPE_ERROR);
     $log->setMessage($error->getMessage());
 
-    $log->setTags([
-        'code' => $error->getCode(),
-        'verbose_type' => get_class($error),
-    ]);
+    $log->addTag('code', $error->getCode());
+    $log->addTag('verbose_type', get_class($error));
 
     $log->addExtra('file', $error->getFile());
     $log->addExtra('line', $error->getLine());
@@ -75,15 +77,13 @@ function logError(Throwable $error, string $action) use ($register) {
     $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
     $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-    $log->setBreadcrumbs([]);
-
     $responseCode = $logger->addLog($log);
     Console::info('Realtime log pushed with status code: '.$responseCode);
-}
+};
 
-$server->onError(logError());
+$server->onError($logError);
 
-$server->onStart(function () use ($stats, $register, $containerId, &$documentId) {
+$server->onStart(function () use ($stats, $register, $containerId, &$documentId, $logError) {
     Console::success('Server started succefully');
 
     $getConsoleDb = function () use ($register) {
@@ -107,7 +107,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
     /**
      * Create document for this worker to share stats across Containers.
      */
-    go(function () use ($getConsoleDb, $containerId, &$documentId, $register) {
+    go(function () use ($getConsoleDb, $containerId, &$documentId, $register, $logError) {
         try {
             [$consoleDb, $returnConsoleDb] = call_user_func($getConsoleDb);
             $document = [
@@ -125,7 +125,8 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
             Authorization::enable();
             $documentId = $document->getId();
         } catch (\Throwable $th) {
-            logError($register, $th, "onStart.createDocument");
+            var_dump("Error starting");
+            call_user_func($logError, $th, "onStart.createDocument");
 
             Console::error('[Error] Type: ' . get_class($th));
             Console::error('[Error] Message: ' . $th->getMessage());

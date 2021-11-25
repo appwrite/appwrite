@@ -63,38 +63,36 @@ abstract class Worker
             global $register;
             $logger = $register->get('logger');
 
-            $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
-            $workerType = $this->getName();
+            if($logger) {
+                $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+                $workerType = $this->getName();
 
-            $log = new Log();
+                $log = new Log();
 
-            $log->setNamespace("worker-" . $workerType);
-            $log->setServer(\gethostname());
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
+                $log->setNamespace("worker-" . $workerType);
+                $log->setServer(\gethostname());
+                $log->setVersion($version);
+                $log->setType(Log::TYPE_ERROR);
+                $log->setMessage($error->getMessage());
 
-            $log->setTags([
-                'worker_type' => $workerType,
-                'code' => $error->getCode(),
-                'verbose_type' => \get_class($error),
-            ]);
+                $log->addTag('worker_type', $workerType);
+                $log->addTag('code', $error->getCode());
+                $log->addTag('verbose_type', \get_class($error));
 
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('args', $this->args);
+                $log->addExtra('file', $error->getFile());
+                $log->addExtra('line', $error->getLine());
+                $log->addExtra('trace', $error->getTraceAsString());
+                $log->addExtra('args', $this->args);
 
-            $action = 'worker.' . $workerType . '.setUp';
-            $log->setAction($action);
+                $action = 'worker.' . $workerType . '.setUp';
+                $log->setAction($action);
 
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+                $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+                $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            $log->setBreadcrumbs([]);
-
-            $responseCode = $logger->addLog($log);
-            Console::info('Setup log pushed with status code: '.$responseCode);
+                $responseCode = $logger->addLog($log);
+                Console::info('Setup log pushed with status code: '.$responseCode);
+            }
 
             throw $error;
         }
@@ -113,37 +111,38 @@ abstract class Worker
         } catch(\Throwable $error) {
             global $register;
             $logger = $register->get('logger');
-            $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
-            $workerType = $this->getName();
 
-            $log = new Log();
+            if($logger) {
+                $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+                $workerType = $this->getName();
 
-            $log->setNamespace("worker-" . $workerType);
-            $log->setServer(\gethostname());
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
+                $log = new Log();
 
-            $log->setTags([
-                'worker_type' => $workerType,
-                'code' => $error->getCode(),
-                'verbose_type' => \get_class($error),
-            ]);
+                $log->setNamespace("worker-" . $workerType);
+                $log->setServer(\gethostname());
+                $log->setVersion($version);
+                $log->setType(Log::TYPE_ERROR);
+                $log->setMessage($error->getMessage());
 
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
+                $log->setTags([
+                    'worker_type' => $workerType,
+                    'code' => $error->getCode(),
+                    'verbose_type' => \get_class($error),
+                ]);
 
-            $action = 'worker.' . $workerType . '.perform';
-            $log->setAction($action);
+                $log->addExtra('file', $error->getFile());
+                $log->addExtra('line', $error->getLine());
+                $log->addExtra('trace', $error->getTraceAsString());
 
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+                $action = 'worker.' . $workerType . '.perform';
+                $log->setAction($action);
 
-            $log->setBreadcrumbs([]);
+                $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+                $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            $responseCode = $logger->addLog($log);
-            Console::info('Perform log pushed with status code: '.$responseCode);
+                $responseCode = $logger->addLog($log);
+                Console::info('Perform log pushed with status code: '.$responseCode);
+            }
 
             throw $error;
         }
@@ -162,37 +161,38 @@ abstract class Worker
         } catch(\Throwable $error) {
             global $register;
             $logger = $register->get('logger');
-            $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
-            $workerType = $this->getName();
 
-            $log = new Log();
+            if($logger) {
+                $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+                $workerType = $this->getName();
 
-            $log->setNamespace("worker-" . $workerType);
-            $log->setServer(\gethostname());
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
+                $log = new Log();
 
-            $log->setTags([
-                'worker_type' => $workerType,
-                'code' => $error->getCode(),
-                'verbose_type' => \get_class($error),
-            ]);
+                $log->setNamespace("worker-" . $workerType);
+                $log->setServer(\gethostname());
+                $log->setVersion($version);
+                $log->setType(Log::TYPE_ERROR);
+                $log->setMessage($error->getMessage());
 
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
+                $log->setTags([
+                    'worker_type' => $workerType,
+                    'code' => $error->getCode(),
+                    'verbose_type' => \get_class($error),
+                ]);
 
-            $action = 'worker.' . $workerType . '.tearDown';
-            $log->setAction($action);
+                $log->addExtra('file', $error->getFile());
+                $log->addExtra('line', $error->getLine());
+                $log->addExtra('trace', $error->getTraceAsString());
 
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+                $action = 'worker.' . $workerType . '.tearDown';
+                $log->setAction($action);
 
-            $log->setBreadcrumbs([]);
+                $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+                $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            $responseCode = $logger->addLog($log);
-            Console::info('Teardown log pushed with status code: '.$responseCode);
+                $responseCode = $logger->addLog($log);
+                Console::info('Teardown log pushed with status code: '.$responseCode);
+            }
 
             throw $error;
         }
