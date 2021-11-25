@@ -14,7 +14,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 
 <div class="zone xl">
     <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
-        <li data-state="/console/database?project={{router.params.project}}">
+        <li data-state="/console/storage?project={{router.params.project}}">
             <h2 class="margin-bottom">Files</h2>
 
             <form class="box padding-small margin-bottom search"
@@ -245,6 +245,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                             data-validator="storage.getFile"
                             required
                             maxlength="36"
+                            pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$"
                             name="fileId"
                             id="fileId" />
 
@@ -266,6 +267,67 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                         </footer>
                     </form>
                 </div>
+            </div>
+        </li>
+        <li data-state="/console/storage/usage?project={{router.params.project}}">
+            <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
+                    data-service="storage.getUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-range="90d">
+                <button class="tick">90d</button>
+            </form>
+
+            <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
+
+            <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '30d'"
+                data-service="storage.getUsage"
+                data-event="submit"
+                data-name="usage">
+                <button class="tick">30d</button>
+            </form>
+
+            <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
+
+            <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '24h'"
+                data-service="storage.getUsage"
+                data-event="submit"
+                data-name="usage"
+                data-param-range="24h">
+                <button class="tick">24h</button>
+            </form>
+
+            <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
+
+            <h2>Usage</h2>
+
+            <div
+                data-service="storage.getUsage"
+                data-event="load"
+                data-name="usage">
+                <div class="box margin-bottom-small">
+                    <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                        <div class="chart margin-bottom-no">
+                            <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Total Files=files" data-height="140" />
+                        </div>
+                    </div>
+                </div>
+
+                <ul class="chart-notes margin-bottom-large">
+                    <li>Total Files <span data-ls-bind="({{usage.files|statsGetLast|statsTotal}})"></span></li>
+                </ul>
+
+                <div class="box margin-bottom-small">
+                    <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                        <div class="chart margin-bottom-no">
+                            <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Total Storage=storage" data-height="140" />
+                        </div>
+                    </div>
+                </div>
+
+                <ul class="chart-notes margin-bottom-large">
+                    <li>Total Storage (<span data-ls-bind="{{usage.storage|statsGetLast|humanFileSize}}"></span> <span data-ls-bind="{{usage.storage|statsGetLast|humanFileUnit}}"></span>)</li>
+                </ul>
             </div>
         </li>
     </ul>
