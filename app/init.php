@@ -559,7 +559,7 @@ App::setResource('schema', function($utopia, $response, $request, $register) {
         $schema = $register->get('_schema');
     } catch (Exception $e) {
         Console::error('Schema not present. Generating Schema...');
-        $schema = Builder::buildSchema($utopia, $response, $register);
+        $schema = Builder::buildModelSchema($utopia, $response, $register);
         $register->set('_schema', function () use ($schema){
             return $schema;
         });

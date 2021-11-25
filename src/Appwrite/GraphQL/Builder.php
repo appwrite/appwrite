@@ -187,7 +187,31 @@ class Builder {
     
         return $type;
     }
-    
+
+    /**
+     * This function goes through all the REST endpoints in the API and builds a
+     * GraphQL schema for all those routes whose response model is neither empty nor NONE
+     *
+     * @param $utopia
+     * @param $response
+     * @param $register
+     * @return Schema
+     */
+    public static function buildDatabaseSchema($utopia, $response, $register)
+    {
+        /** @var Model\Collection[] $collections */
+
+        Console::log("[INFO] Building GraphQL Database Schema...");
+        $start = microtime(true);
+        $collections = [];
+
+        foreach($collections as $collection) {
+            foreach ($collection->getRules() as $rule) {
+                /** @var Model\Rule $rule */
+                $modelName = $rule->getName();
+            }
+        }
+    }
 
     /**
     * This function goes through all the REST endpoints in the API and builds a 
@@ -198,7 +222,7 @@ class Builder {
     * @param $register
     * @return Schema
     */
-    public static function buildSchema($utopia, $response, $register) {
+    public static function buildModelSchema($utopia, $response, $register) {
         Console::log("[INFO] Building GraphQL Schema...");
         $start = microtime(true);
         

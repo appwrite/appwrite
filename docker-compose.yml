@@ -585,11 +585,11 @@ services:
   
   graphql-explorer:
     container_name: graphql-explorer
-    image: appwrite/docker-altair
+    image: appwrite/altair:0.1.0
     restart: unless-stopped
     networks:
       - appwrite
-    ports: 
+    ports:
       - 9509:3000
     environment:
       - SERVER_URL=http://localhost/v1/graphql

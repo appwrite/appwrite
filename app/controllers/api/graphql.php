@@ -3,10 +3,11 @@
 use Appwrite\GraphQL\Builder;
 use GraphQL\GraphQL;
 use GraphQL\Type;
+use GraphQL\Type\Definition\ObjectType;
+use GraphQL\Utils\SchemaExtender;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
 use Utopia\App;
-
 
 App::post('/v1/graphql')
     ->desc('GraphQL Endpoint')
@@ -24,6 +25,27 @@ App::post('/v1/graphql')
         /** @var Utopia\App $utopia */
         /** @var Utopia\Registry\Registry $register */
 
+        $queryType = new ObjectType([
+            'name' => 'Query',
+            'description' => 'The root of all your queries',
+            'fields' => [
+                'accountGet' => [
+                    'type' => Type\Definition\Type::string(),
+                    'description' => 'Extension description',
+                    'args' => [],
+                    'resolve' => fn() => "Replacing account get response"
+                ],
+                'testQuery' => [
+                    'type' => Type\Definition\Type::string(),
+                    'description' => 'Extension description 2',
+                    'args' => [],
+                    'resolve' => fn() => "Test query response"
+                ]
+            ]
+        ]);
+
+        $extendedSchema = SchemaExtender::extend($schema, $queryType->astNode);
+
         $query = $request->getPayload('query', '');
         $variables = $request->getPayload('variables', null);
         $response->setContentType(Response::CONTENT_TYPE_NULL);
@@ -40,7 +62,7 @@ App::post('/v1/graphql')
         try {
             $debug = $isDevelopment ? ( DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE ) : DebugFlag::NONE;
             $rootValue = [];
-            $result = GraphQL::executeQuery($schema, $query, $rootValue, null, $variables)
+            $result = GraphQL::executeQuery($extendedSchema, $query, $rootValue, null, $variables)
                                 ->setErrorFormatter(Builder::getErrorFormatter($isDevelopment, $version));
             $output = $result->toArray($debug);
         } catch (\Exception $error) {
