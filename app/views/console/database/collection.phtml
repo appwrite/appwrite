@@ -42,13 +42,12 @@ $logs = $this->getParam('logs', null);
                     data-service="database.listDocuments"
                     data-event="load,database.createDocument,database.updateDocument,database.deleteDocument"
                     data-param-collection-id="{{router.params.id}}"
-                    data-param-search="{{router.params.search}}"
                     data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                    data-param-offset="{{router.params.offset}}"
                     data-param-order-types="DESC"
                     data-param-order-types-cast-to="array"
                     data-scope="sdk"
-                    data-name="project-documents">
+                    data-name="project-documents"
+                    x-data="{project: new URLSearchParams(location.search).get('project')}">
 
                     <div data-ls-if="0 == {{project-documents.sum}}" class="box margin-bottom">
                         <h3 class="margin-bottom-small text-bold">No Documents Found</h3>
@@ -57,29 +56,43 @@ $logs = $this->getParam('logs', null);
                     </div>
 
                     <div data-ls-if="({{project-documents.sum}})" class="margin-top-negative">
-                        <div class="margin-bottom-small text-align-end text-size-small text-fade"><span data-ls-bind="{{project-documents.sum}}"></span> documents found</div>
-
+                        <div class="margin-bottom-small text-align-end text-size-small text-fade"><span data-ls-bind="{{project-documents.sum}}"></span><span data-ls-if="{{project-documents.sum}} == <?php echo APP_LIMIT_COUNT; ?>">+</span> documents found</div>
                         <div class="box margin-bottom y-scroll text-size-small">
-                            <table class="vertical borders">
+                            <!-- Alpine.js Start -->
+                            <table
+                                data-ls-attrs="x-init=attributes = {{project-collection.attributes}}"
+                                x-data="{attributes: []}"
+                                class="vertical borders">
                                 <thead>
-                                    <tr data-ls-loop="project-collection.attributes" data-ls-as="attribute" data-ls-prefix="template-attribute-title-first" data-ls-limit="20">
-                                        <td style="width: 170px">
-                                            <i data-ls-attrs="class=pull-end icon-{{attribute.type}} text-size-xs"></i>
-                                            <span class="text-bold" data-ls-bind="{{attribute.key}}"></span>
-                                            <span class="text-size-small" data-ls-if="{{attribute.array}}">[]</span>
-                                        </td>
+                                    <tr>
+                                        <td style="width: 170px">$id <i class="pull-end text-size-xs icon-key"></i></td>
+                                        <template x-for="attr in attributes">
+                                            <td x-show="attr.status === 'available'" style="width: 170px">
+                                                <i :class="'icon-' + (attr.format ? attr.format : attr.type)" class="pull-end text-size-xs"></i>
+                                                <span x-text="attr.key" class="text-bold"></span>
+                                                <span x-show="attr.array" class="text-size-small">[]</span>
+                                            </td>
+                                        </template>
                                     </tr>
                                 </thead>
-                                <tbody data-ls-loop="project-documents.documents" data-ls-as="node">
-                                    <tr data-ls-loop="project-collection.attributes" data-ls-as="attribute" data-ls-prefix="template-attribute-body-first" data-ls-limit="20">
-                                        <td data-ls-attrs="data-title={{attribute.key}}: ">
-                                            <!-- <a href="" target="_blank" rel="noopener" class="pull-end margin-start"><i class="icon-link-ext"></i></a> -->
-                                            <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{router.params.id}}&project={{router.params.project}}"><span data-ls-bind="{{node|documentAttribute}}"></span></a>
-                                            <span data-ls-if="!{{node|documentAttribute}}" class="text-fade">n/a</span>
-                                        </td>
-                                    </tr>
+                                <tbody data-ls-attrs="x-init=documents = {{project-documents.documents}}" x-data="{documents: []}">
+                                    <template x-for="doc in documents">
+                                        <tr>
+                                            <td>
+                                                <a :href="`/console/database/document?id=${doc.$id}&collection=${doc.$collection}&project=${project}`" x-text="doc.$id"></a>
+                                            </td>
+                                            <template x-for="attr in attributes">
+                                                <td x-show="attr.status === 'available'" style="width: 170px">
+                                                    <a :href="`/console/database/document?id=${doc.$id}&collection=${doc.$collection}&project=${project}`">
+                                                        <span x-text="doc[attr.key] ?? 'n/a'"></span>
+                                                    </a>
+                                                </td>
+                                            </template>
+                                        </tr>
+                                    </template>
                                 </tbody>
                             </table>
+                            <!-- Alpine.js End -->
                         </div>
                     </div>
 
@@ -117,13 +130,12 @@ $logs = $this->getParam('logs', null);
                         </form>
                     </div>
 
-                    <a data-ls-if="0 < {{project-collection.attributes.length}}" data-ls-attrs="href=/console/database/document?collection={{router.params.id}}&project={{router.params.project}}&buster={{project-collection.dateUpdated}}" class="button">
+                    <a data-ls-if="0 < {{project-collection.attributes.length}}" data-ls-attrs="href=/console/database/document/new?collection={{router.params.id}}&project={{router.params.project}}" class="button">
                         Add Document
                     </a>
-
-                    <button disabled data-ls-if="!{{project-collection.attributes.length}}">
-                        Add Document
-                    </button >
+                    <a data-ls-if="!{{project-collection.attributes.length}}" data-ls-attrs="href=/console/database/collection/attributes?id={{router.params.id}}&project={{router.params.project}}" class="button">
+                        Create Attribute
+                    </a>
                 </div>
             </li>
             <li data-state="/console/database/collection/attributes?id={{router.params.id}}&project={{router.params.project}}">
@@ -132,7 +144,7 @@ $logs = $this->getParam('logs', null);
                 <div class="clear box margin-bottom">
                     <div data-ls-if="0 == {{project-collection.attributes.length}}">
                         <h3 class="margin-bottom-small text-bold">No Attributes Found</h3>
-    
+
                         <p class="margin-bottom-no">Add your first attribute to get started</p>
                     </div>
 
@@ -143,7 +155,8 @@ $logs = $this->getParam('logs', null);
                                 <th width="100"></th>
                                 <th width="130">Attribute ID</th>
                                 <th width="100">Type</th>
-                                <th width="180">Default</th>
+                                <th>Length</th>
+                                <th>Default</th>
                                 <th></th>
                                 <th width="80"></th>
                             </tr>
@@ -151,22 +164,30 @@ $logs = $this->getParam('logs', null);
                         <tbody data-ls-loop="project-collection.attributes" data-ls-as="attribute">
                             <tr>
                                 <td>
-                                    <i data-ls-attrs="class=icon-{{attribute.type}}"></i>
+                                    <i data-ls-if="!{{attribute.format}}" data-ls-attrs="class=icon-{{attribute.type}}"></i>
+                                    <i data-ls-if="{{attribute.format}}" data-ls-attrs="class=icon-{{attribute.format}}"></i>
                                 </td>
+
                                 <td data-title="Status">
                                     <span data-ls-if="{{attribute.status}} == 'available'" class="text-size-small text-success">available&nbsp;</span>
                                     <span data-ls-if="{{attribute.status}} == 'processing'" class="text-size-small text-info">processing&nbsp;</span>
                                     <span data-ls-if="{{attribute.status}} == 'failed'" class="text-size-small text-danger">failed&nbsp;</span>
                                     <span data-ls-if="{{attribute.status}} == 'deleting'" class="text-size-small text-danger">deleting&nbsp;</span>
+                                    <span data-ls-if="{{attribute.status}} == 'stuck'" class="text-size-small text-danger">stuck&nbsp;</span>
                                 </td>
 
                                 <td data-title="Attribute ID: ">
-                                    <span class="text-size-small" data-ls-bind="{{attribute.key}}"></span><span class="text-size-small" data-ls-if="{{attribute.size}}" data-ls-bind=" ({{attribute.size}})"></span>
+                                    <span class="text-size-small" data-ls-bind="{{attribute.key}}"></span>
                                 </td>
 
                                 <td data-title="Type:">
-                                    <span class="text-size-small" data-ls-bind="{{attribute.type}}"></span>
-                                    <span class="text-size-small" data-ls-if="{{attribute.array}}">[]</span>
+                                    <span class="text-size-small" data-ls-if="!{{attribute.array}}" data-ls-bind="{{attribute.type}}"></span>
+                                    <span class="text-size-small" data-ls-if="{{attribute.array}}" data-ls-bind="{{attribute.type}}[]"></span>
+                                    <span class="text-size-small" data-ls-if="{{attribute.format}}" data-ls-bind="({{attribute.format}})"></span>
+                                </td>
+
+                                <td data-title="Length:">
+                                    <span class="text-size-small" data-ls-if="{{attribute.size}}" data-ls-bind="{{attribute.size}}"></span>
                                 </td>
 
                                 <td data-title="Default:">
@@ -179,7 +200,8 @@ $logs = $this->getParam('logs', null);
                                 </td>
 
                                 <td data-title="">
-                                    <form data-ls-if="{{attribute.status}} !== 'deleting'"
+                                    <form
+                                        data-ls-if="{{attribute.status}} !== 'deleting'"
                                         class="pull-end"
                                         data-analytics
                                         data-analytics-activity
@@ -232,6 +254,9 @@ $logs = $this->getParam('logs', null);
                         <li>
                             <div class="link new-attribute-ip"><i class="avatar icon-ip"></i> New IP Attribute</div>
                         </li>
+                        <li>
+                            <div class="link new-attribute-enum"><i class="avatar icon-enum"></i> New Enum Attribute</div>
+                        </li>
                     </ul>
                 </div>
             </li>
@@ -241,7 +266,7 @@ $logs = $this->getParam('logs', null);
                 <div class="clear box margin-bottom">
                     <div data-ls-if="0 == {{project-collection.indexes.length}}">
                         <h3 class="margin-bottom-small text-bold">No Indexes Found</h3>
-    
+
                         <p class="margin-bottom-no">Add your first index to get started</p>
                     </div>
 
@@ -288,7 +313,8 @@ $logs = $this->getParam('logs', null);
                                 </td>
 
                                 <td data-title="">
-                                    <form data-ls-if="{{index.status}} !== 'deleting'"
+                                    <form
+                                        data-ls-if="{{index.status}} !== 'deleting'"
                                         class="pull-end"
                                         data-analytics
                                         data-analytics-activity
@@ -321,12 +347,86 @@ $logs = $this->getParam('logs', null);
                 <button class="new-index">Add Index</button>
             </li>
             <li data-state="/console/database/collection/activity?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>Activity <span class="badge" data-ls-bind="{{project-collection-logs.logs.length}}"></span></h2>
+                <h2>Activity <span class="badge" data-ls-bind="{{logs.sum}}"></span></h2>
 
-                <?php echo $logs->render(); ?>                
+                <?php echo $logs->render(); ?>
             </li>
             <li data-state="/console/database/collection/usage?id={{router.params.id}}&project={{router.params.project}}">
+                <form
+                    class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
+                    data-service="database.getCollectionUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-collection-id="{{router.params.id}}"
+                    data-param-range="90d">
+                    <button class="tick">90d</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
+
+                <form
+                    class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '30d'"
+                    data-service="database.getCollectionUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-collection-id="{{router.params.id}}">
+                    <button class="tick">30d</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
+
+                <form
+                    class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '24h'"
+                    data-service="database.getCollectionUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-collection-id="{{router.params.id}}"
+                    data-param-range="24h">
+                    <button class="tick">24h</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
+
                 <h2>Usage</h2>
+
+                <div data-service="database.getCollectionUsage" data-event="load" data-name="usage" data-param-collection-id="{{router.params.id}}">
+                    <h3 class="margin-bottom-tiny">Documents</h3>
+                    <p class="text-fade">Count of documents over time</p>
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Documents=documentsCount" data-show-y-axis="true" data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large">
+                        <li>Documents <span data-ls-bind="({{usage.documentsCount|statsGetLast|statsTotal}})"></span></li>
+                    </ul>
+
+                    <h3 class="margin-bottom-tiny">Operations</h3>
+                    <p class="text-fade">Count of documents create, read, update and delete operations over time</p>
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart margin-bottom-no">
+                                <input 
+                                    type="hidden" 
+                                    data-ls-bind="{{usage}}"
+                                    data-forms-chart="Created=documentsCreate,Read=documentsRead,Updated=documentsUpdate,Deleted=documentsDelete"
+                                    data-show-y-axis="true"
+                                    data-colors="create,read,update,delete"
+                                    data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large crud">
+                        <li>Created</li>
+                        <li>Read</li>
+                        <li>Updated</li>
+                        <li>Deleted</li>
+                    </ul>
+                </div>
             </li>
             <li data-state="/console/database/collection/settings?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Settings</h2>
@@ -360,14 +460,14 @@ $logs = $this->getParam('logs', null);
                                 <label class="margin-bottom-small">Permissions</label>
 
                                 <p class="text-fade text-size-small">Choose the permissions model for this collection.</p>
-                                
+
                                 <hr class="margin-top-small" />
 
                                 <div class="row">
                                     <div class="col span-1"><input name="permission" value="document" type="radio" class="margin-top-no" data-ls-bind="{{project-collection.permission}}" /></div>
                                     <div class="col span-11">
                                         <b>Document Level</b>
-                                        <p class="text-fade margin-top-tiny">Bla bla bla bla bla Bla blabla bla Bla blabla bla Bla blabla bla Bla blaBla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla</p>
+                                        <p class="text-fade margin-top-tiny">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eget hendrerit est. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.</p>
                                     </div>
                                 </div>
 
@@ -375,37 +475,38 @@ $logs = $this->getParam('logs', null);
                                     <div class="col span-1"><input name="permission" value="collection" type="radio" class="margin-top-tiny" data-ls-bind="{{project-collection.permission}}" /></div>
                                     <div class="col span-11">
                                         <b>Collection Level</b>
-                                        <p class="text-fade margin-top-tiny">Bla bla bla Bla blabla bla Bla blabla bla Bla blabla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla</p>
+                                        <p class="text-fade margin-top-tiny">Nulla elementum nisi eu tempor varius. Vivamus lacinia justo orci. Donec libero felis, blandit eu aliquet eu, ultrices eget lectus. Suspendisse dignissim, arcu in malesuada venenatis, tellus felis lobortis dui, quis condimentum purus libero at nunc. Pellentesque luctus sit amet metus ut tincidunt.</p>
 
                                         <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
-                                        <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.read}}" placeholder="User ID, Team ID or Role" />
-                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
-                                                        
+                                        <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$read}}" placeholder="User ID, Team ID or Role" />
+                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+
                                         <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                        <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.write}}" placeholder="User ID, Team ID or Role" />
-                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+                                        <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$write}}" placeholder="User ID, Team ID or Role" />
+                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
                                     </div>
                                 </div>
 
                                 <hr class="margin-top-no" />
 
                                 <button>Update</button>
-                            </form>
-                        </div>
+                        </form>
                     </div>
-                    <div class="col span-4 sticky-top">
-                        <label>Collection ID</label>
-                        <div class="input-copy margin-bottom">
-                            <input id="id" type="text" autocomplete="off" placeholder="" data-ls-bind="{{project-collection.$id}}" disabled data-forms-copy class="margin-bottom-no" />
-                        </div>
+                </div>
+                <div class="col span-4 sticky-top">
+                    <label>Collection ID</label>
+                    <div class="input-copy margin-bottom">
+                        <input id="id" type="text" autocomplete="off" placeholder="" data-ls-bind="{{project-collection.$id}}" disabled data-forms-copy class="margin-bottom-no" />
+                    </div>
 
-                        <ul class="margin-bottom-large text-fade text-size-small">
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-collection.dateUpdated|dateText}}"></span></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-collection.dateCreated|dateText}}"></span></li>
-                        </ul>
+                    <ul class="margin-bottom-large text-fade text-size-small">
+                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
+                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-collection.dateUpdated|dateText}}"></span></li>
+                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-collection.dateCreated|dateText}}"></span></li>
+                    </ul>
 
-                        <form name="database.deleteCollection" class="margin-bottom"
+                        <form
+                            name="database.deleteCollection" class="margin-bottom"
                             data-analytics
                             data-analytics-activity
                             data-analytics-event="submit"
@@ -423,20 +524,21 @@ $logs = $this->getParam('logs', null);
                             data-failure-param-alert-text="Failed to delete collection"
                             data-failure-param-alert-classname="error">
 
-                            <button type="submit" class="danger fill">Delete Collection</button>
-                        </form>
-                    </div>
+                        <button type="submit" class="danger fill">Delete Collection</button>
+                    </form>
                 </div>
-            </li>
-        </ul>
-    </div>
+            </div>
+        </li>
+    </ul>
+</div>
 
-    <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-string">
-        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+<div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-string">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-        <h1>Add String Attribute</h1>
+    <h1>Add String Attribute</h1>
 
         <form
+            id="add-string-attribute"
             data-analytics
             data-analytics-activity
             data-analytics-event="submit"
@@ -452,38 +554,76 @@ $logs = $this->getParam('logs', null);
             data-failure-param-alert-text="Failed to create attribute"
             data-failure-param-alert-classname="error">
 
-            <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-            <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-            <label for="string-attributeId">Attribute ID</label>
-            <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+        <label for="string-attributeId">Attribute ID</label>
+        <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
-            <label for="string-length">Size</label>
-            <input id="string-length" name="size" type="number" class="margin-bottom" autocomplete="off" required value="255" data-cast-to="integer" />
+        <label for="string-length">Size</label>
+        <input id="string-length" name="size" type="number" class="margin-bottom" autocomplete="off" required value="255" data-cast-to="integer" />
 
-            <div class="margin-bottom">
-                <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
-            </div>
-                                                                
-            <div class="margin-bottom">
-                <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" />  &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
-            </div>
+        <div class="margin-bottom">
+            <input type="hidden" name="required" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+        </div>
 
-            <label for="string-default">Default Value</label>
-            <input id="string-default" name="default" type="text" class="margin-bottom-large" autocomplete="off">
+        <div class="margin-bottom">
+            <input type="hidden" name="array" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+        </div>
 
-            <footer>
-                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-            </footer>
-        </form>
-    </div>
+        <div>
+            <label for="xdefault">Default Value</label>
+            <input name="xdefault" type="text" class="margin-bottom-large" autocomplete="off">
+        </div>
 
-    <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-integer">
-        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+        <footer>
+            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        </footer>
+    </form>
 
-        <h1>Add Integer Attribute</h1>
+    <script type="text/javascript">
+        (() => {
+            const form = document.getElementById("add-string-attribute");
+            const fields = {
+                required: {
+                    array: ["disable", "uncheck"],
+                    required: ["enable"]
+                },
+                array: {
+                    required: ["disable", "uncheck"],
+                    array: ["enable"]
+                },
+                xdefault: {
+                    oneOf: {
+                        if: ["array", "required"],
+                        then: {
+                            xdefault: ["unvalue", "disable"]
+                        },
+                        else: {
+                            required: ["enable"],
+                            array: ["enable"],
+                            xdefault: ["enable"]
+                        }
+                    }
+                }
+            };
+
+            form.addEventListener("change", event => {
+                formValidation(form, fields);
+            });
+        })();
+    </script>
+
+</div>
+
+<div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-integer">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1>Add Integer Attribute</h1>
 
         <form
+            id="add-integer-attribute"
             data-analytics
             data-analytics-activity
             data-analytics-event="submit"
@@ -499,46 +639,170 @@ $logs = $this->getParam('logs', null);
             data-failure-param-alert-text="Failed to create attribute"
             data-failure-param-alert-classname="error">
 
-            <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-            <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-            <label for="integer-attributeId">Attribute ID</label>
-            <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+        <label for="integer-attributeId">Attribute ID</label>
+        <input id="integer-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
-            <div class="margin-bottom">
-                <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+        <div class="margin-bottom">
+            <input type="hidden" name="required" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+        </div>
+
+        <div class="margin-bottom">
+            <input type="hidden" name="array" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+        </div>
+
+        <div class="row responsive thin">
+            <div class="col span-6 margin-bottom-small">
+                <label for="integer-min">Min</label>
+                <input id="integer-min" type="number" step="1" class="full-width" name="min" autocomplete="off" data-cast-to="integer" />
             </div>
-                                                                
-            <div class="margin-bottom">
-                <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" />  &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+            <div class="col span-6 margin-bottom-small">
+                <label for="integer-max">Max</label>
+                <input id="integer-max" type="number" step="1" class="full-width" name="max" autocomplete="off" data-cast-to="integer" />
             </div>
+        </div>
 
-            <div class="row responsive thin">
-                <div class="col span-6 margin-bottom-small">
-                    <label for="integer-min">Min</label>
-                    <input id="integer-min" type="number" class="full-width" name="min" value="0" required autocomplete="off" data-cast-to="integer" />
-                </div>
-                <div class="col span-6 margin-bottom-small">
-                    <label for="integer-max">Max</label>
-                    <input id="integer-max" type="number" class="full-width" name="max" value="0" required autocomplete="off" data-cast-to="integer" />
-                </div>
-            </div>
+        <label for="integer-default">Default Value</label>
 
-            <label for="integer-default">Default Value</label>
-            <input id="integer-default" name="default" type="number" value="0" class="margin-bottom-large" autocomplete="off" data-cast-to="integer">
+        <input id="integer-default" name="xdefault" type="number" step="1" class="margin-bottom-large" autocomplete="off" data-cast-to="integer">
 
-            <footer>
-                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-            </footer>
-        </form>
-    </div>
+        <footer>
+            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        </footer>
+    </form>
+    <script type="text/javascript">
+        (() => {
+            const form = document.getElementById("add-integer-attribute");
+            const fields = {
+                required: {
+                    array: ["disable", "uncheck"],
+                    required: ["enable"]
+                },
+                array: {
+                    required: ["disable", "uncheck"],
+                    array: ["enable"]
+                },
+                xdefault: {
+                    oneOf: {
+                        if: ["array", "required"],
+                        then: {
+                            xdefault: ["unvalue", "disable"]
+                        },
+                        else: {
+                            required: ["enable"],
+                            array: ["enable"],
+                            xdefault: ["enable"]
+                        }
+                    }
+                }
+            };
 
-    <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-email">
-        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+            form.addEventListener("change", event => {
+                formValidation(form, fields);
+            });
+        })();
+    </script>
+</div>
 
-        <h1>Add Email Attribute</h1>
+<div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-float">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1>Add Float Attribute</h1>
 
         <form
+            id="add-float-attribute"
+            data-analytics
+            data-analytics-activity
+            data-analytics-event="submit"
+            data-analytics-category="console"
+            data-analytics-label="Create Collection Attribute (float)"
+            data-service="database.createFloatAttribute"
+            data-scope="sdk"
+            data-event="submit"
+            data-success="alert,trigger,reset"
+            data-success-param-alert-text="Created new attribute successfully"
+            data-success-param-trigger-events="database.createAttribute"
+            data-failure="alert"
+            data-failure-param-alert-text="Failed to create attribute"
+            data-failure-param-alert-classname="error">
+
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+
+        <label for="float-attributeId">Attribute ID</label>
+        <input id="float-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
+
+        <div class="margin-bottom">
+            <input type="hidden" name="required" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+        </div>
+
+        <div class="margin-bottom">
+            <input type="hidden" name="array" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+        </div>
+
+        <div class="row responsive thin">
+            <div class="col span-6 margin-bottom-small">
+                <label for="float-min">Min</label>
+                <input id="float-min" type="number" class="full-width" name="min" step="0.01" autocomplete="off" data-cast-to="float" />
+            </div>
+            <div class="col span-6 margin-bottom-small">
+                <label for="float-max">Max</label>
+                <input id="float-max" type="number" class="full-width" name="max" step="0.01" autocomplete="off" data-cast-to="float" />
+            </div>
+        </div>
+
+        <label for="float-default">Default Value</label>
+        <input id="float-default" name="xdefault" type="number" step="0.01" class="margin-bottom-large" autocomplete="off" data-cast-to="float">
+
+        <footer>
+            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        </footer>
+    </form>
+    <script type="text/javascript">
+        (() => {
+            const form = document.getElementById("add-float-attribute");
+            const fields = {
+                required: {
+                    array: ["disable", "uncheck"],
+                    required: ["enable"]
+                },
+                array: {
+                    required: ["disable", "uncheck"],
+                    array: ["enable"]
+                },
+                xdefault: {
+                    oneOf: {
+                        if: ["array", "required"],
+                        then: {
+                            xdefault: ["unvalue", "disable"]
+                        },
+                        else: {
+                            required: ["enable"],
+                            array: ["enable"],
+                            xdefault: ["enable"]
+                        }
+                    }
+                }
+            };
+
+            form.addEventListener("change", event => {
+                formValidation(form, fields);
+            });
+        })();
+    </script>
+</div>
+
+<div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-email">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1>Add Email Attribute</h1>
+
+        <form
+            id="add-email-attribute"
             data-analytics
             data-analytics-activity
             data-analytics-event="submit"
@@ -554,41 +818,75 @@ $logs = $this->getParam('logs', null);
             data-failure-param-alert-text="Failed to create attribute"
             data-failure-param-alert-classname="error">
 
-            <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-            <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-            <label for="string-attributeId">Attribute ID</label>
-            <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+        <label for="email-attributeId">Attribute ID</label>
+        <input id="email-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
-            <div class="margin-bottom">
-                <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
-            </div>
-                                                                
-            <div class="margin-bottom">
-                <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" />  &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
-            </div>
+        <div class="margin-bottom">
+            <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+        </div>
 
-            <label for="string-default">Default Value</label>
-            <input id="string-default" name="default" type="email" placeholder="demo@appwrite.io" class="margin-bottom-large" autocomplete="off">
+        <div class="margin-bottom">
+            <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+        </div>
 
-            <footer>
-                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-            </footer>
-        </form>
-    </div>
+        <label for="string-default">Default Value</label>
+        <input id="string-default" name="xdefault" type="email" class="margin-bottom-large" autocomplete="off">
 
-    <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-url">
-        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+        <footer>
+            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        </footer>
+    </form>
+    <script type="text/javascript">
+        (() => {
+            const form = document.getElementById("add-email-attribute");
+            const fields = {
+                required: {
+                    array: ["disable", "uncheck"],
+                    required: ["enable"]
+                },
+                array: {
+                    required: ["disable", "uncheck"],
+                    array: ["enable"]
+                },
+                xdefault: {
+                    oneOf: {
+                        if: ["array", "required"],
+                        then: {
+                            xdefault: ["unvalue", "disable"]
+                        },
+                        else: {
+                            required: ["enable"],
+                            array: ["enable"],
+                            xdefault: ["enable"]
+                        }
+                    }
+                }
+            };
 
-        <h1>Add URL Attribute</h1>
+            form.addEventListener("change", event => {
+                formValidation(form, fields);
+            });
+        })();
+    </script>
+</div>
+
+<div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-boolean">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1>Add Boolean Attribute</h1>
 
         <form
+            id="add-boolean-attribute"
             data-analytics
             data-analytics-activity
             data-analytics-event="submit"
             data-analytics-category="console"
-            data-analytics-label="Create Collection Attribute (url)"
-            data-service="database.createUrlAttribute"
+            data-analytics-label="Create Collection Attribute (boolean)"
+            data-service="database.createBooleanAttribute"
             data-scope="sdk"
             data-event="submit"
             data-success="alert,trigger,reset"
@@ -598,111 +896,394 @@ $logs = $this->getParam('logs', null);
             data-failure-param-alert-text="Failed to create attribute"
             data-failure-param-alert-classname="error">
 
-            <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-            <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-            <label for="string-attributeId">Attribute ID</label>
-            <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+        <label for="boolean-attributeId">Attribute ID</label>
+        <input id="boolean-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
-            <div class="margin-bottom">
-                <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
-            </div>
-                                                                
-            <div class="margin-bottom">
-                <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" />  &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
-            </div>
-
-            <label for="string-default">Default Value</label>
-            <input id="string-default" name="default" type="url" placeholder="https://appwrite.io/my-link" class="margin-bottom-large" autocomplete="off">
-
-            <footer>
-                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-            </footer>
-        </form>
-    </div>
-
-    <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-index">
-        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-        <h1>Add Index</h1>
-
-        <div data-ls-if="0 == {{project-collection.attributes.length}}">
-            <div class="info margin-top margin-bottom">
-                <h2>No Attributes Found</h2>
-    
-                <p>Please add your first attribute before adding your first index.</p>
-            </div>
-
-            <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        <div class="margin-bottom">
+            <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
         </div>
 
-        <form data-ls-if="0 < {{project-collection.attributes.length}}"
+        <div class="margin-bottom">
+            <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+        </div>
+
+
+        <div class="margin-bottom-large">
+            <input name="xdefault" type="hidden" data-forms-switch data-cast-to="boolean" autocomplete="off" /> &nbsp; Default Value <span class="tooltip" data-tooltip="Whether this attribute is set to true or false on creation"><i class="icon-info-circled"></i></span>
+        </div>
+
+        <footer>
+            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        </footer>
+    </form>
+    <script type="text/javascript">
+        (() => {
+            const form = document.getElementById("add-boolean-attribute");
+            const fields = {
+                required: {
+                    array: ["disable", "uncheck"],
+                    required: ["enable"]
+                },
+                array: {
+                    required: ["disable", "uncheck"],
+                    array: ["enable"]
+                },
+                xdefault: {
+                    oneOf: {
+                        if: ["array", "required"],
+                        then: {
+                            xdefault: ["uncheck", "disable"]
+                        },
+                        else: {
+                            required: ["enable"],
+                            array: ["enable"],
+                            xdefault: ["enable"]
+                        }
+                    }
+                }
+            };
+
+            form.addEventListener("change", event => {
+                formValidation(form, fields);
+            });
+        })();
+    </script>
+</div>
+
+
+<div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-ip">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1>Add IP Attribute</h1>
+
+        <form
+            id="add-ip-attribute"
             data-analytics
             data-analytics-activity
             data-analytics-event="submit"
             data-analytics-category="console"
-            data-analytics-label="Create Collection Index"
-            data-service="database.createIndex"
+            data-analytics-label="Create Collection Attribute (IP)"
+            data-service="database.createIpAttribute"
             data-scope="sdk"
             data-event="submit"
             data-success="alert,trigger,reset"
-            data-success-param-alert-text="Created new index successfully"
-            data-success-param-trigger-events="database.createIndex"
+            data-success-param-alert-text="Created new attribute successfully"
+            data-success-param-trigger-events="database.createAttribute"
             data-failure="alert"
-            data-failure-param-alert-text="Failed to create index"
+            data-failure-param-alert-text="Failed to create attribute"
             data-failure-param-alert-classname="error">
 
-            <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-            <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-            <label for="index-indexId">Index ID</label>
-            <input id="index-indexId" type="text" class="full-width" name="indexId" required autocomplete="off" maxlength="128" />
+        <label for="ip-attributeId">Attribute ID</label>
+        <input id="ip-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
-            <label for="index-type">Type</label>
-            <select id="index-type" name="type">
-                <option value="key">Key</option>
-                <option value="unique">Unique</option>
-                <option value="fulltext">Fulltext</option>
-            </select>
+        <div class="margin-bottom">
+            <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+        </div>
 
-            <label>Attributes</label>
+        <div class="margin-bottom">
+            <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+        </div>
 
-            <div id="attributes-section"></div>
+        <label for="string-default">Default Value</label>
+        <input id="string-default" name="xdefault" type="text" data-forms-ip-address class="margin-bottom-large" autocomplete="off">
 
-            <div class="margin-bottom">
-                <div data-forms-clone="" data-label="Add Attribute" data-target="attributes-section" data-first="1">
-                    <div class="row responsive thin margin-bottom-tiny">
-                        <div class="col span-7 margin-bottom-small">
-                            <select data-duplications data-ls-attrs="name=attributes" data-ls-loop="project-collection.attributes" data-ls-as="option" data-cast-to="array" class="margin-bottom-no">
-                                <option data-ls-attrs="value={{option.key}}" data-ls-bind="{{option.key}}"></option>
-                            </select>
-                        </div>
-                        <div class="col span-4 margin-bottom-small">
-                            <select name="orders" data-cast-to="array" class="margin-bottom-no">
-                                <option value="ASC">ASC</option>
-                                <option value="DESC">DESC</option>
-                            </select>
-                        </div>
-                        <div class="col span-1 margin-bottom-small">
-                            <button type="button" data-remove class="dark danger small round pull-end" style="margin-top: 10px;"><i class="icon-cancel"></i></button>
-                        </div>
+        <footer>
+            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        </footer>
+    </form>
+    <script type="text/javascript">
+        (() => {
+            const form = document.getElementById("add-ip-attribute");
+            const fields = {
+                required: {
+                    array: ["disable", "uncheck"],
+                    required: ["enable"]
+                },
+                array: {
+                    required: ["disable", "uncheck"],
+                    array: ["enable"]
+                },
+                xdefault: {
+                    oneOf: {
+                        if: ["array", "required"],
+                        then: {
+                            xdefault: ["unvalue", "disable"]
+                        },
+                        else: {
+                            required: ["enable"],
+                            array: ["enable"],
+                            xdefault: ["enable"]
+                        }
+                    }
+                }
+            };
+
+            form.addEventListener("change", event => {
+                formValidation(form, fields);
+            });
+        })();
+    </script>
+</div>
+
+<div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-url">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1>Add URL Attribute</h1>
+
+    <form
+        id="add-url-attribute"
+        data-analytics
+        data-analytics-activity
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Create Collection Attribute (url)"
+        data-service="database.createUrlAttribute"
+        data-scope="sdk"
+        data-event="submit"
+        data-success="alert,trigger,reset"
+        data-success-param-alert-text="Created new attribute successfully"
+        data-success-param-trigger-events="database.createAttribute"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to create attribute"
+        data-failure-param-alert-classname="error">
+
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+
+        <label for="url-attributeId">Attribute ID</label>
+        <input id="url-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
+
+        <div class="margin-bottom">
+            <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+        </div>
+
+        <div class="margin-bottom">
+            <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+        </div>
+
+        <label for="string-default">Default Value</label>
+        <input id="string-default" name="xdefault" type="url" pattern="https://.*" title="Valid URL address" class="margin-bottom-large" autocomplete="off">
+
+        <footer>
+            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        </footer>
+    </form>
+    <script type="text/javascript">
+        (() => {
+            const form = document.getElementById("add-url-attribute");
+            const fields = {
+                required: {
+                    array: ["disable", "uncheck"],
+                    required: ["enable"]
+                },
+                array: {
+                    required: ["disable", "uncheck"],
+                    array: ["enable"]
+                },
+                xdefault: {
+                    oneOf: {
+                        if: ["array", "required"],
+                        then: {
+                            xdefault: ["unvalue", "disable"]
+                        },
+                        else: {
+                            required: ["enable"],
+                            array: ["enable"],
+                            xdefault: ["enable"]
+                        }
+                    }
+                }
+            };
+
+            form.addEventListener("change", event => {
+                formValidation(form, fields);
+            });
+        })();
+    </script>
+</div>
+
+<div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-enum">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1>Add Enum Attribute</h1>
+
+    <form
+        id="add-enum-attribute"
+        data-analytics
+        data-analytics-activity
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Create Collection Attribute (enum)"
+        data-service="database.createEnumAttribute"
+        data-scope="sdk"
+        data-event="submit"
+        data-success="alert,trigger,reset"
+        data-success-param-alert-text="Created new attribute successfully"
+        data-success-param-trigger-events="database.createAttribute"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to create attribute"
+        data-failure-param-alert-classname="error">
+
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+
+        <label for="enum-attributeId">Attribute ID</label>
+        <input id="enum-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
+
+        <label>Elements</label>
+
+        <div id="elements-section"></div>
+
+        <div class="margin-bottom">
+            <div data-forms-clone="" data-label="Add Element" data-target="elements-section" data-first="1">
+                <div class="row responsive thin margin-bottom-tiny">
+                    <div class="col span-11 margin-bottom-small">
+                        <input type="text" class="full-width" name="elements" required autocomplete="off" maxlength="128" />
+                    </div>
+                    <div class="col span-1 margin-bottom-small">
+                        <button type="button" data-remove class="dark danger small round pull-end" style="margin-top: 10px;"><i class="icon-cancel"></i></button>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <footer>
-                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-            </footer>
-        </form>
-    </div>
+        <div class="margin-bottom">
+            <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+        </div>
+
+        <div class="margin-bottom">
+            <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+        </div>
+
+        <label for="enunm-default">Default Value</label>
+        <input id="enum-default" name="xdefault" type="text" class="margin-bottom-large" autocomplete="off">
+
+        <footer>
+            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        </footer>
+    </form>
+    <script type="text/javascript">
+        (() => {
+            const form = document.getElementById("add-enum-attribute");
+            const fields = {
+                required: {
+                    array: ["disable", "uncheck"],
+                    required: ["enable"]
+                },
+                array: {
+                    required: ["disable", "uncheck"],
+                    array: ["enable"]
+                },
+                xdefault: {
+                    oneOf: {
+                        if: ["array", "required"],
+                        then: {
+                            xdefault: ["unvalue", "disable"]
+                        },
+                        else: {
+                            required: ["enable"],
+                            array: ["enable"],
+                            xdefault: ["enable"]
+                        }
+                    }
+                }
+            };
+
+            form.addEventListener("change", event => {
+                formValidation(form, fields);
+            });
+        })();
+    </script>
 </div>
 
-<div class="margin-top"
-    data-service="database.listCollections"
-    data-event="load,database.createCollection,database.updateCollection,database.deleteCollection"
-    data-scope="sdk"
-    data-param-limit="100"
-    data-name="project-collections">
+<div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-index">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1>Add Index</h1>
+
+    <div data-ls-if="0 == {{project-collection.attributes.length}}">
+        <div class="info margin-top margin-bottom">
+            <h2>No Attributes Found</h2>
+
+            <p>Please add your first attribute before adding your first index.</p>
+        </div>
+
+        <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+    </div>
+
+    <form
+        data-ls-if="0 < {{project-collection.attributes.length}}"
+        data-analytics
+        data-analytics-activity
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Create Collection Index"
+        data-service="database.createIndex"
+        data-scope="sdk"
+        data-event="submit"
+        data-success="alert,trigger,reset"
+        data-success-param-alert-text="Created new index successfully"
+        data-success-param-trigger-events="database.createIndex"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to create index"
+        data-failure-param-alert-classname="error">
+
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+
+        <label for="index-indexId">Index ID</label>
+        <input id="index-indexId" type="text" class="full-width" name="indexId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
+
+        <label for="index-type">Type</label>
+        <select id="index-type" name="type">
+            <option value="key">Key</option>
+            <option value="unique">Unique</option>
+            <option value="fulltext">Fulltext</option>
+        </select>
+
+        <label>Attributes</label>
+
+        <div id="attributes-section"></div>
+
+        <div class="margin-bottom">
+            <div data-forms-clone="" data-label="Add Attribute" data-target="attributes-section" data-first="1">
+                <div class="row responsive thin margin-bottom-tiny">
+                    <div class="col span-7 margin-bottom-small">
+                        <select data-duplications data-ls-attrs="name=attributes" data-ls-loop="project-collection.attributes" data-ls-as="option" data-cast-to="array" class="margin-bottom-no">
+                            <option data-ls-attrs="value={{option.key}}" data-ls-bind="{{option.key}}"></option>
+                        </select>
+                    </div>
+                    <div class="col span-4 margin-bottom-small">
+                        <select name="orders" data-cast-to="array" class="margin-bottom-no">
+                            <option value="ASC">ASC</option>
+                            <option value="DESC">DESC</option>
+                        </select>
+                    </div>
+                    <div class="col span-1 margin-bottom-small">
+                        <button type="button" data-remove class="dark danger small round pull-end" style="margin-top: 10px;"><i class="icon-cancel"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        </footer>
+    </form>
+</div>
+
+<div class="margin-top" data-service="database.listCollections" data-event="load,database.createCollection,database.updateCollection,database.deleteCollection" data-scope="sdk" data-param-limit="100" data-name="project-collections">
 </div>
 
 <script type="text/html" id="template-attribute-title-first">

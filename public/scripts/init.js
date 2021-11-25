@@ -123,3 +123,66 @@ window.addEventListener("load", async () => {
   }
 });
 
+window.formValidation = (form, fields) => {
+  const elements = form.elements;
+  const actionHandler = (action, attribute) => {
+      switch (action) {
+          case "disable":
+              elements[attribute].setAttribute("disabled", true);
+              elements[attribute].dispatchEvent(new Event('change'));
+              break;
+          case "enable":
+              elements[attribute].removeAttribute("disabled");
+              elements[attribute].dispatchEvent(new Event('change'));
+              break;
+          case "unvalue":
+              elements[attribute].value = "";
+              break;
+          case "check":
+            elements[attribute].value = "true";
+            break;
+          case "uncheck":
+            elements[attribute].value = "false";
+            break;
+      }
+  };
+  for (const field in fields) {
+      for (const attribute in fields[field]) {
+          const attr = fields[field][attribute];
+          if (Array.isArray(attr)) {
+              attr.forEach(action => {
+                  if (elements[field].value === "true") {
+                      actionHandler(action, attribute);
+                  }
+              })
+          } else {
+              const condition = attr.if.some(c => {
+                  return elements[c].value === "true";
+              });
+              if (condition) {
+                  for (const thenAction in attr.then) {
+                      attr.then[thenAction].forEach(action => {
+                          actionHandler(action, thenAction);
+                      });
+                  }
+              } else {
+                  for (const elseAction in attr.else) {
+                      attr.else[elseAction].forEach(action => {
+                          actionHandler(action, elseAction);
+                      });
+                  }
+              }
+          }
+      }
+  }
+  form.addEventListener("reset", () => {
+    for (const key in fields) {
+        if (Object.hasOwnProperty.call(fields, key)) {
+            const element = form.elements[key];
+            element.setAttribute("value", "");
+            element.removeAttribute("disabled");
+            element.dispatchEvent(new Event("change"));
+        }
+    }
+});
+};
