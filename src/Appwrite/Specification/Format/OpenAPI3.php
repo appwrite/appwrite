@@ -21,34 +21,6 @@ class OpenAPI3 extends Format
     }
 
     /**
-     * Get Used Models
-     *
-     * Recursively get all used models
-     *
-     * @param object $model
-     * @param array $models
-     *
-     * @return void
-     */
-    protected function getUsedModels($model, array &$usedModels)
-    {
-        if (is_string($model) && !in_array($model, ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
-            $usedModels[] = $model;
-            return;
-        }
-        if (!is_object($model)) return;
-        foreach ($model->getRules() as $rule) {
-            if(\is_array($rule['type'])) {
-                foreach ($rule['type'] as $type) {
-                    $this->getUsedModels($type, $usedModels);
-                }
-            } else {
-                $this->getUsedModels($rule['type'], $usedModels);
-            }
-        }
-    }
-
-    /**
      * Parse
      *
      * Parses Appwrite App to given format
@@ -422,7 +394,11 @@ class OpenAPI3 extends Format
             $output['paths'][$url][\strtolower($route->getMethod())] = $temp;
         }
         foreach ($this->models as $model) {
-            $this->getUsedModels($model, $usedModels);
+            foreach ($model->getRules() as $rule) {
+                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
+                    $usedModels[] = $rule['type'];
+                }
+            }
         }
         foreach ($this->models as $model) {
             if (!in_array($model->getType(), $usedModels) && $model->getType() !== 'error') {
@@ -526,7 +502,6 @@ class OpenAPI3 extends Format
                     $output['components']['schemas'][$model->getType()]['properties'][$name] = [
                         'type' => $type,
                         'description' => $rule['description'] ?? '',
-                        //'default' => $rule['default'] ?? null,
                         'x-example' => $rule['example'] ?? null,
                     ];
 
@@ -537,6 +512,9 @@ class OpenAPI3 extends Format
                     if($items) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
                     }
+                }
+                if (!in_array($name, $required)) {
+                    $output['components']['schemas'][$model->getType()]['properties'][$name]['nullable'] = true;
                 }
             }
         }
