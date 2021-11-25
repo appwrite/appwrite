@@ -411,10 +411,8 @@ class DeletesV1 extends Worker
     protected function deleteBucket(Document $document, string $projectId)
     {
         $bucketId = $document->getId();
-        
-        $this->deleteByGroup($bucketId . '_files',[
-            new Query('bucketId', Query::TYPE_EQUAL, [$bucketId])
-        ], $this->getExternalDB($projectId));
+        $dbForExternal = $this->getExternalDB($projectId);
+        $dbForExternal->deleteCollection('bucket_' . $bucketId);
 
         $device = new Local(APP_STORAGE_UPLOADS.'/app-'.$projectId);
         
