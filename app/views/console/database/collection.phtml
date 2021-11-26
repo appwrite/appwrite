@@ -394,7 +394,7 @@ $logs = $this->getParam('logs', null);
                     <p class="text-fade">Count of documents over time</p>
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="chart margin-bottom-no">
+                            <div class="chart background-image-no border-no margin-bottom-no">
                                 <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Documents=documentsCount" data-show-y-axis="true" data-height="140" />
                             </div>
                         </div>
@@ -408,7 +408,7 @@ $logs = $this->getParam('logs', null);
                     <p class="text-fade">Count of documents create, read, update and delete operations over time</p>
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="chart margin-bottom-no">
+                            <div class="chart background-image-no border-no margin-bottom-no">
                                 <input 
                                     type="hidden" 
                                     data-ls-bind="{{usage}}"
@@ -467,7 +467,8 @@ $logs = $this->getParam('logs', null);
                                     <div class="col span-1"><input name="permission" value="document" type="radio" class="margin-top-no" data-ls-bind="{{project-collection.permission}}" /></div>
                                     <div class="col span-11">
                                         <b>Document Level</b>
-                                        <p class="text-fade margin-top-tiny">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eget hendrerit est. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.</p>
+                                        <p class="text-fade margin-top-tiny">With Document Level permissions, you have granular access control over every document, and users will only be able to access documents for which they have explicit permissions.</p>
+                                        <p class="text-fade margin-top-tiny">Document permissions are required in this permission model.</p>
                                     </div>
                                 </div>
 
@@ -475,15 +476,17 @@ $logs = $this->getParam('logs', null);
                                     <div class="col span-1"><input name="permission" value="collection" type="radio" class="margin-top-tiny" data-ls-bind="{{project-collection.permission}}" /></div>
                                     <div class="col span-11">
                                         <b>Collection Level</b>
-                                        <p class="text-fade margin-top-tiny">Nulla elementum nisi eu tempor varius. Vivamus lacinia justo orci. Donec libero felis, blandit eu aliquet eu, ultrices eget lectus. Suspendisse dignissim, arcu in malesuada venenatis, tellus felis lobortis dui, quis condimentum purus libero at nunc. Pellentesque luctus sit amet metus ut tincidunt.</p>
+                                        <p class="text-fade margin-top-tiny">With Collection Level permissions, you assign permissions once for every document in the collection - users with read access to the collection can see all documents.</p>
+                                        <p class="text-fade margin-top-tiny">Collection permissions are required in this permission model, and document permissions are optional.</p>
+                                        <div data-ls-if="{{project-collection.permission}} === 'collection'">
+                                            <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
+                                            <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$read}}" placeholder="User ID, Team ID or Role" />
+                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
 
-                                        <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
-                                        <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$read}}" placeholder="User ID, Team ID or Role" />
-                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
-
-                                        <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                        <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$write}}" placeholder="User ID, Team ID or Role" />
-                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                            <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
+                                            <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$write}}" placeholder="User ID, Team ID or Role" />
+                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                        </div>
                                     </div>
                                 </div>
 

@@ -21,34 +21,6 @@ class Swagger2 extends Format
     }
 
     /**
-     * Get Used Models
-     *
-     * Recursively get all used models
-     * 
-     * @param object $model
-     * @param array $models
-     *
-     * @return void
-     */
-    protected function getUsedModels($model, array &$usedModels)
-    {
-        if (is_string($model) && !in_array($model, ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
-            $usedModels[] = $model;
-            return;
-        }
-        if (!is_object($model)) return;
-        foreach ($model->getRules() as $rule) {
-            if(\is_array($rule['type'])) {
-                foreach ($rule['type'] as $type) {
-                    $this->getUsedModels($type, $usedModels);
-                }
-            } else {
-                $this->getUsedModels($rule['type'], $usedModels);
-            }
-        }
-    }
-
-    /**
      * Parse
      *
      * Parses Appwrite App to given format
@@ -308,7 +280,7 @@ class Swagger2 extends Format
                     case 'Utopia\Validator\Mock':
                     case 'Utopia\Validator\Assoc':
                         $node['type'] = 'object';
-                        $param['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
+                        $node['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['x-example'] = '{}';
                         //$node['format'] = 'json';
                         break;
@@ -322,6 +294,14 @@ class Swagger2 extends Format
                         $node['items'] = [
                             'type' => 'string',
                         ];
+                        break;
+                    case 'Utopia\Database\Validator\Permissions':
+                        $node['type'] = $validator->getType();
+                        $node['collectionFormat'] = 'multi';
+                        $node['items'] = [
+                            'type' => 'string',
+                        ];
+                        $node['x-example'] = '["role:all"]';
                         break;
                     case 'Appwrite\Auth\Validator\Password':
                         $node['type'] = $validator->getType();
@@ -371,14 +351,14 @@ class Swagger2 extends Format
                     $temp['parameters'][] = $node;
                 } else { // Param is in payload
 
-                    if(\in_array('multipart/form-data', $consumes)) {
+                    if (\in_array('multipart/form-data', $consumes)) {
                         $node['in'] = 'formData';
                         $temp['parameters'][] = $node;
 
                         continue;
                     }
 
-                    if(!$param['optional']) {
+                    if (!$param['optional']) {
                         $bodyRequired[] = $name;
                     }
 
@@ -409,8 +389,16 @@ class Swagger2 extends Format
 
             $output['paths'][$url][\strtolower($route->getMethod())] = $temp;
         }
+
         foreach ($this->models as $model) {
-            $this->getUsedModels($model, $usedModels);
+            foreach ($model->getRules() as $rule) {
+                if (
+                    in_array($model->getType(), $usedModels)
+                    && !in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])
+                ) {
+                    $usedModels[] = $rule['type'];
+                }
+            }
         }
 
         foreach ($this->models as $model) {
@@ -527,6 +515,9 @@ class Swagger2 extends Format
                     if($items) {
                         $output['definitions'][$model->getType()]['properties'][$name]['items'] = $items;
                     }
+                }
+                if (!in_array($name, $required)) {
+                    $output['definitions'][$model->getType()]['properties'][$name]['nullable'] = true;
                 }
             }
         }
