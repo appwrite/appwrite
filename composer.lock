@@ -1981,16 +1981,16 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "0.4.1",
+            "version": "0.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "8c48eff73219c8c1ac2807909f0a38f3480c8938"
+                "reference": "7334c5b182c6ccf66b21ca61808d7c6c899e2bcb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/8c48eff73219c8c1ac2807909f0a38f3480c8938",
-                "reference": "8c48eff73219c8c1ac2807909f0a38f3480c8938",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/7334c5b182c6ccf66b21ca61808d7c6c899e2bcb",
+                "reference": "7334c5b182c6ccf66b21ca61808d7c6c899e2bcb",
                 "shasum": ""
             },
             "require": {
@@ -2000,7 +2000,7 @@
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
+                "vimeo/psalm": "4.13.1"
             },
             "type": "library",
             "autoload": {
@@ -2028,9 +2028,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/0.4.1"
+                "source": "https://github.com/utopia-php/cache/tree/0.4.2"
             },
-            "time": "2021-04-29T18:41:43+00:00"
+            "time": "2021-11-25T16:41:35+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -2249,11 +2249,11 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.19.0",
+            "version": "0.19.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework",
-                "reference": "c86fc078ef258f3c88d3a25233202267314df3a9"
+                "reference": "cc7629b5f7a8f45912ec2e069b7f14e361e41c34"
             },
             "require": {
                 "php": ">=7.3.0"
@@ -2283,7 +2283,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2021-10-08T11:46:20+00:00"
+            "time": "2021-11-25T16:11:40+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2554,7 +2554,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage",
-                "reference": "1f8781dd92b9b4153379bfc8b0914a76b09bfb22"
+                "reference": "c879746725b7e18a2eb26dfaaa2b985502389c74"
             },
             "require": {
                 "php": ">=8.0",
@@ -2587,7 +2587,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2021-11-25T07:37:57+00:00"
+            "time": "2021-11-25T11:03:36+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -6246,16 +6246,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v2.14.7",
+            "version": "v2.14.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "8e202327ee1ed863629de9b18a5ec70ac614d88f"
+                "reference": "06b450a2326aa879faa2061ff72fe1588b3ab043"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/8e202327ee1ed863629de9b18a5ec70ac614d88f",
-                "reference": "8e202327ee1ed863629de9b18a5ec70ac614d88f",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/06b450a2326aa879faa2061ff72fe1588b3ab043",
+                "reference": "06b450a2326aa879faa2061ff72fe1588b3ab043",
                 "shasum": ""
             },
             "require": {
@@ -6309,7 +6309,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v2.14.7"
+                "source": "https://github.com/twigphp/Twig/tree/v2.14.8"
             },
             "funding": [
                 {
@@ -6321,7 +6321,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-09-17T08:39:54+00:00"
+            "time": "2021-11-25T13:38:06+00:00"
         },
         {
             "name": "vimeo/psalm",
