@@ -246,8 +246,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                     data-param-function-id="{{router.params.id}}">
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Executions=functionsExecutions" data-height="140" />
+                            <div class="chart background-image-no border-no margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Executions=functionsExecutions" data-height="140" data-show-y-axis="true" />
                             </div>
                         </div>
                     </div>
@@ -258,8 +258,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="CPU Time (seconds)=functionsCompute" data-colors="orange" data-height="140" />
+                            <div class="chart background-image-no border-no margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="CPU Time (seconds)=functionsCompute" data-colors="orange" data-height="140" data-show-y-axis="true" />
                             </div>
                         </div>
                     </div>
@@ -270,8 +270,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Failures=functionsFailures" data-colors="red" data-height="140" />
+                            <div class="chart background-image-no border-no margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Failures=functionsFailures" data-colors="red" data-height="140" data-show-y-axis="true" />
                             </div>
                         </div>
                     </div>
