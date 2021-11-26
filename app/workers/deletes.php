@@ -443,8 +443,7 @@ class DeletesV1 extends Worker
                 $device = new DoSpaces(APP_STORAGE_UPLOADS . '/app-' . $projectId, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
                 break;
         }
-
-        $device = new Local(APP_STORAGE_UPLOADS.'/app-'.$projectId);
+        
         $device->deletePath($device->getRoot() . DIRECTORY_SEPARATOR . $bucketId);
     }
 }
