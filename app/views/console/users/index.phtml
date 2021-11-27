@@ -2,6 +2,7 @@
 $providers = $this->getParam('providers', []);
 $auth = $this->getParam('auth', []);
 $smtpEnabled = $this->getParam('smtpEnabled', false);
+$oidcEnabled = $this->getParam('oidcEnabled', false);
 ?>
 
 <div class="cover">
@@ -482,21 +483,29 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                     <button class="switch on pull-end" data-ls-ui-trigger="provider-update-<?php echo $provider; ?>"></button>
                                 </span>
 
-                                <span data-ls-if="
-                                    !{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid}} ||
-                                    !{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
-                                    <button class="switch pull-end" data-ls-ui-trigger="provider-update-<?php echo $this->escape($provider); ?>"></button>
-                                </span>
+                                <?php if( strcmp($name,'OpenID Connect') === 0 && !$oidcEnabled):?>
+                                <?php else: ?>
+                                    <span data-ls-if="
+                                        !{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid}} ||
+                                        !{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
+                                        <button class="switch pull-end" data-ls-ui-trigger="provider-update-<?php echo $this->escape($provider); ?>"></button>
+                                    </span>
+                                <?php endif; ?>
 
                                 <img src="/images/users/<?php echo $this->escape(strtolower($provider)); ?>.png?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="<?php echo $this->escape(ucfirst($provider)); ?> Logo" class="pull-start provider margin-end" />
                                 
                                 <span class="text-size-small">
                                     <?php echo $this->escape($name); ?> <?php if($sandbox): ?><span class="text-size-xs text-fade">sandbox</span><?php endif; ?> <?php if($beta): ?><span class="text-size-xs text-fade">beta</span><?php endif; ?>
                                 </span>
-
-                                <p class="margin-bottom-no text-one-liner text-size-small">
-                                    <a href="<?php echo $data['developers']; ?>" target="_blank" rel="noopener">OAuth2 Docs<i class="icon-link-ext"></i></a>
-                                </p>
+                                <?php if( strcmp($name,'OpenID Connect') === 0 && !$oidcEnabled): ?>
+                                    <p class="margin-bottom-no text-one-liner text-size-small text-danger">
+                                        Provider Disabled
+                                    </p>
+                                <?php else: ?>
+                                    <p class="margin-bottom-no text-one-liner text-size-small">
+                                        <a href="<?php echo $data['developers']; ?>" target="_blank" rel="noopener">OAuth2 Docs<i class="icon-link-ext"></i></a>
+                                    </p>
+                                <?php endif; ?>
                             </div>
                         </li>
                     <?php endforeach; ?>

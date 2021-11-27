@@ -327,6 +327,9 @@ App::get('/console/users')
             ->setParam('auth', Config::getParam('auth'))
             ->setParam('providers', Config::getParam('providers'))
             ->setParam('smtpEnabled', (!empty(App::getEnv('_APP_SMTP_HOST'))))
+            ->setParam('oidcEnabled', (!empty(App::getEnv('_APP_OIDC_AUTH_ENDPOINT')) 
+                && !empty(App::getEnv('_APP_OIDC_TOKEN_ENDPOINT')) 
+                && !empty(App::getEnv('_APP_OIDC_USERINFO_ENDPOINT'))))
         ;
 
         $layout

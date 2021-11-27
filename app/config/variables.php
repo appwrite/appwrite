@@ -354,6 +354,48 @@ return [
         ],
     ],
     [
+        'category' => 'OIDC',
+        'description' => 'Appwrite ',
+        'variables' => [
+            [
+                'name' => '_APP_OIDC_SCOPES',
+                'description' => 'Additional scopes: String separated by simple space. Default is "openid email profile".',
+                'introduction' => '0.11.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_OIDC_AUTH_ENDPOINT',
+                'description' => 'Authentication endpoint of your oidc-server. Empty by default.',
+                'introduction' => '0.11.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_OIDC_TOKEN_ENDPOINT',
+                'description' => 'Token endpoint of your oidc-server. Empty by default.',
+                'introduction' => '0.11.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_OIDC_USERINFO_ENDPOINT',
+                'description' => 'Userinfo endpoint of your oidc-server. Empty by default.',
+                'introduction' => '0.11.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ],
+    ],
+    [
         'category' => 'Storage',
         'description' => '',
         'variables' => [

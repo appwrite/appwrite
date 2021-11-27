@@ -267,6 +267,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false
     ],
+    'oidc' => [
+        'name' => 'OpenID Connect',
+        'developers' => 'https://openid.net/developers/specs/',
+        'icon' => 'icon-oidc',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false
+    ],
     // Keep Last
     'mock' => [
         'name' => 'Mock',
