@@ -1,22 +1,22 @@
-(function(window) {
+(function (window) {
   "use strict";
 
   window.ls.container.get("view").add({
     selector: "data-forms-chart",
-    controller: function(element, container, date, document) {
+    controller: function (element, container, date, document) {
       let wrapper = document.createElement("div");
       let child = document.createElement("canvas");
       let sources = element.getAttribute('data-forms-chart');
       let width = element.getAttribute('data-width') || 500;
       let height = element.getAttribute('data-height') || 175;
       let colors = (element.getAttribute('data-colors') || 'blue,green,orange,red').split(',');
-      let themes = {'blue': '#29b5d9', 'green': '#4eb55b', 'orange': '#fba233', 'red': '#dc3232',};
-      let range = {'24h': 'H:i', '7d': 'd F Y', '30d': 'd F Y', '90d': 'd F Y'}
+      let themes = { 'blue': '#29b5d9', 'green': '#4eb55b', 'orange': '#fba233', 'red': '#dc3232', };
+      let range = { '24h': 'H:i', '7d': 'd F Y', '30d': 'd F Y', '90d': 'd F Y' }
 
       element.parentNode.insertBefore(wrapper, element.nextSibling);
 
       wrapper.classList.add('content');
-      
+
       child.width = width;
       child.height = height;
 
@@ -26,7 +26,7 @@
 
       let chart = null;
 
-      let check = function() {
+      let check = function () {
 
         let config = {
           type: "line",
@@ -80,25 +80,25 @@
           config.data.datasets[i].data = [0, 0, 0, 0, 0, 0, 0];
           config.data.datasets[i].fill = true;
 
-          if(!data) {
+          if (!data) {
             return;
           }
 
           let dateFormat = (value.range && range[value.range]) ? range[value.range] : 'd F Y';
-          
+
           for (let x = 0; x < data.length; x++) {
             config.data.datasets[i].data[x] = data[x].value;
             config.data.labels[x] = date.format(dateFormat, data[x].date);
           }
         }
-        
-        if(chart) {
+
+        if (chart) {
           chart.destroy();
         }
         else {
         }
         chart = new Chart(child.getContext("2d"), config);
-        
+
         wrapper.dataset["canvas"] = true;
 
       }
