@@ -1,9 +1,9 @@
-# app/* linguist-detectable=false
-# app/* linguist-detectable=false
-# app/*/* linguist-detectable=false
-# app/*/*/* linguist-detectable=false
-# app/*/*/*/* linguist-detectable=false
-# app/*/*/*/*/* linguist-detectable=false
+app/* linguist-detectable=false
+app/* linguist-detectable=false
+app/*/* linguist-detectable=false
+app/*/*/* linguist-detectable=false
+app/*/*/*/* linguist-detectable=false
+app/*/*/*/*/* linguist-detectable=false
 app/config/* linguist-detectable=false
 app/config/* linguist-detectable=false
 app/config/*/* linguist-detectable=false
