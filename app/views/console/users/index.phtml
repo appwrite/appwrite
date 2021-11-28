@@ -477,14 +477,14 @@ $oidcEnabled = $this->getParam('oidcEnabled', false);
                             </div>
 
                             <div class="box padding-small margin-bottom">
-                                <span data-ls-if="
-                                    {{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid}} &&
-                                    {{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
-                                    <button class="switch on pull-end" data-ls-ui-trigger="provider-update-<?php echo $provider; ?>"></button>
-                                </span>
-
-                                <?php if( strcmp($name,'OpenID Connect') === 0 && !$oidcEnabled):?>
+                                <?php if(strcmp($provider,'oidc') === 0 && !$oidcEnabled):?>
                                 <?php else: ?>
+                                    <span data-ls-if="
+                                        {{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid}} &&
+                                        {{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
+                                        <button class="switch on pull-end" data-ls-ui-trigger="provider-update-<?php echo $provider; ?>"></button>
+                                    </span>
+
                                     <span data-ls-if="
                                         !{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid}} ||
                                         !{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
@@ -497,7 +497,7 @@ $oidcEnabled = $this->getParam('oidcEnabled', false);
                                 <span class="text-size-small">
                                     <?php echo $this->escape($name); ?> <?php if($sandbox): ?><span class="text-size-xs text-fade">sandbox</span><?php endif; ?> <?php if($beta): ?><span class="text-size-xs text-fade">beta</span><?php endif; ?>
                                 </span>
-                                <?php if( strcmp($name,'OpenID Connect') === 0 && !$oidcEnabled): ?>
+                                <?php if(strcmp($name,'OpenID Connect') === 0 && !$oidcEnabled): ?>
                                     <p class="margin-bottom-no text-one-liner text-size-small text-danger">
                                         Provider Disabled
                                     </p>

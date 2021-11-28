@@ -292,14 +292,19 @@ App::get('/v1/account/sessions/oauth2/:provider')
         $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
         $appId = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Appid', '');
         $appSecret = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}');
+        $oidcEnabled = !empty(App::getEnv('_APP_OIDC_AUTH_ENDPOINT')) && !empty(App::getEnv('_APP_OIDC_TOKEN_ENDPOINT')) && !empty(App::getEnv('_APP_OIDC_USERINFO_ENDPOINT'));
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
             $key = App::getEnv('_APP_OPENSSL_KEY_V'.$appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
-
+        
         if (empty($appId) || empty($appSecret)) {
             throw new Exception('This provider is disabled. Please configure the provider app ID and app secret key from your '.APP_NAME.' console to continue.', 412);
+        }
+
+        if (strcmp($provider,'oidc') === 0 && !$oidcEnabled) {
+            throw new Exception('This provider is disabled. Please configure the oidc provider environment variables to continue.', 412);
         }
 
         $classname = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
