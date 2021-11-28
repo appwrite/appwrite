@@ -1641,7 +1641,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
 
         // Users can only add their roles to documents, API keys can add any
-        $roles = Authorization::getRoles();
+        $roles = \array_fill_keys(Authorization::getRoles(), true); // Auth::isAppUser expects roles to be keys, not values of assoc array
         foreach ($data['$read'] as $read) {
             if (!Auth::isAppUser($roles) && !Authorization::isRole($read)) {
                 throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
@@ -1999,7 +1999,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $data['$write'] = (is_null($write)) ? ($document->getWrite() ?? []) : $write; // By default inherit write permissions
 
         // Users can only add their roles to documents, API keys can add any
-        $roles = Authorization::getRoles();
+        $roles = \array_fill_keys(Authorization::getRoles(), true); // Auth::isAppUser expects roles to be keys, not values of assoc array
         foreach ($data['$read'] as $read) {
             if (!Auth::isAppUser($roles) && !Authorization::isRole($read)) {
                 throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
