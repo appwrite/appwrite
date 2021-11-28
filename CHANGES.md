@@ -186,7 +186,7 @@
 - Fixed a bug in the Twitch OAuth adapter (#1209)
 - Fixed missing session object when OAuth session creation event is triggered (#1208)
 - Fixed bug where we didn't ignore the email case, converted all emails to lowercase internally (#1243)
-- Fixed a console bug where you can't click a user with no name, added a placehoder for anonyomous users (#1220)
+- Fixed a console bug where you can't click a user with no name, added a placeholder for anonyomous users (#1220)
 - Fixed unique keys not being updated when changing a user's email address (#1301)
 - Fixed a bug where decimal integers where wrongly used with database filters (#1349)
 
