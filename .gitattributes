@@ -19,6 +19,7 @@ app/controllers/* linguist-detectable=false
 app/controllers/*/* linguist-detectable=false
 app/controllers/*/*/* linguist-detectable=false
 app/controllers/*/*/*/* linguist-detectable=false
+app/controllers/*/*/*/*/* linguist-detectable=false
 ; app/workers/* linguist-detectable=false
 ; app/workers/* linguist-detectable=false
 ; app/workers/*/* linguist-detectable=false
