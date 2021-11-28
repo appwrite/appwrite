@@ -193,6 +193,22 @@ class DatabaseCustomServerTest extends Scope
         // Wait for database worker to finish creating attributes
         sleep(2);
 
+        // Creating document to ensure cache is purged on schema change
+        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actors['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => 'unique()',
+            'data' => [
+                'firstName' => 'lorem',
+                'lastName' => 'ipsum',
+                'unneeded' =>  'dolor'
+            ],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+
         $index = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actors['body']['$id'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -235,6 +251,15 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals($attribute['headers']['status-code'], 204);
 
         sleep(2);
+
+        // Check document to ensure cache is purged on schema change
+        $document = $this->client->call(Client::METHOD_GET, '/database/collections/' . $actors['body']['$id'] . '/documents/' . $document['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertNotContains($unneededId, $document['body']);
 
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $actors['body']['$id'], array_merge([
             'content-type' => 'application/json',

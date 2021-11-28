@@ -16,21 +16,21 @@ class UsageFunctions extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('functions.executions', [
+            ->addRule('functionsExecutions', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for function executions.',
                 'default' => [],
                 'example' => new \stdClass,
                 'array' => true 
             ])
-            ->addRule('functions.failures', [
+            ->addRule('functionsFailures', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for function execution failures.',
                 'default' => [],
                 'example' => new \stdClass,
                 'array' => true 
             ])
-            ->addRule('functions.compute', [
+            ->addRule('functionsCompute', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for function execution duration.',
                 'default' => [],

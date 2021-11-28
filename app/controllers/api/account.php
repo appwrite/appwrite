@@ -23,6 +23,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Exception;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -217,6 +218,8 @@ App::post('/v1/account/sessions')
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.sessions.create')
             ->setParam('resource', 'user/' . $profile->getId())
+            ->setParam('userEmail', $profile->getAttribute('email', ''))
+            ->setParam('userName', $profile->getAttribute('name', ''))
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -1182,13 +1185,15 @@ App::get('/v1/account/logs')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
     ->inject('response')
     ->inject('user')
     ->inject('locale')
     ->inject('geodb')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($response, $user, $locale, $geodb, $dbForInternal, $usage) {
+    ->action(function ($limit, $offset, $response, $user, $locale, $geodb, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Document $user */
@@ -1198,8 +1203,7 @@ App::get('/v1/account/logs')
         /** @var Appwrite\Stats\Stats $usage */
 
         $audit = new Audit($dbForInternal);
-
-        $logs = $audit->getLogsByUserAndEvents($user->getId(), [
+        $auditEvents = [
             'account.create',
             'account.delete',
             'account.update.name',
@@ -1215,7 +1219,9 @@ App::get('/v1/account/logs')
             'teams.membership.create',
             'teams.membership.update',
             'teams.membership.delete',
-        ]);
+        ];
+
+        $logs = $audit->getLogsByUserAndEvents($user->getId(), $auditEvents, $limit, $offset);
 
         $output = [];
 
@@ -1224,17 +1230,19 @@ App::get('/v1/account/logs')
 
             $detector = new Detector($log['userAgent']);
 
-            $output[$i] = new Document(array_merge([
-                'event' => $log['event'],
-                'ip' => $log['ip'],
-                'time' => $log['time'],
-            ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
+            $output[$i] = new Document(array_merge(
+                $log->getArrayCopy(),
+                $log['data'],
+                $detector->getOS(),
+                $detector->getClient(),
+                $detector->getDevice()
+            ));
 
             $record = $geodb->get($log['ip']);
 
             if ($record) {
                 $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));        
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -1245,7 +1253,11 @@ App::get('/v1/account/logs')
         $usage
             ->setParam('users.read', 1)
         ;
-        $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
+
+        $response->dynamic(new Document([
+            'sum' => $audit->countLogsByUserAndEvents($user->getId(), $auditEvents),
+            'logs' => $output,
+        ]), Response::MODEL_LOG_LIST);
     });
 
 App::get('/v1/account/sessions/:sessionId')

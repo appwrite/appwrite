@@ -26,7 +26,7 @@ class StorageConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
-        
+
         /**
          * Test for SUCCESS
          */
@@ -83,10 +83,10 @@ class StorageConsoleClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertEquals(count($response['body']), 6);
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['files.count']);
-        $this->assertIsArray($response['body']['files.create']);
-        $this->assertIsArray($response['body']['files.read']);
-        $this->assertIsArray($response['body']['files.update']);
-        $this->assertIsArray($response['body']['files.delete']);
+        $this->assertIsArray($response['body']['filesCount']);
+        $this->assertIsArray($response['body']['filesCreate']);
+        $this->assertIsArray($response['body']['filesRead']);
+        $this->assertIsArray($response['body']['filesUpdate']);
+        $this->assertIsArray($response['body']['filesDelete']);
     }
 }
