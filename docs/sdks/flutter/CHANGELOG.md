@@ -130,7 +130,7 @@
 ## 0.2.0
 
 - Updated flutter_web_auth plugin to version 0.2.4
-- Added per project unique callback for OAuth2 redirects to aviod conflicts between multiple Appwrite projects
+- Added per project unique callback for OAuth2 redirects to avoid conflicts between multiple Appwrite projects
 
 ## 0.1.1
 
@@ -159,7 +159,7 @@
 
 ## 0.0.9
 
-- Updated deafult params
+- Updated default params
 
 ## 0.0.8
 
