@@ -40,7 +40,6 @@ return [
     'la', // Latin
     'lb', // Luxembourgish
     'lt', // Lithuanian
-    'la', // Latin
     'lv', // Latvian
     'ml', // Malayalam
     'mr', // Marathi
