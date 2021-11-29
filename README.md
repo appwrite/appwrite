@@ -102,7 +102,6 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 * [Getting Started for Android](https://appwrite.io/docs/getting-started-for-android)
 * [Getting Started for Server](https://appwrite.io/docs/getting-started-for-server)
 * [Getting Started for CLI](https://appwrite.io/docs/command-line)
-* Getting Started for iOS (Coming soon...)
 
 ### Services
 
@@ -140,7 +139,7 @@ Below is a list of currently supported platforms and languages. If you wish to h
 
 #### Community
 * ✅  &nbsp; [Appcelerator Titanium](https://github.com/m1ga/ti.appwrite) (Maintained by [Michael Gangolf](https://github.com/m1ga/))  
-* ✅  &nbsp; [Godot Engine](https://github.com/m1ga/ti.appwrite) (Maintained by [fenix-hub @GodotNuts](https://github.com/GodotNuts/appwrite-sdk/))  
+* ✅  &nbsp; [Godot Engine](https://github.com/GodotNuts/appwrite-sdk) (Maintained by [fenix-hub @GodotNuts](https://github.com/fenix-hub))  
 
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 

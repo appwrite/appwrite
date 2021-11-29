@@ -12,6 +12,18 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
+FROM node:16-alpine as node
+
+WORKDIR /usr/local/src/
+
+COPY package-lock.json /usr/local/src/
+COPY package.json /usr/local/src/
+COPY gulpfile.js /usr/local/src/
+COPY public /usr/local/src/public
+
+RUN npm ci
+RUN npm run build
+
 FROM php:8.0-cli-alpine as compile
 
 ARG DEBUG=false
@@ -195,6 +207,7 @@ RUN \
 WORKDIR /usr/src/code
 
 COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
+COPY --from=node /usr/local/src/public/dist /usr/src/code/public/dist
 COPY --from=swoole /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yasd.so* /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
@@ -205,7 +218,8 @@ COPY --from=maxmind /usr/local/lib/php/extensions/no-debug-non-zts-20200930/maxm
 COPY ./app /usr/src/code/app
 COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
-COPY ./public /usr/src/code/public
+COPY ./public/fonts /usr/src/code/public/fonts
+COPY ./public/images /usr/src/code/public/images
 COPY ./src /usr/src/code/src
 
 # Set Volumes

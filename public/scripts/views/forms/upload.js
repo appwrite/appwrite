@@ -160,7 +160,7 @@
           search.path = path;
 
           document.dispatchEvent(
-            new CustomEvent("open-file-serach", {
+            new CustomEvent("open-file-search", {
               bubbles: false,
               cancelable: true
             }));
