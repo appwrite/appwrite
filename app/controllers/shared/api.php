@@ -53,8 +53,6 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
         $timeLimitArray[] = $timeLimit;
     }
 
-    //TODO make sure we get array here
-
     $closestLimit = null;
     $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
     $isAppUser = Auth::isAppUser(Authorization::$roles);
