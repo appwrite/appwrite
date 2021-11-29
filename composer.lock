@@ -2066,7 +2066,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/logger",
-                "reference": "5d8cc1bbbfc738ae28ede0d438a1d5318011cf6a"
+                "reference": "572ada8fd774cb8c6c09aab9fe2d36cd807eee13"
             },
             "require": {
                 "php": ">=7.4"
@@ -2113,7 +2113,7 @@
                 "utopia",
                 "warnings"
             ],
-            "time": "2021-11-24T09:10:10+00:00"
+            "time": "2021-11-29T08:40:52+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -2444,12 +2444,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/websocket.git",
-                "reference": "917f82f617bda5a0b63b4c94f32cada43acc7fb0"
+                "reference": "237eed7e9c54a514cfabac3e5726d24661254f2e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/917f82f617bda5a0b63b4c94f32cada43acc7fb0",
-                "reference": "917f82f617bda5a0b63b4c94f32cada43acc7fb0",
+                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/237eed7e9c54a514cfabac3e5726d24661254f2e",
+                "reference": "237eed7e9c54a514cfabac3e5726d24661254f2e",
                 "shasum": ""
             },
             "require": {
@@ -2494,7 +2494,7 @@
                 "issues": "https://github.com/utopia-php/websocket/issues",
                 "source": "https://github.com/utopia-php/websocket/tree/feat-onerror-callback"
             },
-            "time": "2021-11-24T12:04:35+00:00"
+            "time": "2021-11-29T08:43:24+00:00"
         },
         {
             "name": "webmozart/assert",

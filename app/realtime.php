@@ -81,7 +81,7 @@ $logError = function(Throwable $error, string $action) use ($register) {
     Console::info('Realtime log pushed with status code: '.$responseCode);
 };
 
-$server->onError($logError);
+$server->error($logError);
 
 $server->onStart(function () use ($stats, $register, $containerId, &$documentId, $logError) {
     Console::success('Server started succefully');
@@ -125,8 +125,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId,
             Authorization::enable();
             $documentId = $document->getId();
         } catch (\Throwable $th) {
-            var_dump("Error starting");
-            call_user_func($logError, $th, "onStart.createDocument");
+            call_user_func($logError, $th, "createWorkerDocument");
 
             Console::error('[Error] Type: ' . get_class($th));
             Console::error('[Error] Message: ' . $th->getMessage());
@@ -191,7 +190,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId,
                 'value' => json_encode($payload)
             ]);
         } catch (\Throwable $th) {
-            logError($register, $th, "onStart.updateDocument");
+            logError($register, $th, "updateWorkerDocument");
 
             Console::error('[Error] Type: ' . get_class($th));
             Console::error('[Error] Message: ' . $th->getMessage());
@@ -366,7 +365,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 }
             });
         } catch (\Throwable $th) {
-            logError($register, $th, "onWorkerStart.pubSubConnection");
+            logError($register, $th, "pubSubConnection");
 
             Console::error('Pub/sub error: ' . $th->getMessage());
             $register->get('redisPool')->put($redis);
@@ -484,7 +483,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $stats->incr($project->getId(), 'connections');
         $stats->incr($project->getId(), 'connectionsTotal');
     } catch (\Throwable $th) {
-        logError($register, $th, "onOpen.init");
+        logError($register, $th, "initServer");
 
         $response = [
             'type' => 'error',
