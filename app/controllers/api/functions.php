@@ -498,7 +498,7 @@ App::post('/v1/functions/:functionId/tags')
         if(!$tag->isEmpty()) {
             $chunks = $tag->getAttribute('chunksTotal', 1);
             if($chunk == -1) {
-                $chunk = $chunks - 1;
+                $chunk = $chunks;
             }
         }
 
