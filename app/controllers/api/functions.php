@@ -477,7 +477,7 @@ App::post('/v1/functions/:functionId/tags')
             } else {
                 // Calculate total number of chunks based on the chunk size i.e ($rangeEnd - $rangeStart)
                 $chunks = (int) ceil($size / ($end + 1 - $start));
-                $chunk = (int) ($start / ($end + 1 - $start));
+                $chunk = (int) ($start / ($end + 1 - $start)) + 1;
             }
         }
 
