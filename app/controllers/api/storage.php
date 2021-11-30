@@ -583,7 +583,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             throw new Exception('Error bucket maximum file size is larger than _APP_STORAGE_LIMIT', 500);
         }
 
-        $fileSize = new FileSize($maximumFileSize);
+        $fileSizeValidator = new FileSize($maximumFileSize);
         $upload = new Upload();
 
         if (empty($file)) {
@@ -593,7 +593,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         // Make sure we handle a single file and multiple files the same way
         $fileName = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
         $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
-        $size = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+        $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         $contentRange = $request->getHeader('content-range');
         $fileId = $fileId == 'unique()' ? $dbForInternal->getId() : $fileId;
@@ -603,18 +603,18 @@ App::post('/v1/storage/buckets/:bucketId/files')
         if (!empty($contentRange)) {
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
-            $size = $request->getContentRangeSize();
+            $fileSize = $request->getContentRangeSize();
             $fileId = $request->getHeader('x-appwrite-id', $fileId);
-            if(is_null($start) || is_null($end) || is_null($size)) {
+            if(is_null($start) || is_null($end) || is_null($fileSize)) {
                 throw new Exception('Invalid content-range header', 400);
             }
 
-            if ($end == $size) {
+            if ($end == $fileSize) {
                 //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
                 $chunks = $chunk = -1;
             } else {
                 // Calculate total number of chunks based on the chunk size i.e ($rangeEnd - $rangeStart)
-                $chunks = (int) ceil($size / ($end + 1 - $start));
+                $chunks = (int) ceil($fileSize / ($end + 1 - $start));
                 $chunk = (int) ($start / ($end + 1 - $start)) + 1;
             }
         }
@@ -624,7 +624,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             throw new Exception('File extension not allowed', 400);
         }
 
-        if (!$fileSize->isValid($size)) { // Check if file size is exceeding allowed limit
+        if (!$fileSizeValidator->isValid($fileSize)) { // Check if file size is exceeding allowed limit
             throw new Exception('File size not allowed', 400);
         }
 
@@ -636,7 +636,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         // Save to storage
-        $size ??= $localDevice->getFileSize($fileTmpName);
+        $fileSize ??= $localDevice->getFileSize($fileTmpName);
         $path = $device->getPath($fileId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
         $path = str_ireplace($device->getRoot(), $device->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path);
 
@@ -665,7 +665,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? [];
         $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
         if ($chunksUploaded == $chunks) {
-            if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antiVirus', true) && $size <= APP_LIMIT_ANTIVIRUS && App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
+            if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antiVirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
                 $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
                 (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
                 
@@ -678,13 +678,13 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
             $data = '';
             // Compression
-            if ($size <= APP_STORAGE_READ_BUFFER) {
+            if ($fileSize <= APP_STORAGE_READ_BUFFER) {
                 $data = $device->read($path);
                 $compressor = new GZIP();
                 $data = $compressor->compress($data);
             }
 
-            if ($bucket->getAttribute('encryption', true) && $size <= APP_STORAGE_READ_BUFFER) {
+            if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
                 if(empty($data)) {
                     $data = $device->read($path);
                 }
@@ -704,7 +704,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $algorithm = empty($compressor) ? '' : $compressor->getName();
             $fileHash = $device->getFileHash($path);
 
-            if ($bucket->getAttribute('encryption', true) && $size <= APP_STORAGE_READ_BUFFER) {
+            if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
                 $openSSLVersion = '1';
                 $openSSLCipher = OpenSSL::CIPHER_AES_128_GCM;
                 $openSSLTag = \bin2hex($tag);
@@ -723,7 +723,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'path' => $path,
                         'signature' => $fileHash,
                         'mimeType' => $mimeType,
-                        'sizeOriginal' => $size,
+                        'sizeOriginal' => $fileSize,
                         'sizeActual' => $sizeActual,
                         'algorithm' => $algorithm,
                         'comment' => '',
@@ -786,7 +786,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'path' => $path,
                         'signature' => '',
                         'mimeType' => '',
-                        'sizeOriginal' => $size,
+                        'sizeOriginal' => $fileSize,
                         'sizeActual' => 0,
                         'algorithm' => '',
                         'comment' => '',
