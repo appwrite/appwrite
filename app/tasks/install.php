@@ -11,19 +11,6 @@ use Utopia\Config\Config;
 use Utopia\View;
 use Utopia\Validator\Text;
 
-function formatArray(array $arr) {
-    $mask = "%10.10s %-10.10s %10.10s\n";
-    printf($mask, "Type", "Name", "Value");
-    
-    // array_walk($arr, function(&$key) use ($descriptionColumnLimit){
-    //     $key = explode("\n", wordwrap($key, $descriptionColumnLimit));
-    // });
-    
-    foreach($arr as $key => $value) {
-        printf($mask, $key, $value[0], $value[1]);
-    }
-}
-
 $cli
     ->task('install')
     ->desc('Install Appwrite')
@@ -183,11 +170,11 @@ $cli
 
             if ($var['filter'] === 'domainTarget') {
                 if ($input[$var['name']] !== 'localhost') {
-                    Console::warning("If you haven't already done so, make sure you create an 'A' or 'AAAA' DNS record for '".$input[$var['name']]."' pointing to your external server IP. \nYour DNS Table should look like so: ");
-                    formatArray([
-                        'A/AAAA' => ['@', 'Your IP'],
-                    ]);
-                    Console::warning("Use 'AAAA' if you have an IPv6 address and 'A' if you have an IPv4 address.");
+                    Console::info("\nIf you haven't already done so, set the following record for {$input[$var['name']]} on your DNS provider: \n");
+                    $mask = "%-15.15s %-10.10s %-30.30s\n";
+                    printf($mask, "Type", "Name", "Value");
+                    printf($mask, "A or AAAA", "@", "<YOUR EXTERNAL IP>");
+                    Console::info("\nUse 'AAAA' if you're using an IPv6 address and 'A' if you're using an IPv4 address.\n");
                 }
             }
         }
