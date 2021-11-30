@@ -33,6 +33,7 @@ use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\Index;
+use Appwrite\Utopia\Response\Model\FuncPermissions;
 use Appwrite\Utopia\Response\Model\JWT;
 use Appwrite\Utopia\Response\Model\Key;
 use Appwrite\Utopia\Response\Model\Language;
@@ -43,11 +44,9 @@ use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Log;
 use Appwrite\Utopia\Response\Model\Membership;
 use Appwrite\Utopia\Response\Model\Metric;
-use Appwrite\Utopia\Response\Model\Permissions;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Project;
-use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Tag;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
@@ -144,6 +143,7 @@ class Response extends SwooleResponse
     const MODEL_TAG_LIST = 'tagList';
     const MODEL_EXECUTION = 'execution';
     const MODEL_EXECUTION_LIST = 'executionList';
+    const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
     
     // Project
     const MODEL_PROJECT = 'project';
@@ -237,6 +237,7 @@ class Response extends SwooleResponse
             ->setModel(new Team())
             ->setModel(new Membership())
             ->setModel(new Func())
+            ->setModel(new FuncPermissions())
             ->setModel(new Tag())
             ->setModel(new Execution())
             ->setModel(new Project())
