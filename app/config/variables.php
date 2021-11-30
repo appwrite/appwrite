@@ -418,6 +418,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_FUNCTIONS_BUILD_TIMEOUT',
+                'description' => 'The maximum number of seconds allowed as a timeout value when building a new function. The default value is 900 seconds.',
+                'introduction' => '0.12.0',
+                'default' => '900',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_FUNCTIONS_CONTAINERS',
                 'description' => 'The maximum number of containers Appwrite is allowed to keep alive in the background for function environments. Running containers allow faster execution time as there is no need to recreate each container every time a function gets executed. The default value is 10.',
                 'introduction' => '0.7.0',

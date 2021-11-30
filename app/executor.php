@@ -319,6 +319,7 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
         $tagPath = $tag->getAttribute('path', '');
         $tagPathTarget = '/tmp/project-' . $projectID . '/' . $tag->getId() . '/code.tar.gz';
         $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
+
         $container = 'build-stage-' . $tag->getId();
 
         // Perform various checks
@@ -392,7 +393,7 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
             ]
         );
 
-    if (empty($id)) {
+        if (empty($id)) {
             throw new Exception('Failed to start build container');
         }
 
@@ -442,7 +443,7 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
             command: ['sh', '-c', 'cd /usr/local/src && ./build.sh'],
             stdout: $buildStdout,
             stderr: $buildStderr,
-            timeout: 600 //TODO: Make this configurable
+            timeout: App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900)
         );
 
         if (!$buildSuccess) {
