@@ -647,7 +647,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         } else {
             $file = $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
         }
-        var_dump($chunks, $chunk);
+
         $metadata = ['content_type' => $localDevice->getFileMimeType($fileTmpName)];
         if (!$file->isEmpty()) {
             $chunks = $file->getAttribute('chunksTotal', 1);
@@ -658,7 +658,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         $chunksUploaded = $device->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
-        var_dump($metadata);
         if (empty($chunksUploaded)) {
             throw new Exception('Failed uploading file', 500);
         }
