@@ -138,9 +138,9 @@ abstract class Worker
     //$log->setType(Log::TYPE_ERROR);
     //$log->setMessage($error->getMessage());
     //
-    //$log->addTag('worker_type', $workerType);
+    //$log->addTag('workerType', $workerType);
     //$log->addTag('code', $error->getCode());
-    //$log->addTag('verbose_type', \get_class($error));
+    //$log->addTag('verboseType', \get_class($error));
     //
     //$log->addExtra('file', $error->getFile());
     //$log->addExtra('line', $error->getLine());

@@ -318,9 +318,9 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         $log->setMessage($error->getMessage());
 
         $log->addTag('method', $route->getMethod());
-        $log->addTag('url',  $error->getCode());
-        $log->addTag('code', get_class($error));
-        $log->addTag('verbose_type', $route->getPath());
+        $log->addTag('url',  $route->getPath());
+        $log->addTag('verboseType', get_class($error));
+        $log->addTag('code', $error->getCode());
         $log->addTag('projectId', $project->getId());
         $log->addTag('hostname', $request->getHostname());
         $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));

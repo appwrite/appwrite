@@ -66,7 +66,7 @@ $logError = function(Throwable $error, string $action) use ($register) {
     $log->setMessage($error->getMessage());
 
     $log->addTag('code', $error->getCode());
-    $log->addTag('verbose_type', get_class($error));
+    $log->addTag('verboseType', get_class($error));
 
     $log->addExtra('file', $error->getFile());
     $log->addExtra('line', $error->getLine());
