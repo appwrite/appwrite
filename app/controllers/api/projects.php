@@ -59,13 +59,11 @@ App::post('/v1/projects')
     ->inject('dbForConsole')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
-    ->inject('consoleDB')
-    ->action(function ($projectId, $name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForInternal, $dbForExternal, $consoleDB) {
+    ->action(function ($projectId, $name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForInternal, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
-        /** @var Appwrite\Database\Database $consoleDB */
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -106,7 +104,7 @@ App::post('/v1/projects')
             'search' => implode(' ', [$projectId, $name]),
         ]));
 
-        $collections = Config::getParam('collections2', []); /** @var array $collections */
+        $collections = Config::getParam('collections', []); /** @var array $collections */
 
         $dbForInternal->setNamespace('project_' . $project->getId() . '_internal');
         $dbForInternal->create();
@@ -147,8 +145,6 @@ App::post('/v1/projects')
 
             $dbForInternal->createCollection($key, $attributes, $indexes);
         }
-
-        $consoleDB->createNamespace($project->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($project, Response::MODEL_PROJECT);

@@ -90,7 +90,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         if(!$dbForConsole->exists()) {
             Console::success('[Setup] - Server database init started...');
 
-            $collections = Config::getParam('collections2', []); /** @var array $collections */
+            $collections = Config::getParam('collections', []); /** @var array $collections */
 
             $redis->flushAll();
 
