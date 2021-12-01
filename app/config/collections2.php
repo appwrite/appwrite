@@ -810,12 +810,12 @@ $collections = [
                 '$id' => 'secret',
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 256, // var_dump of \bin2hex(\random_bytes(128)) => string(256)
+                'size' => 256, // var_dump of \bin2hex(\random_bytes(128)) => string(256) // TODO what will happen after encryption filter?
                 'signed' => true,
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['encrypt'],
             ],
         ],
         'indexes' => [
@@ -882,12 +882,12 @@ $collections = [
                 '$id' => 'httpPass',
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => Database::LENGTH_KEY,
+                'size' => Database::LENGTH_KEY, // TODO will the length suffice after encryption?
                 'signed' => true,
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['encrypt'],
             ],
             [
                 '$id' => 'security',
@@ -970,7 +970,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['encrypt'],
             ],
             [
                 '$id' => 'passwordUpdate',
@@ -1150,23 +1150,23 @@ $collections = [
                 '$id' => 'providerToken',
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 16384,
+                'size' => 16384, // TODO is this required size and will it suffice after encryption?
                 'signed' => true,
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['encrypt'],
             ],
             [
                 '$id' => 'secret',
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 64, // https://www.tutorialspoint.com/how-long-is-the-sha256-hash-in-mysql
+                'size' => 64, // https://www.tutorialspoint.com/how-long-is-the-sha256-hash-in-mysql // TODO what will happen to size after encryption?
                 'signed' => true,
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['encrypt'],
             ],
             [
                 '$id' => 'expire',
