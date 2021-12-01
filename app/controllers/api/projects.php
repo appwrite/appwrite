@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Validator\Password;
 use Appwrite\Database\Validator\CustomId;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;

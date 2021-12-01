@@ -71,7 +71,6 @@ services:
       - ./psalm.xml:/usr/src/code/psalm.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
-      - ./public:/usr/src/code/public
       # - ./vendor:/usr/src/code/vendor
       - ./docs:/usr/src/code/docs
       - ./src:/usr/src/code/src
