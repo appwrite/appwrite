@@ -500,7 +500,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => ['json'],
+                'filters' => ['json', 'encrypt'],
             ],
             [
                 '$id' => 'platforms',
