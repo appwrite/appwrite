@@ -8,7 +8,6 @@ use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
-use Utopia\CLI\CLI;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -534,7 +533,7 @@ App::delete('/v1/projects/:projectId')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('password', '', new UID(), 'Your user password for confirmation. Must be between 6 to 32 chars.')
+    ->param('password', '', new Password(), 'Your user password for confirmation. Must be at least 8 chars.')
     ->inject('response')
     ->inject('user')
     ->inject('dbForConsole')
