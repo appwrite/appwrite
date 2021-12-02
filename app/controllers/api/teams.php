@@ -116,7 +116,7 @@ App::get('/v1/teams')
     ->param('search', '', new Text(256), 'Enter any text to search. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Limit how many results will be returned. Returns up to 25 results by default. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Use this value to manage pagination. The default value is 0.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Use ASC to order results in ascending and DESC to order results in descending order.', true)
+    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('projectDB')
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
