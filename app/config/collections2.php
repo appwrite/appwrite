@@ -810,7 +810,7 @@ $collections = [
                 '$id' => 'secret',
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 256, // var_dump of \bin2hex(\random_bytes(128)) => string(256) // TODO what will happen after encryption filter?
+                'size' => 512, // var_dump of \bin2hex(\random_bytes(128)) => string(256) doubling for encryption
                 'signed' => true,
                 'required' => true,
                 'default' => null,
@@ -1150,7 +1150,7 @@ $collections = [
                 '$id' => 'providerToken',
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 16384, // TODO is this required size and will it suffice after encryption?
+                'size' => 16384,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
@@ -1161,7 +1161,7 @@ $collections = [
                 '$id' => 'secret',
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 64, // https://www.tutorialspoint.com/how-long-is-the-sha256-hash-in-mysql // TODO what will happen to size after encryption?
+                'size' => 256,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
