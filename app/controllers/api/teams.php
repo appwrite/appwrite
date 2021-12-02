@@ -262,7 +262,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('abuse-limit', 10)
     ->param('teamId', '', new UID(), 'The unique team ID.')
     ->param('email', '', new Email(), 'The email address of the new team member.')
-    ->param('roles', [], new ArrayList(new Key()), 'An Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
+    ->param('roles', [], new ArrayList(new Key()), 'An array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'The name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
