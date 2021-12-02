@@ -1377,21 +1377,8 @@ class ProjectsConsoleClientTest extends Scope
             'store' => '',
             'hostname' => 'localhost',
         ]);
-        
+
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        // $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/platforms', array_merge([
-        //     'content-type' => 'application/json',
-        //     'x-appwrite-project' => $this->getProject()['$id'],
-        // ], $this->getHeaders()), [
-        //     'type' => 'web',
-        //     'name' => 'Web App',
-        //     'key' => '',
-        //     'store' => '',
-        //     'hostname' => 'https://localhost',
-        // ]);
-
-        // $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;
     }
@@ -1402,7 +1389,9 @@ class ProjectsConsoleClientTest extends Scope
     public function testListProjectPlatform($data): array
     {
         $id = $data['projectId'] ?? '';
-        
+
+        sleep(1);
+
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1424,7 +1413,7 @@ class ProjectsConsoleClientTest extends Scope
     public function testGetProjectPlatform($data): array
     {
         $id = $data['projectId'] ?? '';
-        
+
         $platformWebId = $data['platformWebId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformWebId, array_merge([

@@ -128,7 +128,6 @@ Config::load('auth', __DIR__.'/config/auth.php');
 Config::load('providers', __DIR__.'/config/providers.php');
 Config::load('platforms', __DIR__.'/config/platforms.php');
 Config::load('collections', __DIR__.'/config/collections.php');
-Config::load('collections2', __DIR__.'/config/collections2.php');
 Config::load('runtimes', __DIR__.'/config/runtimes.php');
 Config::load('roles', __DIR__.'/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__.'/config/scopes.php');  // User roles and scopes
@@ -804,24 +803,6 @@ App::setResource('console', function() {
         'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
     ]);
 }, []);
-
-App::setResource('consoleDB', function($db, $cache) {
-    $consoleDB = new DatabaseOld();
-    $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-    $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
-    $consoleDB->setMocks(Config::getParam('collections', []));
-
-    return $consoleDB;
-}, ['db', 'cache']);
-
-App::setResource('projectDB', function($db, $cache, $project) {
-    $projectDB = new DatabaseOld();
-    $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-    $projectDB->setNamespace('app_'.$project->getId());
-    $projectDB->setMocks(Config::getParam('collections', []));
-
-    return $projectDB;
-}, ['db', 'cache', 'project']);
 
 App::setResource('dbForInternal', function($db, $cache, $project) {
     $cache = new Cache(new RedisCache($cache));
