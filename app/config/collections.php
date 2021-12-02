@@ -970,7 +970,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => ['encrypt'],
+                'filters' => [],
             ],
             [
                 '$id' => 'passwordUpdate',
