@@ -600,7 +600,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             } else {
                 // Calculate total number of chunks based on the chunk size i.e ($rangeEnd - $rangeStart)
                 $chunks = (int) ceil($size / ($end + 1 - $start));
-                $chunk = (int) ($start / ($end + 1 - $start));
+                $chunk = (int) ($start / ($end + 1 - $start)) + 1;
             }
         }
 
@@ -629,7 +629,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         if (!$file->isEmpty()) {
             $chunks = $file->getAttribute('chunksTotal', 1);
             if ($chunk == -1) {
-                $chunk = $chunks - 1;
+                $chunk = $chunks;
             }
         }
 
