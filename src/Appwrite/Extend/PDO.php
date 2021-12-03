@@ -49,7 +49,7 @@ class PDO extends PDONative
         return $this->pdo->setAttribute($attribute, $value);
     }
 
-    public function prepare($statement, $driver_options = NULL)
+    public function prepare($statement, $driver_options = null)
     {
         return new PDOStatement($this, $this->pdo->prepare($statement, []));
     }

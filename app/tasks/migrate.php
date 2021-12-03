@@ -11,6 +11,8 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Migration\Migration;
 use Utopia\Validator\Text;
 
+Config::load('collections.old', __DIR__.'/../config/collections.old.php');
+
 $cli
     ->task('migrate')
     ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
@@ -29,12 +31,12 @@ $cli
         $consoleDB
             ->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache))
             ->setNamespace('app_console') // Main DB
-            ->setMocks(Config::getParam('collections', []));
+            ->setMocks(Config::getParam('collections.old', []));
 
         $projectDB = new Database();
         $projectDB
             ->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache))
-            ->setMocks(Config::getParam('collections', []));
+            ->setMocks(Config::getParam('collections.old', []));
 
         $console = $consoleDB->getDocument('console');
 

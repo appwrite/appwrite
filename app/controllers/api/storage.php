@@ -530,7 +530,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('user')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $file, $read, $write, $request, $response, $dbForInternal, $user, $audits, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $file, $read, $write, $request, $response, $dbForInternal, $user, $audits, $usage, $mode) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -540,7 +541,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if ($bucket->isEmpty()) {
+        if($bucket->isEmpty() 
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -825,21 +827,23 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('cursor', '', new UID(), 'ID of the file used as the starting point for the query, excluding the file itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($bucketId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if ($bucket->isEmpty()) {
+        if($bucket->isEmpty() 
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -913,14 +917,16 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if ($bucket->isEmpty()) {
+        if($bucket->isEmpty() 
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -980,7 +986,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->inject('project')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForInternal, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForInternal, $usage, $mode) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
@@ -998,7 +1005,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if ($bucket->isEmpty()) {
+        if($bucket->isEmpty() 
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -1150,7 +1158,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $request, $response, $dbForInternal, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $request, $response, $dbForInternal, $usage, $mode) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -1158,7 +1167,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if ($bucket->isEmpty()) {
+        if($bucket->isEmpty() 
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -1285,7 +1295,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->inject('request')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $response, $request, $dbForInternal, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $response, $request, $dbForInternal, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Swoole\Request $request */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -1293,7 +1304,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if ($bucket->isEmpty()) {
+        if($bucket->isEmpty() 
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -1436,7 +1448,8 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('dbForInternal')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $read, $write, $response, $dbForInternal, $audits, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $read, $write, $response, $dbForInternal, $audits, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
@@ -1444,7 +1457,8 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if ($bucket->isEmpty()) {
+        if($bucket->isEmpty() 
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -1514,7 +1528,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $events, $audits, $usage) {
+    ->inject('mode')
+    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $events, $audits, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $events */
@@ -1523,7 +1538,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if ($bucket->isEmpty()) {
+        if($bucket->isEmpty() 
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -1600,8 +1616,8 @@ App::get('/v1/storage/usage')
         /** @var Utopia\Database\Database $dbForInternal */
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-            $period = [
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $periods = [
                 '24h' => [
                     'period' => '30m',
                     'limit' => 48,
@@ -1621,19 +1637,22 @@ App::get('/v1/storage/usage')
             ];
 
             $metrics = [
-                "storage.total",
-                "storage.files.count"
+                'storage.total',
+                'storage.files.count'
             ];
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+            Authorization::skip(function() use ($dbForInternal, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
+                    $limit = $periods[$range]['limit'];
+                    $period = $periods[$range]['period'];
+
                     $requestDocs = $dbForInternal->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
-    
+                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
                         $stats[$metric][] = [
@@ -1641,8 +1660,23 @@ App::get('/v1/storage/usage')
                             'date' => $requestDoc->getAttribute('time'),
                         ];
                     }
+
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                            '30m' => 1800,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                        ];
+                        $backfill--;
+                    }
                     $stats[$metric] = array_reverse($stats[$metric]);
-                }    
+                }
             });
 
             $usage = new Document([
@@ -1680,8 +1714,8 @@ App::get('/v1/storage/:bucketId/usage')
         } 
         
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-            $period = [
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $periods = [
                 '24h' => [
                     'period' => '30m',
                     'limit' => 48,
@@ -1710,13 +1744,16 @@ App::get('/v1/storage/:bucketId/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+            Authorization::skip(function() use ($dbForInternal, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
+                    $limit = $periods[$range]['limit'];
+                    $period = $periods[$range]['period'];
+
                     $requestDocs = $dbForInternal->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
-    
+                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
                         $stats[$metric][] = [
@@ -1724,17 +1761,32 @@ App::get('/v1/storage/:bucketId/usage')
                             'date' => $requestDoc->getAttribute('time'),
                         ];
                     }
+
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                            '30m' => 1800,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                        ];
+                        $backfill--;
+                    }
                     $stats[$metric] = array_reverse($stats[$metric]);
-                }    
+                }
             });
 
             $usage = new Document([
                 'range' => $range,
-                'files.count' => $stats["storage.buckets.$bucketId.files.count"],
-                'files.create' => $stats["storage.buckets.$bucketId.files.create"],
-                'files.read' => $stats["storage.buckets.$bucketId.files.read"],
-                'files.update' => $stats["storage.buckets.$bucketId.files.update"],
-                'files.delete' => $stats["storage.buckets.$bucketId.files.delete"]
+                'filesCount' => $stats["storage.buckets.$bucketId.files.count"],
+                'filesCreate' => $stats["storage.buckets.$bucketId.files.create"],
+                'filesRead' => $stats["storage.buckets.$bucketId.files.read"],
+                'filesUpdate' => $stats["storage.buckets.$bucketId.files.update"],
+                'filesDelete' => $stats["storage.buckets.$bucketId.files.delete"]
             ]);
         }
 

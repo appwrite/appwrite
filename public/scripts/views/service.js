@@ -154,12 +154,12 @@
                   case 'document':
                     document[element.key] = element.default || {'$id': '', '$collection': '', '$permissions': {}};
                     break;
-                
+
                   default:
                     document[element.key] = null;
                     break;
                   }
-                  
+
                   if(element.array) {
                     document[element.key] = [];
                 }
@@ -395,7 +395,9 @@
                   "failureParam" +
                     parsedFailure[i].charAt(0).toUpperCase() +
                     parsedFailure[i].slice(1),
-                  {}
+                    {
+                      text: exception.message ?? undefined
+                    }
                 )
               );
             }
