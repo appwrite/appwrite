@@ -90,12 +90,10 @@
                         }
                     }
                     else if ('checkbox' === type) { // Checkbox
-                        if (!Array.isArray(json[name])) {
-                            json[name] = [];
-                        }
-
-                        if (element.checked) {
-                            json[name].push(element.value);
+                        if (Array.isArray(json[name])) {
+                            json[name].push(element.checked);
+                        } else {
+                            json[name] = element.checked;
                         }
                     }
                     else if ('file' === type) { // File upload
