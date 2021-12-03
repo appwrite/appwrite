@@ -85,11 +85,9 @@
         element.classList.remove("close");
 
         let form = element.querySelector('form');
-        let elements = (form && form.elements) ? [...form.elements] : [];
+        let elements = form ? form.querySelectorAll('[name]') : [];
 
-        for (let index = 0; index < elements.length; index++) {
-          let element = elements[index];
-
+        for (const element of elements) {
           if(element.type !== 'hidden'
             && element.type !== 'button'
             && element.type !== 'submit'
