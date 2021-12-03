@@ -124,7 +124,13 @@ window.addEventListener("load", async () => {
 });
 
 window.formValidation = (form, fields) => {
-  const elements = form.elements;
+  const elements = Array.from(form.querySelectorAll('[name]')).reduce((prev, curr) => {
+    if(!curr.name) {
+      return prev;
+    }
+    prev[curr.name] = curr;
+    return prev;
+  }, {});
   const actionHandler = (action, attribute) => {
       switch (action) {
           case "disable":
@@ -178,7 +184,7 @@ window.formValidation = (form, fields) => {
   form.addEventListener("reset", () => {
     for (const key in fields) {
         if (Object.hasOwnProperty.call(fields, key)) {
-            const element = form.elements[key];
+            const element = elements[key];
             element.setAttribute("value", "");
             element.removeAttribute("disabled");
             element.dispatchEvent(new Event("change"));

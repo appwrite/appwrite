@@ -78,11 +78,11 @@ $logs = $this->getParam('logs', null);
                                 <tbody data-ls-attrs="x-init=documents = {{project-documents.documents}}" x-data="{documents: []}">
                                     <template x-for="doc in documents">
                                         <tr>
-                                            <td>
+                                            <td data-title="$id: ">
                                                 <a :href="`/console/database/document?id=${doc.$id}&collection=${doc.$collection}&project=${project}`" x-text="doc.$id"></a>
                                             </td>
                                             <template x-for="attr in attributes">
-                                                <td x-show="attr.status === 'available'" style="width: 170px">
+                                                <td x-show="attr.status === 'available'" :data-title="attr.key + ':'">
                                                     <a :href="`/console/database/document?id=${doc.$id}&collection=${doc.$collection}&project=${project}`">
                                                         <span x-text="doc[attr.key] ?? 'n/a'"></span>
                                                     </a>
@@ -192,7 +192,7 @@ $logs = $this->getParam('logs', null);
 
                                 <td data-title="Default:">
                                     <span class="text-size-small" data-ls-bind="{{attribute.default}}" data-ls-attr="title={{attribute.default}}"></span>
-                                    <span class="text-fade text-size-small" data-ls-if="!({{attribute.default}})">n/a</span>
+                                    <span class="text-fade text-size-small" data-ls-if="{{attribute.default}} != ''">n/a</span>
                                 </td>
 
                                 <td data-title="">

@@ -26,6 +26,7 @@ use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Appwrite\Auth\Auth;
 use Appwrite\Database\Validator\CustomId;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
@@ -206,7 +207,7 @@ App::get('/v1/database/collections')
     ->label('sdk.response.model', Response::MODEL_COLLECTION_LIST)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, 40000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('cursor', '', new UID(), 'ID of the collection used as the starting point for the query, excluding the collection itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
@@ -499,7 +500,7 @@ App::get('/v1/database/collections/:collectionId/logs')
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
@@ -1639,6 +1640,19 @@ App::post('/v1/database/collections/:collectionId/documents')
         $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
         $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
 
+        // Users can only add their roles to documents, API keys can add any
+        $roles = \array_fill_keys(Authorization::getRoles(), true); // Auth::isAppUser expects roles to be keys, not values of assoc array
+        foreach ($data['$read'] as $read) {
+            if (!Auth::isAppUser($roles) && !Authorization::isRole($read)) {
+                throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+            }
+        }
+        foreach ($data['$write'] as $write) {
+            if (!Auth::isAppUser($roles) && !Authorization::isRole($write)) {
+                throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
+            }
+        }
+
         try {
             if ($collection->getAttribute('permission') === 'collection') {
                 /** @var Document $document */
@@ -1685,7 +1699,7 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('queries', [], new ArrayList(new Text(128)), 'Array of query strings.', true)
     ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
     ->param('cursor', '', new UID(), 'ID of the document used as the starting point for the query, excluding the document itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderAttributes', [], new ArrayList(new Text(128)), 'Array of attributes used to sort results.', true)
@@ -1825,7 +1839,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId/logs')
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->param('documentId', null, new UID(), 'Document unique ID.')
     ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
@@ -1983,6 +1997,19 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $data['$id'] = $document->getId(); // Make sure user don't switch document unique ID
         $data['$read'] = (is_null($read)) ? ($document->getRead() ?? []) : $read; // By default inherit read permissions
         $data['$write'] = (is_null($write)) ? ($document->getWrite() ?? []) : $write; // By default inherit write permissions
+
+        // Users can only add their roles to documents, API keys can add any
+        $roles = \array_fill_keys(Authorization::getRoles(), true); // Auth::isAppUser expects roles to be keys, not values of assoc array
+        foreach ($data['$read'] as $read) {
+            if (!Auth::isAppUser($roles) && !Authorization::isRole($read)) {
+                throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+            }
+        }
+        foreach ($data['$write'] as $write) {
+            if (!Auth::isAppUser($roles) && !Authorization::isRole($write)) {
+                throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
+            }
+        }
 
         try {
             if ($collection->getAttribute('permission') === 'collection') {

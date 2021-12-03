@@ -59,13 +59,11 @@ App::post('/v1/projects')
     ->inject('dbForConsole')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
-    ->inject('consoleDB')
-    ->action(function ($projectId, $name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForInternal, $dbForExternal, $consoleDB) {
+    ->action(function ($projectId, $name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForInternal, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
-        /** @var Appwrite\Database\Database $consoleDB */
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -106,7 +104,7 @@ App::post('/v1/projects')
             'search' => implode(' ', [$projectId, $name]),
         ]));
 
-        $collections = Config::getParam('collections2', []); /** @var array $collections */
+        $collections = Config::getParam('collections', []); /** @var array $collections */
 
         $dbForInternal->setNamespace('project_' . $project->getId() . '_internal');
         $dbForInternal->create();
@@ -148,8 +146,6 @@ App::post('/v1/projects')
             $dbForInternal->createCollection($key, $attributes, $indexes);
         }
 
-        $consoleDB->createNamespace($project->getId());
-
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -166,7 +162,7 @@ App::get('/v1/projects')
     ->label('sdk.response.model', Response::MODEL_PROJECT_LIST)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('cursor', '', new UID(), 'ID of the project used as the starting point for the query, excluding the project itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
