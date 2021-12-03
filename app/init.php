@@ -332,6 +332,9 @@ Database::addFilter('encrypt',
         ]);
     },
     function($value) {
+        if(is_null($value)) {
+            return null;
+        }
         $value = json_decode($value, true);
         $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
 
