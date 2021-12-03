@@ -1039,7 +1039,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception('No such storage device', 400);
         }
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
-        var_dump($bucket);
+
         if($bucket->isEmpty() 
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
@@ -1203,7 +1203,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         /** @var Appwrite\Stats\Stats $usage */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
-        var_dump($bucket);
+
         if($bucket->isEmpty() 
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
             throw new Exception('Bucket not found', 404);
