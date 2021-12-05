@@ -12,7 +12,7 @@ abstract class Worker
     protected $errorCallbacks = [];
 
     /**
-     * Named array holding all information passed into worker alongside a new task.
+     * Associative array holding all information passed into the worker
      *
      * @return array
      */
