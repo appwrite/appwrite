@@ -631,8 +631,7 @@ else{if(!Array.isArray(json[name])){json[name]=[];}
 json[name].push({});ref=json[name][json[name].length-1];}}
 else if(undefined!==element.value){if('SELECT'===element.tagName&&element.children>0){json[name]=element.children[element.selectedIndex].value;}
 else if('radio'===type){if(element.checked){json[name]=element.value;}}
-else if('checkbox'===type){if(!Array.isArray(json[name])){json[name]=[];}
-if(element.checked){json[name].push(element.value);}}
+else if('checkbox'===type){if(Array.isArray(json[name])){json[name].push(element.checked);}else{json[name]=element.checked;}}
 else if('file'===type){json[name]=element.files[0];}
 else if(undefined!==element.value){if((json[name]!==undefined)&&(!Array.isArray(json[name]))){json[name]=[json[name]];}
 if(Array.isArray(json[name])){json[name].push(element.value);}
