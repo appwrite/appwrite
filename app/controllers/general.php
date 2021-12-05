@@ -300,6 +300,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
     /** @var Appwrite\Database\Document $project */
     /** @var Utopia\Logger\Logger $logger */
     /** @var Appwrite\Database\Document $user */
+    /** @var Utopia\Logger\Log\Breadcrumb[] $loggerBreadcrumbs */
 
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
     $route = $utopia->match($request);

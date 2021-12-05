@@ -2,14 +2,16 @@
 
 namespace Appwrite\Resque;
 
-abstract class Worker
+use Exception;
+
+class Worker
 {
     /**
      * Callbacks that will be executed when an error occurs
      *
      * @var array
      */
-    protected $errorCallbacks = [];
+    static protected array $errorCallbacks = [];
 
     /**
      * Associative array holding all information passed into the worker
@@ -22,8 +24,12 @@ abstract class Worker
      * Function for identifying the worker needs to be set to unique name
      *
      * @return string
+     * @throws Exception
      */
-    abstract public function getName(): string;
+    public function getName(): string
+    {
+        throw new Exception("Please implement getName method in worker");
+    }
 
     /**
      * Function executed before running first task.
@@ -32,7 +38,9 @@ abstract class Worker
      * @return void
      * @throws \Exception|\Throwable
      */
-    abstract public function init(): void;
+    public function init() {
+        throw new Exception("Please implement getName method in worker");
+    }
 
     /**
      * Function executed when new task requests is received.
@@ -41,7 +49,9 @@ abstract class Worker
      * @return void
      * @throws \Exception|\Throwable
      */
-    abstract public function run(): void;
+    public function run() {
+        throw new Exception("Please implement getName method in worker");
+    }
 
     /**
      * Function executed just before shutting down the worker.
@@ -50,7 +60,9 @@ abstract class Worker
      * @return void
      * @throws \Exception|\Throwable
      */
-    abstract public function shutdown(): void;
+    public function shutdown() {
+        throw new Exception("Please implement getName method in worker");
+    }
 
     /**
      * A wrapper around 'init' function with non-worker-specific code
@@ -116,44 +128,8 @@ abstract class Worker
      * @param Throwable $error
      * @return self
      */
-    public function error(callable $callback): self
+    public static function error(callable $callback): void
     {
-        \array_push($this->errorCallbacks, $callback);
-        return $this;
+        \array_push(self::$errorCallbacks, $callback);
     }
-
-    // TODO: Implement this on init file using Worker->error(function() {  HERE })
-    //global $register;
-    //$logger = $register->get('logger');
-    //
-    //if($logger) {
-    //$version = App::getEnv('_APP_VERSION', 'UNKNOWN');
-    //$workerType = $this->getName();
-    //
-    //$log = new Log();
-    //
-    //$log->setNamespace("worker-" . $workerType);
-    //$log->setServer(\gethostname());
-    //$log->setVersion($version);
-    //$log->setType(Log::TYPE_ERROR);
-    //$log->setMessage($error->getMessage());
-    //
-    //$log->addTag('workerType', $workerType);
-    //$log->addTag('code', $error->getCode());
-    //$log->addTag('verboseType', \get_class($error));
-    //
-    //$log->addExtra('file', $error->getFile());
-    //$log->addExtra('line', $error->getLine());
-    //$log->addExtra('trace', $error->getTraceAsString());
-    //$log->addExtra('args', $this->args);
-    //
-    //$action = 'worker.' . $workerType . '.setUp';
-    //$log->setAction($action);
-    //
-    //$isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
-    //$log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-    //
-    //$responseCode = $logger->addLog($log);
-    //Console::info('Setup log pushed with status code: '.$responseCode);
-    //}
 }
