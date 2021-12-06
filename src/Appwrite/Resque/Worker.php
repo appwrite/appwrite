@@ -3,6 +3,7 @@
 namespace Appwrite\Resque;
 
 use Exception;
+use function var_dump;
 
 class Worker
 {
@@ -75,8 +76,8 @@ class Worker
         try {
             $this->init();
         } catch(\Throwable $error) {
-            foreach ($this->errorCallbacks as $errorCallback) {
-                $errorCallback($error, "init");
+            foreach (self::$errorCallbacks as $errorCallback) {
+                $errorCallback($error, "init", $this->getName());
             }
 
             throw $error;
@@ -94,8 +95,8 @@ class Worker
         try {
             $this->run();
         } catch(\Throwable $error) {
-            foreach ($this->errorCallbacks as $errorCallback) {
-                $errorCallback($error, "run");
+            foreach (self::$errorCallbacks as $errorCallback) {
+                $errorCallback($error, "run", $this->getName(), $this->args);
             }
 
             throw $error;
@@ -113,8 +114,8 @@ class Worker
         try {
             $this->shutdown();
         } catch(\Throwable $error) {
-            foreach ($this->errorCallbacks as $errorCallback) {
-                $errorCallback($error, "shutdown");
+            foreach (self::$errorCallbacks as $errorCallback) {
+                $errorCallback($error, "shutdown", $this->getName());
             }
 
             throw $error;

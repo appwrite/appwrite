@@ -2066,10 +2066,10 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/logger",
-                "reference": "c50b16a864857cfad381917b2e6f4991f1bccc3e"
+                "reference": "e67eafc1edb8729c463275b81ff4e870eb30c314"
             },
             "require": {
-                "php": ">=7.4"
+                "php": ">=8.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -2113,7 +2113,7 @@
                 "utopia",
                 "warnings"
             ],
-            "time": "2021-11-29T11:40:17+00:00"
+            "time": "2021-12-06T11:18:07+00:00"
         },
         {
             "name": "utopia-php/orchestration",

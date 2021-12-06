@@ -2,6 +2,8 @@
 
 use Appwrite\Extend\PDO;
 use Utopia\App;
+use Utopia\CLI\Console;
+use Utopia\Logger\Log;
 use Appwrite\Resque\Worker;
 
 /** @var Utopia\Registry\Registry $register */
@@ -33,17 +35,15 @@ $register->set('cache', function () { // Register cache connection
     return $redis;
 });
 
-Worker::error(function ($error, $action) use ($register) {
+Worker::error(function ($error, $action, $workerType, $optionalExtras) use ($register) {
     /** @var Throwable|Exception $error */
     /** @var string $action */
+    /** @var string $workerType */
 
     $logger = $register->get('logger');
 
     if($logger) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
-
-        $className = \get_called_class();
-        $workerType = $className;
 
         $log = new Log();
 
@@ -60,8 +60,10 @@ Worker::error(function ($error, $action) use ($register) {
         $log->addExtra('file', $error->getFile());
         $log->addExtra('line', $error->getLine());
         $log->addExtra('trace', $error->getTraceAsString());
-        // $log->addExtra('args', $this->args);
-        // TODO: Test worker error for get_called_class and if args are in trace. What about JWT in args? Other secrets? What about realtime/API?
+
+        if($optionalExtras) {
+             $log->addExtra('args', $optionalExtras);
+        }
 
         $action = 'worker.' . $workerType . '.' . $action;
         $log->setAction($action);
