@@ -211,10 +211,11 @@ App::post('/v1/cleanup/tag')
 App::post('/v1/tag')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('tagId', '', new UID(), 'Tag unique ID.')
+    ->param('userId', '', new UID(), 'User unique ID.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('projectID')
-    ->action(function ($functionId, $tagId, $response, $dbForInternal, $projectID) {
+    ->action(function ($functionId, $tagId, $userId, $response, $dbForInternal, $projectID) {
         // Get function document
         $function = Authorization::skip(function () use ($functionId, $dbForInternal) {
             return $dbForInternal->getDocument('functions', $functionId);
@@ -239,6 +240,31 @@ App::post('/v1/tag')
         $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? new CronExpression($schedule) : null;
         $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
 
+        // Create a new build entry
+        $buildId = $dbForInternal->getId();
+        Authorization::skip(function () use ($buildId, $dbForInternal, $tag, $userId) {
+            $dbForInternal->createDocument('builds', new Document([
+                '$id' => $buildId,
+                '$read' => (!empty($userId)) ? ['user:' . $userId] : [],
+                '$write' => [],
+                'dateCreated' => time(),
+                'status' => 'pending',
+                'outputPath' => '',
+                'source' => $tag->getAttribute('path'),
+                'sourceType' => Storage::DEVICE_LOCAL,
+                'stdout' => '',
+                'stderr' => '',
+                'buildTime' => 0,
+                'envVars' => [
+                    'APPWRITE_ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint'),
+                ]
+            ]));
+
+            $tag->setAttribute('buildId', $buildId);
+
+            $dbForInternal->updateDocument('tags', $tag->getId(), $tag);
+        });
+
         // Update the function document setting the tag as the active one
         $function = Authorization::skip(function () use ($function, $dbForInternal, $tag, $next) {
             return $function = $dbForInternal->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
@@ -248,12 +274,12 @@ App::post('/v1/tag')
         });
 
         // Build Code
-        go(function () use ($dbForInternal, $projectID, $function, $tagId, $functionId) {
+        go(function () use ($dbForInternal, $projectID, $function, $tagId, $buildId, $functionId) {
             // Build Code
-            $tag = runBuildStage($tagId, $function, $projectID, $dbForInternal);
+            runBuildStage($buildId, $function, $projectID, $dbForInternal);
 
             // Deploy Runtime Server
-            createRuntimeServer($functionId, $projectID, $tag, $dbForInternal);
+            createRuntimeServer($functionId, $projectID, $tagId, $dbForInternal);
         });
 
         if (false === $function) {
@@ -276,7 +302,7 @@ App::get('/v1/healthz')
         }
     );
 
-function runBuildStage(string $tagID, Document $function, string $projectID, Database $database): Document
+function runBuildStage(string $buildId, Document $function, string $projectID, Database $database): Document
 {
     global $runtimes;
     global $orchestration;
@@ -284,22 +310,22 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
     $buildStdout = '';
     $buildStderr = '';
 
-    // Check if tag is already built
-    $tag = Authorization::skip(function () use ($tagID, $database) {
-        return $database->getDocument('tags', $tagID);
+    // Check if build has already been run
+    $build = Authorization::skip(function () use ($buildId, $database) {
+        return $database->getDocument('builds', $buildId);
     });
 
     try {
         // If we already have a built package ready there is no need to rebuild.
-        if ($tag->getAttribute('status') === 'ready' && \file_exists($tag->getAttribute('buildPath'))) {
-            return $tag;
+        if ($build->getAttribute('status') === 'ready' && \file_exists($build->getAttribute('outputPath'))) {
+            return $build;
         }
 
         // Update Tag Status
-        $tag->setAttribute('status', 'building');
+        $build->setAttribute('status', 'building');
 
-        Authorization::skip(function () use ($tag, $database) {
-            $database->updateDocument('tags', $tag->getId(), $tag);
+        Authorization::skip(function () use ($build, $database) {
+            $database->updateDocument('builds', $build->getId(), $build);
         });
 
         // Check if runtime is active
@@ -307,26 +333,22 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
             ? $runtimes[$function->getAttribute('runtime', '')]
             : null;
 
-        if ($tag->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception('Tag not found', 404);
-        }
-
         if (\is_null($runtime)) {
             throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
         // Grab Tag Files
-        $tagPath = $tag->getAttribute('path', '');
-        $tagPathTarget = '/tmp/project-' . $projectID . '/' . $tag->getId() . '/code.tar.gz';
+        $tagPath = $build->getAttribute('source', '');
+        $sourceType = $build->getAttribute('sourceType', '');
+
+        $device = Storage::getDevice('functions');
+
+        $tagPathTarget = '/tmp/project-' . $projectID . '/' . $build->getId() . '/code.tar.gz';
         $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
 
-        $container = 'build-stage-' . $tag->getId();
+        $container = 'build-stage-' . $build->getId();
 
         // Perform various checks
-        if (!\is_readable($tagPath)) {
-            throw new Exception('Code is not readable: ' . $tag->getAttribute('path', ''));
-        }
-
         if (!\file_exists($tagPathTargetDir)) {
             if (!\mkdir($tagPathTargetDir, 0755, true)) {
                 throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
@@ -334,21 +356,30 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
         }
 
         if (!\file_exists($tagPathTarget)) {
-            if (!\copy($tagPath, $tagPathTarget)) {
-                throw new Exception('Can\'t create temporary code file ' . $tagPathTarget);
+            if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
+                if (!\copy($tagPath, $tagPathTarget)) {
+                    throw new Exception('Can\'t create temporary code file ' . $tagPathTarget);
+                }
+            } else {
+                $buffer = $device->read($tagPath);
+                \file_put_contents($tagPathTarget, $buffer);
             }
+        }
+
+        if (!$device->exists($tagPath)) {
+            throw new Exception('Code is not readable: ' . $build->getAttribute('source', ''));
         }
 
         // Set build container's environment variables
         $vars = \array_merge($function->getAttribute('vars', []), [
             'APPWRITE_FUNCTION_ID' => $function->getId(),
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-            'APPWRITE_FUNCTION_TAG' => $tag->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
             'APPWRITE_FUNCTION_PROJECT_ID' => $projectID,
-            'APPWRITE_ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint')
         ]);
+
+        $vars = \array_merge($vars, $build->getAttribute('envVars', []));
 
         // Start tracking time
         $buildStart = \microtime(true);
@@ -362,9 +393,9 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
             $value = strval($value);
         }
 
-        if (!\file_exists('/tmp/project-' . $projectID . '/' . $tag->getId() . '/builtCode')) {
-            if (!\mkdir('/tmp/project-' . $projectID . '/' . $tag->getId() . '/builtCode', 0755, true)) {
-                throw new Exception('Can\'t create directory /tmp/project-' . $projectID . '/' . $tag->getId() . '/builtCode');
+        if (!\file_exists('/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode')) {
+            if (!\mkdir('/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode', 0755, true)) {
+                throw new Exception('Can\'t create directory /tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode');
             }
         };
 
@@ -379,7 +410,7 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
                 'appwrite-created' => strval($buildTime),
                 'appwrite-runtime' => $function->getAttribute('runtime', ''),
                 'appwrite-project' => $projectID,
-                'appwrite-tag' => $tagID
+                'appwrite-build' => $build->getId(),
             ],
             command: [
                 'tail',
@@ -389,7 +420,7 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
             hostname: $container,
             mountFolder: $tagPathTargetDir,
             volumes: [
-                '/tmp/project-' . $projectID . '/' . $tag->getId() . '/builtCode' . ':/usr/builtCode:rw'
+                '/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode' . ':/usr/builtCode:rw'
             ]
         );
 
@@ -417,26 +448,6 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
             throw new Exception('Failed to extract tar: ' . $untarStderr);
         }
 
-        $entrypointStdout = '';
-        $entrypointStderr = '';
-
-        // Check if entrypoint file exists
-        // $entrypointTest = $orchestration->execute(
-        //     name: $container,
-        //     command: [
-        //         'tail',
-        //         '-f',
-        //         '/usr/code/'.$tag->getAttribute('entrypoint')
-        //     ],
-        //     stdout: $entrypointStdout,
-        //     stderr: $entrypointStderr,
-        //     timeout: 60
-        // );
-
-        // if ($entrypointStdout === '') {
-        //     throw new Exception('Entrypoint file not found: ' . $tag->getAttribute('entrypoint'));
-        // }
-
         // Build Code / Install Dependencies
         $buildSuccess = $orchestration->execute(
             name: $container,
@@ -454,7 +465,7 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
         $compressStdout = '';
         $compressStderr = '';
 
-        $builtCodePath = '/tmp/project-' . $projectID . '/' . $tag->getId() . '/builtCode/code.tar.gz';
+        $builtCodePath = '/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode/code.tar.gz';
 
         $compressSuccess = $orchestration->execute(
             name: $container,
@@ -489,36 +500,43 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
             }
         }
 
-        if (!\rename($builtCodePath, $path)) {
-            throw new Exception('Failed moving file', 500);
+        if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
+            if (!$device->move($builtCodePath, $path)) {
+                throw new Exception('Failed to upload built code upload to storage', 500);
+            }
+        } else {
+            if (!$device->upload($builtCodePath, $path)) {
+                throw new Exception('Failed to upload built code upload to storage', 500);
+            }
         }
 
         if ($buildStdout == '') {
             $buildStdout = 'Build Successful!';
         }
 
-        $tag->setAttribute('buildPath', $path)
+        $build->setAttribute('outputPath', $path)
             ->setAttribute('status', 'ready')
-            ->setAttribute('buildStdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
-            ->setAttribute('buildStderr', \utf8_encode(\mb_substr($buildStderr, -4096)));
+            ->setAttribute('stdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
+            ->setAttribute('stderr', \utf8_encode(\mb_substr($buildStderr, -4096)))
+            ->setAttribute('buildTime', $buildTime);
 
-        // Update tag with built code attribute
-        $tag = Authorization::skip(function () use ($tag, $tagID, $database) {
-            return $database->updateDocument('tags', $tagID, $tag);
+        // Update build with built code attribute
+        $build = Authorization::skip(function () use ($build, $buildId, $database) {
+            return $database->updateDocument('builds', $buildId, $build);
         });
 
         $buildEnd = \microtime(true);
 
-        Console::info('Tag Built in ' . ($buildEnd - $buildStart) . ' seconds');
+        Console::info('Build Stage Ran in ' . ($buildEnd - $buildStart) . ' seconds');
     } catch (Exception $e) {
-        Console::error('Tag build failed: ' . $e->getMessage());
+        Console::error('Build failed: ' . $e->getMessage());
 
-        $tag->setAttribute('status', 'failed')
-            ->setAttribute('buildStdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
-            ->setAttribute('buildStderr', \utf8_encode(\mb_substr($e->getMessage(), -4096)));
+        $build->setAttribute('status', 'failed')
+            ->setAttribute('stdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
+            ->setAttribute('stderr', \utf8_encode(\mb_substr($e->getMessage(), -4096)));
 
-        Authorization::skip(function () use ($tag, $tagID, $database) {
-            return $database->updateDocument('tags', $tagID, $tag);
+        $build = Authorization::skip(function () use ($build, $buildId, $database) {
+            return $database->updateDocument('builds', $buildId, $build);
         });
 
         // also remove the container if it exists
@@ -527,18 +545,27 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
         }
     }
 
-    return $tag;
+    return $build;
 }
 
-function createRuntimeServer(string $functionId, string $projectId, Document $tag, Database $database): void
+function createRuntimeServer(string $functionId, string $projectId, string $tagId, Database $database): void
 {
     global $orchestration;
     global $runtimes;
     global $activeFunctions;
 
-    // Grab Tag Document
+    // Grab Function Document
     $function = Authorization::skip(function () use ($database, $functionId) {
         return $database->getDocument('functions', $functionId);
+    });
+
+    $tag = Authorization::skip(function () use ($database, $tagId) {
+        return $database->getDocument('tags', $tagId);
+    });
+
+    // Grab Build Document
+    $build = Authorization::skip(function () use ($database, $tag) {
+        return $database->getDocument('builds', $tag->getAttribute('buildId'));
     });
 
     // Check if function isn't already created
@@ -572,8 +599,10 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
         'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
         'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
         'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
-        'APPWRITE_INTERNAL_RUNTIME_KEY' => $secret,
+        'APPWRITE_INTERNAL_RUNTIME_KEY' => $secret
     ]);
+
+    $vars = \array_merge($vars, $build->getAttribute('envVars', [])); // for gettng endpoint.
 
     $container = 'appwrite-function-' . $tag->getId();
 
@@ -589,25 +618,23 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
     }
 
     // Check if tag hasn't failed
-    if ($tag->getAttribute('status') == 'failed') {
+    if ($build->getAttribute('status') == 'failed') {
         throw new Exception('Tag build failed, please check your logs.', 500);
     }
 
     // Check if tag is built yet.
-    if ($tag->getAttribute('status') !== 'ready') {
+    if ($build->getAttribute('status') !== 'ready') {
         throw new Exception('Tag is not built yet', 500);
     }
 
     // Grab Tag Files
-    $tagPath = $tag->getAttribute('buildPath', '');
+    $tagPath = $build->getAttribute('outputPath', '');
 
-    $tagPathTarget = '/tmp/project-' . $projectId . '/' . $tag->getId() . '/builtCode/code.tar.gz';
+    $tagPathTarget = '/tmp/project-' . $projectId . '/' . $build->getId() . '/builtCode/code.tar.gz';
     $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
     $container = 'appwrite-function-' . $tag->getId();
 
-    if (!\is_readable($tagPath)) {
-        throw new Exception('Code is not readable: ' . $tagPath);
-    }
+    $device = Storage::getDevice('functions');
 
     if (!\file_exists($tagPathTargetDir)) {
         if (!\mkdir($tagPathTargetDir, 0755, true)) {
@@ -616,10 +643,19 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
     }
 
     if (!\file_exists($tagPathTarget)) {
-        if (!\copy($tagPath, $tagPathTarget)) {
-            throw new Exception('Can\'t create temporary code file ' . $tagPathTarget);
+        if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
+            if (!\copy($tagPath, $tagPathTarget)) {
+                throw new Exception('Can\'t create temporary code file ' . $tagPathTarget);
+            }
+        } else {
+            $buffer = $device->read($tagPath);
+            \file_put_contents($tagPathTarget, $buffer);
         }
-    }
+    };
+
+    // if ($device->exists($tagPathTarget)) {
+    //     throw new Exception('Code is not readable: ' . $tagPathTarget);
+    // };
 
     /**
      * Limit CPU Usage - DONE
@@ -697,6 +733,11 @@ function execute(string $trigger, string $projectId, string $executionId, string
         return $database->getDocument('tags', $function->getAttribute('tag', ''));
     });
 
+    // Grab Build Document
+    $build = Authorization::skip(function () use ($database, $tag) {
+        return $database->getDocument('builds', $tag->getAttribute('buildId', ''));
+    });
+
     if ($tag->getAttribute('functionId') !== $function->getId()) {
         throw new Exception('Tag not found', 404);
     }
@@ -726,7 +767,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
     }
 
 
-    if ($tag->getAttribute('status') == 'building') {
+    if ($build->getAttribute('status') == 'building') {
         Console::error('Execution Failed. Reason: Code was still being built.');
 
         $execution->setAttribute('status', 'failed')
@@ -765,11 +806,38 @@ function execute(string $trigger, string $projectId, string $executionId, string
         'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
     ]);
 
+    $vars = \array_merge($vars, $build->getAttribute('envVars', []));
+
     $container = 'appwrite-function-' . $tag->getId();
 
     try {
-        if ($tag->getAttribute('status') !== 'ready') {
-            runBuildStage($tag->getId(), $function, $projectId, $database);
+        if ($build->getAttribute('status') !== 'ready') {
+        // Create a new build entry
+            $buildId = $database->getId();
+            Authorization::skip(function () use ($buildId, $database, $tag, $userId) {
+                $database->createDocument('builds', new Document([
+                    '$id' => $buildId,
+                    '$read' => (!$userId == '') ? ['user:' . $userId] : [],
+                    '$write' => [],
+                    'dateCreated' => time(),
+                    'status' => 'pending',
+                    'outputPath' => '',
+                    'source' => $tag->getAttribute('path'),
+                    'sourceType' => Storage::DEVICE_LOCAL,
+                    'stdout' => '',
+                    'stderr' => '',
+                    'buildTime' => 0,
+                    'envVars' => [
+                        'APPWRITE_ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint')
+                    ]
+                ]));
+
+                $tag->setAttribute('buildId', $buildId);
+
+                $database->updateDocument('tags', $tag->getId(), $tag);
+            });
+
+            runBuildStage($buildId, $function, $projectId, $database);
             sleep(1);
         }
     } catch (Exception $e) {
@@ -786,7 +854,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     try {
         if (!$activeFunctions->exists($container)) { // Create contianer if not ready
-            createRuntimeServer($functionId, $projectId, $tag, $database);
+            createRuntimeServer($functionId, $projectId, $tag->getId(), $database);
         } else if ($activeFunctions->get($container)['status'] === 'Down') {
             sleep(1);
         } else {
@@ -829,6 +897,8 @@ function execute(string $trigger, string $projectId, string $executionId, string
         'APPWRITE_FUNCTION_PROJECT_ID' => $projectId
     ]);
 
+    $vars = \array_merge($vars, $build->getAttribute('envVars', []));
+
     $stdout = '';
     $stderr = '';
 
@@ -850,7 +920,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
         $body = \json_encode([
             'path' => '/usr/code',
-            'file' => $tag->getAttribute('entrypoint', ''),
+            'file' => $build->getAttribute('envVars', [])['APPWRITE_ENTRYPOINT_NAME'],
             'env' => $vars,
             'payload' => $data,
             'timeout' => $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900))

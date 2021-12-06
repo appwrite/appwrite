@@ -312,10 +312,12 @@ App::patch('/v1/functions/:functionId/tag')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('project')
-    ->action(function ($functionId, $tag, $response, $dbForInternal, $project) {
+    ->inject('user')
+    ->action(function ($functionId, $tag, $response, $dbForInternal, $project, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Document $project */
+        /** @var Utopia\Database\Document $user */
 
         $function = $dbForInternal->getDocument('functions', $functionId);
 
@@ -324,7 +326,8 @@ App::patch('/v1/functions/:functionId/tag')
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             'functionId' => $functionId,
-            'tagId' => $tag
+            'tagId' => $tag,
+            'userId' => $user->getId()
         ]));
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
@@ -566,6 +569,15 @@ App::get('/v1/functions/:functionId/tags')
 
         $results = $dbForInternal->find('tags', $queries, $limit, $offset, [], [$orderType], $cursorTag ?? null, $cursorDirection);
         $sum = $dbForInternal->count('tags', $queries, APP_LIMIT_COUNT);
+
+        // Get Current Build Data
+        foreach ($results as &$tag) {
+            $build = $dbForInternal->getDocument('builds', $tag->getAttribute('buildId', ''));
+
+            $tag['status'] = $build->getAttribute('status', 'pending');
+            $tag['buildStdout'] = $build->getAttribute('stdout', '');
+            $tag['buildStderr'] = $build->getAttribute('stderr', '');
+        }
 
         $response->dynamic(new Document([
             'tags' => $results,
@@ -946,4 +958,79 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         }
 
         $response->dynamic($execution, Response::MODEL_EXECUTION);
+    });
+
+App::get('/v1/builds')
+    ->groups(['api', 'functions'])
+    ->desc('Get Builds')
+    ->label('scope', 'execution.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'listBuilds')
+    ->label('sdk.description', '/docs/references/functions/list-builds.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BUILD_LIST)
+    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('cursor', '', new UID(), 'ID of the build used as the starting point for the query, excluding the build itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->action(function ($limit, $offset, $search, $cursor, $cursorDirection, $response, $dbForInternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+
+        if (!empty($cursor)) {
+            $cursorExecution = $dbForInternal->getDocument('builds', $cursor);
+
+            if ($cursorExecution->isEmpty()) {
+                throw new Exception("Execution '{$cursor}' for the 'cursor' value not found.", 400);
+            }
+        }
+
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
+
+        $results = $dbForInternal->find('builds', $queries, $limit, $offset, [], [Database::ORDER_DESC], $cursorExecution ?? null, $cursorDirection);
+
+        $sum = $dbForInternal->count('builds', $queries, APP_LIMIT_COUNT);
+
+        $response->dynamic(new Document([
+            'builds' => $results,
+            'sum' => $sum,
+        ]), Response::MODEL_BUILD_LIST);
+    });
+
+App::get('/v1/builds/:buildId')
+    ->groups(['api', 'functions'])
+    ->desc('Get Build')
+    ->label('scope', 'execution.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'getBuild')
+    ->label('sdk.description', '/docs/references/functions/get-build.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BUILD)
+    ->param('buildId', '', new UID(), 'Build unique ID.')
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->action(function ($buildId, $response, $dbForInternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+        
+        Authorization::disable();
+        $build = $dbForInternal->getDocument('builds', $buildId);
+        Authorization::reset();
+
+        if ($build->isEmpty()) {
+            throw new Exception('Build not found', 404);
+        }
+
+        $response->dynamic($build, Response::MODEL_BUILD);
     });

@@ -31,6 +31,7 @@ use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\SyncExecution;
+use Appwrite\Utopia\Response\Model\Build;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\Index;
@@ -146,6 +147,8 @@ class Response extends SwooleResponse
     const MODEL_EXECUTION = 'execution';
     const MODEL_SYNC_EXECUTION = 'syncExecution';
     const MODEL_EXECUTION_LIST = 'executionList';
+    const MODEL_BUILD = 'build';
+    const MODEL_BUILD_LIST = 'buildList';
     
     // Project
     const MODEL_PROJECT = 'project';
@@ -203,6 +206,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
             ->setModel(new BaseList('Tags List', self::MODEL_TAG_LIST, 'tags', self::MODEL_TAG))
             ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
+            ->setModel(new BaseList('Builds List', self::MODEL_BUILD_LIST, 'builds', self::MODEL_BUILD))
             ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
             ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
@@ -242,6 +246,7 @@ class Response extends SwooleResponse
             ->setModel(new Tag())
             ->setModel(new Execution())
             ->setModel(new SyncExecution())
+            ->setModel(new Build())
             ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())

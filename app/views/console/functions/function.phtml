@@ -129,6 +129,9 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                                 <span data-ls-if="{{tag.status}} == 'processing' || {{tag.status}} == 'building' || {{tag.status}} == 'pending'" style="color: var(--config-color-info)" class="pull-start" data-ls-bind="{{tag.status}}"></span>
                                                 <span class="pull-start" data-ls-bind="&nbsp; | &nbsp; Created {{tag.dateCreated|timeSince}} &nbsp; | &nbsp; {{tag.size|humanFileSize}}{{tag.size|humanFileUnit}}"></span>
 
+                                                <span data-ls-if="{{tag.status}} == 'failed'">&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-stderr-{{tag.$id}}">Logs</button></span>
+                                                <span data-ls-if="{{tag.status}} == 'ready'">&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-stdout-{{tag.$id}}">Logs</button></span>
+
                                                 <form data-ls-if="{{tag.$id}} !== {{project-function.tag}}" name="functions.deleteTag" class="pull-start"
                                                     data-analytics
                                                     data-analytics-activity
@@ -149,9 +152,6 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 
                                                     &nbsp; | &nbsp;<button type="submit" class="link text-danger text-size-small">Delete</button>
                                                 </form>
-
-                                                <span data-ls-if="{{tag.status}} == 'failed'">&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-stderr-{{tag.$id}}">Open Error</button></span>
-                                                <span data-ls-if="{{tag.status}} == 'ready'">&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-stdout-{{tag.$id}}">Open Build Logs</button></span>
                                             </div>
                                         </li>
                                     </ul>
