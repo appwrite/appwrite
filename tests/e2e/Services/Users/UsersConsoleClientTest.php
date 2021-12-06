@@ -37,7 +37,7 @@ class UsersConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
-        
+
         /**
          * Test for SUCCESS
          */
@@ -52,15 +52,15 @@ class UsersConsoleClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertEquals(count($response['body']), 9);
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['users.count']);
-        $this->assertIsArray($response['body']['users.create']);
-        $this->assertIsArray($response['body']['users.read']);
-        $this->assertIsArray($response['body']['users.update']);
-        $this->assertIsArray($response['body']['users.delete']);
-        $this->assertIsArray($response['body']['sessions.create']);
-        $this->assertIsArray($response['body']['sessions.provider.create']);
-        $this->assertIsArray($response['body']['sessions.delete']);
-    
+        $this->assertIsArray($response['body']['usersCount']);
+        $this->assertIsArray($response['body']['usersCreate']);
+        $this->assertIsArray($response['body']['usersRead']);
+        $this->assertIsArray($response['body']['usersUpdate']);
+        $this->assertIsArray($response['body']['usersDelete']);
+        $this->assertIsArray($response['body']['sessionsCreate']);
+        $this->assertIsArray($response['body']['sessionsProviderCreate']);
+        $this->assertIsArray($response['body']['sessionsDelete']);
+
         $response = $this->client->call(Client::METHOD_GET, '/users/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
@@ -71,13 +71,13 @@ class UsersConsoleClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertEquals(count($response['body']), 9);
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['users.count']);
-        $this->assertIsArray($response['body']['users.create']);
-        $this->assertIsArray($response['body']['users.read']);
-        $this->assertIsArray($response['body']['users.update']);
-        $this->assertIsArray($response['body']['users.delete']);
-        $this->assertIsArray($response['body']['sessions.create']);
-        $this->assertIsArray($response['body']['sessions.provider.create']);
-        $this->assertIsArray($response['body']['sessions.delete']);
+        $this->assertIsArray($response['body']['usersCount']);
+        $this->assertIsArray($response['body']['usersCreate']);
+        $this->assertIsArray($response['body']['usersRead']);
+        $this->assertIsArray($response['body']['usersUpdate']);
+        $this->assertIsArray($response['body']['usersDelete']);
+        $this->assertIsArray($response['body']['sessionsCreate']);
+        $this->assertIsArray($response['body']['sessionsProviderCreate']);
+        $this->assertIsArray($response['body']['sessionsDelete']);
     }
 }

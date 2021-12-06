@@ -94,7 +94,7 @@ App::get('/v1/users')
     ->label('sdk.response.model', Response::MODEL_USER_LIST)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('cursor', '', new UID(), 'ID of the user used as the starting point for the query, excluding the user itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
@@ -259,12 +259,14 @@ App::get('/v1/users/:userId/logs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('locale')
     ->inject('geodb')
     ->inject('usage')
-    ->action(function ($userId, $response, $dbForInternal, $locale, $geodb, $usage) {
+    ->action(function ($userId, $limit, $offset, $response, $dbForInternal, $locale, $geodb, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -279,8 +281,7 @@ App::get('/v1/users/:userId/logs')
         }
 
         $audit = new Audit($dbForInternal);
-
-        $logs = $audit->getLogsByUserAndEvents($user->getId(), [
+        $auditEvents = [
             'account.create',
             'account.delete',
             'account.update.name',
@@ -296,7 +297,9 @@ App::get('/v1/users/:userId/logs')
             'teams.membership.create',
             'teams.membership.update',
             'teams.membership.delete',
-        ]);
+        ];
+
+        $logs = $audit->getLogsByUserAndEvents($user->getId(), $auditEvents, $limit, $offset);
 
         $output = [];
 
@@ -355,7 +358,11 @@ App::get('/v1/users/:userId/logs')
         $usage
             ->setParam('users.read', 1)
         ;
-        $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
+
+        $response->dynamic(new Document([
+            'sum' => $audit->countLogsByUserAndEvents($user->getId(), $auditEvents),
+            'logs' => $output,
+        ]), Response::MODEL_LOG_LIST);
     });
 
 App::patch('/v1/users/:userId/status')
@@ -780,7 +787,7 @@ App::get('/v1/users/usage')
 
         $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $period = [
+            $periods = [
                 '24h' => [
                     'period' => '30m',
                     'limit' => 48,
@@ -812,12 +819,15 @@ App::get('/v1/users/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+            Authorization::skip(function() use ($dbForInternal, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
+                    $limit = $periods[$range]['limit'];
+                    $period = $periods[$range]['period'];
+
                     $requestDocs = $dbForInternal->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
     
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -826,20 +836,36 @@ App::get('/v1/users/usage')
                             'date' => $requestDoc->getAttribute('time'),
                         ];
                     }
+
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                            '30m' => 1800,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                        ];
+                        $backfill--;
+                    }
                     $stats[$metric] = array_reverse($stats[$metric]);
                 }    
             });
 
             $usage = new Document([
                 'range' => $range,
-                'users.count' => $stats["users.count"],
-                'users.create' => $stats["users.create"],
-                'users.read' => $stats["users.read"],
-                'users.update' => $stats["users.update"],
-                'users.delete' => $stats["users.delete"],
-                'sessions.create' => $stats["users.sessions.create"],
-                'sessions.provider.create' => $stats["users.sessions.$provider.create"],
-                'sessions.delete' => $stats["users.sessions.delete"]
+                'usersCount' => $stats["users.count"],
+                'usersCreate' => $stats["users.create"],
+                'usersRead' => $stats["users.read"],
+                'usersUpdate' => $stats["users.update"],
+                'usersDelete' => $stats["users.delete"],
+                'sessionsCreate' => $stats["users.sessions.create"],
+                'sessionsProviderCreate' => $stats["users.sessions.$provider.create"],
+                'sessionsDelete' => $stats["users.sessions.delete"]
             ]);
 
         }

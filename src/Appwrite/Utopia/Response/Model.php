@@ -92,7 +92,7 @@ abstract class Model
         $list = [];
 
         foreach ($this->rules as $key => $rule) {
-            if (isset($rule['require']) || $rule['require']) {
+            if ($rule['require'] ?? false) {
                 $list[] = $key;
             }
         }

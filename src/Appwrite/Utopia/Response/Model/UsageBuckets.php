@@ -16,35 +16,35 @@ class UsageBuckets extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('files.count', [
+            ->addRule('filesCount', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for total number of files in this bucket.',
                 'default' => [],
                 'example' => new \stdClass,
                 'array' => true 
             ])
-            ->addRule('files.create', [
+            ->addRule('filesCreate', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files created.',
                 'default' => [],
                 'example' => new \stdClass,
                 'array' => true 
             ])
-            ->addRule('files.read', [
+            ->addRule('filesRead', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files read.',
                 'default' => [],
                 'example' => new \stdClass,
                 'array' => true 
             ])
-            ->addRule('files.update', [
+            ->addRule('filesUpdate', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files updated.',
                 'default' => [],
                 'example' => new \stdClass,
                 'array' => true 
             ])
-            ->addRule('files.delete', [
+            ->addRule('filesDelete', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files deleted.',
                 'default' => [],

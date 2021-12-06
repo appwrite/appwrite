@@ -1,10 +1,16 @@
+<?php
+
+$new = $this->getParam('new', false);
+$logs = $this->getParam('logs', null);
+
+?>
 <div
     data-service="database.getCollection"
     data-param-collection-id="{{router.params.collection}}"
     data-scope="sdk"
     data-event="load,database.updateDocument"
     data-name="project-collection">
-    
+
     <div
         data-service="database.getDocument"
         data-param-collection-id="{{router.params.collection}}"
@@ -27,7 +33,7 @@
 
         <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-json">
             <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
-            
+
             <h2>JSON View</h2>
 
             <div class="margin-bottom">
@@ -40,9 +46,9 @@
         <div class="zone xl margin-bottom-no">
             <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
                 <li data-state="/console/database/document?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}">
-                    <h2>Overview</h2>
+                    <h2 class="margin-bottom">Overview</h2>
 
-                    <div class="row responsive margin-top-negative">
+                    <div class="row responsive">
                         <div class="col span-8 margin-bottom">
                             <form
                                 data-analytics
@@ -54,29 +60,236 @@
                                 data-name="project-document"
                                 data-scope="sdk"
                                 data-event="submit"
-                                data-success="alert,trigger"
-                                data-success-param-alert-text="Updated document successfully"
+                                data-success="trigger,redirect"
                                 data-success-param-trigger-events="database.updateDocument"
+                                data-success-param-redirect-url="/console/database/document?id={{serviceData.$id}}&collection={{project-collection.$id}}&project={{router.params.project}}"
                                 data-failure="alert"
                                 data-failure-param-alert-text="Failed to update document"
                                 data-failure-param-alert-classname="error">
-                                
-                                <input type="hidden" name="collectionId" data-ls-bind="{{project-collection.$id}}" />
-                                <input type="hidden" name="documentId" data-ls-bind="{{project-document.$id}}" />
 
-                                <label>&nbsp;</label>
+                                <input type="hidden" name="collectionId" data-ls-bind="{{project-collection.$id}}" />
+                                <?php if(!$new): ?><input type="hidden" name="documentId" data-ls-bind="{{project-document.$id}}" /><?php endif; ?>
 
                                 <div class="box">
-                                    <fieldset name="data" data-cast-to="object">                            
-                                        <ul data-ls-loop="project-collection.attributes" data-ls-as="attribute">
-                                            <li>
-                                                <label>
-                                                    <div data-ls-bind="{{attribute.key}}" class="margin-bottom-tiny"></div>
-                                                    <div data-ls-if="{{attribute.required}}" class="text-size-xs text-danger text-fade">required</div>
-                                                    <div data-ls-if="!{{attribute.required}}" class="text-size-xs text-fade">optional</div>
-                                                </label>
-                                                <textarea data-ls-attrs="name={{attribute.key}}" data-ls-bind="{{project-document|documentAttribute}}"></textarea>
-                                            </li>
+                                    <?php if($new): ?>
+                                        <label for="documentId">Document ID</label>
+                                        <input
+                                            type="hidden"
+                                            data-custom-id
+                                            data-id-type="auto"
+                                            data-validator="database.getDocument"
+                                            required
+                                            maxlength="36"
+                                            name="documentId"
+                                            id="documentId"
+                                            maxlength="36"
+                                            pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+                                    <?php endif; ?>
+
+                                    <fieldset name="data" data-cast-to="object" data-ls-attrs="x-init=doc = {{project-document}}" x-data="{doc: {}}">
+                                        <ul data-ls-attrs="x-init=attributes = {{project-collection.attributes}}" x-data="{attributes: []}">
+                                            <template x-for="attr in attributes">
+                                                <li>
+                                                    <label>
+                                                        <div x-text="attr.key" class="margin-bottom-tiny"></div>
+                                                        <span x-show="attr.required" class="text-size-xs text-danger text-fade">required</span>
+                                                        <span x-show="!attr.required" class="text-size-xs text-fade">optional</span>
+                                                    </label>
+                                                    <template x-if="!attr.array">
+                                                        <div>
+                                                            <template x-if="attr.type === 'integer'">
+                                                                <input
+                                                                    type="number"
+                                                                    step="1"
+                                                                    :placeholder="attr.default"
+                                                                    :name="attr.key"
+                                                                    :required="attr.required"
+                                                                    x-model="doc[attr.key]"
+                                                                    data-cast-to="integer" />
+                                                            </template>
+                                                            <template x-if="attr.type === 'double'">
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    :placeholder="attr.default"
+                                                                    :name="attr.key"
+                                                                    :required="attr.required"
+                                                                    x-model="doc[attr.key]"
+                                                                    data-cast-to="integer" />
+                                                            </template>
+                                                            <template x-if="attr.type === 'boolean'">
+                                                                <input
+                                                                    class="button switch margin-bottom"
+                                                                    type="checkbox"
+                                                                    :name="attr.key"
+                                                                    :checked="doc[attr.key]" />
+                                                            </template>
+                                                            <template x-if="attr.type === 'string' && !attr.format">
+                                                                <textarea 
+                                                                    data-forms-text-resize
+                                                                    data-forms-text-direction
+                                                                    :placeholder="attr.default"
+                                                                    :name="attr.key"
+                                                                    :required="attr.required"
+                                                                    x-model="doc[attr.key]"
+                                                                    data-cast-to="string"></textarea>
+                                                            </template>
+                                                            <template x-if="attr.format === 'ip'">
+                                                                <textarea 
+                                                                    data-forms-text-resize
+                                                                    data-forms-text-direction
+                                                                    pattern="((^\s*((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\s*$)|(^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$))"
+                                                                    :placeholder="attr.default"
+                                                                    :name="attr.key"
+                                                                    :required="attr.required"
+                                                                    x-model="doc[attr.key]"
+                                                                    data-cast-to="string"></textarea>
+                                                            </template>
+                                                            <template x-if="attr.format === 'email'">
+                                                                <textarea 
+                                                                    data-forms-text-resize
+                                                                    data-forms-text-direction
+                                                                    type="email"
+                                                                    :placeholder="attr.default"
+                                                                    :name="attr.key"
+                                                                    :required="attr.required"
+                                                                    x-model="doc[attr.key]"
+                                                                    data-cast-to="string"></textarea>
+                                                            </template>
+                                                            <template x-if="attr.format === 'url'">
+                                                                <textarea 
+                                                                    data-forms-text-resize
+                                                                    data-forms-text-direction
+                                                                    type="url"
+                                                                    :placeholder="attr.default"
+                                                                    :name="attr.key"
+                                                                    :required="attr.required"
+                                                                    x-model="doc[attr.key]"
+                                                                    data-cast-to="string"></textarea>
+                                                            </template>
+                                                            <template x-if="attr.format === 'enum'">
+                                                                <select
+                                                                    :name="attr.key"
+                                                                    data-cast-to="string">
+                                                                    <template x-for="element in attr.elements">
+                                                                        <option
+                                                                            :value="element"
+                                                                            x-text="element"
+                                                                            :selected="doc[attr.key] === element"></option>
+                                                                    </template>
+                                                                </select>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                    <template x-if="attr.array">
+                                                        <div>
+                                                            <input type="hidden" :required="attr.required" :name="attr.key" data-cast-to="array-empty">
+                                                            <template x-for="(node, index) in doc[attr.key]">
+                                                                <div class="row responsive thin margin-bottom-tiny">
+                                                                    <div class="col span-11 margin-bottom-small">
+                                                                        <template x-if="attr.type === 'integer'">
+                                                                            <input
+                                                                                type="number"
+                                                                                step="1"
+                                                                                :placeholder="attr.default"
+                                                                                :name="attr.key"
+                                                                                :required="attr.required"
+                                                                                x-model="doc[attr.key][index]"
+                                                                                data-cast-to="integer" />
+                                                                        </template>
+                                                                        <template x-if="attr.type === 'double'">
+                                                                            <input
+                                                                                type="number"
+                                                                                step="0.01"
+                                                                                :placeholder="attr.default"
+                                                                                :name="attr.key"
+                                                                                :required="attr.required"
+                                                                                x-model="doc[attr.key][index]"
+                                                                                data-cast-to="integer" />
+                                                                        </template>
+                                                                        <template x-if="attr.type === 'boolean'">
+                                                                            <input
+                                                                                class="button switch"
+                                                                                :class="(doc[attr.key].length - 1) === index ? 'margin-bottom' : ''"
+                                                                                type="checkbox"
+                                                                                :name="attr.key"
+                                                                                :checked="doc[attr.key][index]" />
+                                                                        </template>
+                                                                        <template x-if="attr.type === 'string' && !attr.format">
+                                                                            <textarea 
+                                                                                data-forms-text-resize
+                                                                                data-forms-text-direction
+                                                                                :placeholder="attr.default"
+                                                                                :name="attr.key"
+                                                                                :required="attr.required"
+                                                                                x-model="doc[attr.key][index]"
+                                                                                data-cast-to="string"></textarea>
+                                                                        </template>
+                                                                        <template x-if="attr.format === 'ip'">
+                                                                            <textarea 
+                                                                                data-forms-text-resize
+                                                                                data-forms-text-direction
+                                                                                pattern="((^\s*((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\s*$)|(^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$))"
+                                                                                :placeholder="attr.default"
+                                                                                :name="attr.key"
+                                                                                :required="attr.required"
+                                                                                x-model="doc[attr.key][index]"
+                                                                                data-cast-to="string"></textarea>
+                                                                        </template>
+                                                                        <template x-if="attr.format === 'email'">
+                                                                            <textarea 
+                                                                                data-forms-text-resize
+                                                                                data-forms-text-direction
+                                                                                type="email"
+                                                                                :placeholder="attr.default"
+                                                                                :name="attr.key"
+                                                                                :required="attr.required"
+                                                                                x-model="doc[attr.key][index]"
+                                                                                data-cast-to="string"></textarea>
+                                                                        </template>
+                                                                        <template x-if="attr.format === 'url'">
+                                                                            <textarea 
+                                                                                data-forms-text-resize
+                                                                                data-forms-text-direction
+                                                                                type="url"
+                                                                                :placeholder="attr.default"
+                                                                                :name="attr.key"
+                                                                                :required="attr.required"
+                                                                                x-model="doc[attr.key][index]"
+                                                                                data-cast-to="string"></textarea>
+                                                                        </template>
+                                                                        <template x-if="attr.format === 'enum'">
+                                                                            <select
+                                                                                :name="attr.key"
+                                                                                data-cast-to="string">
+                                                                                <template x-for="element in attr.elements">
+                                                                                    <option
+                                                                                        :value="element"
+                                                                                        x-text="element"
+                                                                                        :selected="doc[attr.key][index] === element"></option>
+                                                                                </template>
+                                                                            </select>
+                                                                        </template>
+                                                                    </div>
+                                                                    <div class="col span-1 margin-bottom-small">
+                                                                        <button type="button" class="dark danger small round pull-end" style="margin-top: 10px;" @click="doc[attr.key].splice(index, 1)"><i class="icon-cancel"></i></button>
+                                                                    </div>
+                                                                </div>
+                                                            </template>
+                                                            <button type="button" class="margin-end margin-bottom-small reverse" @click="doc = addAttribute(doc, attr.key)"> Add Attribute </button>
+                                                        </div>
+                                                    </template>
+                                                    <script type="text/javascript">
+                                                        function addAttribute(doc, key) {
+                                                            if (!Array.isArray(doc[key])) {
+                                                                doc[key] = [];
+                                                            }
+                                                            doc[key].push(null);
+                                                            return doc;
+                                                        }
+                                                    </script>
+                                                </li>
+                                            </template>
                                         </ul>
                                     </fieldset>
 
@@ -145,9 +358,13 @@
                         </div>
                     </div>
                 </li>
-                <!-- <li data-ls-if="{{project-document.$id}}" data-state="/console/database/document/activity?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}">
-                    <h2>Activity</h2>
-                </li> -->
+                <?php if(!$new): ?>
+                    <li data-state="/console/database/document/activity?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}">
+                        <h2>Activity <span class="badge" data-ls-bind="{{logs.sum}}"></span></h2>
+
+                        <?php echo $logs->render(); ?>
+                    </li>
+                <?php endif; ?>
             </ul>
         </div>
     </div>

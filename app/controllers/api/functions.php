@@ -90,7 +90,7 @@ App::get('/v1/functions')
     ->label('sdk.response.model', Response::MODEL_FUNCTION_LIST)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('cursor', '', new UID(), 'ID of the function used as the starting point for the query, excluding the function itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
@@ -177,7 +177,7 @@ App::get('/v1/functions/:functionId/usage')
         
         $usage = [];
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $period = [
+            $periods = [
                 '24h' => [
                     'period' => '30m',
                     'limit' => 48,
@@ -204,12 +204,15 @@ App::get('/v1/functions/:functionId/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+            Authorization::skip(function() use ($dbForInternal, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
+                    $limit = $periods[$range]['limit'];
+                    $period = $periods[$range]['period'];
+
                     $requestDocs = $dbForInternal->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
     
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -218,15 +221,30 @@ App::get('/v1/functions/:functionId/usage')
                             'date' => $requestDoc->getAttribute('time'),
                         ];
                     }
+
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                            '30m' => 1800,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                        ];
+                        $backfill--;
+                    }
                     $stats[$metric] = array_reverse($stats[$metric]);
                 }    
             });
 
             $usage = new Document([
                 'range' => $range,
-                'functions.executions' => $stats["functions.$functionId.executions"],
-                'functions.failures' => $stats["functions.$functionId.failures"],
-                'functions.compute' => $stats["functions.$functionId.compute"]
+                'functionsExecutions' => $stats["functions.$functionId.executions"],
+                'functionsFailures' => $stats["functions.$functionId.failures"],
+                'functionsCompute' => $stats["functions.$functionId.compute"]
             ]);
         }
 
@@ -535,7 +553,7 @@ App::get('/v1/functions/:functionId/tags')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('cursor', '', new UID(), 'ID of the tag used as the starting point for the query, excluding the tag itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
@@ -877,7 +895,7 @@ App::get('/v1/functions/:functionId/executions')
     ->label('sdk.response.model', Response::MODEL_EXECUTION_LIST)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('cursor', '', new UID(), 'ID of the execution used as the starting point for the query, excluding the execution itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
