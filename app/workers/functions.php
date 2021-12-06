@@ -385,7 +385,7 @@ class FunctionsV1 extends Worker
             }
         }
 
-        if (isset($list[$container]) && !(\substr($list[$container]->getStatus(), 0, 2) === 'Up')) { // Remove conatiner if not online
+        if (isset($list[$container]) && !(\substr($list[$container]->getStatus(), 0, 2) === 'Up')) { // Remove container if not online
             $stdout = '';
             $stderr = '';
 
@@ -407,7 +407,7 @@ class FunctionsV1 extends Worker
          * Make sure no access to NFS server / storage volumes
          * Access Appwrite REST from internal network for improved performance
          */
-        if (!isset($list[$container])) { // Create contianer if not ready
+        if (!isset($list[$container])) { // Create container if not ready
             $stdout = '';
             $stderr = '';
 

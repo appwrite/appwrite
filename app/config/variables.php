@@ -72,7 +72,7 @@ return [
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_ROOT',
-                'description' => 'This option allows you to disable the creation of new users on the Appwrite console. When enabled only 1 user will be able to use the registration form. New users can be added by invting them to your project. By default this option is enabled.',
+                'description' => 'This option allows you to disable the creation of new users on the Appwrite console. When enabled only 1 user will be able to use the registration form. New users can be added by inviting them to your project. By default this option is enabled.',
                 'introduction' => '0.8.0',
                 'default' => 'enabled',
                 'required' => false,
@@ -377,7 +377,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_STORAGE_LIMIT',
-                'description' => 'Maximun file size allowed for file upload. The default value is 10MB limitation. You should pass your size limit value in bytes.',
+                'description' => 'Maximum file size allowed for file upload. The default value is 10MB limitation. You should pass your size limit value in bytes.',
                 'introduction' => '0.7.0',
                 'default' => '10000000',
                 'required' => false,
@@ -473,7 +473,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_ENVS',
-                'description' => 'Deprectated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead!',
+                'description' => 'Deprecated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead!',
                 'introduction' => '0.7.0',
                 'default' => 'node-16.0,php-7.4,python-3.9,ruby-3.0,java-16.0',
                 'required' => false,

@@ -530,7 +530,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $timeLimit = new TimeLimit('url:{url},conection:{connection}', 32, 60, $db);
+        $timeLimit = new TimeLimit('url:{url},connection:{connection}', 32, 60, $db);
         $timeLimit
             ->setNamespace('app_' . $realtime->connections[$connection]['projectId'])
             ->setParam('{connection}', $connection)
