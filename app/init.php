@@ -169,7 +169,7 @@ $register->set('logger', function () { // Register error logger
     $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
 
     if(empty($providerName) || empty($providerConfig)) {
-        return;
+        return null;
     }
 
     if(!Logger::hasProvider($providerName)) {

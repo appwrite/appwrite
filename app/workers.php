@@ -42,36 +42,38 @@ Worker::error(function ($error, $action, $workerType, $optionalExtras) use ($reg
 
     $logger = $register->get('logger');
 
-    if($logger) {
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
-
-        $log = new Log();
-
-        $log->setNamespace("worker-" . $workerType);
-        $log->setServer(\gethostname());
-        $log->setVersion($version);
-        $log->setType(Log::TYPE_ERROR);
-        $log->setMessage($error->getMessage());
-
-        $log->addTag('workerType', $workerType);
-        $log->addTag('code', $error->getCode());
-        $log->addTag('verboseType', \get_class($error));
-
-        $log->addExtra('file', $error->getFile());
-        $log->addExtra('line', $error->getLine());
-        $log->addExtra('trace', $error->getTraceAsString());
-
-        if($optionalExtras) {
-             $log->addExtra('args', $optionalExtras);
-        }
-
-        $action = 'worker.' . $workerType . '.' . $action;
-        $log->setAction($action);
-
-        $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
-        $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-        $responseCode = $logger->addLog($log);
-        Console::info('Setup log pushed with status code: ' . $responseCode);
+    if(!$logger) {
+        return;
     }
+
+    $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+
+    $log = new Log();
+
+    $log->setNamespace("worker-" . $workerType);
+    $log->setServer(\gethostname());
+    $log->setVersion($version);
+    $log->setType(Log::TYPE_ERROR);
+    $log->setMessage($error->getMessage());
+
+    $log->addTag('workerType', $workerType);
+    $log->addTag('code', $error->getCode());
+    $log->addTag('verboseType', \get_class($error));
+
+    $log->addExtra('file', $error->getFile());
+    $log->addExtra('line', $error->getLine());
+    $log->addExtra('trace', $error->getTraceAsString());
+
+    if($optionalExtras) {
+        $log->addExtra('args', $optionalExtras);
+    }
+
+    $action = 'worker.' . $workerType . '.' . $action;
+    $log->setAction($action);
+
+    $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+    $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+    $responseCode = $logger->addLog($log);
+    Console::info('Setup log pushed with status code: ' . $responseCode);
 });
