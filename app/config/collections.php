@@ -1883,15 +1883,6 @@ $collections = [
                 'attributes' => ['search'],
                 'lengths' => [2048],
                 'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Async',
-                'key' => 'async',
-                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
-                'default' => '',
-                'required' => false,
-                'array' => false,
             ]
         ],
     ],

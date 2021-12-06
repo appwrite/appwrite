@@ -25,6 +25,7 @@ use Utopia\Validator\WhiteList;
 use Utopia\Config\Config;
 use Cron\CronExpression;
 use Utopia\CLI\Console;
+use Utopia\Validator\Boolean;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -749,7 +750,7 @@ App::post('/v1/functions/:functionId/executions')
     ->label('abuse-time', 60)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('data', '', new Text(8192), 'String of custom data to send to function.', true)
-    ->param('async', 1, new Range(0, 1), 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
+    ->param('async', true, new Boolean(), 'Execute code asynchronously. Default value is true.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForInternal')

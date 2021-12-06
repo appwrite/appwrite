@@ -103,7 +103,7 @@ class FunctionsCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'async' => 1,
+            'async' => true,
         ]);
 
         $this->assertEquals(401, $execution['headers']['status-code']);
@@ -112,7 +112,7 @@ class FunctionsCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'async' => 1,
+            'async' => true,
         ]);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
@@ -121,7 +121,7 @@ class FunctionsCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'async' => 1,
+            'async' => true,
         ]);
 
         $this->assertEquals(401, $execution['headers']['status-code']);
@@ -337,7 +337,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
             'data' => 'foobar',
-            'async' => 0
+            'async' => false
         ]);
 
         $output = json_decode($execution['body']['response'], true);
