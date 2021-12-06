@@ -213,6 +213,7 @@ $logs = $this->getParam('logs', null);
                                                                                 :class="(doc[attr.key].length - 1) === index ? 'margin-bottom' : ''"
                                                                                 type="checkbox"
                                                                                 :name="attr.key"
+                                                                                :value="attr.key"
                                                                                 :checked="doc[attr.key][index]" />
                                                                         </template>
                                                                         <template x-if="attr.type === 'string' && !attr.format">
