@@ -421,7 +421,8 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                     <div class="col span-1"><input name="permission" value="file" type="radio" class="margin-top-no" data-ls-bind="{{project-bucket.permission}}" /></div>
                                     <div class="col span-11">
                                         <b>File Level</b>
-                                        <p class="text-fade margin-top-tiny">File permission take effect instead of bucket permission</p>
+                                        <p class="text-fade margin-top-tiny">With File Level permissions, you have granular access control over every file. Users will only be able to access files for which they have explicit permissions.</p>
+                                        <p class="text-fade margin-top-tiny">In this permission level file permissions take precedence and bucket permissions are ignored.</p>
                                     </div>
                                 </div>
 
@@ -429,15 +430,18 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                     <div class="col span-1"><input name="permission" value="bucket" type="radio" class="margin-top-tiny" data-ls-bind="{{project-bucket.permission}}" /></div>
                                     <div class="col span-11">
                                         <b>Bucket Level</b>
-                                        <p class="text-fade margin-top-tiny">Bucket permissions override the file permissions</p>
+                                        <p class="text-fade margin-top-tiny">With Bucket Level permissions, you assign permissions only once in the bucket.</p>
+                                        <p class="text-fade margin-top-tiny">In this permission level permissions assigned to bucket takes the precedence and file permissions are ignored</p>
+                                        <div data-ls-if="{{project-bucket.permission}} == 'bucket'">
+                                            
+                                            <label for="bucket-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
+                                            <input type="hidden" id="bucket-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-bucket.$permissions.read}}" placeholder="User ID, Team ID or Role" />
+                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
 
-                                        <label for="bucket-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
-                                        <input type="hidden" id="bucket-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-bucket.$permissions.read}}" placeholder="User ID, Team ID or Role" />
-                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
-
-                                        <label for="bucket-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                        <input type="hidden" id="bucket-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-bucket.$permissions.write}}" placeholder="User ID, Team ID or Role" />
-                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+                                            <label for="bucket-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
+                                            <input type="hidden" id="bucket-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-bucket.$permissions.write}}" placeholder="User ID, Team ID or Role" />
+                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+                                        </div>
                                     </div>
                                 </div>
 
