@@ -1046,7 +1046,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     return [
         'status' => $functionStatus,
-        'response' => $stdout,
+        'response' => ($functionStatus !== 'completed') ? $stderr : $stdout,
         'time' => $executionTime
     ];
 }

@@ -1,8 +1,3 @@
-
-# Unreleased Version 1.1.0
-- Added ability to create syncronous function executions
-- Introduced new execution model for functions
-
 # Version 1.0.0
 
 ## Features
@@ -10,6 +5,10 @@
 - Grouped auth related attributes in project collection. Introduced new attribute `auths` and removed all attributes related to auth methods and `usersAuthLimit` as well, all these are grouped under `auths` attribute
 - Grouped oAuth related attributes in project collection. Introduced new attribute `providers` and removed all attributes related to OAuth2 providers. All OAuth2 attributes are grouped under `providers`
 - Project model changed, `userAuth<AuthMethod>` => `auth<AuthMethod>` example `userAuthEmailPassword` => `authEmailPassword`, also `userOauth2<Provider>...` => `provider<Provider>...` example `userOauth2GithubAppid` => `providerGithubAppid`
+
+# Unreleased Version 0.13.0
+- Added ability to create syncronous function executions
+- Introduced new execution model for functions
 # Version 0.11.0
 
 ## Features
