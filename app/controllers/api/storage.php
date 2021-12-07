@@ -609,7 +609,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 throw new Exception('Invalid content-range header', 400);
             }
 
-            if ($end === $size) {
+            if ($end === $fileSize) {
                 //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
                 $chunks = $chunk = -1;
             } else {
