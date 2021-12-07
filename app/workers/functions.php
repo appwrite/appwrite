@@ -199,6 +199,7 @@ class FunctionsV1 extends Worker
                     'projectId' => $projectId,
                     'webhooks' => $webhooks,
                     'functionId' => $function->getId(),
+                    'userId' => $userId,
                     'executionId' => null,
                     'trigger' => 'schedule',
                     'scheduleOriginal' => $function->getAttribute('schedule', ''),

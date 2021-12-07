@@ -274,7 +274,8 @@ App::put('/v1/functions/:functionId')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('project')
-    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $dbForInternal, $project) {
+    ->inject('user')
+    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $dbForInternal, $project, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Document $project */
@@ -306,6 +307,7 @@ App::put('/v1/functions/:functionId')
                 'projectId' => $project->getId(),
                 'webhooks' => $project->getAttribute('webhooks', []),
                 'functionId' => $function->getId(),
+                'userId' => $user->getId(),
                 'executionId' => null,
                 'trigger' => 'schedule',
             ]);  // Async task rescheduale
