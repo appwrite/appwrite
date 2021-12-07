@@ -398,8 +398,6 @@ App::put('/v1/storage/buckets/:bucketId')
 
         $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
         $write ??= $bucket->getAttribute('$write',[]); // By default inherit write permissions
-        $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
-        $write ??= $bucket->getAttribute('$write', []); // By default inherit write permissions
         $maximumFileSize ??= $bucket->getAttribute('maximumFileSize', (int)App::getEnv('_APP_STORAGE_LIMIT', 0));
         $allowedFileExtensions ??= $bucket->getAttribute('allowedFileExtensions', []);
         $enabled ??= $bucket->getAttribute('enabled', true);
@@ -1375,7 +1373,7 @@ App::get('/v1/storage/usage')
         /** @var Utopia\Database\Database $dbForInternal */
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
             $periods = [
                 '24h' => [
                     'period' => '30m',
@@ -1473,7 +1471,7 @@ App::get('/v1/storage/:bucketId/usage')
         } 
         
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
             $periods = [
                 '24h' => [
                     'period' => '30m',
