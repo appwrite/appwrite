@@ -1616,7 +1616,7 @@ App::get('/v1/storage/usage')
         /** @var Utopia\Database\Database $dbForInternal */
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
             $periods = [
                 '24h' => [
                     'period' => '30m',
@@ -1714,7 +1714,7 @@ App::get('/v1/storage/:bucketId/usage')
         } 
         
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
             $periods = [
                 '24h' => [
                     'period' => '30m',
