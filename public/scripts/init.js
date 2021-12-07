@@ -25,7 +25,7 @@ document.addEventListener("account.create", function () {
 
   let promise = sdk.account.createSession(form.email, form.password);
 
-  container.set("serviceForm", {}, true, true); // Remove sensetive data when not needed
+  container.set("serviceForm", {}, true, true); // Remove sensitive data when not needed
 
   promise.then(function () {
     var subscribe = document.getElementById('newsletter').checked;

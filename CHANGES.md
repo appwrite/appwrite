@@ -107,7 +107,7 @@
 - Refactored E-Mail template (#1422)
 - Improved locale management (#1440)
 - Added `$permissions` to execution response (#948)
-- Switch from using Docker CLI to Docker API by intergrating [utopia-php/orchestration](https://github.com/utopia-php/orchestration) (#1420)
+- Switch from using Docker CLI to Docker API by integrating [utopia-php/orchestration](https://github.com/utopia-php/orchestration) (#1420)
 - Added DOCKERHUB_PULL_USERNAME, DOCKERHUB_PULL_PASSWORD and DOCKERHUB_PULL_EMAIL env variables for pulling from private DockerHub repos (#1420)
 - Added `updateName`, `updateEmail` and `updatePassword` to Users service and console (#1547)
 
@@ -162,7 +162,7 @@
 - Added internal support for connection pools for improved performance (#1278)
 - Added new abstraction for workers executable files (#1276)
 - Added a new API in the Users API to allow you to force update your user verification status (#1223)
-- Using a fixed commit to avoid breaking changes for imagemagick extenstion (#1274)
+- Using a fixed commit to avoid breaking changes for imagemagick extension (#1274)
 - Updated the design of all the email templates (#1225)
 - Refactored Devices page in Console: (#1167)
   - Renamed *Devices* to *Sessions*
@@ -193,7 +193,7 @@
 - Fixed a bug in the Twitch OAuth adapter (#1209)
 - Fixed missing session object when OAuth session creation event is triggered (#1208)
 - Fixed bug where we didn't ignore the email case, converted all emails to lowercase internally (#1243)
-- Fixed a console bug where you can't click a user with no name, added a placehoder for anonyomous users (#1220)
+- Fixed a console bug where you can't click a user with no name, added a placeholder for anonymous users (#1220)
 - Fixed unique keys not being updated when changing a user's email address (#1301)
 - Fixed a bug where decimal integers where wrongly used with database filters (#1349)
 
@@ -287,8 +287,8 @@
 
 ## Upgrades
 
-- Upgraded redis extenstion lib to version 5.3.3
-- Upgraded maxmind extenstion lib to version 1.10.0
+- Upgraded redis extension lib to version 5.3.3
+- Upgraded maxmind extension lib to version 1.10.0
 - Upgraded utopia-php/cli lib to version 0.10.0
 - Upgraded matomo/device-detector lib to version 4.1.0
 - Upgraded dragonmantank/cron-expression lib to version 3.1.0
@@ -300,7 +300,7 @@
 ## Bug Fixes
 
 - Updated missing storage env vars
-- Fixed a bug, that added a wrong timzone offset to user log timestamps
+- Fixed a bug, that added a wrong timezone offset to user log timestamps
 - Fixed a bug, that Response format header was not added in the access-control-allow-header list.
 - Fixed a bug where countryName is unknown on sessions (#933)
 - Added missing event users.update.prefs (#952)
@@ -379,13 +379,13 @@
 - Upgraded Influxdb Docker image to version 1.8 (alpine)
 - Upgraded Redis Resque queue library to version 1.3.6 ([#319](https://github.com/appwrite/appwrite/issues/319))
 - Upgraded ClamAV container image to version 1.0.11 ([#412](https://github.com/appwrite/appwrite/issues/412))
-- Upgraded device detctor to version 3.12.6
+- Upgraded device detector to version 3.12.6
 - Upgraded GEOIP DB file to Feb 2021 release
 
 ## Breaking Changes (Read before upgrading!)
 
 - **Deprecated** `first` and `last` query params for documents list route in the database API
-- **Deprecated** Deprectaed Pubjabi Translations ('pn')
+- **Deprecated** Deprecated Pubjabi Translations ('pn')
 - **Deprecated** `PATCH /account/prefs` is now updating the prefs payload and not just merging it
 - **Deprecated** `PATCH /users/:userId/prefs` is now updating the prefs payload and not just merging it
 - Switched order of limit and offset params in all the SDKs `listDocuments` method for better consistency
@@ -431,7 +431,7 @@
 - Block iframe access to Appwrite console using the `X-Frame-Options` header.
 - Fixed `roles` param input validator
 - API Keys are now stored encrypted 
-- Disabled domains whitlist ACL for the Appwrite console
+- Disabled domains whitelist ACL for the Appwrite console
 
 # Version 0.6.2 (PRE-RELEASE)
 
