@@ -46,15 +46,15 @@
 - Added new environment variable `_APP_USAGE_AGGREGATION_INTERVAL` to configure the usage worker interval
 - Added negative rotation values to file preview endpoint
 - Added following langauges to the Locale service:
-  - Adds Latin
-  - Adds Sindhi
-  - Adds Telugu
+  - Latin
+  - Sindhi
+  - Telugu
 - **DEPRECATED** Tasks service 
 
 ## Bugs
-- Fixes `/v1/avatars/initials` when no space in the name, will try to split by `_`
-- Fixes all audit logs now saving the proper informations
-- Fixes Health endpoints for `db` and `cache`
+- Fixed `/v1/avatars/initials` when no space in the name, will try to split by `_`
+- Fixed all audit logs now saving all relevant informations
+- Fixed Health endpoints for `db` and `cache`
 
 ## Security
 - Increased minimum password length to 8
