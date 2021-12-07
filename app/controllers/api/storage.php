@@ -596,7 +596,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         $contentRange = $request->getHeader('content-range');
-        $fileId = $fileId == 'unique()' ? $dbForInternal->getId() : $fileId;
+        $fileId = $fileId === 'unique()' ? $dbForInternal->getId() : $fileId;
         $chunk = 1;
         $chunks = 1;
 
@@ -609,7 +609,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 throw new Exception('Invalid content-range header', 400);
             }
 
-            if ($end == $fileSize) {
+            if ($end === $size) {
                 //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
                 $chunks = $chunk = -1;
             } else {
@@ -638,7 +638,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         // Save to storage
         $fileSize ??= $localDevice->getFileSize($fileTmpName);
         $path = $device->getPath($fileId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
-        $path = str_ireplace($device->getRoot(), $device->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path);
+        $path = str_ireplace($device->getRoot(), $device->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
 
         if($permissionBucket) {
             $file = Authorization::skip(function() use ($dbForExternal, $bucketId, $fileId) {
@@ -652,7 +652,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         if (!$file->isEmpty()) {
             $chunks = $file->getAttribute('chunksTotal', 1);
             $metadata = $file->getAttribute('metadata', []);
-            if ($chunk == -1) {
+            if ($chunk === -1) {
                 $chunk = $chunks;
             }
         }
@@ -664,7 +664,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? [];
         $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
-        if ($chunksUploaded == $chunks) {
+        if ($chunksUploaded === $chunks) {
             if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antiVirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
                 $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
                 (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
