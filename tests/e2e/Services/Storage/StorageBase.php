@@ -340,7 +340,7 @@ trait StorageBase
         $this->assertNotEmpty($file6['body']);
 
         // Test for negative angle values in fileGetPreview
-        $file7 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/preview', array_merge([
+        $file7 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
