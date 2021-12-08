@@ -1,1 +1,1 @@
-Update a team using its unique ID. Only members with the owner role can update the team.
+Use this endpoint to update a team using its unique ID. Only members with the owner role can update the team.
