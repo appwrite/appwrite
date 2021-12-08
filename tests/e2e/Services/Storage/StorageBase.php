@@ -272,6 +272,31 @@ trait StorageBase
         $this->assertEquals('image/png', $file6['headers']['content-type']);
         $this->assertNotEmpty($file6['body']);
 
+        // Test for negative angle values in fileGetPreview
+        $file7 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 300,
+            'height' => 100,
+            'borderRadius' => '50',
+            'opacity' => '0.5',
+            'output' => 'png',
+            'rotation' => '-315',
+        ]);
+        
+        $this->assertEquals(200, $file7['headers']['status-code']);
+        $this->assertEquals('image/png', $file7['headers']['content-type']);
+        $this->assertNotEmpty($file7['body']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($file7['body']);
+        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.png');
+
+        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
+        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
+        $this->assertEquals('PNG', $image->getImageFormat());
+
         /**
          * Test large files decompress successfully
          */

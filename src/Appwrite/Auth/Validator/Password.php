@@ -20,13 +20,11 @@ class Password extends Validator
      */
     public function getDescription()
     {
-        return 'Password must be between 6 and 32 chars and contain ...';
+        return 'Password must be at least 8 characters';
     }
 
     /**
      * Is valid.
-     *
-     * Validation username
      *
      * @param mixed $value
      *
@@ -34,7 +32,11 @@ class Password extends Validator
      */
     public function isValid($value)
     {
-        if (\strlen($value) < 6 || \strlen($value) > 32) {
+        if (!\is_string($value)) {
+            return false;
+        } 
+
+        if (\strlen($value) < 8) {
             return false;
         }
 
