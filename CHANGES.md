@@ -21,7 +21,7 @@
 - Permissions are now found as top-level keys `$read` and `$write` instead of nested under `$permissions`
 - Added Cursor pagination to all endpoints that provide pagination by offset
 - Added new Usage worker to aggregate usage statistics
-- Added new Database to handle heavy database tasks in the background
+- Added new Database worker to handle heavy database tasks in the background
 - Added detailed Usage statistics to following services in the Console:
   - Users
   - Storage
@@ -57,7 +57,7 @@
 - Fixed Health endpoints for `db` and `cache`
 
 ## Security
-- Increased minimum password length to 8
+- Increased minimum password length to 8 and removed maximum length
 - Upgraded Redis to 6.2
 - Upgraded InfluxDB to 1.4.0
 - Upgraded Telegraf to 1.3.0
