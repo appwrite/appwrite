@@ -176,7 +176,7 @@ DatabaseOld::addFilter('encrypt',
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
-        
+
         return json_encode([
             'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
             'method' => OpenSSL::CIPHER_AES_128_GCM,
@@ -216,7 +216,7 @@ Database::addFilter('enum',
         return $value;
     },
     function($value, Document $attribute) {
-        $formatOptions = json_decode($attribute->getAttribute('formatOptions', []), true);
+        $formatOptions = json_decode($attribute->getAttribute('formatOptions', '[]'), true);
         if (isset($formatOptions['elements'])) {
             $attribute->setAttribute('elements', $formatOptions['elements']);
         }
@@ -235,7 +235,7 @@ Database::addFilter('range',
         return $value;
     },
     function($value, Document $attribute) {
-        $formatOptions = json_decode($attribute->getAttribute('formatOptions', []), true);
+        $formatOptions = json_decode($attribute->getAttribute('formatOptions', '[]'), true);
         if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
             $attribute
                 ->setAttribute('min', $formatOptions['min'])

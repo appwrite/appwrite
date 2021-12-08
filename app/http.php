@@ -81,10 +81,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             return $redis;
         });
 
-        App::setResource('app', function() use (&$app) {
-            return $app;
-        });
-
         $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
 
         if(!$dbForConsole->exists()) {
