@@ -333,49 +333,51 @@ App::patch('/v1/functions/:functionId/tag')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('project')
-    ->inject('user')
-    ->action(function ($functionId, $tag, $response, $dbForInternal, $project, $user) {
+    ->action(function ($functionId, $tag, $response, $dbForInternal, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Document $user */
 
         $function = $dbForInternal->getDocument('functions', $functionId);
+        $tag = $dbForInternal->getDocument('tags', $tag);
+        $build = $dbForInternal->getDocument('builds', $tag->getAttribute('buildId'));
 
-        $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/tag");
-        \curl_setopt($ch, CURLOPT_POST, true);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-            'functionId' => $functionId,
-            'tagId' => $tag,
-            'userId' => $user->getId()
-        ]));
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
-        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'x-appwrite-project: '.$project->getId(),
-            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
-        ]);
-
-        $executorResponse = \curl_exec($ch);
-
-        $error = \curl_error($ch);
-
-        if (!empty($error)) {
-            throw new Exception('Curl error: ' . $error, 500);
+        if ($function->isEmpty()) {
+            throw new Exception('Function not found', 404);
         }
 
-        // Check status code
-        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        if (200 !== $statusCode) {
-            throw new Exception('Executor error: ' . $executorResponse, $statusCode);
+        if ($tag->isEmpty()) {
+            throw new Exception('Tag not found', 404);
         }
 
-        \curl_close($ch);
+        if ($build->isEmpty()) {
+            throw new Exception('Build not found', 404);
+        }
 
-        $response->dynamic(new Document(json_decode($executorResponse, true)), Response::MODEL_FUNCTION);
+        if ($build->getAttribute('status') !== 'ready') {
+            throw new Exception('Build not ready', 400);
+        }
+
+        $schedule = $function->getAttribute('schedule', '');
+        $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? new CronExpression($schedule) : null;
+        $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
+
+        $function = $dbForInternal->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
+            'tag' => $tag->getId(),
+            'scheduleNext' => (int)$next,
+        ])));
+
+        if ($next) { // Init first schedule
+            ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
+                'projectId' => $project->getId(),
+                'webhooks' => $project->getAttribute('webhooks', []),
+                'functionId' => $function->getId(),
+                'executionId' => null,
+                'trigger' => 'schedule',
+            ]);  // Async task rescheduale
+        }
+
+        $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
 App::delete('/v1/functions/:functionId')
@@ -466,15 +468,20 @@ App::post('/v1/functions/:functionId/tags')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
     ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
+    ->param('automaticDeploy', false, new Boolean(true), 'Automatically deploy the function when it is finished building.', false)
     ->inject('request')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($functionId, $entrypoint, $file, $request, $response, $dbForInternal, $usage) {
+    ->inject('user')
+    ->inject('project')
+    ->action(function ($functionId, $entrypoint, $file, $automaticDeploy, $request, $response, $dbForInternal, $usage, $user, $project) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $usage */
+        /** @var Appwrite\Auth\User $user */
+        /** @var Appwrite\Project\Project $project */
 
         $function = $dbForInternal->getDocument('functions', $functionId);
 
@@ -516,6 +523,18 @@ App::post('/v1/functions/:functionId/tags')
         if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
             throw new Exception('Failed moving file', 500);
         }
+
+        if ($automaticDeploy === 'true') {
+            // Remove automaticDeploy for all other tags.
+            $tags = $dbForInternal->find('tags', [
+                new Query('automaticDeploy', Query::TYPE_EQUAL, [true]),
+            ]);
+
+            foreach ($tags as $tag) {
+                $tag->setAttribute('automaticDeploy', false);
+                $dbForInternal->updateDocument('tags', $tag->getId(), $tag);
+            }
+        }
         
         $tagId = $dbForInternal->getId();
         $tag = $dbForInternal->createDocument('tags', new Document([
@@ -531,12 +550,49 @@ App::post('/v1/functions/:functionId/tags')
             'status' => 'pending',
             'buildPath' => '',
             'buildStdout' => '',
-            'buildStderr' => ''
+            'buildStderr' => '',
+            'automaticDeploy' => ($automaticDeploy === 'true'),
         ]));
 
         $usage
             ->setParam('storage', $tag->getAttribute('size', 0))
         ;
+
+        // Send start build reqeust to executor using /v1/build/:buildId
+        $function = $dbForInternal->getDocument('functions', $functionId);
+
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/tag");
+        \curl_setopt($ch, CURLOPT_POST, true);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+            'functionId' => $functionId,
+            'tagId' => $tag->getId(),
+            'userId' => $user->getId(),
+        ]));
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
+        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'x-appwrite-project: '.$project->getId(),
+            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
+        ]);
+
+        $executorResponse = \curl_exec($ch);
+
+        $error = \curl_error($ch);
+
+        if (!empty($error)) {
+            throw new Exception('Curl error: ' . $error, 500);
+        }
+
+        // Check status code
+        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if (200 !== $statusCode) {
+            throw new Exception('Executor error: ' . $executorResponse, $statusCode);
+        }
+
+        \curl_close($ch);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($tag, Response::MODEL_TAG);
@@ -1054,4 +1110,65 @@ App::get('/v1/builds/:buildId')
         }
 
         $response->dynamic($build, Response::MODEL_BUILD);
+    });
+App::post('/v1/builds/:buildId')
+    ->groups(['api', 'functions'])
+    ->desc('Retry Build')
+    ->label('scope', 'functions.write')
+    ->label('event', 'functions.tags.update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'retryBuild')
+    ->label('sdk.description', '/docs/references/functions/retry-build.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('buildId', '', new UID(), 'Build unique ID.')
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->inject('project')
+    ->action(function ($buildId, $response, $dbForInternal, $project) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Document $project */
+
+        $build = $dbForInternal->getDocument('builds', $buildId);
+
+        if ($build->isEmpty()) {
+            throw new Exception('Build not found', 404);
+        }
+
+        if ($build->getAttribute('status') !== 'failed') {
+            throw new Exception('Build not failed', 400);
+        }
+
+        // Retry build
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/build/{$buildId}");
+        \curl_setopt($ch, CURLOPT_POST, true);
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
+        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'x-appwrite-project: '.$project->getId(),
+            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
+        ]);
+    
+        $executorResponse = \curl_exec($ch);
+    
+        $error = \curl_error($ch);
+    
+        if (!empty($error)) {
+            throw new Exception('Curl error: ' . $error, 500);
+        }
+    
+        // Check status code
+        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if (200 !== $statusCode) {
+            throw new Exception('Executor error: ' . $executorResponse, $statusCode);
+        }
+    
+        \curl_close($ch);
+
+        $response->noContent();
     });

@@ -28,6 +28,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
 
     Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
     Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
+    Storage::setDevice('builds', new Local(APP_STORAGE_BUILDS.'/app-'.$project->getId()));
 
     $route = $utopia->match($request);
 

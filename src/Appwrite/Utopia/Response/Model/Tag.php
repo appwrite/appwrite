@@ -35,16 +35,22 @@ class Tag extends Model
                 'example' => 'enabled',
             ])
             ->addRule('size', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'The code size in bytes.',
-                'default' => '',
-                'example' => 'python-3.8',
+                'default' => 0,
+                'example' => 128,
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The tags current built status',
                 'default' => '',
                 'example' => 'ready',
+            ])
+            ->addRule('buildId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The current build ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
             ])
             ->addRule('buildStdout', [
                 'type' => self::TYPE_STRING,
@@ -57,6 +63,12 @@ class Tag extends Model
                 'description' => 'The stderr of the build.',
                 'default' => '',
                 'example' => '',
+            ])
+            ->addRule('automaticDeploy', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the tag should be automatically deployed.',
+                'default' => false,
+                'example' => true,
             ])
         ;
     }

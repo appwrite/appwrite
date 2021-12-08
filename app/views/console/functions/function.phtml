@@ -8,7 +8,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 <div
     data-service="functions.get"
     data-name="project-function"
-    data-event="load,functions.update,functions.createTag,functions.updateTag,functions.deleteTag"
+    data-event="load,functions.update,functions.createTag,functions.updateTag,functions.deleteTag,functions.retryBuild"
     data-param-function-id="{{router.params.id}}"
     data-success="trigger"
     data-success-param-trigger-events="functions.get">
@@ -59,7 +59,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                         <div class="margin-bottom"
                             data-service="functions.listTags"
                             data-scope="sdk"
-                            data-event="load,functions.createTag,functions.deleteTag,functions.updateTag"
+                            data-event="load,functions.createTag,functions.deleteTag,functions.updateTag,functions.retryBuild"
                             data-name="project-function-tags"
                             data-param-function-id="{{router.params.id}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -102,7 +102,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 
                                                 <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                             </div>
-                                            <form data-ls-if="{{tag.$id}} !== {{project-function.tag}}" name="functions.updateTag" class="pull-end"
+                                            <form data-ls-if="({{tag.$id}} !== {{project-function.tag}} && {{tag.status}} == 'ready')" name="functions.updateTag" class="pull-end"
                                                 data-analytics
                                                 data-analytics-activity
                                                 data-analytics-event="submit"
@@ -119,6 +119,23 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                                 data-failure-param-alert-classname="error">
                                                 <input type="hidden" name="tag" data-ls-bind="{{tag.$id}}">
                                                 <button>Activate</button>
+                                            </form>
+                                            <form data-ls-if="({{tag.$id}} !== {{project-function.tag}} && {{tag.status}} == 'failed')" name="functions.retryBuild" class="pull-end"
+                                                data-analytics
+                                                data-analytics-activity
+                                                data-analytics-event="submit"
+                                                data-analytics-category="console"
+                                                data-analytics-label="Retry Build"
+                                                data-service="functions.retryBuild"
+                                                data-event="submit"
+                                                data-success="alert,trigger"
+                                                data-success-param-alert-text="Build started successfully"
+                                                data-success-param-trigger-events="functions.retryBuild"
+                                                data-failure="alert"
+                                                data-failure-param-alert-text="Failed to retry build"
+                                                data-failure-param-alert-classname="error">
+                                                <input type="hidden" name="buildId" data-ls-bind="{{tag.buildId}}">
+                                                <button>Retry Build</button>
                                             </form>
    
                                             <b data-ls-bind="{{tag.$id}}"></b> &nbsp;
@@ -667,7 +684,9 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 
                 <label for="tag-code">Gzipped Code (tar.gz file)</label>
                 <input type="file" name="code" id="tag-code" size="1" required accept="application/x-gzip,.gz">
-                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom-large">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
+                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
+
+                <label for="tag-automaticDeploy" class="margin-bottom-large">Auto Deploy Tag after build <input type="checkbox" class="margin-start-small" id="tag-automaticDeploy" name="automaticDeploy" /></label>
 
                 <footer>
                     <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
