@@ -143,15 +143,52 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @depends testCreateProject
+     * @depends testCreateProjectKey
      */
     public function testGetProjectUsage($data):array
     {
         $id = $data['projectId'] ?? '';
+        $apiKey = $data['keySecret'] ?? '';
 
         /**
          * Test for SUCCESS
          */
+        $response = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $apiKey
+        ]), [
+            'name' => 'Private Collection',
+            'read' => [],
+            'write' => ['role:member', 'role:admin'],
+            'rules' => [
+                [
+                    'label' => 'Field',
+                    'key' => 'field',
+                    'type' => 'text',
+                    'default' => '',
+                    'required' => true,
+                    'array' => false
+                ]
+            ],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $document1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $response['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $apiKey
+        ], $this->getHeaders()), [
+            'data' => [
+                'field' => 'field'
+            ],
+            'read' => [],
+            'write' => [],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -160,7 +197,9 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertArrayHasKey('collections', $response['body']);
+        $this->assertEquals(1, $response['body']['collections']['total']);
         $this->assertArrayHasKey('documents', $response['body']);
+        $this->assertEquals(1, $response['body']['documents']['total']);
         $this->assertArrayHasKey('network', $response['body']);
         $this->assertArrayHasKey('requests', $response['body']);
         $this->assertArrayHasKey('storage', $response['body']);
@@ -757,7 +796,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Key Test',
-            'scopes' => ['teams.read', 'teams.write'],
+            'scopes' => ['teams.read', 'teams.write', 'collections.write', 'documents.write'],
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -767,7 +806,10 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('teams.write', $response['body']['scopes']);
         $this->assertNotEmpty($response['body']['secret']);
         
-        $data = array_merge($data, ['keyId' => $response['body']['$id']]);
+        $data = array_merge($data, [
+            'keyId' => $response['body']['$id'],
+            'keySecret' => $response['body']['secret']
+        ]);
 
         /**
          * Test for FAILURE
@@ -826,7 +868,9 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('Key Test', $response['body']['name']);
         $this->assertContains('teams.read', $response['body']['scopes']);
         $this->assertContains('teams.write', $response['body']['scopes']);
-        $this->assertCount(2, $response['body']['scopes']);
+        $this->assertContains('collections.write', $response['body']['scopes']);
+        $this->assertContains('documents.write', $response['body']['scopes']);
+        $this->assertCount(4, $response['body']['scopes']);
         $this->assertNotEmpty($response['body']['secret']);
         
         /**

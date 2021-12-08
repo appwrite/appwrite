@@ -16,6 +16,7 @@ use Appwrite\Auth\Validator\Password;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
+use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
@@ -306,6 +307,7 @@ App::get('/v1/projects/:projectId/usage')
         $usersTotal = $projectDB->getSum();
 
         // Documents
+        Authorization::disable();
         $collections = $projectDB->getCollection([
             'limit' => 100,
             'offset' => 0,
@@ -329,6 +331,7 @@ App::get('/v1/projects/:projectId/usage')
 
             $documents[] = ['name' => $collection['name'], 'total' => $projectDB->getSum()];
         }
+        Authorization::reset();
 
         // Tasks
         $tasksTotal = \count($project->getAttribute('tasks', []));
