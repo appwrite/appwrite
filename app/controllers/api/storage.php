@@ -844,7 +844,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->param('borderColor', '', new HexColor(), 'Preview image border color. Use a valid HEX color, no # is needed for prefix.', true)
     ->param('borderRadius', 0, new Range(0, 4000), 'Preview image border radius in pixels. Pass an integer between 0 to 4000.', true)
     ->param('opacity', 1, new Range(0,1, Range::TYPE_FLOAT), 'Preview image opacity. Only works with images having an alpha channel (like png). Pass a number between 0 to 1.', true)
-    ->param('rotation', 0, new Range(0,360), 'Preview image rotation in degrees. Pass an integer between 0 and 360.', true)
+    ->param('rotation', 0, new Range(-360,360), 'Preview image rotation in degrees. Pass an integer between -360 and 360.', true)
     ->param('background', '', new HexColor(), 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->inject('request')
@@ -984,7 +984,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         if (!empty($rotation)) {
-            $image->setRotation($rotation);
+            $image->setRotation(($rotation + 360) % 360);
         }
 
         $output = (empty($output)) ? $type : $output;
