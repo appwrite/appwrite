@@ -405,7 +405,7 @@ return [
             [
                 'name' => '_APP_STORAGE_DEVICE',
                 'description' => 'Select default storage device. The default value is \'Local\'. List of supported adapters are \'Local\', \'S3\' and \'DoSpaces\'.',
-                'introduction' => '0.12.0',
+                'introduction' => '0.13.0',
                 'default' => 'Local',
                 'required' => false,
                 'question' => '',
@@ -413,7 +413,7 @@ return [
             [
                 'name' => '_APP_STORAGE_DEVICE_S3_ACCESS_KEY',
                 'description' => 'AWS S3 storage access key. Required when the storage adapter is set to S3. You can get your access key from your AWS console',
-                'introduction' => '0.12.0',
+                'introduction' => '0.13.0',
                 'default' => '',
                 'required' => true,
                 'question' => '',
@@ -421,7 +421,7 @@ return [
             [
                 'name' => '_APP_STORAGE_DEVICE_S3_SECRET',
                 'description' => 'AWS S3 storage secret key. Required when the storage adapter is set to S3. You can get your secret key from your AWS console.',
-                'introduction' => '0.12.0',
+                'introduction' => '0.13.0',
                 'default' => '',
                 'required' => true,
                 'question' => '',
@@ -429,7 +429,7 @@ return [
             [
                 'name' => '_APP_STORAGE_DEVICE_S3_REGION',
                 'description' => 'AWS S3 storage region. Required when storage adapter is set to S3. You can find your region info for your bucket from AWS console.',
-                'introduction' => '0.12.0',
+                'introduction' => '0.13.0',
                 'default' => 'us-eas-1',
                 'required' => false,
                 'question' => '',
@@ -437,7 +437,7 @@ return [
             [
                 'name' => '_APP_STORAGE_DEVICE_S3_BUCKET',
                 'description' => 'AWS S3 storage bucket. Required when storage adapter is set to S3. You can create buckets in your AWS console.',
-                'introduction' => '0.12.0',
+                'introduction' => '0.13.0',
                 'default' => '',
                 'required' => true,
                 'question' => '',
@@ -445,7 +445,7 @@ return [
             [
                 'name' => '_APP_STORAGE_DEVICE_DO_SPACES_ACCESS_KEY',
                 'description' => 'DigitalOcean spaces access key. Required when the storage adapter is set to DoSpaces. You can get your access key from your DigitalOcean console.',
-                'introduction' => '0.12.0',
+                'introduction' => '0.13.0',
                 'default' => '',
                 'required' => true,
                 'question' => '',
@@ -453,7 +453,7 @@ return [
             [
                 'name' => '_APP_STORAGE_DEVICE_DO_SPACES_SECRET',
                 'description' => 'DigitalOcean spaces secret key. Required when the storage adapter is set to DoSpaces. You can get your secret key from your DigitalOcean console..',
-                'introduction' => '0.12.0',
+                'introduction' => '0.13.0',
                 'default' => '',
                 'required' => true,
                 'question' => '',
@@ -461,7 +461,7 @@ return [
             [
                 'name' => '_APP_STORAGE_DEVICE_DO_SPACES_REGION',
                 'description' => 'DigitalOcean spaces region. Required when storage adapter is set to DoSpaces. You can find your region info for your space from DigitalOcean console..',
-                'introduction' => '0.12.0',
+                'introduction' => '0.13.0',
                 'default' => 'us-eas-1',
                 'required' => false,
                 'question' => '',
@@ -469,7 +469,7 @@ return [
             [
                 'name' => '_APP_STORAGE_DEVICE_DO_SPACES_BUCKET',
                 'description' => 'DigitalOcean spaces bucket. Required when storage adapter is set to DoSpaces. You can create spaces in your DigitalOcean console.',
-                'introduction' => '0.12.0',
+                'introduction' => '0.13.0',
                 'default' => '',
                 'required' => true,
                 'question' => '',
