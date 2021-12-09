@@ -40,7 +40,7 @@ class V11 extends Migration
     {
         parent::__construct($db, $cache, $options);
         $this->options = array_map(fn ($option) => $option === 'yes' ? true : false, $this->options);
-        var_dump($this->options);
+
         if (!is_null($cache)) {
             $cacheAdapter = new Cache(new RedisCache($this->cache));
             $this->dbInternal = new Database(new MariaDB($this->db), $cacheAdapter);
@@ -63,6 +63,11 @@ class V11 extends Migration
         $this->dbInternal->setNamespace('project_' . $oldProject->getId() . '_internal');
         $this->dbExternal->setNamespace('project_' . $oldProject->getId() . '_external');
 
+        Console::info('');
+        Console::info('------------------------------------');
+        Console::info('Migrating project ' . $oldProject->getAttribute('name'));
+        Console::info('------------------------------------');
+
         /**
          * Create internal/external structure for projects and skip the console project.
          */
@@ -76,7 +81,7 @@ class V11 extends Migration
                 $newProject = $this->fixDocument($oldProject);
                 $newProject->setAttribute('version', '0.12.0');
                 $project = $this->dbConsole->createDocument('projects', $newProject);
-                Console::log('Migrating project: ' . $oldProject->getAttribute('name') . ' (' . $oldProject->getId() . ')');
+                Console::log('Created project document: ' . $oldProject->getAttribute('name') . ' (' . $oldProject->getId() . ')');
             }
 
             /**
@@ -156,6 +161,7 @@ class V11 extends Migration
         $sum = $this->limit;
         $offset = 0;
         $total = 0;
+
         /**
          * Migrate internal documents
          */
