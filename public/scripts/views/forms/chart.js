@@ -51,8 +51,9 @@
                 display: showYAxis,
                 min: 0,
                 ticks: {
+                  count: ticksCount,
                   fontColor: "#8f8f8f"
-                }
+                },
               }
             },
             plugins: {
@@ -67,7 +68,7 @@
                 mode: "index",
                 intersect: false,
                 caretPadding: 0
-              }
+              },
             }
           }
         };
@@ -113,8 +114,8 @@
           config.options.scales.y.ticks.stepSize = highest / ticksCount;
           config.options.scales.y.max = highest;
         }
-
-        if (chart) {
+        
+        if(chart) {
           chart.destroy();
         }
         else {
