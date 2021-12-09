@@ -585,7 +585,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $size = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         $contentRange = $request->getHeader('content-range');
-        $fileId = $fileId === 'unique()' ? $$dbForExternal->getId() : $fileId;
+        $fileId = $fileId === 'unique()' ? $dbForExternal->getId() : $fileId;
         $chunk = 1;
         $chunks = 1;
 
