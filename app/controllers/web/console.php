@@ -326,20 +326,12 @@ App::get('/console/storage/bucket')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\View $layout */
 
-        // $logs = new View(__DIR__.'/../../views/console/comps/logs.phtml');
-
-        // $logs
-        //     ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 0))
-        // ;
-
         $page = new View(__DIR__.'/../../views/console/storage/bucket.phtml');
         $page
             ->setParam('home', App::getEnv('_APP_HOME', 0))
             ->setParam('fileLimit', App::getEnv('_APP_STORAGE_LIMIT', 0))
             ->setParam('fileLimitHuman', Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0)))
         ;
-        
-        // $page->setParam('logs', $logs);
         
         $layout
             ->setParam('title', APP_NAME.' - Storage Bucket')
