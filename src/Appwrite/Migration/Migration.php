@@ -30,7 +30,7 @@ abstract class Migration
     /**
      * @var int
      */
-    protected int $limit = 50;
+    protected int $limit = 500;
 
     /**
      * @var OldDocument

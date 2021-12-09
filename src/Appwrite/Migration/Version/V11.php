@@ -39,8 +39,8 @@ class V11 extends Migration
     public function __construct(PDO $db, Redis $cache = null, array $options = [])
     {
         parent::__construct($db, $cache, $options);
-        $this->options = array_map(fn($option) => $option === 'yes' ? true : false, $this->options);
-
+        $this->options = array_map(fn ($option) => $option === 'yes' ? true : false, $this->options);
+        var_dump($this->options);
         if (!is_null($cache)) {
             $cacheAdapter = new Cache(new RedisCache($this->cache));
             $this->dbInternal = new Database(new MariaDB($this->db), $cacheAdapter);
@@ -58,16 +58,6 @@ class V11 extends Migration
         Authorization::disable();
         Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-        /**
-         * Get a project to check if the version works with this migration.
-         */
-        if (!str_starts_with($this->oldConsoleDB->getCollectionFirst([
-            'filters' => [
-                '$collection=' . OldDatabase::SYSTEM_COLLECTION_PROJECTS
-            ]
-        ])->getAttribute('version'), '0.11.')) {
-            throw new Exception("Can only migrate from version 0.11.x to 0.12.x");
-        }
         $oldProject = $this->project;
 
         $this->dbInternal->setNamespace('project_' . $oldProject->getId() . '_internal');
@@ -175,11 +165,21 @@ class V11 extends Migration
                 'offset' => $offset,
                 'orderType' => 'DESC',
                 'filters' => [
-                    '$collection!=' . OldDatabase::SYSTEM_COLLECTION_COLLECTIONS,
-                    '$collection!=' . OldDatabase::SYSTEM_COLLECTION_RULES,
-                    '$collection!=' . OldDatabase::SYSTEM_COLLECTION_TASKS,
-                    '$collection!=' . OldDatabase::SYSTEM_COLLECTION_PROJECTS,
-                    '$collection!=' . OldDatabase::SYSTEM_COLLECTION_CONNECTIONS,
+                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_DOMAINS,
+                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_EXECUTIONS,
+                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_FILES,
+                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_FUNCTIONS,
+                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_KEYS,
+                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_MEMBERSHIPS,
+                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_PLATFORMS,
+                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_SESSIONS,
+                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_TAGS,
+                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_TEAMS,
+                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_TOKENS,
+                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_USAGES,
+                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_USERS,
+                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_WEBHOOKS,
+                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_CERTIFICATES,
                 ]
             ]);
 
@@ -187,36 +187,37 @@ class V11 extends Migration
 
             Console::log('Migrating Documents: ' . $offset . ' / ' . $this->oldProjectDB->getSum());
 
-            foreach ($all as $document) {
-                if (
-                    !array_key_exists($document->getCollection(), $this->oldCollections)
-                ) {
-                    continue;
-                }
-
-                $old = $document->getArrayCopy();
-                $new = $this->fixDocument($document);
-
-                if (empty($new->getId())) {
-                    Console::warning('Skipped Document due to missing ID.');
-                    continue;
-                }
-
-                try {
-                    if ($this->dbInternal->getDocument($new->getCollection(), $new->getId())->isEmpty()) {
-                        $this->dbInternal->createDocument($new->getCollection(), $new);
-                    } else {
-                        Console::warning('Skipped Document ' . $new->getId() . ' from ' . $new->getCollection());
+            go(function ($all) {
+                foreach ($all as $document) {
+                    if (
+                        !array_key_exists($document->getCollection(), $this->oldCollections)
+                    ) {
+                        return;
                     }
-                } catch (\Throwable $th) {
-                    Console::error('Failed to update document: ' . $th->getMessage());
-                    continue;
 
-                    if ($document && $new->getId() !== $document->getId()) {
-                        throw new Exception('Duplication Error');
+                    $new = $this->fixDocument($document);
+
+                    if (empty($new->getId())) {
+                        Console::warning('Skipped Document due to missing ID.');
+                        return;
+                    }
+
+                    try {
+                        if ($this->dbInternal->getDocument($new->getCollection(), $new->getId())->isEmpty()) {
+                            $this->dbInternal->createDocument($new->getCollection(), $new);
+                        } else {
+                            Console::warning('Skipped Document ' . $new->getId() . ' from ' . $new->getCollection());
+                        }
+                    } catch (\Throwable $th) {
+                        Console::error('Failed to update document: ' . $th->getMessage());
+                        return;
+
+                        if ($document && $new->getId() !== $document->getId()) {
+                            throw new Exception('Duplication Error');
+                        }
                     }
                 }
-            }
+            }, $all);
 
             $offset += $this->limit;
         }
@@ -326,7 +327,7 @@ class V11 extends Migration
 
                         Console::log('Created "' . $attribute['$id'] . '" attribute in collection: ' . $name);
                     } catch (\Throwable $th) {
-                        Console::log($th->getMessage() . ' - (' . $attribute['$id'] . '" attribute in collection ' . $name . ')');
+                        Console::log($th->getMessage() . ' - ("' . $attribute['$id'] . '" attribute in collection ' . $name . ')');
                     }
                 }
                 if ($this->options['migrateDocuments']) {
@@ -349,6 +350,7 @@ class V11 extends Migration
     {
         $sum = $this->limit;
         $offset = 0;
+
         while ($sum >= $this->limit) {
             $allDocs = $this->oldProjectDB->getCollection([
                 'limit' => $this->limit,
@@ -360,40 +362,45 @@ class V11 extends Migration
             ]);
 
             $sum = \count($allDocs);
+
+            Console::log('Migrating External Documents for Collection ' . $collection . ': ' . $offset . ' / ' . $this->oldProjectDB->getSum());
+
             foreach ($allDocs as $document) {
                 if (!$this->dbExternal->getDocument($collection, $document->getId())->isEmpty()) {
                     continue;
                 }
-                foreach ($document as $key => $attr) {
-                    /**
-                     * Convert nested Document to JSON strings.
-                     */
-                    if ($document->getAttribute($key) instanceof OldDocument) {
-                        $document[$key] = json_encode($this->fixDocument($attr)->getArrayCopy());
-                    }
-                    /**
-                     * Convert numeric Attributes to float.
-                     */
-                    if (is_numeric($attr)) {
-                        $document[$key] = floatval($attr);
-                    }
-                    if (\is_array($attr)) {
-                        foreach ($attr as $index => $child) {
-                            /**
-                             * Convert array of nested Document to array JSON strings.
-                             */
-                            if ($document->getAttribute($key)[$index] instanceof OldDocument) {
-                                $document[$key][$index] = json_encode($this->fixDocument($child)->getArrayCopy());
-                            }
-                            /**
-                             * Convert array of numeric Attributes to array float.
-                             */
-                            if (is_numeric($attr)) {
-                                $document[$key][$index] = floatval($child); // Convert any numeric to float
+                go(function ($document) {
+                    foreach ($document as $key => $attr) {
+                        /**
+                         * Convert nested Document to JSON strings.
+                         */
+                        if ($document->getAttribute($key) instanceof OldDocument) {
+                            $document[$key] = json_encode($this->fixDocument($attr)->getArrayCopy());
+                        }
+                        /**
+                         * Convert numeric Attributes to float.
+                         */
+                        if (is_numeric($attr)) {
+                            $document[$key] = floatval($attr);
+                        }
+                        if (\is_array($attr)) {
+                            foreach ($attr as $index => $child) {
+                                /**
+                                 * Convert array of nested Document to array JSON strings.
+                                 */
+                                if ($document->getAttribute($key)[$index] instanceof OldDocument) {
+                                    $document[$key][$index] = json_encode($this->fixDocument($child)->getArrayCopy());
+                                }
+                                /**
+                                 * Convert array of numeric Attributes to array float.
+                                 */
+                                if (is_numeric($attr)) {
+                                    $document[$key][$index] = floatval($child); // Convert any numeric to float
+                                }
                             }
                         }
                     }
-                }
+                }, $document);
                 $document = new Document($document->getArrayCopy());
                 $document = $this->migratePermissions($document);
                 $this->dbExternal->createDocument($collection, $document);
