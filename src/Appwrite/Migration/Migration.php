@@ -13,6 +13,11 @@ use Utopia\Exception;
 abstract class Migration
 {
     /**
+     * @var array
+     */
+    protected array $options;
+
+    /**
      * @var PDO
      */
     protected PDO $db;
@@ -68,8 +73,9 @@ abstract class Migration
      *
      * @param PDO $pdo
      */
-    public function __construct(PDO $db, Redis $cache = null)
+    public function __construct(PDO $db, Redis $cache = null, array $options = [])
     {
+        $this->options = $options;
         $this->db = $db;
         if(!is_null($cache)) {
             $this->cache = $cache;
