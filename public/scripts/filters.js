@@ -183,6 +183,13 @@ window.ls.filter
 
     return $value[$value.length - 1].value;
   })
+  .add("statsGetLast", function ($value) {
+    if (!$value || $value.length < 1) {
+      return 0;
+    }
+
+    return $value[$value.length - 1].value;
+  })
   .add("isEmpty", function ($value) {
     return (!!$value);
   })
