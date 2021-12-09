@@ -37,6 +37,7 @@ return [
     'kn', // Kannada
     'km', // Khmer
     'ko', // Korean
+    'la', // Latin
     'lb', // Luxembourgish
     'lt', // Lithuanian
     'lv', // Latvian
