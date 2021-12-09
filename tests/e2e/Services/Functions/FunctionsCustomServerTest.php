@@ -795,4 +795,27 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
         $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['stdout']);
     }
+
+    public function testGetRuntimes()
+    {
+
+        $runtimes = $this->client->call(Client::METHOD_GET, '/functions/runtimes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $runtimes['headers']['status-code']);
+        $this->assertEquals(12, $runtimes['body']['sum']);
+
+        $runtime = $runtimes['body']['runtimes'][0];
+
+        $this->assertArrayHasKey('$id', $runtime);
+        $this->assertArrayHasKey('name', $runtime);
+        $this->assertArrayHasKey('version', $runtime);
+        $this->assertArrayHasKey('logo', $runtime);
+        $this->assertArrayHasKey('image', $runtime);
+        $this->assertArrayHasKey('base', $runtime);
+        $this->assertArrayHasKey('supports', $runtime);
+
+    }
 }
