@@ -729,7 +729,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('openSSLVersion', $openSSLVersion)
                         ->setAttribute('openSSLCipher', $openSSLCipher)
                         ->setAttribute('openSSLTag', $openSSLTag)
-                        ->setAttribute('openSSLIV', $openSSLIV);
+                        ->setAttribute('openSSLIV', $openSSLIV)
+                        ->setAttribute('chunksUploaded', $chunksUploaded);
 
                     if($permissionBucket) {
                         $file = Authorization::skip(function() use ($dbForInternal, $bucketId, $fileId, $file) {
