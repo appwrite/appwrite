@@ -805,7 +805,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $runtimes['headers']['status-code']);
-        $this->assertEquals(12, $runtimes['body']['sum']);
+        $this->assertGreaterThan(0, $runtimes['body']['sum']);
 
         $runtime = $runtimes['body']['runtimes'][0];
 

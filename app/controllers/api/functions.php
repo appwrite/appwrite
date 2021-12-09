@@ -133,7 +133,6 @@ App::get('/v1/functions/runtimes')
     ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
 
         $runtimes = Config::getParam('runtimes');
 
