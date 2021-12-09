@@ -155,7 +155,7 @@ class V11 extends Migration
 
         $sum = $this->limit;
         $offset = 0;
-
+        $total = 0;
         /**
          * Migrate internal documents
          */
@@ -165,21 +165,11 @@ class V11 extends Migration
                 'offset' => $offset,
                 'orderType' => 'DESC',
                 'filters' => [
-                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_DOMAINS,
-                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_EXECUTIONS,
-                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_FILES,
-                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_FUNCTIONS,
-                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_KEYS,
-                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_MEMBERSHIPS,
-                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_PLATFORMS,
-                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_SESSIONS,
-                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_TAGS,
-                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_TEAMS,
-                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_TOKENS,
-                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_USAGES,
-                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_USERS,
-                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_WEBHOOKS,
-                    '$collection=' . OldDatabase::SYSTEM_COLLECTION_CERTIFICATES,
+                    '$collection!=' . OldDatabase::SYSTEM_COLLECTION_COLLECTIONS,
+                    '$collection!=' . OldDatabase::SYSTEM_COLLECTION_RULES,
+                    '$collection!=' . OldDatabase::SYSTEM_COLLECTION_TASKS,
+                    '$collection!=' . OldDatabase::SYSTEM_COLLECTION_PROJECTS,
+                    '$collection!=' . OldDatabase::SYSTEM_COLLECTION_CONNECTIONS,
                 ]
             ]);
 
@@ -187,41 +177,38 @@ class V11 extends Migration
 
             Console::log('Migrating Documents: ' . $offset . ' / ' . $this->oldProjectDB->getSum());
 
-            go(function ($all) {
-                foreach ($all as $document) {
-                    if (
-                        !array_key_exists($document->getCollection(), $this->oldCollections)
-                    ) {
-                        return;
+            foreach ($all as $document) {
+                if (
+                    !array_key_exists($document->getCollection(), $this->oldCollections)
+                ) {
+                    continue;
+                }
+
+                $new = $this->fixDocument($document);
+
+                if (empty($new->getId())) {
+                    Console::warning('Skipped Document due to missing ID.');
+                    continue;
+                }
+
+                try {
+                    if ($this->dbInternal->getDocument($new->getCollection(), $new->getId())->isEmpty()) {
+                        $this->dbInternal->createDocument($new->getCollection(), $new);
                     }
+                } catch (\Throwable $th) {
+                    Console::error('Failed to update document: ' . $th->getMessage());
+                    continue;
 
-                    $new = $this->fixDocument($document);
-
-                    if (empty($new->getId())) {
-                        Console::warning('Skipped Document due to missing ID.');
-                        return;
-                    }
-
-                    try {
-                        if ($this->dbInternal->getDocument($new->getCollection(), $new->getId())->isEmpty()) {
-                            $this->dbInternal->createDocument($new->getCollection(), $new);
-                        } else {
-                            Console::warning('Skipped Document ' . $new->getId() . ' from ' . $new->getCollection());
-                        }
-                    } catch (\Throwable $th) {
-                        Console::error('Failed to update document: ' . $th->getMessage());
-                        return;
-
-                        if ($document && $new->getId() !== $document->getId()) {
-                            throw new Exception('Duplication Error');
-                        }
+                    if ($document && $new->getId() !== $document->getId()) {
+                        throw new Exception('Duplication Error');
                     }
                 }
-            }, $all);
+            }
 
             $offset += $this->limit;
+            $total += $sum;
         }
-        Console::log('Migrated ' . $sum . ' Documents.');
+        Console::log('Migrated ' . $total . ' Documents.');
     }
 
     /**

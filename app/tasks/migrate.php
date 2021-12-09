@@ -128,5 +128,6 @@ $cli
         }
         $cache->flushAll();
 
+        sleep(1); // Wait for Coroutines to finish
         Console::success('Data Migration Completed');
     });
