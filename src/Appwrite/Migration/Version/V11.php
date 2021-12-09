@@ -181,7 +181,7 @@ class V11 extends Migration
 
             $sum = \count($all);
 
-            Console::log('Migrating Documents: ' . $offset . ' / ' . $this->oldProjectDB->getSum());
+            Console::log('Migrating Internal Documents: ' . $offset . ' / ' . $this->oldProjectDB->getSum());
 
             foreach ($all as $document) {
                 if (
@@ -214,7 +214,7 @@ class V11 extends Migration
             $offset += $this->limit;
             $total += $sum;
         }
-        Console::log('Migrated ' . $total . ' Documents.');
+        Console::log('Migrated ' . $total . ' Internal Documents.');
     }
 
     /**
