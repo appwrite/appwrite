@@ -299,7 +299,8 @@ class V11 extends Migration
                             default: $attribute['default'],
                             signed: $attribute['signed'],
                             array: $attribute['array'],
-                            format: null,
+                            format: $attribute['format'] ?? null,
+                            formatOptions: $attribute['formatOptions'] ?? [],
                             filters: $attribute['filters']
                         );
 
@@ -314,7 +315,8 @@ class V11 extends Migration
                             'signed' => $attribute['signed'],
                             'default' => $attribute['default'],
                             'array' => $attribute['array'],
-                            'format' => null,
+                            'format' => $attribute['format'] ?? null,
+                            'formatOptions' => $attribute['formatOptions'] ?? null,
                             'filters' => $attribute['filters']
                         ]));
 
@@ -650,6 +652,13 @@ class V11 extends Migration
                 'signed' => true,
                 'filters' => []
             ];
+
+            if ($type === Database::VAR_FLOAT) {
+                $attributes[$key]['format'] = APP_DATABASE_ATTRIBUTE_FLOAT_RANGE;
+                $attributes[$key]['formatOptions'] = [];
+                $attributes[$key]['formatOptions']['min'] = -PHP_FLOAT_MAX;
+                $attributes[$key]['formatOptions']['max'] = PHP_FLOAT_MAX;
+            }
         }
 
         return $attributes;
