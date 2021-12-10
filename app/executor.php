@@ -1114,8 +1114,6 @@ function execute(string $trigger, string $projectId, string $executionId, string
     $executionTime = ($executionEnd - $executionStart);
     $functionStatus = ($statusCode >= 200 && $statusCode < 300) ? 'completed' : 'failed';
 
-    var_dump($statusCode);
-
     Console::info('Function executed in ' . ($executionEnd - $executionStart) . ' seconds, status: ' . $functionStatus);
 
     $execution->setAttribute('tagId', $tag->getId())
