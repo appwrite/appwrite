@@ -1234,7 +1234,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             $unit = $request->getRangeUnit();
 
             if ($end === null) {
-                $end =  min(($start + 2000000-1), ($size - 1));
+                $end =  min(($start + MAX_OUTPUT_CHUNK_SIZE-1), ($size - 1));
             }
 
             if ($unit !== 'bytes' || $start >= $end || $end >= $size) {
@@ -1283,7 +1283,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         if ($size > APP_STORAGE_READ_BUFFER) {          
             $response->addHeader('Content-Length', $device->getFileSize($path));
             for ($i=0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
-                $response->chunk($device->read($path, ($i * MAX_OUTPUT_CHUNK_SIZE), min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))), (($i + 1) * MAX_OUTPUT_CHUNK_SIZE) >= $size);
+                $response->chunk(
+                    $device->read(
+                        $path,
+                        ($i * MAX_OUTPUT_CHUNK_SIZE),
+                        min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
+                    ),
+                    (($i + 1) * MAX_OUTPUT_CHUNK_SIZE) >= $size
+                );
             }
         } else {
             $response->send($device->read($path));
@@ -1432,11 +1439,15 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         $size = $device->getFileSize($path);
         if ($size > APP_STORAGE_READ_BUFFER) {          
             $response->addHeader('Content-Length', $device->getFileSize($path));
-            $chunk = 2000000; // Max chunk of 2 mb
-            for ($i=0; $i < ceil($size / $chunk); $i++) {
+            for ($i=0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    $device->read($path, ($i * $chunk),
-                    min($chunk, $size - ($i * $chunk))), (($i + 1) * $chunk) >= $size);
+                    $device->read(
+                        $path,
+                        ($i * MAX_OUTPUT_CHUNK_SIZE),
+                        min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
+                    ),
+                    (($i + 1) * MAX_OUTPUT_CHUNK_SIZE) >= $size
+                );
             }
         } else {
             $response->send($device->read($path));
