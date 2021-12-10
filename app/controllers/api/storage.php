@@ -553,6 +553,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var string $mode */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
@@ -871,6 +872,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var string $mode */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
@@ -956,6 +958,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var string $mode */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
@@ -1028,6 +1031,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var string $mode */
 
         $storage = 'files';
 
@@ -1201,6 +1205,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var string $mode */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
@@ -1339,6 +1344,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         /** @var Utopia\Swoole\Request $request */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var string $mode */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
@@ -1493,6 +1499,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var string $mode */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
@@ -1576,6 +1583,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var string $mode */
         
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
