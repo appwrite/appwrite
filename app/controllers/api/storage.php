@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Validator\ArrayList;
@@ -57,6 +58,25 @@ App::post('/v1/storage/files')
         /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+
+        $read = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; // By default set read permissions for user
+        $write = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; 
+
+        // Users can only add their roles to files, API keys and Admin users can add any
+        $roles = \array_fill_keys(Authorization::getRoles(), true); // Auth::isAppUser expects roles to be keys, not values of assoc array
+
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach ($read as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Read permissions must be one of: ('.\implode(', ', array_keys($roles)).')', 400);
+                }
+            }
+            foreach ($write as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Write permissions must be one of: ('.\implode(', ', array_keys($roles)).')', 400);
+                }
+            }
+        }
 
         $file = $request->getFiles('file');
 
@@ -563,12 +583,33 @@ App::put('/v1/storage/files/:fileId')
     ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->inject('response')
     ->inject('dbForInternal')
+    ->inject('user')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($fileId, $read, $write, $response, $dbForInternal, $audits, $usage) {
+    ->action(function ($fileId, $read, $write, $response, $dbForInternal, $user, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
+
+        $read = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; // By default set read permissions for user
+        $write = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; 
+
+        // Users can only add their roles to files, API keys and Admin users can add any
+        $roles = \array_fill_keys(Authorization::getRoles(), true); // Auth::isAppUser expects roles to be keys, not values of assoc array
+
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach ($read as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Read permissions must be one of: ('.\implode(', ', array_keys($roles)).')', 400);
+                }
+            }
+            foreach ($write as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Write permissions must be one of: ('.\implode(', ', array_keys($roles)).')', 400);
+                }
+            }
+        }
 
         $file = $dbForInternal->getDocument('files', $fileId);
 
