@@ -292,6 +292,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsInt($tag['body']['dateCreated']);
         $this->assertEquals('index.php', $tag['body']['entrypoint']);
         // $this->assertGreaterThan(10000, $tag['body']['size']);
+
+        // Wait for tag to build.
+        sleep(5);
        
         /**
          * Test for FAILURE
@@ -320,9 +323,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsInt($response['body']['dateCreated']);
         $this->assertIsInt($response['body']['dateUpdated']);
         $this->assertEquals($data['tagId'], $response['body']['tag']);
-
-        // Wait for tag to be built.
-        sleep(5);
        
         /**
          * Test for FAILURE
@@ -445,7 +445,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsInt($execution['body']['dateCreated']);
         $this->assertEquals($data['functionId'], $execution['body']['functionId']);
         $this->assertEquals('waiting', $execution['body']['status']);
-        $this->assertEquals(0, $execution['body']['exitCode']);
+        $this->assertEquals(0, $execution['body']['statusCode']);
         $this->assertEquals('', $execution['body']['stdout']);
         $this->assertEquals('', $execution['body']['stderr']);
         $this->assertEquals(0, $execution['body']['time']);
@@ -462,7 +462,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsInt($execution['body']['dateCreated']);
         $this->assertEquals($data['functionId'], $execution['body']['functionId']);
         $this->assertEquals('completed', $execution['body']['status']);
-        $this->assertEquals(0, $execution['body']['exitCode']);
+        $this->assertEquals(200, $execution['body']['statusCode']);
         $this->assertStringContainsString($execution['body']['functionId'], $execution['body']['stdout']);
         $this->assertStringContainsString($data['tagId'], $execution['body']['stdout']);
         $this->assertStringContainsString('Test1', $execution['body']['stdout']);
@@ -685,6 +685,9 @@ class FunctionsCustomServerTest extends Scope
         $tagId = $tag['body']['$id'] ?? '';
         $this->assertEquals(201, $tag['headers']['status-code']);
 
+        // Allow build step to run
+        sleep(5);
+
         $tag = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/tag', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -694,9 +697,6 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $tag['headers']['status-code']);
-
-        // Allow build step to run
-        sleep(5);
        
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',
@@ -723,11 +723,11 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
         $this->assertEquals($executions['body']['executions'][0]['status'], 'failed');
-        $this->assertEquals($executions['body']['executions'][0]['exitCode'], 124);
+        $this->assertEquals($executions['body']['executions'][0]['statusCode'], 124);
         $this->assertGreaterThan(2, $executions['body']['executions'][0]['time']);
         $this->assertLessThan(3, $executions['body']['executions'][0]['time']);
         $this->assertEquals($executions['body']['executions'][0]['stdout'], '');
-        $this->assertEquals($executions['body']['executions'][0]['stderr'], '');
+        $this->assertEquals($executions['body']['executions'][0]['stderr'], 'Execution timed out.');
     }
 
     /**
@@ -768,6 +768,9 @@ class FunctionsCustomServerTest extends Scope
         $tagId = $tag['body']['$id'] ?? '';
         $this->assertEquals(201, $tag['headers']['status-code']);
 
+        // Allow build step to run
+        sleep(5);
+
         $tag = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/tag', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -776,9 +779,6 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $tag['headers']['status-code']);
-
-        // Allow build step to run
-        sleep(5);
        
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',

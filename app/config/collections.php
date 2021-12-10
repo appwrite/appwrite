@@ -2255,7 +2255,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'exitCode',
+                '$id' => 'statusCode',
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,

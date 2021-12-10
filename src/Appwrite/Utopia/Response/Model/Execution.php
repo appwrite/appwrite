@@ -47,9 +47,9 @@ class Execution extends Model
                 'default' => '',
                 'example' => 'processing',
             ])
-            ->addRule('exitCode', [
+            ->addRule('statusCode', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'The script exit code.',
+                'description' => 'The script status code.',
                 'default' => 0,
                 'example' => 0,
             ])

@@ -858,7 +858,7 @@ App::post('/v1/functions/:functionId/executions')
             'tagId' => $tag->getId(),
             'trigger' => 'http', // http / schedule / event
             'status' => 'waiting', // waiting / processing / completed / failed
-            'exitCode' => 0,
+            'statusCode' => 0,
             'stdout' => '',
             'stderr' => '',
             'time' => 0.0,

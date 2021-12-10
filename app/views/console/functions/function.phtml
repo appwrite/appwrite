@@ -371,7 +371,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                         </td>
                                         <td data-title="Status: ">
                                             <span data-ls-bind="{{execution.status}}"></span>
-                                            <span class="text-fade text-size-small" data-ls-if="{{execution.exitCode}} !== 0" data-ls-bind=" exit code: {{execution.exitCode}}"></span>
+                                            <span class="text-fade text-size-small" data-ls-if="{{execution.statusCode}} < 200 && {{execution.statusCode}} >= 300" data-ls-bind=" exit code: {{execution.statusCode}}"></span>
                                         </td>
                                         <td data-title="Trigger: ">
                                             <span data-ls-bind="{{execution.trigger}}"></span>

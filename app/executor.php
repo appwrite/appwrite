@@ -665,6 +665,10 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
         return $database->getDocument('tags', $tagId);
     });
 
+    if ($tag->getAttribute('buildId') === null) {
+        throw new Exception('Tag has no buildId');
+    }
+
     // Grab Build Document
     $build = Authorization::skip(function () use ($database, $tag) {
         return $database->getDocument('builds', $tag->getAttribute('buildId'));
@@ -856,7 +860,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
             'tagId' => $tag->getId(),
             'trigger' => $trigger, // http / schedule / event
             'status' => 'processing', // waiting / processing / completed / failed
-            'exitCode' => 0,
+            'statusCode' => 0,
             'stdout' => '',
             'stderr' => '',
             'time' => 0.0,
@@ -873,7 +877,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
         Console::error('Execution Failed. Reason: Code was still being built.');
 
         $execution->setAttribute('status', 'failed')
-            ->setAttribute('exitCode', 1)
+            ->setAttribute('statusCode', 500)
             ->setAttribute('stderr', 'Tag is still being built.')
             ->setAttribute('time', 0);
 
@@ -951,7 +955,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
     } catch (Exception $e) {
         Console::error('Something went wrong building the code. ' . $e->getMessage());
         $execution->setAttribute('status', 'failed')
-            ->setAttribute('exitCode', 1)
+            ->setAttribute('statusCode', 500)
             ->setAttribute('stderr', \utf8_encode(\mb_substr($e->getMessage(), -4000))) // log last 4000 chars output
             ->setAttribute('time', 0);
 
@@ -972,7 +976,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
         Console::error('Something went wrong building the runtime server. ' . $e->getMessage());
 
         $execution->setAttribute('status', 'failed')
-            ->setAttribute('exitCode', 1)
+            ->setAttribute('statusCode', 500)
             ->setAttribute('stderr', \utf8_encode(\mb_substr($e->getMessage(), -4000))) // log last 4000 chars output
             ->setAttribute('time', 0);
 
@@ -1012,8 +1016,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     $executionStart = \microtime(true);
 
-    $exitCode = 0;
-    $statusCode = 200;
+    $statusCode = 0;
 
     $errNo = -1;
     $attempts = 0;
@@ -1067,12 +1070,12 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     if ($attempts >= 5) {
         $stderr = 'Failed to connect to executor runtime after 5 attempts.';
-        $exitCode = 124;
+        $statusCode = 124;
     }
 
     // If timeout error
     if ($errNo == CURLE_OPERATION_TIMEDOUT || $errNo == 110) {
-        $exitCode = 124;
+        $statusCode = 124;
     }
 
     // 110 is the Swoole error code for timeout, see: https://www.swoole.co.uk/docs/swoole-error-code
@@ -1081,29 +1084,43 @@ function execute(string $trigger, string $projectId, string $executionId, string
         throw new Exception('Curl error: ' . $error, 500);
     }
 
+    $executionData = [];
+
     if (!empty($executorResponse)) {
         $executionData = json_decode($executorResponse, true);
     }
 
     if (isset($executionData['code'])) {
-        $exitCode = $executionData['code'];
+        $statusCode = $executionData['code'];
     }
 
-    if ($exitCode === 500) {
-        $stderr = $executionData['message'];
-    } else if ($exitCode === 0) {
+    if ($statusCode === 500) {
+        if (isset($executionData['message'])) {
+            $stderr = $executionData['message'];
+        } else {
+            $stderr = 'Internal Runtime error';
+        }
+    } else if ($statusCode === 124) {
+        $stderr = 'Execution timed out.';
+    } else if ($statusCode === 0) {
+        $stderr = 'Execution failed.';
+    } else if ($statusCode >= 200 && $statusCode < 300) {
         $stdout = $executorResponse;
+    } else {
+        $stderr = 'Execution failed.';
     }
 
     $executionEnd = \microtime(true);
     $executionTime = ($executionEnd - $executionStart);
-    $functionStatus = ($exitCode === 0) ? 'completed' : 'failed';
+    $functionStatus = ($statusCode >= 200 && $statusCode < 300) ? 'completed' : 'failed';
+
+    var_dump($statusCode);
 
     Console::info('Function executed in ' . ($executionEnd - $executionStart) . ' seconds, status: ' . $functionStatus);
 
     $execution->setAttribute('tagId', $tag->getId())
         ->setAttribute('status', $functionStatus)
-        ->setAttribute('exitCode', $exitCode)
+        ->setAttribute('statusCode', $statusCode)
         ->setAttribute('stdout', \utf8_encode(\mb_substr($stdout, -8000)))
         ->setAttribute('stderr', \utf8_encode(\mb_substr($stderr, -8000)))
         ->setAttribute('time', $executionTime);
@@ -1341,7 +1358,7 @@ function handleShutdown()
             // Mark all processing executions as failed
             foreach ($executions as $execution) {
                 $execution->setAttribute('status', 'failed')
-                    ->setAttribute('exitCode', 1)
+                    ->setAttribute('statusCode', 1)
                     ->setAttribute('stderr', 'Appwrite was shutdown during execution');
                 
                 Authorization::skip(function () use ($database, $execution) {
