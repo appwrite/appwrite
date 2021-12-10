@@ -64,8 +64,9 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
         ;
     }
 
-    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-    $isAppUser = Auth::isAppUser(Authorization::$roles);
+    $roles = Authorization::getRoles();
+    $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+    $isAppUser = Auth::isAppUser($roles);
 
     if (($abuse->check() // Route is rate-limited
         && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not disabled
@@ -128,8 +129,8 @@ App::init(function ($utopia, $request, $project) {
 
     $route = $utopia->match($request);
 
-    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-    $isAppUser = Auth::isAppUser(Authorization::$roles);
+    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+    $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
     if($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
         return;
