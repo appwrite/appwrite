@@ -22,13 +22,13 @@ class CollectionsTest extends TestCase
         foreach ($this->collections as $key => $collection) {
             if (array_key_exists('attributes', $collection)) {
                 foreach ($collection['attributes'] as $check) {
-                    $occurences = 0;
+                    $occurrences = 0;
                     foreach ($collection['attributes'] as $attribute) {
                         if ($attribute['$id'] == $check['$id']) {
-                            $occurences++;
+                            $occurrences++;
                         }
                     }
-                    $this->assertEquals(1, $occurences);
+                    $this->assertEquals(1, $occurrences);
                 }
             }
         }

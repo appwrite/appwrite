@@ -35,6 +35,7 @@ use Appwrite\Utopia\Response\Model\Build;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\Index;
+use Appwrite\Utopia\Response\Model\FuncPermissions;
 use Appwrite\Utopia\Response\Model\JWT;
 use Appwrite\Utopia\Response\Model\Key;
 use Appwrite\Utopia\Response\Model\Language;
@@ -149,7 +150,8 @@ class Response extends SwooleResponse
     const MODEL_EXECUTION_LIST = 'executionList';
     const MODEL_BUILD = 'build';
     const MODEL_BUILD_LIST = 'buildList';
-    
+    const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
+ 
     // Project
     const MODEL_PROJECT = 'project';
     const MODEL_PROJECT_LIST = 'projectList';
@@ -243,6 +245,7 @@ class Response extends SwooleResponse
             ->setModel(new Team())
             ->setModel(new Membership())
             ->setModel(new Func())
+            ->setModel(new FuncPermissions())
             ->setModel(new Tag())
             ->setModel(new Execution())
             ->setModel(new SyncExecution())
