@@ -199,7 +199,7 @@
                  *
                  * Use this endpoint to allow a new user to register a new account in your
                  * project. After the user registration completes successfully, you can use
-                 * the [/account/verfication](/docs/client/account#accountCreateVerification)
+                 * the [/account/verification](/docs/client/account#accountCreateVerification)
                  * route to start verifying the user email address. To allow the new user to
                  * login to their new account, you need to create a new [account
                  * session](/docs/client/account#accountCreateSession).
@@ -3896,7 +3896,7 @@
                  * Update Team Membership Status
                  *
                  * Use this endpoint to allow a user to accept an invitation to join a team
-                 * after being redirected back to your app from the invitation email recieved
+                 * after being redirected back to your app from the invitation email received
                  * by the user.
                  *
                  * @param {string} teamId
