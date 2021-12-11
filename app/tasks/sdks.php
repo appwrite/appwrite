@@ -180,7 +180,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setShareText('Appwrite is a backend as a service for building web or mobile apps')
                     ->setShareURL('http://appwrite.io')
                     ->setShareTags('JS,javascript,reactjs,angular,ios,android,serverless')
-                    ->setShareVia('appwrite_io')
+                    ->setShareVia('appwrite')
                     ->setWarning($warning)
                     ->setReadme($readme)
                     ->setGettingStarted($gettingStarted)
