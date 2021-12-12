@@ -328,7 +328,7 @@ App::get('/v1/users/:userId/logs')
                 'clientEngineVersion' => $client['clientEngineVersion'],
                 'deviceName' => $device['deviceName'],
                 'deviceBrand' => $device['deviceBrand'],
-                'deviceModel' => $device['deviceModel'],
+                'deviceModel' => $device['deviceModel']
             ]);
 
             $record = $geodb->get($log['ip']);
