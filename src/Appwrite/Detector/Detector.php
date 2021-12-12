@@ -47,7 +47,18 @@ class Detector
      */
     public function getClient(): array
     {
-        $client = $this->getDetector()->getClient();
+        if (strpos($this->userAgent, 'Terminal') !== false) {
+            $version = explode(' ', $this->userAgent)[0];
+            $version = explode('/', $version)[1];
+            $client = [
+                'type' => 'desktop',
+                'short_name' => 'terminal',
+                'name' => 'Terminal',
+                'version' => $version
+            ];
+        } else {
+            $client = $this->getDetector()->getClient();
+        }
 
         return [
             'clientType' => (isset($client['type'])) ? $client['type'] : '',
