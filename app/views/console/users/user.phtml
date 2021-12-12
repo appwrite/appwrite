@@ -392,7 +392,10 @@
                                     <td data-title="Date: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
                                     <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
                                     <td data-title="Client: ">
-                                        <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="({{log.clientCode}})" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.clientCode|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
+                                        <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{log.clientCode|lowercase}} !== 'terminal'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.clientCode|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
+                                        
+                                        <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{log.clientCode|lowercase}} === 'terminal'" data-ls-attrs="src=/images/clients/terminal.png?buster=<?php echo APP_CACHE_BUSTER; ?>,,title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
+                                        
                                         <span data-ls-if="({{log.clientName}})" data-ls-bind="{{log.clientName}} {{log.clientVersion}} on {{log.model}} {{log.osName}} {{log.osVersion}}"></span>
                                         <div data-ls-if="(!{{log.clientName}})" class="text-align-center text-fade">Unknown</div>
                                     </td>
