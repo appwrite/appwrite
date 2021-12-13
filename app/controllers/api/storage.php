@@ -390,22 +390,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
         }
 
-        $file = $request->getFiles('file');
-
-        /**
-         * Validators
-         */
-        $allowedFileExtensions = $bucket->getAttribute('allowedFileExtensions', []);
-        $fileExt = new FileExt($allowedFileExtensions);
-
         $maximumFileSize = $bucket->getAttribute('maximumFileSize', 0);
         if ($maximumFileSize > (int) App::getEnv('_APP_STORAGE_LIMIT', 0)) {
             throw new Exception('Error bucket maximum file size is larger than _APP_STORAGE_LIMIT', 500);
         }
 
-        $fileSizeValidator = new FileSize($maximumFileSize);
-        $upload = new Upload();
-
+        $file = $request->getFiles('file');
         if (empty($file)) {
             throw new Exception('No file sent', 400);
         }
@@ -430,7 +420,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             if ($end === $fileSize) {
-                //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
+                //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to -1 notify it's last chunk
                 $chunks = $chunk = -1;
             } else {
                 // Calculate total number of chunks based on the chunk size i.e ($rangeEnd - $rangeStart)
@@ -439,15 +429,23 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
         }
 
-        // Check if file type is allowed (feature for project settings?)
+         /**
+         * Validators
+         */
+        // Check if file type is allowed
+        $allowedFileExtensions = $bucket->getAttribute('allowedFileExtensions', []);
+        $fileExt = new FileExt($allowedFileExtensions);
         if (!empty($allowedFileExtensions) && !$fileExt->isValid($fileName)) {
             throw new Exception('File extension not allowed', 400);
         }
 
-        if (!$fileSizeValidator->isValid($fileSize)) { // Check if file size is exceeding allowed limit
+        // Check if file size is exceeding allowed limit
+        $fileSizeValidator = new FileSize($maximumFileSize);
+        if (!$fileSizeValidator->isValid($fileSize)) {
             throw new Exception('File size not allowed', 400);
         }
-
+        
+        $upload = new Upload();
         if (!$upload->isValid($fileTmpName)) {
             throw new Exception('Invalid file', 403);
         }
@@ -488,7 +486,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 
                 if (!$antiVirus->fileScan($path)) {
                     $deviceFiles->delete($path);
-                    throw new Exception('Invalid file', 403);
+                    throw new Exception('Invalid file', 400);
                 }
             }
 
