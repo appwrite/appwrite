@@ -1494,6 +1494,10 @@ App::patch('/v1/account/prefs')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
+        if(\strlen($prefs) > 16384) {
+            throw new Exception('Maximum allowed prefs size exceeded.', 400);
+        }
+
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
 
         $audits

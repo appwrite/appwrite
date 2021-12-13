@@ -591,6 +591,10 @@ App::patch('/v1/users/:userId/prefs')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
 
+        if(\strlen($prefs) > 16384) {
+            throw new Exception('Maximum allowed prefs size exceeded.', 400);
+        }
+
         $user = $dbForInternal->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
