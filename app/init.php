@@ -825,11 +825,11 @@ App::setResource('dbForInternal', function($db, $cache, $project) {
     return $database;
 }, ['db', 'cache', 'project']);
 
-App::setResource('storageSelf', function() {
+App::setResource('deviceLocal', function() {
     return new Local();
 });
 
-App::setResource('storageFiles', function($project) {
+App::setResource('deviceFiles', function($project) {
     switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
         case Storage::DEVICE_LOCAL:default:
             return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
@@ -850,7 +850,7 @@ App::setResource('storageFiles', function($project) {
     }
 }, ['project']);
 
-App::setResource('storageFunctions', function($project) {
+App::setResource('deviceFunctions', function($project) {
     switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
         case Storage::DEVICE_LOCAL:default:
             return new Local(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
