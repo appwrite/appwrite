@@ -53,12 +53,17 @@ if(!empty($platforms)) {
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
     <meta name="theme-color" content="#f02e65">
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="<?php echo APP_NAME; ?>">
     <meta property="og:title" content="<?php echo $this->escape($this->getParam('title', '')); ?>" />
     <meta property="og:description" content="<?php echo $this->escape($this->getParam('description', '')); ?>" />
     <?php if (!empty($canonical)): ?>
         <meta property="og:url" content="<?php echo $this->escape($canonical); ?>" />
     <?php endif; ?>
     <meta property="og:image"  content="<?php echo $this->escape($endpoint); ?><?php echo $this->escape($image); ?>?v=<?php echo APP_CACHE_BUSTER; ?>" />
+    <meta name="twitter:site" content="@<?php echo APP_SOCIAL_TWITTER_HANDLE; ?>">
+    <meta name="twitter:title" content="<?php echo $this->escape($this->getParam('title', '')); ?>">
+    <meta name="twitter:image:src" content="<?php echo $this->escape($endpoint); ?><?php echo $this->escape($image); ?>?v=<?php echo APP_CACHE_BUSTER; ?>">
+    <meta name="twitter:card" content="summary_large_image">
     <script>
 
         (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
