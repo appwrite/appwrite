@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Account;
 
 use Tests\E2E\Client;
+use function array_merge;
 
 trait AccountBase
 {
@@ -747,6 +748,29 @@ trait AccountBase
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'prefs' => '{"test": "value"}'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        /**
+         * Prefs size exceeded
+         */
+
+        $prefsObject = [];
+        // Add 1000 keys
+        for($i = 1000; $i < 2000; $i++) {
+            $prefsObject["key" + $i]  = "HelloWorld";
+            // Each key is 7 characters and value is 10 characters
+        }
+        // That makes total size minimum of 17 000, plus any JSON stuff. Max supported is 16384, so this should exceed.
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'prefs' => $prefsObject
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
