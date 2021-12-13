@@ -70,222 +70,37 @@ App::post('/v1/storage/buckets')
 
         $bucketId = $bucketId === 'unique()' ? $dbForInternal->getId() : $bucketId;
         try {
-            $dbForExternal->createCollection('bucket_' . $bucketId, [
-                new Document([
-                    '$id' => 'dateCreated',
-                    'type' => Database::VAR_INTEGER,
-                    'format' => '',
-                    'size' => 0,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    'array' => false,
-                    '$id' => 'bucketId',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => Database::LENGTH_KEY,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'name',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 2048,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'path',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 2048,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'signature',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 2048,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'mimeType',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 127, // https://tools.ietf.org/html/rfc4288#section-4.2
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'metadata',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 16384, // https://tools.ietf.org/html/rfc4288#section-4.2
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => ['json'],
-                ]),
-                new Document([
-                    '$id' => 'sizeOriginal',
-                    'type' => Database::VAR_INTEGER,
-                    'format' => '',
-                    'size' => 0,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'sizeActual',
-                    'type' => Database::VAR_INTEGER,
-                    'format' => '',
-                    'size' => 0,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'algorithm',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 255,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'comment',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 2048,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'openSSLVersion',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 64,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'openSSLCipher',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 64,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'openSSLTag',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 2048,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'openSSLIV',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 2048,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'chunksTotal',
-                    'type' => Database::VAR_INTEGER,
-                    'format' => '',
-                    'size' => 0,
-                    'signed' => false,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'chunksUploaded',
-                    'type' => Database::VAR_INTEGER,
-                    'format' => '',
-                    'size' => 0,
-                    'signed' => false,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'search',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 16384,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-            ], [
-                new Document([
-                    '$id' => '_key_search',
-                    'type' => Database::INDEX_FULLTEXT,
-                    'attributes' => ['search'],
-                    'lengths' => [2048],
-                    'orders' => [Database::ORDER_ASC],
-                ]),
-                new Document([
-                    '$id' => '_key_bucket',
-                    'type' => Database::INDEX_KEY,
-                    'attributes' => ['bucketId'],
-                    'lengths' => [Database::LENGTH_KEY],
-                    'orders' => [Database::ORDER_ASC],
-                ]),
-            ]);
+            $files = Config::getParam('collections', [])['files'] ?? [];
+            if(empty($files)) {
+                throw new Exception('Files collection is not configured.');
+            }
+
+            $attributes = [];
+            $indexes = [];
+
+            foreach ($files['attributes'] as $attribute) {
+                $attributes[] = new Document([
+                    '$id' => $attribute['$id'],
+                    'type' => $attribute['type'],
+                    'size' => $attribute['size'],
+                    'required' => $attribute['required'],
+                    'signed' => $attribute['signed'],
+                    'array' => $attribute['array'],
+                    'filters' => $attribute['filters'],
+                ]);
+            }
+
+            foreach ($files['indexes'] as $index) {
+                $indexes[] = new Document([
+                    '$id' => $index['$id'],
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]);
+            }
+
+            $dbForExternal->createCollection('bucket_' . $bucketId, $attributes, $indexes);
 
             $bucket = $dbForInternal->createDocument('buckets', new Document([
                 '$id' => $bucketId,
