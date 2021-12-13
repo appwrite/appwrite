@@ -120,7 +120,7 @@
 
 ## 0.2.2
 
-- Fixed an error that happend when the OAuth session creation request was sent before any other API call
+- Fixed an error that happened when the OAuth session creation request was sent before any other API call
 - Fixed a bug in the Avatars service where location URL generation had syntax error
 
 ## 0.2.1
@@ -130,7 +130,7 @@
 ## 0.2.0
 
 - Updated flutter_web_auth plugin to version 0.2.4
-- Added per project unique callback for OAuth2 redirects to aviod conflicts between multiple Appwrite projects
+- Added per project unique callback for OAuth2 redirects to avoid conflicts between multiple Appwrite projects
 
 ## 0.1.1
 
@@ -159,7 +159,7 @@
 
 ## 0.0.9
 
-- Updated deafult params
+- Updated default params
 
 ## 0.0.8
 

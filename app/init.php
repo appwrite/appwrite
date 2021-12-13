@@ -22,8 +22,6 @@ use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Database as DatabaseOld;
-use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
-use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
@@ -332,6 +330,9 @@ Database::addFilter('encrypt',
         ]);
     },
     function($value) {
+        if(is_null($value)) {
+            return null;
+        }
         $value = json_decode($value, true);
         $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
 
@@ -532,6 +533,7 @@ Locale::setLanguageFromJSON('jv', __DIR__.'/config/locale/translations/jv.json')
 Locale::setLanguageFromJSON('kn', __DIR__.'/config/locale/translations/kn.json');
 Locale::setLanguageFromJSON('km', __DIR__.'/config/locale/translations/km.json');
 Locale::setLanguageFromJSON('ko', __DIR__.'/config/locale/translations/ko.json');
+Locale::setLanguageFromJSON('la', __DIR__.'/config/locale/translations/la.json');
 Locale::setLanguageFromJSON('lb', __DIR__.'/config/locale/translations/lb.json');
 Locale::setLanguageFromJSON('lt', __DIR__.'/config/locale/translations/lt.json');
 Locale::setLanguageFromJSON('lv', __DIR__.'/config/locale/translations/lv.json');
@@ -542,7 +544,6 @@ Locale::setLanguageFromJSON('nb', __DIR__.'/config/locale/translations/nb.json')
 Locale::setLanguageFromJSON('ne', __DIR__.'/config/locale/translations/ne.json');
 Locale::setLanguageFromJSON('nl', __DIR__.'/config/locale/translations/nl.json');
 Locale::setLanguageFromJSON('nn', __DIR__.'/config/locale/translations/nn.json');
-Locale::setLanguageFromJSON('no', __DIR__.'/config/locale/translations/no.json');
 Locale::setLanguageFromJSON('or', __DIR__.'/config/locale/translations/or.json');
 Locale::setLanguageFromJSON('pa', __DIR__.'/config/locale/translations/pa.json');
 Locale::setLanguageFromJSON('pl', __DIR__.'/config/locale/translations/pl.json');
@@ -558,6 +559,7 @@ Locale::setLanguageFromJSON('sl', __DIR__ . '/config/locale/translations/sl.json
 Locale::setLanguageFromJSON('sq', __DIR__ . '/config/locale/translations/sq.json');
 Locale::setLanguageFromJSON('sv', __DIR__ . '/config/locale/translations/sv.json');
 Locale::setLanguageFromJSON('ta', __DIR__ . '/config/locale/translations/ta.json');
+Locale::setLanguageFromJSON('te', __DIR__.'/config/locale/translations/te.json');
 Locale::setLanguageFromJSON('th', __DIR__.'/config/locale/translations/th.json');
 Locale::setLanguageFromJSON('tl', __DIR__.'/config/locale/translations/tl.json');
 Locale::setLanguageFromJSON('tr', __DIR__.'/config/locale/translations/tr.json');

@@ -13,7 +13,7 @@ class CustomId extends Key {
      *
      * @return bool
      */
-    public function isValid($value)
+    public function isValid($value): bool
     {
 
         return $value == 'unique()' || parent::isValid($value);

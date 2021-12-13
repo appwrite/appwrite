@@ -34,7 +34,7 @@ class Permissions extends Validator
      *
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return $this->message;
     }
@@ -48,7 +48,7 @@ class Permissions extends Validator
      *
      * @return bool
      */
-    public function isValid($value)
+    public function isValid($value): bool
     {
         if (!\is_array($value) && !empty($value)) {
             $this->message = 'Invalid permissions data structure';

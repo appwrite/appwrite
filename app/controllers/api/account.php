@@ -46,7 +46,7 @@ App::post('/v1/account')
     ->label('abuse-limit', 10)
     ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
-    ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
+    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('request')
     ->inject('response')
@@ -150,7 +150,7 @@ App::post('/v1/account/sessions')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', new Email(), 'User email.')
-    ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
+    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->inject('request')
     ->inject('response')
     ->inject('dbForInternal')
@@ -648,8 +648,9 @@ App::post('/v1/account/sessions/magic-url')
             throw new Exception('SMTP Disabled', 503);
         }
 
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-        $isAppUser = Auth::isAppUser(Authorization::$roles);
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
 
         $user = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]);
 
@@ -1367,8 +1368,8 @@ App::patch('/v1/account/password')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('password', '', new Password(), 'New user password. Must be between 6 to 32 chars.')
-    ->param('oldPassword', '', new Password(), 'Old user password. Must be between 6 to 32 chars.', true)
+    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->param('oldPassword', '', new Password(), 'Old user password. Must be at least 8 chars.', true)
     ->inject('response')
     ->inject('user')
     ->inject('dbForInternal')
@@ -1416,7 +1417,7 @@ App::patch('/v1/account/email')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('email', '', new Email(), 'User email.')
-    ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
+    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->inject('response')
     ->inject('user')
     ->inject('dbForInternal')
@@ -1780,8 +1781,9 @@ App::post('/v1/account/recovery')
             throw new Exception('SMTP Disabled', 503);
         }
 
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-        $isAppUser = Auth::isAppUser(Authorization::$roles);
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
 
         $email = \strtolower($email);
         $profile = $dbForInternal->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
@@ -1869,8 +1871,8 @@ App::put('/v1/account/recovery')
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', new UID(), 'User account UID address.')
     ->param('secret', '', new Text(256), 'Valid reset token.')
-    ->param('password', '', new Password(), 'New password. Must be between 6 to 32 chars.')
-    ->param('passwordAgain', '', new Password(), 'New password again. Must be between 6 to 32 chars.')
+    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->param('passwordAgain', '', new Password(), 'New password again. Must be at least 8 chars.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('audits')
@@ -1971,9 +1973,10 @@ App::post('/v1/account/verification')
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception('SMTP Disabled', 503);
         }
-        
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-        $isAppUser = Auth::isAppUser(Authorization::$roles);
+
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
 
         $verificationSecret = Auth::tokenGenerator();
 

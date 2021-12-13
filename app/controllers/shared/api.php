@@ -64,8 +64,9 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
         ;
     }
 
-    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-    $isAppUser = Auth::isAppUser(Authorization::$roles);
+    $roles = Authorization::getRoles();
+    $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+    $isAppUser = Auth::isAppUser($roles);
 
     if (($abuse->check() // Route is rate-limited
         && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not disabled
@@ -128,8 +129,8 @@ App::init(function ($utopia, $request, $project) {
 
     $route = $utopia->match($request);
 
-    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-    $isAppUser = Auth::isAppUser(Authorization::$roles);
+    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+    $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
     if($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
         return;
@@ -166,7 +167,7 @@ App::init(function ($utopia, $request, $project) {
                 throw new Exception('JWT authentication is disabled for this project', 501);
             }
             break;
-        
+
         default:
             throw new Exception('Unsupported authentication route');
             break;
@@ -187,7 +188,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     /** @var bool $mode */
 
     if (!empty($events->getParam('event'))) {
-        if(empty($events->getParam('eventData'))) {
+        if (empty($events->getParam('eventData'))) {
             $events->setParam('eventData', $response->getPayload());
         }
 
@@ -206,10 +207,10 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
 
         if ($project->getId() !== 'console') {
             $payload = new Document($response->getPayload());
-            $target = Realtime::fromPayload($events->getParam('event'), $payload);
+            $target = Realtime::fromPayload($events->getParam('event'), $payload, $project);
 
             Realtime::send(
-                $project->getId(),
+                $target['projectId'] ?? $project->getId(),
                 $response->getPayload(),
                 $events->getParam('event'),
                 $target['channels'],

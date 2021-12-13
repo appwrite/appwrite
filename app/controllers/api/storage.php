@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Validator\ArrayList;
@@ -57,6 +58,25 @@ App::post('/v1/storage/files')
         /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+
+        $read = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; // By default set read permissions for user
+        $write = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; 
+
+        // Users can only add their roles to files, API keys and Admin users can add any
+        $roles = Authorization::getRoles();
+
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach ($read as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                }
+            }
+            foreach ($write as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                }
+            }
+        }
 
         $file = $request->getFiles('file');
 
@@ -265,7 +285,7 @@ App::get('/v1/storage/files/:fileId/preview')
     ->param('borderColor', '', new HexColor(), 'Preview image border color. Use a valid HEX color, no # is needed for prefix.', true)
     ->param('borderRadius', 0, new Range(0, 4000), 'Preview image border radius in pixels. Pass an integer between 0 to 4000.', true)
     ->param('opacity', 1, new Range(0,1, Range::TYPE_FLOAT), 'Preview image opacity. Only works with images having an alpha channel (like png). Pass a number between 0 to 1.', true)
-    ->param('rotation', 0, new Range(0,360), 'Preview image rotation in degrees. Pass an integer between 0 and 360.', true)
+    ->param('rotation', 0, new Range(-360,360), 'Preview image rotation in degrees. Pass an integer between -360 and 360.', true)
     ->param('background', '', new HexColor(), 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->inject('request')
@@ -382,7 +402,7 @@ App::get('/v1/storage/files/:fileId/preview')
         }
 
         if (!empty($rotation)) {
-            $image->setRotation($rotation);
+            $image->setRotation(($rotation + 360) % 360);
         }
 
         $output = (empty($output)) ? $type : $output;
@@ -563,12 +583,33 @@ App::put('/v1/storage/files/:fileId')
     ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->inject('response')
     ->inject('dbForInternal')
+    ->inject('user')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($fileId, $read, $write, $response, $dbForInternal, $audits, $usage) {
+    ->action(function ($fileId, $read, $write, $response, $dbForInternal, $user, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
+
+        $read = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; // By default set read permissions for user
+        $write = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; 
+
+        // Users can only add their roles to files, API keys and Admin users can add any
+        $roles = Authorization::getRoles();
+
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach ($read as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                }
+            }
+            foreach ($write as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                }
+            }
+        }
 
         $file = $dbForInternal->getDocument('files', $fileId);
 
