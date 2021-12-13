@@ -5,7 +5,7 @@ sdk
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-let promise = sdk.projects.delete('[PROJECT_ID]', 'password');
+let promise = sdk.functions.listRuntimes();
 
 promise.then(function (response) {
     console.log(response); // Success
