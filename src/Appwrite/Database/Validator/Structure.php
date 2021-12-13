@@ -109,7 +109,7 @@ class Structure extends Validator
      *
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return 'Invalid document structure: '.$this->message;
     }
@@ -123,7 +123,7 @@ class Structure extends Validator
      *
      * @return bool
      */
-    public function isValid($document)
+    public function isValid($document): bool
     {
         $document = (\is_array($document)) ? new Document($document) : $document;
 

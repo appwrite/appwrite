@@ -13,7 +13,7 @@ class UID extends Validator
      *
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return 'Invalid UID format';
     }
@@ -27,7 +27,7 @@ class UID extends Validator
      *
      * @return bool
      */
-    public function isValid($value)
+    public function isValid($value): bool
     {
         if ($value === 0) { // TODO Deprecate confition when we get the chance.
             return true;
