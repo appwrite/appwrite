@@ -84,7 +84,7 @@ class Origin extends Validator
         }
     }
 
-    public function getDescription()
+    public function getDescription(): string
     {
         if (!\array_key_exists($this->client, $this->platforms)) {
             return 'Unsupported platform';
@@ -102,7 +102,7 @@ class Origin extends Validator
      *
      * @return bool
      */
-    public function isValid($origin)
+    public function isValid($origin): bool
     {
         if (!is_string($origin)) {
             return false;

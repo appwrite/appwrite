@@ -20,7 +20,7 @@ class Domain extends Validator
      *
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return 'Value must be a valid domain';
     }
@@ -35,7 +35,7 @@ class Domain extends Validator
      * @param  mixed $value
      * @return bool
      */
-    public function isValid($value)
+    public function isValid($value): bool
     {
         if (empty($value)) {
             return false;

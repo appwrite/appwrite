@@ -30,7 +30,7 @@ class Host extends Validator
      *
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return 'URL host must be one of: ' . \implode(', ', $this->whitelist);
     }
@@ -43,7 +43,7 @@ class Host extends Validator
      * @param  mixed $value
      * @return bool
      */
-    public function isValid($value)
+    public function isValid($value): bool
     {
         $urlValidator = new URL();
 

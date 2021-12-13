@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7e24a95bc534ed39b042f19b27268de9",
+    "content-hash": "9dcf48d4173daea87c60b464b104cd22",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2138,16 +2138,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.12.0",
+            "version": "0.12.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "102ee1d21fd55fc92dc7a07b60672a98ae49be26"
+                "reference": "af512b7a00cc7c6e30fa03efbc5fd7e77a93e2df"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/102ee1d21fd55fc92dc7a07b60672a98ae49be26",
-                "reference": "102ee1d21fd55fc92dc7a07b60672a98ae49be26",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/af512b7a00cc7c6e30fa03efbc5fd7e77a93e2df",
+                "reference": "af512b7a00cc7c6e30fa03efbc5fd7e77a93e2df",
                 "shasum": ""
             },
             "require": {
@@ -2155,7 +2155,7 @@
                 "ext-pdo": "*",
                 "ext-redis": "*",
                 "mongodb/mongodb": "1.8.0",
-                "php": ">=7.1",
+                "php": ">=8.0",
                 "utopia-php/cache": "0.4.*",
                 "utopia-php/framework": "0.*.*"
             },
@@ -2195,9 +2195,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.12.0"
+                "source": "https://github.com/utopia-php/database/tree/0.12.1"
             },
-            "time": "2021-11-24T14:53:22+00:00"
+            "time": "2021-12-13T14:57:32+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2255,24 +2255,24 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.19.1",
+            "version": "0.19.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "cc7629b5f7a8f45912ec2e069b7f14e361e41c34"
+                "reference": "49e4374b97c0f4d14bc84b424bdc9c3b7747e15f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/cc7629b5f7a8f45912ec2e069b7f14e361e41c34",
-                "reference": "cc7629b5f7a8f45912ec2e069b7f14e361e41c34",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/49e4374b97c0f4d14bc84b424bdc9c3b7747e15f",
+                "reference": "49e4374b97c0f4d14bc84b424bdc9c3b7747e15f",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.3.0"
+                "php": ">=8.0.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.4",
-                "vimeo/psalm": "4.0.1"
+                "phpunit/phpunit": "^9.5.10",
+                "vimeo/psalm": "4.13.1"
             },
             "type": "library",
             "autoload": {
@@ -2298,9 +2298,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.19.1"
+                "source": "https://github.com/utopia-php/framework/tree/0.19.2"
             },
-            "time": "2021-11-25T16:11:40+00:00"
+            "time": "2021-12-07T09:29:35+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2567,16 +2567,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.5.0",
+            "version": "0.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "92ae20c7a2ac329f573a58a82dc245134cc63408"
+                "reference": "e672aa3fc2a8ba689aff65f68ff29f1d608223b8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/92ae20c7a2ac329f573a58a82dc245134cc63408",
-                "reference": "92ae20c7a2ac329f573a58a82dc245134cc63408",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/e672aa3fc2a8ba689aff65f68ff29f1d608223b8",
+                "reference": "e672aa3fc2a8ba689aff65f68ff29f1d608223b8",
                 "shasum": ""
             },
             "require": {
@@ -2613,33 +2613,33 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.5.0"
+                "source": "https://github.com/utopia-php/storage/tree/0.5.1"
             },
-            "time": "2021-04-15T16:43:12+00:00"
+            "time": "2021-12-13T15:17:14+00:00"
         },
         {
             "name": "utopia-php/swoole",
-            "version": "0.2.4",
+            "version": "0.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/swoole.git",
-                "reference": "37d8c64b536d6bc7da4f0f5a934a0ec44885abf4"
+                "reference": "2b714eddf77cd5eda1889219c9656d7c0a63ce73"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/37d8c64b536d6bc7da4f0f5a934a0ec44885abf4",
-                "reference": "37d8c64b536d6bc7da4f0f5a934a0ec44885abf4",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/2b714eddf77cd5eda1889219c9656d7c0a63ce73",
+                "reference": "2b714eddf77cd5eda1889219c9656d7c0a63ce73",
                 "shasum": ""
             },
             "require": {
                 "ext-swoole": "*",
-                "php": ">=7.4",
+                "php": ">=8.0",
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
-                "swoole/ide-helper": "4.5.5",
-                "vimeo/psalm": "4.0.1"
+                "swoole/ide-helper": "4.8.3",
+                "vimeo/psalm": "4.15.0"
             },
             "type": "library",
             "autoload": {
@@ -2669,9 +2669,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/swoole/issues",
-                "source": "https://github.com/utopia-php/swoole/tree/0.2.4"
+                "source": "https://github.com/utopia-php/swoole/tree/0.3.2"
             },
-            "time": "2021-06-22T10:49:24+00:00"
+            "time": "2021-12-13T15:37:41+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -5665,23 +5665,23 @@
         },
         {
             "name": "symfony/console",
-            "version": "v5.4.0",
+            "version": "v5.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "ec3661faca1d110d6c307e124b44f99ac54179e3"
+                "reference": "9130e1a0fc93cb0faadca4ee917171bd2ca9e5f4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/ec3661faca1d110d6c307e124b44f99ac54179e3",
-                "reference": "ec3661faca1d110d6c307e124b44f99ac54179e3",
+                "url": "https://api.github.com/repos/symfony/console/zipball/9130e1a0fc93cb0faadca4ee917171bd2ca9e5f4",
+                "reference": "9130e1a0fc93cb0faadca4ee917171bd2ca9e5f4",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.2.5",
                 "symfony/deprecation-contracts": "^2.1|^3",
                 "symfony/polyfill-mbstring": "~1.0",
-                "symfony/polyfill-php73": "^1.8",
+                "symfony/polyfill-php73": "^1.9",
                 "symfony/polyfill-php80": "^1.16",
                 "symfony/service-contracts": "^1.1|^2|^3",
                 "symfony/string": "^5.1|^6.0"
@@ -5744,7 +5744,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v5.4.0"
+                "source": "https://github.com/symfony/console/tree/v5.4.1"
             },
             "funding": [
                 {
@@ -5760,7 +5760,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-11-29T15:30:56+00:00"
+            "time": "2021-12-09T11:22:43+00:00"
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
@@ -6170,16 +6170,16 @@
         },
         {
             "name": "symfony/string",
-            "version": "v6.0.0",
+            "version": "v6.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/string.git",
-                "reference": "ba727797426af0f587f4800566300bdc0cda0777"
+                "reference": "0cfed595758ec6e0a25591bdc8ca733c1896af32"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/string/zipball/ba727797426af0f587f4800566300bdc0cda0777",
-                "reference": "ba727797426af0f587f4800566300bdc0cda0777",
+                "url": "https://api.github.com/repos/symfony/string/zipball/0cfed595758ec6e0a25591bdc8ca733c1896af32",
+                "reference": "0cfed595758ec6e0a25591bdc8ca733c1896af32",
                 "shasum": ""
             },
             "require": {
@@ -6235,7 +6235,7 @@
                 "utf8"
             ],
             "support": {
-                "source": "https://github.com/symfony/string/tree/v6.0.0"
+                "source": "https://github.com/symfony/string/tree/v6.0.1"
             },
             "funding": [
                 {
@@ -6251,7 +6251,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-10-29T07:35:21+00:00"
+            "time": "2021-12-08T15:13:44+00:00"
         },
         {
             "name": "textalk/websocket",
