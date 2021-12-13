@@ -1,1 +1,1 @@
-Use this endpoint to list a team's members using the team's unique ID. All team members have read access to this endpoint.
+Use this endpoint to list a team's members using the team's ID. All team members have read access to this endpoint.
