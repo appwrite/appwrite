@@ -1,1 +1,1 @@
-Update currently logged in user account preferences. You can pass only the specific settings you wish to update.
+Update currently logged in user account preferences. The object you pass is stored as is, and replaces any previous value.
