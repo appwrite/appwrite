@@ -233,7 +233,7 @@ class Realtime extends Adapter
     }
 
     /**
-     * Creae channels array based on the event name and payload.
+     * Create channels array based on the event name and payload.
      *
      * @param string $event 
      * @param Document $payload 
