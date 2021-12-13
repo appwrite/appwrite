@@ -199,7 +199,7 @@
                  *
                  * Use this endpoint to allow a new user to register a new account in your
                  * project. After the user registration completes successfully, you can use
-                 * the [/account/verification](/docs/client/account#accountCreateVerification)
+                 * the [/account/verfication](/docs/client/account#accountCreateVerification)
                  * route to start verifying the user email address. To allow the new user to
                  * login to their new account, you need to create a new [account
                  * session](/docs/client/account#accountCreateSession).
@@ -264,11 +264,13 @@
                  * Update Account Email
                  *
                  * Update currently logged in user account email address. After changing user
-                 * address, user confirmation status is being reset and a new confirmation
-                 * mail is sent. For security measures, user password is required to complete
-                 * this request.
+                 * address, the user confirmation status will get reset. A new confirmation
+                 * email is not sent automatically however you can use the send confirmation
+                 * email endpoint again to send the confirmation email. For security measures,
+                 * user password is required to complete this request.
                  * This endpoint can also be used to convert an anonymous account to a normal
                  * one, by passing an email address and a new password.
+                 *
                  *
                  * @param {string} email
                  * @param {string} password
@@ -1165,8 +1167,8 @@
                  * @param {string} collectionId
                  * @param {string} name
                  * @param {string} permission
-                 * @param {string} read
-                 * @param {string} write
+                 * @param {string[]} read
+                 * @param {string[]} write
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
@@ -1237,12 +1239,13 @@
                  * @param {string} collectionId
                  * @param {string} name
                  * @param {string} permission
-                 * @param {string} read
-                 * @param {string} write
+                 * @param {string[]} read
+                 * @param {string[]} write
+                 * @param {boolean} enabled
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateCollection: (collectionId, name, permission, read, write) => __awaiter(this, void 0, void 0, function* () {
+                updateCollection: (collectionId, name, permission, read, write, enabled) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
@@ -1265,6 +1268,9 @@
                     }
                     if (typeof write !== 'undefined') {
                         payload['write'] = write;
+                    }
+                    if (typeof enabled !== 'undefined') {
+                        payload['enabled'] = enabled;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('put', uri, {
@@ -1793,8 +1799,8 @@
                  * @param {string} collectionId
                  * @param {string} documentId
                  * @param {object} data
-                 * @param {string} read
-                 * @param {string} write
+                 * @param {string[]} read
+                 * @param {string[]} write
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
@@ -1861,8 +1867,8 @@
                  * @param {string} collectionId
                  * @param {string} documentId
                  * @param {object} data
-                 * @param {string} read
-                 * @param {string} write
+                 * @param {string[]} read
+                 * @param {string[]} write
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
@@ -2231,6 +2237,22 @@
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * List the currently active function runtimes.
+                 *
+                 * Get a list of all runtimes that are currently active in your project.
+                 *
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                listRuntimes: () => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/functions/runtimes';
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
