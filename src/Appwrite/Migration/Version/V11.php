@@ -43,8 +43,8 @@ class V11 extends Migration
 
         if (!is_null($cache)) {
             $cacheAdapter = new Cache(new RedisCache($this->cache));
-            $this->dbInternal = new Database(new MariaDB($this->db), $cacheAdapter);
-            $this->dbExternal = new Database(new MariaDB($this->db), $cacheAdapter);
+            $this->dbInternal = new Database(new MariaDB($this->db), $cacheAdapter); // namespace is set on execution
+            $this->dbExternal = new Database(new MariaDB($this->db), $cacheAdapter); // namespace is set on execution
             $this->dbConsole = new Database(new MariaDB($this->db), $cacheAdapter);
             $this->dbConsole->setNamespace('project_console_internal');
         }
