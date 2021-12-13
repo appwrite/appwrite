@@ -52,8 +52,8 @@ class Detector
             $version = explode('/', $version)[1];
             $client = [
                 'type' => 'desktop',
-                'short_name' => 'terminal',
-                'name' => 'Terminal',
+                'short_name' => 'cli',
+                'name' => 'Appwrite CLI',
                 'version' => $version
             ];
         } else {
