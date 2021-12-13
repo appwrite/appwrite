@@ -25,7 +25,9 @@ $cli
         }
         $options = [];
         if (str_starts_with($version, '0.12.')) {
+            Console::error('--------------------');
             Console::error('WARNING');
+            Console::error('--------------------');
             Console::warning('Migrating to Version 0.12.x introduces a major breaking change within the Database Service!');
             Console::warning('Before migrating, please read about the breaking changes here:');
             Console::info('https://appwrite.io/guide-to-db-migration');
@@ -41,6 +43,7 @@ $cli
             Console::warning('Be aware that following actions will happen during the migration:');
             Console::warning('- Nested Document rules will be migrated to String attributes');
             Console::warning('- Numeric rules will be migrated to float attributes');
+            Console::warning('- Wildcard and Markdown rules will be converted to string attributes');
             Console::info("Do you want to migrate your Database Collections?");
             $options['migrateCollections'] = Console::confirm("Type 'yes' or 'no':");
 
@@ -51,6 +54,7 @@ $cli
                 Console::warning('Be aware that following actions will happen during the migration:');
                 Console::warning('- Nested Documents will be stored as JSON values');
                 Console::warning('- All Numeric values will be converted to float');
+                Console::warning('- All Wildcard and Markdown values will be converted to string');
                 Console::info("Do you want to migrate your Database Documents?");
                 $options['migrateDocuments'] = Console::confirm("Type 'yes' or 'no':");
             } else {

@@ -71,13 +71,16 @@ abstract class Migration
     /**
      * Migration constructor.
      *
-     * @param PDO $pdo
+     * @param PDO $db
+     * @param Redis|null $cache
+     * @param array $options
+     * @return void 
      */
     public function __construct(PDO $db, Redis $cache = null, array $options = [])
     {
         $this->options = $options;
         $this->db = $db;
-        if(!is_null($cache)) {
+        if (!is_null($cache)) {
             $this->cache = $cache;
         }
     }
@@ -166,7 +169,7 @@ abstract class Migration
      * @param array $array2 
      * @return array 
      */
-    public function check_diff_multi(array $array1, array $array2)
+    public function check_diff_multi(array $array1, array $array2): array
     {
         $result = array();
 
