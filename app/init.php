@@ -51,6 +51,10 @@ use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
 use Utopia\Database\Query;
+use Utopia\Storage\Storage;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\S3;
+use Utopia\Storage\Device\DoSpaces;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -820,6 +824,52 @@ App::setResource('dbForInternal', function($db, $cache, $project) {
 
     return $database;
 }, ['db', 'cache', 'project']);
+
+App::setResource('storageSelf', function() {
+    return new Local();
+});
+
+App::setResource('storageFiles', function($project) {
+    switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
+        case Storage::DEVICE_LOCAL:default:
+            return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+        case Storage::DEVICE_S3:
+            $s3AccessKey = App::getEnv('_APP_STORAGE_DEVICE_S3_ACCESS_KEY', '');
+            $s3SecretKey = App::getEnv('_APP_STORAGE_DEVICE_S3_SECRET', '');
+            $s3Region = App::getEnv('_APP_STORAGE_DEVICE_S3_REGION', '');
+            $s3Bucket = App::getEnv('_APP_STORAGE_DEVICE_S3_BUCKET', '');
+            $s3Acl = 'private';
+            return new S3(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
+        case Storage::DEVICE_DO_SPACES:
+            $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_ACCESS_KEY', '');
+            $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_SECRET', '');
+            $doSpacesRegion = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_REGION', '');
+            $doSpacesBucket = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_BUCKET', '');
+            $doSpacesAcl = 'private';
+            return new DoSpaces(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+    }
+}, ['project']);
+
+App::setResource('storageFunctions', function($project) {
+    switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
+        case Storage::DEVICE_LOCAL:default:
+            return new Local(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+        case Storage::DEVICE_S3:
+            $s3AccessKey = App::getEnv('_APP_STORAGE_DEVICE_S3_ACCESS_KEY', '');
+            $s3SecretKey = App::getEnv('_APP_STORAGE_DEVICE_S3_SECRET', '');
+            $s3Region = App::getEnv('_APP_STORAGE_DEVICE_S3_REGION', '');
+            $s3Bucket = App::getEnv('_APP_STORAGE_DEVICE_S3_BUCKET', '');
+            $s3Acl = 'private';
+            return new S3(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
+        case Storage::DEVICE_DO_SPACES:
+            $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_ACCESS_KEY', '');
+            $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_SECRET', '');
+            $doSpacesRegion = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_REGION', '');
+            $doSpacesBucket = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_BUCKET', '');
+            $doSpacesAcl = 'private';
+            return new DoSpaces(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+    }
+}, ['project']);
 
 App::setResource('dbForExternal', function($db, $cache, $project) {
     $cache = new Cache(new RedisCache($cache));
