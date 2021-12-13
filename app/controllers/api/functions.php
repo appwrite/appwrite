@@ -426,11 +426,15 @@ App::post('/v1/functions/:functionId/tags')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($functionId, $command, $file, $request, $response, $dbForInternal, $usage) {
+    ->inject('deviceFunctions')
+    ->inject('deviceLocal')
+    ->action(function ($functionId, $command, $file, $request, $response, $dbForInternal, $usage, $deviceFunctions, $deviceLocal) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $usage */
+        /** @var Utopia\Storage\Device $deviceFunctions */
+        /** @var Utopia\Storage\Device $deviceLocal */
 
         $function = $dbForInternal->getDocument('functions', $functionId);
 
@@ -439,7 +443,6 @@ App::post('/v1/functions/:functionId/tags')
         }
 
         $file = $request->getFiles('code');
-        $device = Storage::getDevice('functions');
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
         $fileSizeValidator = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
         $upload = new Upload();
@@ -490,8 +493,8 @@ App::post('/v1/functions/:functionId/tags')
         }
 
         // Save to storage
-        $fileSize ??= Storage::getDevice('self')->getFileSize($fileTmpName);
-        $path = $device->getPath($tagId.'.'.\pathinfo($fileName, PATHINFO_EXTENSION));
+        $fileSize ??= $deviceLocal->getFileSize($fileTmpName);
+        $path = $deviceFunctions->getPath($tagId.'.'.\pathinfo($fileName, PATHINFO_EXTENSION));
         
         $tag = $dbForInternal->getDocument('tags', $tagId);
 
@@ -502,14 +505,14 @@ App::post('/v1/functions/:functionId/tags')
             }
         }
 
-        $chunksUploaded = $device->upload($fileTmpName, $path, $chunk, $chunks);
+        $chunksUploaded = $deviceFunctions->upload($fileTmpName, $path, $chunk, $chunks);
 
         if (empty($chunksUploaded)) {
             throw new Exception('Failed moving file', 500);
         }
         
         if($chunksUploaded == $chunks) {
-            $fileSize = $device->getFileSize($path);
+            $fileSize = $deviceFunctions->getFileSize($path);
 
             if ($tag->isEmpty()) {
                 $tag = $dbForInternal->createDocument('tags', new Document([
@@ -663,10 +666,12 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($functionId, $tagId, $response, $dbForInternal, $usage) {
+    ->inject('deviceFunctions')
+    ->action(function ($functionId, $tagId, $response, $dbForInternal, $usage, $deviceFunctions) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $usage */
+        /** @var Utopia\Storage\Device $deviceFunctions */
 
         $function = $dbForInternal->getDocument('functions', $functionId);
 
@@ -684,9 +689,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
             throw new Exception('Tag not found', 404);
         }
 
-        $device = Storage::getDevice('functions');
-
-        if ($device->delete($tag->getAttribute('path', ''))) {
+        if ($deviceFunctions->delete($tag->getAttribute('path', ''))) {
             if (!$dbForInternal->deleteDocument('tags', $tag->getId())) {
                 throw new Exception('Failed to remove tag from DB', 500);
             }
