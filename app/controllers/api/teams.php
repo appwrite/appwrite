@@ -49,8 +49,8 @@ App::post('/v1/teams')
 
         Authorization::disable();
 
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-        $isAppUser = Auth::isAppUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
         $teamId = $teamId == 'unique()' ? $dbForInternal->getId() : $teamId;
         $team = $dbForInternal->createDocument('teams', new Document([
@@ -293,8 +293,8 @@ App::post('/v1/teams/:teamId/memberships')
             throw new Exception('SMTP Disabled', 503);
         }
 
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-        $isAppUser = Auth::isAppUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
         $email = \strtolower($email);
         $name = (empty($name)) ? $email : $name;
@@ -566,8 +566,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception('User not found', 404);
         }
 
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-        $isAppUser = Auth::isAppUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
         $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
         
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)

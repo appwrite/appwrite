@@ -234,16 +234,18 @@ class Realtime extends Adapter
 
     /**
      * Create channels array based on the event name and payload.
-     * 
+     *
      * @param string $event 
      * @param Document $payload 
+     * @param Document|null $project 
      * @return array 
      */
-    public static function fromPayload(string $event, Document $payload): array
+    public static function fromPayload(string $event, Document $payload, Document $project = null): array
     {
         $channels = [];
         $roles = [];
         $permissionsChanged = false;
+        $projectId = null;
 
         switch (true) {
             case strpos($event, 'account.recovery.') === 0:
@@ -301,7 +303,8 @@ class Realtime extends Adapter
         return [
             'channels' => $channels,
             'roles' => $roles,
-            'permissionsChanged' => $permissionsChanged
+            'permissionsChanged' => $permissionsChanged,
+            'projectId' => $projectId
         ];
     }
 }

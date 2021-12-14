@@ -63,7 +63,7 @@ class Template extends View
      *
      * @throws Exception
      */
-    public function render($minify = true)
+    public function render($minify = true): string
     {
         if ($this->rendered) { // Don't render any template
             return '';

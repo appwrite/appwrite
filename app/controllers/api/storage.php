@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Validator\ArrayList;
@@ -534,6 +535,25 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $validator = new Authorization('write');
             if (!$validator->isValid($bucket->getWrite())) {
                 throw new Exception('Unauthorized permissions', 401);
+            }
+        }
+
+        $read = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; // By default set read permissions for user
+        $write = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; 
+
+        // Users can only add their roles to files, API keys and Admin users can add any
+        $roles = Authorization::getRoles();
+
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach ($read as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                }
+            }
+            foreach ($write as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                }
             }
         }
 
@@ -1226,16 +1246,36 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->inject('audits')
+    ->inject('user')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($bucketId, $fileId, $read, $write, $response, $dbForInternal, $dbForExternal, $audits, $usage, $mode) {
+    ->action(function ($bucketId, $fileId, $read, $write, $response, $dbForInternal, $dbForExternal, $user, $audits, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var string $mode */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+        $read = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; // By default set read permissions for user
+        $write = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; 
+
+        // Users can only add their roles to files, API keys and Admin users can add any
+        $roles = Authorization::getRoles();
+
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach ($read as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                }
+            }
+            foreach ($write as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                }
+            }
+        }
 
         if($bucket->isEmpty() 
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {

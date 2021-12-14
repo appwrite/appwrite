@@ -254,7 +254,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     if(!empty($service)) {
         if(array_key_exists($service, $project->getAttribute('services',[]))
             && !$project->getAttribute('services',[])[$service]
-            && !Auth::isPrivilegedUser(Authorization::$roles)) {
+            && !Auth::isPrivilegedUser(Authorization::getRoles())) {
             throw new Exception('Service is disabled', 503);
         }
     }
