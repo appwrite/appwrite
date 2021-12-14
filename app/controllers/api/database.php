@@ -1455,17 +1455,11 @@ App::get('/v1/database/collections/:collectionId/indexes')
 
         $indexes = $collection->getAttribute('indexes');
 
-        $indexes = array_map(function ($index) use ($collection) {
-            return new Document([\array_merge($index, [
-                'collectionId' => $collection->getId(),
-            ])]);
-        }, $indexes);
-
         $usage->setParam('database.collections.read', 1);
 
         $response->dynamic(new Document([
             'sum' => \count($indexes),
-            'attributes' => $indexes,
+            'indexes' => $indexes,
         ]), Response::MODEL_INDEX_LIST);
     });
 
