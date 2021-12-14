@@ -695,7 +695,7 @@ App::delete('/v1/users/:userId/sessions')
             $dbForInternal->deleteDocument('sessions', $session->getId());
         }
 
-        $dbForInternal->updateDocument('users', $user->getId(), $user->getAttribute('sessions', []));
+        $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('sessions', []));
 
         $events
             ->setParam('eventData', $response->output($user, Response::MODEL_USER))
