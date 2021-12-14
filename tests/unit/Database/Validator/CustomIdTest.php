@@ -28,7 +28,7 @@ class CustomIdTest extends TestCase
         $this->assertEquals($this->object->isValid('else()'), false);
         $this->assertEquals($this->object->isValid('with space'), false);
         $this->assertEquals($this->object->isValid('with_underscore'), true);
-        $this->assertEquals($this->object->isValid('loremipsum'), true);
+        $this->assertEquals($this->object->isValid('justtext'), true);
         $this->assertEquals($this->object->isValid('_leadingunderscore'), false);
         $this->assertEquals($this->object->isValid('some$sign'), false);
         $this->assertEquals($this->object->isValid(false), false);
