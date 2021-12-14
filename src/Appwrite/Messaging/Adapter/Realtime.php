@@ -276,6 +276,19 @@ class Realtime extends Adapter
                 $roles = ['team:' . $payload->getId()];
 
                 break;
+            case strpos($event, 'database.collections.') === 0:
+                $channels[] = 'collections';
+                $channels[] = 'collections.' . $payload->getId();
+                $roles = $payload->getRead();
+
+                break;
+            case strpos($event, 'database.attributes.') === 0:
+            case strpos($event, 'database.indexes.') === 0:
+                $channels[] = 'console';
+                $projectId = 'console';
+                $roles = ['team:' . $project->getAttribute('teamId')];
+
+                break;
             case strpos($event, 'database.documents.') === 0:
                 $channels[] = 'documents';
                 $channels[] = 'collections.' . $payload->getAttribute('$collection') . '.documents';
