@@ -26,11 +26,11 @@ class CustomIdTest extends TestCase
         $this->assertEquals($this->object->isValid('unique()'), true);
         $this->assertEquals($this->object->isValid('unique)'), false);
         $this->assertEquals($this->object->isValid('else()'), false);
-        $this->assertEquals($this->object->isValid('dasda asdasd'), false);
-        $this->assertEquals($this->object->isValid('dasda_asdasd'), true);
-        $this->assertEquals($this->object->isValid('asdasdasdas'), true);
-        $this->assertEquals($this->object->isValid('_asdasdasdas'), false);
-        $this->assertEquals($this->object->isValid('as$$5dasdasdas'), false);
+        $this->assertEquals($this->object->isValid('with space'), false);
+        $this->assertEquals($this->object->isValid('with_underscore'), true);
+        $this->assertEquals($this->object->isValid('loremipsum'), true);
+        $this->assertEquals($this->object->isValid('_leadingunderscore'), false);
+        $this->assertEquals($this->object->isValid('some$sign'), false);
         $this->assertEquals($this->object->isValid(false), false);
         $this->assertEquals($this->object->isValid(null), false);
         $this->assertEquals($this->object->isValid('socialAccountForYoutubeAndRestSubscribers'), false);
