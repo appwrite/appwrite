@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9dcf48d4173daea87c60b464b104cd22",
+    "content-hash": "c2e77add2d14e18f3ec31ba1f54625e5",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2567,20 +2567,14 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.5.1",
+            "version": "dev-feat-large-file-support",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/storage.git",
-                "reference": "e672aa3fc2a8ba689aff65f68ff29f1d608223b8"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/e672aa3fc2a8ba689aff65f68ff29f1d608223b8",
-                "reference": "e672aa3fc2a8ba689aff65f68ff29f1d608223b8",
-                "shasum": ""
+                "url": "https://github.com/utopia-php/storage",
+                "reference": "6d82e34bac0b46b55ea781e0499bd1dfcff94160"
             },
             "require": {
-                "php": ">=7.4",
+                "php": ">=8.0",
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
@@ -2593,7 +2587,11 @@
                     "Utopia\\Storage\\": "src/Storage"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Storage"
+                }
+            },
             "license": [
                 "MIT"
             ],
@@ -2611,11 +2609,7 @@
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.5.1"
-            },
-            "time": "2021-12-13T15:17:14+00:00"
+            "time": "2021-12-14T07:04:35+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -6590,7 +6584,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/storage": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
