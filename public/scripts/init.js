@@ -57,10 +57,27 @@ window.addEventListener("load", async () => {
   const realtime = window.ls.container.get('realtime');
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
   let current = {};
-  window.ls.container.get('console').subscribe('project', event => {
-    for (let project in event.payload) {
-      current[project] = event.payload[project] ?? 0;
+  window.ls.container.get('console').subscribe(['project', 'console'], response => {
+    switch (response.event) {
+      case 'stats.connections':
+        for (let project in response.payload) {
+          current[project] = response.payload[project] ?? 0;
+        }
+        break;
+      case 'database.attributes.create':
+      case 'database.attributes.update':
+      case 'database.attributes.delete':
+        document.dispatchEvent(new CustomEvent('database.createAttribute'));
+
+        break;
+      case 'database.indexes.create':
+      case 'database.indexes.update':
+      case 'database.indexes.delete':
+        document.dispatchEvent(new CustomEvent('database.createIndex'));
+
+        break;
     }
+
   });
 
   while (true) {
