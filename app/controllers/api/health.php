@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Storage\Device\Local;
@@ -15,22 +16,33 @@ App::get('/v1/health')
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/health/get.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->json(['status' => 'OK']);
+        $output = [
+            'status' => 'pass',
+            'checkTime' => 0
+        ];
+
+        $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
     });
 
 App::get('/v1/health/version')
     ->desc('Get Version')
     ->groups(['api', 'health'])
     ->label('scope', 'public')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_VERSION)
     ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->json(['version' => APP_VERSION_STABLE]);
+        $response->dynamic(new Document([ 'version' => APP_VERSION_STABLE ]), Response::MODEL_HEALTH_VERSION);
     });
 
 App::get('/v1/health/db')
@@ -41,11 +53,17 @@ App::get('/v1/health/db')
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getDB')
     ->label('sdk.description', '/docs/references/health/get-db.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
     ->inject('utopia')
     ->action(function ($response, $utopia) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\App $utopia */
+
+        $checkStart = \microtime(true);
+
         try {
             $db = $utopia->getResource('db'); /* @var $db PDO */
 
@@ -59,7 +77,12 @@ App::get('/v1/health/db')
             throw new Exception('Database is not available', 500);
         }
 
-        return $response->json(['status' => 'OK']);
+        $output = [
+            'status' => 'pass',
+            'checkTime' => \microtime(true) - $checkStart
+        ];
+
+        $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
     });
 
 App::get('/v1/health/cache')
@@ -70,19 +93,30 @@ App::get('/v1/health/cache')
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getCache')
     ->label('sdk.description', '/docs/references/health/get-cache.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
     ->inject('utopia')
     ->action(function ($response, $utopia) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\App $utopia */
         /** @var Redis */
+
+        $checkStart = \microtime(true);
+
         $redis = $utopia->getResource('cache');
 
-        if ($redis->ping(true)) {
-            return $response->json(['status' => 'OK']);
-        } else {
+        if (!$redis->ping(true)) {
             throw new Exception('Cache is not available', 500);
         }
+
+        $output = [
+            'status' => 'pass',
+            'checkTime' => \microtime(true) - $checkStart
+        ];
+
+        $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
     });
 
 App::get('/v1/health/time')
@@ -93,6 +127,9 @@ App::get('/v1/health/time')
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getTime')
     ->label('sdk.description', '/docs/references/health/get-time.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_TIME)
     ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
@@ -131,7 +168,13 @@ App::get('/v1/health/time')
             throw new Exception('Server time gaps detected');
         }
 
-        $response->json(['remote' => $timestamp, 'local' => \time(), 'diff' => $diff]);
+        $output = [
+            'remote' => $timestamp,
+            'local' => \time(),
+            'diff' => $diff
+        ];
+
+        $response->dynamic(new Document($output), Response::MODEL_HEALTH_TIME);
     });
 
 App::get('/v1/health/queue/webhooks')
@@ -142,11 +185,14 @@ App::get('/v1/health/queue/webhooks')
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getQueueWebhooks')
     ->label('sdk.description', '/docs/references/health/get-queue-webhooks.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->json(['size' => Resque::size(Event::WEBHOOK_QUEUE_NAME)]);
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::WEBHOOK_QUEUE_NAME) ]), Response::MODEL_HEALTH_STATUS);
     }, ['response']);
 
 App::get('/v1/health/queue/tasks')
@@ -157,11 +203,14 @@ App::get('/v1/health/queue/tasks')
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getQueueTasks')
     ->label('sdk.description', '/docs/references/health/get-queue-tasks.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->json(['size' => Resque::size(Event::TASK_QUEUE_NAME)]);
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::TASK_QUEUE_NAME) ]), Response::MODEL_HEALTH_STATUS);
     }, ['response']);
 
 App::get('/v1/health/queue/logs')
@@ -172,11 +221,14 @@ App::get('/v1/health/queue/logs')
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getQueueLogs')
     ->label('sdk.description', '/docs/references/health/get-queue-logs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->json(['size' => Resque::size(Event::AUDITS_QUEUE_NAME)]);
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::AUDITS_QUEUE_NAME) ]), Response::MODEL_HEALTH_STATUS);
     }, ['response']);
 
 App::get('/v1/health/queue/usage')
@@ -187,11 +239,14 @@ App::get('/v1/health/queue/usage')
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getQueueUsage')
     ->label('sdk.description', '/docs/references/health/get-queue-usage.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->json(['size' => Resque::size(Event::USAGE_QUEUE_NAME)]);
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::USAGE_QUEUE_NAME) ]), Response::MODEL_HEALTH_STATUS);
     }, ['response']);
 
 App::get('/v1/health/queue/certificates')
@@ -202,11 +257,14 @@ App::get('/v1/health/queue/certificates')
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getQueueCertificates')
     ->label('sdk.description', '/docs/references/health/get-queue-certificates.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->json(['size' => Resque::size(Event::CERTIFICATES_QUEUE_NAME)]);
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::CERTIFICATES_QUEUE_NAME) ]), Response::MODEL_HEALTH_STATUS);
     }, ['response']);
 
 App::get('/v1/health/queue/functions')
@@ -217,11 +275,14 @@ App::get('/v1/health/queue/functions')
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getQueueFunctions')
     ->label('sdk.description', '/docs/references/health/get-queue-functions.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->json(['size' => Resque::size(Event::FUNCTIONS_QUEUE_NAME)]);
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::FUNCTIONS_QUEUE_NAME) ]), Response::MODEL_HEALTH_STATUS);
     }, ['response']);
 
 App::get('/v1/health/storage/local')
@@ -232,9 +293,14 @@ App::get('/v1/health/storage/local')
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getStorageLocal')
     ->label('sdk.description', '/docs/references/health/get-storage-local.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
+
+        $checkStart = \microtime(true);
 
         foreach ([
             'Uploads' => APP_STORAGE_UPLOADS,
@@ -253,41 +319,51 @@ App::get('/v1/health/storage/local')
             }
         }
 
-        $response->json(['status' => 'OK']);
+        $output = [
+            'status' => 'pass',
+            'checkTime' => \microtime(true) - $checkStart
+        ];
+
+        $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
     });
 
 App::get('/v1/health/anti-virus')
-    ->desc('Get Anti virus')
+    ->desc('Get AntiVirus')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getAntiVirus')
     ->label('sdk.description', '/docs/references/health/get-storage-anti-virus.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_ANTIVIRUS)
     ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
+        $output = [
+            'status' => '',
+            'version' => ''
+        ];
+
         if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
-            return $response->json([
-                'status' => 'disabled',
-                'version' => '',
-            ]);
+            $output['status'] = 'disabled';
+            $output['version'] = '';
+        } else {
+            $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+                (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
+
+            try {
+                $output['version'] = @$antiVirus->version();
+                $output['status'] = (@$antiVirus->ping()) ? 'pass' : 'fail';
+            } catch( \Exception $e) {
+                $output['status'] = 'offline';
+                $output['version'] = '';
+            }
         }
 
-        $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-            (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
-        try {
-            $response->json([
-                'status' => (@$antiVirus->ping()) ? 'online' : 'offline',
-                'version' => @$antiVirus->version(),
-            ]);
-        } catch( \Exception $e) {
-            $response->json([
-                'status' => 'offline',
-                'version' => '',
-            ]);
-        }
+        $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
     });
 
 App::get('/v1/health/stats') // Currently only used internally

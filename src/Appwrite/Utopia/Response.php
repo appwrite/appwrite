@@ -122,6 +122,13 @@ class Response extends SwooleResponse
     const MODEL_PLATFORM_LIST = 'platformList';
     const MODEL_DOMAIN = 'domain';
     const MODEL_DOMAIN_LIST = 'domainList';
+
+    // Health
+    const MODEL_HEALTH_STATUS = 'healthStatus';
+    const MODEL_HEALTH_VERSION = 'healthVersion';
+    const MODEL_HEALTH_QUEUE = 'healthQueue';
+    const MODEL_HEALTH_TIME = 'healthTime';
+    const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
     
     // Tests (keep last)
     const MODEL_MOCK = 'mock';
