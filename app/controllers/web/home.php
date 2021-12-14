@@ -3,15 +3,15 @@
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
+use Appwrite\Utopia\View;
 use Utopia\App;
-use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Exception;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 
 App::init(function ($layout) {
-    /** @var Utopia\View $layout */
+    /** @var Appwrite\Utopia\View $layout */
 
     $header = new View(__DIR__.'/../../views/home/comps/header.phtml');
     $footer = new View(__DIR__.'/../../views/home/comps/footer.phtml');
@@ -32,7 +32,7 @@ App::init(function ($layout) {
 
 App::shutdown(function ($response, $layout) {
     /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\View $layout */
+    /** @var Appwrite\Utopia\View $layout */
 
     $response->html($layout->render());
 }, ['response', 'layout'], 'home');
@@ -76,7 +76,7 @@ App::get('/auth/signin')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/signin.phtml');
 
@@ -95,7 +95,7 @@ App::get('/auth/signup')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
         $page = new View(__DIR__.'/../../views/home/auth/signup.phtml');
 
         $page
@@ -113,7 +113,7 @@ App::get('/auth/recovery')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/recovery.phtml');
 
@@ -132,7 +132,7 @@ App::get('/auth/confirm')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/confirm.phtml');
 
@@ -147,7 +147,7 @@ App::get('/auth/join')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/join.phtml');
 
@@ -162,7 +162,7 @@ App::get('/auth/recovery/reset')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/recovery/reset.phtml');
 
@@ -177,7 +177,7 @@ App::get('/auth/oauth2/success')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/oauth2.phtml');
 
@@ -195,7 +195,7 @@ App::get('/auth/magic-url')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/magicURL.phtml');
 
@@ -213,7 +213,7 @@ App::get('/auth/oauth2/failure')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/oauth2.phtml');
 
@@ -232,7 +232,7 @@ App::get('/error/:code')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
     ->inject('layout')
     ->action(function ($code, $layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/error.phtml');
 
