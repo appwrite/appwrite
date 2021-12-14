@@ -137,6 +137,7 @@ App::post('/v1/storage/files')
         $data = $compressor->compress($data);
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+        $tag = null;
         $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
 
         if (!$device->write($path, $data, $mimeType)) {
@@ -162,7 +163,7 @@ App::post('/v1/storage/files')
             'comment' => '',
             'openSSLVersion' => '1',
             'openSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
-            'openSSLTag' => \bin2hex($tag),
+            'openSSLTag' => \bin2hex($tag ?? ''),
             'openSSLIV' => \bin2hex($iv),
             'search' => implode(' ', [$fileId, $file['name'] ?? '',]),
         ]));

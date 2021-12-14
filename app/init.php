@@ -286,8 +286,8 @@ Database::addFilter('encrypt',
         return json_encode([
             'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
             'method' => OpenSSL::CIPHER_AES_128_GCM,
-            'iv' => bin2hex($iv),
-            'tag' => bin2hex($tag),
+            'iv' => \bin2hex($iv),
+            'tag' => \bin2hex($tag ?? ''),
             'version' => '1',
         ]);
     },
