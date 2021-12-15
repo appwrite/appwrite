@@ -66,17 +66,20 @@ trait DatabaseBase
         ]);
 
         $this->assertEquals($title['headers']['status-code'], 201);
+        $this->assertEquals($title['body']['$id'], 'title');
         $this->assertEquals($title['body']['key'], 'title');
         $this->assertEquals($title['body']['type'], 'string');
         $this->assertEquals($title['body']['size'], 256);
         $this->assertEquals($title['body']['required'], true);
 
         $this->assertEquals($releaseYear['headers']['status-code'], 201);
+        $this->assertEquals($releaseYear['body']['$id'], 'releaseYear');
         $this->assertEquals($releaseYear['body']['key'], 'releaseYear');
         $this->assertEquals($releaseYear['body']['type'], 'integer');
         $this->assertEquals($releaseYear['body']['required'], true);
 
         $this->assertEquals($actors['headers']['status-code'], 201);
+        $this->assertEquals($actors['body']['$id'], 'actors');
         $this->assertEquals($actors['body']['key'], 'actors');
         $this->assertEquals($actors['body']['type'], 'string');
         $this->assertEquals($actors['body']['size'], 256);
@@ -97,6 +100,9 @@ trait DatabaseBase
         $this->assertEquals($movies['body']['attributes'][0]['key'], $title['body']['key']);
         $this->assertEquals($movies['body']['attributes'][1]['key'], $releaseYear['body']['key']);
         $this->assertEquals($movies['body']['attributes'][2]['key'], $actors['body']['key']);
+        $this->assertEquals($movies['body']['attributes'][0]['$id'], $title['body']['$id']);
+        $this->assertEquals($movies['body']['attributes'][1]['$id'], $releaseYear['body']['$id']);
+        $this->assertEquals($movies['body']['attributes'][2]['$id'], $actors['body']['$id']);
 
         return $data;
     }
@@ -596,6 +602,7 @@ trait DatabaseBase
         ]);
 
         $this->assertEquals(201, $titleIndex['headers']['status-code']);
+        $this->assertEquals('titleIndex', $titleIndex['body']['$id']);
         $this->assertEquals('titleIndex', $titleIndex['body']['key']);
         $this->assertEquals('fulltext', $titleIndex['body']['type']);
         $this->assertCount(1, $titleIndex['body']['attributes']);
@@ -612,6 +619,7 @@ trait DatabaseBase
         ]);
 
         $this->assertEquals(201, $releaseYearIndex['headers']['status-code']);
+        $this->assertEquals('releaseYear', $releaseYearIndex['body']['$id']);
         $this->assertEquals('releaseYear', $releaseYearIndex['body']['key']);
         $this->assertEquals('key', $releaseYearIndex['body']['type']);
         $this->assertCount(1, $releaseYearIndex['body']['attributes']);
@@ -628,6 +636,8 @@ trait DatabaseBase
 
         $this->assertIsArray($movies['body']['indexes']);
         $this->assertCount(2, $movies['body']['indexes']);
+        $this->assertEquals($titleIndex['body']['$id'], $movies['body']['indexes'][0]['$id']);
+        $this->assertEquals($releaseYearIndex['body']['$id'], $movies['body']['indexes'][1]['$id']);
         $this->assertEquals($titleIndex['body']['key'], $movies['body']['indexes'][0]['key']);
         $this->assertEquals($releaseYearIndex['body']['key'], $movies['body']['indexes'][1]['key']);
         $this->assertEquals('available', $movies['body']['indexes'][0]['status']);
