@@ -351,7 +351,7 @@ App::get('/v1/health/anti-virus')
             $output['status'] = 'disabled';
             $output['version'] = '';
         } else {
-            $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+            $antivirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
                 (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
 
             try {

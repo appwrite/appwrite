@@ -98,10 +98,10 @@ App::post('/v1/storage/files')
         $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
 
         if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
-            $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+            $antivirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
                 (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
 
-            if (!$antiVirus->fileScan($path)) {
+            if (!$antivirus->fileScan($path)) {
                 $device->delete($path);
                 throw new Exception('Invalid file', 403);
             }
@@ -652,11 +652,11 @@ App::delete('/v1/storage/files/:fileId')
 
 //             $source = $compressor->decompress($source);
 
-//             $antiVirus = new Network('clamav', 3310);
+//             $antivirus = new Network('clamav', 3310);
 
-//             //var_dump($antiVirus->ping());
-//             //var_dump($antiVirus->version());
-//             //var_dump($antiVirus->fileScan('/storage/uploads/app-1/5/9/f/e/59fecaed49645.pdf'));
+//             //var_dump($antivirus->ping());
+//             //var_dump($antivirus->version());
+//             //var_dump($antivirus->fileScan('/storage/uploads/app-1/5/9/f/e/59fecaed49645.pdf'));
 
 //         }
 //     );
