@@ -628,6 +628,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         if($bucket->getAttribute('encryption', true) && $size <= APP_LIMIT_ENCRYPTION) {
             $key = App::getEnv('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+            $tag = null;
             $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
         }
 
@@ -651,6 +652,10 @@ App::post('/v1/storage/buckets/:bucketId/files')
             'sizeActual' => $sizeActual,
             'algorithm' => empty($compressor) ? '' : $compressor->getName(),
             'comment' => '',
+            'openSSLVersion' => '1',
+            'openSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
+            'openSSLTag' => \bin2hex($tag ?? ''),
+            'openSSLIV' => \bin2hex($iv),
             'search' => implode(' ', [$fileId, $file['name'] ?? '',]),
         ];
 

@@ -34,7 +34,6 @@ use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Bucket;
 use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\Index;
-use Appwrite\Utopia\Response\Model\FuncPermissions;
 use Appwrite\Utopia\Response\Model\JWT;
 use Appwrite\Utopia\Response\Model\Key;
 use Appwrite\Utopia\Response\Model\Language;
@@ -248,7 +247,6 @@ class Response extends SwooleResponse
             ->setModel(new Membership())
             ->setModel(new Func())
             ->setModel(new Runtime())
-            ->setModel(new FuncPermissions())
             ->setModel(new Tag())
             ->setModel(new Execution())
             ->setModel(new Project())

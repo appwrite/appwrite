@@ -2,8 +2,8 @@
 
 namespace Appwrite\Template;
 
+use Appwrite\Utopia\View;
 use Exception;
-use Utopia\View;
 
 class Template extends View
 {

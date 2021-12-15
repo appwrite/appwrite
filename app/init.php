@@ -27,8 +27,8 @@ use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Stats\Stats;
+use Appwrite\Utopia\View;
 use Utopia\App;
-use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
@@ -76,8 +76,8 @@ const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
-const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite_io';
-const APP_SOCIAL_TWITTER_HANDLE = 'appwrite_io';
+const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite';
+const APP_SOCIAL_TWITTER_HANDLE = 'appwrite';
 const APP_SOCIAL_FACEBOOK = 'https://www.facebook.com/appwrite.io';
 const APP_SOCIAL_LINKEDIN = 'https://www.linkedin.com/company/appwrite';
 const APP_SOCIAL_INSTAGRAM = 'https://www.instagram.com/appwrite.io';
@@ -86,7 +86,7 @@ const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
 const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
-const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite';
+const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
 // Database Worker Types
 const DATABASE_TYPE_CREATE_ATTRIBUTE = 'createAttribute';
 const DATABASE_TYPE_CREATE_INDEX = 'createIndex';
@@ -290,8 +290,8 @@ Database::addFilter('encrypt',
         return json_encode([
             'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
             'method' => OpenSSL::CIPHER_AES_128_GCM,
-            'iv' => bin2hex($iv),
-            'tag' => bin2hex($tag),
+            'iv' => \bin2hex($iv),
+            'tag' => \bin2hex($tag ?? ''),
             'version' => '1',
         ]);
     },
