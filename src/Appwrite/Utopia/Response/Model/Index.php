@@ -10,6 +10,12 @@ class Index extends Model
     public function __construct()
     {
         $this
+            ->addRule('$id', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Index ID.',
+                'default' => '',
+                'example' => 'index1',
+            ])
             ->addRule('key', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Index Key.',
