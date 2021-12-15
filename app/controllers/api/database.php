@@ -1045,7 +1045,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForInternal, $dbForExternal,$database, $audits, $usage) {
+    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
         /** @var Utopia\Database\Database $dbForExternal*/
@@ -1059,6 +1059,11 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
 
         if ($min > $max) {
             throw new Exception('Minimum value must be lesser than maximum value', 400);
+        }
+        
+        // Ensure default value is a float
+        if (!is_null($default)) {
+            $default = \floatval($default);
         }
 
         $validator = new Range($min, $max, Database::VAR_FLOAT);
