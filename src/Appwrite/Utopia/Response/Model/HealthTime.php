@@ -10,13 +10,13 @@ class HealthTime extends Model
     public function __construct()
     {
         $this
-            ->addRule('remote', [
+            ->addRule('remoteTime', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Current unix timestamp on trustful remote server.',
                 'default' => 0,
                 'example' => 1639490751,
             ])
-            ->addRule('local', [
+            ->addRule('localTime', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Current unix timestamp of local server where Appwrite runs.',
                 'default' => 0,

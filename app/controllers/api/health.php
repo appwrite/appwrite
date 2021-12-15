@@ -355,15 +355,15 @@ App::get('/v1/health/anti-virus')
                 (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
 
             try {
-                $output['version'] = @$antiVirus->version();
-                $output['status'] = (@$antiVirus->ping()) ? 'pass' : 'fail';
+                $output['version'] = @$antivirus->version();
+                $output['status'] = (@$antivirus->ping()) ? 'pass' : 'fail';
             } catch( \Exception $e) {
                 $output['status'] = 'offline';
                 $output['version'] = '';
             }
         }
 
-        $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
+        $response->dynamic(new Document($output), Response::MODEL_HEALTH_ANTIVIRUS);
     });
 
 App::get('/v1/health/stats') // Currently only used internally

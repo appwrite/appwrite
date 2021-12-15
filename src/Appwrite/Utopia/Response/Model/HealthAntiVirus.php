@@ -5,20 +5,20 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class HealthAntiVirus extends Model
+class HealthAntivirus extends Model
 {
     public function __construct()
     {
         $this
             ->addRule('version', [
                 'type' => self::TYPE_STRING,
-                'description' => 'AntiVirus version.',
+                'description' => 'Antivirus version.',
                 'default' => '',
                 'example' => '1.0.0',
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'AntiVirus status. Possible values can are: `disabled`, `offline`, `online`',
+                'description' => 'Antivirus status. Possible values can are: `disabled`, `offline`, `online`',
                 'default' => '',
                 'example' => 'online',
             ])
@@ -32,11 +32,11 @@ class HealthAntiVirus extends Model
      */
     public function getName():string
     {
-        return 'Health AntiVirus';
+        return 'Health Antivirus';
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */
