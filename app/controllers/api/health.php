@@ -192,7 +192,7 @@ App::get('/v1/health/queue/webhooks')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->dynamic(new Document([ 'size' => Resque::size(Event::WEBHOOK_QUEUE_NAME) ]), Response::MODEL_HEALTH_STATUS);
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::WEBHOOK_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/tasks')
@@ -210,7 +210,7 @@ App::get('/v1/health/queue/tasks')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->dynamic(new Document([ 'size' => Resque::size(Event::TASK_QUEUE_NAME) ]), Response::MODEL_HEALTH_STATUS);
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::TASK_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/logs')
@@ -228,7 +228,7 @@ App::get('/v1/health/queue/logs')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->dynamic(new Document([ 'size' => Resque::size(Event::AUDITS_QUEUE_NAME) ]), Response::MODEL_HEALTH_STATUS);
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::AUDITS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/usage')
@@ -246,7 +246,7 @@ App::get('/v1/health/queue/usage')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->dynamic(new Document([ 'size' => Resque::size(Event::USAGE_QUEUE_NAME) ]), Response::MODEL_HEALTH_STATUS);
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::USAGE_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/certificates')
@@ -264,7 +264,7 @@ App::get('/v1/health/queue/certificates')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->dynamic(new Document([ 'size' => Resque::size(Event::CERTIFICATES_QUEUE_NAME) ]), Response::MODEL_HEALTH_STATUS);
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::CERTIFICATES_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/functions')
@@ -282,7 +282,7 @@ App::get('/v1/health/queue/functions')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->dynamic(new Document([ 'size' => Resque::size(Event::FUNCTIONS_QUEUE_NAME) ]), Response::MODEL_HEALTH_STATUS);
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::FUNCTIONS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/storage/local')
@@ -328,12 +328,12 @@ App::get('/v1/health/storage/local')
     });
 
 App::get('/v1/health/anti-virus')
-    ->desc('Get AntiVirus')
+    ->desc('Get Antivirus')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getAntiVirus')
+    ->label('sdk.method', 'getAntivirus')
     ->label('sdk.description', '/docs/references/health/get-storage-anti-virus.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
