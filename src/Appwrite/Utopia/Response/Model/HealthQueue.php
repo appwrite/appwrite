@@ -30,7 +30,7 @@ class HealthQueue extends Model
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */

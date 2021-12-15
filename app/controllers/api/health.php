@@ -25,7 +25,7 @@ App::get('/v1/health')
 
         $output = [
             'status' => 'pass',
-            'checkTime' => 0
+            'ping' => 0
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
@@ -79,7 +79,7 @@ App::get('/v1/health/db')
 
         $output = [
             'status' => 'pass',
-            'checkTime' => \microtime(true) - $checkStart
+            'ping' => \microtime(true) - $checkStart
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
@@ -113,7 +113,7 @@ App::get('/v1/health/cache')
 
         $output = [
             'status' => 'pass',
-            'checkTime' => \microtime(true) - $checkStart
+            'ping' => \microtime(true) - $checkStart
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
@@ -169,8 +169,8 @@ App::get('/v1/health/time')
         }
 
         $output = [
-            'remote' => $timestamp,
-            'local' => \time(),
+            'remoteTime' => $timestamp,
+            'localTime' => \time(),
             'diff' => $diff
         ];
 
@@ -321,7 +321,7 @@ App::get('/v1/health/storage/local')
 
         $output = [
             'status' => 'pass',
-            'checkTime' => \microtime(true) - $checkStart
+            'ping' => \microtime(true) - $checkStart
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);

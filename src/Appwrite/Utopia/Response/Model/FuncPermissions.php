@@ -31,7 +31,7 @@ class FuncPermissions extends Model
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */

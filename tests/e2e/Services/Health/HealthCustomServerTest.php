@@ -223,7 +223,7 @@ class HealthCustomServerTest extends Scope
         return [];
     }
 
-    public function testStorageAntiVirusSuccess():array
+    public function testStorageAntivirusSuccess():array
     {
         /**
          * Test for SUCCESS
