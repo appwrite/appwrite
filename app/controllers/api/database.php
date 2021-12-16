@@ -1589,13 +1589,15 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->inject('user')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($documentId, $collectionId, $data, $read, $write, $response, $dbForInternal, $dbForExternal, $user, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($documentId, $collectionId, $data, $read, $write, $response, $dbForInternal, $dbForExternal, $user, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -1607,7 +1609,10 @@ App::post('/v1/database/collections/:collectionId/documents')
             throw new Exception('$id is not allowed for creating new documents, try update instead', 400);
         }
 
-        $collection = $dbForInternal->getDocument('collections', $collectionId);
+        /**
+         * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
+         */
+        $collection = Authorization::skip(fn() => $dbForInternal->getDocument('collections', $collectionId));
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
@@ -1659,6 +1664,8 @@ App::post('/v1/database/collections/:collectionId/documents')
             throw new Exception('Document already exists', 409);
         }
 
+        $events->setParam('collection', $collection->getArrayCopy());
+
         $usage
             ->setParam('database.documents.create', 1)
             ->setParam('collectionId', $collectionId)
@@ -1703,7 +1710,10 @@ App::get('/v1/database/collections/:collectionId/documents')
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $collection = $dbForInternal->getDocument('collections', $collectionId);
+        /**
+         * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
+         */
+        $collection = Authorization::skip(fn() => $dbForInternal->getDocument('collections', $collectionId));
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
@@ -1739,11 +1749,11 @@ App::get('/v1/database/collections/:collectionId/documents')
 
         if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document[] $documents */
-            $documents = Authorization::skip(function() use ($dbForExternal, $collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument, $cursorDirection) {
-                return $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
-            });
+            $documents = Authorization::skip(fn() => $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection));
+            $sum = Authorization::skip(fn() => $dbForExternal->count($collectionId, $queries, APP_LIMIT_COUNT));
         } else {
             $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
+            $sum = $dbForExternal->count($collectionId, $queries, APP_LIMIT_COUNT);
         }
 
         $usage
@@ -1752,7 +1762,7 @@ App::get('/v1/database/collections/:collectionId/documents')
         ;
 
         $response->dynamic(new Document([
-            'sum' => $dbForExternal->count($collectionId, $queries, APP_LIMIT_COUNT),
+            'sum' => $sum,
             'documents' => $documents,
         ]), Response::MODEL_DOCUMENT_LIST);
     });
@@ -1779,7 +1789,10 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
         /** @var Utopia\Database\Database $$dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
 
-        $collection = $dbForInternal->getDocument('collections', $collectionId);
+        /**
+         * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
+         */
+        $collection = Authorization::skip(fn() => $dbForInternal->getDocument('collections', $collectionId));
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
@@ -1930,14 +1943,19 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->inject('dbForExternal')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $documentId, $data, $read, $write, $response, $dbForInternal, $dbForExternal, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($collectionId, $documentId, $data, $read, $write, $response, $dbForInternal, $dbForExternal, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
-        $collection = $dbForInternal->getDocument('collections', $collectionId);
+        /**
+         * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
+         */
+        $collection = Authorization::skip(fn() => $dbForInternal->getDocument('collections', $collectionId));
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
@@ -1949,9 +1967,12 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
             if (!$validator->isValid($collection->getWrite())) {
                 throw new Exception('Unauthorized permissions', 401);
             }
+
+            $document = Authorization::skip(fn() => $dbForExternal->getDocument($collectionId, $documentId));
+        } else {
+            $document = $dbForExternal->getDocument($collectionId, $documentId);
         }
 
-        $document = $dbForExternal->getDocument($collectionId, $documentId);
 
         if ($document->isEmpty()) {
             throw new Exception('Document not found', 404);
@@ -2009,7 +2030,9 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         catch (StructureException $exception) {
             throw new Exception($exception->getMessage(), 400);
         }
-        
+
+        $events->setParam('collection', $collection->getArrayCopy());
+
         $usage
             ->setParam('database.documents.update', 1)
             ->setParam('collectionId', $collectionId)
@@ -2050,7 +2073,10 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $collection = $dbForInternal->getDocument('collections', $collectionId);
+        /**
+         * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
+         */
+        $collection = Authorization::skip(fn() => $dbForInternal->getDocument('collections', $collectionId));
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
@@ -2077,7 +2103,12 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('No document found', 404);
         }
 
-        $dbForExternal->deleteDocument($collectionId, $documentId);
+        if ($collection->getAttribute('permission') === 'collection') {
+            Authorization::skip(fn() => $dbForExternal->deleteDocument($collectionId, $documentId));
+        } else {
+            $dbForExternal->deleteDocument($collectionId, $documentId);
+        }
+
         $dbForExternal->deleteCachedDocument($collectionId, $documentId);
 
         $usage
@@ -2087,6 +2118,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
 
         $events
             ->setParam('eventData', $response->output($document, Response::MODEL_DOCUMENT))
+            ->setParam('collection', $collection->getArrayCopy());
         ;
 
         $audits
