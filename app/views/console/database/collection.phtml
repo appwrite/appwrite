@@ -347,7 +347,7 @@ $logs = $this->getParam('logs', null);
                 <button class="new-index">Add Index</button>
             </li>
             <li data-state="/console/database/collection/activity?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>Activity <span class="badge" data-ls-bind="{{logs.sum}}"></span></h2>
+                <h2>Activity</h2>
 
                 <?php echo $logs->render(); ?>
             </li>
