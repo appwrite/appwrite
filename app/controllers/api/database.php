@@ -1757,15 +1757,7 @@ App::get('/v1/database/collections/:collectionId/documents_poc')
             $nextAfter = $documents[array_key_last($documents)]->getId();
         }
 
-        if ($nextBeforeExists) {
-            if ($cursorDirection === Database::CURSOR_BEFORE) {
-                $nextBefore = $documents[0]->getId();
-            } else {
-                $nextBefore = $nextBeforeExists->getId();
-            }
-        } else {
-            $nextBefore = null;
-        }
+        $nextBefore = $nextBeforeExists ? $documents[0]->getId() : null;
 
         $usage
             ->setParam('database.documents.read', 1)
