@@ -45,7 +45,7 @@ class DatabasePermissionsTeamTest extends Scope
         $this->collections['collection1'] = $collection1['body']['$id'];
 
         $this->client->call(Client::METHOD_POST, '/database/collections/' . $this->collections['collection1'] . '/attributes/string', $this->getServerHeader(), [
-            'attributeId' => 'title',
+            'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
@@ -61,7 +61,7 @@ class DatabasePermissionsTeamTest extends Scope
         $this->collections['collection2'] = $collection2['body']['$id'];
 
         $this->client->call(Client::METHOD_POST, '/database/collections/' . $this->collections['collection2'] . '/attributes/string', $this->getServerHeader(), [
-            'attributeId' => 'title',
+            'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);

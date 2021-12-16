@@ -50,7 +50,7 @@ use Appwrite\Detector\Detector;
  */
 function createAttribute($collectionId, $attribute, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage): Document
 {
-    $attributeId = $attribute->getId();
+    $key = $attribute->getAttribute('key');
     $type = $attribute->getAttribute('type', '');
     $size = $attribute->getAttribute('size', 0);
     $required = $attribute->getAttribute('required', true);
@@ -59,7 +59,7 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
     $format = $attribute->getAttribute('format', '');
     $formatOptions = $attribute->getAttribute('formatOptions', []);
     $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint 
-    $default = $attribute->getAttribute('default', null);
+    $default = $attribute->getAttribute('default');
 
     $collection = $dbForInternal->getDocument('collections', $collectionId);
 
@@ -84,8 +84,8 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
 
     try {
         $attribute = new Document([
-            '$id' => $collectionId.'_'.$attributeId,
-            'key' => $attributeId,
+            '$id' => $collectionId.'_'.$key,
+            'key' => $key,
             'collectionId' => $collectionId,
             'type' => $type,
             'status' => 'processing', // processing, available, failed, deleting, stuck
@@ -711,7 +711,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_STRING)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('attributeId', '', new Key(), 'Attribute ID.')
+    ->param('key', '', new Key(), 'Attribute Key.')
     ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Range::TYPE_INTEGER), 'Attribute size for text attributes, in number of characters.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
@@ -722,7 +722,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $size, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
+    ->action(function ($collectionId, $key, $size, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
         /** @var Utopia\Database\Database $dbForExternal*/
@@ -737,7 +737,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
         }
 
         $attribute = createAttribute($collectionId, new Document([
-            '$id' => $attributeId,
+            'key' => $key,
             'type' => Database::VAR_STRING,
             'size' => $size,
             'required' => $required,
@@ -761,7 +761,7 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_EMAIL)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('attributeId', '', new Key(), 'Attribute ID.')
+    ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Email(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
@@ -771,7 +771,7 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
+    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
         /** @var Utopia\Database\Database $dbForExternal*/
@@ -780,7 +780,7 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
         /** @var Appwrite\Stats\Stats $usage */
 
         $attribute = createAttribute($collectionId, new Document([
-            '$id' => $attributeId,
+            'key' => $key,
             'type' => Database::VAR_STRING,
             'size' => 254,
             'required' => $required,
@@ -805,7 +805,7 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_ENUM)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('attributeId', '', new Key(), 'Attribute ID.')
+    ->param('key', '', new Key(), 'Attribute Key.')
     ->param('elements', [], new ArrayList(new Text(0)), 'Array of elements in enumerated type. Uses length of longest element to determine size.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
@@ -816,7 +816,7 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $elements, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
+    ->action(function ($collectionId, $key, $elements, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
         /** @var Utopia\Database\Database $dbForExternal*/
@@ -836,7 +836,7 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
         }
 
         $attribute = createAttribute($collectionId, new Document([
-            '$id' => $attributeId,
+            'key' => $key,
             'type' => Database::VAR_STRING,
             'size' => $size,
             'required' => $required,
@@ -862,7 +862,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_IP)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('attributeId', '', new Key(), 'Attribute ID.')
+    ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new IP(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
@@ -872,7 +872,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
+    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
         /** @var Utopia\Database\Database $dbForExternal*/
@@ -881,7 +881,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
         /** @var Appwrite\Stats\Stats $usage */
 
         $attribute = createAttribute($collectionId, new Document([
-            '$id' => $attributeId,
+            'key' => $key,
             'type' => Database::VAR_STRING,
             'size' => 39,
             'required' => $required,
@@ -906,7 +906,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_URL)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('attributeId', '', new Key(), 'Attribute ID.')
+    ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new URL(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
@@ -916,7 +916,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
+    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
@@ -924,7 +924,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
         /** @var Appwrite\Stats\Stats $usage */
 
         $attribute = createAttribute($collectionId, new Document([
-            '$id' => $attributeId,
+            'key' => $key,
             'type' => Database::VAR_STRING,
             'size' => 2000,
             'required' => $required,
@@ -949,7 +949,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_INTEGER)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('attributeId', '', new Key(), 'Attribute ID.')
+    ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('min', null, new Integer(), 'Minimum value to enforce on new documents', true)
     ->param('max', null, new Integer(), 'Maximum value to enforce on new documents', true)
@@ -961,7 +961,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
+    ->action(function ($collectionId, $key, $required, $min, $max, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
         /** @var Utopia\Database\Database $dbForExternal*/
@@ -984,7 +984,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
         }
 
         $attribute = createAttribute($collectionId, new Document([
-            '$id' => $attributeId,
+            'key' => $key,
             'type' => Database::VAR_INTEGER,
             'size' => 0,
             'required' => $required,
@@ -1020,7 +1020,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_FLOAT)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('attributeId', '', new Key(), 'Attribute ID.')
+    ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('min', null, new FloatValidator(), 'Minimum value to enforce on new documents', true)
     ->param('max', null, new FloatValidator(), 'Maximum value to enforce on new documents', true)
@@ -1032,7 +1032,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
+    ->action(function ($collectionId, $key, $required, $min, $max, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
         /** @var Utopia\Database\Database $dbForExternal*/
@@ -1047,7 +1047,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
         if ($min > $max) {
             throw new Exception('Minimum value must be lesser than maximum value', 400);
         }
-        
+
         // Ensure default value is a float
         if (!is_null($default)) {
             $default = \floatval($default);
@@ -1060,7 +1060,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
         }
 
         $attribute = createAttribute($collectionId, new Document([
-            '$id' => $attributeId,
+            'key' => $key,
             'type' => Database::VAR_FLOAT,
             'required' => $required,
             'size' => 0,
@@ -1096,7 +1096,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_BOOLEAN)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('attributeId', '', new Key(), 'Attribute ID.')
+    ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Boolean(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
@@ -1106,7 +1106,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
+    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
         /** @var Appwrite\Event\Event $database */
@@ -1114,7 +1114,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
         /** @var Appwrite\Stats\Stats $usage */
 
         $attribute = createAttribute($collectionId, new Document([
-            '$id' => $attributeId,
+            'key' => $key,
             'type' => Database::VAR_BOOLEAN,
             'size' => 0,
             'required' => $required,
@@ -1160,7 +1160,7 @@ App::get('/v1/database/collections/:collectionId/attributes')
         ]), Response::MODEL_ATTRIBUTE_LIST);
     });
 
-App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
+App::get('/v1/database/collections/:collectionId/attributes/:key')
     ->desc('Get Attribute')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
@@ -1180,11 +1180,11 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
         Response::MODEL_ATTRIBUTE_IP,
         Response::MODEL_ATTRIBUTE_STRING,])// needs to be last, since its condition would dominate any other string attribute
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('attributeId', '', new Key(), 'Attribute ID.')
+    ->param('key', '', new Key(), 'Attribute Key.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $response, $dbForInternal, $usage) {
+    ->action(function ($collectionId, $key, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
@@ -1194,7 +1194,7 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
             throw new Exception('Collection not found', 404);
         }
 
-        $attribute = $collection->find('$id', $attributeId, 'attributes');
+        $attribute = $collection->find('$id', $key, 'attributes');
 
         if (!$attribute) {
             throw new Exception('Attribute not found', 404);
@@ -1223,7 +1223,7 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
         $response->dynamic($attribute, $model);
     });
 
-App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
+App::delete('/v1/database/collections/:collectionId/attributes/:key')
     ->desc('Delete Attribute')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
@@ -1235,7 +1235,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('attributeId', '', new Key(), 'Attribute ID.')
+    ->param('key', '', new Key(), 'Attribute Key.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
@@ -1243,7 +1243,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $attributeId, $response, $dbForInternal, $dbForExternal, $database, $events, $audits, $usage) {
+    ->action(function ($collectionId, $key, $response, $dbForInternal, $dbForExternal, $database, $events, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
@@ -1258,7 +1258,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
             throw new Exception('Collection not found', 404);
         }
 
-        $attribute = $dbForInternal->getDocument('attributes', $collectionId.'_'.$attributeId);
+        $attribute = $dbForInternal->getDocument('attributes', $collectionId.'_'.$key);
 
         if (empty($attribute->getId())) {
             throw new Exception('Attribute not found', 404);
@@ -1324,7 +1324,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_INDEX)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('indexId', null, new Key(), 'Index ID.')
+    ->param('key', null, new Key(), 'Index Key.')
     ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE, Database::INDEX_SPATIAL, Database::INDEX_ARRAY]), 'Index type.')
     ->param('attributes', null, new ArrayList(new Key()), 'Array of attributes to index.')
     ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING)), 'Array of index orders.', true)
@@ -1333,7 +1333,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $indexId, $type, $attributes, $orders, $response, $dbForInternal, $database, $audits, $usage) {
+    ->action(function ($collectionId, $key, $type, $attributes, $orders, $response, $dbForInternal, $database, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $database */
@@ -1364,7 +1364,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
         // lengths hidden by default
         $lengths = [];
 
-        foreach ($attributes as $key => $attribute) {
+        foreach ($attributes as $i => $attribute) {
             // find attribute metadata in collection document
             $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
 
@@ -1382,13 +1382,13 @@ App::post('/v1/database/collections/:collectionId/indexes')
             }
 
             // set attribute size as index length only for strings
-            $lengths[$key] = ($attributeType === Database::VAR_STRING) ? $attributeSize : null;
+            $lengths[$i] = ($attributeType === Database::VAR_STRING) ? $attributeSize : null;
         }
 
         try {
             $index = $dbForInternal->createDocument('indexes', new Document([
-                '$id' => $collectionId.'_'.$indexId,
-                'key' => $indexId,
+                '$id' => $collectionId.'_'.$key,
+                'key' => $key,
                 'status' => 'processing', // processing, available, failed, deleting, stuck
                 'collectionId' => $collectionId,
                 'type' => $type,
@@ -1455,7 +1455,7 @@ App::get('/v1/database/collections/:collectionId/indexes')
         ]), Response::MODEL_INDEX_LIST);
     });
 
-App::get('/v1/database/collections/:collectionId/indexes/:indexId')
+App::get('/v1/database/collections/:collectionId/indexes/:key')
     ->desc('Get Index')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
@@ -1467,11 +1467,11 @@ App::get('/v1/database/collections/:collectionId/indexes/:indexId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_INDEX)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('indexId', null, new Key(), 'Index ID.')
+    ->param('key', null, new Key(), 'Index Key.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($collectionId, $indexId, $response, $dbForInternal, $usage) {
+    ->action(function ($collectionId, $key, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
@@ -1484,7 +1484,7 @@ App::get('/v1/database/collections/:collectionId/indexes/:indexId')
         $indexes = $collection->getAttribute('indexes');
 
         // Search for index
-        $indexIndex = array_search($indexId, array_column($indexes, '$id'));
+        $indexIndex = array_search($key, array_column($indexes, 'key'));
 
         if ($indexIndex === false) {
             throw new Exception('Index not found', 404);
@@ -1495,11 +1495,11 @@ App::get('/v1/database/collections/:collectionId/indexes/:indexId')
         ])]);
 
         $usage->setParam('database.collections.read', 1);
-        
+
         $response->dynamic($index, Response::MODEL_INDEX);
     });
 
-App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
+App::delete('/v1/database/collections/:collectionId/indexes/:key')
     ->desc('Delete Index')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
@@ -1511,14 +1511,14 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('indexId', '', new Key(), 'Index ID.')
+    ->param('key', '', new Key(), 'Index Key.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('database')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $indexId, $response, $dbForInternal, $database, $events, $audits, $usage) {
+    ->action(function ($collectionId, $key, $response, $dbForInternal, $database, $events, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $database */
@@ -1532,7 +1532,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
             throw new Exception('Collection not found', 404);
         }
 
-        $index = $dbForInternal->getDocument('indexes', $collectionId.'_'.$indexId);
+        $index = $dbForInternal->getDocument('indexes', $collectionId.'_'.$key);
 
         if (empty($index->getId())) {
             throw new Exception('Index not found', 404);
