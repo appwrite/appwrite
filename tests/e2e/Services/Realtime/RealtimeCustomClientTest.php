@@ -586,7 +586,7 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'name',
+            'key' => 'name',
             'size' => 256,
             'required' => true,
         ]);
