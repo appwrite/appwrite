@@ -7,6 +7,7 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Event;
+use Appwrite\Database\Document;
 
 App::get('/v1/health')
     ->desc('Get HTTP')
@@ -79,7 +80,7 @@ App::get('/v1/health/db')
 
         $output = [
             'status' => 'pass',
-            'ping' => \microtime(true) - $checkStart
+            'ping' => \round((\microtime(true) - $checkStart) / 1000)
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
@@ -113,7 +114,7 @@ App::get('/v1/health/cache')
 
         $output = [
             'status' => 'pass',
-            'ping' => \microtime(true) - $checkStart
+            'ping' => \round((\microtime(true) - $checkStart) / 1000)
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
@@ -321,7 +322,7 @@ App::get('/v1/health/storage/local')
 
         $output = [
             'status' => 'pass',
-            'ping' => \microtime(true) - $checkStart
+            'ping' => \round((\microtime(true) - $checkStart) / 1000)
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);

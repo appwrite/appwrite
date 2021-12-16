@@ -25,7 +25,9 @@ class HealthCustomServerTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('OK', $response['body']['status']);
+        $this->assertEquals('pass', $response['body']['status']);
+        $this->assertIsInt($response['body']['ping']);
+        $this->assertLessThan(100, $response['body']['ping']);
 
         /**
          * Test for FAILURE
@@ -45,7 +47,9 @@ class HealthCustomServerTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('OK', $response['body']['status']);
+        $this->assertEquals('pass', $response['body']['status']);
+        $this->assertIsInt($response['body']['ping']);
+        $this->assertLessThan(100, $response['body']['ping']);
 
         /**
          * Test for FAILURE
@@ -65,7 +69,9 @@ class HealthCustomServerTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('OK', $response['body']['status']);
+        $this->assertEquals('pass', $response['body']['status']);
+        $this->assertIsInt($response['body']['ping']);
+        $this->assertLessThan(100, $response['body']['ping']);
 
         /**
          * Test for FAILURE
@@ -85,10 +91,10 @@ class HealthCustomServerTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsInt($response['body']['remote']);
-        $this->assertIsInt($response['body']['local']);
-        $this->assertNotEmpty($response['body']['remote']);
-        $this->assertNotEmpty($response['body']['local']);
+        $this->assertIsInt($response['body']['remoteTime']);
+        $this->assertIsInt($response['body']['localTime']);
+        $this->assertNotEmpty($response['body']['remoteTime']);
+        $this->assertNotEmpty($response['body']['localTime']);
         $this->assertLessThan(10, $response['body']['diff']);
 
         /**
@@ -214,7 +220,9 @@ class HealthCustomServerTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('OK', $response['body']['status']);
+        $this->assertEquals('pass', $response['body']['status']);
+        $this->assertIsInt($response['body']['ping']);
+        $this->assertLessThan(100, $response['body']['ping']);
 
         /**
          * Test for FAILURE

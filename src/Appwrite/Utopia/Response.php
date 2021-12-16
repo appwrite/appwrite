@@ -42,6 +42,11 @@ use Appwrite\Utopia\Response\Model\Task;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
+use Appwrite\Utopia\Response\Model\HealthAntivirus;
+use Appwrite\Utopia\Response\Model\HealthQueue;
+use Appwrite\Utopia\Response\Model\HealthStatus;
+use Appwrite\Utopia\Response\Model\HealthTime;
+use Appwrite\Utopia\Response\Model\HealthVersion;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use stdClass;
 
@@ -209,6 +214,11 @@ class Response extends SwooleResponse
             ->setModel(new Language())
             ->setModel(new Currency())
             ->setModel(new Phone())
+            ->setModel(new HealthAntivirus())
+            ->setModel(new HealthQueue())
+            ->setModel(new HealthStatus())
+            ->setModel(new HealthTime())
+            ->setModel(new HealthVersion())
             // Verification
             // Recovery
             // Tests (keep last)
