@@ -87,9 +87,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                 'timestamp' => time(),
                 'value' => '{}'
             ]);
-            $statsDocument = Authorization::skip(function () use ($database, $document) {
-                return $database->createDocument('realtime', $document);
-            });
+            $statsDocument = Authorization::skip(fn() => $database->createDocument('realtime', $document));
         } catch (\Throwable $th) {
             Console::error('[Error] Type: ' . get_class($th));
             Console::error('[Error] Message: ' . $th->getMessage());
@@ -141,9 +139,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                 ->setAttribute('timestamp', time())
                 ->setAttribute('value', json_encode($payload));
 
-            Authorization::skip(function () use ($database, $statsDocument) {
-                $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument);
-            });
+            Authorization::skip(fn() => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
         } catch (\Throwable $th) {
             Console::error('[Error] Type: ' . get_class($th));
             Console::error('[Error] Message: ' . $th->getMessage());
@@ -171,11 +167,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
             $payload = [];
 
-            $list = Authorization::skip(function () use ($database) {
-                return $database->find('realtime', [
+            $list = Authorization::skip(fn() => $database->find('realtime', [
                     new Query('timestamp', Query::TYPE_GREATER, [(time() - 15)])
-                ]);
-            });
+                ]));
 
             /**
              * Aggregate stats across containers.

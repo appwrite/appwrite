@@ -807,9 +807,7 @@ App::get('/v1/functions/:functionId/executions')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $function = Authorization::skip(function() use ($dbForInternal, $functionId) {
-            return $dbForInternal->getDocument('functions', $functionId);
-        });
+        $function = Authorization::skip(fn() => $dbForInternal->getDocument('functions', $functionId));
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);

@@ -669,26 +669,24 @@ App::post('/v1/account/sessions/magic-url')
 
             $userId = $userId == 'unique()' ? $dbForInternal->getId() : $userId;
 
-            $user = Authorization::skip(function () use ($dbForInternal, $userId, $email) {
-                return $dbForInternal->createDocument('users', new Document([
-                    '$id' => $userId,
-                    '$read' => ['role:all'],
-                    '$write' => ['user:' . $userId],
-                    'email' => $email,
-                    'emailVerification' => false,
-                    'status' => true,
-                    'password' => null,
-                    'passwordUpdate' => \time(),
-                    'registration' => \time(),
-                    'reset' => false,
-                    'prefs' => [],
-                    'sessions' => [],
-                    'tokens' => [],
-                    'memberships' => [],
-                    'search' => implode(' ', [$userId, $email]),
-                    'deleted' => false
-                ]));
-            });
+            $user = Authorization::skip(fn () => $dbForInternal->createDocument('users', new Document([
+                '$id' => $userId,
+                '$read' => ['role:all'],
+                '$write' => ['user:' . $userId],
+                'email' => $email,
+                'emailVerification' => false,
+                'status' => true,
+                'password' => null,
+                'passwordUpdate' => \time(),
+                'registration' => \time(),
+                'reset' => false,
+                'prefs' => [],
+                'sessions' => [],
+                'tokens' => [],
+                'memberships' => [],
+                'search' => implode(' ', [$userId, $email]),
+                'deleted' => false
+            ])));
 
             $mails->setParam('event', 'users.create');
             $audits->setParam('event', 'users.create');
