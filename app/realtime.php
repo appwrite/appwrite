@@ -106,12 +106,8 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     Timer::tick(5000, function () use ($register, $stats, $containerId, &$statsDocument) {
         /** @var Document $statsDocument */
         foreach ($stats as $projectId => $value) {
-            if (empty($value['connections']) && empty($value['messages'])) {
-                continue;
-            }
-
-            $connections = $stats->get($projectId, 'connections');
-            $messages = $stats->get($projectId, 'messages');
+            $connections = $stats->get($projectId, 'connections') ?? 0;
+            $messages = $stats->get($projectId, 'messages' ?? 0);
 
             $usage = new Event('v1-usage', 'UsageV1');
             $usage
@@ -132,9 +128,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
         }
         $payload = [];
         foreach ($stats as $projectId => $value) {
-            if (!empty($value['connectionsTotal'])) {
-                $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
-            }
+            $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
         }
         if (empty($payload) || empty($statsDocument)) {
             return;
@@ -493,7 +487,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         }
 
         switch ($message['type']) {
-            /**
+                /**
              * This type is used to authenticate.
              */
             case 'authentication':
