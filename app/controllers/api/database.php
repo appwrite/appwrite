@@ -1674,7 +1674,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
-App::get('/v1/database/collections/:collectionId/documents')
+App::get('/v1/database/collections/:collectionId/documents_poc')
     ->desc('List Documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
@@ -1739,12 +1739,23 @@ App::get('/v1/database/collections/:collectionId/documents')
 
         if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document[] $documents */
-            $documents = Authorization::skip(function() use ($dbForExternal, $collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument, $cursorDirection) {
-                return $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
-            });
+            $documents = Authorization::skip(fn() => $dbForExternal->find($collectionId, $queries, $limit + 1, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection));
+            if (!empty($documents)) {
+                $nextAfter = Authorization::skip(fn() => $dbForExternal->findOne($collectionId, $queries, $offset, $orderAttributes, $orderTypes, $documents[0], $cursorDirection === Database::CURSOR_AFTER ? Database::CURSOR_BEFORE : Database::CURSOR_AFTER));
+            }
         } else {
-            $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
+            $documents = $dbForExternal->find($collectionId, $queries, $limit + 1, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
+            if (!empty($documents)) {
+                $nextAfter = $dbForExternal->findOne($collectionId, $queries, $offset, $orderAttributes, $orderTypes, $documents[0], $cursorDirection === Database::CURSOR_AFTER ? Database::CURSOR_BEFORE : Database::CURSOR_AFTER);
+            }
         }
+
+        if (count($documents) > $limit) {
+            array_pop($documents); // remove last array item
+            $nextBefore = $documents[array_key_last($documents)]->getId();
+        }
+
+        $nextAfter = $nextAfter ? $nextAfter->getId() : null;
 
         $usage
             ->setParam('database.documents.read', 1)
@@ -1753,6 +1764,8 @@ App::get('/v1/database/collections/:collectionId/documents')
 
         $response->dynamic(new Document([
             'sum' => $dbForExternal->count($collectionId, $queries, APP_LIMIT_COUNT),
+            'nextBefore' => $nextBefore ?? '',
+            'nextAfter' => $nextAfter ?? '',
             'documents' => $documents,
         ]), Response::MODEL_DOCUMENT_LIST);
     });

@@ -37,6 +37,16 @@ class BaseList extends Model
                 'description' => 'Total number of items available on the server.',
                 'default' => 0,
                 'example' => 5,
+            ])->addRule('nextBefore', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Total number of items available on the server.',
+                'default' => '',
+                'example' => '98dfs89z3',
+            ])->addRule('nextAfter', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Total number of items available on the server.',
+                'default' => '',
+                'example' => '98dfs89z3',
             ]);
         }
         $this->addRule($key, [
