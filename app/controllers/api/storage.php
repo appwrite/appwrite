@@ -638,8 +638,9 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $sizeActual = $device->getFileSize($path);
         
+        $fileId = $fileId === 'unique()' ? $dbForInternal->getId() : $fileId;
         $data = [
-            '$id' => $fileId === 'unique()' ? $dbForInternal->getId() : $fileId,
+            '$id' => $fileId,
             '$read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], // By default set read permissions for user
             '$write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], // By default set write permissions for user
             'dateCreated' => \time(),
@@ -652,17 +653,13 @@ App::post('/v1/storage/buckets/:bucketId/files')
             'sizeActual' => $sizeActual,
             'algorithm' => empty($compressor) ? '' : $compressor->getName(),
             'comment' => '',
-            'openSSLVersion' => '1',
-            'openSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
-            'openSSLTag' => \bin2hex($tag ?? ''),
-            'openSSLIV' => \bin2hex($iv),
             'search' => implode(' ', [$fileId, $file['name'] ?? '',]),
         ];
 
         if($bucket->getAttribute('encryption', true) && $size <= APP_LIMIT_ENCRYPTION) {
             $data['openSSLVersion'] = '1';
             $data['openSSLCipher'] = OpenSSL::CIPHER_AES_128_GCM;
-            $data['openSSLTag'] = \bin2hex($tag);
+            $data['openSSLTag'] = \bin2hex($tag ?? '');
             $data['openSSLIV'] = \bin2hex($iv);
         }
 
