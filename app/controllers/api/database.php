@@ -1750,14 +1750,15 @@ App::get('/v1/database/collections/:collectionId/documents_poc')
             }
         }
 
+        $nextBefore = $nextBeforeExists ? $documents[0]->getId() : null;
+
         if ($cursorDirection === Database::CURSOR_AFTER && count($documents) > $limit) {
-            array_pop($documents); // remove last array item
+            array_pop($documents); // remove last array item from extending the limit by 1
             $nextAfter = $documents[array_key_last($documents)]->getId();
         } else if ($cursorDirection === Database::CURSOR_BEFORE) {
             $nextAfter = $documents[array_key_last($documents)]->getId();
         }
 
-        $nextBefore = $nextBeforeExists ? $documents[0]->getId() : null;
 
         $usage
             ->setParam('database.documents.read', 1)
