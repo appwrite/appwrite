@@ -1355,6 +1355,26 @@ trait DatabaseBase
             'array' => true,
         ]);
 
+        $defaultRequired = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'defaultRequired',
+            'required' => true,
+            'default' => 12
+        ]);
+
+        $enumDefault = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/enum', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'enumDefault',
+            'elements' => ['north', 'west'],
+            'default' => 'south'
+        ]);
+
         $this->assertEquals(201, $email['headers']['status-code']);
         $this->assertEquals(201, $ip['headers']['status-code']);
         $this->assertEquals(201, $url['headers']['status-code']);
@@ -1363,8 +1383,11 @@ trait DatabaseBase
         $this->assertEquals(201, $probability['headers']['status-code']);
         $this->assertEquals(201, $upperBound['headers']['status-code']);
         $this->assertEquals(201, $lowerBound['headers']['status-code']);
+        $this->assertEquals(201, $enum['headers']['status-code']);
         $this->assertEquals(400, $invalidRange['headers']['status-code']);
         $this->assertEquals(400, $defaultArray['headers']['status-code']);
+        $this->assertEquals(400, $defaultRequired['headers']['status-code']);
+        $this->assertEquals(400, $enumDefault['headers']['status-code']);
         $this->assertEquals('Minimum value must be lesser than maximum value', $invalidRange['body']['message']);
         $this->assertEquals('Cannot set default value for array attributes', $defaultArray['body']['message']);
 

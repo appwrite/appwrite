@@ -835,6 +835,10 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
             $size = ($length > $size) ? $length : $size;
         }
 
+        if (!is_null($default) && !in_array($default, $elements)) {
+            throw new Exception('Default value not found in elements', 400);
+        }
+
         $attribute = createAttribute($collectionId, new Document([
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
