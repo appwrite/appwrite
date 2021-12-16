@@ -589,14 +589,6 @@ $logs = $this->getParam('logs', null);
         (() => {
             const form = document.getElementById("add-string-attribute");
             const fields = {
-                required: {
-                    array: ["disable", "uncheck"],
-                    required: ["enable"]
-                },
-                array: {
-                    required: ["disable", "uncheck"],
-                    array: ["enable"]
-                },
                 xdefault: {
                     oneOf: {
                         if: ["array", "required"],
@@ -680,14 +672,6 @@ $logs = $this->getParam('logs', null);
         (() => {
             const form = document.getElementById("add-integer-attribute");
             const fields = {
-                required: {
-                    array: ["disable", "uncheck"],
-                    required: ["enable"]
-                },
-                array: {
-                    required: ["disable", "uncheck"],
-                    array: ["enable"]
-                },
                 xdefault: {
                     oneOf: {
                         if: ["array", "required"],
@@ -769,14 +753,6 @@ $logs = $this->getParam('logs', null);
         (() => {
             const form = document.getElementById("add-float-attribute");
             const fields = {
-                required: {
-                    array: ["disable", "uncheck"],
-                    required: ["enable"]
-                },
-                array: {
-                    required: ["disable", "uncheck"],
-                    array: ["enable"]
-                },
                 xdefault: {
                     oneOf: {
                         if: ["array", "required"],
@@ -847,14 +823,6 @@ $logs = $this->getParam('logs', null);
         (() => {
             const form = document.getElementById("add-email-attribute");
             const fields = {
-                required: {
-                    array: ["disable", "uncheck"],
-                    required: ["enable"]
-                },
-                array: {
-                    required: ["disable", "uncheck"],
-                    array: ["enable"]
-                },
                 xdefault: {
                     oneOf: {
                         if: ["array", "required"],
@@ -927,14 +895,6 @@ $logs = $this->getParam('logs', null);
         (() => {
             const form = document.getElementById("add-boolean-attribute");
             const fields = {
-                required: {
-                    array: ["disable", "uncheck"],
-                    required: ["enable"]
-                },
-                array: {
-                    required: ["disable", "uncheck"],
-                    array: ["enable"]
-                },
                 xdefault: {
                     oneOf: {
                         if: ["array", "required"],
@@ -1006,14 +966,6 @@ $logs = $this->getParam('logs', null);
         (() => {
             const form = document.getElementById("add-ip-attribute");
             const fields = {
-                required: {
-                    array: ["disable", "uncheck"],
-                    required: ["enable"]
-                },
-                array: {
-                    required: ["disable", "uncheck"],
-                    array: ["enable"]
-                },
                 xdefault: {
                     oneOf: {
                         if: ["array", "required"],
@@ -1074,7 +1026,7 @@ $logs = $this->getParam('logs', null);
         </div>
 
         <label for="string-default">Default Value</label>
-        <input id="string-default" name="xdefault" type="url" pattern="https://.*" title="Valid URL address" class="margin-bottom-large" autocomplete="off">
+        <input id="string-default" name="xdefault" type="url" title="Valid URL address" class="margin-bottom-large" autocomplete="off">
 
         <footer>
             <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
@@ -1084,14 +1036,6 @@ $logs = $this->getParam('logs', null);
         (() => {
             const form = document.getElementById("add-url-attribute");
             const fields = {
-                required: {
-                    array: ["disable", "uncheck"],
-                    required: ["enable"]
-                },
-                array: {
-                    required: ["disable", "uncheck"],
-                    array: ["enable"]
-                },
                 xdefault: {
                     oneOf: {
                         if: ["array", "required"],
@@ -1179,14 +1123,6 @@ $logs = $this->getParam('logs', null);
         (() => {
             const form = document.getElementById("add-enum-attribute");
             const fields = {
-                required: {
-                    array: ["disable", "uncheck"],
-                    required: ["enable"]
-                },
-                array: {
-                    required: ["disable", "uncheck"],
-                    array: ["enable"]
-                },
                 xdefault: {
                     oneOf: {
                         if: ["array", "required"],
