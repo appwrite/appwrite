@@ -1741,21 +1741,31 @@ App::get('/v1/database/collections/:collectionId/documents_poc')
             /** @var Document[] $documents */
             $documents = Authorization::skip(fn() => $dbForExternal->find($collectionId, $queries, $limit + 1, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection));
             if (!empty($documents)) {
-                $nextAfter = Authorization::skip(fn() => $dbForExternal->findOne($collectionId, $queries, $offset, $orderAttributes, $orderTypes, $documents[0], $cursorDirection === Database::CURSOR_AFTER ? Database::CURSOR_BEFORE : Database::CURSOR_AFTER));
+                $nextBeforeExists = Authorization::skip(fn() => $dbForExternal->findOne($collectionId, $queries, $offset, $orderAttributes, $orderTypes, $documents[0], Database::CURSOR_BEFORE));
             }
         } else {
             $documents = $dbForExternal->find($collectionId, $queries, $limit + 1, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
             if (!empty($documents)) {
-                $nextAfter = $dbForExternal->findOne($collectionId, $queries, $offset, $orderAttributes, $orderTypes, $documents[0], $cursorDirection === Database::CURSOR_AFTER ? Database::CURSOR_BEFORE : Database::CURSOR_AFTER);
+                $nextBeforeExists = $dbForExternal->findOne($collectionId, $queries, $offset, $orderAttributes, $orderTypes, $documents[0], Database::CURSOR_BEFORE);
             }
         }
 
-        if (count($documents) > $limit) {
+        if ($cursorDirection === Database::CURSOR_AFTER && count($documents) > $limit) {
             array_pop($documents); // remove last array item
-            $nextBefore = $documents[array_key_last($documents)]->getId();
+            $nextAfter = $documents[array_key_last($documents)]->getId();
+        } else if ($cursorDirection === Database::CURSOR_BEFORE) {
+            $nextAfter = $documents[array_key_last($documents)]->getId();
         }
 
-        $nextAfter = $nextAfter ? $nextAfter->getId() : null;
+        if ($nextBeforeExists) {
+            if ($cursorDirection === Database::CURSOR_BEFORE) {
+                $nextBefore = $documents[0]->getId();
+            } else {
+                $nextBefore = $nextBeforeExists->getId();
+            }
+        } else {
+            $nextBefore = null;
+        }
 
         $usage
             ->setParam('database.documents.read', 1)
