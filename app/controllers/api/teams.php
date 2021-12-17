@@ -179,7 +179,7 @@ App::put('/v1/teams/:teamId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM)
     ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
+    ->param('name', null, new Text(128), 'New team name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForInternal')
     ->action(function ($teamId, $name, $response, $dbForInternal) {
@@ -270,10 +270,10 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
     ->label('abuse-limit', 10)
     ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('email', '', new Email(), 'Team member email.')
+    ->param('email', '', new Email(), 'Email of the new team member.')
     ->param('roles', [], new ArrayList(new Key()), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
-    ->param('name', '', new Text(128), 'Team member name. Max length: 128 chars.', true)
+    ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
     ->inject('user')
@@ -515,13 +515,18 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
 
         $membership = $dbForInternal->getDocument('memberships', $membershipId);
 
-        if($membership->isEmpty() || empty($membership->getAttribute('userId', null))) {
+        if($membership->isEmpty() || empty($membership->getAttribute('userId'))) {
             throw new Exception('Membership not found', 404);
         }
 
-        $temp = $dbForInternal->getDocument('users', $membership->getAttribute('userId', null))->getArrayCopy(['email', 'name']);
+        $user = $dbForInternal->getDocument('users', $membership->getAttribute('userId'));
 
-        $response->dynamic(new Document(\array_merge($temp, $membership->getArrayCopy())), Response::MODEL_MEMBERSHIP );
+        $membership
+            ->setAttribute('name', $user->getAttribute('name'))
+            ->setAttribute('email', $user->getAttribute('email'))
+        ;
+
+        $response->dynamic($membership, Response::MODEL_MEMBERSHIP );
     });
 
 App::patch('/v1/teams/:teamId/memberships/:membershipId')
@@ -538,7 +543,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
-    ->param('roles', [], new ArrayList(new Key()), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Max length for each role is 32 chars.')
+    ->param('roles', [], new ArrayList(new Key()), 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Max length for each role is 32 chars.')
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -569,7 +574,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
         $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
-        
+
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception('User is not allowed to modify roles', 401);
         }
