@@ -1324,27 +1324,27 @@
                  *
                  *
                  * @param {string} collectionId
-                 * @param {string} attributeId
+                 * @param {string} key
                  * @param {boolean} required
                  * @param {boolean} xdefault
                  * @param {boolean} array
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createBooleanAttribute: (collectionId, attributeId, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                createBooleanAttribute: (collectionId, key, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (typeof attributeId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
                     }
                     if (typeof required === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "required"');
                     }
                     let path = '/database/collections/{collectionId}/attributes/boolean'.replace('{collectionId}', collectionId);
                     let payload = {};
-                    if (typeof attributeId !== 'undefined') {
-                        payload['attributeId'] = attributeId;
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
                     }
                     if (typeof required !== 'undefined') {
                         payload['required'] = required;
@@ -1367,27 +1367,27 @@
                  *
                  *
                  * @param {string} collectionId
-                 * @param {string} attributeId
+                 * @param {string} key
                  * @param {boolean} required
                  * @param {string} xdefault
                  * @param {boolean} array
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createEmailAttribute: (collectionId, attributeId, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                createEmailAttribute: (collectionId, key, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (typeof attributeId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
                     }
                     if (typeof required === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "required"');
                     }
                     let path = '/database/collections/{collectionId}/attributes/email'.replace('{collectionId}', collectionId);
                     let payload = {};
-                    if (typeof attributeId !== 'undefined') {
-                        payload['attributeId'] = attributeId;
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
                     }
                     if (typeof required !== 'undefined') {
                         payload['required'] = required;
@@ -1408,7 +1408,7 @@
                  *
                  *
                  * @param {string} collectionId
-                 * @param {string} attributeId
+                 * @param {string} key
                  * @param {string[]} elements
                  * @param {boolean} required
                  * @param {string} xdefault
@@ -1416,12 +1416,12 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createEnumAttribute: (collectionId, attributeId, elements, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                createEnumAttribute: (collectionId, key, elements, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (typeof attributeId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
                     }
                     if (typeof elements === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "elements"');
@@ -1431,8 +1431,8 @@
                     }
                     let path = '/database/collections/{collectionId}/attributes/enum'.replace('{collectionId}', collectionId);
                     let payload = {};
-                    if (typeof attributeId !== 'undefined') {
-                        payload['attributeId'] = attributeId;
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
                     }
                     if (typeof elements !== 'undefined') {
                         payload['elements'] = elements;
@@ -1459,7 +1459,7 @@
                  *
                  *
                  * @param {string} collectionId
-                 * @param {string} attributeId
+                 * @param {string} key
                  * @param {boolean} required
                  * @param {string} min
                  * @param {string} max
@@ -1468,20 +1468,20 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createFloatAttribute: (collectionId, attributeId, required, min, max, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                createFloatAttribute: (collectionId, key, required, min, max, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (typeof attributeId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
                     }
                     if (typeof required === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "required"');
                     }
                     let path = '/database/collections/{collectionId}/attributes/float'.replace('{collectionId}', collectionId);
                     let payload = {};
-                    if (typeof attributeId !== 'undefined') {
-                        payload['attributeId'] = attributeId;
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
                     }
                     if (typeof required !== 'undefined') {
                         payload['required'] = required;
@@ -1511,7 +1511,7 @@
                  *
                  *
                  * @param {string} collectionId
-                 * @param {string} attributeId
+                 * @param {string} key
                  * @param {boolean} required
                  * @param {number} min
                  * @param {number} max
@@ -1520,20 +1520,20 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createIntegerAttribute: (collectionId, attributeId, required, min, max, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                createIntegerAttribute: (collectionId, key, required, min, max, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (typeof attributeId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
                     }
                     if (typeof required === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "required"');
                     }
                     let path = '/database/collections/{collectionId}/attributes/integer'.replace('{collectionId}', collectionId);
                     let payload = {};
-                    if (typeof attributeId !== 'undefined') {
-                        payload['attributeId'] = attributeId;
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
                     }
                     if (typeof required !== 'undefined') {
                         payload['required'] = required;
@@ -1562,27 +1562,27 @@
                  *
                  *
                  * @param {string} collectionId
-                 * @param {string} attributeId
+                 * @param {string} key
                  * @param {boolean} required
                  * @param {string} xdefault
                  * @param {boolean} array
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createIpAttribute: (collectionId, attributeId, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                createIpAttribute: (collectionId, key, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (typeof attributeId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
                     }
                     if (typeof required === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "required"');
                     }
                     let path = '/database/collections/{collectionId}/attributes/ip'.replace('{collectionId}', collectionId);
                     let payload = {};
-                    if (typeof attributeId !== 'undefined') {
-                        payload['attributeId'] = attributeId;
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
                     }
                     if (typeof required !== 'undefined') {
                         payload['required'] = required;
@@ -1605,7 +1605,7 @@
                  *
                  *
                  * @param {string} collectionId
-                 * @param {string} attributeId
+                 * @param {string} key
                  * @param {number} size
                  * @param {boolean} required
                  * @param {string} xdefault
@@ -1613,12 +1613,12 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createStringAttribute: (collectionId, attributeId, size, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                createStringAttribute: (collectionId, key, size, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (typeof attributeId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
                     }
                     if (typeof size === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "size"');
@@ -1628,8 +1628,8 @@
                     }
                     let path = '/database/collections/{collectionId}/attributes/string'.replace('{collectionId}', collectionId);
                     let payload = {};
-                    if (typeof attributeId !== 'undefined') {
-                        payload['attributeId'] = attributeId;
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
                     }
                     if (typeof size !== 'undefined') {
                         payload['size'] = size;
@@ -1655,27 +1655,27 @@
                  *
                  *
                  * @param {string} collectionId
-                 * @param {string} attributeId
+                 * @param {string} key
                  * @param {boolean} required
                  * @param {string} xdefault
                  * @param {boolean} array
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createUrlAttribute: (collectionId, attributeId, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                createUrlAttribute: (collectionId, key, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (typeof attributeId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
                     }
                     if (typeof required === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "required"');
                     }
                     let path = '/database/collections/{collectionId}/attributes/url'.replace('{collectionId}', collectionId);
                     let payload = {};
-                    if (typeof attributeId !== 'undefined') {
-                        payload['attributeId'] = attributeId;
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
                     }
                     if (typeof required !== 'undefined') {
                         payload['required'] = required;
@@ -1696,18 +1696,18 @@
                  *
                  *
                  * @param {string} collectionId
-                 * @param {string} attributeId
+                 * @param {string} key
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getAttribute: (collectionId, attributeId) => __awaiter(this, void 0, void 0, function* () {
+                getAttribute: (collectionId, key) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (typeof attributeId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
                     }
-                    let path = '/database/collections/{collectionId}/attributes/{attributeId}'.replace('{collectionId}', collectionId).replace('{attributeId}', attributeId);
+                    let path = '/database/collections/{collectionId}/attributes/{key}'.replace('{collectionId}', collectionId).replace('{key}', key);
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
@@ -1719,18 +1719,18 @@
                  *
                  *
                  * @param {string} collectionId
-                 * @param {string} attributeId
+                 * @param {string} key
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                deleteAttribute: (collectionId, attributeId) => __awaiter(this, void 0, void 0, function* () {
+                deleteAttribute: (collectionId, key) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (typeof attributeId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
                     }
-                    let path = '/database/collections/{collectionId}/attributes/{attributeId}'.replace('{collectionId}', collectionId).replace('{attributeId}', attributeId);
+                    let path = '/database/collections/{collectionId}/attributes/{key}'.replace('{collectionId}', collectionId).replace('{key}', key);
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('delete', uri, {
@@ -1980,19 +1980,19 @@
                  *
                  *
                  * @param {string} collectionId
-                 * @param {string} indexId
+                 * @param {string} key
                  * @param {string} type
                  * @param {string[]} attributes
                  * @param {string[]} orders
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createIndex: (collectionId, indexId, type, attributes, orders) => __awaiter(this, void 0, void 0, function* () {
+                createIndex: (collectionId, key, type, attributes, orders) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (typeof indexId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "indexId"');
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
                     }
                     if (typeof type === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "type"');
@@ -2002,8 +2002,8 @@
                     }
                     let path = '/database/collections/{collectionId}/indexes'.replace('{collectionId}', collectionId);
                     let payload = {};
-                    if (typeof indexId !== 'undefined') {
-                        payload['indexId'] = indexId;
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
                     }
                     if (typeof type !== 'undefined') {
                         payload['type'] = type;
@@ -2024,18 +2024,18 @@
                  *
                  *
                  * @param {string} collectionId
-                 * @param {string} indexId
+                 * @param {string} key
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getIndex: (collectionId, indexId) => __awaiter(this, void 0, void 0, function* () {
+                getIndex: (collectionId, key) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (typeof indexId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "indexId"');
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
                     }
-                    let path = '/database/collections/{collectionId}/indexes/{indexId}'.replace('{collectionId}', collectionId).replace('{indexId}', indexId);
+                    let path = '/database/collections/{collectionId}/indexes/{key}'.replace('{collectionId}', collectionId).replace('{key}', key);
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
@@ -2047,18 +2047,18 @@
                  *
                  *
                  * @param {string} collectionId
-                 * @param {string} indexId
+                 * @param {string} key
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                deleteIndex: (collectionId, indexId) => __awaiter(this, void 0, void 0, function* () {
+                deleteIndex: (collectionId, key) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (typeof indexId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "indexId"');
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
                     }
-                    let path = '/database/collections/{collectionId}/indexes/{indexId}'.replace('{collectionId}', collectionId).replace('{indexId}', indexId);
+                    let path = '/database/collections/{collectionId}/indexes/{key}'.replace('{collectionId}', collectionId).replace('{key}', key);
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('delete', uri, {
