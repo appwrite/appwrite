@@ -311,7 +311,7 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_EMAIL, function() {
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_ENUM, function($attribute) {
     $elements = $attribute['formatOptions']['elements'];
-    return new WhiteList($elements);
+    return new WhiteList($elements, true);
 }, Database::VAR_STRING);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_IP, function() {
