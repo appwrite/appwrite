@@ -19,8 +19,8 @@ trait DatabaseBase
         ]), [
             'collectionId' => 'unique()',
             'name' => 'Movies',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'read' => [],
+            'write' => [],
             'permission' => 'document',
         ]);
 
@@ -113,8 +113,8 @@ trait DatabaseBase
         ]), [
             'collectionId' => 'unique()',
             'name' => 'Response Models',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'read' => [],
+            'write' => [],
             'permission' => 'document',
         ]);
 
@@ -1229,8 +1229,8 @@ trait DatabaseBase
         ]), [
             'collectionId' => 'unique()',
             'name' => 'invalidDocumentStructure',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'read' => [],
+            'write' => [],
             'permission' => 'document',
         ]);
 
@@ -1829,13 +1829,41 @@ trait DatabaseBase
 
         $this->assertEquals(201, $document1['headers']['status-code']);
 
+        $document2 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'attribute' => 'one',
+            ],
+            'read' => [],
+            'write' => [$user],
+        ]);
+
+        $this->assertEquals(201, $document2['headers']['status-code']);
+
+        $document3 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'attribute' => 'one',
+            ],
+            'read' => [],
+            'write' => [],
+        ]);
+
+        $this->assertEquals(201, $document3['headers']['status-code']);
+
         $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(1, $documents['body']['sum']);
-        $this->assertCount(1, $documents['body']['documents']);
+        $this->assertEquals(3, $documents['body']['sum']);
+        $this->assertCount(3, $documents['body']['documents']);
 
         /*
          * Test for Failure
@@ -1894,7 +1922,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
-        $this->assertEquals(404, $documents['headers']['status-code']);
+        $this->assertEquals(401, $documents['headers']['status-code']);
     }
 
     /**
