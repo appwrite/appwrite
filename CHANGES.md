@@ -19,6 +19,7 @@
   - Document
 - Wildcard permissions `*` are now `role:all`
 - Permissions are now found as top-level keys `$read` and `$write` instead of nested under `$permissions`
+- Accessing collections with insufficient permissions now return a `401` isntead of `404` status code
 - Added Cursor pagination to all endpoints that provide pagination by offset
 - Added new Usage worker to aggregate usage statistics
 - Added new Database worker to handle heavy database tasks in the background
