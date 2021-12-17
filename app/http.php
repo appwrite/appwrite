@@ -73,17 +73,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             }
         } while ($attempts < $max);
 
-        App::setResource('db', function () use (&$db) {
-            return $db;
-        });
-
-        App::setResource('cache', function () use (&$redis) {
-            return $redis;
-        });
-
-        App::setResource('app', function() use (&$app) {
-            return $app;
-        });
+        App::setResource('db', fn() => $db);
+        App::setResource('cache', fn() => $redis);
 
         $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
 
@@ -170,14 +161,9 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $db = $register->get('dbPool')->get();
     $redis = $register->get('redisPool')->get();
 
-    App::setResource('db', function () use (&$db) {
-        return $db;
-    });
+    App::setResource('db', fn() => $db);
+    App::setResource('cache', fn() => $redis);
 
-    App::setResource('cache', function () use (&$redis) {
-        return $redis;
-    });
-    
     try {
         Authorization::cleanRoles();
         Authorization::setRole('role:all');

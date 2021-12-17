@@ -323,21 +323,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
     Console::info("Connection open (user: {$connection})");
 
-    App::setResource('db', function () use (&$db) {
-        return $db;
-    });
-
-    App::setResource('cache', function () use (&$redis) {
-        return $redis;
-    });
-
-    App::setResource('request', function () use ($request) {
-        return $request;
-    });
-
-    App::setResource('response', function () use ($response) {
-        return $response;
-    });
+    App::setResource('db', fn() => $db);
+    App::setResource('cache', fn() => $redis);
+    App::setResource('request', fn() => $request);
+    App::setResource('response', fn() => $response);
 
     try {
         /** @var \Utopia\Database\Document $user */
