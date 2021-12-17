@@ -1620,8 +1620,10 @@ App::post('/v1/database/collections/:collectionId/documents')
          */
         $collection = Authorization::skip(fn() => $dbForInternal->getDocument('collections', $collectionId));
 
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
-            throw new Exception('Collection not found', 404);
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+                throw new Exception('Collection not found', 404);
+            }
         }
 
         // Check collection permissions when enforced
@@ -1707,22 +1709,28 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
+    ->inject('user')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($collectionId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderAttributes, $orderTypes, $response, $dbForInternal, $dbForExternal, $usage, $mode) {
+    ->action(function ($collectionId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderAttributes, $orderTypes, $response, $dbForInternal, $dbForExternal, $user, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Utopia\Database\Document $user */
         /** @var string $mode */
 
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
+         *
+         * @var Utopia\Database\Document $collection
          */
         $collection = Authorization::skip(fn() => $dbForInternal->getDocument('collections', $collectionId));
 
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
-            throw new Exception('Collection not found', 404);
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+                throw new Exception('Collection not found', 404);
+            }
         }
 
         // Check collection permissions when enforced
@@ -1802,8 +1810,10 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
          */
         $collection = Authorization::skip(fn() => $dbForInternal->getDocument('collections', $collectionId));
 
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
-            throw new Exception('Collection not found', 404);
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+                throw new Exception('Collection not found', 404);
+            }
         }
 
         // Check collection permissions when enforced
@@ -1965,8 +1975,10 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
          */
         $collection = Authorization::skip(fn() => $dbForInternal->getDocument('collections', $collectionId));
 
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
-            throw new Exception('Collection not found', 404);
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+                throw new Exception('Collection not found', 404);
+            }
         }
 
         // Check collection permissions when enforced
@@ -2086,8 +2098,10 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
          */
         $collection = Authorization::skip(fn() => $dbForInternal->getDocument('collections', $collectionId));
 
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
-            throw new Exception('Collection not found', 404);
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+                throw new Exception('Collection not found', 404);
+            }
         }
 
         // Check collection permissions when enforced
