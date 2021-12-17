@@ -271,8 +271,8 @@ class V11 extends Migration
 
                     $this->dbInternal->createDocument('collections', new Document([
                         '$id' => $id,
-                        '$read' => $read,
-                        '$write' => $write,
+                        '$read' => [],
+                        '$write' => [],
                         'permission' => 'document',
                         'dateCreated' => time(),
                         'dateUpdated' => time(),
