@@ -347,7 +347,7 @@ $logs = $this->getParam('logs', null);
                 <button class="new-index">Add Index</button>
             </li>
             <li data-state="/console/database/collection/activity?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>Activity <span class="badge" data-ls-bind="{{logs.sum}}"></span></h2>
+                <h2>Activity</h2>
 
                 <?php echo $logs->render(); ?>
             </li>
@@ -470,8 +470,8 @@ $logs = $this->getParam('logs', null);
                                     <div class="col span-1"><input name="permission" value="document" type="radio" class="margin-top-no" data-ls-bind="{{project-collection.permission}}" /></div>
                                     <div class="col span-11">
                                         <b>Document Level</b>
-                                        <p class="text-fade margin-top-tiny">With Document Level permissions, you have granular access control over every file. Users will only be able to access documents for which they have explicit permissions.</p>
-                                        <p class="text-fade margin-top-tiny">In this permission level, document permissions take precedence and bucket permissions are ignored.</p>
+                                        <p class="text-fade margin-top-tiny">With Document Level permissions, you have granular access control over every document. Users will only be able to access documents for which they have explicit permissions.</p>
+                                        <p class="text-fade margin-top-tiny">In this permission level, document permissions take precedence and collection permissions are ignored.</p>
                                     </div>
                                 </div>
 
@@ -480,7 +480,7 @@ $logs = $this->getParam('logs', null);
                                     <div class="col span-11">
                                         <b>Collection Level</b>
                                         <p class="text-fade margin-top-tiny">With Collection Level permissions, you assign permissions only once in the collection.</p>
-                                        <p class="text-fade margin-top-tiny">In this permission level, permissions assigned to collection takes the precedence and documents permissions are ignored</p>
+                                        <p class="text-fade margin-top-tiny">In this permission level, permissions assigned to collection takes the precedence and documents permissions are ignored.</p>
                                         <div data-ls-if="{{project-collection.permission}} === 'collection'">
                                             <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
                                             <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$read}}" placeholder="User ID, Team ID or Role" />
@@ -592,14 +592,6 @@ $logs = $this->getParam('logs', null);
         (() => {
             const form = document.getElementById("add-string-attribute");
             const fields = {
-                required: {
-                    array: ["disable", "uncheck"],
-                    required: ["enable"]
-                },
-                array: {
-                    required: ["disable", "uncheck"],
-                    array: ["enable"]
-                },
                 xdefault: {
                     oneOf: {
                         if: ["array", "required"],
@@ -683,14 +675,6 @@ $logs = $this->getParam('logs', null);
         (() => {
             const form = document.getElementById("add-integer-attribute");
             const fields = {
-                required: {
-                    array: ["disable", "uncheck"],
-                    required: ["enable"]
-                },
-                array: {
-                    required: ["disable", "uncheck"],
-                    array: ["enable"]
-                },
                 xdefault: {
                     oneOf: {
                         if: ["array", "required"],
@@ -772,14 +756,6 @@ $logs = $this->getParam('logs', null);
         (() => {
             const form = document.getElementById("add-float-attribute");
             const fields = {
-                required: {
-                    array: ["disable", "uncheck"],
-                    required: ["enable"]
-                },
-                array: {
-                    required: ["disable", "uncheck"],
-                    array: ["enable"]
-                },
                 xdefault: {
                     oneOf: {
                         if: ["array", "required"],
@@ -850,14 +826,6 @@ $logs = $this->getParam('logs', null);
         (() => {
             const form = document.getElementById("add-email-attribute");
             const fields = {
-                required: {
-                    array: ["disable", "uncheck"],
-                    required: ["enable"]
-                },
-                array: {
-                    required: ["disable", "uncheck"],
-                    array: ["enable"]
-                },
                 xdefault: {
                     oneOf: {
                         if: ["array", "required"],
@@ -930,14 +898,6 @@ $logs = $this->getParam('logs', null);
         (() => {
             const form = document.getElementById("add-boolean-attribute");
             const fields = {
-                required: {
-                    array: ["disable", "uncheck"],
-                    required: ["enable"]
-                },
-                array: {
-                    required: ["disable", "uncheck"],
-                    array: ["enable"]
-                },
                 xdefault: {
                     oneOf: {
                         if: ["array", "required"],
@@ -1009,14 +969,6 @@ $logs = $this->getParam('logs', null);
         (() => {
             const form = document.getElementById("add-ip-attribute");
             const fields = {
-                required: {
-                    array: ["disable", "uncheck"],
-                    required: ["enable"]
-                },
-                array: {
-                    required: ["disable", "uncheck"],
-                    array: ["enable"]
-                },
                 xdefault: {
                     oneOf: {
                         if: ["array", "required"],
@@ -1077,7 +1029,7 @@ $logs = $this->getParam('logs', null);
         </div>
 
         <label for="string-default">Default Value</label>
-        <input id="string-default" name="xdefault" type="url" pattern="https://.*" title="Valid URL address" class="margin-bottom-large" autocomplete="off">
+        <input id="string-default" name="xdefault" type="url" title="Valid URL address" class="margin-bottom-large" autocomplete="off">
 
         <footer>
             <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
@@ -1087,14 +1039,6 @@ $logs = $this->getParam('logs', null);
         (() => {
             const form = document.getElementById("add-url-attribute");
             const fields = {
-                required: {
-                    array: ["disable", "uncheck"],
-                    required: ["enable"]
-                },
-                array: {
-                    required: ["disable", "uncheck"],
-                    array: ["enable"]
-                },
                 xdefault: {
                     oneOf: {
                         if: ["array", "required"],
@@ -1182,14 +1126,6 @@ $logs = $this->getParam('logs', null);
         (() => {
             const form = document.getElementById("add-enum-attribute");
             const fields = {
-                required: {
-                    array: ["disable", "uncheck"],
-                    required: ["enable"]
-                },
-                array: {
-                    required: ["disable", "uncheck"],
-                    array: ["enable"]
-                },
                 xdefault: {
                     oneOf: {
                         if: ["array", "required"],

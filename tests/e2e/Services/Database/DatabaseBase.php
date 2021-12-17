@@ -19,8 +19,8 @@ trait DatabaseBase
         ]), [
             'collectionId' => 'unique()',
             'name' => 'Movies',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'read' => [],
+            'write' => [],
             'permission' => 'document',
         ]);
 
@@ -104,7 +104,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'title',
+            'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
@@ -114,7 +114,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'releaseYear',
+            'key' => 'releaseYear',
             'required' => true,
         ]);
 
@@ -123,7 +123,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'actors',
+            'key' => 'actors',
             'size' => 256,
             'required' => false,
             'array' => true,
@@ -177,8 +177,8 @@ trait DatabaseBase
         ]), [
             'collectionId' => 'unique()',
             'name' => 'Response Models',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'read' => [],
+            'write' => [],
             'permission' => 'document',
         ]);
 
@@ -192,7 +192,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'string',
+            'key' => 'string',
             'size' => 16,
             'required' => false,
             'default' => 'default',
@@ -203,7 +203,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'email',
+            'key' => 'email',
             'required' => false,
             'default' => 'default@example.com',
         ]);
@@ -213,7 +213,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'enum',
+            'key' => 'enum',
             'elements' => ['yes', 'no', 'maybe'],
             'required' => false,
             'default' => 'maybe',
@@ -224,7 +224,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'ip',
+            'key' => 'ip',
             'required' => false,
             'default' => '192.0.2.0',
         ]);
@@ -234,7 +234,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'url',
+            'key' => 'url',
             'required' => false,
             'default' => 'http://example.com',
         ]);
@@ -244,7 +244,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'integer',
+            'key' => 'integer',
             'required' => false,
             'min' => 1,
             'max' => 5,
@@ -256,7 +256,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'float',
+            'key' => 'float',
             'required' => false,
             'min' => 1.5,
             'max' => 5.5,
@@ -268,7 +268,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'boolean',
+            'key' => 'boolean',
             'required' => false,
             'default' => true,
         ]);
@@ -632,7 +632,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'enum',
+            'key' => 'enum',
             'elements' => ['yes', 'no', ''],
             'required' => false,
             'default' => 'maybe',
@@ -654,7 +654,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'indexId' => 'titleIndex',
+            'key' => 'titleIndex',
             'type' => 'fulltext',
             'attributes' => ['title'],
         ]);
@@ -670,7 +670,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'indexId' => 'releaseYear',
+            'key' => 'releaseYear',
             'type' => 'key',
             'attributes' => ['releaseYear'],
         ]);
@@ -1293,8 +1293,8 @@ trait DatabaseBase
         ]), [
             'collectionId' => 'unique()',
             'name' => 'invalidDocumentStructure',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'read' => [],
+            'write' => [],
             'permission' => 'document',
         ]);
 
@@ -1308,7 +1308,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'email',
+            'key' => 'email',
             'required' => false,
         ]);
 
@@ -1317,7 +1317,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'enum',
+            'key' => 'enum',
             'elements' => ['yes', 'no', 'maybe'],
             'required' => false,
         ]);
@@ -1327,7 +1327,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'ip',
+            'key' => 'ip',
             'required' => false,
         ]);
 
@@ -1336,7 +1336,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'url',
+            'key' => 'url',
             'size' => 256,
             'required' => false,
         ]);
@@ -1346,7 +1346,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'range',
+            'key' => 'range',
             'required' => false,
             'min' => 1,
             'max' => 10,
@@ -1358,7 +1358,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'floatRange',
+            'key' => 'floatRange',
             'required' => false,
             'min' => 1.1,
             'max' => 1.4,
@@ -1369,7 +1369,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'probability',
+            'key' => 'probability',
             'required' => false,
             'min' => 0,
             'max' => 1,
@@ -1380,7 +1380,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'upperBound',
+            'key' => 'upperBound',
             'required' => false,
             'max' => 10,
         ]);
@@ -1390,7 +1390,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'lowerBound',
+            'key' => 'lowerBound',
             'required' => false,
             'min' => 5,
         ]);
@@ -1403,7 +1403,7 @@ trait DatabaseBase
             'content-type' => 'application/json', 'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'invalidRange',
+            'key' => 'invalidRange',
             'required' => false,
             'min' => 4,
             'max' => 3,
@@ -1413,7 +1413,7 @@ trait DatabaseBase
             'content-type' => 'application/json', 'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'defaultArray',
+            'key' => 'defaultArray',
             'required' => false,
             'default' => 42,
             'array' => true,
@@ -1852,7 +1852,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'attribute',
+            'key' => 'attribute',
             'size' => 64,
             'required' => true,
         ]);
@@ -1868,7 +1868,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'indexId' => 'key_attribute',
+            'key' => 'key_attribute',
             'type' => 'key',
             'attributes' => [$attribute['body']['key']],
         ]);
@@ -1893,13 +1893,41 @@ trait DatabaseBase
 
         $this->assertEquals(201, $document1['headers']['status-code']);
 
+        $document2 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'attribute' => 'one',
+            ],
+            'read' => [],
+            'write' => [$user],
+        ]);
+
+        $this->assertEquals(201, $document2['headers']['status-code']);
+
+        $document3 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'attribute' => 'one',
+            ],
+            'read' => [],
+            'write' => [],
+        ]);
+
+        $this->assertEquals(201, $document3['headers']['status-code']);
+
         $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(1, $documents['body']['sum']);
-        $this->assertCount(1, $documents['body']['documents']);
+        $this->assertEquals(3, $documents['body']['sum']);
+        $this->assertCount(3, $documents['body']['documents']);
 
         /*
          * Test for Failure
@@ -1958,7 +1986,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
-        $this->assertEquals(404, $documents['headers']['status-code']);
+        $this->assertEquals(401, $documents['headers']['status-code']);
     }
 
     /**
@@ -1971,7 +1999,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'indexId' => 'unique_title',
+            'key' => 'unique_title',
             'type' => 'unique',
             'attributes' => ['title'],
         ]);
