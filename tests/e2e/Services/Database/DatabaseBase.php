@@ -33,6 +33,70 @@ trait DatabaseBase
     /**
      * @depends testCreateCollection
      */
+    public function testDisableCollection(array $data): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/database/collections/' . $data['moviesId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Movies',
+            'enabled' => false,
+            'permission' => 'document',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertFalse($response['body']['enabled']);
+
+        if ($this->getSide() === 'client') {
+            $responseCreateDocument = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'documentId' => 'unique()',
+                'data' => [
+                    'title' => 'Captain America',
+                ],
+                'read' => ['user:'.$this->getUser()['$id']],
+                'write' => ['user:'.$this->getUser()['$id']],
+            ]);
+
+            $responseListDocument = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $responseGetDocument = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents/someID', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals($responseCreateDocument['headers']['status-code'], 404);
+            $this->assertEquals($responseListDocument['headers']['status-code'], 404);
+            $this->assertEquals($responseGetDocument['headers']['status-code'], 404);
+        }
+
+        $response = $this->client->call(Client::METHOD_PUT, '/database/collections/' . $data['moviesId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Movies',
+            'enabled' => true,
+            'permission' => 'document',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertTrue($response['body']['enabled']);
+    }
+
+
+    /**
+     * @depends testCreateCollection
+     */
     public function testCreateAttributes(array $data): array
     {
         $title = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes/string', array_merge([

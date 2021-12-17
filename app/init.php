@@ -795,6 +795,12 @@ App::setResource('dbForConsole', function($db, $cache) {
 
 App::setResource('mode', function($request) {
     /** @var Utopia\Swoole\Request $request */
+
+    /**
+     * Defines the mode for the request:
+     * - 'default' => Requests for Client and Server Side
+     * - 'admin' => Request from the Console on non-console projects
+     */
     return $request->getParam('mode', $request->getHeader('x-appwrite-mode', APP_MODE_DEFAULT));
 }, ['request']);
 

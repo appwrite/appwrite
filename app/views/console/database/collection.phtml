@@ -456,6 +456,9 @@ $logs = $this->getParam('logs', null);
                                 <label for="collection-name">Name</label>
                                 <input name="name" id="collection-name" type="text" autocomplete="off" data-ls-bind="{{project-collection.name}}" data-forms-text-direction required placeholder="Collection Name" maxlength="128" />
 
+                                <div class="margin-bottom">
+                                    <input name="enabled" type="hidden" data-forms-switch data-cast-to="boolean" data-ls-bind="{{project-collection.enabled}}" /> &nbsp; Enabled <span class="tooltip" data-tooltip="Mark whether collection is enabled"><i class="icon-info-circled"></i></span>
+                                </div>
 
                                 <label class="margin-bottom-small">Permissions</label>
 

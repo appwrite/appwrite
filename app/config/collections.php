@@ -44,6 +44,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => 'enabled',
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => true,
+                'default' => null,
+                'array' => false,
+            ],
+            [
                 '$id' => 'permission',
                 'type' => Database::VAR_STRING,
                 'size' => 64,
