@@ -470,20 +470,22 @@ App::get('/v1/teams/:teamId/memberships')
 
         $memberships = $dbForInternal->find('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], $limit, $offset, [], [$orderType], $cursorMembership ?? null, $cursorDirection);
         $sum = $dbForInternal->count('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], APP_LIMIT_COUNT);
-        $users = [];
 
-        foreach ($memberships as $membership) {
-            if (empty($membership->getAttribute('userId', null))) {
-                continue;
-            }
+        $memberships = array_filter($memberships, fn(Document $membership) => !empty($membership->getAttribute('userId')));
 
-            $temp = $dbForInternal->getDocument('users', $membership->getAttribute('userId', null))->getArrayCopy(['email', 'name']);
+        $memberships = array_map(function($membership) use ($dbForInternal) {
+            $user = $dbForInternal->getDocument('users', $membership->getAttribute('userId'));
 
-            $users[] = new Document(\array_merge($temp, $membership->getArrayCopy()));
-        }
+            $membership
+                ->setAttribute('name', $user->getAttribute('name'))
+                ->setAttribute('email', $user->getAttribute('email'))
+            ;
+
+            return $membership;
+        }, $memberships);
 
         $response->dynamic(new Document([
-            'memberships' => $users,
+            'memberships' => $memberships,
             'sum' => $sum,
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
@@ -636,11 +638,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception('Team IDs don\'t match', 404);
         }
 
-        Authorization::disable();
-
-        $team = $dbForInternal->getDocument('teams', $teamId);
-        
-        Authorization::reset();
+        $team = Authorization::skip(fn() => $dbForInternal->getDocument('teams', $teamId));
 
         if ($team->isEmpty()) {
             throw new Exception('Team not found', 404);
@@ -696,7 +694,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             ->setAttribute('$read', ['user:'.$user->getId()])
             ->setAttribute('$write', ['user:'.$user->getId()])
         );
-        
+
         $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
 
         Authorization::setRole('user:'.$userId);
