@@ -175,6 +175,7 @@ App::post('/v1/database/collections')
                 'permission' => $permission, // Permissions model type (document vs collection)
                 'dateCreated' => time(),
                 'dateUpdated' => time(),
+                'enabled' => true,
                 'name' => $name,
                 'search' => implode(' ', [$collectionId, $name]),
             ]));
@@ -592,11 +593,12 @@ App::put('/v1/database/collections/:collectionId')
     ->param('permission', null, new WhiteList(['document', 'collection']), 'Permissions type model to use for reading documents in this collection. You can use collection-level permission set once on the collection using the `read` and `write` params, or you can set document-level permission where each document read and write params will decide who has access to read and write to each document individually. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
+    ->param('enabled', true, new Boolean(), 'Is collection enabled?', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $name, $permission, $read, $write, $response, $dbForInternal, $audits, $usage) {
+    ->action(function ($collectionId, $name, $permission, $read, $write, $enabled, $response, $dbForInternal, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
@@ -608,8 +610,9 @@ App::put('/v1/database/collections/:collectionId')
             throw new Exception('Collection not found', 404);
         }
 
-        $read = (is_null($read)) ? ($collection->getRead() ?? []) : $read; // By default inherit read permissions
-        $write = (is_null($write)) ? ($collection->getWrite() ?? []) : $write; // By default inherit write permissions
+        $read ??= $collection->getRead() ?? []; // By default inherit read permissions
+        $write ??= $collection->getWrite() ?? []; // By default inherit write permissions
+        $enabled ??= $collection->getAttribute('enabled', true);
 
         try {
             $collection = $dbForInternal->updateDocument('collections', $collection->getId(), $collection
@@ -618,6 +621,7 @@ App::put('/v1/database/collections/:collectionId')
                 ->setAttribute('name', $name)
                 ->setAttribute('permission', $permission)
                 ->setAttribute('dateUpdated', time())
+                ->setAttribute('enabled', $enabled)
                 ->setAttribute('search', implode(' ', [$collectionId, $name]))
             );
         }
@@ -833,6 +837,10 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
 
             }
             $size = ($length > $size) ? $length : $size;
+        }
+
+        if (!is_null($default) && !in_array($default, $elements)) {
+            throw new Exception('Default value not found in elements', 400);
         }
 
         $attribute = createAttribute($collectionId, new Document([
@@ -1590,7 +1598,8 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($documentId, $collectionId, $data, $read, $write, $response, $dbForInternal, $dbForExternal, $user, $audits, $usage, $events) {
+    ->inject('mode')
+    ->action(function ($documentId, $collectionId, $data, $read, $write, $response, $dbForInternal, $dbForExternal, $user, $audits, $usage, $events, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
@@ -1598,6 +1607,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Event\Event $events */
+        /** @var string $mode */
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -1614,8 +1624,10 @@ App::post('/v1/database/collections/:collectionId/documents')
          */
         $collection = Authorization::skip(fn() => $dbForInternal->getDocument('collections', $collectionId));
 
-        if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+                throw new Exception('Collection not found', 404);
+            }
         }
 
         // Check collection permissions when enforced
@@ -1701,20 +1713,28 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
+    ->inject('user')
     ->inject('usage')
-    ->action(function ($collectionId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderAttributes, $orderTypes, $response, $dbForInternal, $dbForExternal, $usage) {
+    ->inject('mode')
+    ->action(function ($collectionId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderAttributes, $orderTypes, $response, $dbForInternal, $dbForExternal, $user, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Utopia\Database\Document $user */
+        /** @var string $mode */
 
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
+         *
+         * @var Utopia\Database\Document $collection
          */
         $collection = Authorization::skip(fn() => $dbForInternal->getDocument('collections', $collectionId));
 
-        if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+                throw new Exception('Collection not found', 404);
+            }
         }
 
         // Check collection permissions when enforced
@@ -1782,18 +1802,22 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->inject('usage')
-    ->action(function ($collectionId, $documentId, $response, $dbForInternal, $dbForExternal, $usage) {
+    ->inject('mode')
+    ->action(function ($collectionId, $documentId, $response, $dbForInternal, $dbForExternal, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $$dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
+        /** @var string $mode */
 
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
          */
         $collection = Authorization::skip(fn() => $dbForInternal->getDocument('collections', $collectionId));
 
-        if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+                throw new Exception('Collection not found', 404);
+            }
         }
 
         // Check collection permissions when enforced
@@ -1940,21 +1964,25 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $documentId, $data, $read, $write, $response, $dbForInternal, $dbForExternal, $audits, $usage, $events) {
+    ->inject('mode')
+    ->action(function ($collectionId, $documentId, $data, $read, $write, $response, $dbForInternal, $dbForExternal, $audits, $usage, $events, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Event\Event $events */
+        /** @var string $mode */
 
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
          */
         $collection = Authorization::skip(fn() => $dbForInternal->getDocument('collections', $collectionId));
 
-        if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+                throw new Exception('Collection not found', 404);
+            }
         }
 
         // Check collection permissions when enforced
@@ -2060,20 +2088,24 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $documentId, $response, $dbForInternal, $dbForExternal, $events, $audits, $usage) {
+    ->inject('mode')
+    ->action(function ($collectionId, $documentId, $response, $dbForInternal, $dbForExternal, $events, $audits, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var string $mode */
 
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
          */
         $collection = Authorization::skip(fn() => $dbForInternal->getDocument('collections', $collectionId));
 
-        if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+                throw new Exception('Collection not found', 404);
+            }
         }
 
         // Check collection permissions when enforced

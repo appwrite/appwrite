@@ -46,6 +46,23 @@ For **Mac OS** add your app name and Bundle ID, You can find your Bundle Identif
 ### Web
 Appwrite 0.7, and the Appwrite Flutter SDK 0.3.0 have added support for Flutter Web. To build web apps that integrate with Appwrite successfully, all you have to do is add a web platform on your Appwrite project's dashboard and list the domain your website will use to allow communication to the Appwrite API.
 
+For web in order to capture the OAuth2 callback URL and send it to the application using JavaScript `postMessage()`, you need to create an html file inside `./web` folder of your Flutter project. For example `auth.html` with the following content.
+
+```html
+<!DOCTYPE html>
+<title>Authentication complete</title>
+<p>Authentication is complete. If this does not happen automatically, please
+close the window.
+<script>
+  window.opener.postMessage({
+    flutter-web-auth: window.location.href
+  }, window.location.origin);
+  window.close();
+</script>
+```
+
+Redirection URL passed to the authentication service must be the same as the URL on which the application is running (schema, host, port if necessary) and the path must point to created HTML file, /auth.html in this case. The callbackUrlScheme parameter of the authenticate() method does not take into account, so it is possible to use a schema for native platforms in the code.
+
 #### Flutter Web Cross-Domain Communication & Cookies
 While running Flutter Web, make sure your Appwrite server and your Flutter client are using the same top-level domain and the same protocol (HTTP or HTTPS) to communicate. When trying to communicate between different domains or protocols, you may receive HTTP status error 401 because some modern browsers block cross-site or insecure cookies for enhanced privacy. In production, Appwrite allows you set multiple [custom-domains](https://appwrite.io/docs/custom-domains) for each project.
 
