@@ -1650,9 +1650,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         try {
             if ($collection->getAttribute('permission') === 'collection') {
                 /** @var Document $document */
-                $document = Authorization::skip(function() use ($dbForExternal, $collectionId, $data) {
-                    return $dbForExternal->createDocument($collectionId, new Document($data));
-                });
+                $document = Authorization::skip(fn() => $dbForExternal->createDocument($collectionId, new Document($data)));
             } else {
                 $document = $dbForExternal->createDocument($collectionId, new Document($data));
             }
@@ -1808,9 +1806,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
 
         if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document $document */
-            $document = Authorization::skip(function() use ($dbForExternal, $collectionId, $documentId) {
-                return $dbForExternal->getDocument($collectionId, $documentId);
-            });
+            $document = Authorization::skip(fn() => $dbForExternal->getDocument($collectionId, $documentId));
         } else {
             $document = $dbForExternal->getDocument($collectionId, $documentId);
         }
@@ -2014,9 +2010,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         try {
             if ($collection->getAttribute('permission') === 'collection') {
                 /** @var Document $document */
-                $document = Authorization::skip(function() use ($dbForExternal, $collection, $document, $data) {
-                    return $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data));
-                });
+                $document = Authorization::skip(fn() => $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data)));
             } else {
                 $document = $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data));
             }
@@ -2092,9 +2086,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
 
         if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document $document */
-            $document = Authorization::skip(function() use ($dbForExternal, $collectionId, $documentId) {
-                return $dbForExternal->getDocument($collectionId, $documentId);
-            });
+            $document = Authorization::skip(fn() => $dbForExternal->getDocument($collectionId, $documentId));
         } else {
             $document = $dbForExternal->getDocument($collectionId, $documentId);
         }

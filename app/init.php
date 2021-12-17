@@ -543,9 +543,7 @@ Locale::setLanguageFromJSON('zh-tw', __DIR__.'/config/locale/translations/zh-tw.
 
 // Runtime Execution
 
-App::setResource('register', function() use ($register) {
-    return $register;
-});
+App::setResource('register', fn() => $register);
 
 App::setResource('layout', function($locale) {
     $layout = new View(__DIR__.'/views/layouts/default.phtml');
