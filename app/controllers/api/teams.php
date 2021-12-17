@@ -47,13 +47,11 @@ App::post('/v1/teams')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $events */
 
-        Authorization::disable();
-
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
         $teamId = $teamId == 'unique()' ? $dbForInternal->getId() : $teamId;
-        $team = $dbForInternal->createDocument('teams', new Document([
+        $team = Authorization::skip(fn() => $dbForInternal->createDocument('teams', new Document([
             '$id' => $teamId ,
             '$read' => ['team:'.$teamId],
             '$write' => ['team:'.$teamId .'/owner'],
@@ -61,9 +59,7 @@ App::post('/v1/teams')
             'sum' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
             'dateCreated' => \time(),
             'search' => implode(' ', [$teamId, $name]),
-        ]));
-
-        Authorization::reset();
+        ])));
 
         if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
             $membership = new Document([
@@ -318,11 +314,9 @@ App::post('/v1/teams/:teamId/memberships')
                 }
             }
 
-            Authorization::disable();
-
             try {
                 $userId = $dbForInternal->getId();
-                $invitee = $dbForInternal->createDocument('users', new Document([
+                $invitee = Authorization::skip(fn() => $dbForInternal->createDocument('users', new Document([
                     '$id' => $userId,
                     '$read' => ['user:'.$userId, 'role:all'],
                     '$write' => ['user:'.$userId],
@@ -344,12 +338,10 @@ App::post('/v1/teams/:teamId/memberships')
                     'tokens' => [],
                     'memberships' => [],
                     'search' => implode(' ', [$userId, $email, $name]),
-                ]));
+                ])));
             } catch (Duplicate $th) {
                 throw new Exception('Account already exists', 409);
             }
-
-            Authorization::reset();
         }
 
         $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
@@ -374,21 +366,18 @@ App::post('/v1/teams/:teamId/memberships')
         ]);
 
         if ($isPrivilegedUser || $isAppUser) { // Allow admin to create membership
-            Authorization::disable();
             try {
-                $membership = $dbForInternal->createDocument('memberships', $membership);
+                $membership = Authorization::skip(fn() => $dbForInternal->createDocument('memberships', $membership));
             } catch (Duplicate $th) {
                 throw new Exception('User has already been invited or is already a member of this team', 409);
             }
-
-            $team = $dbForInternal->updateDocument('teams', $team->getId(), $team->setAttribute('sum', $team->getAttribute('sum', 0) + 1));
+            $team->setAttribute('sum', $team->getAttribute('sum', 0) + 1);
+            $team = Authorization::skip(fn() => $dbForInternal->updateDocument('teams', $team->getId(), $team));
 
             // Attach user to team
             $invitee->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND);
 
-            $invitee = $dbForInternal->updateDocument('users', $invitee->getId(), $invitee);
-
-            Authorization::reset();
+            $invitee = Authorization::skip(fn() => $dbForInternal->updateDocument('users', $invitee->getId(), $invitee));
         } else {
             try {
                 $membership = $dbForInternal->createDocument('memberships', $membership);
@@ -702,11 +691,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
         $membership = $dbForInternal->updateDocument('memberships', $membership->getId(), $membership);
 
-        Authorization::disable();
-
-        $team = $dbForInternal->updateDocument('teams', $team->getId(), $team->setAttribute('sum', $team->getAttribute('sum', 0) + 1));
-
-        Authorization::reset();
+        $team = Authorization::skip(fn() => $dbForInternal->updateDocument('teams', $team->getId(), $team->setAttribute('sum', $team->getAttribute('sum', 0) + 1)));
 
         $audits
             ->setParam('userId', $user->getId())
@@ -791,14 +776,13 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             }
         }
 
-        Authorization::disable();
+        $user->setAttribute('memberships', $memberships);
 
-        $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('memberships', $memberships));
-
-        Authorization::reset();
+        Authorization::skip(fn() => $dbForInternal->updateDocument('users', $user->getId(), $user));
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
-            $team = $dbForInternal->updateDocument('teams', $team->getId(), $team->setAttribute('sum', \max($team->getAttribute('sum', 0) - 1, 0)));
+            $team->setAttribute('sum', \max($team->getAttribute('sum', 0) - 1, 0));
+            $team = $dbForInternal->updateDocument('teams', $team->getId(), $team);
         }
 
         $audits
