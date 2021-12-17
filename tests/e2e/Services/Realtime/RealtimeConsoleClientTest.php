@@ -61,7 +61,7 @@ class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'attributeId' => 'name',
+            'key' => 'name',
             'size' => 256,
             'required' => true,
         ]);
@@ -134,7 +134,7 @@ class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'indexId' => 'key_name',
+            'key' => 'key_name',
             'type' => 'key',
             'attributes' => [
                 'name',

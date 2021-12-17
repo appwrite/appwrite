@@ -207,5 +207,20 @@ window.formValidation = (form, fields) => {
             element.dispatchEvent(new Event("change"));
         }
     }
-});
+  });
 };
+/**
+ * Method to add attribute for the UI on array attributes.
+ * 
+ * Needs to be global - since client side routing will break it.
+ * @param {*} doc 
+ * @param {*} key 
+ * @returns 
+ */
+function addAttribute(doc, key) {
+  if (!Array.isArray(doc[key])) {
+      doc[key] = [];
+  }
+  doc[key].push(null);
+  return doc;
+}

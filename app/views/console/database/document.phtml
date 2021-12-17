@@ -280,15 +280,6 @@ $logs = $this->getParam('logs', null);
                                                             <button type="button" class="margin-end margin-bottom-small reverse" @click="doc = addAttribute(doc, attr.key)"> Add Attribute </button>
                                                         </div>
                                                     </template>
-                                                    <script type="text/javascript">
-                                                        function addAttribute(doc, key) {
-                                                            if (!Array.isArray(doc[key])) {
-                                                                doc[key] = [];
-                                                            }
-                                                            doc[key].push(null);
-                                                            return doc;
-                                                        }
-                                                    </script>
                                                 </li>
                                             </template>
                                         </ul>

@@ -57,7 +57,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'firstName',
+            'key' => 'firstName',
             'size' => 256,
             'required' => true,
         ]);
@@ -67,7 +67,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'lastName',
+            'key' => 'lastName',
             'size' => 256,
             'required' => true,
         ]);
@@ -77,7 +77,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'extra',
+            'key' => 'extra',
             'size' => 64,
             'required' => false,
         ]);

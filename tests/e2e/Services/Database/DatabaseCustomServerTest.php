@@ -165,7 +165,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'firstName',
+            'key' => 'firstName',
             'size' => 256,
             'required' => true,
         ]);
@@ -175,7 +175,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'lastName',
+            'key' => 'lastName',
             'size' => 256,
             'required' => true,
         ]);
@@ -185,7 +185,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'unneeded',
+            'key' => 'unneeded',
             'size' => 256,
             'required' => true,
         ]);
@@ -214,7 +214,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'indexId' => 'key_lastName',
+            'key' => 'key_lastName',
             'type' => 'key',
             'attributes' => [
                 'lastName',
@@ -275,7 +275,7 @@ class DatabaseCustomServerTest extends Scope
 
         return [
             'collectionId' => $actors['body']['$id'],
-            'indexId' => $index['body']['key'],
+            'key' => $index['body']['key'],
         ];
     }
 
@@ -284,7 +284,7 @@ class DatabaseCustomServerTest extends Scope
      */
     public function testDeleteIndex($data): array
     {
-        $index = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['collectionId'] . '/indexes/'. $data['indexId'], array_merge([
+        $index = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['collectionId'] . '/indexes/'. $data['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -316,7 +316,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'attribute1',
+            'key' => 'attribute1',
             'size' => 16,
             'required' => true,
         ]);
@@ -326,7 +326,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'attribute2',
+            'key' => 'attribute2',
             'size' => 16,
             'required' => true,
         ]);
@@ -343,7 +343,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'indexId' => 'index1',
+            'key' => 'index1',
             'type' => 'key',
             'attributes' => ['attribute1', 'attribute2'],
             'orders' => ['ASC', 'ASC'],
@@ -354,7 +354,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'indexId' => 'index2',
+            'key' => 'index2',
             'type' => 'key',
             'attributes' => ['attribute2'],
         ]);
@@ -428,7 +428,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'attribute1',
+            'key' => 'attribute1',
             'size' => 16,
             'required' => true,
         ]);
@@ -438,7 +438,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'attribute2',
+            'key' => 'attribute2',
             'size' => 16,
             'required' => true,
         ]);
@@ -455,7 +455,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'indexId' => 'index1',
+            'key' => 'index1',
             'type' => 'key',
             'attributes' => ['attribute1', 'attribute2'],
             'orders' => ['ASC', 'ASC'],
@@ -466,7 +466,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'indexId' => 'index2',
+            'key' => 'index2',
             'type' => 'key',
             'attributes' => ['attribute2'],
         ]);
@@ -615,7 +615,7 @@ class DatabaseCustomServerTest extends Scope
     //             'x-appwrite-project' => $this->getProject()['$id'],
     //             'x-appwrite-key' => $this->getProject()['apiKey']
     //         ]), [
-    //             'attributeId' => "attribute{$i}",
+    //             'key' => "attribute{$i}",
     //             'required' => false,
     //         ]);
 
@@ -629,7 +629,7 @@ class DatabaseCustomServerTest extends Scope
     //         'x-appwrite-project' => $this->getProject()['$id'],
     //         'x-appwrite-key' => $this->getProject()['apiKey']
     //     ]), [
-    //         'attributeId' => "tooMany",
+    //         'key' => "tooMany",
     //         'required' => false,
     //     ]);
 
@@ -663,7 +663,7 @@ class DatabaseCustomServerTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
-                'attributeId' => "attribute{$i}",
+                'key' => "attribute{$i}",
                 'size' => 1024,
                 'required' => true,
             ]);
@@ -678,7 +678,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'tooWide',
+            'key' => 'tooWide',
             'size' => 1024,
             'required' => true,
         ]);
@@ -714,7 +714,7 @@ class DatabaseCustomServerTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
-                'attributeId' => "attribute{$i}",
+                'key' => "attribute{$i}",
                 'size' => 64,
                 'required' => true,
             ]);
@@ -751,7 +751,7 @@ class DatabaseCustomServerTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
-                'indexId' => "key_attribute{$i}",
+                'key' => "key_attribute{$i}",
                 'type' => 'key',
                 'attributes' => ["attribute{$i}"],
             ]);
@@ -780,7 +780,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'indexId' => 'tooMany',
+            'key' => 'tooMany',
             'type' => 'key',
             'attributes' => ['attribute61'],
         ]);
