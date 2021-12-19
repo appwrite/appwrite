@@ -39,7 +39,7 @@ class Collection extends Structure
      *
      * @return bool
      */
-    public function isValid($document)
+    public function isValid($document): bool
     {
         $document = new Document(
             \array_merge($this->merge, ($document instanceof Document) ? $document->getArrayCopy() : $document)

@@ -1,1 +1,1 @@
-Update a team by its unique ID. Only team owners have write access for this resource.
+Update a team using its ID. Only members with the owner role can update the team.

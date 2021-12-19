@@ -34,7 +34,7 @@ App::post('/v1/teams')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM)
-    ->param('teamId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('teamId', '', new CustomId(), 'Team ID. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
     ->param('roles', ['owner'], new ArrayList(new Key()), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.', true)
     ->inject('response')
@@ -49,8 +49,8 @@ App::post('/v1/teams')
 
         Authorization::disable();
 
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-        $isAppUser = Auth::isAppUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
         $teamId = $teamId == 'unique()' ? $dbForInternal->getId() : $teamId;
         $team = $dbForInternal->createDocument('teams', new Document([
@@ -105,9 +105,9 @@ App::get('/v1/teams')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM_LIST)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('cursor', '', new UID(), 'ID of the team used as the starting point for the query, excluding the team itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of teams to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('cursor', '', new UID(), 'ID of the team used as the starting point for the query, excluding the team itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
@@ -150,7 +150,7 @@ App::get('/v1/teams/:teamId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM)
-    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('teamId', '', new UID(), 'Team ID.')
     ->inject('response')
     ->inject('dbForInternal')
     ->action(function ($teamId, $response, $dbForInternal) {
@@ -178,8 +178,8 @@ App::put('/v1/teams/:teamId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM)
-    ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
+    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('name', null, new Text(128), 'New team name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForInternal')
     ->action(function ($teamId, $name, $response, $dbForInternal) {
@@ -211,7 +211,7 @@ App::delete('/v1/teams/:teamId')
     ->label('sdk.description', '/docs/references/teams/delete-team.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('teamId', '', new UID(), 'Team ID.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('events')
@@ -269,11 +269,11 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
     ->label('abuse-limit', 10)
-    ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('email', '', new Email(), 'New team member email.')
+    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('email', '', new Email(), 'Email of the new team member.')
     ->param('roles', [], new ArrayList(new Key()), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
-    ->param('name', '', new Text(128), 'New team member name. Max length: 128 chars.', true)
+    ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
     ->inject('user')
@@ -293,8 +293,8 @@ App::post('/v1/teams/:teamId/memberships')
             throw new Exception('SMTP Disabled', 503);
         }
 
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-        $isAppUser = Auth::isAppUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
         $email = \strtolower($email);
         $name = (empty($name)) ? $email : $name;
@@ -441,11 +441,11 @@ App::get('/v1/teams/:teamId/memberships')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP_LIST)
-    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('teamId', '', new UID(), 'Team ID.')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('cursor', '', new UID(), 'ID of the membership used as the starting point for the query, excluding the membership itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of memberships to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('cursor', '', new UID(), 'ID of the membership used as the starting point for the query, excluding the membership itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
@@ -470,20 +470,22 @@ App::get('/v1/teams/:teamId/memberships')
 
         $memberships = $dbForInternal->find('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], $limit, $offset, [], [$orderType], $cursorMembership ?? null, $cursorDirection);
         $sum = $dbForInternal->count('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], APP_LIMIT_COUNT);
-        $users = [];
 
-        foreach ($memberships as $membership) {
-            if (empty($membership->getAttribute('userId', null))) {
-                continue;
-            }
+        $memberships = array_filter($memberships, fn(Document $membership) => !empty($membership->getAttribute('userId')));
 
-            $temp = $dbForInternal->getDocument('users', $membership->getAttribute('userId', null))->getArrayCopy(['email', 'name']);
+        $memberships = array_map(function($membership) use ($dbForInternal) {
+            $user = $dbForInternal->getDocument('users', $membership->getAttribute('userId'));
 
-            $users[] = new Document(\array_merge($temp, $membership->getArrayCopy()));
-        }
+            $membership
+                ->setAttribute('name', $user->getAttribute('name'))
+                ->setAttribute('email', $user->getAttribute('email'))
+            ;
+
+            return $membership;
+        }, $memberships);
 
         $response->dynamic(new Document([
-            'memberships' => $users,
+            'memberships' => $memberships,
             'sum' => $sum,
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
@@ -499,8 +501,8 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP_LIST)
-    ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('membershipId', '', new UID(), 'membership unique ID.')
+    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('membershipId', '', new UID(), 'Membership ID.')
     ->inject('response')
     ->inject('dbForInternal')
     ->action(function ($teamId, $membershipId, $response, $dbForInternal) {
@@ -515,13 +517,18 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
 
         $membership = $dbForInternal->getDocument('memberships', $membershipId);
 
-        if($membership->isEmpty() || empty($membership->getAttribute('userId', null))) {
+        if($membership->isEmpty() || empty($membership->getAttribute('userId'))) {
             throw new Exception('Membership not found', 404);
         }
 
-        $temp = $dbForInternal->getDocument('users', $membership->getAttribute('userId', null))->getArrayCopy(['email', 'name']);
+        $user = $dbForInternal->getDocument('users', $membership->getAttribute('userId'));
 
-        $response->dynamic(new Document(\array_merge($temp, $membership->getArrayCopy())), Response::MODEL_MEMBERSHIP );
+        $membership
+            ->setAttribute('name', $user->getAttribute('name'))
+            ->setAttribute('email', $user->getAttribute('email'))
+        ;
+
+        $response->dynamic($membership, Response::MODEL_MEMBERSHIP );
     });
 
 App::patch('/v1/teams/:teamId/memberships/:membershipId')
@@ -536,9 +543,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
-    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
-    ->param('roles', [], new ArrayList(new Key()), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
+    ->param('roles', [], new ArrayList(new Key()), 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Max length for each role is 32 chars.')
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -566,10 +573,10 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception('User not found', 404);
         }
 
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-        $isAppUser = Auth::isAppUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
         $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
-        
+
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception('User is not allowed to modify roles', 401);
         }
@@ -601,9 +608,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
-    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
-    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('userId', '', new UID(), 'User ID.')
     ->param('secret', '', new Text(256), 'Secret key.')
     ->inject('request')
     ->inject('response')
@@ -631,11 +638,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception('Team IDs don\'t match', 404);
         }
 
-        Authorization::disable();
-
-        $team = $dbForInternal->getDocument('teams', $teamId);
-        
-        Authorization::reset();
+        $team = Authorization::skip(fn() => $dbForInternal->getDocument('teams', $teamId));
 
         if ($team->isEmpty()) {
             throw new Exception('Team not found', 404);
@@ -691,7 +694,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             ->setAttribute('$read', ['user:'.$user->getId()])
             ->setAttribute('$write', ['user:'.$user->getId()])
         );
-        
+
         $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
 
         Authorization::setRole('user:'.$userId);
@@ -739,7 +742,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->label('sdk.description', '/docs/references/teams/delete-team-membership.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->inject('response')
     ->inject('dbForInternal')

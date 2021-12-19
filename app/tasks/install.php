@@ -5,10 +5,10 @@ global $cli;
 use Appwrite\Auth\Auth;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
+use Appwrite\Utopia\View;
 use Utopia\Analytics\GoogleAnalytics;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\View;
 use Utopia\Validator\Text;
 
 $cli

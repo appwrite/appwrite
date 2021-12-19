@@ -44,6 +44,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => 'enabled',
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => true,
+                'default' => null,
+                'array' => false,
+            ],
+            [
                 '$id' => 'permission',
                 'type' => Database::VAR_STRING,
                 'size' => 64,
@@ -500,7 +511,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => ['json'],
+                'filters' => ['json', 'encrypt'],
             ],
             [
                 '$id' => 'platforms',
@@ -810,12 +821,12 @@ $collections = [
                 '$id' => 'secret',
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 256, // var_dump of \bin2hex(\random_bytes(128)) => string(256)
+                'size' => 512, // var_dump of \bin2hex(\random_bytes(128)) => string(256) doubling for encryption
                 'signed' => true,
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['encrypt'],
             ],
         ],
         'indexes' => [
@@ -882,12 +893,12 @@ $collections = [
                 '$id' => 'httpPass',
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => Database::LENGTH_KEY,
+                'size' => Database::LENGTH_KEY, // TODO will the length suffice after encryption?
                 'signed' => true,
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['encrypt'],
             ],
             [
                 '$id' => 'security',
@@ -1155,18 +1166,18 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['encrypt'],
             ],
             [
                 '$id' => 'secret',
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 64, // https://www.tutorialspoint.com/how-long-is-the-sha256-hash-in-mysql
+                'size' => 512, // https://www.tutorialspoint.com/how-long-is-the-sha256-hash-in-mysql (512 for encryption)
                 'signed' => true,
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['encrypt'],
             ],
             [
                 '$id' => 'expire',
@@ -1497,7 +1508,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['encrypt'],
             ],
         ],
         'indexes' => [

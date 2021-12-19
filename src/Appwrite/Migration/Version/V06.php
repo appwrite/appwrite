@@ -46,8 +46,8 @@ class V06 extends Migration
                     $document->setAttribute('secret', json_encode([
                         'data' => OpenSSL::encrypt($document->getAttribute('secret'), OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
                         'method' => OpenSSL::CIPHER_AES_128_GCM,
-                        'iv' => bin2hex($iv),
-                        'tag' => bin2hex($tag),
+                        'iv' => \bin2hex($iv),
+                        'tag' => \bin2hex($tag ?? ''),
                         'version' => '1',
                     ]));
                 }

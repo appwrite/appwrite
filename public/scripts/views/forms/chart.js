@@ -38,6 +38,9 @@
             datasets: []
           },
           options: {
+            animation: {
+              duration: 0
+            },
             responsive: true,
             hover: {
               mode: "nearest",
