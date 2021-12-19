@@ -317,7 +317,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->param('projectId', '', new Text(1024), 'Project unique ID.')
+    ->param('projectId', '', new Text(1024), 'Project ID.')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
     ->param('code', '', new Text(1024), 'OAuth2 code.')
     ->param('state', '', new Text(2048), 'Login state params.', true)
@@ -344,7 +344,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->label('scope', 'public')
     ->label('origin', '*')
     ->label('docs', false)
-    ->param('projectId', '', new Text(1024), 'Project unique ID.')
+    ->param('projectId', '', new Text(1024), 'Project ID.')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
     ->param('code', '', new Text(1024), 'OAuth2 code.')
     ->param('state', '', new Text(2048), 'Login state params.', true)
@@ -648,8 +648,9 @@ App::post('/v1/account/sessions/magic-url')
             throw new Exception('SMTP Disabled', 503);
         }
 
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-        $isAppUser = Auth::isAppUser(Authorization::$roles);
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
 
         $user = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]);
 
@@ -668,26 +669,24 @@ App::post('/v1/account/sessions/magic-url')
 
             $userId = $userId == 'unique()' ? $dbForInternal->getId() : $userId;
 
-            $user = Authorization::skip(function () use ($dbForInternal, $userId, $email) {
-                return $dbForInternal->createDocument('users', new Document([
-                    '$id' => $userId,
-                    '$read' => ['role:all'],
-                    '$write' => ['user:' . $userId],
-                    'email' => $email,
-                    'emailVerification' => false,
-                    'status' => true,
-                    'password' => null,
-                    'passwordUpdate' => \time(),
-                    'registration' => \time(),
-                    'reset' => false,
-                    'prefs' => [],
-                    'sessions' => [],
-                    'tokens' => [],
-                    'memberships' => [],
-                    'search' => implode(' ', [$userId, $email]),
-                    'deleted' => false
-                ]));
-            });
+            $user = Authorization::skip(fn () => $dbForInternal->createDocument('users', new Document([
+                '$id' => $userId,
+                '$read' => ['role:all'],
+                '$write' => ['user:' . $userId],
+                'email' => $email,
+                'emailVerification' => false,
+                'status' => true,
+                'password' => null,
+                'passwordUpdate' => \time(),
+                'registration' => \time(),
+                'reset' => false,
+                'prefs' => [],
+                'sessions' => [],
+                'tokens' => [],
+                'memberships' => [],
+                'search' => implode(' ', [$userId, $email]),
+                'deleted' => false
+            ])));
 
             $mails->setParam('event', 'users.create');
             $audits->setParam('event', 'users.create');
@@ -771,7 +770,7 @@ App::put('/v1/account/sessions/magic-url')
     ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
-    ->param('userId', '', new CustomId(), 'User unique ID.')
+    ->param('userId', '', new CustomId(), 'User ID.')
     ->param('secret', '', new Text(256), 'Valid verification token.')
     ->inject('request')
     ->inject('response')
@@ -1185,8 +1184,8 @@ App::get('/v1/account/logs')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->inject('response')
     ->inject('user')
     ->inject('locale')
@@ -1271,7 +1270,7 @@ App::get('/v1/account/sessions/:sessionId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_SESSION)
-    ->param('sessionId', null, new UID(), 'Session unique ID. Use the string \'current\' to get the current device session.')
+    ->param('sessionId', null, new UID(), 'Session ID. Use the string \'current\' to get the current device session.')
     ->inject('response')
     ->inject('user')
     ->inject('locale')
@@ -1367,8 +1366,8 @@ App::patch('/v1/account/password')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
-    ->param('oldPassword', '', new Password(), 'Old user password. Must be at least 8 chars.', true)
+    ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
+    ->param('oldPassword', '', new Password(), 'Current user password. Must be at least 8 chars.', true)
     ->inject('response')
     ->inject('user')
     ->inject('dbForInternal')
@@ -1585,7 +1584,7 @@ App::delete('/v1/account/sessions/:sessionId')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 100)
-    ->param('sessionId', null, new UID(), 'Session unique ID. Use the string \'current\' to delete the current device session.')
+    ->param('sessionId', null, new UID(), 'Session ID. Use the string \'current\' to delete the current device session.')
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1780,8 +1779,9 @@ App::post('/v1/account/recovery')
             throw new Exception('SMTP Disabled', 503);
         }
 
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-        $isAppUser = Auth::isAppUser(Authorization::$roles);
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
 
         $email = \strtolower($email);
         $profile = $dbForInternal->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
@@ -1867,10 +1867,10 @@ App::put('/v1/account/recovery')
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
-    ->param('userId', '', new UID(), 'User account UID address.')
+    ->param('userId', '', new UID(), 'User ID.')
     ->param('secret', '', new Text(256), 'Valid reset token.')
-    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
-    ->param('passwordAgain', '', new Password(), 'New password again. Must be at least 8 chars.')
+    ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
+    ->param('passwordAgain', '', new Password(), 'Repeat new user password. Must be at least 8 chars.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('audits')
@@ -1971,9 +1971,10 @@ App::post('/v1/account/verification')
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception('SMTP Disabled', 503);
         }
-        
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-        $isAppUser = Auth::isAppUser(Authorization::$roles);
+
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
 
         $verificationSecret = Auth::tokenGenerator();
 
@@ -2049,7 +2050,7 @@ App::put('/v1/account/verification')
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
-    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('userId', '', new UID(), 'User ID.')
     ->param('secret', '', new Text(256), 'Valid verification token.')
     ->inject('response')
     ->inject('user')

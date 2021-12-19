@@ -392,10 +392,7 @@ class Swagger2 extends Format
 
         foreach ($this->models as $model) {
             foreach ($model->getRules() as $rule) {
-                if (
-                    in_array($model->getType(), $usedModels)
-                    && !in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])
-                ) {
+                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
                     $usedModels[] = $rule['type'];
                 }
             }

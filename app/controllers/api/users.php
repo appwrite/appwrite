@@ -15,7 +15,7 @@ use Utopia\Audit\Audit;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Validator\UID;
-use DeviceDetector\DeviceDetector;
+use Appwrite\Detector\Detector;
 use Appwrite\Database\Validator\CustomId;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -34,7 +34,7 @@ App::post('/v1/users')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
@@ -93,9 +93,9 @@ App::get('/v1/users')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER_LIST)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('cursor', '', new UID(), 'ID of the user used as the starting point for the query, excluding the user itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of users to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('cursor', '', new UID(), 'ID of the user used as the starting point for the query, excluding the user itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
@@ -143,7 +143,7 @@ App::get('/v1/users/:userId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
@@ -175,7 +175,7 @@ App::get('/v1/users/:userId/prefs')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PREFERENCES)
-    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
@@ -209,7 +209,7 @@ App::get('/v1/users/:userId/sessions')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_SESSION_LIST)
-    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('locale')
@@ -258,9 +258,9 @@ App::get('/v1/users/:userId/logs')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
-    ->param('userId', '', new UID(), 'User unique ID.')
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('locale')
@@ -306,42 +306,29 @@ App::get('/v1/users/:userId/logs')
         foreach ($logs as $i => &$log) {
             $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
 
-            $dd = new DeviceDetector($log['userAgent']);
+            $detector = new Detector($log['userAgent']);
+            $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
 
-            $dd->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-
-            $dd->parse();
-
-            $os = $dd->getOs();
-            $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
-            $osName = (isset($os['name'])) ? $os['name'] : '';
-            $osVersion = (isset($os['version'])) ? $os['version'] : '';
-
-            $client = $dd->getClient();
-            $clientType = (isset($client['type'])) ? $client['type'] : '';
-            $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
-            $clientName = (isset($client['name'])) ? $client['name'] : '';
-            $clientVersion = (isset($client['version'])) ? $client['version'] : '';
-            $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
-            $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
+            $os = $detector->getOS();
+            $client = $detector->getClient();
+            $device = $detector->getDevice();
 
             $output[$i] = new Document([
                 'event' => $log['event'],
                 'ip' => $log['ip'],
                 'time' => $log['time'],
-
-                'osCode' => $osCode,
-                'osName' => $osName,
-                'osVersion' => $osVersion,
-                'clientType' => $clientType,
-                'clientCode' => $clientCode,
-                'clientName' => $clientName,
-                'clientVersion' => $clientVersion,
-                'clientEngine' => $clientEngine,
-                'clientEngineVersion' => $clientEngineVersion,
-                'deviceName' => $dd->getDeviceName(),
-                'deviceBrand' => $dd->getBrandName(),
-                'deviceModel' => $dd->getModel(),
+                'osCode' => $os['osCode'],
+                'osName' => $os['osName'],
+                'osVersion' => $os['osVersion'],
+                'clientType' => $client['clientType'],
+                'clientCode' => $client['clientCode'],
+                'clientName' => $client['clientName'],
+                'clientVersion' => $client['clientVersion'],
+                'clientEngine' => $client['clientEngine'],
+                'clientEngineVersion' => $client['clientEngineVersion'],
+                'deviceName' => $device['deviceName'],
+                'deviceBrand' => $device['deviceBrand'],
+                'deviceModel' => $device['deviceModel']
             ]);
 
             $record = $geodb->get($log['ip']);
@@ -377,8 +364,8 @@ App::patch('/v1/users/:userId/status')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('userId', '', new UID(), 'User unique ID.')
-    ->param('status', null, new Boolean(true), 'User Status. To activate the user pass `true` and to block the user pass `false`')
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('status', null, new Boolean(true), 'User Status. To activate the user pass `true` and to block the user pass `false`.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
@@ -413,8 +400,8 @@ App::patch('/v1/users/:userId/verification')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('userId', '', new UID(), 'User unique ID.')
-    ->param('emailVerification', false, new Boolean(), 'User Email Verification Status.')
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('emailVerification', false, new Boolean(), 'User email verification status.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
@@ -449,7 +436,7 @@ App::patch('/v1/users/:userId/name')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('userId', '', new UID(), 'User ID.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForInternal')
@@ -488,8 +475,8 @@ App::patch('/v1/users/:userId/password')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('userId', '', new UID(), 'User unique ID.')
-    ->param('password', '', new Password(), 'New user password. Must be between 6 to 32 chars.')
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('audits')
@@ -531,7 +518,7 @@ App::patch('/v1/users/:userId/email')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('userId', '', new UID(), 'User ID.')
     ->param('email', '', new Email(), 'User email.')
     ->inject('response')
     ->inject('dbForInternal')
@@ -581,7 +568,7 @@ App::patch('/v1/users/:userId/prefs')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PREFERENCES)
-    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('userId', '', new UID(), 'User ID.')
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('dbForInternal')
@@ -616,8 +603,8 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->label('sdk.description', '/docs/references/users/delete-user-session.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('userId', '', new UID(), 'User unique ID.')
-    ->param('sessionId', null, new UID(), 'User unique session ID.')
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('sessionId', null, new UID(), 'Session ID.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('events')
@@ -672,7 +659,7 @@ App::delete('/v1/users/:userId/sessions')
     ->label('sdk.description', '/docs/references/users/delete-user-sessions.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('events')
@@ -695,7 +682,7 @@ App::delete('/v1/users/:userId/sessions')
             $dbForInternal->deleteDocument('sessions', $session->getId());
         }
 
-        $dbForInternal->updateDocument('users', $user->getId(), $user->getAttribute('sessions', []));
+        $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('sessions', []));
 
         $events
             ->setParam('eventData', $response->output($user, Response::MODEL_USER))
@@ -719,7 +706,7 @@ App::delete('/v1/users/:userId')
     ->label('sdk.description', '/docs/references/users/delete.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('userId', '', function () {return new UID();}, 'User unique ID.')
+    ->param('userId', '', function () {return new UID();}, 'User ID.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('events')
