@@ -221,7 +221,7 @@ $logs = $this->getParam('logs', null);
 
                                         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                                         <input type="hidden" name="collectionId" data-ls-bind="{{project-collection.$id}}" />
-                                        <input type="hidden" name="attributeId" data-ls-bind="{{attribute.key}}" />
+                                        <input type="hidden" name="key" data-ls-bind="{{attribute.key}}" />
 
                                         <button class="danger small">Delete</button>
                                     </form>
@@ -275,7 +275,7 @@ $logs = $this->getParam('logs', null);
                             <tr>
                                 <th width="30"></th>
                                 <th width="80"></th>
-                                <th width="130">Index ID</th>
+                                <th width="130">Index Key</th>
                                 <th width="100">Type</th>
                                 <th width="180">Attributes</th>
                                 <th></th>
@@ -295,7 +295,7 @@ $logs = $this->getParam('logs', null);
                                     <span data-ls-if="{{index.status}} == 'deleting'" class="text-size-small text-danger">deleting&nbsp;</span>
                                 </td>
 
-                                <td data-title="Index ID: ">
+                                <td data-title="Index Key: ">
                                     <span class="text-size-small" data-ls-bind="{{index.key}}"></span><span class="text-size-small" data-ls-if="{{index.size}}" data-ls-bind="({{index.size}})"></span>
                                 </td>
 
@@ -334,7 +334,7 @@ $logs = $this->getParam('logs', null);
 
                                         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                                         <input type="hidden" name="collectionId" data-ls-bind="{{project-collection.$id}}" />
-                                        <input type="hidden" name="indexId" data-ls-bind="{{index.key}}" />
+                                        <input type="hidden" name="key" data-ls-bind="{{index.key}}" />
 
                                         <button class="danger small">Delete</button>
                                     </form>
@@ -347,7 +347,7 @@ $logs = $this->getParam('logs', null);
                 <button class="new-index">Add Index</button>
             </li>
             <li data-state="/console/database/collection/activity?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>Activity <span class="badge" data-ls-bind="{{logs.sum}}"></span></h2>
+                <h2>Activity</h2>
 
                 <?php echo $logs->render(); ?>
             </li>
@@ -456,6 +456,9 @@ $logs = $this->getParam('logs', null);
                                 <label for="collection-name">Name</label>
                                 <input name="name" id="collection-name" type="text" autocomplete="off" data-ls-bind="{{project-collection.name}}" data-forms-text-direction required placeholder="Collection Name" maxlength="128" />
 
+                                <div class="margin-bottom">
+                                    <input name="enabled" type="hidden" data-forms-switch data-cast-to="boolean" data-ls-bind="{{project-collection.enabled}}" /> &nbsp; Enabled <span class="tooltip" data-tooltip="Mark whether collection is enabled"><i class="icon-info-circled"></i></span>
+                                </div>
 
                                 <label class="margin-bottom-small">Permissions</label>
 
@@ -467,8 +470,8 @@ $logs = $this->getParam('logs', null);
                                     <div class="col span-1"><input name="permission" value="document" type="radio" class="margin-top-no" data-ls-bind="{{project-collection.permission}}" /></div>
                                     <div class="col span-11">
                                         <b>Document Level</b>
-                                        <p class="text-fade margin-top-tiny">With Document Level permissions, you have granular access control over every file. Users will only be able to access documents for which they have explicit permissions.</p>
-                                        <p class="text-fade margin-top-tiny">In this permission level, document permissions take precedence and bucket permissions are ignored.</p>
+                                        <p class="text-fade margin-top-tiny">With Document Level permissions, you have granular access control over every document. Users will only be able to access documents for which they have explicit permissions.</p>
+                                        <p class="text-fade margin-top-tiny">In this permission level, document permissions take precedence and collection permissions are ignored.</p>
                                     </div>
                                 </div>
 
@@ -477,7 +480,7 @@ $logs = $this->getParam('logs', null);
                                     <div class="col span-11">
                                         <b>Collection Level</b>
                                         <p class="text-fade margin-top-tiny">With Collection Level permissions, you assign permissions only once in the collection.</p>
-                                        <p class="text-fade margin-top-tiny">In this permission level, permissions assigned to collection takes the precedence and documents permissions are ignored</p>
+                                        <p class="text-fade margin-top-tiny">In this permission level, permissions assigned to collection takes the precedence and documents permissions are ignored.</p>
                                         <div data-ls-if="{{project-collection.permission}} === 'collection'">
                                             <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
                                             <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$read}}" placeholder="User ID, Team ID or Role" />
@@ -560,8 +563,8 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-        <label for="string-attributeId">Attribute ID</label>
-        <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <label for="string-key">Attribute ID</label>
+        <input id="string-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <label for="string-length">Size</label>
@@ -637,8 +640,8 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-        <label for="integer-attributeId">Attribute ID</label>
-        <input id="integer-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <label for="integer-key">Attribute ID</label>
+        <input id="integer-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
@@ -719,8 +722,8 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-        <label for="float-attributeId">Attribute ID</label>
-        <input id="float-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <label for="float-key">Attribute ID</label>
+        <input id="float-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
@@ -800,8 +803,8 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-        <label for="email-attributeId">Attribute ID</label>
-        <input id="email-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <label for="email-key">Attribute ID</label>
+        <input id="email-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="128" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
@@ -870,8 +873,8 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-        <label for="boolean-attributeId">Attribute ID</label>
-        <input id="boolean-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <label for="boolean-key">Attribute ID</label>
+        <input id="boolean-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
@@ -943,8 +946,8 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-        <label for="ip-attributeId">Attribute ID</label>
-        <input id="ip-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <label for="ip-key">Attribute ID</label>
+        <input id="ip-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
@@ -1013,8 +1016,8 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-        <label for="url-attributeId">Attribute ID</label>
-        <input id="url-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <label for="url-key">Attribute ID</label>
+        <input id="url-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <div class="margin-bottom">
@@ -1083,8 +1086,8 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-        <label for="enum-attributeId">Attribute ID</label>
-        <input id="enum-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <label for="enum-key">Attribute ID</label>
+        <input id="enum-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <label>Elements</label>
@@ -1180,8 +1183,8 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-        <label for="index-indexId">Index ID</label>
-        <input id="index-indexId" type="text" class="full-width" name="indexId" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+        <label for="index-key">Index Key</label>
+        <input id="index-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore</div>
 
         <label for="index-type">Type</label>
