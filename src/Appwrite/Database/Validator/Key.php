@@ -18,7 +18,7 @@ class Key extends Validator
      *
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return $this->message;
     }
@@ -32,7 +32,7 @@ class Key extends Validator
      *
      * @return bool
      */
-    public function isValid($value)
+    public function isValid($value): bool
     {
         if (!\is_string($value)) {
             return false;

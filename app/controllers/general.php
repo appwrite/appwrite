@@ -5,7 +5,7 @@ require_once __DIR__.'/../init.php';
 use Utopia\App;
 use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
-use Utopia\View;
+use Appwrite\Utopia\View;
 use Utopia\Exception;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
@@ -254,7 +254,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     if(!empty($service)) {
         if(array_key_exists($service, $project->getAttribute('services',[]))
             && !$project->getAttribute('services',[])[$service]
-            && !Auth::isPrivilegedUser(Authorization::$roles)) {
+            && !Auth::isPrivilegedUser(Authorization::getRoles())) {
             throw new Exception('Service is disabled', 503);
         }
     }
@@ -298,7 +298,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\View $layout */
+    /** @var Appwrite\Utopia\View $layout */
     /** @var Utopia\Database\Document $project */
 
     if ($error instanceof PDOException) {

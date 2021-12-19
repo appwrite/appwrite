@@ -406,8 +406,8 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'read' => ['role:all', 'user:x'],
-            'write' => ['role:all', 'user:x'],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
         ]);
 
         $this->assertEquals(200, $file['headers']['status-code']);
@@ -424,8 +424,8 @@ trait StorageBase
         //$this->assertNotEmpty($file['body']['fileOpenSSLIV']);
         $this->assertIsArray($file['body']['$read']);
         $this->assertIsArray($file['body']['$write']);
-        $this->assertCount(2, $file['body']['$read']);
-        $this->assertCount(2, $file['body']['$write']);
+        $this->assertCount(1, $file['body']['$read']);
+        $this->assertCount(1, $file['body']['$write']);
 
         /**
          * Test for FAILURE unknown Bucket
@@ -435,8 +435,8 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'read' => ['role:all', 'user:x'],
-            'write' => ['role:all', 'user:x'],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
         ]);
 
         $this->assertEquals(404, $file['headers']['status-code']);

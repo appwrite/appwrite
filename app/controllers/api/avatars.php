@@ -95,9 +95,7 @@ App::get('/v1/avatars/credit-cards/:code')
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->inject('response')
-    ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
-        return $avatarCallback('credit-cards', $code, $width, $height, $quality, $response);
-    });
+    ->action(fn($code, $width, $height, $quality, $response) =>  $avatarCallback('credit-cards', $code, $width, $height, $quality, $response));
 
 App::get('/v1/avatars/browsers/:code')
     ->desc('Get Browser Icon')
@@ -115,9 +113,7 @@ App::get('/v1/avatars/browsers/:code')
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->inject('response')
-    ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
-        return $avatarCallback('browsers', $code, $width, $height, $quality, $response);
-    });
+    ->action(fn($code, $width, $height, $quality, $response) => $avatarCallback('browsers', $code, $width, $height, $quality, $response));
 
 App::get('/v1/avatars/flags/:code')
     ->desc('Get Country Flag')
@@ -135,9 +131,7 @@ App::get('/v1/avatars/flags/:code')
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->inject('response')
-    ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
-        return $avatarCallback('flags', $code, $width, $height, $quality, $response);
-    });
+    ->action(fn($code, $width, $height, $quality, $response) => $avatarCallback('flags', $code, $width, $height, $quality, $response));
 
 App::get('/v1/avatars/image')
     ->desc('Get Image from URL')
