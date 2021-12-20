@@ -1691,7 +1691,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
-    App::get('/v1/database/collections/:collectionId/documents')
+App::get('/v1/database/collections/:collectionId/documents')
     ->desc('List Documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
@@ -1786,7 +1786,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         ]), Response::MODEL_DOCUMENT_LIST);
     });
 
-    App::get('/v1/database/collections/:collectionId/documents_poc')
+App::get('/v1/database/collections/:collectionId/documents_poc')
     ->desc('List Documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
