@@ -756,12 +756,12 @@ trait AccountBase
          */
 
         $prefsObject = [];
-        // Add 1000 keys
-        for($i = 1000; $i < 2000; $i++) {
-            $prefsObject["key" + $i]  = "HelloWorld";
-            // Each key is 7 characters and value is 10 characters
+        // Add 1024 keys
+        for($i = 1000; $i < 2024; $i++) {
+            $prefsObject["key" + $i]  = "HelloWorldHelloWorldHelloWorldHelloWorldHelloWorldHelloWorldHel";
+            // Each key is 7 characters and value is 63 characters
         }
-        // That makes total size minimum of 17 000, plus any JSON stuff. Max supported is 16384, so this should exceed.
+        // That makes total size minimum of 70kB, plus any JSON stuff. Max supported is 64kB, so this should exceed.
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
