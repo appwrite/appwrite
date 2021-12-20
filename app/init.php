@@ -48,15 +48,15 @@ const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
-const APP_CACHE_BUSTER = 170;
+const APP_CACHE_BUSTER = 171;
 const APP_VERSION_STABLE = '0.11.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
-const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite_io';
-const APP_SOCIAL_TWITTER_HANDLE = 'appwrite_io';
+const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite';
+const APP_SOCIAL_TWITTER_HANDLE = 'appwrite';
 const APP_SOCIAL_FACEBOOK = 'https://www.facebook.com/appwrite.io';
 const APP_SOCIAL_LINKEDIN = 'https://www.linkedin.com/company/appwrite';
 const APP_SOCIAL_INSTAGRAM = 'https://www.instagram.com/appwrite.io';
@@ -65,7 +65,7 @@ const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
 const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
-const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite';
+const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
 
 // Deletion Types
 const DELETE_TYPE_DOCUMENT = 'document';
@@ -338,6 +338,7 @@ Locale::setLanguageFromJSON('sd', __DIR__ . '/config/locale/translations/sd.json
 Locale::setLanguageFromJSON('si', __DIR__ . '/config/locale/translations/si.json');
 Locale::setLanguageFromJSON('sk', __DIR__ . '/config/locale/translations/sk.json');
 Locale::setLanguageFromJSON('sl', __DIR__ . '/config/locale/translations/sl.json');
+Locale::setLanguageFromJSON('sn', __DIR__ . '/config/locale/translations/sn.json');
 Locale::setLanguageFromJSON('sq', __DIR__ . '/config/locale/translations/sq.json');
 Locale::setLanguageFromJSON('sv', __DIR__ . '/config/locale/translations/sv.json');
 Locale::setLanguageFromJSON('ta', __DIR__ . '/config/locale/translations/ta.json');
