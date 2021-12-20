@@ -11,7 +11,7 @@
 ## Breaking Changes (Read before upgrading!)
 
 - Multiple HealthAPI response models were changed to new (better) schema
-- Method `health.getAntiVirus()` hsa been renamed to `health.getAntivirus()`
+- Method `health.getAntiVirus()` has been renamed to `health.getAntivirus()`
 
 # Version 0.11.0
 
