@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c118448e0047bca33e037cb54fa4b3a0",
+    "content-hash": "269b7f80dd8bd8f7fd0e78432da13b12",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2061,6 +2061,72 @@
             "time": "2021-07-24T11:35:55+00:00"
         },
         {
+            "name": "utopia-php/logger",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/logger.git",
+                "reference": "a7d626e349e8736e46d4d75f5ba686b40e73c097"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/logger/zipball/a7d626e349e8736e46d4d75f5ba686b40e73c097",
+                "reference": "a7d626e349e8736e46d4d75f5ba686b40e73c097",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.3",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Logger\\": "src/Logger"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                },
+                {
+                    "name": "Matej Bačo",
+                    "email": "matej@appwrite.io"
+                },
+                {
+                    "name": "Christy Jacob",
+                    "email": "christy@appwrite.io"
+                }
+            ],
+            "description": "Utopia Logger library is simple and lite library for logging information, such as errors or warnings. This library is aiming to be as simple and easy to learn and use.",
+            "keywords": [
+                "appsignal",
+                "errors",
+                "framework",
+                "logger",
+                "logging",
+                "logs",
+                "php",
+                "raygun",
+                "sentry",
+                "upf",
+                "utopia",
+                "warnings"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/logger/issues",
+                "source": "https://github.com/utopia-php/logger/tree/0.1.0"
+            },
+            "time": "2021-12-20T06:57:26+00:00"
+        },
+        {
             "name": "utopia-php/orchestration",
             "version": "0.2.1",
             "source": {
@@ -2385,16 +2451,16 @@
         },
         {
             "name": "utopia-php/websocket",
-            "version": "0.0.1",
+            "version": "dev-feat-onerror-callback",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/websocket.git",
-                "reference": "808317ef4ea0683c2c82dee5d543b1c8378e2e1b"
+                "reference": "237eed7e9c54a514cfabac3e5726d24661254f2e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/808317ef4ea0683c2c82dee5d543b1c8378e2e1b",
-                "reference": "808317ef4ea0683c2c82dee5d543b1c8378e2e1b",
+                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/237eed7e9c54a514cfabac3e5726d24661254f2e",
+                "reference": "237eed7e9c54a514cfabac3e5726d24661254f2e",
                 "shasum": ""
             },
             "require": {
@@ -2437,9 +2503,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/websocket/issues",
-                "source": "https://github.com/utopia-php/websocket/tree/0.0.1"
+                "source": "https://github.com/utopia-php/websocket/tree/feat-onerror-callback"
             },
-            "time": "2021-07-11T13:09:44+00:00"
+            "time": "2021-11-29T08:43:24+00:00"
         },
         {
             "name": "webmozart/assert",
@@ -6401,7 +6467,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/websocket": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

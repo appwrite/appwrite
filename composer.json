@@ -20,12 +20,6 @@
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
-    "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/utopia-php/logger"
-        }
-    ],
     "require": {
         "php": ">=8.0.0",
         "ext-curl": "*",
@@ -45,7 +39,7 @@
         "appwrite/php-runtimes": "0.6.*",
 
         "utopia-php/framework": "0.18.*",
-        "utopia-php/logger": "dev-dev",
+        "utopia-php/logger": "0.1.*",
         "utopia-php/abuse": "0.5.*",
         "utopia-php/analytics": "0.2.*",
         "utopia-php/audit": "0.5.*",
