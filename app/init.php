@@ -706,18 +706,13 @@ App::setResource('project', function($dbForConsole, $request, $console) {
     /** @var Utopia\Database\Database $dbForConsole */
     /** @var Utopia\Database\Document $console */
 
-    $projectId = $request->getParam('project',
-        $request->getHeader('x-appwrite-project', 'console'));
-    
+    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
+
     if($projectId === 'console') {
         return $console;
     }
 
-    Authorization::disable();
-
-    $project = $dbForConsole->getDocument('projects', $projectId);
-
-    Authorization::reset();
+    $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
 
     return $project;
 }, ['dbForConsole', 'request', 'console']);

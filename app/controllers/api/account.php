@@ -88,11 +88,9 @@ App::post('/v1/account')
             }
         }
 
-        Authorization::disable();
-
         try {
             $userId = $userId == 'unique()' ? $dbForInternal->getId() : $userId;
-            $user = $dbForInternal->createDocument('users', new Document([
+            $user = Authorization::skip(fn() => $dbForInternal->createDocument('users', new Document([
                 '$id' => $userId,
                 '$read' => ['role:all'],
                 '$write' => ['user:' . $userId],
@@ -110,12 +108,10 @@ App::post('/v1/account')
                 'memberships' => [],
                 'search' => implode(' ', [$userId, $email, $name]),
                 'deleted' => false
-            ]));
+            ])));
         } catch (Duplicate $th) {
             throw new Exception('Account already exists', 409);
         }
-
-        Authorization::reset();
 
         Authorization::unsetRole('role:' . Auth::USER_ROLE_GUEST);
         Authorization::setRole('user:' . $user->getId());
@@ -490,11 +486,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     }
                 }
 
-                Authorization::disable();
-
                 try {
                     $userId = $dbForInternal->getId();
-                    $user = $dbForInternal->createDocument('users', new Document([
+                    $user = Authorization::skip(fn() => $dbForInternal->createDocument('users', new Document([
                         '$id' => $userId,
                         '$read' => ['role:all'],
                         '$write' => ['user:' . $userId],
@@ -512,12 +506,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'memberships' => [],
                         'search' => implode(' ', [$userId, $email, $name]),
                         'deleted' => false
-                    ]));
+                    ])));
                 } catch (Duplicate $th) {
                     throw new Exception('Account already exists', 409);
                 }
-
-                Authorization::reset();
             }
         }
 
@@ -939,10 +931,8 @@ App::post('/v1/account/sessions/anonymous')
             }
         }
 
-        Authorization::disable();
-
         $userId = $dbForInternal->getId();
-        $user = $dbForInternal->createDocument('users', new Document([
+        $user = Authorization::skip(fn() => $dbForInternal->createDocument('users', new Document([
             '$id' => $userId,
             '$read' => ['role:all'],
             '$write' => ['user:' . $userId],
@@ -960,9 +950,7 @@ App::post('/v1/account/sessions/anonymous')
             'memberships' => [],
             'search' => $userId,
             'deleted' => false
-        ]));
-
-        Authorization::reset();
+        ])));
 
         // Create session token
 
