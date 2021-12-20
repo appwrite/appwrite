@@ -21,17 +21,14 @@ use Appwrite\Extend\PDO;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Database as DatabaseOld;
-use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
-use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Stats\Stats;
+use Appwrite\Utopia\View;
 use Utopia\App;
-use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
@@ -76,8 +73,8 @@ const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
-const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite_io';
-const APP_SOCIAL_TWITTER_HANDLE = 'appwrite_io';
+const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite';
+const APP_SOCIAL_TWITTER_HANDLE = 'appwrite';
 const APP_SOCIAL_FACEBOOK = 'https://www.facebook.com/appwrite.io';
 const APP_SOCIAL_LINKEDIN = 'https://www.linkedin.com/company/appwrite';
 const APP_SOCIAL_INSTAGRAM = 'https://www.instagram.com/appwrite.io';
@@ -86,7 +83,7 @@ const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
 const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
-const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite';
+const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
 // Database Worker Types
 const DATABASE_TYPE_CREATE_ATTRIBUTE = 'createAttribute';
 const DATABASE_TYPE_CREATE_INDEX = 'createIndex';
@@ -155,43 +152,6 @@ if(!empty($user) || !empty($pass)) {
 } else {
     Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
 }
-
-/**
- * Old DB Filters
- */
-DatabaseOld::addFilter('json',
-    function($value) {
-        if(!is_array($value)) {
-            return $value;
-        }
-        return json_encode($value);
-    },
-    function($value) {
-        return json_decode($value, true);
-    }
-);
-
-DatabaseOld::addFilter('encrypt',
-    function($value) {
-        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
-        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-        $tag = null;
-        
-        return json_encode([
-            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-            'method' => OpenSSL::CIPHER_AES_128_GCM,
-            'iv' => bin2hex($iv),
-            'tag' => bin2hex($tag),
-            'version' => '1',
-        ]);
-    },
-    function($value) {
-        $value = json_decode($value, true);
-        $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
-
-        return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
-    }
-);
 
 /**
  * New DB Filters
@@ -326,8 +286,8 @@ Database::addFilter('encrypt',
         return json_encode([
             'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
             'method' => OpenSSL::CIPHER_AES_128_GCM,
-            'iv' => bin2hex($iv),
-            'tag' => bin2hex($tag),
+            'iv' => \bin2hex($iv),
+            'tag' => \bin2hex($tag ?? ''),
             'version' => '1',
         ]);
     },
@@ -351,7 +311,7 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_EMAIL, function() {
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_ENUM, function($attribute) {
     $elements = $attribute['formatOptions']['elements'];
-    return new WhiteList($elements);
+    return new WhiteList($elements, true);
 }, Database::VAR_STRING);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_IP, function() {
@@ -583,9 +543,7 @@ Locale::setLanguageFromJSON('zh-tw', __DIR__.'/config/locale/translations/zh-tw.
 
 // Runtime Execution
 
-App::setResource('register', function() use ($register) {
-    return $register;
-});
+App::setResource('register', fn() => $register);
 
 App::setResource('layout', function($locale) {
     $layout = new View(__DIR__.'/views/layouts/default.phtml');
@@ -748,18 +706,13 @@ App::setResource('project', function($dbForConsole, $request, $console) {
     /** @var Utopia\Database\Database $dbForConsole */
     /** @var Utopia\Database\Document $console */
 
-    $projectId = $request->getParam('project',
-        $request->getHeader('x-appwrite-project', 'console'));
-    
+    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
+
     if($projectId === 'console') {
         return $console;
     }
 
-    Authorization::disable();
-
-    $project = $dbForConsole->getDocument('projects', $projectId);
-
-    Authorization::reset();
+    $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
 
     return $project;
 }, ['dbForConsole', 'request', 'console']);
@@ -837,6 +790,12 @@ App::setResource('dbForConsole', function($db, $cache) {
 
 App::setResource('mode', function($request) {
     /** @var Utopia\Swoole\Request $request */
+
+    /**
+     * Defines the mode for the request:
+     * - 'default' => Requests for Client and Server Side
+     * - 'admin' => Request from the Console on non-console projects
+     */
     return $request->getParam('mode', $request->getHeader('x-appwrite-mode', APP_MODE_DEFAULT));
 }, ['request']);
 

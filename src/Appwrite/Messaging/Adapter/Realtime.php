@@ -234,16 +234,18 @@ class Realtime extends Adapter
 
     /**
      * Create channels array based on the event name and payload.
-     * 
+     *
      * @param string $event 
      * @param Document $payload 
+     * @param Document|null $project 
      * @return array 
      */
-    public static function fromPayload(string $event, Document $payload): array
+    public static function fromPayload(string $event, Document $payload, Document $project = null, Document $collection = null): array
     {
         $channels = [];
         $roles = [];
         $permissionsChanged = false;
+        $projectId = null;
 
         switch (true) {
             case strpos($event, 'account.recovery.') === 0:
@@ -274,17 +276,23 @@ class Realtime extends Adapter
                 $roles = ['team:' . $payload->getId()];
 
                 break;
-            case strpos($event, 'database.collections.') === 0:
-                $channels[] = 'collections';
-                $channels[] = 'collections.' . $payload->getId();
-                $roles = $payload->getRead();
+            case strpos($event, 'database.attributes.') === 0:
+            case strpos($event, 'database.indexes.') === 0:
+                $channels[] = 'console';
+                $projectId = 'console';
+                $roles = ['team:' . $project->getAttribute('teamId')];
 
                 break;
             case strpos($event, 'database.documents.') === 0:
+                if ($collection->isEmpty()) {
+                    throw new \Exception('Collection need to be passed to to Realtime for Document events in the Database.');
+                }
+
                 $channels[] = 'documents';
                 $channels[] = 'collections.' . $payload->getAttribute('$collection') . '.documents';
                 $channels[] = 'documents.' . $payload->getId();
-                $roles = $payload->getRead();
+
+                $roles = ($collection->getAttribute('permission') === 'collection') ? $collection->getRead() : $payload->getRead();
 
                 break;
             case strpos($event, 'storage.') === 0:
@@ -306,7 +314,8 @@ class Realtime extends Adapter
         return [
             'channels' => $channels,
             'roles' => $roles,
-            'permissionsChanged' => $permissionsChanged
+            'permissionsChanged' => $permissionsChanged,
+            'projectId' => $projectId
         ];
     }
 }

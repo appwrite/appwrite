@@ -65,7 +65,7 @@ class DatabasePermissionsMemberTest extends Scope
         $this->collections = ['public' => $public['body']['$id']];
 
         $response = $this->client->call(Client::METHOD_POST, '/database/collections/' . $this->collections['public'] . '/attributes/string', $this->getServerHeader(), [
-            'attributeId' => 'title',
+            'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
@@ -83,7 +83,7 @@ class DatabasePermissionsMemberTest extends Scope
         $this->collections['private'] = $private['body']['$id'];
 
         $this->client->call(Client::METHOD_POST, '/database/collections/' . $this->collections['private'] . '/attributes/string', $this->getServerHeader(), [
-            'attributeId' => 'title',
+            'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
