@@ -700,15 +700,13 @@ App::post('/v1/functions/:functionId/executions')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Document $user */
 
-        Authorization::disable();
-
-        $function = $dbForInternal->getDocument('functions', $functionId);
+        $function = Authorization::skip(fn() => $dbForInternal->getDocument('functions', $functionId));
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
 
-        $tag = $dbForInternal->getDocument('tags', $function->getAttribute('tag'));
+        $tag = Authorization::skip(fn() => $dbForInternal->getDocument('tags', $function->getAttribute('tag')));
 
         if ($tag->getAttribute('functionId') !== $function->getId()) {
             throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
@@ -718,19 +716,15 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
         }
 
-        Authorization::reset();
-
         $validator = new Authorization($function, 'execute');
 
         if (!$validator->isValid($function->getAttribute('execute'))) { // Check if user has write access to execute function
             throw new Exception($validator->getDescription(), 401);
         }
 
-        Authorization::disable();
-
         $executionId = $dbForInternal->getId();
 
-        $execution = $dbForInternal->createDocument('executions', new Document([
+        $execution = Authorization::skip(fn() => $dbForInternal->createDocument('executions', new Document([
             '$id' => $executionId,
             '$read' => (!$user->isEmpty()) ? ['user:' . $user->getId()] : [],
             '$write' => [],
@@ -744,9 +738,7 @@ App::post('/v1/functions/:functionId/executions')
             'stderr' => '',
             'time' => 0.0,
             'search' => implode(' ', [$functionId, $executionId]),
-        ]));
-
-        Authorization::reset();
+        ])));
 
         $jwt = ''; // initialize
         if (!$user->isEmpty()) { // If userId exists, generate a JWT for function
@@ -807,9 +799,7 @@ App::get('/v1/functions/:functionId/executions')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $function = Authorization::skip(function() use ($dbForInternal, $functionId) {
-            return $dbForInternal->getDocument('functions', $functionId);
-        });
+        $function = Authorization::skip(fn() => $dbForInternal->getDocument('functions', $functionId));
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
@@ -858,10 +848,8 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->action(function ($functionId, $executionId, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
-        
-        Authorization::disable();
-        $function = $dbForInternal->getDocument('functions', $functionId);
-        Authorization::reset();
+
+        $function = Authorization::skip(fn() => $dbForInternal->getDocument('functions', $functionId));
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);

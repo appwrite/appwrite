@@ -8,13 +8,13 @@
     <br />
 </p>
 
-[![Hacktoberfest](https://img.shields.io/static/v1?label=hacktoberfest&message=friendly&color=90a88b&style=flat-square)](https://hacktoberfest.appwrite.io)
+<!-- [![Hacktoberfest](https://img.shields.io/static/v1?label=hacktoberfest&message=friendly&color=90a88b&style=flat-square)](https://hacktoberfest.appwrite.io) -->
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord&style=flat-square)](https://appwrite.io/discord?r=Github)
 [![Docker Pulls](https://img.shields.io/docker/pulls/appwrite/appwrite?color=f02e65&style=flat-square)](https://hub.docker.com/r/appwrite/appwrite)
 [![Build Status](https://img.shields.io/travis/com/appwrite/appwrite?style=flat-square)](https://travis-ci.com/appwrite/appwrite)
 [![Twitter Account](https://img.shields.io/twitter/follow/appwrite?color=00acee&label=twitter&style=flat-square)](https://twitter.com/appwrite)
 [![Translate](https://img.shields.io/badge/translate-f02e65?style=flat-square)](docs/tutorials/add-translations.md)
-<!-- [![Swag Store](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io) -->
+[![Swag Store](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io)
 
 [**Appwrite 0.11 has been released! Learn what's new!**](https://dev.to/appwrite/building-apps-just-got-swifter-announcing-appwrite-v011-4g62)
 

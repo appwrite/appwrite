@@ -311,7 +311,7 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_EMAIL, function() {
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_ENUM, function($attribute) {
     $elements = $attribute['formatOptions']['elements'];
-    return new WhiteList($elements);
+    return new WhiteList($elements, true);
 }, Database::VAR_STRING);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_IP, function() {
@@ -543,9 +543,7 @@ Locale::setLanguageFromJSON('zh-tw', __DIR__.'/config/locale/translations/zh-tw.
 
 // Runtime Execution
 
-App::setResource('register', function() use ($register) {
-    return $register;
-});
+App::setResource('register', fn() => $register);
 
 App::setResource('layout', function($locale) {
     $layout = new View(__DIR__.'/views/layouts/default.phtml');
@@ -708,18 +706,13 @@ App::setResource('project', function($dbForConsole, $request, $console) {
     /** @var Utopia\Database\Database $dbForConsole */
     /** @var Utopia\Database\Document $console */
 
-    $projectId = $request->getParam('project',
-        $request->getHeader('x-appwrite-project', 'console'));
-    
+    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
+
     if($projectId === 'console') {
         return $console;
     }
 
-    Authorization::disable();
-
-    $project = $dbForConsole->getDocument('projects', $projectId);
-
-    Authorization::reset();
+    $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
 
     return $project;
 }, ['dbForConsole', 'request', 'console']);
@@ -797,6 +790,12 @@ App::setResource('dbForConsole', function($db, $cache) {
 
 App::setResource('mode', function($request) {
     /** @var Utopia\Swoole\Request $request */
+
+    /**
+     * Defines the mode for the request:
+     * - 'default' => Requests for Client and Server Side
+     * - 'admin' => Request from the Console on non-console projects
+     */
     return $request->getParam('mode', $request->getHeader('x-appwrite-mode', APP_MODE_DEFAULT));
 }, ['request']);
 
