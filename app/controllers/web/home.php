@@ -1,19 +1,17 @@
 <?php
 
-use Appwrite\Database\Database;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
+use Appwrite\Utopia\View;
 use Utopia\App;
-use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Exception;
-use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 
 App::init(function ($layout) {
-    /** @var Utopia\View $layout */
+    /** @var Appwrite\Utopia\View $layout */
 
     $header = new View(__DIR__.'/../../views/home/comps/header.phtml');
     $footer = new View(__DIR__.'/../../views/home/comps/footer.phtml');
@@ -34,7 +32,7 @@ App::init(function ($layout) {
 
 App::shutdown(function ($response, $layout) {
     /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\View $layout */
+    /** @var Appwrite\Utopia\View $layout */
 
     $response->html($layout->render());
 }, ['response', 'layout'], 'home');
@@ -44,12 +42,12 @@ App::get('/')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('response')
-    ->inject('consoleDB')
+    ->inject('dbForConsole')
     ->inject('project')
-    ->action(function ($response, $consoleDB, $project) {
+    ->action(function ($response, $dbForConsole, $project) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $consoleDB */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Database\Database $dbForConsole */
+        /** @var Utopia\Database\Document $project */
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -58,18 +56,12 @@ App::get('/')
         ;
 
         if ('console' === $project->getId() || $project->isEmpty()) {
-            $whitlistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled');
+            $whitelistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled');
 
-            if($whitlistRoot !== 'disabled') {
-                $consoleDB->getCollection([ // Count users
-                    'filters' => [
-                        '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                    ],
-                ]);
-                    
-                $sum = $consoleDB->getSum();
+            if($whitelistRoot !== 'disabled') {
+                $count = $dbForConsole->count('users', [], 1);
 
-                if($sum !== 0) {
+                if($count !== 0) {
                     return $response->redirect('/auth/signin');
                 }
             }
@@ -84,7 +76,7 @@ App::get('/auth/signin')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/signin.phtml');
 
@@ -103,7 +95,7 @@ App::get('/auth/signup')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
         $page = new View(__DIR__.'/../../views/home/auth/signup.phtml');
 
         $page
@@ -121,7 +113,7 @@ App::get('/auth/recovery')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/recovery.phtml');
 
@@ -140,7 +132,7 @@ App::get('/auth/confirm')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/confirm.phtml');
 
@@ -155,7 +147,7 @@ App::get('/auth/join')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/join.phtml');
 
@@ -170,7 +162,7 @@ App::get('/auth/recovery/reset')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/recovery/reset.phtml');
 
@@ -185,7 +177,7 @@ App::get('/auth/oauth2/success')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/oauth2.phtml');
 
@@ -203,7 +195,7 @@ App::get('/auth/magic-url')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/magicURL.phtml');
 
@@ -221,7 +213,7 @@ App::get('/auth/oauth2/failure')
     ->label('scope', 'home')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/oauth2.phtml');
 
@@ -240,7 +232,7 @@ App::get('/error/:code')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
     ->inject('layout')
     ->action(function ($code, $layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/error.phtml');
 
@@ -257,6 +249,7 @@ App::get('/specs/:format')
     ->groups(['web', 'home'])
     ->label('scope', 'public')
     ->label('docs', false)
+    ->label('origin', '*')
     ->param('format', 'swagger2', new WhiteList(['swagger2', 'open-api3'], true), 'Spec format.', true)
     ->param('platform', APP_PLATFORM_CLIENT, new WhiteList([APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER, APP_PLATFORM_CONSOLE], true), 'Choose target platform.', true)
     ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)
@@ -412,15 +405,14 @@ App::get('/specs/:format')
                 }
 
                 $routes[] = $route;
-                $model = $response->getModel($route->getLabel('sdk.response.model', 'none'));
-                
-                if($model) {
-                    $models[$model->getType()] = $model;
-                }
+                $modelLabel = $route->getLabel('sdk.response.model', 'none');
+                $model = \is_array($modelLabel) ? \array_map(function($m) use($response) {
+                    return $response->getModel($m);
+                }, $modelLabel) : $response->getModel($modelLabel);
             }
         }
 
-        foreach (Config::getParam('services', []) as $key => $service) {
+        foreach (Config::getParam('services', []) as $service) {
             if(!isset($service['docs']) // Skip service if not part of the public API
                 || !isset($service['sdk'])
                 || !$service['docs']

@@ -37,6 +37,7 @@ $root = ($this->getParam('root') !== 'disabled');
         <?php if($root): ?>
             <p>Please create your root account</p>
         <?php endif; ?>
+        <input name="userId" type="hidden" value="unique()">
 
         <label>Name</label>
         <input name="name" type="text" autocomplete="name" placeholder="" required maxlength="128">

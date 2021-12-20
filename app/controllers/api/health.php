@@ -196,24 +196,6 @@ App::get('/v1/health/queue/webhooks')
         $response->dynamic(new Document([ 'size' => Resque::size(Event::WEBHOOK_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-App::get('/v1/health/queue/tasks')
-    ->desc('Get Tasks Queue')
-    ->groups(['api', 'health'])
-    ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueTasks')
-    ->label('sdk.description', '/docs/references/health/get-queue-tasks.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
-
-        $response->dynamic(new Document([ 'size' => Resque::size(Event::TASK_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
-    }, ['response']);
-
 App::get('/v1/health/queue/logs')
     ->desc('Get Logs Queue')
     ->groups(['api', 'health'])

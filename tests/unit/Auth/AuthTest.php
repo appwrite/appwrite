@@ -3,8 +3,8 @@
 namespace Appwrite\Tests;
 
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Document;
-use Appwrite\Database\Validator\Authorization;
+use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use PHPUnit\Framework\TestCase;
 
 class AuthTest extends TestCase
@@ -13,8 +13,13 @@ class AuthTest extends TestCase
     {
     }
 
+    /**
+     * Reset Roles
+     */
     public function tearDown(): void
     {
+        Authorization::cleanRoles();
+        Authorization::setRole('role:all');
     }
 
     public function testCookieName()
@@ -167,35 +172,35 @@ class AuthTest extends TestCase
     public function testIsPrivilegedUser()
     {
         $this->assertEquals(false, Auth::isPrivilegedUser([]));
-        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_GUEST => true]));
-        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_MEMBER => true]));
-        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_ADMIN => true]));
-        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_DEVELOPER => true]));
-        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_OWNER => true]));
-        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_APP => true]));
-        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_SYSTEM => true]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_GUEST]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_MEMBER]));
+        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_ADMIN]));
+        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_DEVELOPER]));
+        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_OWNER]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_APP]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_SYSTEM]));
 
-        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_APP => true, 'role:'.Auth::USER_ROLE_APP => true]));
-        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_APP => true, 'role:'.Auth::USER_ROLE_GUEST => true]));
-        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_OWNER => true, 'role:'.Auth::USER_ROLE_GUEST => true]));
-        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_OWNER => true, 'role:'.Auth::USER_ROLE_ADMIN => true, 'role:'.Auth::USER_ROLE_DEVELOPER => true]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_APP, 'role:'.Auth::USER_ROLE_APP]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_APP, 'role:'.Auth::USER_ROLE_GUEST]));
+        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_OWNER, 'role:'.Auth::USER_ROLE_GUEST]));
+        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_OWNER, 'role:'.Auth::USER_ROLE_ADMIN, 'role:'.Auth::USER_ROLE_DEVELOPER]));
     }
     
     public function testIsAppUser()
     {
         $this->assertEquals(false, Auth::isAppUser([]));
-        $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_GUEST => true]));
-        $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_MEMBER => true]));
-        $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_ADMIN => true]));
-        $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_DEVELOPER => true]));
-        $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_OWNER => true]));
-        $this->assertEquals(true, Auth::isAppUser(['role:'.Auth::USER_ROLE_APP => true]));
-        $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_SYSTEM => true]));
+        $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_GUEST]));
+        $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_MEMBER]));
+        $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_ADMIN]));
+        $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_DEVELOPER]));
+        $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_OWNER]));
+        $this->assertEquals(true, Auth::isAppUser(['role:'.Auth::USER_ROLE_APP]));
+        $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_SYSTEM]));
 
-        $this->assertEquals(true, Auth::isAppUser(['role:'.Auth::USER_ROLE_APP => true, 'role:'.Auth::USER_ROLE_APP => true]));
-        $this->assertEquals(true, Auth::isAppUser(['role:'.Auth::USER_ROLE_APP => true, 'role:'.Auth::USER_ROLE_GUEST => true]));
-        $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_OWNER => true, 'role:'.Auth::USER_ROLE_GUEST => true]));
-        $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_OWNER => true, 'role:'.Auth::USER_ROLE_ADMIN => true, 'role:'.Auth::USER_ROLE_DEVELOPER => true]));
+        $this->assertEquals(true, Auth::isAppUser(['role:'.Auth::USER_ROLE_APP, 'role:'.Auth::USER_ROLE_APP]));
+        $this->assertEquals(true, Auth::isAppUser(['role:'.Auth::USER_ROLE_APP, 'role:'.Auth::USER_ROLE_GUEST]));
+        $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_OWNER, 'role:'.Auth::USER_ROLE_GUEST]));
+        $this->assertEquals(false, Auth::isAppUser(['role:'.Auth::USER_ROLE_OWNER, 'role:'.Auth::USER_ROLE_ADMIN, 'role:'.Auth::USER_ROLE_DEVELOPER]));
     }
 
     public function testGuestRoles()
@@ -274,8 +279,6 @@ class AuthTest extends TestCase
         $this->assertContains('team:abc/moderator', $roles);
         $this->assertContains('team:def', $roles);
         $this->assertContains('team:def/guest', $roles);
-
-        Authorization::reset();
     }
 
     public function testAppUserRoles()
@@ -310,7 +313,5 @@ class AuthTest extends TestCase
         $this->assertContains('team:abc/moderator', $roles);
         $this->assertContains('team:def', $roles);
         $this->assertContains('team:def/guest', $roles);
-
-        Authorization::reset();
     }
 }

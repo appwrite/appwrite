@@ -16,12 +16,12 @@ class Execution extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('$permissions', [
-                'type' => Response::MODEL_PERMISSIONS,
-                'description' => 'Execution permissions.',
-                'default' => new \stdClass,
-                'example' => new \stdClass,
-                'array' => false,
+            ->addRule('$read', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Execution read permissions.',
+                'default' => '',
+                'example' => 'role:all',
+                'array' => true,
             ])
             ->addRule('functionId', [
                 'type' => self::TYPE_STRING,

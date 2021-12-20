@@ -14,7 +14,7 @@ class HealthCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    public function testHTTPSuccess():array
+    public function testHTTPSuccess(): array
     {
         /**
          * Test for SUCCESS
@@ -32,11 +32,11 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        
+
         return [];
     }
 
-    public function testDBSuccess():array
+    public function testDBSuccess(): array
     {
         /**
          * Test for SUCCESS
@@ -54,11 +54,11 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        
+
         return [];
     }
 
-    public function testCacheSuccess():array
+    public function testCacheSuccess(): array
     {
         /**
          * Test for SUCCESS
@@ -76,11 +76,11 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        
+
         return [];
     }
 
-    public function testTimeSuccess():array
+    public function testTimeSuccess(): array
     {
         /**
          * Test for SUCCESS
@@ -100,11 +100,11 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        
+
         return [];
     }
 
-    public function testWebhooksSuccess():array
+    public function testWebhooksSuccess(): array
     {
         /**
          * Test for SUCCESS
@@ -121,32 +121,11 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        
+
         return [];
     }
 
-    public function testTasksSuccess():array
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/health/queue/tasks', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsInt($response['body']['size']);
-        $this->assertLessThan(100, $response['body']['size']);
-
-        /**
-         * Test for FAILURE
-         */
-        
-        return [];
-    }
-
-    public function testLogsSuccess():array
+    public function testLogsSuccess(): array
     {
         /**
          * Test for SUCCESS
@@ -163,11 +142,11 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        
+
         return [];
     }
 
-    public function testUsageSuccess():array
+    public function testUsageSuccess(): array
     {
         /**
          * Test for SUCCESS
@@ -184,11 +163,11 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        
+
         return [];
     }
 
-    public function testCertificatesSuccess():array
+    public function testCertificatesSuccess(): array
     {
         /**
          * Test for SUCCESS
@@ -205,11 +184,11 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        
+
         return [];
     }
 
-    public function testStorageLocalSuccess():array
+    public function testStorageLocalSuccess(): array
     {
         /**
          * Test for SUCCESS
@@ -227,11 +206,11 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        
+
         return [];
     }
 
-    public function testStorageAntivirusSuccess():array
+    public function testStorageAntiVirusSuccess(): array
     {
         /**
          * Test for SUCCESS
@@ -249,7 +228,7 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        
+
         return [];
     }
 }

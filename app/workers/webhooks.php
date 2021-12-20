@@ -4,7 +4,7 @@ use Appwrite\Resque\Worker;
 use Utopia\App;
 use Utopia\CLI\Console;
 
-require_once __DIR__ . '/../workers.php';
+require_once __DIR__.'/../init.php';
 
 Console::title('Webhooks V1 Worker');
 Console::success(APP_NAME . ' webhooks worker v1 has started');

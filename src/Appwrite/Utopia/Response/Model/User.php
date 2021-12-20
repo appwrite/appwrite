@@ -29,10 +29,10 @@ class User extends Model
                 'example' => 1592981250,
             ])
             ->addRule('status', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'User status. 0 for Unactivated, 1 for active and 2 is blocked.',
-                'default' => 0,
-                'example' => 0,
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'User status. Pass `true` for enabled and `false` for disabled.',
+                'default' => true,
+                'example' => true,
             ])
             ->addRule('passwordUpdate', [
                 'type' => self::TYPE_INTEGER,

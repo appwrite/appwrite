@@ -59,6 +59,42 @@ class PDO extends PDONative
         return $this->pdo->quote($string, $parameter_type);
     }
 
+    public function beginTransaction()
+    {
+        try {
+            $result = $this->pdo->beginTransaction();
+        } catch (\Throwable $th) {
+            $this->pdo = $this->reconnect();
+            $result = $this->pdo->beginTransaction();
+        }
+
+        return $result;
+    }
+
+    public function rollBack()
+    {
+        try {
+            $result = $this->pdo->rollBack();
+        } catch (\Throwable $th) {
+            $this->pdo = $this->reconnect();
+            return false;
+        }
+
+        return $result;
+    }
+
+    public function commit()
+    {
+        try {
+            $result = $this->pdo->commit();
+        } catch (\Throwable $th) {
+            $this->pdo = $this->reconnect();
+            $result = $this->pdo->commit();
+        }
+
+        return $result;
+    }
+
     public function reconnect(): PDONative
     {
         $this->pdo = new PDONative($this->dsn, $this->username, $this->passwd, $this->options);
