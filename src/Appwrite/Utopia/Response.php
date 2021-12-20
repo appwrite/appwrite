@@ -52,6 +52,11 @@ use Appwrite\Utopia\Response\Model\Tag;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
+use Appwrite\Utopia\Response\Model\HealthAntivirus;
+use Appwrite\Utopia\Response\Model\HealthQueue;
+use Appwrite\Utopia\Response\Model\HealthStatus;
+use Appwrite\Utopia\Response\Model\HealthTime;
+use Appwrite\Utopia\Response\Model\HealthVersion;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\UsageBuckets;
@@ -160,6 +165,13 @@ class Response extends SwooleResponse
     const MODEL_PLATFORM_LIST = 'platformList';
     const MODEL_DOMAIN = 'domain';
     const MODEL_DOMAIN_LIST = 'domainList';
+
+    // Health
+    const MODEL_HEALTH_STATUS = 'healthStatus';
+    const MODEL_HEALTH_VERSION = 'healthVersion';
+    const MODEL_HEALTH_QUEUE = 'healthQueue';
+    const MODEL_HEALTH_TIME = 'healthTime';
+    const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
     
     // Deprecated
     const MODEL_PERMISSIONS = 'permissions';
@@ -255,6 +267,11 @@ class Response extends SwooleResponse
             ->setModel(new Language())
             ->setModel(new Currency())
             ->setModel(new Phone())
+            ->setModel(new HealthAntivirus())
+            ->setModel(new HealthQueue())
+            ->setModel(new HealthStatus())
+            ->setModel(new HealthTime())
+            ->setModel(new HealthVersion())
             ->setModel(new Metric())
             ->setModel(new UsageDatabase())
             ->setModel(new UsageCollection())

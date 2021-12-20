@@ -5,22 +5,22 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class Country extends Model
+class HealthStatus extends Model
 {
     public function __construct()
     {
         $this
-            ->addRule('name', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Country name.',
-                'default' => '',
-                'example' => 'United States',
+            ->addRule('ping', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Duration in milliseconds how long the health check took.',
+                'default' => 0,
+                'example' => 128,
             ])
-            ->addRule('code', [
+            ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Country two-character ISO 3166-1 alpha code.',
+                'description' => 'Service status. Possible values can are: `pass`, `fail`',
                 'default' => '',
-                'example' => 'US',
+                'example' => 'pass',
             ])
         ;
     }
@@ -32,7 +32,7 @@ class Country extends Model
      */
     public function getName():string
     {
-        return 'Country';
+        return 'Health Status';
     }
 
     /**
@@ -42,6 +42,6 @@ class Country extends Model
      */
     public function getType():string
     {
-        return Response::MODEL_COUNTRY;
+        return Response::MODEL_HEALTH_STATUS;
     }
 }
