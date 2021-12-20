@@ -758,7 +758,7 @@ trait AccountBase
         $prefsObject = [];
         // Add 1024 keys
         for($i = 1000; $i < 2024; $i++) {
-            $prefsObject["key" + $i]  = "HelloWorldHelloWorldHelloWorldHelloWorldHelloWorldHelloWorldHel";
+            $prefsObject["key" . $i]  = "HelloWorldHelloWorldHelloWorldHelloWorldHelloWorldHelloWorldHel";
             // Each key is 7 characters and value is 63 characters
         }
         // That makes total size minimum of 70kB, plus any JSON stuff. Max supported is 64kB, so this should exceed.
