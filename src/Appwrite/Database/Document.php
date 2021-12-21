@@ -92,6 +92,26 @@ class Document extends ArrayObject
     }
 
     /**
+     * Get Document Attributes
+     * 
+     * @return array
+     */
+    public function getAttributes(): array
+    {
+        $attributes = [];
+
+        foreach ($this as $attribute => $value) {
+            if(array_key_exists($attribute, ['$id' => true, '$permissions' => true, '$collection' => true, '$execute' => []])) {
+                continue;
+            }
+
+            $attributes[$attribute] = $value;
+        }
+
+        return $attributes;
+    }
+
+    /**
      * Set Attribute.
      *
      * Method for setting a specific field attribute
@@ -215,7 +235,7 @@ class Document extends ArrayObject
      *
      * @return array
      */
-    public function getArrayCopy(array $whitelist = [], array $blacklist = [])
+    public function getArrayCopy(array $whitelist = [], array $blacklist = []): array
     {
         $array = parent::getArrayCopy();
 
