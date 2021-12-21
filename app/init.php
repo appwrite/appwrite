@@ -542,7 +542,6 @@ Locale::setLanguageFromJSON('zh-tw', __DIR__.'/config/locale/translations/zh-tw.
 ]);
 
 // Runtime Execution
-
 App::setResource('register', fn() => $register);
 
 App::setResource('layout', function($locale) {
@@ -552,36 +551,18 @@ App::setResource('layout', function($locale) {
     return $layout;
 }, ['locale']);
 
-App::setResource('locale', function() {
-    return new Locale(App::getEnv('_APP_LOCALE', 'en'));
-});
+App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
 
 // Queues
-App::setResource('events', function($register) {
-    return new Event('', '');
-}, ['register']);
-
-App::setResource('audits', function($register) {
-    return new Event(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME);
-}, ['register']);
-
+App::setResource('events', fn() => new Event('', ''));
+App::setResource('audits', fn() => new Event(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME));
+App::setResource('mails', fn() => new Event(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME));
+App::setResource('deletes', fn() => new Event(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME));
+App::setResource('database', fn() => new Event(Event::DATABASE_QUEUE_NAME, Event::DATABASE_CLASS_NAME));
 App::setResource('usage', function($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
 
-App::setResource('mails', function($register) {
-    return new Event(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME);
-}, ['register']);
-
-App::setResource('deletes', function($register) {
-    return new Event(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME);
-}, ['register']);
-
-App::setResource('database', function($register) {
-    return new Event(Event::DATABASE_QUEUE_NAME, Event::DATABASE_CLASS_NAME);
-}, ['register']);
-
-// Test Mock
 App::setResource('clients', function($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => 'platforms',
@@ -589,7 +570,7 @@ App::setResource('clients', function($request, $console, $project) {
         'type' => 'web',
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
-    
+
     /**
      * Get All verified client URLs for both console and current projects
      * + Filter for duplicated entries
