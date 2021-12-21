@@ -10,6 +10,8 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Logger\Log;
+use Utopia\Logger\Log\User;
 use Utopia\Swoole\Files;
 use Utopia\Swoole\Request;
 
@@ -98,6 +100,9 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         Console::error('[Error] Message: '.$th->getMessage());
         Console::error('[Error] File: '.$th->getFile());
         Console::error('[Error] Line: '.$th->getLine());
+
+        $code = $th->getCode();
+        $swooleResponse->setStatusCode($code);
 
         /**
          * Reset Database connection if PDOException was thrown.

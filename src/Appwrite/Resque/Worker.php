@@ -3,7 +3,6 @@
 namespace Appwrite\Resque;
 
 use Exception;
-use function var_dump;
 
 class Worker
 {

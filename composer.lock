@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "269b7f80dd8bd8f7fd0e78432da13b12",
+    "content-hash": "1a20aaab4a5e2858c4088865be641035",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2451,16 +2451,16 @@
         },
         {
             "name": "utopia-php/websocket",
-            "version": "dev-feat-onerror-callback",
+            "version": "0.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/websocket.git",
-                "reference": "237eed7e9c54a514cfabac3e5726d24661254f2e"
+                "reference": "51fcb86171400d8aa40d76c54593481fd273dab5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/237eed7e9c54a514cfabac3e5726d24661254f2e",
-                "reference": "237eed7e9c54a514cfabac3e5726d24661254f2e",
+                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/51fcb86171400d8aa40d76c54593481fd273dab5",
+                "reference": "51fcb86171400d8aa40d76c54593481fd273dab5",
                 "shasum": ""
             },
             "require": {
@@ -2503,9 +2503,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/websocket/issues",
-                "source": "https://github.com/utopia-php/websocket/tree/feat-onerror-callback"
+                "source": "https://github.com/utopia-php/websocket/tree/0.1.0"
             },
-            "time": "2021-11-29T08:43:24+00:00"
+            "time": "2021-12-20T10:50:09+00:00"
         },
         {
             "name": "webmozart/assert",
@@ -6467,9 +6467,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/websocket": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

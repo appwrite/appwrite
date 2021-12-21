@@ -139,7 +139,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId,
     /**
      * Save current connections to the Database every 5 seconds.
      */
-    Timer::tick(5000, function () use ($stats, $getConsoleDb, $containerId, &$documentId, $register) {
+    Timer::tick(5000, function () use ($stats, $getConsoleDb, $containerId, &$documentId, $register, $logError) {
         foreach ($stats as $projectId => $value) {
             if (empty($value['connections']) && empty($value['messages'])) {
                 continue;
@@ -190,7 +190,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId,
                 'value' => json_encode($payload)
             ]);
         } catch (\Throwable $th) {
-            logError($register, $th, "updateWorkerDocument");
+            call_user_func($logError, $th, "updateWorkerDocument");
 
             Console::error('[Error] Type: ' . get_class($th));
             Console::error('[Error] Message: ' . $th->getMessage());
@@ -202,13 +202,13 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId,
     });
 });
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $logError) {
     Console::success('Worker ' . $workerId . ' started succefully');
 
     $attempts = 0;
     $start = time();
 
-    Timer::tick(5000, function () use ($server, $register, $realtime, $stats) {
+    Timer::tick(5000, function () use ($server, $register, $realtime, $stats, $logError) {
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
@@ -365,7 +365,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 }
             });
         } catch (\Throwable $th) {
-            logError($register, $th, "pubSubConnection");
+            call_user_func($logError, $th, "pubSubConnection");
 
             Console::error('Pub/sub error: ' . $th->getMessage());
             $register->get('redisPool')->put($redis);
@@ -379,7 +379,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     Console::error('Failed to restart pub/sub...');
 });
 
-$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime) {
+$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $logError) {
     $app = new App('UTC');
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
@@ -483,7 +483,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $stats->incr($project->getId(), 'connections');
         $stats->incr($project->getId(), 'connectionsTotal');
     } catch (\Throwable $th) {
-        logError($register, $th, "initServer");
+        call_user_func($logError, $th, "initServer");
 
         $response = [
             'type' => 'error',
