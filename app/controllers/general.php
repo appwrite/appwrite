@@ -317,7 +317,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         if($error->getCode() >= 500 || $error->getCode() === 0) {
             $log = new Utopia\Logger\Log();
 
-            if(!$user->isEmpty()) {
+            if($user !== null && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
             }
 

@@ -101,19 +101,18 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         $user = null;
         try {
             $user = $app->getResource('user');
-        } catch(\Throwable $th) {
+        } catch(\Throwable $_th) {
             // All good, user is optional information for logger
         }
 
         $logger = $app->getResource("logger");
         if($logger) {
             $loggerBreadcrumbs = $app->getResource("loggerBreadcrumbs");
-            $project = $app->getResource("project");
             $route = $app->match($request);
 
             $log = new Utopia\Logger\Log();
 
-            if(!$user->isEmpty()) {
+            if($user !== null && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
             }
 
@@ -127,7 +126,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $log->addTag('url',  $route->getPath());
             $log->addTag('verboseType', get_class($th));
             $log->addTag('code', $th->getCode());
-            $log->addTag('projectId', $project->getId());
+            // $log->addTag('projectId', $project->getId()); // TODO: Figure out how to get ProjectID, if it becomes relevant
             $log->addTag('hostname', $request->getHostname());
             $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
 
