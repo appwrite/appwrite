@@ -10,8 +10,6 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Logger\Log;
-use Utopia\Logger\Log\User;
 use Utopia\Swoole\Files;
 use Utopia\Swoole\Request;
 
