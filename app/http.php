@@ -101,9 +101,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         Console::error('[Error] File: '.$th->getFile());
         Console::error('[Error] Line: '.$th->getLine());
 
-        $code = $th->getCode();
-        $swooleResponse->setStatusCode($code);
-
         /**
          * Reset Database connection if PDOException was thrown.
          */
