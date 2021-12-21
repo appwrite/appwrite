@@ -21,6 +21,7 @@ use Appwrite\Extend\PDO;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
+use Appwrite\Database\Database as DatabaseOld;
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
@@ -154,6 +155,43 @@ if(!empty($user) || !empty($pass)) {
 }
 
 /**
+ * Old DB Filters
+ */
+DatabaseOld::addFilter('json',
+    function($value) {
+        if(!is_array($value)) {
+            return $value;
+        }
+        return json_encode($value);
+    },
+    function($value) {
+        return json_decode($value, true);
+    }
+);
+
+DatabaseOld::addFilter('encrypt',
+    function($value) {
+        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+        $tag = null;
+
+        return json_encode([
+            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+            'method' => OpenSSL::CIPHER_AES_128_GCM,
+            'iv' => bin2hex($iv),
+            'tag' => bin2hex($tag),
+            'version' => '1',
+        ]);
+    },
+    function($value) {
+        $value = json_decode($value, true);
+        $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
+
+        return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+    }
+);
+
+/**
  * New DB Filters
  */
 Database::addFilter('casting',
@@ -176,7 +214,7 @@ Database::addFilter('enum',
         return $value;
     },
     function($value, Document $attribute) {
-        $formatOptions = json_decode($attribute->getAttribute('formatOptions', []), true);
+        $formatOptions = json_decode($attribute->getAttribute('formatOptions', '[]'), true);
         if (isset($formatOptions['elements'])) {
             $attribute->setAttribute('elements', $formatOptions['elements']);
         }
@@ -195,7 +233,7 @@ Database::addFilter('range',
         return $value;
     },
     function($value, Document $attribute) {
-        $formatOptions = json_decode($attribute->getAttribute('formatOptions', []), true);
+        $formatOptions = json_decode($attribute->getAttribute('formatOptions', '[]'), true);
         if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
             $attribute
                 ->setAttribute('min', $formatOptions['min'])
@@ -518,6 +556,7 @@ Locale::setLanguageFromJSON('sd', __DIR__ . '/config/locale/translations/sd.json
 Locale::setLanguageFromJSON('si', __DIR__ . '/config/locale/translations/si.json');
 Locale::setLanguageFromJSON('sk', __DIR__ . '/config/locale/translations/sk.json');
 Locale::setLanguageFromJSON('sl', __DIR__ . '/config/locale/translations/sl.json');
+Locale::setLanguageFromJSON('sn', __DIR__ . '/config/locale/translations/sn.json');
 Locale::setLanguageFromJSON('sq', __DIR__ . '/config/locale/translations/sq.json');
 Locale::setLanguageFromJSON('sv', __DIR__ . '/config/locale/translations/sv.json');
 Locale::setLanguageFromJSON('ta', __DIR__ . '/config/locale/translations/ta.json');
@@ -542,7 +581,6 @@ Locale::setLanguageFromJSON('zh-tw', __DIR__.'/config/locale/translations/zh-tw.
 ]);
 
 // Runtime Execution
-
 App::setResource('register', fn() => $register);
 
 App::setResource('layout', function($locale) {
@@ -552,36 +590,18 @@ App::setResource('layout', function($locale) {
     return $layout;
 }, ['locale']);
 
-App::setResource('locale', function() {
-    return new Locale(App::getEnv('_APP_LOCALE', 'en'));
-});
+App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
 
 // Queues
-App::setResource('events', function($register) {
-    return new Event('', '');
-}, ['register']);
-
-App::setResource('audits', function($register) {
-    return new Event(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME);
-}, ['register']);
-
+App::setResource('events', fn() => new Event('', ''));
+App::setResource('audits', fn() => new Event(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME));
+App::setResource('mails', fn() => new Event(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME));
+App::setResource('deletes', fn() => new Event(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME));
+App::setResource('database', fn() => new Event(Event::DATABASE_QUEUE_NAME, Event::DATABASE_CLASS_NAME));
 App::setResource('usage', function($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
 
-App::setResource('mails', function($register) {
-    return new Event(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME);
-}, ['register']);
-
-App::setResource('deletes', function($register) {
-    return new Event(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME);
-}, ['register']);
-
-App::setResource('database', function($register) {
-    return new Event(Event::DATABASE_QUEUE_NAME, Event::DATABASE_CLASS_NAME);
-}, ['register']);
-
-// Test Mock
 App::setResource('clients', function($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => 'platforms',
@@ -589,7 +609,7 @@ App::setResource('clients', function($request, $console, $project) {
         'type' => 'web',
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
-    
+
     /**
      * Get All verified client URLs for both console and current projects
      * + Filter for duplicated entries

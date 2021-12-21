@@ -1,3 +1,6 @@
+## 2.0.0
+- BREAKING All services and methods now return structured response objects instead of `Response` object
+
 ## 1.0.2
 - Support for Appwrite 0.11
 

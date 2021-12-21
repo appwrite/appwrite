@@ -17,7 +17,7 @@ class Document extends Any
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */

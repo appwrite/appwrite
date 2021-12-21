@@ -1,3 +1,7 @@
+## 2.1.0
+- Updated `flutter_we_auth` plugin now supports Flutter web for OAuth2 sessions [read more](https://github.com/appwrite/sdk-for-flutter/blob/master/README.md#web)
+- Added linters and updated codebase to match the rules
+
 ## 2.0.3
 - Support for Appwrite 0.11
 - Fix comments on `sum` attributes

@@ -182,6 +182,8 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $db = null;
         }
 
+        $swooleResponse->setStatusCode(500);
+
         if(App::isDevelopment()) {
             $swooleResponse->end('error: '.$th->getMessage());
         }
