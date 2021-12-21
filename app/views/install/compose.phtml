@@ -3,7 +3,6 @@
 $httpPort = $this->getParam('httpPort', '');
 $httpsPort = $this->getParam('httpsPort', '');
 $version = $this->getParam('version', '');
-$version = '0.12.0-alpha'; // TODO: TEMPORARY
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
 ?>version: '3'
@@ -33,7 +32,7 @@ services:
     networks:
       - gateway
       - appwrite
-  
+
   appwrite:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     container_name: appwrite
@@ -322,7 +321,7 @@ services:
       - _APP_SMTP_SECURE
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
-      
+
   appwrite-maintenance:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: maintenance
