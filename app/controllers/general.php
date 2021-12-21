@@ -291,7 +291,7 @@ App::options(function ($request, $response) {
         ->noContent();
 }, ['request', 'response']);
 
-App::error(function ($error, $utopia, $request, $response, $layout, $project, $logger, $user, $loggerBreadcrumbs) {
+App::error(function ($error, $utopia, $request, $response, $layout, $project, $logger, $loggerBreadcrumbs) {
     /** @var Exception $error */
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
@@ -299,8 +299,16 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
     /** @var Utopia\View $layout */
     /** @var Appwrite\Database\Document $project */
     /** @var Utopia\Logger\Logger $logger */
-    /** @var Appwrite\Database\Document $user */
     /** @var Utopia\Logger\Log\Breadcrumb[] $loggerBreadcrumbs */
+
+    $user = null;
+    /** @var Appwrite\Database\Document $user */
+
+    try {
+        $user = $utopia->getResource('user');
+    } catch(\Throwable $th) {
+        // All good, user is optional information for logger
+    }
 
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
     $route = $utopia->match($request);
@@ -431,7 +439,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
 
     $response->dynamic(new Document($output),
         $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR);
-}, ['error', 'utopia', 'request', 'response', 'layout', 'project', 'logger', 'user', 'loggerBreadcrumbs']);
+}, ['error', 'utopia', 'request', 'response', 'layout', 'project', 'logger', 'loggerBreadcrumbs']);
 
 App::get('/manifest.json')
     ->desc('Progressive app manifest file')
