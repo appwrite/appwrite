@@ -1713,15 +1713,13 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
-    ->inject('user')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($collectionId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderAttributes, $orderTypes, $response, $dbForInternal, $dbForExternal, $user, $usage, $mode) {
+    ->action(function ($collectionId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderAttributes, $orderTypes, $response, $dbForInternal, $dbForExternal, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Stats\Stats $usage */
-        /** @var Utopia\Database\Document $user */
         /** @var string $mode */
 
         /**
@@ -1745,12 +1743,10 @@ App::get('/v1/database/collections/:collectionId/documents')
             }
         }
 
-        $queries = \array_map(function ($query) {
-            return Query::parse($query);
-        }, $queries);
+        $queries = \array_map(fn($query) => Query::parse($query), $queries);
 
         if (!empty($queries)) {
-            $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []), true);
+            $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []));
             if (!$validator->isValid($queries)) {
                 throw new Exception($validator->getDescription(), 400);
             }
@@ -1763,127 +1759,42 @@ App::get('/v1/database/collections/:collectionId/documents')
                 throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
-
-        if ($collection->getAttribute('permission') === 'collection') {
-            /** @var Document[] $documents */
-            $documents = Authorization::skip(fn() => $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection));
-            $sum = Authorization::skip(fn() => $dbForExternal->count($collectionId, $queries, APP_LIMIT_COUNT));
-        } else {
-            $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
-            $sum = $dbForExternal->count($collectionId, $queries, APP_LIMIT_COUNT);
-        }
-
-        $usage
-            ->setParam('database.documents.read', 1)
-            ->setParam('collectionId', $collectionId)
-        ;
-
-        $response->dynamic(new Document([
-            'nextBefore' => '',
-            'nextAfter' => '',
-            'sum' => $sum,
-            'documents' => $documents,
-        ]), Response::MODEL_DOCUMENT_LIST);
-    });
-
-App::get('/v1/database/collections/:collectionId/documents_poc')
-    ->desc('List Documents')
-    ->groups(['api', 'database'])
-    ->label('scope', 'documents.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'database')
-    ->label('sdk.method', 'listDocuments')
-    ->label('sdk.description', '/docs/references/database/list-documents.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('queries', [], new ArrayList(new Text(128)), 'Array of query strings.', true)
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursor', '', new UID(), 'ID of the document used as the starting point for the query, excluding the document itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
-    ->param('orderAttributes', [], new ArrayList(new Text(128)), 'Array of attributes used to sort results.', true)
-    ->param('orderTypes', [], new ArrayList(new WhiteList(['DESC', 'ASC'], true)), 'Array of order directions for sorting attribtues. Possible values are DESC for descending order, or ASC for ascending order.', true)
-    ->inject('response')
-    ->inject('dbForInternal')
-    ->inject('dbForExternal')
-    ->inject('user')
-    ->inject('usage')
-    ->inject('mode')
-    ->action(function ($collectionId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderAttributes, $orderTypes, $response, $dbForInternal, $dbForExternal, $user, $usage, $mode) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Utopia\Database\Database $dbForExternal */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Utopia\Database\Document $user */
-        /** @var string $mode */
 
         /**
-         * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
-         *
-         * @var Utopia\Database\Document $collection
+         * Add +1 limit to get the next possible document.
          */
-        $collection = Authorization::skip(fn() => $dbForInternal->getDocument('collections', $collectionId));
-
-        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-                throw new Exception('Collection not found', 404);
-            }
-        }
-
-        // Check collection permissions when enforced
         if ($collection->getAttribute('permission') === 'collection') {
-            $validator = new Authorization('read');
-            if (!$validator->isValid($collection->getRead())) {
-                throw new Exception('Unauthorized permissions', 401);
-            }
-        }
-
-        $queries = \array_map(function ($query) {
-            return Query::parse($query);
-        }, $queries);
-
-        if (!empty($queries)) {
-            $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []), true);
-            if (!$validator->isValid($queries)) {
-                throw new Exception($validator->getDescription(), 400);
-            }
-        }
-
-        $cursorDocument = null;
-        if (!empty($cursor)) {
-            $cursorDocument = $dbForExternal->getDocument($collectionId, $cursor);
-
-            if ($cursorDocument->isEmpty()) {
-                throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400);
-            }
-        }
-
-        if ($collection->getAttribute('permission') === 'collection') {
-            /** @var Document[] $documents */
             $documents = Authorization::skip(fn() => $dbForExternal->find($collectionId, $queries, $limit + 1, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection));
             $sum = Authorization::skip(fn() => $dbForExternal->count($collectionId, $queries, APP_LIMIT_COUNT));
-            if (!empty($documents)) {
-                $nextBeforeExists = Authorization::skip(fn() => $dbForExternal->findOne($collectionId, $queries, $offset, $orderAttributes, $orderTypes, $documents[0], Database::CURSOR_BEFORE));
-            }
         } else {
             $documents = $dbForExternal->find($collectionId, $queries, $limit + 1, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
             $sum = $dbForExternal->count($collectionId, $queries, APP_LIMIT_COUNT);
+        }
+
+
+        if ($cursorDirection === Database::CURSOR_AFTER) {
+            if (count($documents) > $limit) {
+                array_pop($documents); // remove last array item from extending the limit by 1
+                $nextAfter = $documents[array_key_last($documents)]->getId();
+            }
+        } else {
+            if (count($documents) > $limit) {
+                array_shift($documents); // remove first array item from extending the limit by 1
+            }
             if (!empty($documents)) {
+                $nextAfter = $documents[array_key_last($documents)]->getId();
+            }
+        }
+
+        if (!empty($documents)) {
+            if ($collection->getAttribute('permission') === 'collection') {
+                $nextBeforeExists = Authorization::skip(fn() => $dbForExternal->findOne($collectionId, $queries, $offset, $orderAttributes, $orderTypes, $documents[0], Database::CURSOR_BEFORE));
+            } else {
                 $nextBeforeExists = $dbForExternal->findOne($collectionId, $queries, $offset, $orderAttributes, $orderTypes, $documents[0], Database::CURSOR_BEFORE);
             }
         }
 
         $nextBefore = $nextBeforeExists ? $documents[0]->getId() : null;
-
-        if ($cursorDirection === Database::CURSOR_AFTER && count($documents) > $limit) {
-            array_pop($documents); // remove last array item from extending the limit by 1
-            $nextAfter = $documents[array_key_last($documents)]->getId();
-        } else if ($cursorDirection === Database::CURSOR_BEFORE) {
-            $nextAfter = $documents[array_key_last($documents)]->getId();
-        }
-
 
         $usage
             ->setParam('database.documents.read', 1)

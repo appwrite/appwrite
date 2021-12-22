@@ -862,6 +862,8 @@ trait DatabaseBase
         $this->assertEquals('Spider-Man: Far From Home', $base['body']['documents'][1]['title']);
         $this->assertEquals('Spider-Man: Homecoming', $base['body']['documents'][2]['title']);
         $this->assertCount(3, $base['body']['documents']);
+        $this->assertEmpty($base['body']['nextBefore']);
+        $this->assertEmpty($base['body']['nextAfter']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -873,6 +875,8 @@ trait DatabaseBase
         $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['documents'][0]['$id']);
         $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['documents'][1]['$id']);
+        $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['nextBefore']);
+        $this->assertEmpty($documents['body']['nextAfter']);
         $this->assertCount(2, $documents['body']['documents']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
@@ -883,6 +887,8 @@ trait DatabaseBase
         ]);
 
         $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEmpty($documents['body']['nextBefore']);
+        $this->assertEmpty($documents['body']['nextAfter']);
         $this->assertEmpty($documents['body']['documents']);
 
         /**
@@ -901,6 +907,24 @@ trait DatabaseBase
         $this->assertEquals(2017, $base['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $base['body']['documents'][2]['releaseYear']);
         $this->assertCount(3, $base['body']['documents']);
+        $this->assertEmpty($base['body']['nextBefore']);
+        $this->assertEmpty($base['body']['nextAfter']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'orderAttributes' => ['releaseYear'],
+            'orderTypes' => ['ASC'],
+            'limit' => 1,
+            'cursor' => $base['body']['documents'][0]['$id']
+        ]);
+
+        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['documents'][0]['$id']);
+        $this->assertCount(1, $documents['body']['documents']);
+        $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['nextBefore']);
+        $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['nextAfter']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -914,6 +938,8 @@ trait DatabaseBase
         $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['documents'][0]['$id']);
         $this->assertCount(1, $documents['body']['documents']);
+        $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['nextBefore']);
+        $this->assertEmpty($documents['body']['nextAfter']);
 
         /**
          * Test with DESC order and after.
@@ -931,6 +957,8 @@ trait DatabaseBase
         $this->assertEquals(2017, $base['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $base['body']['documents'][0]['releaseYear']);
         $this->assertCount(3, $base['body']['documents']);
+        $this->assertEmpty($base['body']['nextBefore']);
+        $this->assertEmpty($base['body']['nextAfter']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -944,6 +972,8 @@ trait DatabaseBase
         $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['documents'][0]['$id']);
         $this->assertCount(1, $documents['body']['documents']);
+        $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['nextBefore']);
+        $this->assertEmpty($documents['body']['nextAfter']);
 
         /**
          * Test after with unknown document.
@@ -978,6 +1008,8 @@ trait DatabaseBase
         $this->assertEquals('Spider-Man: Far From Home', $base['body']['documents'][1]['title']);
         $this->assertEquals('Spider-Man: Homecoming', $base['body']['documents'][2]['title']);
         $this->assertCount(3, $base['body']['documents']);
+        $this->assertEmpty($base['body']['nextBefore']);
+        $this->assertEmpty($base['body']['nextAfter']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -990,6 +1022,8 @@ trait DatabaseBase
         $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEquals($base['body']['documents'][0]['$id'], $documents['body']['documents'][0]['$id']);
         $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['documents'][1]['$id']);
+        $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['nextAfter']);
+        $this->assertEmpty($documents['body']['nextBefore']);
         $this->assertCount(2, $documents['body']['documents']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
@@ -1002,6 +1036,8 @@ trait DatabaseBase
 
         $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEmpty($documents['body']['documents']);
+        $this->assertEmpty($documents['body']['nextBefore']);
+        $this->assertEmpty($documents['body']['nextAfter']);
 
         /**
          * Test with ASC order and after.
@@ -1019,6 +1055,25 @@ trait DatabaseBase
         $this->assertEquals(2017, $base['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $base['body']['documents'][2]['releaseYear']);
         $this->assertCount(3, $base['body']['documents']);
+        $this->assertEmpty($base['body']['nextBefore']);
+        $this->assertEmpty($base['body']['nextAfter']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'orderAttributes' => ['releaseYear'],
+            'orderTypes' => ['ASC'],
+            'limit' => 1,
+            'cursor' => $base['body']['documents'][2]['$id'],
+            'cursorDirection' => Database::CURSOR_BEFORE
+        ]);
+
+        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['documents'][0]['$id']);
+        $this->assertCount(1, $documents['body']['documents']);
+        $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['nextAfter']);
+        $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['nextBefore']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -1033,6 +1088,8 @@ trait DatabaseBase
         $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEquals($base['body']['documents'][0]['$id'], $documents['body']['documents'][0]['$id']);
         $this->assertCount(1, $documents['body']['documents']);
+        $this->assertEquals($base['body']['documents'][0]['$id'], $documents['body']['nextAfter']);
+        $this->assertEmpty($documents['body']['nextBefore']);
 
         /**
          * Test with DESC order and after.
@@ -1050,6 +1107,25 @@ trait DatabaseBase
         $this->assertEquals(2017, $base['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $base['body']['documents'][0]['releaseYear']);
         $this->assertCount(3, $base['body']['documents']);
+        $this->assertEmpty($base['body']['nextBefore']);
+        $this->assertEmpty($base['body']['nextAfter']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'orderAttributes' => ['releaseYear'],
+            'orderTypes' => ['DESC'],
+            'limit' => 1,
+            'cursor' => $base['body']['documents'][2]['$id'],
+            'cursorDirection' => Database::CURSOR_BEFORE
+        ]);
+
+        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['documents'][0]['$id']);
+        $this->assertCount(1, $documents['body']['documents']);
+        $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['nextAfter']);
+        $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['nextBefore']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -1064,6 +1140,8 @@ trait DatabaseBase
         $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEquals($base['body']['documents'][0]['$id'], $documents['body']['documents'][0]['$id']);
         $this->assertCount(1, $documents['body']['documents']);
+        $this->assertEquals($base['body']['documents'][0]['$id'], $documents['body']['nextAfter']);
+        $this->assertEmpty($documents['body']['nextBefore']);
 
         return [];
     }
