@@ -76,7 +76,7 @@ class Platform extends Model
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */
