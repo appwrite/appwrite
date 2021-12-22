@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Account;
 
 use Tests\E2E\Client;
+use function array_merge;
 
 trait AccountBase
 {
@@ -764,9 +765,9 @@ trait AccountBase
 
         // Add 100 keys, each is 1kB
         for($i = 0; $i < 100; $i++) {
-            $prefsObject["key" . $i]  = $text1Kb;
+            $prefsObject["k" . $i]  = $text1Kb;
         }
-        // That makes total size minimum of 100kB, plus any JSON stuff. Max supported is 64kB, so this should exceed.
+        // That makes total size minimum of 100kB, plus key size, plus any JSON syntax stuff. Max supported is 64kB, so this should exceed.
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
@@ -777,7 +778,28 @@ trait AccountBase
             'prefs' => $prefsObject
         ]);
 
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Now let's test the same thing, but with normal symbol instead of multi-byte cake emoji
+        $prefsObject = [];
+        $text1Kb = "";
+        for($i = 0; $i < 1024; $i++) {
+            $text1Kb .= "A";
+        }
+        for($i = 0; $i < 100; $i++) {
+            $prefsObject["key" . $i]  = $text1Kb;
+        }
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'prefs' => $prefsObject
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;
     }
