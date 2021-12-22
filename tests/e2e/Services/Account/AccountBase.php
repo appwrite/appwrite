@@ -777,7 +777,7 @@ trait AccountBase
             'prefs' => $prefsObject
         ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(500, $response['headers']['status-code']);
 
         return $data;
     }
