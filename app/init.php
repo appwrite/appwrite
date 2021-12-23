@@ -796,7 +796,7 @@ App::setResource('dbForExternal', function($db, $cache, $project) {
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase('appwrite');
-    $database->setNamespace('project_'.$project->getId());
+    $database->setNamespace('_project_'.$project->getId());
 
     return $database;
 }, ['db', 'cache', 'project']);
@@ -806,7 +806,7 @@ App::setResource('dbForConsole', function($db, $cache) {
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase('appwrite');
-    $database->setNamespace('_console');
+    $database->setNamespace('_project_console');
 
     return $database;
 }, ['db', 'cache']);

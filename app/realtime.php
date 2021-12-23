@@ -78,7 +78,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
      */
     go(function () use ($register, $containerId, &$statsDocument) {
         try {
-            [$database, $returnDatabase] = getDatabase($register, '_console');
+            [$database, $returnDatabase] = getDatabase($register, '_project_console');
             $document = new Document([
                 '$id' => $database->getId(),
                 '$collection' => 'realtime',
@@ -134,7 +134,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
         }
 
         try {
-            [$database, $returnDatabase] = getDatabase($register, '_console');
+            [$database, $returnDatabase] = getDatabase($register, '_project_console');
 
             $statsDocument
                 ->setAttribute('timestamp', time())
@@ -164,7 +164,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
          */
         if ($realtime->hasSubscriber('console', 'role:member', 'project')) {
 
-            [$database, $returnDatabase] = getDatabase($register, '_console');
+            [$database, $returnDatabase] = getDatabase($register, '_project_console');
 
             $payload = [];
 
