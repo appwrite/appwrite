@@ -850,6 +850,15 @@ App::setResource('dbForConsole', function($db, $cache) {
     return $database;
 }, ['db', 'cache']);
 
+App::setResource('dbForConsoleExternal', function($db, $cache) {
+    $cache = new Cache(new RedisCache($cache));
+
+    $database = new Database(new MariaDB($db), $cache);
+    $database->setNamespace('project_console_external');
+
+    return $database;
+}, ['db', 'cache']);
+
 App::setResource('mode', function($request) {
     /** @var Utopia\Swoole\Request $request */
 
