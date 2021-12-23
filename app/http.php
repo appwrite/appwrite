@@ -78,14 +78,14 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 
         $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
 
-        if(!$dbForConsole->exists()) {
+        // if(!$dbForConsole->exists('appwrite')) {
             Console::success('[Setup] - Server database init started...');
 
             $collections = Config::getParam('collections', []); /** @var array $collections */
 
             $redis->flushAll();
 
-            $dbForConsole->create();
+            $dbForConsole->create('appwrite');
 
             $audit = new Audit($dbForConsole);
             $audit->setup();
@@ -125,7 +125,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             }
 
             Console::success('[Setup] - Server database init completed...');
-        }
+        // }
     });
 
     Console::success('Server started successfully (max payload is '.number_format($payloadSize).' bytes)');

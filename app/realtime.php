@@ -58,6 +58,7 @@ function getDatabase(Registry &$register, string $namespace)
 
     $cache = new Cache(new RedisCache($redis));
     $database = new Database(new MariaDB($db), $cache);
+    $database->setDefaultDatabase('appwrite');
     $database->setNamespace($namespace);
 
     return [
@@ -77,7 +78,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
      */
     go(function () use ($register, $containerId, &$statsDocument) {
         try {
-            [$database, $returnDatabase] = getDatabase($register, 'project_console_internal');
+            [$database, $returnDatabase] = getDatabase($register, '_console');
             $document = new Document([
                 '$id' => $database->getId(),
                 '$collection' => 'realtime',
@@ -133,7 +134,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
         }
 
         try {
-            [$database, $returnDatabase] = getDatabase($register, 'project_console_internal');
+            [$database, $returnDatabase] = getDatabase($register, '_console');
 
             $statsDocument
                 ->setAttribute('timestamp', time())
@@ -163,7 +164,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
          */
         if ($realtime->hasSubscriber('console', 'role:member', 'project')) {
 
-            [$database, $returnDatabase] = getDatabase($register, 'project_console_internal');
+            [$database, $returnDatabase] = getDatabase($register, '_console');
 
             $payload = [];
 
@@ -267,7 +268,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         return;
                     }
 
-                    [$database, $returnDatabase] = getDatabase($register, 'project_' . $projectId . '_internal');
+                    [$database, $returnDatabase] = getDatabase($register, 'project_' . $projectId);
 
                     $user = $database->getDocument('users', $userId);
 

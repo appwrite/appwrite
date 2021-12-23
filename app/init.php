@@ -785,7 +785,8 @@ App::setResource('dbForInternal', function($db, $cache, $project) {
     $cache = new Cache(new RedisCache($cache));
 
     $database = new Database(new MariaDB($db), $cache);
-    $database->setNamespace('project_'.$project->getId().'_internal');
+    $database->setDefaultDatabase('appwrite');
+    $database->setNamespace('_project_'.$project->getId());
 
     return $database;
 }, ['db', 'cache', 'project']);
@@ -794,7 +795,8 @@ App::setResource('dbForExternal', function($db, $cache, $project) {
     $cache = new Cache(new RedisCache($cache));
 
     $database = new Database(new MariaDB($db), $cache);
-    $database->setNamespace('project_'.$project->getId().'_external');
+    $database->setDefaultDatabase('appwrite');
+    $database->setNamespace('project_'.$project->getId());
 
     return $database;
 }, ['db', 'cache', 'project']);
@@ -803,7 +805,8 @@ App::setResource('dbForConsole', function($db, $cache) {
     $cache = new Cache(new RedisCache($cache));
 
     $database = new Database(new MariaDB($db), $cache);
-    $database->setNamespace('project_console_internal');
+    $database->setDefaultDatabase('appwrite');
+    $database->setNamespace('_console');
 
     return $database;
 }, ['db', 'cache']);

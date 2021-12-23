@@ -86,16 +86,16 @@ abstract class Worker
                 if (!$projectId) {
                     throw new \Exception('ProjectID not provided - cannot get database');
                 }
-                $namespace = "project_{$projectId}_internal";
+                $namespace = "project_{$projectId}";
                 break;
             case self::DATABASE_EXTERNAL:
                 if (!$projectId) {
                     throw new \Exception('ProjectID not provided - cannot get database');
                 }
-                $namespace = "project_{$projectId}_external";
+                $namespace = "project_{$projectId}";
                 break;
             case self::DATABASE_CONSOLE:
-                $namespace = "project_console_internal";
+                $namespace = "_console";
                 $sleep = 5; // ConsoleDB needs extra sleep time to ensure tables are created
                 break;
             default:
@@ -110,9 +110,10 @@ abstract class Worker
                 $attempts++;
                 $cache = new Cache(new RedisCache($register->get('cache')));
                 $database = new Database(new MariaDB($register->get('db')), $cache);
+                $database->setDefaultDatabase('appwrite');
                 $database->setNamespace($namespace); // Main DB
-                if (!$database->exists()) {
-                    throw new \Exception("Table does not exist: {$database->getNamespace()}");
+                if (!empty($projectId) && !$database->getDocument('projects', $projectId)->isEmpty()) {
+                    throw new \Exception("Project does not exist: {$projectId}");
                 }
                 break; // leave loop if successful
             } catch(\Exception $e) {

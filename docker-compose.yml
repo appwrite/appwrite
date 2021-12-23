@@ -71,7 +71,7 @@ services:
       - ./psalm.xml:/usr/src/code/psalm.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
-      # - ./vendor:/usr/src/code/vendor
+      - ./vendor:/usr/src/code/vendor
       - ./docs:/usr/src/code/docs
       - ./src:/usr/src/code/src
       # - ./debug:/tmp
@@ -441,7 +441,7 @@ services:
       - _APP_REDIS_PASS
 
   mariadb:
-    image: appwrite/mariadb:1.2.0 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     networks:
       - appwrite
