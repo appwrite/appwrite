@@ -759,10 +759,6 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
         }
     };
 
-    // if ($device->exists($tagPathTarget)) {
-    //     throw new Exception('Code is not readable: ' . $tagPathTarget);
-    // };
-
     /**
      * Limit CPU Usage - DONE
      * Limit Memory Usage - DONE
