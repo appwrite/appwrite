@@ -128,6 +128,60 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 $dbForConsole->createCollection($key, $attributes, $indexes);
             }
 
+            Console::success('[Setup] - Creating default bucket...');
+            $dbForConsole->createDocument('buckets', new Document([
+                '$id' => 'default',
+                '$collection' => 'buckets',
+                'dateCreated' => \time(),
+                'dateUpdated' => \time(),
+                'name' => 'Default',
+                'permission' => 'file',
+                'maximumFileSize' => App::getEnv('_APP_STORAGE_LIMIT', 0), // 10MB
+                'allowedFileExtensions' => [],
+                'enabled' => true,
+                'adapter' => '',
+                'encryption' => true,
+                'antiVirus' => true,
+                '$read' => [],
+                '$write' => [],
+                'search' => 'buckets Default',
+            ]));
+
+            Console::success('[Setup] - Creating files collection for default bucket...');
+            $files = $collections['file'] ?? [];
+            if(empty($files)) {
+                throw new Exception('Files collection is not configured.');
+            }
+
+            $attributes = [];
+            $indexes = [];
+
+            foreach ($files['attributes'] as $attribute) {
+                $attributes[] = new Document([
+                    '$id' => $attribute['$id'],
+                    'type' => $attribute['type'],
+                    'size' => $attribute['size'],
+                    'required' => $attribute['required'],
+                    'signed' => $attribute['signed'],
+                    'array' => $attribute['array'],
+                    'filters' => $attribute['filters'],
+                ]);
+            }
+
+            foreach ($files['indexes'] as $index) {
+                $indexes[] = new Document([
+                    '$id' => $index['$id'],
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]);
+            }
+
+            $dbForExternal = $app->getResource('dbForExternal'); /** @var Utopia\Database\Database $dbForExternal */
+
+            $dbForExternal->createCollection('bucket_' . 'default', $attributes, $indexes);
+
             Console::success('[Setup] - Server database init completed...');
         }
     });
