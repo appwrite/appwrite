@@ -166,7 +166,7 @@ App::post('/v1/database/collections')
         $collectionId = $collectionId == 'unique()' ? $dbForExternal->getId() : $collectionId;
 
         try {
-            $dbForExternal->createCollection($collectionId);
+            $dbForExternal->createCollection('collection_' . $collectionId);
 
             $collection = $dbForInternal->createDocument('collections', new Document([
                 '$id' => $collectionId,
@@ -402,7 +402,7 @@ App::get('/v1/database/:collectionId/usage')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Registry\Registry $register */
 
-        $collection = $dbForExternal->getCollection($collectionId);
+        $collection = $dbForExternal->getCollection('collection_' . $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
@@ -515,7 +515,7 @@ App::get('/v1/database/collections/:collectionId/logs')
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
 
-        $collection = $dbForExternal->getCollection($collectionId);
+        $collection = $dbForExternal->getCollection('collection_' . $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
@@ -680,7 +680,7 @@ App::delete('/v1/database/collections/:collectionId')
             throw new Exception('Failed to remove collection from DB', 500);
         }
 
-        $dbForExternal->deleteCachedCollection($collection->getId());
+        $dbForExternal->deleteCachedCollection('collection_' . $collection->getId());
 
         $deletes
             ->setParam('type', DELETE_TYPE_DOCUMENT)
@@ -1662,9 +1662,9 @@ App::post('/v1/database/collections/:collectionId/documents')
         try {
             if ($collection->getAttribute('permission') === 'collection') {
                 /** @var Document $document */
-                $document = Authorization::skip(fn() => $dbForExternal->createDocument($collectionId, new Document($data)));
+                $document = Authorization::skip(fn() => $dbForExternal->createDocument('collection_' . $collectionId, new Document($data)));
             } else {
-                $document = $dbForExternal->createDocument($collectionId, new Document($data));
+                $document = $dbForExternal->createDocument('collection_' . $collectionId, new Document($data));
             }
         }
         catch (StructureException $exception) {
@@ -1758,7 +1758,7 @@ App::get('/v1/database/collections/:collectionId/documents')
 
         $cursorDocument = null;
         if (!empty($cursor)) {
-            $cursorDocument = $dbForExternal->getDocument($collectionId, $cursor);
+            $cursorDocument = $dbForExternal->getDocument('collection_' . $collectionId, $cursor);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400);
@@ -1767,11 +1767,11 @@ App::get('/v1/database/collections/:collectionId/documents')
 
         if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document[] $documents */
-            $documents = Authorization::skip(fn() => $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection));
-            $sum = Authorization::skip(fn() => $dbForExternal->count($collectionId, $queries, APP_LIMIT_COUNT));
+            $documents = Authorization::skip(fn() => $dbForExternal->find('collection_' . $collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection));
+            $sum = Authorization::skip(fn() => $dbForExternal->count('collection_' . $collectionId, $queries, APP_LIMIT_COUNT));
         } else {
-            $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
-            $sum = $dbForExternal->count($collectionId, $queries, APP_LIMIT_COUNT);
+            $documents = $dbForExternal->find('collection_' . $collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
+            $sum = $dbForExternal->count('collection_' . $collectionId, $queries, APP_LIMIT_COUNT);
         }
 
         $usage
@@ -1830,9 +1830,9 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
 
         if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document $document */
-            $document = Authorization::skip(fn() => $dbForExternal->getDocument($collectionId, $documentId));
+            $document = Authorization::skip(fn() => $dbForExternal->getDocument('collection_' . $collectionId, $documentId));
         } else {
-            $document = $dbForExternal->getDocument($collectionId, $documentId);
+            $document = $dbForExternal->getDocument('collection_' . $collectionId, $documentId);
         }
 
         if ($document->isEmpty()) {
@@ -1881,7 +1881,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId/logs')
             throw new Exception('Collection not found', 404);
         }
 
-        $document = $dbForExternal->getDocument($collectionId, $documentId);
+        $document = $dbForExternal->getDocument('collection_' . $collectionId, $documentId);
 
         if ($document->isEmpty()) {
             throw new Exception('No document found', 404);
@@ -1992,9 +1992,9 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
                 throw new Exception('Unauthorized permissions', 401);
             }
 
-            $document = Authorization::skip(fn() => $dbForExternal->getDocument($collectionId, $documentId));
+            $document = Authorization::skip(fn() => $dbForExternal->getDocument('collection_' . $collectionId, $documentId));
         } else {
-            $document = $dbForExternal->getDocument($collectionId, $documentId);
+            $document = $dbForExternal->getDocument('collection_' . $collectionId, $documentId);
         }
 
 
@@ -2038,9 +2038,9 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         try {
             if ($collection->getAttribute('permission') === 'collection') {
                 /** @var Document $document */
-                $document = Authorization::skip(fn() => $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data)));
+                $document = Authorization::skip(fn() => $dbForExternal->updateDocument('collection_' . $collection->getId(), $document->getId(), new Document($data)));
             } else {
-                $document = $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data));
+                $document = $dbForExternal->updateDocument('collection_' . $collection->getId(), $document->getId(), new Document($data));
             }
         }
         catch (AuthorizationException $exception) {
@@ -2118,9 +2118,9 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
 
         if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document $document */
-            $document = Authorization::skip(fn() => $dbForExternal->getDocument($collectionId, $documentId));
+            $document = Authorization::skip(fn() => $dbForExternal->getDocument('collection_' . $collectionId, $documentId));
         } else {
-            $document = $dbForExternal->getDocument($collectionId, $documentId);
+            $document = $dbForExternal->getDocument('collection_' . $collectionId, $documentId);
         }
 
         if ($document->isEmpty()) {
@@ -2128,12 +2128,12 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         }
 
         if ($collection->getAttribute('permission') === 'collection') {
-            Authorization::skip(fn() => $dbForExternal->deleteDocument($collectionId, $documentId));
+            Authorization::skip(fn() => $dbForExternal->deleteDocument('collection_' . $collectionId, $documentId));
         } else {
             $dbForExternal->deleteDocument($collectionId, $documentId);
         }
 
-        $dbForExternal->deleteCachedDocument($collectionId, $documentId);
+        $dbForExternal->deleteCachedDocument('collection_' . $collectionId, $documentId);
 
         $usage
             ->setParam('database.documents.delete', 1)

@@ -87,7 +87,7 @@ class DatabaseV1 extends Worker
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if(!$dbForExternal->createAttribute($collectionId, $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
+            if(!$dbForExternal->createAttribute('collection_' . $collectionId, $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
                 throw new Exception('Failed to create Attribute');
             }
             $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
@@ -137,7 +137,7 @@ class DatabaseV1 extends Worker
         // - failed: attribute was never created
         // - stuck: attribute was available but cannot be removed
         try {
-            if($status !== 'failed' && !$dbForExternal->deleteAttribute($collectionId, $key)) {
+            if($status !== 'failed' && !$dbForExternal->deleteAttribute('collection_' . $collectionId, $key)) {
                 throw new Exception('Failed to delete Attribute');
             }
             $dbForInternal->deleteDocument('attributes', $attribute->getId());
@@ -235,7 +235,7 @@ class DatabaseV1 extends Worker
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if(!$dbForExternal->createIndex($collectionId, $key, $type, $attributes, $lengths, $orders)) {
+            if(!$dbForExternal->createIndex('collection_' . $collectionId, $key, $type, $attributes, $lengths, $orders)) {
                 throw new Exception('Failed to create Index');
             }
             $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
@@ -279,7 +279,7 @@ class DatabaseV1 extends Worker
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if($status !== 'failed' && !$dbForExternal->deleteIndex($collectionId, $key)) {
+            if($status !== 'failed' && !$dbForExternal->deleteIndex('collection_' . $collectionId, $key)) {
                 throw new Exception('Failed to delete index');
             }
             $dbForInternal->deleteDocument('indexes', $index->getId());

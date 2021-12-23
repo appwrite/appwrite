@@ -2142,12 +2142,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "f4e02988c2dc4385c08dbb318c81462d5188ed8e"
+                "reference": "414178de818ce50832d26b4f4826f10fef64c740"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/f4e02988c2dc4385c08dbb318c81462d5188ed8e",
-                "reference": "f4e02988c2dc4385c08dbb318c81462d5188ed8e",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/414178de818ce50832d26b4f4826f10fef64c740",
+                "reference": "414178de818ce50832d26b4f4826f10fef64c740",
                 "shasum": ""
             },
             "require": {
@@ -2197,7 +2197,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-database-and-namespace"
             },
-            "time": "2021-12-23T20:51:18+00:00"
+            "time": "2021-12-23T22:38:30+00:00"
         },
         {
             "name": "utopia-php/domains",
