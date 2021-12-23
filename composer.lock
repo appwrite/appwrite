@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f546dc6dcc6af7ccdb62435aed4fc0ca",
+    "content-hash": "3410f6496e9bb8fd1dd0d996abf4a94f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1820,22 +1820,22 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.6.3",
+            "version": "dev-feat-use-namespace-as-table-prefix",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "d63e928c2c50b367495a499a85ba9806ee274c5e"
+                "reference": "340774ba29828d0570ab9d91eadcd31e7a52d5d4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/d63e928c2c50b367495a499a85ba9806ee274c5e",
-                "reference": "d63e928c2c50b367495a499a85ba9806ee274c5e",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/340774ba29828d0570ab9d91eadcd31e7a52d5d4",
+                "reference": "340774ba29828d0570ab9d91eadcd31e7a52d5d4",
                 "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
-                "php": ">=7.4",
-                "utopia-php/database": ">=0.6 <1.0"
+                "php": ">=8.0",
+                "utopia-php/database": "dev-feat-database-and-namespace as 0.13.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.4",
@@ -1867,9 +1867,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.6.3"
+                "source": "https://github.com/utopia-php/abuse/tree/feat-use-namespace-as-table-prefix"
             },
-            "time": "2021-08-16T18:38:31+00:00"
+            "time": "2021-12-23T21:21:10+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1928,22 +1928,22 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.7.0",
+            "version": "dev-feat-use-namespace-as-table-prefix",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "485cdd2354db7eb8f7aa74bbe39c39b583e99c04"
+                "reference": "02681f6b0bd048348c758c06ebfcc5e05f7c19e1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/485cdd2354db7eb8f7aa74bbe39c39b583e99c04",
-                "reference": "485cdd2354db7eb8f7aa74bbe39c39b583e99c04",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/02681f6b0bd048348c758c06ebfcc5e05f7c19e1",
+                "reference": "02681f6b0bd048348c758c06ebfcc5e05f7c19e1",
                 "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
-                "php": ">=7.4",
-                "utopia-php/database": ">=0.11 <1.0"
+                "php": ">=8.0",
+                "utopia-php/database": "dev-feat-database-and-namespace as 0.13.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1975,9 +1975,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.7.0"
+                "source": "https://github.com/utopia-php/audit/tree/feat-use-namespace-as-table-prefix"
             },
-            "time": "2021-11-17T17:23:42+00:00"
+            "time": "2021-12-23T21:11:58+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -2142,12 +2142,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "dce7c47b51cd5b4ccbdf87e192be13b22c8a25e1"
+                "reference": "f4e02988c2dc4385c08dbb318c81462d5188ed8e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/dce7c47b51cd5b4ccbdf87e192be13b22c8a25e1",
-                "reference": "dce7c47b51cd5b4ccbdf87e192be13b22c8a25e1",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/f4e02988c2dc4385c08dbb318c81462d5188ed8e",
+                "reference": "f4e02988c2dc4385c08dbb318c81462d5188ed8e",
                 "shasum": ""
             },
             "require": {
@@ -2197,7 +2197,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-database-and-namespace"
             },
-            "time": "2021-12-22T20:55:21+00:00"
+            "time": "2021-12-23T20:51:18+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -6498,6 +6498,18 @@
     ],
     "aliases": [
         {
+            "package": "utopia-php/abuse",
+            "version": "dev-feat-use-namespace-as-table-prefix",
+            "alias": "0.7.0",
+            "alias_normalized": "0.7.0.0"
+        },
+        {
+            "package": "utopia-php/audit",
+            "version": "dev-feat-use-namespace-as-table-prefix",
+            "alias": "0.8.0",
+            "alias_normalized": "0.8.0.0"
+        },
+        {
             "package": "utopia-php/database",
             "version": "dev-feat-database-and-namespace",
             "alias": "0.13.0",
@@ -6506,6 +6518,8 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
+        "utopia-php/abuse": 20,
+        "utopia-php/audit": 20,
         "utopia-php/database": 20
     },
     "prefer-stable": false,
