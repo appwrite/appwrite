@@ -13,6 +13,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Audit\Audit;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Swoole\Files;
 use Utopia\Swoole\Request;
@@ -94,6 +95,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $adapter->setup();
 
             foreach ($collections as $key => $collection) {
+                if(($collection['$collection'] ?? '') !== Database::METADATA) {
+                    continue;
+                }
                 Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
 
                 $attributes = [];

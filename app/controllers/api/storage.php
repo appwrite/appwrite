@@ -71,7 +71,7 @@ App::post('/v1/storage/buckets')
 
         $bucketId = $bucketId === 'unique()' ? $dbForInternal->getId() : $bucketId;
         try {
-            $files = Config::getParam('subCollections', [])['files'] ?? [];
+            $files = Config::getParam('collections', [])['files'] ?? [];
             if(empty($files)) {
                 throw new Exception('Files collection is not configured.');
             }
