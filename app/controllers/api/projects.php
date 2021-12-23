@@ -106,10 +106,9 @@ App::post('/v1/projects')
 
         $collections = Config::getParam('collections', []); /** @var array $collections */
 
-        $dbForInternal->setNamespace('project_' . $project->getId() . '_internal');
-        $dbForInternal->create();
-        $dbForExternal->setNamespace('project_' . $project->getId() . '_external');
-        $dbForExternal->create();
+        $dbForInternal->setNamespace('_project_' . $project->getId());
+        $dbForExternal->setNamespace('_project_' . $project->getId());
+        $dbForExternal->create('appwrite');
 
         $audit = new Audit($dbForInternal);
         $audit->setup();
