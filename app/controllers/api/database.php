@@ -2130,7 +2130,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         if ($collection->getAttribute('permission') === 'collection') {
             Authorization::skip(fn() => $dbForExternal->deleteDocument('collection_' . $collectionId, $documentId));
         } else {
-            $dbForExternal->deleteDocument($collectionId, $documentId);
+            $dbForExternal->deleteDocument('collection_' . $collectionId, $documentId);
         }
 
         $dbForExternal->deleteCachedDocument('collection_' . $collectionId, $documentId);
