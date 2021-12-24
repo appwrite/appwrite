@@ -268,7 +268,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         return;
                     }
 
-                    [$database, $returnDatabase] = getDatabase($register, 'project_' . $projectId);
+                    [$database, $returnDatabase] = getDatabase($register, '_project_' . $projectId);
 
                     $user = $database->getDocument('users', $userId);
 
