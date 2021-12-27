@@ -1728,7 +1728,9 @@ App::get('/v1/database/collections/:collectionId/documents')
 
         $cursorDocument = null;
         if (!empty($cursor)) {
-            $cursorDocument = $dbForProject->getDocument('collection_' . $collectionId, $cursor);
+            $cursorDocument = $collection->getAttribute('permission') === 'collection'
+                ? Authorization::skip(fn () => $dbForProject->getDocument('collection_' . $collectionId, $cursor))
+                : $dbForProject->getDocument('collection_' . $collectionId, $cursor);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400);
