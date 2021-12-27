@@ -341,7 +341,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
-        $database->setNamespace('project_' . $project->getId() . '_internal');
+        $database->setDefaultDatabase('appwrite');
+        $database->setNamespace('_project_' . $project->getId());
 
         /*
          *  Project Check
@@ -445,7 +446,8 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
-        $database->setNamespace('project_' . $realtime->connections[$connection]['projectId'] . '_internal');
+        $database->setDefaultDatabase('appwrite');
+        $database->setNamespace('_project_' . $realtime->connections[$connection]['projectId']);
 
         /*
          * Abuse Check
