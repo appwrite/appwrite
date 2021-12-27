@@ -1177,13 +1177,13 @@ App::get('/v1/database/collections/:collectionId/attributes/:key')
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
-        if (empty($collection)) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
-        $attribute = $collection->find('$id', $key, 'attributes');
+        $attribute = $dbForProject->getDocument('attributes', $collectionId.'_'.$key);
 
-        if (!$attribute) {
+        if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404);
         }
 
@@ -1245,7 +1245,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
 
         $attribute = $dbForProject->getDocument('attributes', $collectionId.'_'.$key);
 
-        if (empty($attribute->getId())) {
+        if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404);
         }
 
