@@ -301,23 +301,21 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
     /** @var Utopia\Logger\Logger $logger */
     /** @var Utopia\Logger\Log\Breadcrumb[] $loggerBreadcrumbs */
 
-    $user = null;
-    /** @var Appwrite\Database\Document $user */
-
-    try {
-        $user = $utopia->getResource('user');
-    } catch(\Throwable $th) {
-        // All good, user is optional information for logger
-    }
-
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
     $route = $utopia->match($request);
 
     if($logger) {
         if($error->getCode() >= 500 || $error->getCode() === 0) {
+            try {
+                $user = $utopia->getResource('user');
+                /** @var Appwrite\Database\Document $user */
+            } catch(\Throwable $th) {
+                // All good, user is optional information for logger
+            }
+
             $log = new Utopia\Logger\Log();
 
-            if($user !== null && !$user->isEmpty()) {
+            if(isset($user) && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
             }
 

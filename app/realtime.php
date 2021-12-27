@@ -79,6 +79,11 @@ $logError = function(Throwable $error, string $action) use ($register) {
 
     $responseCode = $logger->addLog($log);
     Console::info('Realtime log pushed with status code: '.$responseCode);
+
+    Console::error('[Error] Type: ' . get_class($error));
+    Console::error('[Error] Message: ' . $error->getMessage());
+    Console::error('[Error] File: ' . $error->getFile());
+    Console::error('[Error] Line: ' . $error->getLine());
 };
 
 $server->error($logError);
@@ -126,11 +131,6 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId,
             $documentId = $document->getId();
         } catch (\Throwable $th) {
             call_user_func($logError, $th, "createWorkerDocument");
-
-            Console::error('[Error] Type: ' . get_class($th));
-            Console::error('[Error] Message: ' . $th->getMessage());
-            Console::error('[Error] File: ' . $th->getFile());
-            Console::error('[Error] Line: ' . $th->getLine());
         } finally {
             call_user_func($returnConsoleDb);
         }
@@ -191,11 +191,6 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId,
             ]);
         } catch (\Throwable $th) {
             call_user_func($logError, $th, "updateWorkerDocument");
-
-            Console::error('[Error] Type: ' . get_class($th));
-            Console::error('[Error] Message: ' . $th->getMessage());
-            Console::error('[Error] File: ' . $th->getFile());
-            Console::error('[Error] Line: ' . $th->getLine());
         } finally {
             call_user_func($returnConsoleDb);
         }

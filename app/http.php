@@ -98,21 +98,21 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     } catch (\Throwable $th) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
-        $user = null;
-        try {
-            $user = $app->getResource('user');
-        } catch(\Throwable $_th) {
-            // All good, user is optional information for logger
-        }
-
         $logger = $app->getResource("logger");
         if($logger) {
+            try {
+                $user = $app->getResource('user');
+                /** @var Appwrite\Database\Document $user */
+            } catch(\Throwable $_th) {
+                // All good, user is optional information for logger
+            }
+
             $loggerBreadcrumbs = $app->getResource("loggerBreadcrumbs");
             $route = $app->match($request);
 
             $log = new Utopia\Logger\Log();
 
-            if($user !== null && !$user->isEmpty()) {
+            if(isset($user) && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
             }
 
