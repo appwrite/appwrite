@@ -1621,6 +1621,8 @@ App::post('/v1/database/collections/:collectionId/documents')
 
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
+         * 
+         * @var Document $collection
          */
         $collection = Authorization::skip(fn() => $dbForInternal->getDocument('collections', $collectionId));
 
@@ -1666,6 +1668,7 @@ App::post('/v1/database/collections/:collectionId/documents')
             } else {
                 $document = $dbForExternal->createDocument('collection_' . $collectionId, new Document($data));
             }
+            $document->setAttribute('$collection', $collectionId);
         }
         catch (StructureException $exception) {
             throw new Exception($exception->getMessage(), 400);
@@ -1774,6 +1777,11 @@ App::get('/v1/database/collections/:collectionId/documents')
             $sum = $dbForExternal->count('collection_' . $collectionId, $queries, APP_LIMIT_COUNT);
         }
 
+        /**
+         * Reset $collection attribute to remove prefix.
+         */
+        $documents = array_map(fn(Document $document) => $document->setAttribute('$collection', $collectionId), $documents);
+
         $usage
             ->setParam('database.documents.read', 1)
             ->setParam('collectionId', $collectionId)
@@ -1834,6 +1842,11 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
         } else {
             $document = $dbForExternal->getDocument('collection_' . $collectionId, $documentId);
         }
+
+        /**
+         * Reset $collection attribute to remove prefix.
+         */
+        $document->setAttribute('$collection', $collectionId);
 
         if ($document->isEmpty()) {
             throw new Exception('No document found', 404);
@@ -2042,6 +2055,10 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
             } else {
                 $document = $dbForExternal->updateDocument('collection_' . $collection->getId(), $document->getId(), new Document($data));
             }
+            /**
+             * Reset $collection attribute to remove prefix.
+             */
+            $document->setAttribute('$collection', $collectionId);
         }
         catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401);
@@ -2134,6 +2151,11 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         }
 
         $dbForExternal->deleteCachedDocument('collection_' . $collectionId, $documentId);
+
+        /**
+         * Reset $collection attribute to remove prefix.
+         */
+        $document->setAttribute('$collection', $collectionId);
 
         $usage
             ->setParam('database.documents.delete', 1)

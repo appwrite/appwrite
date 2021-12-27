@@ -827,6 +827,10 @@ trait DatabaseBase
         $this->assertEquals(2019, $documents['body']['documents'][2]['releaseYear']);
         $this->assertCount(3, $documents['body']['documents']);
 
+        foreach ($documents['body']['documents'] as $document) {
+            $this->assertEquals($data['moviesId'], $document['$collection']);
+        }
+
         $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -841,7 +845,28 @@ trait DatabaseBase
         $this->assertEquals(2019, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(3, $documents['body']['documents']);
 
-        return [];
+        return $documents['body']['documents'];
+    }
+
+    /**
+     * @depends testListDocuments
+     */
+    public function testGetDocument(array $documents): void
+    {
+        foreach ($documents as $document) {
+            $response = $this->client->call(Client::METHOD_GET, '/database/collections/' . $document['$collection'] . '/documents/' . $document['$id'], array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals($response['headers']['status-code'], 200);
+            $this->assertEquals($response['body']['$id'], $document['$id']);
+            $this->assertEquals($response['body']['$collection'], $document['$collection']);
+            $this->assertEquals($response['body']['title'], $document['title']);
+            $this->assertEquals($response['body']['releaseYear'], $document['releaseYear']);
+            $this->assertEquals($response['body']['$read'], $document['$read']);
+            $this->assertEquals($response['body']['$write'], $document['$write']);
+        }
     }
 
     /**
@@ -1218,6 +1243,8 @@ trait DatabaseBase
         ]);
 
         $this->assertEquals($document['headers']['status-code'], 200);
+        $this->assertEquals($document['body']['$id'], $id);
+        $this->assertEquals($document['body']['$collection'], $data['moviesId']);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnarok');
         $this->assertEquals($document['body']['releaseYear'], 2017);
         $this->assertEquals('role:member', $document['body']['$read'][0]);
@@ -1280,7 +1307,7 @@ trait DatabaseBase
         ], $this->getHeaders()));
 
         $this->assertEquals($document['headers']['status-code'], 404);
-        
+
         return $data;
     }
 
