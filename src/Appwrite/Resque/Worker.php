@@ -21,8 +21,7 @@ abstract class Worker
     const MAX_ATTEMPTS = 10;
     const SLEEP_TIME = 2;
 
-    const DATABASE_INTERNAL = 'internal';
-    const DATABASE_EXTERNAL = 'external';
+    const DATABASE_PROJECT = 'project';
     const DATABASE_CONSOLE = 'console';
 
     public function setUp(): void
@@ -44,19 +43,9 @@ abstract class Worker
      * @param string $projectId
      * @return Database
      */
-    protected function getInternalDB(string $projectId): Database
+    protected function getProjectDB(string $projectId): Database
     {
-        return $this->getDB(self::DATABASE_INTERNAL, $projectId);
-    }
-
-    /**
-     * Get external project database
-     * @param string $projectId
-     * @return Database
-     */
-    protected function getExternalDB(string $projectId): Database
-    {
-        return $this->getDB(self::DATABASE_EXTERNAL, $projectId);
+        return $this->getDB(self::DATABASE_PROJECT, $projectId);
     }
 
     /**
@@ -82,13 +71,7 @@ abstract class Worker
         $sleep = self::SLEEP_TIME; // overwritten when necessary
 
         switch ($type) {
-            case self::DATABASE_INTERNAL:
-                if (!$projectId) {
-                    throw new \Exception('ProjectID not provided - cannot get database');
-                }
-                $namespace = "_project_{$projectId}";
-                break;
-            case self::DATABASE_EXTERNAL:
+            case self::DATABASE_PROJECT:
                 if (!$projectId) {
                     throw new \Exception('ProjectID not provided - cannot get database');
                 }

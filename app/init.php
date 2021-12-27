@@ -602,7 +602,7 @@ App::setResource('usage', function($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
 
-App::setResource('clients', function($request, $console, $project) {
+App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => 'platforms',
         'name' => 'Current Host',
@@ -614,34 +614,35 @@ App::setResource('clients', function($request, $console, $project) {
      * Get All verified client URLs for both console and current projects
      * + Filter for duplicated entries
      */
-    $clientsConsole = \array_map(function ($node) {
-        return $node['hostname'];
-    }, \array_filter($console->getAttribute('platforms', []), function ($node) {
-        if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
-            return true;
-        }
+    $clientsConsole = \array_map(
+        fn ($node) => $node['hostname'],
+        \array_filter(
+            $console->getAttribute('platforms', []),
+            fn ($node) => (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname']))
+        )
+    );
 
-        return false;
-    }));
-
-    $clients = \array_unique(\array_merge($clientsConsole, \array_map(function ($node) {
-        return $node['hostname'];
-    }, \array_filter($project->getAttribute('platforms', []), function ($node) {
-        if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
-            return true;
-        }
-
-        return false;
-    }))));
+    $clients = \array_unique(
+        \array_merge(
+            $clientsConsole,
+            \array_map(
+                fn ($node) => $node['hostname'],
+                \array_filter(
+                    $project->getAttribute('platforms', []),
+                    fn ($node) => (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname']))
+                )
+            )
+        )
+    );
 
     return $clients;
 }, ['request', 'console', 'project']);
 
-App::setResource('user', function($mode, $project, $console, $request, $response, $dbForInternal, $dbForConsole) {
+App::setResource('user', function($mode, $project, $console, $request, $response, $dbForProject, $dbForConsole) {
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $project */
-    /** @var Utopia\Database\Database $dbForInternal */
+    /** @var Utopia\Database\Database $dbForProject */
     /** @var Utopia\Database\Database $dbForConsole */
     /** @var string $mode */
 
@@ -675,7 +676,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
             $user = new Document(['$id' => '', '$collection' => 'users']);
         }
         else {
-            $user = $dbForInternal->getDocument('users', Auth::$unique);
+            $user = $dbForProject->getDocument('users', Auth::$unique);
         }
     }
     else {
@@ -710,7 +711,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         $jwtSessionId = $payload['sessionId'] ?? '';
 
         if($jwtUserId && $jwtSessionId) {
-            $user = $dbForInternal->getDocument('users', $jwtUserId);
+            $user = $dbForProject->getDocument('users', $jwtUserId);
         }
 
         if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
@@ -719,7 +720,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     }
 
     return $user;
-}, ['mode', 'project', 'console', 'request', 'response', 'dbForInternal', 'dbForConsole']);
+}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForConsole']);
 
 App::setResource('project', function($dbForConsole, $request, $console) {
     /** @var Utopia\Swoole\Request $request */
@@ -781,17 +782,7 @@ App::setResource('console', function() {
     ]);
 }, []);
 
-App::setResource('dbForInternal', function($db, $cache, $project) {
-    $cache = new Cache(new RedisCache($cache));
-
-    $database = new Database(new MariaDB($db), $cache);
-    $database->setDefaultDatabase('appwrite');
-    $database->setNamespace('_project_'.$project->getId());
-
-    return $database;
-}, ['db', 'cache', 'project']);
-
-App::setResource('dbForExternal', function($db, $cache, $project) {
+App::setResource('dbForProject', function($db, $cache, $project) {
     $cache = new Cache(new RedisCache($cache));
 
     $database = new Database(new MariaDB($db), $cache);
