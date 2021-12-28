@@ -78,54 +78,70 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 
         $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
 
-        if(!$dbForConsole->exists()) {
-            Console::success('[Setup] - Server database init started...');
+        Console::success('[Setup] - Server database init started...');
+        $collections = Config::getParam('collections', []); /** @var array $collections */
 
-            $collections = Config::getParam('collections', []); /** @var array $collections */
-
+        if(!$dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'))) {
             $redis->flushAll();
 
-            $dbForConsole->create();
+            Console::success('[Setup] - Creating database: appwrite...');
 
+            $dbForConsole->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        }
+
+        try {
+            Console::success('[Setup] - Creating metadata table: appwrite...');
+            $dbForConsole->createMetadata();
+        } catch (\Throwable $th) {
+            Console::success('[Setup] - Skip: metadata table already exists');
+        }
+
+        if($dbForConsole->getCollection(Audit::COLLECTION)->isEmpty()) {
             $audit = new Audit($dbForConsole);
             $audit->setup();
+        }
 
+        if ($dbForConsole->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
             $adapter = new TimeLimit("", 0, 1, $dbForConsole);
             $adapter->setup();
+        }
 
-            foreach ($collections as $key => $collection) {
-                Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
-
-                $attributes = [];
-                $indexes = [];
-
-                foreach ($collection['attributes'] as $attribute) {
-                    $attributes[] = new Document([
-                        '$id' => $attribute['$id'],
-                        'type' => $attribute['type'],
-                        'size' => $attribute['size'],
-                        'required' => $attribute['required'],
-                        'signed' => $attribute['signed'],
-                        'array' => $attribute['array'],
-                        'filters' => $attribute['filters'],
-                    ]);
-                }
-
-                foreach ($collection['indexes'] as $index) {
-                    $indexes[] = new Document([
-                        '$id' => $index['$id'],
-                        'type' => $index['type'],
-                        'attributes' => $index['attributes'],
-                        'lengths' => $index['lengths'],
-                        'orders' => $index['orders'],
-                    ]);
-                }
-
-                $dbForConsole->createCollection($key, $attributes, $indexes);
+        foreach ($collections as $key => $collection) {
+            if(!$dbForConsole->getCollection($key)->isEmpty()) {
+                continue;
             }
 
-            Console::success('[Setup] - Server database init completed...');
+            Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
+
+            $attributes = [];
+            $indexes = [];
+
+            foreach ($collection['attributes'] as $attribute) {
+                $attributes[] = new Document([
+                    '$id' => $attribute['$id'],
+                    'type' => $attribute['type'],
+                    'size' => $attribute['size'],
+                    'required' => $attribute['required'],
+                    'signed' => $attribute['signed'],
+                    'array' => $attribute['array'],
+                    'filters' => $attribute['filters'],
+                ]);
+            }
+
+            foreach ($collection['indexes'] as $index) {
+                $indexes[] = new Document([
+                    '$id' => $index['$id'],
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]);
+            }
+
+            $dbForConsole->createCollection($key, $attributes, $indexes);
+
         }
+        Console::success('[Setup] - Server database init completed...');
     });
 
     Console::success('Server started successfully (max payload is '.number_format($payloadSize).' bytes)');

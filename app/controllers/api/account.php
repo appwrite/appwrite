@@ -51,14 +51,14 @@ App::post('/v1/account')
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($userId, $email, $password, $name, $request, $response, $project, $dbForInternal, $audits, $usage) {
+    ->action(function ($userId, $email, $password, $name, $request, $response, $project, $dbForProject, $audits, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
@@ -79,7 +79,7 @@ App::post('/v1/account')
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
         if ($limit !== 0) {
-            $sum = $dbForInternal->count('users', [
+            $sum = $dbForProject->count('users', [
                 new Query('deleted', Query::TYPE_EQUAL, [false]),
             ], APP_LIMIT_USERS);
 
@@ -89,8 +89,8 @@ App::post('/v1/account')
         }
 
         try {
-            $userId = $userId == 'unique()' ? $dbForInternal->getId() : $userId;
-            $user = Authorization::skip(fn() => $dbForInternal->createDocument('users', new Document([
+            $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
+            $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
                 '$id' => $userId,
                 '$read' => ['role:all'],
                 '$write' => ['user:' . $userId],
@@ -102,7 +102,7 @@ App::post('/v1/account')
                 'registration' => \time(),
                 'reset' => false,
                 'name' => $name,
-                'prefs' => [],
+                'prefs' => new \stdClass(),
                 'sessions' => [],
                 'tokens' => [],
                 'memberships' => [],
@@ -149,15 +149,15 @@ App::post('/v1/account/sessions')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->inject('request')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($email, $password, $request, $response, $dbForInternal, $locale, $geodb, $audits, $usage) {
+    ->action(function ($email, $password, $request, $response, $dbForProject, $locale, $geodb, $audits, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
@@ -166,7 +166,7 @@ App::post('/v1/account/sessions')
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
-        $profile = $dbForInternal->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+        $profile = $dbForProject->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
         if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
             $audits
@@ -188,7 +188,7 @@ App::post('/v1/account/sessions')
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge(
             [
-                '$id' => $dbForInternal->getId(),
+                '$id' => $dbForProject->getId(),
                 'userId' => $profile->getId(),
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => $email,
@@ -202,13 +202,13 @@ App::post('/v1/account/sessions')
 
         Authorization::setRole('user:' . $profile->getId());
 
-        $session = $dbForInternal->createDocument('sessions', $session
+        $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$read', ['user:' . $profile->getId()])
             ->setAttribute('$write', ['user:' . $profile->getId()])
         );
 
         $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
-        $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile);
+        $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile);
 
         $audits
             ->setParam('userId', $profile->getId())
@@ -376,17 +376,17 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('response')
     ->inject('project')
     ->inject('user')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('geodb')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $dbForInternal, $geodb, $audits, $events, $usage) use ($oauthDefaultSuccess) {
+    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $dbForProject, $geodb, $audits, $events, $usage) use ($oauthDefaultSuccess) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
@@ -458,13 +458,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 if ($current === $session['$id']) {
                     unset($sessions[$key]);
 
-                    $dbForInternal->deleteDocument('sessions', $session->getId());
-                    $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
+                    $dbForProject->deleteDocument('sessions', $session->getId());
+                    $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
                 }
             }
         }
 
-        $user = ($user->isEmpty()) ? $dbForInternal->findOne('sessions', [ // Get user by provider id
+        $user = ($user->isEmpty()) ? $dbForProject->findOne('sessions', [ // Get user by provider id
             new Query('provider', QUERY::TYPE_EQUAL, [$provider]),
             new Query('providerUid', QUERY::TYPE_EQUAL, [$oauth2ID]),
         ]) : $user;
@@ -473,13 +473,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $name = $oauth2->getUserName($accessToken);
             $email = $oauth2->getUserEmail($accessToken);
 
-            $user = $dbForInternal->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+            $user = $dbForProject->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
             if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
                 if ($limit !== 0) {
-                    $sum = $dbForInternal->count('users', [ new Query('deleted', Query::TYPE_EQUAL, [false]),], APP_LIMIT_COUNT);
+                    $sum = $dbForProject->count('users', [ new Query('deleted', Query::TYPE_EQUAL, [false]),], APP_LIMIT_COUNT);
 
                     if ($sum >= $limit) {
                         throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
@@ -487,8 +487,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 }
 
                 try {
-                    $userId = $dbForInternal->getId();
-                    $user = Authorization::skip(fn() => $dbForInternal->createDocument('users', new Document([
+                    $userId = $dbForProject->getId();
+                    $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
                         '$id' => $userId,
                         '$read' => ['role:all'],
                         '$write' => ['user:' . $userId],
@@ -500,7 +500,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'registration' => \time(),
                         'reset' => false,
                         'name' => $name,
-                        'prefs' => [],
+                        'prefs' => new \stdClass(),
                         'sessions' => [],
                         'tokens' => [],
                         'memberships' => [],
@@ -524,7 +524,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $secret = Auth::tokenGenerator();
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $session = new Document(array_merge([
-            '$id' => $dbForInternal->getId(),
+            '$id' => $dbForProject->getId(),
             'userId' => $user->getId(),
             'provider' => $provider,
             'providerUid' => $oauth2ID,
@@ -552,12 +552,12 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         Authorization::setRole('user:' . $user->getId());
 
-        $session = $dbForInternal->createDocument('sessions', $session
+        $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$read', ['user:' . $user->getId()])
             ->setAttribute('$write', ['user:' . $user->getId()])
         );
 
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $audits
             ->setParam('userId', $user->getId())
@@ -621,16 +621,16 @@ App::post('/v1/account/sessions/magic-url')
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('locale')
     ->inject('audits')
     ->inject('events')
     ->inject('mails')
-    ->action(function ($userId, $email, $url, $request, $response, $project, $dbForInternal, $locale, $audits, $events, $mails) {
+    ->action(function ($userId, $email, $url, $request, $response, $project, $dbForProject, $locale, $audits, $events, $mails) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
@@ -644,13 +644,13 @@ App::post('/v1/account/sessions/magic-url')
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
-        $user = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]);
+        $user = $dbForProject->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]);
 
         if (!$user) {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if ($limit !== 0) {
-                $sum = $dbForInternal->count('users', [
+                $sum = $dbForProject->count('users', [
                     new Query('deleted', Query::TYPE_EQUAL, [false]),
                 ], APP_LIMIT_COUNT);
 
@@ -659,9 +659,9 @@ App::post('/v1/account/sessions/magic-url')
                 }
             }
 
-            $userId = $userId == 'unique()' ? $dbForInternal->getId() : $userId;
+            $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
 
-            $user = Authorization::skip(fn () => $dbForInternal->createDocument('users', new Document([
+            $user = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
                 '$id' => $userId,
                 '$read' => ['role:all'],
                 '$write' => ['user:' . $userId],
@@ -672,7 +672,7 @@ App::post('/v1/account/sessions/magic-url')
                 'passwordUpdate' => \time(),
                 'registration' => \time(),
                 'reset' => false,
-                'prefs' => [],
+                'prefs' => new \stdClass(),
                 'sessions' => [],
                 'tokens' => [],
                 'memberships' => [],
@@ -689,7 +689,7 @@ App::post('/v1/account/sessions/magic-url')
         $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
 
         $token = new Document([
-            '$id' => $dbForInternal->getId(),
+            '$id' => $dbForProject->getId(),
             'userId' => $user->getId(),
             'type' => Auth::TOKEN_TYPE_MAGIC_URL,
             'secret' => Auth::hash($loginSecret), // One way hash encryption to protect DB leak
@@ -702,7 +702,7 @@ App::post('/v1/account/sessions/magic-url')
 
         $user->setAttribute('tokens', $token, Document::SET_TYPE_APPEND);
 
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         if (false === $user) {
             throw new Exception('Failed to save user to DB', 500);
@@ -766,21 +766,21 @@ App::put('/v1/account/sessions/magic-url')
     ->param('secret', '', new Text(256), 'Valid verification token.')
     ->inject('request')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($userId, $secret, $request, $response, $dbForInternal, $locale, $geodb, $audits) {
+    ->action(function ($userId, $secret, $request, $response, $dbForProject, $locale, $geodb, $audits) {
         /** @var string $userId */
         /** @var string $secret */
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
 
-        $user = $dbForInternal->getDocument('users', $userId);
+        $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
@@ -798,7 +798,7 @@ App::put('/v1/account/sessions/magic-url')
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $session = new Document(array_merge(
             [
-                '$id' => $dbForInternal->getId(),
+                '$id' => $dbForProject->getId(),
                 'userId' => $user->getId(),
                 'provider' => Auth::SESSION_PROVIDER_MAGIC_URL,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
@@ -814,7 +814,7 @@ App::put('/v1/account/sessions/magic-url')
 
         Authorization::setRole('user:' . $user->getId());
 
-        $session = $dbForInternal->createDocument('sessions', $session
+        $session = $dbForProject->createDocument('sessions', $session
                 ->setAttribute('$read', ['user:' . $user->getId()])
                 ->setAttribute('$write', ['user:' . $user->getId()])
         );
@@ -836,7 +836,7 @@ App::put('/v1/account/sessions/magic-url')
             ->setAttribute('tokens', $tokens);
 
 
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
@@ -894,17 +894,17 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('locale')
     ->inject('user')
     ->inject('project')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('geodb')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($request, $response, $locale, $user, $project, $dbForInternal, $geodb, $audits, $usage) {
+    ->action(function ($request, $response, $locale, $user, $project, $dbForProject, $geodb, $audits, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
@@ -922,7 +922,7 @@ App::post('/v1/account/sessions/anonymous')
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
         if ($limit !== 0) {
-            $sum = $dbForInternal->count('users', [
+            $sum = $dbForProject->count('users', [
                 new Query('deleted', Query::TYPE_EQUAL, [false]),
             ], APP_LIMIT_COUNT);
 
@@ -931,8 +931,8 @@ App::post('/v1/account/sessions/anonymous')
             }
         }
 
-        $userId = $dbForInternal->getId();
-        $user = Authorization::skip(fn() => $dbForInternal->createDocument('users', new Document([
+        $userId = $dbForProject->getId();
+        $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
             '$id' => $userId,
             '$read' => ['role:all'],
             '$write' => ['user:' . $userId],
@@ -944,7 +944,7 @@ App::post('/v1/account/sessions/anonymous')
             'registration' => \time(),
             'reset' => false,
             'name' => null,
-            'prefs' => [],
+            'prefs' => new \stdClass(),
             'sessions' => [],
             'tokens' => [],
             'memberships' => [],
@@ -960,7 +960,7 @@ App::post('/v1/account/sessions/anonymous')
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $session = new Document(array_merge(
             [
-                '$id' => $dbForInternal->getId(),
+                '$id' => $dbForProject->getId(),
                 'userId' => $user->getId(),
                 'provider' => Auth::SESSION_PROVIDER_ANONYMOUS,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
@@ -976,12 +976,12 @@ App::post('/v1/account/sessions/anonymous')
 
         Authorization::setRole('user:' . $user->getId());
 
-        $session = $dbForInternal->createDocument('sessions', $session
+        $session = $dbForProject->createDocument('sessions', $session
                 ->setAttribute('$read', ['user:' . $user->getId()])
                 ->setAttribute('$write', ['user:' . $user->getId()])
         );
 
-        $user = $dbForInternal->updateDocument('users', $user->getId(),
+        $user = $dbForProject->updateDocument('users', $user->getId(),
             $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND));
 
         $audits
@@ -1178,18 +1178,18 @@ App::get('/v1/account/logs')
     ->inject('user')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($limit, $offset, $response, $user, $locale, $geodb, $dbForInternal, $usage) {
+    ->action(function ($limit, $offset, $response, $user, $locale, $geodb, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $audit = new Audit($dbForInternal);
+        $audit = new Audit($dbForProject);
         $auditEvents = [
             'account.create',
             'account.delete',
@@ -1262,13 +1262,13 @@ App::get('/v1/account/sessions/:sessionId')
     ->inject('response')
     ->inject('user')
     ->inject('locale')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($sessionId, $response, $user, $locale, $dbForInternal, $usage) {
+    ->action(function ($sessionId, $response, $user, $locale, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
         $sessions = $user->getAttribute('sessions', []);
@@ -1314,17 +1314,17 @@ App::patch('/v1/account/name')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($name, $response, $user, $dbForInternal, $audits, $usage) {
+    ->action(function ($name, $response, $user, $dbForProject, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user
             ->setAttribute('name', $name)
             ->setAttribute('search', implode(' ', [$user->getId(), $name, $user->getAttribute('email')]))
         );
@@ -1358,13 +1358,13 @@ App::patch('/v1/account/password')
     ->param('oldPassword', '', new Password(), 'Current user password. Must be at least 8 chars.', true)
     ->inject('response')
     ->inject('user')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($password, $oldPassword, $response, $user, $dbForInternal, $audits, $usage) {
+    ->action(function ($password, $oldPassword, $response, $user, $dbForProject, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
@@ -1373,7 +1373,7 @@ App::patch('/v1/account/password')
             throw new Exception('Invalid credentials', 401);
         }
 
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user
                 ->setAttribute('password', Auth::passwordHash($password))
                 ->setAttribute('passwordUpdate', \time())
         );
@@ -1406,13 +1406,13 @@ App::patch('/v1/account/email')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($email, $password, $response, $user, $dbForInternal, $audits, $usage) {
+    ->action(function ($email, $password, $response, $user, $dbForProject, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
@@ -1426,14 +1426,14 @@ App::patch('/v1/account/email')
         }
 
         $email = \strtolower($email);
-        $profile = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+        $profile = $dbForProject->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
         if ($profile) {
             throw new Exception('User already registered', 409);
         }
 
         try {
-            $user = $dbForInternal->updateDocument('users', $user->getId(), $user
+            $user = $dbForProject->updateDocument('users', $user->getId(), $user
                 ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password) : $user->getAttribute('password', ''))
                 ->setAttribute('email', $email)
                 ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
@@ -1470,17 +1470,17 @@ App::patch('/v1/account/prefs')
     ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($prefs, $response, $user, $dbForInternal, $audits, $usage) {
+    ->action(function ($prefs, $response, $user, $dbForProject, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
 
         $audits
             ->setParam('event', 'account.update.prefs')
@@ -1507,21 +1507,21 @@ App::delete('/v1/account')
     ->inject('request')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($request, $response, $user, $dbForInternal, $audits, $events, $usage) {
+    ->action(function ($request, $response, $user, $dbForProject, $audits, $events, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
 
         $protocol = $request->getProtocol();
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('status', false));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', false));
 
         // TODO Seems to be related to users.php/App::delete('/v1/users/:userId'). Can we share code between these two? Do todos below apply to users.php?
 
@@ -1576,16 +1576,16 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('request')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('locale')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($sessionId, $request, $response, $user, $dbForInternal, $locale, $audits, $events, $usage) {
+    ->action(function ($sessionId, $request, $response, $user, $dbForProject, $locale, $audits, $events, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
@@ -1602,7 +1602,7 @@ App::delete('/v1/account/sessions/:sessionId')
             if ($sessionId == $session->getId()) {
                 unset($sessions[$key]);
 
-                $dbForInternal->deleteDocument('sessions', $session->getId());
+                $dbForProject->deleteDocument('sessions', $session->getId());
 
                 $audits
                     ->setParam('userId', $user->getId())
@@ -1630,7 +1630,7 @@ App::delete('/v1/account/sessions/:sessionId')
                     ;
                 }
 
-                $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
+                $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
 
                 $events
                     ->setParam('eventData', $response->output($session, Response::MODEL_SESSION))
@@ -1662,16 +1662,16 @@ App::delete('/v1/account/sessions')
     ->inject('request')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('locale')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($request, $response, $user, $dbForInternal, $locale, $audits, $events, $usage) {
+    ->action(function ($request, $response, $user, $dbForProject, $locale, $audits, $events, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
@@ -1681,7 +1681,7 @@ App::delete('/v1/account/sessions')
         $sessions = $user->getAttribute('sessions', []);
 
         foreach ($sessions as $session) {/** @var Document $session */
-            $dbForInternal->deleteDocument('sessions', $session->getId());
+            $dbForProject->deleteDocument('sessions', $session->getId());
 
             $audits
                 ->setParam('userId', $user->getId())
@@ -1709,7 +1709,7 @@ App::delete('/v1/account/sessions')
             }
         }
 
-        $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('sessions', []));
+        $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', []));
 
         $numOfSessions = count($sessions);
 
@@ -1745,17 +1745,17 @@ App::post('/v1/account/recovery')
     ->param('url', '', function ($clients) {return new Host($clients);}, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
     ->inject('request')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('project')
     ->inject('locale')
     ->inject('mails')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($email, $url, $request, $response, $dbForInternal, $project, $locale, $mails, $audits, $events, $usage) {
+    ->action(function ($email, $url, $request, $response, $dbForProject, $project, $locale, $mails, $audits, $events, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $mails */
@@ -1772,7 +1772,7 @@ App::post('/v1/account/recovery')
         $isAppUser = Auth::isAppUser($roles);
 
         $email = \strtolower($email);
-        $profile = $dbForInternal->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+        $profile = $dbForProject->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
         if (!$profile) {
             throw new Exception('User not found', 404);
@@ -1786,7 +1786,7 @@ App::post('/v1/account/recovery')
 
         $secret = Auth::tokenGenerator();
         $recovery = new Document([
-            '$id' => $dbForInternal->getId(),
+            '$id' => $dbForProject->getId(),
             'userId' => $profile->getId(),
             'type' => Auth::TOKEN_TYPE_RECOVERY,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
@@ -1799,7 +1799,7 @@ App::post('/v1/account/recovery')
 
         $profile->setAttribute('tokens', $recovery, Document::SET_TYPE_APPEND);
 
-        $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile);
+        $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile);
 
         $url = Template::parseURL($url);
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
@@ -1860,12 +1860,12 @@ App::put('/v1/account/recovery')
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
     ->param('passwordAgain', '', new Password(), 'Repeat new user password. Must be at least 8 chars.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($userId, $secret, $password, $passwordAgain, $response, $dbForInternal, $audits, $usage) {
+    ->action(function ($userId, $secret, $password, $passwordAgain, $response, $dbForProject, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
@@ -1873,7 +1873,7 @@ App::put('/v1/account/recovery')
             throw new Exception('Passwords must match', 400);
         }
 
-        $profile = $dbForInternal->getDocument('users', $userId);
+        $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty() || $profile->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
@@ -1888,7 +1888,7 @@ App::put('/v1/account/recovery')
 
         Authorization::setRole('user:' . $profile->getId());
 
-        $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile
+        $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
                 ->setAttribute('password', Auth::passwordHash($password))
                 ->setAttribute('passwordUpdate', \time())
                 ->setAttribute('emailVerification', true)
@@ -1905,7 +1905,7 @@ App::put('/v1/account/recovery')
             }
         }
 
-        $dbForInternal->updateDocument('users', $profile->getId(), $profile->setAttribute('tokens', $tokens));
+        $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('tokens', $tokens));
 
         $audits
             ->setParam('userId', $profile->getId())
@@ -1938,18 +1938,18 @@ App::post('/v1/account/verification')
     ->inject('response')
     ->inject('project')
     ->inject('user')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('locale')
     ->inject('audits')
     ->inject('events')
     ->inject('mails')
     ->inject('usage')
-    ->action(function ($url, $request, $response, $project, $user, $dbForInternal, $locale, $audits, $events, $mails, $usage) {
+    ->action(function ($url, $request, $response, $project, $user, $dbForProject, $locale, $audits, $events, $mails, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
@@ -1969,7 +1969,7 @@ App::post('/v1/account/verification')
         $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
 
         $verification = new Document([
-            '$id' => $dbForInternal->getId(),
+            '$id' => $dbForProject->getId(),
             'userId' => $user->getId(),
             'type' => Auth::TOKEN_TYPE_VERIFICATION,
             'secret' => Auth::hash($verificationSecret), // One way hash encryption to protect DB leak
@@ -1982,7 +1982,7 @@ App::post('/v1/account/verification')
 
         $user->setAttribute('tokens', $verification, Document::SET_TYPE_APPEND);
 
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $url = Template::parseURL($url);
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
@@ -2042,17 +2042,17 @@ App::put('/v1/account/verification')
     ->param('secret', '', new Text(256), 'Valid verification token.')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($userId, $secret, $response, $user, $dbForInternal, $audits, $usage) {
+    ->action(function ($userId, $secret, $response, $user, $dbForProject, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $profile = $dbForInternal->getDocument('users', $userId);
+        $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
             throw new Exception('User not found', 404);
@@ -2067,7 +2067,7 @@ App::put('/v1/account/verification')
 
         Authorization::setRole('user:' . $profile->getId());
 
-        $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile->setAttribute('emailVerification', true));
+        $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('emailVerification', true));
 
         /**
          * We act like we're updating and validating
@@ -2080,7 +2080,7 @@ App::put('/v1/account/verification')
             }
         }
 
-        $dbForInternal->updateDocument('users', $profile->getId(), $profile->setAttribute('tokens', $tokens));
+        $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('tokens', $tokens));
 
         $audits
             ->setParam('userId', $profile->getId())

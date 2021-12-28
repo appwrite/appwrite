@@ -69,8 +69,7 @@ class DatabaseV1 extends Worker
     protected function createAttribute(Document $collection, Document $attribute, string $projectId): void
     {
         $dbForConsole = $this->getConsoleDB();
-        $dbForInternal = $this->getInternalDB($projectId);
-        $dbForExternal = $this->getExternalDB($projectId);
+        $dbForProject = $this->getProjectDB($projectId);
 
         $event = 'database.attributes.update';
         $collectionId = $collection->getId();
@@ -87,13 +86,13 @@ class DatabaseV1 extends Worker
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if(!$dbForExternal->createAttribute($collectionId, $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
+            if(!$dbForProject->createAttribute('collection_' . $collectionId, $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
                 throw new Exception('Failed to create Attribute');
             }
-            $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
+            $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
-            $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));
+            $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));
         } finally {
             $target = Realtime::fromPayload($event, $attribute, $project);
 
@@ -110,7 +109,7 @@ class DatabaseV1 extends Worker
             );
         }
 
-        $dbForInternal->deleteCachedDocument('collections', $collectionId);
+        $dbForProject->deleteCachedDocument('collections', $collectionId);
     }
 
     /**
@@ -121,8 +120,7 @@ class DatabaseV1 extends Worker
     protected function deleteAttribute(Document $collection, Document $attribute, string $projectId): void
     {
         $dbForConsole = $this->getConsoleDB();
-        $dbForInternal = $this->getInternalDB($projectId);
-        $dbForExternal = $this->getExternalDB($projectId);
+        $dbForProject = $this->getProjectDB($projectId);
 
         $event = 'database.attributes.delete';
         $collectionId = $collection->getId();
@@ -137,13 +135,13 @@ class DatabaseV1 extends Worker
         // - failed: attribute was never created
         // - stuck: attribute was available but cannot be removed
         try {
-            if($status !== 'failed' && !$dbForExternal->deleteAttribute($collectionId, $key)) {
+            if($status !== 'failed' && !$dbForProject->deleteAttribute('collection_' . $collectionId, $key)) {
                 throw new Exception('Failed to delete Attribute');
             }
-            $dbForInternal->deleteDocument('attributes', $attribute->getId());
+            $dbForProject->deleteDocument('attributes', $attribute->getId());
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
-            $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'stuck'));
+            $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'stuck'));
         } finally {
             $target = Realtime::fromPayload($event, $attribute, $project);
 
@@ -182,7 +180,7 @@ class DatabaseV1 extends Worker
                 $orders = \array_values(\array_diff($orders, [$orders[$found]]));
 
                 if (empty($attributes)) {
-                    $dbForInternal->deleteDocument('indexes', $index->getId());
+                    $dbForProject->deleteDocument('indexes', $index->getId());
                 } else {
                     $index
                         ->setAttribute('attributes', $attributes, Document::SET_TYPE_ASSIGN)
@@ -205,13 +203,13 @@ class DatabaseV1 extends Worker
                     if ($exists) { // Delete the duplicate if created, else update in db 
                         $this->deleteIndex($collection, $index, $projectId);
                     } else {
-                        $dbForInternal->updateDocument('indexes', $index->getId(), $index);
+                        $dbForProject->updateDocument('indexes', $index->getId(), $index);
                     }
                 }
             }
         }
 
-        $dbForInternal->deleteCachedDocument('collections', $collectionId);
+        $dbForProject->deleteCachedDocument('collections', $collectionId);
     }
 
     /**
@@ -222,8 +220,7 @@ class DatabaseV1 extends Worker
     protected function createIndex(Document $collection, Document $index, string $projectId): void
     {
         $dbForConsole = $this->getConsoleDB();
-        $dbForInternal = $this->getInternalDB($projectId);
-        $dbForExternal = $this->getExternalDB($projectId);
+        $dbForProject = $this->getProjectDB($projectId);
 
         $event = 'database.indexes.update';
         $collectionId = $collection->getId();
@@ -235,13 +232,13 @@ class DatabaseV1 extends Worker
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if(!$dbForExternal->createIndex($collectionId, $key, $type, $attributes, $lengths, $orders)) {
+            if(!$dbForProject->createIndex('collection_' . $collectionId, $key, $type, $attributes, $lengths, $orders)) {
                 throw new Exception('Failed to create Index');
             }
-            $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
+            $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
-            $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'failed'));
+            $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'failed'));
         } finally {
             $target = Realtime::fromPayload($event, $index, $project);
 
@@ -258,7 +255,7 @@ class DatabaseV1 extends Worker
             );
         }
 
-        $dbForInternal->deleteCachedDocument('collections', $collectionId);
+        $dbForProject->deleteCachedDocument('collections', $collectionId);
     }
 
     /**
@@ -269,8 +266,7 @@ class DatabaseV1 extends Worker
     protected function deleteIndex(Document $collection, Document $index, string $projectId): void
     {
         $dbForConsole = $this->getConsoleDB();
-        $dbForInternal = $this->getInternalDB($projectId);
-        $dbForExternal = $this->getExternalDB($projectId);
+        $dbForProject = $this->getProjectDB($projectId);
 
         $collectionId = $collection->getId();
         $key = $index->getAttribute('key');
@@ -279,13 +275,13 @@ class DatabaseV1 extends Worker
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if($status !== 'failed' && !$dbForExternal->deleteIndex($collectionId, $key)) {
+            if($status !== 'failed' && !$dbForProject->deleteIndex('collection_' . $collectionId, $key)) {
                 throw new Exception('Failed to delete index');
             }
-            $dbForInternal->deleteDocument('indexes', $index->getId());
+            $dbForProject->deleteDocument('indexes', $index->getId());
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
-            $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'stuck'));
+            $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'stuck'));
         } finally {
             $target = Realtime::fromPayload($event, $index, $project);
 
@@ -302,6 +298,6 @@ class DatabaseV1 extends Worker
             );
         }
 
-        $dbForInternal->deleteCachedDocument('collections', $collectionId);
+        $dbForProject->deleteCachedDocument('collections', $collectionId);
     }
 }

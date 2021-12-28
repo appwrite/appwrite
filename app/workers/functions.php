@@ -118,7 +118,7 @@ class FunctionsV1 extends Worker
         $userId = $this->args['userId'] ?? '';
         $jwt = $this->args['jwt'] ?? '';
 
-        $database = $this->getInternalDB($projectId);
+        $database = $this->getProjectDB($projectId);
 
         switch ($trigger) {
             case 'event':
