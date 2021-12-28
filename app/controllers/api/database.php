@@ -127,7 +127,7 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
 
     $audits
         ->setParam('event', 'database.attributes.create')
-        ->setParam('resource', 'collection/'.$collection->getId())
+        ->setParam('resource', 'collection/'.$collectionId)
         ->setParam('data', $clone)
     ;
 
@@ -185,7 +185,7 @@ App::post('/v1/database/collections')
 
         $audits
             ->setParam('event', 'database.collections.create')
-            ->setParam('resource', 'collection/'.$collection->getId())
+            ->setParam('resource', 'collection/'.$collectionId)
             ->setParam('data', $collection->getArrayCopy())
         ;
 
@@ -405,7 +405,7 @@ App::get('/v1/database/:collectionId/usage')
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
-        
+
         $usage = [];
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
@@ -470,7 +470,7 @@ App::get('/v1/database/:collectionId/usage')
                         $backfill--;
                     }
                     $stats[$metric] = array_reverse($stats[$metric]);
-                }    
+                }
             });
 
             $usage = new Document([
@@ -518,7 +518,7 @@ App::get('/v1/database/collections/:collectionId/logs')
         }
 
         $audit = new Audit($dbForProject);
-        $resource = 'collection/'.$collection->getId();
+        $resource = 'collection/'.$collectionId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
         $output = [];
@@ -611,7 +611,7 @@ App::put('/v1/database/collections/:collectionId')
         $enabled ??= $collection->getAttribute('enabled', true);
 
         try {
-            $collection = $dbForProject->updateDocument('collections', $collection->getId(), $collection
+            $collection = $dbForProject->updateDocument('collections', $collectionId, $collection
                 ->setAttribute('$write', $write)
                 ->setAttribute('$read', $read)
                 ->setAttribute('name', $name)
@@ -632,7 +632,7 @@ App::put('/v1/database/collections/:collectionId')
 
         $audits
             ->setParam('event', 'database.collections.update')
-            ->setParam('resource', 'collection/'.$collection->getId())
+            ->setParam('resource', 'collection/'.$collectionId)
             ->setParam('data', $collection->getArrayCopy())
         ;
 
@@ -674,7 +674,7 @@ App::delete('/v1/database/collections/:collectionId')
             throw new Exception('Failed to remove collection from DB', 500);
         }
 
-        $dbForProject->deleteCachedCollection('collection_' . $collection->getId());
+        $dbForProject->deleteCachedCollection('collection_' . $collectionId);
 
         $deletes
             ->setParam('type', DELETE_TYPE_DOCUMENT)
@@ -689,7 +689,7 @@ App::delete('/v1/database/collections/:collectionId')
 
         $audits
             ->setParam('event', 'database.collections.delete')
-            ->setParam('resource', 'collection/'.$collection->getId())
+            ->setParam('resource', 'collection/'.$collectionId)
             ->setParam('data', $collection->getArrayCopy())
         ;
 
@@ -1255,7 +1255,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
         }
 
         $dbForProject->deleteCachedDocument('collections', $collectionId);
-        $dbForProject->deleteCachedCollection($collection->getId());
+        $dbForProject->deleteCachedCollection($collectionId);
 
         $database
             ->setParam('type', DATABASE_TYPE_DELETE_ATTRIBUTE)
@@ -1289,7 +1289,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
 
         $audits
             ->setParam('event', 'database.attributes.delete')
-            ->setParam('resource', 'collection/'.$collection->getId())
+            ->setParam('resource', 'collection/'.$collectionId)
             ->setParam('data', $attribute->getArrayCopy())
         ;
 
@@ -1395,7 +1395,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
 
         $audits
             ->setParam('event', 'database.indexes.create')
-            ->setParam('resource', 'collection/'.$collection->getId())
+            ->setParam('resource', 'collection/'.$collectionId)
             ->setParam('data', $index->getArrayCopy())
         ;
 
@@ -1542,7 +1542,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:key')
 
         $audits
             ->setParam('event', 'database.indexes.delete')
-            ->setParam('resource', 'collection/'.$collection->getId())
+            ->setParam('resource', 'collection/'.$collectionId)
             ->setParam('data', $index->getArrayCopy())
         ;
 
