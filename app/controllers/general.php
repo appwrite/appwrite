@@ -47,20 +47,20 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         } else {
             Authorization::disable();
 
-            $certificate = $dbForConsole->findOne('certificates', [
+            $domainDocument = $dbForConsole->findOne('domain', [
                 new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
             ]);
 
-            if (empty($certificate)) {
-                $certificate = new Document([
+            if (!$domainDocument) {
+                $domainDocument = new Document([
                     'domain' => $domain->get(),
                 ]);
-                $certificate = $dbForConsole->createDocument('certificates', $certificate);
+                $domainDocument = $dbForConsole->createDocument('domains', $domains);
 
                 Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...');
 
                 Resque::enqueue('v1-certificates', 'CertificatesV1', [
-                    'document' => $certificate,
+                    'document' => $domainDocument,
                     'domain' => $domain->get(),
                     'validateTarget' => false,
                     'validateCNAME' => false,
@@ -74,7 +74,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         Config::setParam('domains', $domains);
     }
 
-    $localeParam = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
+    $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
 
     if (\in_array($localeParam, Config::getParam('locale-codes'))) {
         $locale->setDefault($localeParam);
