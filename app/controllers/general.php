@@ -54,6 +54,10 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
             if (!$domainDocument) {
                 $domainDocument = new Document([
                     'domain' => $domain->get(),
+                    'tld' => $domain->getSuffix(),
+                    'registerable' => $domain->getRegisterable(),
+                    'verification' => false,
+                    'certificateId' => null,
                 ]);
 
                 $domainDocument = $dbForConsole->createDocument('domains', $domainDocument);
