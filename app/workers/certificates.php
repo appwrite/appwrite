@@ -160,7 +160,7 @@ class CertificatesV1 extends Worker
                 'certificateId' => $certificate->getId(),
             ]));
 
-            $certificate = $dbForConsole->updateDocument('certificates', $certificate->getId(), $certificate);
+            $certificate = $dbForConsole->updateDocument('domains', $certificate->getId(), $certificate);
 
             if(!$certificate) {
                 throw new Exception('Failed saving domain to DB');
