@@ -1758,7 +1758,11 @@ App::get('/v1/database/collections/:collectionId/documents')
 
         $cursorDocument = null;
         if (!empty($cursor)) {
-            $cursorDocument = $dbForExternal->getDocument($collectionId, $cursor);
+            if ($collection->getAttribute('permission') === 'collection') {
+                $cursorDocument = Authorization::skip(fn() => $dbForExternal->getDocument($collectionId, $cursor));
+            } else {
+                $cursorDocument = $dbForExternal->getDocument($collectionId, $cursor);
+            }
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400);
