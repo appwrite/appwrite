@@ -514,7 +514,7 @@ class V11 extends Migration
                  * Set default values for arrays if not set.
                  */
                 if (empty($document->getAttribute('prefs', []))) {
-                    $document->setAttribute('prefs', []);
+                    $document->setAttribute('prefs', new \stdClass());
                 }
                 if (empty($document->getAttribute('sessions', []))) {
                     $document->setAttribute('sessions', []);

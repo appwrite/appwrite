@@ -62,7 +62,7 @@ App::post('/v1/users')
                 'registration' => \time(),
                 'reset' => false,
                 'name' => $name,
-                'prefs' => [],
+                'prefs' => new \stdClass(),
                 'sessions' => [],
                 'tokens' => [],
                 'memberships' => [],

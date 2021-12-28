@@ -1001,7 +1001,7 @@ $collections = [
                 'size' => 16384,
                 'signed' => true,
                 'required' => false,
-                'default' => [],
+                'default' => new \stdClass(),
                 'array' => false,
                 'filters' => ['json'],
             ],

@@ -333,7 +333,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'registration' => \time(),
                     'reset' => false,
                     'name' => $name,
-                    'prefs' => [],
+                    'prefs' => new \stdClass(),
                     'sessions' => [],
                     'tokens' => [],
                     'memberships' => [],
