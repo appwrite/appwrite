@@ -786,7 +786,7 @@ App::setResource('dbForProject', function($db, $cache, $project) {
     $cache = new Cache(new RedisCache($cache));
 
     $database = new Database(new MariaDB($db), $cache);
-    $database->setDefaultDatabase('appwrite');
+    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace('_project_'.$project->getId());
 
     return $database;
@@ -796,7 +796,7 @@ App::setResource('dbForConsole', function($db, $cache) {
     $cache = new Cache(new RedisCache($cache));
 
     $database = new Database(new MariaDB($db), $cache);
-    $database->setDefaultDatabase('appwrite');
+    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace('_project_console');
 
     return $database;

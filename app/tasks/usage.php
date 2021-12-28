@@ -223,8 +223,8 @@ $cli
         $cacheAdapter = new Cache(new Redis($redis));
         $dbForProject = new Database(new MariaDB($db), $cacheAdapter);
         $dbForConsole = new Database(new MariaDB($db), $cacheAdapter);
-        $dbForProject->setDefaultDatabase('appwrite');
-        $dbForConsole->setDefaultDatabase('appwrite');
+        $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $dbForConsole->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $dbForConsole->setNamespace('_project_console');
 
         $latestTime = [];

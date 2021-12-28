@@ -58,7 +58,7 @@ function getDatabase(Registry &$register, string $namespace)
 
     $cache = new Cache(new RedisCache($redis));
     $database = new Database(new MariaDB($db), $cache);
-    $database->setDefaultDatabase('appwrite');
+    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace($namespace);
 
     return [
@@ -341,7 +341,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
-        $database->setDefaultDatabase('appwrite');
+        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $database->setNamespace('_project_' . $project->getId());
 
         /*
@@ -446,7 +446,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
-        $database->setDefaultDatabase('appwrite');
+        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $database->setNamespace('_project_' . $realtime->connections[$connection]['projectId']);
 
         /*

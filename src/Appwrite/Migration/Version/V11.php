@@ -11,6 +11,7 @@ use Redis;
 use Swoole\Runtime;
 use Throwable;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -45,8 +46,8 @@ class V11 extends Migration
             $this->dbProject = new Database(new MariaDB($this->db), $cacheAdapter); // namespace is set on execution
             $this->dbConsole = new Database(new MariaDB($this->db), $cacheAdapter);
 
-            $this->dbProject->setDefaultDatabase('appwrite');
-            $this->dbConsole->setDefaultDatabase('appwrite');
+            $this->dbProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $this->dbConsole->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
             $this->dbConsole->setNamespace('_project_console');
         }
 

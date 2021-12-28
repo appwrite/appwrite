@@ -81,12 +81,12 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         Console::success('[Setup] - Server database init started...');
         $collections = Config::getParam('collections', []); /** @var array $collections */
 
-        if(!$dbForConsole->exists('appwrite')) {
+        if(!$dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'))) {
             $redis->flushAll();
 
             Console::success('[Setup] - Creating database: appwrite...');
 
-            $dbForConsole->create('appwrite');
+            $dbForConsole->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         }
 
         try {

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Resque;
 
+use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\CLI\Console;
@@ -93,7 +94,7 @@ abstract class Worker
                 $attempts++;
                 $cache = new Cache(new RedisCache($register->get('cache')));
                 $database = new Database(new MariaDB($register->get('db')), $cache);
-                $database->setDefaultDatabase('appwrite');
+                $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
                 $database->setNamespace($namespace); // Main DB
                 if (!empty($projectId) && !$database->getDocument('projects', $projectId)->isEmpty()) {
                     throw new \Exception("Project does not exist: {$projectId}");
