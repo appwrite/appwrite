@@ -8,7 +8,7 @@ WORKDIR /usr/local/src/
 COPY composer.lock /usr/local/src/
 COPY composer.json /usr/local/src/
 
-RUN composer update --ignore-platform-reqs --optimize-autoloader \
+RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
@@ -29,9 +29,9 @@ FROM php:8.0-cli-alpine as compile
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
 
-ENV PHP_REDIS_VERSION=5.3.4 \
+ENV PHP_REDIS_VERSION=5.3.5 \
     PHP_MONGODB_VERSION=1.9.1 \
-    PHP_SWOOLE_VERSION=v4.8.3 \
+    PHP_SWOOLE_VERSION=v4.8.5 \
     PHP_IMAGICK_VERSION=3.5.1 \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0
