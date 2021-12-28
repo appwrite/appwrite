@@ -11,6 +11,7 @@ use Redis;
 use Swoole\Runtime;
 use Throwable;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -29,8 +30,7 @@ global $register;
 
 class V11 extends Migration
 {
-    protected Database $dbInternal;
-    protected Database $dbExternal;
+    protected Database $dbProject;
     protected Database $dbConsole;
 
     protected array $oldCollections;
@@ -43,10 +43,12 @@ class V11 extends Migration
 
         if (!is_null($cache)) {
             $cacheAdapter = new Cache(new RedisCache($this->cache));
-            $this->dbInternal = new Database(new MariaDB($this->db), $cacheAdapter); // namespace is set on execution
-            $this->dbExternal = new Database(new MariaDB($this->db), $cacheAdapter); // namespace is set on execution
+            $this->dbProject = new Database(new MariaDB($this->db), $cacheAdapter); // namespace is set on execution
             $this->dbConsole = new Database(new MariaDB($this->db), $cacheAdapter);
-            $this->dbConsole->setNamespace('project_console_internal');
+
+            $this->dbProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $this->dbConsole->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $this->dbConsole->setNamespace('_project_console');
         }
 
         $this->newCollections = Config::getParam('collections', []);
@@ -60,8 +62,7 @@ class V11 extends Migration
 
         $oldProject = $this->project;
 
-        $this->dbInternal->setNamespace('project_' . $oldProject->getId() . '_internal');
-        $this->dbExternal->setNamespace('project_' . $oldProject->getId() . '_external');
+        $this->dbProject->setNamespace('_project_' . $oldProject->getId());
 
         Console::info('');
         Console::info('------------------------------------');
@@ -85,26 +86,18 @@ class V11 extends Migration
             }
 
             /**
-             * Create internal DB tables
+             * Create internal tables
              */
-            if (!$this->dbInternal->exists()) {
-                $this->dbInternal->create();
+            if (!$this->dbProject->exists('appwrite')) {
+                $this->dbProject->create('appwrite');
                 Console::log('Created internal tables for : ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
-            }
-
-            /**
-             * Create external DB tables
-             */
-            if (!$this->dbExternal->exists()) {
-                $this->dbExternal->create();
-                Console::log('Created external tables for : ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
             }
 
             /**
              * Create Audit tables
              */
-            if ($this->dbInternal->getCollection(Audit::COLLECTION)->isEmpty()) {
-                $audit = new Audit($this->dbInternal);
+            if ($this->dbProject->getCollection(Audit::COLLECTION)->isEmpty()) {
+                $audit = new Audit($this->dbProject);
                 $audit->setup();
                 Console::log('Created audit tables for : ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
             }
@@ -112,8 +105,8 @@ class V11 extends Migration
             /**
              * Create Abuse tables
              */
-            if ($this->dbInternal->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
-                $adapter = new TimeLimit("", 0, 1, $this->dbInternal);
+            if ($this->dbProject->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
+                $adapter = new TimeLimit("", 0, 1, $this->dbProject);
                 $adapter->setup();
                 Console::log('Created abuse tables for : ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
             }
@@ -122,7 +115,7 @@ class V11 extends Migration
              * Create internal collections for Project
              */
             foreach ($this->newCollections as $key => $collection) {
-                if (!$this->dbInternal->getCollection($key)->isEmpty()) continue; // Skip if project collection already exists
+                if (!$this->dbProject->getCollection($key)->isEmpty()) continue; // Skip if project collection already exists
 
                 $attributes = [];
                 $indexes = [];
@@ -149,7 +142,7 @@ class V11 extends Migration
                     ]);
                 }
 
-                $this->dbInternal->createCollection($key, $attributes, $indexes);
+                $this->dbProject->createCollection($key, $attributes, $indexes);
             }
             if ($this->options['migrateCollections']) {
                 $this->migrateExternalCollections();
@@ -198,8 +191,8 @@ class V11 extends Migration
                 }
 
                 try {
-                    if ($this->dbInternal->getDocument($new->getCollection(), $new->getId())->isEmpty()) {
-                        $this->dbInternal->createDocument($new->getCollection(), $new);
+                    if ($this->dbProject->getDocument($new->getCollection(), $new->getId())->isEmpty()) {
+                        $this->dbProject->createDocument($new->getCollection(), $new);
                     }
                 } catch (\Throwable $th) {
                     Console::error('Failed to update document: ' . $th->getMessage());
@@ -249,10 +242,10 @@ class V11 extends Migration
                 $id = $oldCollection->getId();
                 $permissions = $oldCollection->getPermissions();
                 $name = $oldCollection->getAttribute('name');
-                $newCollection = $this->dbExternal->getCollection($id);
+                $newCollection = $this->dbProject->getCollection('collection_' . $id);
 
                 if ($newCollection->isEmpty()) {
-                    $this->dbExternal->createCollection($id);
+                    $this->dbProject->createCollection('collection_' . $id);
                     /**
                      * Migrate permissions
                      */
@@ -263,13 +256,13 @@ class V11 extends Migration
                      * Suffix collection name with a subsequent number to make it unique if possible.
                      */
                     $suffix = 1;
-                    while ($this->dbInternal->findOne('collections', [
+                    while ($this->dbProject->findOne('collections', [
                         new Query('name', Query::TYPE_EQUAL, [$name])
                     ])) {
                         $name .= ' - ' . $suffix++;
                     }
 
-                    $this->dbInternal->createDocument('collections', new Document([
+                    $this->dbProject->createDocument('collections', new Document([
                         '$id' => $id,
                         '$read' => [],
                         '$write' => [],
@@ -290,7 +283,7 @@ class V11 extends Migration
 
                 foreach ($attributes as $attribute) {
                     try {
-                        $this->dbExternal->createAttribute(
+                        $this->dbProject->createAttribute(
                             collection: $attribute['$collection'],
                             id: $attribute['$id'],
                             type: $attribute['type'],
@@ -304,7 +297,7 @@ class V11 extends Migration
                             filters: $attribute['filters']
                         );
 
-                        $this->dbInternal->createDocument('attributes', new Document([
+                        $this->dbProject->createDocument('attributes', new Document([
                             '$id' => $attribute['$collection'] . '_' . $attribute['$id'],
                             'key' => $attribute['$id'],
                             'collectionId' => $attribute['$collection'],
@@ -361,7 +354,7 @@ class V11 extends Migration
             Console::log('Migrating External Documents for Collection ' . $collection . ': ' . $offset . ' / ' . $this->oldProjectDB->getSum());
 
             foreach ($allDocs as $document) {
-                if (!$this->dbExternal->getDocument($collection, $document->getId())->isEmpty()) {
+                if (!$this->dbProject->getDocument('collection_' . $collection, $document->getId())->isEmpty()) {
                     continue;
                 }
                 go(function ($document) {
@@ -398,7 +391,7 @@ class V11 extends Migration
                 }, $document);
                 $document = new Document($document->getArrayCopy());
                 $document = $this->migratePermissions($document);
-                $this->dbExternal->createDocument($collection, $document);
+                $this->dbProject->createDocument('collection_' . $collection, $document);
             }
             $offset += $this->limit;
         }
@@ -522,7 +515,7 @@ class V11 extends Migration
                  * Set default values for arrays if not set.
                  */
                 if (empty($document->getAttribute('prefs', []))) {
-                    $document->setAttribute('prefs', []);
+                    $document->setAttribute('prefs', new \stdClass());
                 }
                 if (empty($document->getAttribute('sessions', []))) {
                     $document->setAttribute('sessions', []);

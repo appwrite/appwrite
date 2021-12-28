@@ -58,6 +58,7 @@ function getDatabase(Registry &$register, string $namespace)
 
     $cache = new Cache(new RedisCache($redis));
     $database = new Database(new MariaDB($db), $cache);
+    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace($namespace);
 
     return [
@@ -77,7 +78,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
      */
     go(function () use ($register, $containerId, &$statsDocument) {
         try {
-            [$database, $returnDatabase] = getDatabase($register, 'project_console_internal');
+            [$database, $returnDatabase] = getDatabase($register, '_project_console');
             $document = new Document([
                 '$id' => $database->getId(),
                 '$collection' => 'realtime',
@@ -133,7 +134,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
         }
 
         try {
-            [$database, $returnDatabase] = getDatabase($register, 'project_console_internal');
+            [$database, $returnDatabase] = getDatabase($register, '_project_console');
 
             $statsDocument
                 ->setAttribute('timestamp', time())
@@ -163,7 +164,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
          */
         if ($realtime->hasSubscriber('console', 'role:member', 'project')) {
 
-            [$database, $returnDatabase] = getDatabase($register, 'project_console_internal');
+            [$database, $returnDatabase] = getDatabase($register, '_project_console');
 
             $payload = [];
 
@@ -267,7 +268,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         return;
                     }
 
-                    [$database, $returnDatabase] = getDatabase($register, 'project_' . $projectId . '_internal');
+                    [$database, $returnDatabase] = getDatabase($register, '_project_' . $projectId);
 
                     $user = $database->getDocument('users', $userId);
 
@@ -340,7 +341,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
-        $database->setNamespace('project_' . $project->getId() . '_internal');
+        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $database->setNamespace('_project_' . $project->getId());
 
         /*
          *  Project Check
@@ -444,7 +446,8 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
-        $database->setNamespace('project_' . $realtime->connections[$connection]['projectId'] . '_internal');
+        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $database->setNamespace('_project_' . $realtime->connections[$connection]['projectId']);
 
         /*
          * Abuse Check
