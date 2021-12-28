@@ -47,7 +47,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         } else {
             Authorization::disable();
 
-            $domainDocument = $dbForConsole->findOne('domain', [
+            $domainDocument = $dbForConsole->findOne('domains', [
                 new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
             ]);
 
@@ -55,7 +55,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
                 $domainDocument = new Document([
                     'domain' => $domain->get(),
                 ]);
-                $domainDocument = $dbForConsole->createDocument('domains', $domains);
+
+                $domainDocument = $dbForConsole->createDocument('domains', $domainDocument);
 
                 Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...');
 
