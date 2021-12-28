@@ -392,7 +392,7 @@ $register->set('dbPool', function () { // Register DB connection
         ->withOptions([
             PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
         ])
-    , 16);
+    , 64);
 
     return $pool;
 });
@@ -412,7 +412,7 @@ $register->set('redisPool', function () {
         ->withPort($redisPort)
         ->withAuth($redisAuth)
         ->withDbIndex(0)
-    , 16);
+    , 64);
 
     return $pool;
 });
