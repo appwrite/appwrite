@@ -1149,6 +1149,17 @@ trait DatabaseBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'queries' => ['$id.equal("' . $documents['body']['documents'][0]['$id'] . '")'],
+        ]);
+
+        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
+        $this->assertCount(1, $documents['body']['documents']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'queries' => ['title.search("Homecoming")'],
         ]);
 
@@ -1200,6 +1211,21 @@ trait DatabaseBase
         ]);
         $this->assertEquals(400, $documents['headers']['status-code']);
         $this->assertEquals('Index not found: actors', $documents['body']['message']);
+
+        $conditions = [];
+
+        for ($i=0; $i < 101; $i++) { 
+            $conditions[] = $i;
+        }
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['releaseYear.equal(' . implode(',', $conditions) . ')'],
+        ]);
+
+        $this->assertEquals(400, $documents['headers']['status-code']);
 
         return [];
     }
