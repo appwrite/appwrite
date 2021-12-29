@@ -1212,6 +1212,21 @@ trait DatabaseBase
         $this->assertEquals(400, $documents['headers']['status-code']);
         $this->assertEquals('Index not found: actors', $documents['body']['message']);
 
+        $conditions = [];
+
+        for ($i=0; $i < 101; $i++) { 
+            $conditions[] = $i;
+        }
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['releaseYear.equal(' . implode(',', $conditions) . ')'],
+        ]);
+
+        $this->assertEquals(400, $documents['headers']['status-code']);
+
         return [];
     }
 

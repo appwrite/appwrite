@@ -1717,7 +1717,15 @@ App::get('/v1/database/collections/:collectionId/documents')
             }
         }
 
-        $queries = \array_map(fn ($query) => Query::parse($query), $queries);
+        $queries = \array_map(function ($query) {
+            $query = Query::parse($query);
+
+            if (\count($query->getValues()) > 100) {
+                throw new Exception("You cannot use more than 100 query values on attribute '{$query->getAttribute()}'", 400);
+            }
+
+            return $query;
+        }, $queries);
 
         if (!empty($queries)) {
             $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []), true);
