@@ -5655,16 +5655,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v6.0.1",
+            "version": "v6.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "fafd9802d386bf1c267e0249ddb7ceb14dcfdad4"
+                "reference": "dd434fa8d69325e5d210f63070014d889511fcb3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/fafd9802d386bf1c267e0249ddb7ceb14dcfdad4",
-                "reference": "fafd9802d386bf1c267e0249ddb7ceb14dcfdad4",
+                "url": "https://api.github.com/repos/symfony/console/zipball/dd434fa8d69325e5d210f63070014d889511fcb3",
+                "reference": "dd434fa8d69325e5d210f63070014d889511fcb3",
                 "shasum": ""
             },
             "require": {
@@ -5730,7 +5730,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v6.0.1"
+                "source": "https://github.com/symfony/console/tree/v6.0.2"
             },
             "funding": [
                 {
@@ -5746,7 +5746,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-12-09T12:47:37+00:00"
+            "time": "2021-12-27T21:05:08+00:00"
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
@@ -6077,16 +6077,16 @@
         },
         {
             "name": "symfony/string",
-            "version": "v6.0.1",
+            "version": "v6.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/string.git",
-                "reference": "0cfed595758ec6e0a25591bdc8ca733c1896af32"
+                "reference": "bae261d0c3ac38a1f802b4dfed42094296100631"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/string/zipball/0cfed595758ec6e0a25591bdc8ca733c1896af32",
-                "reference": "0cfed595758ec6e0a25591bdc8ca733c1896af32",
+                "url": "https://api.github.com/repos/symfony/string/zipball/bae261d0c3ac38a1f802b4dfed42094296100631",
+                "reference": "bae261d0c3ac38a1f802b4dfed42094296100631",
                 "shasum": ""
             },
             "require": {
@@ -6142,7 +6142,7 @@
                 "utf8"
             ],
             "support": {
-                "source": "https://github.com/symfony/string/tree/v6.0.1"
+                "source": "https://github.com/symfony/string/tree/v6.0.2"
             },
             "funding": [
                 {
@@ -6158,7 +6158,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-12-08T15:13:44+00:00"
+            "time": "2021-12-16T22:13:01+00:00"
         },
         {
             "name": "textalk/websocket",

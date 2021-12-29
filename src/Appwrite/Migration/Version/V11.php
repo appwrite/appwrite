@@ -42,6 +42,7 @@ class V11 extends Migration
         $this->options = array_map(fn ($option) => $option === 'yes' ? true : false, $this->options);
 
         if (!is_null($cache)) {
+            $this->cache->flushAll();
             $cacheAdapter = new Cache(new RedisCache($this->cache));
             $this->dbProject = new Database(new MariaDB($this->db), $cacheAdapter); // namespace is set on execution
             $this->dbConsole = new Database(new MariaDB($this->db), $cacheAdapter);
@@ -63,6 +64,7 @@ class V11 extends Migration
         $oldProject = $this->project;
 
         $this->dbProject->setNamespace('_project_' . $oldProject->getId());
+        $this->dbConsole->setNamespace('_project_console');
 
         Console::info('');
         Console::info('------------------------------------');
@@ -73,7 +75,12 @@ class V11 extends Migration
          * Create internal/external structure for projects and skip the console project.
          */
         if ($oldProject->getId() !== 'console') {
-            $project = $this->dbConsole->getDocument('projects', $oldProject->getId());
+            try {
+                $project = $this->dbConsole->getDocument(collection: 'projects', id: $oldProject->getId());
+            } catch (\Throwable $th) {
+                var_dump($th->getTraceAsString());
+                var_dump($th);
+            }
 
             /**
              * Migrate Project Document.
@@ -88,10 +95,10 @@ class V11 extends Migration
             /**
              * Create internal tables
              */
-            if (!$this->dbProject->exists('appwrite')) {
-                $this->dbProject->create('appwrite');
+            try {
                 Console::log('Created internal tables for : ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
-            }
+                $this->dbProject->createMetadata();
+            } catch (\Throwable $th) { }
 
             /**
              * Create Audit tables
@@ -197,10 +204,6 @@ class V11 extends Migration
                 } catch (\Throwable $th) {
                     Console::error('Failed to update document: ' . $th->getMessage());
                     continue;
-
-                    if ($document && $new->getId() !== $document->getId()) {
-                        throw new Exception('Duplication Error');
-                    }
                 }
             }
 
@@ -270,6 +273,7 @@ class V11 extends Migration
                         'dateCreated' => time(),
                         'dateUpdated' => time(),
                         'name' => $name,
+                        'enabled' => true,
                         'search' => implode(' ', [$id, $name]),
                     ]));
                 } else {
@@ -284,7 +288,7 @@ class V11 extends Migration
                 foreach ($attributes as $attribute) {
                     try {
                         $this->dbProject->createAttribute(
-                            collection: $attribute['$collection'],
+                            collection: 'collection_' . $attribute['$collection'],
                             id: $attribute['$id'],
                             type: $attribute['type'],
                             size: $attribute['size'],
@@ -296,7 +300,6 @@ class V11 extends Migration
                             formatOptions: $attribute['formatOptions'] ?? [],
                             filters: $attribute['filters']
                         );
-
                         $this->dbProject->createDocument('attributes', new Document([
                             '$id' => $attribute['$collection'] . '_' . $attribute['$id'],
                             'key' => $attribute['$id'],
@@ -426,7 +429,30 @@ class V11 extends Migration
         }
 
         switch ($document->getAttribute('$collection')) {
-            case OldDatabase::SYSTEM_COLLECTION_PLATFORMS:
+                case OldDatabase::SYSTEM_COLLECTION_PROJECTS:
+                    $newProviders = [];
+                    $providers = Config::getParam('providers', []);
+
+                    /*
+                    * Add enabled OAuth2 providers to default data rules
+                    */
+                    foreach ($providers as $index => $provider) {
+                        $appId = $document->getAttribute('usersOauth2'.\ucfirst($index).'Appid');
+                        $appSecret = $document->getAttribute('usersOauth2'.\ucfirst($index).'Secret');
+
+                        if (!is_null($appId) || !is_null($appId)) {
+                            $newProviders[$appId] = $appSecret;
+                        }
+
+                        $document
+                            ->removeAttribute('usersOauth2'.\ucfirst($index).'Appid')
+                            ->removeAttribute('usersOauth2'.\ucfirst($index).'Secret');
+                    }
+
+                    $document->setAttribute('providers', $newProviders);
+
+                    break;
+                case OldDatabase::SYSTEM_COLLECTION_PLATFORMS:
                 $projectId = $this->getProjectIdFromReadPermissions($document);
 
                 /**
