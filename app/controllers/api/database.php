@@ -973,10 +973,12 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
             throw new Exception($validator->getDescription(), 400);
         }
 
+        $size = $max > 2147483647 ? 8 : 4; // Automatically create BigInt depending on max value
+
         $attribute = createAttribute($collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_INTEGER,
-            'size' => 0,
+            'size' => $size,
             'required' => $required,
             'default' => $default,
             'array' => $array,
