@@ -194,6 +194,11 @@ DatabaseOld::addFilter('encrypt',
 /**
  * New DB Filters
  */
+Database::addFilter('object',
+    fn($value) => json_encode($value),
+    fn($value) => (is_null($value)) ? new \stdClass() : json_decode($value)
+);
+
 Database::addFilter('casting',
     function($value) {
         return json_encode(['value' => $value]);

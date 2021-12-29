@@ -55,7 +55,7 @@ class User extends Model
             ->addRule('prefs', [
                 'type' => Response::MODEL_PREFERENCES,
                 'description' => 'User preferences as a key-value object',
-                'default' => new \stdClass,
+                'default' => new \stdClass(),
                 'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
             ])
         ;

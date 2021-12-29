@@ -161,6 +161,7 @@ App::get('/v1/users/:userId')
         $usage
             ->setParam('users.read', 1)
         ;
+
         $response->dynamic($user, Response::MODEL_USER);
     });
 
@@ -195,6 +196,7 @@ App::get('/v1/users/:userId/prefs')
         $usage
             ->setParam('users.read', 1)
         ;
+
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
@@ -589,6 +591,7 @@ App::patch('/v1/users/:userId/prefs')
         $usage
             ->setParam('users.update', 1)
         ;
+
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
@@ -718,7 +721,7 @@ App::delete('/v1/users/:userId')
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $deletes */
         /** @var Appwrite\Stats\Stats $usage */
-        
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {

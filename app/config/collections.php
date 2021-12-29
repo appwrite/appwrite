@@ -1003,7 +1003,7 @@ $collections = [
                 'required' => false,
                 'default' => new \stdClass(),
                 'array' => false,
-                'filters' => ['json'],
+                'filters' => ['object'],
             ],
             [
                 '$id' => 'registration',
