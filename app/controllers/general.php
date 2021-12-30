@@ -2,6 +2,7 @@
 
 require_once __DIR__.'/../init.php';
 
+use Appwrite\Utopia\Request\Filters\V11;
 use Utopia\App;
 use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
@@ -23,7 +24,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-App::init(function ($utopia, $request, $response, $console, $project, $dbForConsole, $user, $locale, $clients) {
+App::init(function ($args, $utopia, $request, $response, $console, $project, $dbForConsole, $user, $locale, $clients) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
@@ -79,13 +80,30 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         Config::setParam('domains', $domains);
     }
 
-    $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
+    $route = $utopia->match($request);
 
+    /*
+     * Request format
+    */
+    $requestFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+    if ($requestFormat) {
+        switch($requestFormat) {
+            // TODO: For some reason console is still on 0.12. We dont want this filter logic in console, console uses 0.12 SDK
+            case version_compare ($requestFormat , '0.11.0', '<=') :
+                $requestFilter = new V11();
+                break;
+        }
+    }
+    if(isset($requestFilter)) {
+        $endpointIdentifier = $route->getLabel('sdk.namespace', 'unknown') . '.' . $route->getLabel('sdk.method', 'unknown');
+        $newParams = $requestFilter->parse($args->get(), $endpointIdentifier);
+        $args->set($newParams);
+    }
+
+    $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
     if (\in_array($localeParam, Config::getParam('locale-codes'))) {
         $locale->setDefault($localeParam);
-    };
-
-    $route = $utopia->match($request);
+    }
 
     if ($project->isEmpty()) {
         throw new Exception('Project not found', 404);
@@ -280,7 +298,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         throw new Exception('Password reset is required', 412);
     }
 
-}, ['utopia', 'request', 'response', 'console', 'project', 'dbForConsole', 'user', 'locale', 'clients']);
+}, ['args', 'utopia', 'request', 'response', 'console', 'project', 'dbForConsole', 'user', 'locale', 'clients']);
 
 App::options(function ($request, $response) {
     /** @var Utopia\Swoole\Request $request */
