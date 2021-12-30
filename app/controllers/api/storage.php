@@ -1643,7 +1643,14 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $device = Storage::getDevice('files');
 
-        if ($device->delete($file->getAttribute('path', ''))) {
+        $deviceDeleted = false;
+        if($file->getAttribute('chunksTotal') !== $file->getAttribute('chunksUploaded')) {
+            $deviceDeleted = $device->abort($file->getAttribute('path'));
+        } else {
+            $deviceDeleted = $device->delete($file->getAttribute('path'));
+        }
+
+        if ($deviceDeleted) {
             if ($bucket->getAttribute('permission') === 'bucket') {
                 $deleted = Authorization::skip(function() use ($dbForExternal, $fileId, $bucketId) {
                     return $dbForExternal->deleteDocument('bucket_' . $bucketId, $fileId);
