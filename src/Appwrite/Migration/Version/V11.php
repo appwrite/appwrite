@@ -202,7 +202,7 @@ class V11 extends Migration
                         $this->dbProject->createDocument($new->getCollection(), $new);
                     }
                 } catch (\Throwable $th) {
-                    Console::error('Failed to update document: ' . $th->getMessage());
+                    Console::error("Failed to migrate document ({$new->getId()}) from collection ({$new->getCollection()}): " . $th->getMessage());
                     continue;
                 }
             }
@@ -394,7 +394,13 @@ class V11 extends Migration
                 }, $document);
                 $document = new Document($document->getArrayCopy());
                 $document = $this->migratePermissions($document);
-                $this->dbProject->createDocument('collection_' . $collection, $document);
+
+                try {
+                    $this->dbProject->createDocument('collection_' . $collection, $document);
+                } catch (\Throwable $th) {
+                    Console::error("Failed to migrate document ({$document->getId()}): " . $th->getMessage());
+                    continue;
+                }
             }
             $offset += $this->limit;
         }
