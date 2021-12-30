@@ -2,6 +2,7 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
+use Appwrite\Utopia\Request\Filters\V11;
 use Appwrite\Utopia\Response;
 use Swoole\Process;
 use Swoole\Http\Server;
@@ -15,7 +16,7 @@ use Utopia\Audit\Audit;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Database\Document;
 use Utopia\Swoole\Files;
-use Utopia\Swoole\Request;
+use Appwrite\Utopia\Request;
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
@@ -183,6 +184,23 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     try {
         Authorization::cleanRoles();
         Authorization::setRole('role:all');
+
+        /*
+         * Request format
+        */
+        $route = $app->match($request);
+        Request::setRoute($route);
+
+        $requestFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        if ($requestFormat) {
+            switch($requestFormat) {
+                // TODO: For some reason console is still on 0.12. We dont want this filter logic in console, console uses 0.12 SDK
+                case version_compare ($requestFormat , '0.11.0', '<=') :
+                    \var_dump("Matches 0.11");
+                    Request::setFilter(new V11());
+                    break;
+            }
+        }
 
         $app->run($request, $response);
     } catch (\Throwable $th) {

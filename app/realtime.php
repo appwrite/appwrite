@@ -22,7 +22,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
-use Utopia\Swoole\Request;
+use Appwrite\Utopia\Request;
 use Utopia\WebSocket\Server;
 use Utopia\WebSocket\Adapter;
 

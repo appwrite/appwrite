@@ -349,7 +349,7 @@ class Response extends SwooleResponse
         $output = $this->output($document, $model);
 
         // If filter is set, parse the output
-        if (self::isFilter()) {
+        if (self::hasFilter()) {
             $output = self::getFilter()->parse($output, $model);
         }
 
@@ -488,7 +488,7 @@ class Response extends SwooleResponse
      *
      * @return bool
      */
-    public static function isFilter(): bool
+    public static function hasFilter(): bool
     {
         return self::$filter != null;
     }
