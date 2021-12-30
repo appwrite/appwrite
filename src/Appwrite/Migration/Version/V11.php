@@ -660,6 +660,10 @@ class V11 extends Migration
 
             $size = $type === Database::VAR_STRING ? 65_535 : 0; // Max size of text in MariaDB
 
+            if ($required) {
+                $default = null;
+            }
+
             $attributes[$key] = [
                 '$collection' => $collectionId,
                 '$id' => $id,
