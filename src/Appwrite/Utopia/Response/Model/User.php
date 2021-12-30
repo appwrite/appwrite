@@ -75,7 +75,7 @@ class User extends Model
         }
 
         if(is_array($prefs) && empty($prefs)) {
-            $document->setAttribute('prefs', new stdClass);
+            $document->setAttribute('prefs', new \stdClass);
         }
         return $document;
     }
