@@ -78,8 +78,7 @@ class V11 extends Migration
             try {
                 $project = $this->dbConsole->getDocument(collection: 'projects', id: $oldProject->getId());
             } catch (\Throwable $th) {
-                var_dump($th->getTraceAsString());
-                var_dump($th);
+                Console::error($th->getTraceAsString());
             }
 
             /**
@@ -587,6 +586,19 @@ class V11 extends Migration
                  */
                 $write = $document->getWrite();
                 $document->setAttribute('$write', str_replace('user:{self}', "user:{$document->getId()}", $write));
+
+                break;
+
+            case OldDatabase::SYSTEM_COLLECTION_TEAMS:
+
+                /**
+                 * Replace team:{self} with team:TEAM_ID
+                 */
+                $read = $document->getWrite();
+                $write = $document->getWrite();
+
+                $document->setAttribute('$read', str_replace('team:{self}', "team:{$document->getId()}", $read));
+                $document->setAttribute('$write', str_replace('team:{self}', "team:{$document->getId()}", $write));
 
                 break;
             case OldDatabase::SYSTEM_COLLECTION_FILES:
