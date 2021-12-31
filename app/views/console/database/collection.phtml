@@ -177,7 +177,62 @@ $logs = $this->getParam('logs', null);
                                 </td>
 
                                 <td data-title="Attribute ID: ">
-                                    <span class="text-size-small" data-ls-bind="{{attribute.key}}"></span>
+                                    <div data-ui-modal class="box modal sticky-footer width-large close" data-button-text="{{attribute.key}}" data-button-class="text-size-small link" data-button-element="span">
+                                        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                        <h1>
+                                            <i data-ls-if="!{{attribute.format}}" data-ls-attrs="class=icon-{{attribute.type}}"></i>
+                                            <i data-ls-if="{{attribute.format}}" data-ls-attrs="class=icon-{{attribute.format}}"></i>
+                                            <span data-ls-bind="{{attribute.key}}"></span>
+                                        </h1>
+
+                                        <hr />
+
+                                        <div class="row responsive modalize">
+                                            <form>
+                                                <div class="col span-12">
+                                                    <label>Key</label>
+                                                    <div class="input-copy">
+                                                        <input type="text" data-ls-bind="{{attribute.key}}" data-forms-copy disabled />
+                                                    </div>
+                                                    <label>Type</label>
+                                                    <input type="text" data-ls-bind="{{attribute.type}}" disabled />
+                                                    <div data-ls-if="{{attribute.format}}">
+                                                        <label>Format</label>
+                                                        <input type="text" data-ls-bind="{{attribute.format}}" class="full-width" disabled />
+                                                    </div>
+                                                    <div data-ls-if="{{attribute.default}}">
+                                                        <label>Default Value</label>
+                                                        <input type="text" data-ls-bind="{{attribute.default}}" class="full-width" disabled />
+                                                    </div>
+                                                    <div data-ls-if="{{attribute.size}}">
+                                                        <label for="size">Length</label>
+                                                        <input type="text" data-ls-bind="{{attribute.size}}" class="full-width" disabled />
+                                                    </div>
+
+                                                    <div data-ls-if="{{attribute.format}} == 'enum'">
+                                                        <label>Elements</label>
+                                                        <span data-ls-loop="attribute.elements" data-ls-as="element">
+                                                            <input type="text" data-ls-bind="{{element}}" class="full-width" disabled />
+                                                        </span>
+                                                    </div>
+
+                                                    <div data-ls-if="{{attribute.min}}">
+                                                        <label>Min</label>
+                                                        <input type="text" name="min" data-ls-bind="{{attribute.min}}" class="full-width" disabled />
+                                                    </div>
+                                                    <div data-ls-if="{{attribute.max}}">
+                                                        <label>Max</label>
+                                                        <input type="text" name="max" data-ls-bind="{{attribute.max}}" class="full-width" disabled />
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+
+                                        <footer>
+                                <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                        </footer>
+                                    </div>
                                 </td>
 
                                 <td data-title="Type:">

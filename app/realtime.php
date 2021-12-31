@@ -473,7 +473,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         }
 
         switch ($message['type']) {
-                /**
+            /**
              * This type is used to authenticate.
              */
             case 'authentication':
