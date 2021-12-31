@@ -12,8 +12,30 @@ class V12 extends Filter
         $parsedResponse = [];
 
         switch ($model) {
+            // No IDs -> Custom IDs
             case "account.create":
-                $parsedResponse = $this->addUserId($content);
+            case "account.createMagicURLSession":
+            case "users.create":
+                $parsedResponse = $this->addId('userId', $content);
+                break;
+            case "functions.create":
+                $parsedResponse = $this->addId('functionId', $content);
+                break;
+            case "teams.create":
+                $parsedResponse = $this->addId('teamId', $content);
+                break;
+
+            // Status integer -> boolean
+            case "users.updateStatus":
+                $parsedResponse = $this->convertStatus($content);
+                break;
+
+            // The rest (more complex) formats
+            case "database.createDocument":
+                $parsedResponse = $this->addId('documentId', $content);
+                break;
+            case "database.createCollection":
+                $parsedResponse = $this->addId('collectionId', $content);
                 break;
         }
 
@@ -25,9 +47,15 @@ class V12 extends Filter
         return $parsedResponse;
     }
 
-    protected function addUserId(array $content): array
+    protected function addUserId(string $key, array $content): array
     {
-        $content['userId'] = 'unique()';
+        $content[$key] = 'unique()';
+        return $content;
+    }
+
+    protected function convertStatus(array $content): array
+    {
+        $content['status'] = 'false'; // TODO: True or false. original is integer
         return $content;
     }
 }
