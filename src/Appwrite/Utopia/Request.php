@@ -43,6 +43,13 @@ class Request extends UtopiaRequest
             default:
                 return $this->getQuery($key, $default);
         }
+
+        if (self::hasFilter() && self::hasRoute()) {
+            $endpointIdentifier = self::getRoute()->getLabel('sdk.namespace', 'unknown') . '.' . self::getRoute()->getLabel('sdk.method', 'unknown');
+            return self::getFilter()->parse($requestParameters, $endpointIdentifier);
+        } else {
+            return $requestParameters;
+        }
     }
 
     /**

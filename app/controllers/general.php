@@ -2,7 +2,6 @@
 
 require_once __DIR__.'/../init.php';
 
-use Appwrite\Utopia\Request\Filters\V11;
 use Utopia\App;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -80,12 +79,12 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         Config::setParam('domains', $domains);
     }
 
-    $route = $utopia->match($request);
-
     $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
     if (\in_array($localeParam, Config::getParam('locale-codes'))) {
         $locale->setDefault($localeParam);
     }
+
+    $route = $utopia->match($request);
 
     if ($project->isEmpty()) {
         throw new Exception('Project not found', 404);

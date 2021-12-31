@@ -4,9 +4,8 @@ namespace Appwrite\Utopia\Request\Filters;
 
 use Appwrite\Utopia\Request\Filter;
 
-class V11 extends Filter
+class V12 extends Filter
 {
-    // TODO: Should this class be called be V11 or V12?
     // Convert 0.11 params format to 0.12 format
     public function parse(array $content, string $model): array
     {
@@ -19,8 +18,7 @@ class V11 extends Filter
         }
 
         if(empty($parsedResponse)) {
-            // TODO: Do we need execption? We dont need to find, right? Not found means no changes
-            // throw new Exception('Received invalid request model : '. $model);
+            // No changes between current version and the one user requested
             $parsedResponse = $content;
         }
 

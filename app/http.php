@@ -2,7 +2,7 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-use Appwrite\Utopia\Request\Filters\V11;
+use Appwrite\Utopia\Request\Filters\V12;
 use Appwrite\Utopia\Response;
 use Swoole\Process;
 use Swoole\Http\Server;
@@ -194,12 +194,15 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         $requestFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($requestFormat) {
             switch($requestFormat) {
-                // TODO: For some reason console is still on 0.12. We dont want this filter logic in console, console uses 0.12 SDK
+                // TODO: For some reason console is still on 0.11. We dont want this filter logic in console, console uses 0.12 SDK
                 case version_compare ($requestFormat , '0.11.0', '<=') :
-                    \var_dump("Matches 0.11");
-                    Request::setFilter(new V11());
+                    Request::setFilter(new V12());
                     break;
+                default:
+                    Request::setFilter(null);
             }
+        } else {
+            Request::setFilter(null);
         }
 
         $app->run($request, $response);
