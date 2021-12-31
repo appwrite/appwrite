@@ -14,6 +14,8 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
+use Utopia\Logger\Log;
 use Utopia\Database\Database;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
@@ -51,6 +53,43 @@ $adapter->setPackageMaxLength(64000); // Default maximum Package Size (64kb)
 
 $server = new Server($adapter);
 
+$logError = function(Throwable $error, string $action) use ($register) {
+    $logger = $register->get('logger');
+
+    if($logger) {
+        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+
+        $log = new Log();
+        $log->setNamespace("realtime");
+        $log->setServer(\gethostname());
+        $log->setVersion($version);
+        $log->setType(Log::TYPE_ERROR);
+        $log->setMessage($error->getMessage());
+
+        $log->addTag('code', $error->getCode());
+        $log->addTag('verboseType', get_class($error));
+
+        $log->addExtra('file', $error->getFile());
+        $log->addExtra('line', $error->getLine());
+        $log->addExtra('trace', $error->getTraceAsString());
+
+        $log->setAction($action);
+
+        $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+        $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+        $responseCode = $logger->addLog($log);
+        Console::info('Realtime log pushed with status code: '.$responseCode);
+    }
+
+    Console::error('[Error] Type: ' . get_class($error));
+    Console::error('[Error] Message: ' . $error->getMessage());
+    Console::error('[Error] File: ' . $error->getFile());
+    Console::error('[Error] Line: ' . $error->getLine());
+};
+
+$server->error($logError);
+
 function getDatabase(Registry &$register, string $namespace)
 {
     $db = $register->get('dbPool')->get();
@@ -70,13 +109,13 @@ function getDatabase(Registry &$register, string $namespace)
     ];
 };
 
-$server->onStart(function () use ($stats, $register, $containerId, &$statsDocument) {
+$server->onStart(function () use ($stats, $register, $containerId, &$statsDocument, $logError) {
     Console::success('Server started succefully');
 
     /**
      * Create document for this worker to share stats across Containers.
      */
-    go(function () use ($register, $containerId, &$statsDocument) {
+    go(function () use ($register, $containerId, &$statsDocument, $logError) {
         try {
             [$database, $returnDatabase] = getDatabase($register, '_project_console');
             $document = new Document([
@@ -90,10 +129,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
             ]);
             $statsDocument = Authorization::skip(fn() => $database->createDocument('realtime', $document));
         } catch (\Throwable $th) {
-            Console::error('[Error] Type: ' . get_class($th));
-            Console::error('[Error] Message: ' . $th->getMessage());
-            Console::error('[Error] File: ' . $th->getFile());
-            Console::error('[Error] Line: ' . $th->getLine());
+            call_user_func($logError, $th, "createWorkerDocument");
         } finally {
             call_user_func($returnDatabase);
         }
@@ -102,7 +138,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     /**
      * Save current connections to the Database every 5 seconds.
      */
-    Timer::tick(5000, function () use ($register, $stats, $containerId, &$statsDocument) {
+    Timer::tick(5000, function () use ($register, $stats, $containerId, &$statsDocument, $logError) {
         /** @var Document $statsDocument */
         foreach ($stats as $projectId => $value) {
             $connections = $stats->get($projectId, 'connections') ?? 0;
@@ -142,23 +178,20 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
 
             Authorization::skip(fn() => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
         } catch (\Throwable $th) {
-            Console::error('[Error] Type: ' . get_class($th));
-            Console::error('[Error] Message: ' . $th->getMessage());
-            Console::error('[Error] File: ' . $th->getFile());
-            Console::error('[Error] Line: ' . $th->getLine());
+            call_user_func($logError, $th, "updateWorkerDocument");
         } finally {
             call_user_func($returnDatabase);
         }
     });
 });
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $logError) {
     Console::success('Worker ' . $workerId . ' started succefully');
 
     $attempts = 0;
     $start = time();
 
-    Timer::tick(5000, function () use ($server, $register, $realtime, $stats) {
+    Timer::tick(5000, function () use ($server, $register, $realtime, $stats, $logError) {
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
@@ -300,6 +333,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 }
             });
         } catch (\Throwable $th) {
+            call_user_func($logError, $th, "pubSubConnection");
+
             Console::error('Pub/sub error: ' . $th->getMessage());
             $register->get('redisPool')->put($redis);
             $attempts++;
@@ -312,7 +347,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     Console::error('Failed to restart pub/sub...');
 });
 
-$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime) {
+$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $logError) {
     $app = new App('UTC');
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
@@ -409,6 +444,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $stats->incr($project->getId(), 'connections');
         $stats->incr($project->getId(), 'connectionsTotal');
     } catch (\Throwable $th) {
+        call_user_func($logError, $th, "initServer");
+
         $response = [
             'type' => 'error',
             'data' => [

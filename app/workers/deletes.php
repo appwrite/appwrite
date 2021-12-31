@@ -23,6 +23,10 @@ class DeletesV1 extends Worker
      */
     protected $consoleDB = null;
 
+    public function getName(): string {
+        return "deletes";
+    }
+
     public function init(): void
     {
     }

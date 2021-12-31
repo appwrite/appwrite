@@ -16,6 +16,8 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Database\Document;
 use Utopia\Swoole\Files;
 use Utopia\Swoole\Request;
+use Utopia\Logger\Log;
+use Utopia\Logger\Log\User;
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
@@ -186,6 +188,59 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $app->run($request, $response);
     } catch (\Throwable $th) {
+        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+
+        $logger = $app->getResource("logger");
+        if($logger) {
+            try {
+                $user = $app->getResource('user');
+                /** @var Appwrite\Database\Document $user */
+            } catch(\Throwable $_th) {
+                // All good, user is optional information for logger
+            }
+
+            $loggerBreadcrumbs = $app->getResource("loggerBreadcrumbs");
+            $route = $app->match($request);
+
+            $log = new Utopia\Logger\Log();
+
+            if(isset($user) && !$user->isEmpty()) {
+                $log->setUser(new User($user->getId()));
+            }
+
+            $log->setNamespace("http");
+            $log->setServer(\gethostname());
+            $log->setVersion($version);
+            $log->setType(Log::TYPE_ERROR);
+            $log->setMessage($th->getMessage());
+
+            $log->addTag('method', $route->getMethod());
+            $log->addTag('url',  $route->getPath());
+            $log->addTag('verboseType', get_class($th));
+            $log->addTag('code', $th->getCode());
+            // $log->addTag('projectId', $project->getId()); // TODO: Figure out how to get ProjectID, if it becomes relevant
+            $log->addTag('hostname', $request->getHostname());
+            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
+
+            $log->addExtra('file', $th->getFile());
+            $log->addExtra('line', $th->getLine());
+            $log->addExtra('trace', $th->getTraceAsString());
+            $log->addExtra('roles', Authorization::$roles);
+
+            $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
+            $log->setAction($action);
+
+            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+            foreach($loggerBreadcrumbs as $loggerBreadcrumb) {
+                $log->addBreadcrumb($loggerBreadcrumb);
+            }
+
+            $responseCode = $logger->addLog($log);
+            Console::info('Log pushed with status code: '.$responseCode);
+        }
+
         Console::error('[Error] Type: '.get_class($th));
         Console::error('[Error] Message: '.$th->getMessage());
         Console::error('[Error] File: '.$th->getFile());
@@ -200,12 +255,20 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $swooleResponse->setStatusCode(500);
 
-        if(App::isDevelopment()) {
-            $swooleResponse->end('error: '.$th->getMessage());
-        }
-        else {
-            $swooleResponse->end('500: Server Error');
-        }
+        $output = ((App::isDevelopment())) ? [
+            'message' => 'Error: '. $th->getMessage(),
+            'code' => 500,
+            'file' => $th->getFile(),
+            'line' => $th->getLine(),
+            'trace' => $th->getTrace(),
+            'version' => $version,
+        ] : [
+            'message' => 'Error: Server Error',
+            'code' => 500,
+            'version' => $version,
+        ];
+
+        $swooleResponse->end(\json_encode($output));
     } finally {
         /** @var PDOPool $dbPool */
         $dbPool = $register->get('dbPool');

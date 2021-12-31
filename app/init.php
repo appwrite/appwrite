@@ -30,6 +30,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Stats\Stats;
 use Appwrite\Utopia\View;
 use Utopia\App;
+use Utopia\Logger\Logger;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
@@ -144,7 +145,7 @@ Config::load('locale-continents', __DIR__.'/config/locale/continents.php');
 Config::load('storage-logos', __DIR__.'/config/storage/logos.php'); 
 Config::load('storage-mimes', __DIR__.'/config/storage/mimes.php'); 
 Config::load('storage-inputs', __DIR__.'/config/storage/inputs.php'); 
-Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php'); 
+Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php');
 
 $user = App::getEnv('_APP_REDIS_USER','');
 $pass = App::getEnv('_APP_REDIS_PASS','');
@@ -375,6 +376,22 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function($attribute) {
 /*
  * Registry
  */
+$register->set('logger', function () { // Register error logger
+    $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
+    $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
+
+    if(empty($providerName) || empty($providerConfig)) {
+        return null;
+    }
+
+    if(!Logger::hasProvider($providerName)) {
+        throw new Exception("Logging provider not supported. Logging disabled.");
+    }
+
+    $classname = '\\Utopia\\Logger\\Adapter\\'.\ucfirst($providerName);
+    $adapter = new $classname($providerConfig);
+    return new Logger($adapter);
+});
 $register->set('dbPool', function () { // Register DB connection
     $dbHost = App::getEnv('_APP_DB_HOST', '');
     $dbPort = App::getEnv('_APP_DB_PORT', '');
@@ -581,6 +598,14 @@ Locale::setLanguageFromJSON('zh-tw', __DIR__.'/config/locale/translations/zh-tw.
 ]);
 
 // Runtime Execution
+App::setResource('logger', function($register) {
+    return $register->get('logger');
+}, ['register']);
+
+App::setResource('loggerBreadcrumbs', function() {
+    return [];
+});
+
 App::setResource('register', fn() => $register);
 
 App::setResource('layout', function($locale) {
