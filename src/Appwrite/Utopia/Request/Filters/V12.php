@@ -120,7 +120,36 @@ class V12 extends Filter
 
     protected function convertQueries(array $content): array
     {
-      // TODO: remove filters, search; add queries
+        $queries = [];
+
+        if(!empty($content['filters'])) {
+            foreach ($content['filters'] as $filter) {
+                $operators = ['=' => 'equal', '!=' => 'notEqual', '>' => 'greater', '<' => 'lesser', '<=' => 'lesserEqual', '>=' => 'greaterEqual'];
+                foreach ($operators as $operator => $operatorVerbose) {
+                    if (\str_contains($filter, $operator)) {
+                        $usedOperator = $operator;
+                        break;
+                    }
+                }
+
+                if(isset($usedOperator)) {
+                    [ $attributeKey, $filterValue ] = \explode($usedOperator, $filter);
+                    // TODO: String or not? Any way to figure out?
+                    $query = $attributeKey . '.' . $operators[$usedOperator] . '("' . $filterValue . '")';
+                    \array_push($queries, $query);
+                }
+            }
+        }
+
+        // TODO: Can we even migrate search? Which key? Is $id key OK?
+        // TODO: What's difference between !empty and isset?
+        if(!empty($content['search'])) {
+            \array_push($queries, '$id.search("' . $content['search'] . '")');
+        }
+
+        unset($content['filters']);
+        unset($content['search']);
+        $content['queries'] = $queries;
 
         return $content;
     }
