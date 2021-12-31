@@ -92,7 +92,6 @@ $logError = function(Throwable $error, string $action) use ($register) {
 
 $server->error($logError);
 
-
 function getDatabase(Registry &$register, string $namespace)
 {
     $db = $register->get('dbPool')->get();
