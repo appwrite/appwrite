@@ -115,16 +115,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.6.1",
+            "version": "0.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/php-runtimes.git",
-                "reference": "a42434de2fbd60818244c1a9b2ac0429ad0ef9ee"
+                "reference": "33e087933f4353b1b3aad8d00e32ef82af18a292"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/php-runtimes/zipball/a42434de2fbd60818244c1a9b2ac0429ad0ef9ee",
-                "reference": "a42434de2fbd60818244c1a9b2ac0429ad0ef9ee",
+                "url": "https://api.github.com/repos/appwrite/php-runtimes/zipball/33e087933f4353b1b3aad8d00e32ef82af18a292",
+                "reference": "33e087933f4353b1b3aad8d00e32ef82af18a292",
                 "shasum": ""
             },
             "require": {
@@ -164,9 +164,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/php-runtimes/issues",
-                "source": "https://github.com/appwrite/php-runtimes/tree/0.6.1"
+                "source": "https://github.com/appwrite/php-runtimes/tree/0.6.2"
             },
-            "time": "2021-10-21T11:32:25+00:00"
+            "time": "2021-12-31T07:16:48+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -6520,5 +6520,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.0.0"
 }

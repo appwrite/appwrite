@@ -24,6 +24,8 @@
   - Deno 1.12
   - Deno 1.13
   - Deno 1.14
+  - PHP 8.1
+  - Node 17
 - Added translations:
   - German `de` by @SoftCreatR in https://github.com/appwrite/appwrite/pull/1790
   - Hebrew `he` by @Kokoden in https://github.com/appwrite/appwrite/pull/1846
