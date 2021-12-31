@@ -510,6 +510,29 @@ class V11 extends Migration
 
                 break;
             case OldDatabase::SYSTEM_COLLECTION_KEYS:
+                $projectId = $this->getProjectIdFromReadPermissions($document);
+
+                /**
+                 * Set Project ID
+                 */
+                if ($document->getAttribute('projectId') === null) {
+                    $document->setAttribute('projectId', $projectId);
+                }
+
+                /**
+                 * Set scopes if empty
+                 */
+                if (empty($document->getAttribute('scopes', []))) {
+                    $document->setAttribute('scopes', []);
+                }
+
+                /**
+                 * Reset Permissions
+                 */
+                $document->setAttribute('$read', ['role:all']);
+                $document->setAttribute('$write', ['role:all']);
+
+                break;
             case OldDatabase::SYSTEM_COLLECTION_WEBHOOKS:
                 $projectId = $this->getProjectIdFromReadPermissions($document);
 
