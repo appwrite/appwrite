@@ -37,41 +37,50 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     /*
      * Abuse Check
      */
-    $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $db);
-    $timeLimit->setNamespace('app_'.$project->getId());
-    $timeLimit
-        ->setParam('{userId}', $user->getId())
-        ->setParam('{userAgent}', $request->getUserAgent(''))
-        ->setParam('{ip}', $request->getIP())
-        ->setParam('{url}', $request->getHostname().$route->getPath())
-    ;
+    $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
+    $timeLimitArray = [];
 
-    //TODO make sure we get array here
+    $abuseKeyLabel = (!is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
-    foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-        if(!empty($value)) {
-            $timeLimit->setParam('{param-'.$key.'}', (\is_array($value)) ? \json_encode($value) : $value);
-        }
+    foreach ($abuseKeyLabel as $abuseKey) {
+        $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $db);
+        $timeLimit->setNamespace('app_'.$project->getId());
+        $timeLimit
+            ->setParam('{userId}', $user->getId())
+            ->setParam('{userAgent}', $request->getUserAgent(''))
+            ->setParam('{ip}', $request->getIP())
+            ->setParam('{url}', $request->getHostname().$route->getPath());
+        $timeLimitArray[] = $timeLimit;
     }
 
-    $abuse = new Abuse($timeLimit);
-
-    if ($timeLimit->limit()) {
-        $response
-            ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
-            ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
-            ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600))
-        ;
-    }
-
+    $closestLimit = null;
     $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
     $isAppUser = Auth::isAppUser(Authorization::$roles);
 
-    if (($abuse->check() // Route is rate-limited
+    foreach ($timeLimitArray as $timeLimit) {
+        foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
+            if(!empty($value)) {
+                $timeLimit->setParam('{param-'.$key.'}', (\is_array($value)) ? \json_encode($value) : $value);
+            }
+        }
+
+        $abuse = new Abuse($timeLimit);
+
+        if ($timeLimit->limit() && ($timeLimit->remaining() < $closestLimit || is_null($closestLimit))) {
+            $closestLimit = $timeLimit->remaining();
+            $response
+                ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
+                ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
+                ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600))
+            ;
+        }
+    
+        if (($abuse->check() // Route is rate-limited
         && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not disabled
         && (!$isAppUser && !$isPrivilegedUser)) // User is not an admin or API key
         {
-        throw new Exception('Too many requests', 429);
+            throw new Exception('Too many requests', 429);
+        }
     }
 
     /*
