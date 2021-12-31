@@ -31,7 +31,6 @@ use Appwrite\Stats\Stats;
 use Appwrite\Utopia\View;
 use Utopia\App;
 use Utopia\Logger\Logger;
-use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
