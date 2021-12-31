@@ -23,6 +23,10 @@ class DeletesV1 extends Worker
      */
     protected $consoleDB = null;
 
+    public function getName(): string {
+        return "deletes";
+    }
+
     public function init(): void
     {
     }
@@ -102,7 +106,7 @@ class DeletesV1 extends Worker
 
         $dbForProject = $this->getProjectDB($projectId);
 
-        $dbForProject->deleteCollection($collectionId);
+        $dbForProject->deleteCollection('collection_' . $collectionId);
 
         $this->deleteByGroup('attributes', [
             new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])

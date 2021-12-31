@@ -100,6 +100,10 @@ class FunctionsV1 extends Worker
 
     public array $allowed = [];
 
+    public function getName(): string {
+        return "functions";
+    }
+
     public function init(): void
     {
     }

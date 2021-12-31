@@ -973,10 +973,12 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
             throw new Exception($validator->getDescription(), 400);
         }
 
+        $size = $max > 2147483647 ? 8 : 4; // Automatically create BigInt depending on max value
+
         $attribute = createAttribute($collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_INTEGER,
-            'size' => 0,
+            'size' => $size,
             'required' => $required,
             'default' => $default,
             'array' => $array,
@@ -1679,7 +1681,7 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('queries', [], new ArrayList(new Text(0)), 'Array of query strings.', true) // TODO: research limitations - temporarily unlimited length
+    ->param('queries', [], new ArrayList(new Text(0), 100), 'Array of query strings.', true) 
     ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the document used as the starting point for the query, excluding the document itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
@@ -1717,7 +1719,15 @@ App::get('/v1/database/collections/:collectionId/documents')
             }
         }
 
-        $queries = \array_map(fn ($query) => Query::parse($query), $queries);
+        $queries = \array_map(function ($query) {
+            $query = Query::parse($query);
+
+            if (\count($query->getValues()) > 100) {
+                throw new Exception("You cannot use more than 100 query values on attribute '{$query->getAttribute()}'", 400);
+            }
+
+            return $query;
+        }, $queries);
 
         if (!empty($queries)) {
             $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []), true);

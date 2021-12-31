@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class User extends Model
 {
@@ -59,6 +60,24 @@ class User extends Model
                 'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
             ])
         ;
+    }
+
+    /**
+     * Get Collection
+     * 
+     * @return string
+     */
+    public function filter(Document $document): Document
+    {
+        $prefs = $document->getAttribute('prefs');
+        if($prefs instanceof Document) {
+            $prefs = $prefs->getArrayCopy();
+        }
+
+        if(is_array($prefs) && empty($prefs)) {
+            $document->setAttribute('prefs', new \stdClass);
+        }
+        return $document;
     }
 
     /**
