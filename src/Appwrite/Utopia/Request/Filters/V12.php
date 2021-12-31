@@ -9,53 +9,121 @@ class V12 extends Filter
     // Convert 0.11 params format to 0.12 format
     public function parse(array $content, string $model): array
     {
-        $parsedResponse = [];
+        // TODO: Double-check!
 
         switch ($model) {
             // No IDs -> Custom IDs
             case "account.create":
             case "account.createMagicURLSession":
             case "users.create":
-                $parsedResponse = $this->addId('userId', $content);
+                $content = $this->addId($content, 'userId');
                 break;
             case "functions.create":
-                $parsedResponse = $this->addId('functionId', $content);
+                $content = $this->addId($content, 'functionId');
                 break;
             case "teams.create":
-                $parsedResponse = $this->addId('teamId', $content);
+                $content = $this->addId($content, 'teamId');
                 break;
 
             // Status integer -> boolean
             case "users.updateStatus":
-                $parsedResponse = $this->convertStatus($content);
+                $content = $this->convertStatus($content);
+                break;
+
+            // Deprecating order type
+            case "functions.listExecutions":
+                $content = $this->removeOrderType($content);
                 break;
 
             // The rest (more complex) formats
             case "database.createDocument":
-                $parsedResponse = $this->addId('documentId', $content);
+                $content = $this->addId($content, 'documentId');
+                $content = $this->removeParentProperties($content);
+                break;
+            case "database.listDocuments":
+                $content = $this->removeOrderCast($content);
+                $content = $this->convertOrder($content);
+                $content = $this->convertQueries($content);
                 break;
             case "database.createCollection":
-                $parsedResponse = $this->addId('collectionId', $content);
+                $content = $this->addId($content, 'collectionId');
+                $content = $this->removeRules($content);
+                $content = $this->addCollectionPermissionLevel($content);
+                break;
+            case "database.updateCollection":
+                $content = $this->removeRules($content);
+                $content = $this->addCollectionPermissionLevel($content);
                 break;
         }
 
-        if(empty($parsedResponse)) {
-            // No changes between current version and the one user requested
-            $parsedResponse = $content;
-        }
-
-        return $parsedResponse;
+        return $content;
     }
 
-    protected function addUserId(string $key, array $content): array
+    // New parameters
+
+    protected function addUserId(array $content, string $key): array
     {
         $content[$key] = 'unique()';
         return $content;
     }
 
+    protected function addCollectionPermissionLevel(array $content): array
+    {
+        $content['permission'] = 'document';
+        return $content;
+    }
+
+    // Deprecated parameters
+
+    protected function removeRules(array $content): array
+    {
+        unset($content['rules']);
+        return $content;
+    }
+
+    protected function removeOrderType(array $content): array
+    {
+        unset($content['orderType']);
+        return $content;
+    }
+
+    protected function removeOrderCast(array $content): array
+    {
+        unset($content['orderCast']);
+        return $content;
+    }
+
+    protected function removeParentProperties(array $content): array
+    {
+        unset($content['parentDocument']);
+        unset($content['parentProperty']);
+        unset($content['parentPropertyType']);
+        return $content;
+    }
+
+    // Modified parameters
+
     protected function convertStatus(array $content): array
     {
-        $content['status'] = 'false'; // TODO: True or false. original is integer
+        $content['status'] = $content['status'] === 2 ? false : true;
+        return $content;
+    }
+
+    protected function convertOrder(array $content): array
+    {
+        $content['orderAttributes'] = [ $content['orderField'] ];
+        $content['orderTypes'] = [ $content['orderType'] ];
+
+        unset($content['orderField']);
+        unset($content['orderType']);
+
+        return $content;
+    }
+
+    protected function convertQueries(array $content): array
+    {
+      // TODO: remove filters, search; add queries
+
         return $content;
     }
 }
