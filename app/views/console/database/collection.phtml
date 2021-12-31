@@ -155,10 +155,8 @@ $logs = $this->getParam('logs', null);
                                 <th width="100"></th>
                                 <th width="130">Attribute ID</th>
                                 <th width="100">Type</th>
-                                <th>Length</th>
-                                <th>Default</th>
                                 <th></th>
-                                <th width="80"></th>
+                                <th width="32"></th>
                             </tr>
                         </thead>
                         <tbody data-ls-loop="project-collection.attributes" data-ls-as="attribute">
@@ -177,7 +175,21 @@ $logs = $this->getParam('logs', null);
                                 </td>
 
                                 <td data-title="Attribute ID: ">
-                                    <div data-ui-modal class="box modal sticky-footer width-large close" data-button-text="{{attribute.key}}" data-button-class="text-size-small link" data-button-element="span">
+                                    <span class="text-size-small" data-ls-bind="{{attribute.key}}"></span>
+                                </td>
+
+                                <td data-title="Type:">
+                                    <span class="text-size-small" data-ls-if="!{{attribute.array}}" data-ls-bind="{{attribute.type}}"></span>
+                                    <span class="text-size-small" data-ls-if="{{attribute.array}}" data-ls-bind="{{attribute.type}}[]"></span>
+                                    <span class="text-size-small" data-ls-if="{{attribute.format}}" data-ls-bind="({{attribute.format}})"></span>
+                                </td>
+
+                                <td data-title="">
+                                    <span class="text-size-small text-danger" data-ls-if="{{attribute.required}}">required</span>
+                                </td>
+
+                                <td data-title="">
+                                    <div data-ui-modal class="box modal sticky-footer width-large close" data-button-class="icon-dot-3 link" data-button-element="i">
                                         <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                                         <h1>
@@ -247,63 +259,41 @@ $logs = $this->getParam('logs', null);
                                         </div>
 
                                         <footer>
-                                <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                            <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                            <form
+                                                data-ls-if="{{attribute.status}} !== 'deleting'"
+                                                class="pull-end"
+                                                data-analytics
+                                                data-analytics-activity
+                                                data-analytics-event="submit"
+                                                data-analytics-category="console"
+                                                data-analytics-label="Delete Collection Attribute"
+                                                data-service="database.deleteAttribute"
+                                                data-scope="sdk"
+                                                data-event="submit"
+                                                data-confirm="Are you sure you want to delete this attribute?"
+                                                data-success="alert,trigger"
+                                                data-success-param-alert-text="Deleted attribute successfully"
+                                                data-success-param-trigger-events="database.deleteAttribute"
+                                                data-failure="alert"
+                                                data-failure-param-alert-text="Failed to delete attribute"
+                                                data-failure-param-alert-classname="error">
+
+                                                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                                                <input type="hidden" name="collectionId" data-ls-bind="{{project-collection.$id}}" />
+                                                <input type="hidden" name="key" data-ls-bind="{{attribute.key}}" />
+
+                                                <button class="danger">Delete</button>
+                                            </form>
                                         </footer>
                                     </div>
-                                </td>
-
-                                <td data-title="Type:">
-                                    <span class="text-size-small" data-ls-if="!{{attribute.array}}" data-ls-bind="{{attribute.type}}"></span>
-                                    <span class="text-size-small" data-ls-if="{{attribute.array}}" data-ls-bind="{{attribute.type}}[]"></span>
-                                    <span class="text-size-small" data-ls-if="{{attribute.format}}" data-ls-bind="({{attribute.format}})"></span>
-                                </td>
-
-                                <td data-title="Length:">
-                                    <span class="text-size-small" data-ls-if="{{attribute.size}}" data-ls-bind="{{attribute.size}}"></span>
-                                </td>
-
-                                <td data-title="Default:">
-                                    <span class="text-size-small" data-ls-bind="{{attribute.default}}" data-ls-attr="title={{attribute.default}}"></span>
-                                    <span class="text-fade text-size-small" data-ls-if="{{attribute.default}} != ''">n/a</span>
-                                </td>
-
-                                <td data-title="">
-                                    <span class="text-size-small text-danger" data-ls-if="{{attribute.required}}">required</span>
-                                </td>
-
-                                <td data-title="">
-                                    <form
-                                        data-ls-if="{{attribute.status}} !== 'deleting'"
-                                        class="pull-end"
-                                        data-analytics
-                                        data-analytics-activity
-                                        data-analytics-event="submit"
-                                        data-analytics-category="console"
-                                        data-analytics-label="Delete Collection Attribute"
-                                        data-service="database.deleteAttribute"
-                                        data-scope="sdk"
-                                        data-event="submit"
-                                        data-confirm="Are you sure you want to delete this attribute?"
-                                        data-success="alert,trigger"
-                                        data-success-param-alert-text="Deleted attribute successfully"
-                                        data-success-param-trigger-events="database.deleteAttribute"
-                                        data-failure="alert"
-                                        data-failure-param-alert-text="Failed to delete attribute"
-                                        data-failure-param-alert-classname="error">
-
-                                        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                                        <input type="hidden" name="collectionId" data-ls-bind="{{project-collection.$id}}" />
-                                        <input type="hidden" name="key" data-ls-bind="{{attribute.key}}" />
-
-                                        <button class="danger small">Delete</button>
-                                    </form>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <div class="drop-list pull-start" data-ls-ui-open="" data-button-aria="Choose Platform" data-button-text="Add Attribute" data-button-class="button" data-blur="1">
+                <div class="drop-list pull-start" data-ls-ui-open="" data-button-aria="Choose Attribute" data-button-text="Add Attribute" data-button-class="button" data-blur="1">
                     <ul>
                         <li>
                             <div class="link new-attribute-string"><i class="avatar icon-string"></i> New String Attribute</div>
