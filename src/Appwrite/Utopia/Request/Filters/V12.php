@@ -9,8 +9,6 @@ class V12 extends Filter
     // Convert 0.11 params format to 0.12 format
     public function parse(array $content, string $model): array
     {
-        // TODO: Double-check!
-
         switch ($model) {
             // No IDs -> Custom IDs
             case "account.create":
@@ -61,7 +59,7 @@ class V12 extends Filter
 
     // New parameters
 
-    protected function addUserId(array $content, string $key): array
+    protected function addId(array $content, string $key): array
     {
         $content[$key] = 'unique()';
         return $content;
