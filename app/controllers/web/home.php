@@ -258,7 +258,7 @@ App::get('/specs/:format')
     ->inject('response')
     ->action(function ($format, $platform, $tests, $utopia, $request, $response) {
         /** @var Utopia\App $utopia */
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
 
         $platforms = [

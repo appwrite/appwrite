@@ -27,7 +27,7 @@ Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 App::init(function ($utopia, $request, $response, $console, $project, $dbForConsole, $user, $locale, $clients) {
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $console */
     /** @var Utopia\Database\Document $project */
@@ -284,7 +284,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
 }, ['utopia', 'request', 'response', 'console', 'project', 'dbForConsole', 'user', 'locale', 'clients']);
 
 App::options(function ($request, $response) {
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
 
     $origin = $request->getOrigin();
@@ -302,7 +302,7 @@ App::options(function ($request, $response) {
 App::error(function ($error, $utopia, $request, $response, $layout, $project, $logger, $loggerBreadcrumbs) {
     /** @var Exception $error */
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Utopia\View $layout */
     /** @var Utopia\Database\Document $project */

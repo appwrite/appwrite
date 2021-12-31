@@ -453,7 +453,7 @@ App::post('/v1/functions/:functionId/tags')
     ->inject('dbForProject')
     ->inject('usage')
     ->action(function ($functionId, $command, $file, $request, $response, $dbForProject, $usage) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */

@@ -5,7 +5,7 @@ use Utopia\Config\Config;
 
 App::init(function ($utopia, $request, $response, $layout) {
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Utopia\View $layout */
 
