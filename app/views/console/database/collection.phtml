@@ -195,12 +195,25 @@ $logs = $this->getParam('logs', null);
                                                     <div class="input-copy">
                                                         <input type="text" data-ls-bind="{{attribute.key}}" data-forms-copy disabled />
                                                     </div>
+
                                                     <label>Type</label>
                                                     <input type="text" data-ls-bind="{{attribute.type}}" disabled />
                                                     <div data-ls-if="{{attribute.format}}">
                                                         <label>Format</label>
                                                         <input type="text" data-ls-bind="{{attribute.format}}" class="full-width" disabled />
                                                     </div>
+
+                                                    <div class="row responsive thin">
+                                                        <div class="col span-6 margin-bottom-small">
+                                                            <label>Required</label>
+                                                            <input type="text" data-ls-bind="{{attribute.required}}" disabled />
+                                                        </div>
+                                                        <div class="col span-6 margin-bottom-small">
+                                                            <label>Array</label>
+                                                            <input type="text" data-ls-bind="{{attribute.array}}" disabled />
+                                                        </div>
+                                                    </div>
+
                                                     <div data-ls-if="{{attribute.default}}">
                                                         <label>Default Value</label>
                                                         <input type="text" data-ls-bind="{{attribute.default}}" class="full-width" disabled />
@@ -217,14 +230,18 @@ $logs = $this->getParam('logs', null);
                                                         </span>
                                                     </div>
 
-                                                    <div data-ls-if="{{attribute.min}}">
-                                                        <label>Min</label>
-                                                        <input type="text" name="min" data-ls-bind="{{attribute.min}}" class="full-width" disabled />
+                                                    <div data-ls-if="{{attribute.min}} && {{attribute.max}}" class="row responsive thin">
+                                                        <div class="col span-6 margin-bottom-small">
+                                                            <label>Min</label>
+                                                            <input type="text" name="min" data-ls-bind="{{attribute.min}}" class="full-width" disabled />
+                                                        </div>
+                                                        <div class="col span-6 margin-bottom-small">
+                                                            <label>Max</label>
+                                                            <input type="text" name="max" data-ls-bind="{{attribute.max}}" class="full-width" disabled />
+                                                        </div>
                                                     </div>
-                                                    <div data-ls-if="{{attribute.max}}">
-                                                        <label>Max</label>
-                                                        <input type="text" name="max" data-ls-bind="{{attribute.max}}" class="full-width" disabled />
-                                                    </div>
+
+
                                                 </div>
                                             </form>
                                         </div>
