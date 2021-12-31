@@ -14,7 +14,6 @@ use Utopia\Locale\Locale as Locale;
 
 class V06 extends Filter
 {
-    
     // Convert 0.7 Data format to 0.6 format
     public function parse(array $content, string $model): array
     {
@@ -49,7 +48,7 @@ class V06 extends Filter
             case Response::MODEL_USER_LIST:
                 $parsedResponse = $this->parseUserList($content);
                 break;
-            
+
             case Response::MODEL_TEAM:
                 $parsedResponse = $this->parseTeam($content);
                 break;
@@ -61,7 +60,7 @@ class V06 extends Filter
             case Response::MODEL_MEMBERSHIP:
                 $parsedResponse = $content;
                 break;
-            
+
             case Response::MODEL_MEMBERSHIP_LIST:
                 $parsedResponse = $content['memberships'];
                 break;
@@ -73,11 +72,11 @@ class V06 extends Filter
             case Response::MODEL_SESSION_LIST:
                 $parsedResponse = $this->parseSessionList($content);
                 break;
-            
+
             case Response::MODEL_LOG_LIST:
                 $parsedResponse = $this->parseLogList($content);
                 break;
-            
+
             case Response::MODEL_TOKEN:
                 $parsedResponse = $this->parseToken($content);
                 break;
@@ -113,7 +112,7 @@ class V06 extends Filter
                 break;
 
             default:
-                throw new Exception('Received invalid model : '.$model);
+                throw new Exception('Received invalid model : ' . $model);
         }
 
         return $parsedResponse;
@@ -245,7 +244,7 @@ class V06 extends Filter
                 'model' => $log['deviceModel'],
                 'time' => $log['time'],
                 'geo' => [
-                    'isoCode' => empty($log['countryCode']) ? '---' : $log['countryCode']  ,
+                    'isoCode' => empty($log['countryCode']) ? '---' : $log['countryCode'],
                     'country' => empty($log['countryName']) ? Locale::getText('locale.country.unknown') : $log['countryName']
                 ],
                 'OS' => [
@@ -280,7 +279,7 @@ class V06 extends Filter
                 'ip' => $session['ip'],
                 'model' => $session['deviceModel'],
                 'geo' => [
-                    'isoCode' => empty($session['countryCode']) ? '---' : $session['countryCode']  ,
+                    'isoCode' => empty($session['countryCode']) ? '---' : $session['countryCode'],
                     'country' => empty($session['countryName']) ? Locale::getText('locale.country.unknown') : $session['countryName']
                 ],
                 'OS' => [
@@ -325,10 +324,10 @@ class V06 extends Filter
             if (!$provider['enabled']) {
                 continue;
             }
-            $content['oauth2'.ucfirst($key)] = '';
-            $content['oauth2'.ucfirst($key).'AccessToken'] = '';
+            $content['oauth2' . ucfirst($key)] = '';
+            $content['oauth2' . ucfirst($key) . 'AccessToken'] = '';
         }
-        $content['status'] = empty($content['status']) ? 0 : $content['status'];
+        $content['status'] = $content['status'] ? 0 : 2;
         $content['roles'] = Authorization::getRoles() ?? [];
         return $content;
     }

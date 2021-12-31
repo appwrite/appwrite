@@ -1,6 +1,6 @@
 <?php
 
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -224,9 +224,7 @@ App::get('/v1/locale/currencies')
 
         $list = Config::getParam('locale-currencies');
 
-        $list = array_map(function($node) {
-            return new Document($node);
-        }, $list);
+        $list = array_map(fn($node) => new Document($node), $list);
 
         $response->dynamic(new Document(['currencies' => $list, 'sum' => \count($list)]), Response::MODEL_CURRENCY_LIST);
     });
@@ -249,9 +247,7 @@ App::get('/v1/locale/languages')
 
         $list = Config::getParam('locale-languages');
 
-        $list = array_map(function($node) {
-            return new Document($node);
-        }, $list);
+        $list = array_map(fn ($node) => new Document($node), $list);
 
         $response->dynamic(new Document(['languages' => $list, 'sum' => \count($list)]), Response::MODEL_LANGUAGE_LIST);
     });

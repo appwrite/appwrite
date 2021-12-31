@@ -13,6 +13,7 @@ const configApp = {
     mainFile: 'app.js',
     src: [
         'public/scripts/dependencies/litespeed.js',
+        'public/scripts/dependencies/alpine.js',
 
         'public/scripts/init.js',
 
@@ -46,7 +47,9 @@ const configApp = {
         'public/scripts/views/forms/code.js',
         'public/scripts/views/forms/color.js',
         'public/scripts/views/forms/copy.js',
+        'public/scripts/views/forms/custom-id.js',
         'public/scripts/views/forms/document.js',
+        'public/scripts/views/forms/duplications.js',
         'public/scripts/views/forms/document-preview.js',
         'public/scripts/views/forms/filter.js',
         'public/scripts/views/forms/headers.js',
@@ -57,9 +60,11 @@ const configApp = {
         'public/scripts/views/forms/oauth-apple.js',
         'public/scripts/views/forms/password-meter.js',
         'public/scripts/views/forms/pell.js',
+        'public/scripts/views/forms/required.js',
         'public/scripts/views/forms/remove.js',
         'public/scripts/views/forms/run.js',
         'public/scripts/views/forms/select-all.js',
+        'public/scripts/views/forms/selected.js',
         'public/scripts/views/forms/show-secret.js',
         'public/scripts/views/forms/switch.js',
         'public/scripts/views/forms/tags.js',
@@ -69,6 +74,7 @@ const configApp = {
         'public/scripts/views/forms/upload.js',
 
         'public/scripts/views/general/cookies.js',
+        'public/scripts/views/general/copy.js',
         'public/scripts/views/general/page-title.js',
         'public/scripts/views/general/scroll-to.js',
         'public/scripts/views/general/scroll-direction.js',

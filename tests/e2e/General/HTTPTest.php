@@ -124,7 +124,7 @@ class HTTPTest extends Scope
 
     public function testSpecOpenAPI3()
     {
-        $response = $this->client->call(Client::METHOD_GET, '/specs/open-api3?platform=client', [
+        $response = $this->client->call(Client::METHOD_GET, '/specs/open-api3?platform=console', [
             'content-type' => 'application/json',
         ], []);
 

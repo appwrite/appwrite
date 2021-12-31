@@ -21,7 +21,14 @@
 
       let syncB = function() {
         input.checked = (element.value === "true");
+
+        if (element.disabled) {
+          input.setAttribute("disabled", true);
+        } else {
+          input.removeAttribute("disabled");
+        }
       };
+
 
       input.addEventListener("input", syncA);
       input.addEventListener("change", syncA);

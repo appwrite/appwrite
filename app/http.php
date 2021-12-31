@@ -2,7 +2,6 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Utopia\Response;
 use Swoole\Process;
 use Swoole\Http\Server;
@@ -10,10 +9,15 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Logger\Log;
-use Utopia\Logger\Log\User;
+use Utopia\Config\Config;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Audit\Audit;
+use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Database\Document;
 use Utopia\Swoole\Files;
 use Utopia\Swoole\Request;
+use Utopia\Logger\Log;
+use Utopia\Logger\Log\User;
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
@@ -31,21 +35,118 @@ $http
     ])
 ;
 
-$http->on('WorkerStart', function($serv, $workerId) {
-    Console::success('Worker '.++$workerId.' started succefully');
+$http->on('WorkerStart', function($server, $workerId) {
+    Console::success('Worker '.++$workerId.' started successfully');
 });
 
-$http->on('BeforeReload', function($serv, $workerId) {
+$http->on('BeforeReload', function($server, $workerId) {
     Console::success('Starting reload...');
 });
 
-$http->on('AfterReload', function($serv, $workerId) {
+$http->on('AfterReload', function($server, $workerId) {
     Console::success('Reload completed...');
 });
 
-$http->on('start', function (Server $http) use ($payloadSize) {
+Files::load(__DIR__ . '/../public');
 
-    Console::success('Server started succefully (max payload is '.number_format($payloadSize).' bytes)');
+include __DIR__ . '/controllers/general.php';
+
+$http->on('start', function (Server $http) use ($payloadSize, $register) {
+    $app = new App('UTC');
+
+    go(function() use ($register, $app) {
+        // wait for database to be ready
+        $attempts = 0;
+        $max = 10;
+        $sleep = 1;
+
+        do {
+            try {
+                $attempts++;
+                $db = $register->get('dbPool')->get();
+                $redis = $register->get('redisPool')->get();
+                break; // leave the do-while if successful
+            } catch(\Exception $e) {
+                Console::warning("Database not ready. Retrying connection ({$attempts})...");
+                if ($attempts >= $max) {
+                    throw new \Exception('Failed to connect to database: '. $e->getMessage());
+                }
+                sleep($sleep);
+            }
+        } while ($attempts < $max);
+
+        App::setResource('db', fn() => $db);
+        App::setResource('cache', fn() => $redis);
+
+        $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+
+        Console::success('[Setup] - Server database init started...');
+        $collections = Config::getParam('collections', []); /** @var array $collections */
+
+        if(!$dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'))) {
+            $redis->flushAll();
+
+            Console::success('[Setup] - Creating database: appwrite...');
+
+            $dbForConsole->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        }
+
+        try {
+            Console::success('[Setup] - Creating metadata table: appwrite...');
+            $dbForConsole->createMetadata();
+        } catch (\Throwable $th) {
+            Console::success('[Setup] - Skip: metadata table already exists');
+        }
+
+        if($dbForConsole->getCollection(Audit::COLLECTION)->isEmpty()) {
+            $audit = new Audit($dbForConsole);
+            $audit->setup();
+        }
+
+        if ($dbForConsole->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
+            $adapter = new TimeLimit("", 0, 1, $dbForConsole);
+            $adapter->setup();
+        }
+
+        foreach ($collections as $key => $collection) {
+            if(!$dbForConsole->getCollection($key)->isEmpty()) {
+                continue;
+            }
+
+            Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
+
+            $attributes = [];
+            $indexes = [];
+
+            foreach ($collection['attributes'] as $attribute) {
+                $attributes[] = new Document([
+                    '$id' => $attribute['$id'],
+                    'type' => $attribute['type'],
+                    'size' => $attribute['size'],
+                    'required' => $attribute['required'],
+                    'signed' => $attribute['signed'],
+                    'array' => $attribute['array'],
+                    'filters' => $attribute['filters'],
+                ]);
+            }
+
+            foreach ($collection['indexes'] as $index) {
+                $indexes[] = new Document([
+                    '$id' => $index['$id'],
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]);
+            }
+
+            $dbForConsole->createCollection($key, $attributes, $indexes);
+
+        }
+        Console::success('[Setup] - Server database init completed...');
+    });
+
+    Console::success('Server started successfully (max payload is '.number_format($payloadSize).' bytes)');
 
     Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");
 
@@ -55,10 +156,6 @@ $http->on('start', function (Server $http) use ($payloadSize) {
         $http->shutdown();
     });
 });
-
-Files::load(__DIR__ . '/../public');
-
-include __DIR__ . '/controllers/general.php';
 
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
     $request = new Request($swooleRequest);
@@ -82,17 +179,12 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $db = $register->get('dbPool')->get();
     $redis = $register->get('redisPool')->get();
 
-    App::setResource('db', function () use (&$db) {
-        return $db;
-    });
+    App::setResource('db', fn() => $db);
+    App::setResource('cache', fn() => $redis);
 
-    App::setResource('cache', function () use (&$redis) {
-        return $redis;
-    });
-    
     try {
         Authorization::cleanRoles();
-        Authorization::setRole('*');
+        Authorization::setRole('role:all');
 
         $app->run($request, $response);
     } catch (\Throwable $th) {

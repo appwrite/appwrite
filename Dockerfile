@@ -8,7 +8,7 @@ WORKDIR /usr/local/src/
 COPY composer.lock /usr/local/src/
 COPY composer.json /usr/local/src/
 
-RUN composer update --ignore-platform-reqs --optimize-autoloader \
+RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
@@ -29,11 +29,12 @@ FROM php:8.0-cli-alpine as compile
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
 
-ENV PHP_REDIS_VERSION=5.3.4 \
-    PHP_SWOOLE_VERSION=v4.8.0 \
+ENV PHP_REDIS_VERSION=5.3.5 \
+    PHP_MONGODB_VERSION=1.9.1 \
+    PHP_SWOOLE_VERSION=v4.8.5 \
     PHP_IMAGICK_VERSION=3.5.1 \
-    PHP_YAML_VERSION=2.2.1 \
-    PHP_MAXMINDDB_VERSION=v1.10.1
+    PHP_YAML_VERSION=2.2.2 \
+    PHP_MAXMINDDB_VERSION=v1.11.0
 
 RUN \
   apk add --no-cache --virtual .deps \
@@ -108,6 +109,16 @@ RUN \
   git clone --depth 1 --branch $PHP_MAXMINDDB_VERSION https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
   cd MaxMind-DB-Reader-php && \
   cd ext && \
+  phpize && \
+  ./configure && \
+  make && make install
+
+# Mongodb Extension
+FROM compile as mongodb
+RUN \
+  git clone --depth 1 --branch $PHP_MONGODB_VERSION https://github.com/mongodb/mongo-php-driver.git && \
+  cd mongo-php-driver && \
+  git submodule update --init && \
   phpize && \
   ./configure && \
   make && make install
@@ -215,6 +226,7 @@ COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.
 COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=yaml /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=maxmind /usr/local/lib/php/extensions/no-debug-non-zts-20200930/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=mongodb /usr/local/lib/php/extensions/no-debug-non-zts-20200930/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 
 # Add Source Code
 COPY ./app /usr/src/code/app
@@ -241,6 +253,7 @@ RUN mkdir -p /storage/uploads && \
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/maintenance && \
+    chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/realtime && \
@@ -251,11 +264,10 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/worker-audits && \
     chmod +x /usr/local/bin/worker-certificates && \
+    chmod +x /usr/local/bin/worker-database && \
     chmod +x /usr/local/bin/worker-deletes && \
     chmod +x /usr/local/bin/worker-functions && \
     chmod +x /usr/local/bin/worker-mails && \
-    chmod +x /usr/local/bin/worker-tasks && \
-    chmod +x /usr/local/bin/worker-usage && \
     chmod +x /usr/local/bin/worker-webhooks
 
 # Letsencrypt Permissions
