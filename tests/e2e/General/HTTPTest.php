@@ -139,6 +139,13 @@ class HTTPTest extends Scope
                 continue;
             }
 
+            if(
+                (strpos($file, 'latest') === false) &&
+                (strpos($file, '0.12.x') === false)
+             ) {
+                continue;
+            }
+
             /**
              * Test for SUCCESS
              */
