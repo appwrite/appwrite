@@ -397,7 +397,7 @@ class OpenAPI3 extends Format
             foreach ($model->getRules() as $rule) {
                 if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
                     if(\is_array($rule['type'])) {
-                        foreach ($rule['type'] as $key => $value) {
+                        foreach ($rule['type'] as $value) {
                             $usedModels[] = $value;
                         }
                     }
