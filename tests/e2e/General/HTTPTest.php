@@ -128,26 +128,34 @@ class HTTPTest extends Scope
             'content-type' => 'application/json',
         ], []);
 
-        if(!file_put_contents(__DIR__ . '/../../resources/open-api3.json', json_encode($response['body']))) {
-            throw new Exception('Failed to save spec file');
-        }
+        $directory = __DIR__ . '/../../../app/config/specs/';
 
+        $files = scandir($directory);
         $client = new Client();
         $client->setEndpoint('https://validator.swagger.io');
 
-        /**
-         * Test for SUCCESS
-         */
-        $response = $client->call(Client::METHOD_POST, '/validator/debug', [
-            'content-type' => 'application/json',
-        ], json_decode(file_get_contents(realpath(__DIR__ . '/../../resources/open-api3.json')), true));
+        foreach($files as $file) {
+            if(in_array($file, ['.', '..'])) {
+                continue;
+            }
 
-        $response['body'] = json_decode($response['body'], true);
+            /**
+             * Test for SUCCESS
+             */
+            $response = $client->call(Client::METHOD_POST, '/validator/debug', [
+                'content-type' => 'application/json',
+            ], json_decode(file_get_contents($directory.$file), true));
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertTrue(empty($response['body']));
+            $response['body'] = json_decode($response['body'], true);
 
-        unlink(realpath(__DIR__ . '/../../resources/open-api3.json'));
+            $this->assertEquals(200, $response['headers']['status-code']);
+            
+                        if(!empty($response['body'])){
+                            var_dump($directory.$file);
+                            var_dump($response['body']);
+                        }
+            $this->assertTrue(empty($response['body']));
+        }
     }
 
     public function testResponseHeader() {
