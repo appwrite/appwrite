@@ -543,22 +543,23 @@ $logs = $this->getParam('logs', null);
 
     <h1>Add String Attribute</h1>
 
-        <form
-            id="add-string-attribute"
-            data-analytics
-            data-analytics-activity
-            data-analytics-event="submit"
-            data-analytics-category="console"
-            data-analytics-label="Create Collection Attribute (string)"
-            data-service="database.createStringAttribute"
-            data-scope="sdk"
-            data-event="submit"
-            data-success="alert,trigger,reset"
-            data-success-param-alert-text="Created new attribute successfully"
-            data-success-param-trigger-events="database.createAttribute"
-            data-failure="alert"
-            data-failure-param-alert-text="Failed to create attribute"
-            data-failure-param-alert-classname="error">
+    <form
+        id="add-string-attribute"
+        data-analytics
+        data-analytics-activity
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Create Collection Attribute (string)"
+        data-service="database.createStringAttribute"
+        data-scope="sdk"
+        data-event="submit"
+        data-success="alert,trigger,reset"
+        data-success-param-alert-text="Created new attribute successfully"
+        data-success-param-trigger-events="database.createAttribute"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to create attribute"
+        data-failure-param-alert-classname="error"
+        x-data="{ array: false, required: false }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
@@ -571,48 +572,25 @@ $logs = $this->getParam('logs', null);
         <input id="string-length" name="size" type="number" class="margin-bottom" autocomplete="off" required value="255" data-cast-to="integer" />
 
         <div class="margin-bottom">
-            <input type="hidden" name="required" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+            <input x-model="required" name="required" class="button switch" type="checkbox" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
         </div>
 
         <div class="margin-bottom">
-            <input type="hidden" name="array" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+            <input x-model="array" name="array" class="button switch" type="checkbox" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
         </div>
 
-        <div>
-            <label for="xdefault">Default Value</label>
+        <label for="xdefault">Default Value</label>
+        <template x-if="!(array || required)">
             <input name="xdefault" type="text" class="margin-bottom-large" autocomplete="off">
-        </div>
+        </template>
+        <template x-if="(array || required)">
+            <input name="xdefault" type="text" class="margin-bottom-large" autocomplete="off" disabled value="">
+        </template>
 
         <footer>
             <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
         </footer>
     </form>
-
-    <script type="text/javascript">
-        (() => {
-            const form = document.getElementById("add-string-attribute");
-            const fields = {
-                xdefault: {
-                    oneOf: {
-                        if: ["array", "required"],
-                        then: {
-                            xdefault: ["unvalue", "disable"]
-                        },
-                        else: {
-                            required: ["enable"],
-                            array: ["enable"],
-                            xdefault: ["enable"]
-                        }
-                    }
-                }
-            };
-
-            form.addEventListener("change", event => {
-                formValidation(form, fields);
-            });
-        })();
-    </script>
-
 </div>
 
 <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-integer">
@@ -620,22 +598,23 @@ $logs = $this->getParam('logs', null);
 
     <h1>Add Integer Attribute</h1>
 
-        <form
-            id="add-integer-attribute"
-            data-analytics
-            data-analytics-activity
-            data-analytics-event="submit"
-            data-analytics-category="console"
-            data-analytics-label="Create Collection Attribute (integer)"
-            data-service="database.createIntegerAttribute"
-            data-scope="sdk"
-            data-event="submit"
-            data-success="alert,trigger,reset"
-            data-success-param-alert-text="Created new attribute successfully"
-            data-success-param-trigger-events="database.createAttribute"
-            data-failure="alert"
-            data-failure-param-alert-text="Failed to create attribute"
-            data-failure-param-alert-classname="error">
+    <form
+        id="add-integer-attribute"
+        data-analytics
+        data-analytics-activity
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Create Collection Attribute (integer)"
+        data-service="database.createIntegerAttribute"
+        data-scope="sdk"
+        data-event="submit"
+        data-success="alert,trigger,reset"
+        data-success-param-alert-text="Created new attribute successfully"
+        data-success-param-trigger-events="database.createAttribute"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to create attribute"
+        data-failure-param-alert-classname="error"
+        x-data="{ array: false, required: false }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
@@ -645,11 +624,11 @@ $logs = $this->getParam('logs', null);
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
 
         <div class="margin-bottom">
-            <input type="hidden" name="required" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+            <input x-model="required" name="required" class="button switch" type="checkbox" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
         </div>
 
         <div class="margin-bottom">
-            <input type="hidden" name="array" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+            <input x-model="array" name="array" class="button switch" type="checkbox" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
         </div>
 
         <div class="row responsive thin">
@@ -667,34 +646,17 @@ $logs = $this->getParam('logs', null);
 
         <input id="integer-default" name="xdefault" type="number" step="1" class="margin-bottom-large" autocomplete="off" data-cast-to="integer">
 
+        <template x-if="!(array || required)">
+            <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off">
+        </template>
+        <template x-if="(array || required)">
+            <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off" disabled value="">
+        </template>
+
         <footer>
             <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
         </footer>
     </form>
-    <script type="text/javascript">
-        (() => {
-            const form = document.getElementById("add-integer-attribute");
-            const fields = {
-                xdefault: {
-                    oneOf: {
-                        if: ["array", "required"],
-                        then: {
-                            xdefault: ["unvalue", "disable"]
-                        },
-                        else: {
-                            required: ["enable"],
-                            array: ["enable"],
-                            xdefault: ["enable"]
-                        }
-                    }
-                }
-            };
-
-            form.addEventListener("change", event => {
-                formValidation(form, fields);
-            });
-        })();
-    </script>
 </div>
 
 <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-float">
@@ -702,22 +664,23 @@ $logs = $this->getParam('logs', null);
 
     <h1>Add Float Attribute</h1>
 
-        <form
-            id="add-float-attribute"
-            data-analytics
-            data-analytics-activity
-            data-analytics-event="submit"
-            data-analytics-category="console"
-            data-analytics-label="Create Collection Attribute (float)"
-            data-service="database.createFloatAttribute"
-            data-scope="sdk"
-            data-event="submit"
-            data-success="alert,trigger,reset"
-            data-success-param-alert-text="Created new attribute successfully"
-            data-success-param-trigger-events="database.createAttribute"
-            data-failure="alert"
-            data-failure-param-alert-text="Failed to create attribute"
-            data-failure-param-alert-classname="error">
+    <form
+        id="add-float-attribute"
+        data-analytics
+        data-analytics-activity
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Create Collection Attribute (float)"
+        data-service="database.createFloatAttribute"
+        data-scope="sdk"
+        data-event="submit"
+        data-success="alert,trigger,reset"
+        data-success-param-alert-text="Created new attribute successfully"
+        data-success-param-trigger-events="database.createAttribute"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to create attribute"
+        data-failure-param-alert-classname="error"
+        x-data="{ array: false, required: false }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
@@ -727,11 +690,11 @@ $logs = $this->getParam('logs', null);
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
 
         <div class="margin-bottom">
-            <input type="hidden" name="required" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+            <input x-model="required" name="required" class="button switch" type="checkbox" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
         </div>
 
         <div class="margin-bottom">
-            <input type="hidden" name="array" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+            <input x-model="array" name="array" class="button switch" type="checkbox" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
         </div>
 
         <div class="row responsive thin">
@@ -746,36 +709,18 @@ $logs = $this->getParam('logs', null);
         </div>
 
         <label for="float-default">Default Value</label>
-        <input id="float-default" name="xdefault" type="number" step="0.01" class="margin-bottom-large" autocomplete="off" data-cast-to="float">
+
+        <template x-if="!(array || required)">
+            <input name="xdefault" type="number" step="0.01" class="margin-bottom-large" autocomplete="off">
+        </template>
+        <template x-if="(array || required)">
+            <input name="xdefault" type="number" step="0.01" class="margin-bottom-large" autocomplete="off" disabled value="">
+        </template>
 
         <footer>
             <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
         </footer>
     </form>
-    <script type="text/javascript">
-        (() => {
-            const form = document.getElementById("add-float-attribute");
-            const fields = {
-                xdefault: {
-                    oneOf: {
-                        if: ["array", "required"],
-                        then: {
-                            xdefault: ["unvalue", "disable"]
-                        },
-                        else: {
-                            required: ["enable"],
-                            array: ["enable"],
-                            xdefault: ["enable"]
-                        }
-                    }
-                }
-            };
-
-            form.addEventListener("change", event => {
-                formValidation(form, fields);
-            });
-        })();
-    </script>
 </div>
 
 <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-email">
@@ -783,22 +728,23 @@ $logs = $this->getParam('logs', null);
 
     <h1>Add Email Attribute</h1>
 
-        <form
-            id="add-email-attribute"
-            data-analytics
-            data-analytics-activity
-            data-analytics-event="submit"
-            data-analytics-category="console"
-            data-analytics-label="Create Collection Attribute (email)"
-            data-service="database.createEmailAttribute"
-            data-scope="sdk"
-            data-event="submit"
-            data-success="alert,trigger,reset"
-            data-success-param-alert-text="Created new attribute successfully"
-            data-success-param-trigger-events="database.createAttribute"
-            data-failure="alert"
-            data-failure-param-alert-text="Failed to create attribute"
-            data-failure-param-alert-classname="error">
+    <form
+        id="add-email-attribute"
+        data-analytics
+        data-analytics-activity
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Create Collection Attribute (email)"
+        data-service="database.createEmailAttribute"
+        data-scope="sdk"
+        data-event="submit"
+        data-success="alert,trigger,reset"
+        data-success-param-alert-text="Created new attribute successfully"
+        data-success-param-trigger-events="database.createAttribute"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to create attribute"
+        data-failure-param-alert-classname="error"
+        x-data="{ array: false, required: false }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
@@ -808,44 +754,25 @@ $logs = $this->getParam('logs', null);
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
 
         <div class="margin-bottom">
-            <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+            <input x-model="required" name="required" class="button switch" type="checkbox" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
         </div>
 
         <div class="margin-bottom">
-            <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+            <input x-model="array" name="array" class="button switch" type="checkbox" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
         </div>
 
         <label for="string-default">Default Value</label>
-        <input id="string-default" name="xdefault" type="email" class="margin-bottom-large" autocomplete="off">
+        <template x-if="!(array || required)">
+            <input name="xdefault" type="email" class="margin-bottom-large" autocomplete="off">
+        </template>
+        <template x-if="(array || required)">
+            <input name="xdefault" type="email" class="margin-bottom-large" autocomplete="off" disabled value="">
+        </template>
 
         <footer>
             <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
         </footer>
     </form>
-    <script type="text/javascript">
-        (() => {
-            const form = document.getElementById("add-email-attribute");
-            const fields = {
-                xdefault: {
-                    oneOf: {
-                        if: ["array", "required"],
-                        then: {
-                            xdefault: ["unvalue", "disable"]
-                        },
-                        else: {
-                            required: ["enable"],
-                            array: ["enable"],
-                            xdefault: ["enable"]
-                        }
-                    }
-                }
-            };
-
-            form.addEventListener("change", event => {
-                formValidation(form, fields);
-            });
-        })();
-    </script>
 </div>
 
 <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-boolean">
@@ -853,22 +780,23 @@ $logs = $this->getParam('logs', null);
 
     <h1>Add Boolean Attribute</h1>
 
-        <form
-            id="add-boolean-attribute"
-            data-analytics
-            data-analytics-activity
-            data-analytics-event="submit"
-            data-analytics-category="console"
-            data-analytics-label="Create Collection Attribute (boolean)"
-            data-service="database.createBooleanAttribute"
-            data-scope="sdk"
-            data-event="submit"
-            data-success="alert,trigger,reset"
-            data-success-param-alert-text="Created new attribute successfully"
-            data-success-param-trigger-events="database.createAttribute"
-            data-failure="alert"
-            data-failure-param-alert-text="Failed to create attribute"
-            data-failure-param-alert-classname="error">
+    <form
+        id="add-boolean-attribute"
+        data-analytics
+        data-analytics-activity
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Create Collection Attribute (boolean)"
+        data-service="database.createBooleanAttribute"
+        data-scope="sdk"
+        data-event="submit"
+        data-success="alert,trigger,reset"
+        data-success-param-alert-text="Created new attribute successfully"
+        data-success-param-trigger-events="database.createAttribute"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to create attribute"
+        data-failure-param-alert-classname="error"
+        x-data="{ array: false, required: false }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
@@ -878,46 +806,28 @@ $logs = $this->getParam('logs', null);
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
 
         <div class="margin-bottom">
-            <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+            <input x-model="required" name="required" class="button switch" type="checkbox" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
         </div>
 
         <div class="margin-bottom">
-            <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+            <input x-model="array" name="array" class="button switch" type="checkbox" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
         </div>
 
 
         <div class="margin-bottom-large">
-            <input name="xdefault" type="hidden" data-forms-switch data-cast-to="boolean" autocomplete="off" /> &nbsp; Default Value <span class="tooltip" data-tooltip="Whether this attribute is set to true or false on creation"><i class="icon-info-circled"></i></span>
+            <template x-if="!(array || required)">
+                <input name="xdefault" class="button switch" type="checkbox" /> 
+            </template>
+            <template x-if="(array || required)">
+                <input name="xdefault" class="button switch" type="checkbox" disabled /> 
+            </template>
+            &nbsp; Default Value <span class="tooltip" data-tooltip="Whether this attribute is set to true or false on creation"><i class="icon-info-circled"></i></span>
         </div>
 
         <footer>
             <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
         </footer>
     </form>
-    <script type="text/javascript">
-        (() => {
-            const form = document.getElementById("add-boolean-attribute");
-            const fields = {
-                xdefault: {
-                    oneOf: {
-                        if: ["array", "required"],
-                        then: {
-                            xdefault: ["uncheck", "disable"]
-                        },
-                        else: {
-                            required: ["enable"],
-                            array: ["enable"],
-                            xdefault: ["enable"]
-                        }
-                    }
-                }
-            };
-
-            form.addEventListener("change", event => {
-                formValidation(form, fields);
-            });
-        })();
-    </script>
 </div>
 
 
@@ -926,22 +836,23 @@ $logs = $this->getParam('logs', null);
 
     <h1>Add IP Attribute</h1>
 
-        <form
-            id="add-ip-attribute"
-            data-analytics
-            data-analytics-activity
-            data-analytics-event="submit"
-            data-analytics-category="console"
-            data-analytics-label="Create Collection Attribute (IP)"
-            data-service="database.createIpAttribute"
-            data-scope="sdk"
-            data-event="submit"
-            data-success="alert,trigger,reset"
-            data-success-param-alert-text="Created new attribute successfully"
-            data-success-param-trigger-events="database.createAttribute"
-            data-failure="alert"
-            data-failure-param-alert-text="Failed to create attribute"
-            data-failure-param-alert-classname="error">
+    <form
+        id="add-ip-attribute"
+        data-analytics
+        data-analytics-activity
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Create Collection Attribute (IP)"
+        data-service="database.createIpAttribute"
+        data-scope="sdk"
+        data-event="submit"
+        data-success="alert,trigger,reset"
+        data-success-param-alert-text="Created new attribute successfully"
+        data-success-param-trigger-events="database.createAttribute"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to create attribute"
+        data-failure-param-alert-classname="error"
+        x-data="{ array: false, required: false }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
@@ -951,44 +862,25 @@ $logs = $this->getParam('logs', null);
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
 
         <div class="margin-bottom">
-            <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+            <input x-model="required" name="required" class="button switch" type="checkbox" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
         </div>
 
         <div class="margin-bottom">
-            <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+            <input x-model="array" name="array" class="button switch" type="checkbox" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
         </div>
 
         <label for="string-default">Default Value</label>
-        <input id="string-default" name="xdefault" type="text" data-forms-ip-address class="margin-bottom-large" autocomplete="off">
+        <template x-if="!(array || required)">
+            <input name="xdefault" type="text" class="margin-bottom-large" autocomplete="off">
+        </template>
+        <template x-if="(array || required)">
+            <input name="xdefault" type="text" class="margin-bottom-large" autocomplete="off" disabled value="">
+        </template>
 
         <footer>
             <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
         </footer>
     </form>
-    <script type="text/javascript">
-        (() => {
-            const form = document.getElementById("add-ip-attribute");
-            const fields = {
-                xdefault: {
-                    oneOf: {
-                        if: ["array", "required"],
-                        then: {
-                            xdefault: ["unvalue", "disable"]
-                        },
-                        else: {
-                            required: ["enable"],
-                            array: ["enable"],
-                            xdefault: ["enable"]
-                        }
-                    }
-                }
-            };
-
-            form.addEventListener("change", event => {
-                formValidation(form, fields);
-            });
-        })();
-    </script>
 </div>
 
 <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-url">
@@ -1011,7 +903,8 @@ $logs = $this->getParam('logs', null);
         data-success-param-trigger-events="database.createAttribute"
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
-        data-failure-param-alert-classname="error">
+        data-failure-param-alert-classname="error"
+        x-data="{ array: false, required: false }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
@@ -1021,44 +914,25 @@ $logs = $this->getParam('logs', null);
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
 
         <div class="margin-bottom">
-            <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+            <input x-model="required" name="required" class="button switch" type="checkbox" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
         </div>
 
         <div class="margin-bottom">
-            <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+            <input x-model="array" name="array" class="button switch" type="checkbox" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
         </div>
 
         <label for="string-default">Default Value</label>
-        <input id="string-default" name="xdefault" type="url" title="Valid URL address" class="margin-bottom-large" autocomplete="off">
+        <template x-if="!(array || required)">
+            <input name="xdefault" type="url" class="margin-bottom-large" autocomplete="off">
+        </template>
+        <template x-if="(array || required)">
+            <input name="xdefault" type="url" class="margin-bottom-large" autocomplete="off" disabled value="">
+        </template>
 
         <footer>
             <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
         </footer>
     </form>
-    <script type="text/javascript">
-        (() => {
-            const form = document.getElementById("add-url-attribute");
-            const fields = {
-                xdefault: {
-                    oneOf: {
-                        if: ["array", "required"],
-                        then: {
-                            xdefault: ["unvalue", "disable"]
-                        },
-                        else: {
-                            required: ["enable"],
-                            array: ["enable"],
-                            xdefault: ["enable"]
-                        }
-                    }
-                }
-            };
-
-            form.addEventListener("change", event => {
-                formValidation(form, fields);
-            });
-        })();
-    </script>
 </div>
 
 <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-enum">
@@ -1081,7 +955,8 @@ $logs = $this->getParam('logs', null);
         data-success-param-trigger-events="database.createAttribute"
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
-        data-failure-param-alert-classname="error">
+        data-failure-param-alert-classname="error"
+        x-data="{ array: false, required: false }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
@@ -1108,44 +983,25 @@ $logs = $this->getParam('logs', null);
         </div>
 
         <div class="margin-bottom">
-            <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+            <input x-model="required" name="required" class="button switch" type="checkbox" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
         </div>
 
         <div class="margin-bottom">
-            <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+            <input x-model="array" name="array" class="button switch" type="checkbox" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
         </div>
 
         <label for="enunm-default">Default Value</label>
-        <input id="enum-default" name="xdefault" type="text" class="margin-bottom-large" autocomplete="off">
+        <template x-if="!(array || required)">
+            <input name="xdefault" type="text" class="margin-bottom-large" autocomplete="off">
+        </template>
+        <template x-if="(array || required)">
+            <input name="xdefault" type="text" class="margin-bottom-large" autocomplete="off" disabled value="">
+        </template>
 
         <footer>
             <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
         </footer>
     </form>
-    <script type="text/javascript">
-        (() => {
-            const form = document.getElementById("add-enum-attribute");
-            const fields = {
-                xdefault: {
-                    oneOf: {
-                        if: ["array", "required"],
-                        then: {
-                            xdefault: ["unvalue", "disable"]
-                        },
-                        else: {
-                            required: ["enable"],
-                            array: ["enable"],
-                            xdefault: ["enable"]
-                        }
-                    }
-                }
-            };
-
-            form.addEventListener("change", event => {
-                formValidation(form, fields);
-            });
-        })();
-    </script>
 </div>
 
 <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-index">
