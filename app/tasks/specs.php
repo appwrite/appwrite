@@ -17,13 +17,13 @@ use Utopia\Validator\WhiteList;
 $cli
     ->task('specs')
     ->param('version', 'latest', new Text(8), 'Spec version', true)
-    ->param('mode', 'normal', new WhiteList(['normal', 'tests']), 'Spec Mode', true)
+    ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
     ->action(function ($version, $mode) use ($register) {
         $db = $register->get('db');
         $redis = $register->get('cache');
         $appRoutes = App::getRoutes();
         $response = new Response(new HttpResponse());
-        $tests = ($mode === 'tests');
+        $mocks = ($mode === 'mocks');
         
         App::setResource('request', function() {
             return new Request;
@@ -166,11 +166,11 @@ $cli
                             continue;
                         }
         
-                        if ($route->getLabel('sdk.mock', false) && !$tests) {
+                        if ($route->getLabel('sdk.mock', false) && !$mocks) {
                             continue;
                         }
         
-                        if (!$route->getLabel('sdk.mock', false) && $tests) {
+                        if (!$route->getLabel('sdk.mock', false) && $mocks) {
                             continue;
                         }
         
@@ -184,7 +184,7 @@ $cli
         
                         $routes[] = $route;
                         $modelLabel = $route->getLabel('sdk.response.model', 'none');
-                        $model = \is_array($modelLabel) ? \array_map(function($m) use($response) {
+                        \is_array($modelLabel) ? \array_map(function($m) use($response) {
                             return $response->getModel($m);
                         }, $modelLabel) : $response->getModel($modelLabel);
                     }
@@ -247,14 +247,14 @@ $cli
                     ->setParam('docs.url', $endpoint.'/docs')
                 ;
 
-                if($tests) {
-                    $path = __DIR__.'/../config/specs/'.$format.'-tests-'.$platform.'.json';
+                if($mocks) {
+                    $path = __DIR__.'/../config/specs/'.$format.'-mocks-'.$platform.'.json';
 
                     if(!file_put_contents($path, json_encode($specs->parse()))) {
-                        throw new Exception('Failed to save tests spec file: '.$path);
+                        throw new Exception('Failed to save mocks spec file: '.$path);
                     }
                     
-                    Console::success('Saved tests spec file: ' . realpath($path));
+                    Console::success('Saved mocks spec file: ' . realpath($path));
 
                     continue;
                 }

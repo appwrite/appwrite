@@ -156,11 +156,6 @@ class HTTPTest extends Scope
             $response['body'] = json_decode($response['body'], true);
 
             $this->assertEquals(200, $response['headers']['status-code']);
-            
-                        if(!empty($response['body'])){
-                            var_dump($directory.$file);
-                            var_dump($response['body']);
-                        }
             $this->assertTrue(empty($response['body']));
         }
     }

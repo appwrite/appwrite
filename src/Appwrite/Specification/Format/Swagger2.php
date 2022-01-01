@@ -478,8 +478,6 @@ class Swagger2 extends Format
                                     }, $rule['type'])
                                 ];
                             }
-
-                            // $items['$ref'] = '#/definitions/document';
                         } else {
                             $items = [
                                 'type' => $type,
