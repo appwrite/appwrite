@@ -25,13 +25,8 @@ $cli
         $response = new Response(new HttpResponse());
         $tests = ($mode === 'tests');
         
-        App::setResource('request', function() {
-            return new Request;
-        });
-
-        App::setResource('response', function() use ($response) {
-            return $response;
-        });
+        App::setResource('request', fn() => new Request);
+        App::setResource('response', fn() => $response);
 
         App::setResource('db', fn() => $db);
         App::setResource('cache', fn() => $redis);
