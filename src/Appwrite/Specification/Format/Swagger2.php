@@ -198,7 +198,7 @@ class Swagger2 extends Format
                     $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
                         'description' => $modelDescription,
                         'schema' => [
-                            'oneOf' => \array_map(function($m) {
+                            'x-oneOf' => \array_map(function($m) {
                                 return ['$ref' => '#/definitions/'.$m->getType()];
                             }, $model)
                         ],
@@ -478,6 +478,8 @@ class Swagger2 extends Format
                                     }, $rule['type'])
                                 ];
                             }
+
+                            // $items['$ref'] = '#/definitions/document';
                         } else {
                             $items = [
                                 'type' => $type,
