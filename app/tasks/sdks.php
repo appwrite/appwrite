@@ -47,7 +47,7 @@ $cli
 
                 Console::info('Fetching API Spec for '.$language['name'].' for '.$platform['name'] . ' (version: '.$version.')');
                 
-                $spec = file_get_contents(__DIR__.'/../config/specs/'.$version.'.'.$language['family'].'.json');
+                $spec = file_get_contents(__DIR__.'/../config/specs/swagger2-'.$version.'.'.$language['family'].'.json');
 
                 $cover = 'https://appwrite.io/images/github.png';
                 $result = \realpath(__DIR__.'/..').'/sdks/'.$key.'-'.$language['key'];

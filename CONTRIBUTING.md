@@ -288,7 +288,7 @@ The Runtimes for all supported cloud functions (multicore builds) can be found a
 
 For generating a new console SDK follow the next steps:
 
-1. Update the console spec file located at `app/config/specs/0.10.x.console.json` from the dynamic version located at `https://localhost/specs/swagger2?platform=console`
+1. Update the console spec file located at `app/config/specs/swagger2-0.12.x.console.json` from the dynamic version located at `https://localhost/specs/swagger2?platform=console`
 2. Generate a new SDK using the command `php app/cli.php sdks`
 3. Change your working dir using `cd app/sdks/console-web`
 4. Build the new SDK `npm run build`
