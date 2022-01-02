@@ -18,7 +18,7 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_OPTIONS, '/', array_merge([
+        $response = $this->client->call(Client::METHOD_OPTIONS, '/', \array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
         ]), []);
@@ -38,7 +38,7 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/error', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/error', \array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
         ]), []);
@@ -54,7 +54,7 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/manifest.json', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/manifest.json', \array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
         ]), []);
@@ -73,7 +73,7 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/humans.txt', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/humans.txt', \array_merge([
             'origin' => 'http://localhost',
         ]), []);
 
@@ -86,7 +86,7 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/robots.txt', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/robots.txt', \array_merge([
             'origin' => 'http://localhost',
         ]), []);
 
@@ -155,7 +155,7 @@ class HTTPTest extends Scope
         /**
          * Test without header
          */
-        $response = $this->client->call(Client::METHOD_GET, '/locale/continents', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/locale/continents', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], $this->getHeaders()));
@@ -173,7 +173,7 @@ class HTTPTest extends Scope
          /**
          * Test with header
          */
-        $response = $this->client->call(Client::METHOD_GET, '/locale/continents', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/locale/continents', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
             'x-appwrite-response-format' => '0.6.2'
@@ -187,60 +187,12 @@ class HTTPTest extends Scope
         $this->assertEquals($body['continents']['AS'], 'Asia');
     }
 
-    public function testRequestHeader() {
-        /**
-         * Test without header
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console'
-        ], $this->getHeaders()), [
-            'name' => 'Latest version Team',
-            'teamId' => 'unique()'
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $team1Id = $response['body']['$id'];
-
-        /**
-         * Test with header
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'x-appwrite-response-format' => '0.11.0'
-        ], $this->getHeaders()), [
-            'name' => 'Latest version Team'
-            // Notice "teamId' is not defined
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $team2Id = $response['body']['$id'];
-
-        /**
-         * Cleanup, so I don't invalidate some listTeams requests by mistake
-         */
-        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $team1Id, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-        ], $this->getHeaders()));
-
-        $this->assertEquals(204, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $team2Id, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-        ], $this->getHeaders()));
-
-        $this->assertEquals(204, $response['headers']['status-code']);
-    }
-
     public function testVersions() {
 
         /**
          * Test without header
          */
-        $response = $this->client->call(Client::METHOD_GET, '/versions', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/versions', \array_merge([
             'content-type' => 'application/json',
         ], $this->getHeaders()));
 
