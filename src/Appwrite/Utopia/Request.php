@@ -4,8 +4,9 @@
 namespace Appwrite\Utopia;
 
 use Appwrite\Utopia\Request\Filter;
+use Swoole\Http\Request as SwooleRequest;
 use Utopia\Route;
-use Utopia\Request as UtopiaRequest;
+use Utopia\Swoole\Request as UtopiaRequest;
 
 class Request extends UtopiaRequest
 {
@@ -18,6 +19,14 @@ class Request extends UtopiaRequest
      * @var Route
      */
     private static $route = null;
+
+    /**
+     * Request constructor.
+     */
+    public function __construct(SwooleRequest $request)
+    {
+        parent::__construct($request);
+    }
 
     /**
      * Get Param
