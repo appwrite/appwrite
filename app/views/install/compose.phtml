@@ -138,6 +138,7 @@ services:
     networks:
       - appwrite
     depends_on:
+      - mariadb
       - redis
     environment:
       - _APP_ENV

@@ -158,8 +158,8 @@ services:
       - ./src:/usr/src/code/src
       # - ./vendor:/usr/src/code/vendor
     depends_on:
-      - redis
       - mariadb
+      - redis
     environment:
       - _APP_ENV
       - _APP_OPTIONS_ABUSE
