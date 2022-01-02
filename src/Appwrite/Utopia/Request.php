@@ -5,7 +5,7 @@ namespace Appwrite\Utopia;
 
 use Appwrite\Utopia\Request\Filter;
 use Utopia\Route;
-use Appwrite\Utopia\Request as UtopiaRequest;
+use Utopia\Request as UtopiaRequest;
 
 class Request extends UtopiaRequest
 {
