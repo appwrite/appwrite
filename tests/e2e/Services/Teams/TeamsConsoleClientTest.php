@@ -15,13 +15,6 @@ class TeamsConsoleClientTest extends Scope
     use SideClient;
 
     public function testRequestHeader() {
-        $headers = \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console'
-        ], $this->getHeaders());
-
-        \var_dump($headers);
-
         /**
          * Test without header
          */
