@@ -490,6 +490,7 @@ class V11 extends Migration
                  */
                 if ($document->getAttribute('certificateId') !== null) {
                     $document->setAttribute('$id', $document->getAttribute('certificateId'));
+                    $document->removeAttribute('certificateId');
                 }
 
                 break;
