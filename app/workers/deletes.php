@@ -67,7 +67,17 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_AUDIT:
-                $this->deleteAuditLogs($this->args['timestamp']);
+                $timestamp = $this->args['timestamp'] ?? 0;
+                $document = new Document($this->args['document'] ?? []);
+
+                if (!empty($timestamp)) {
+                    $this->deleteAuditLogs($this->args['timestamp']);
+                }
+
+                if (!$document->isEmpty()) {
+                    $this->deleteAuditLogsByResource('document/' . $document->getId(), $projectId);
+                }
+
                 break;
 
             case DELETE_TYPE_ABUSE:
@@ -115,6 +125,8 @@ class DeletesV1 extends Worker
         $this->deleteByGroup('indexes', [
             new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])
         ], $dbForProject);
+
+        $this->deleteAuditLogsByResource('collection/' . $collectionId, $projectId);
     }
 
     /**
@@ -261,6 +273,18 @@ class DeletesV1 extends Worker
                 throw new Exception('Failed to delete Audit logs for project' . $projectId);
             }
         });
+    }
+
+    /**
+     * @param int $timestamp
+     */
+    protected function deleteAuditLogsByResource(string $resource, string $projectId): void
+    {
+        $dbForProject = $this->getProjectDB($projectId);
+
+        $this->deleteByGroup(Audit::COLLECTION, [
+            new Query('resource', Query::TYPE_EQUAL, [$resource])
+        ], $dbForProject);
     }
 
     /**

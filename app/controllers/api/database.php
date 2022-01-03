@@ -2076,13 +2076,15 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('audits')
+    ->inject('deletes')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($collectionId, $documentId, $response, $dbForProject, $events, $audits, $usage, $mode) {
+    ->action(function ($collectionId, $documentId, $response, $dbForProject, $events, $audits, $deletes, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $deletes */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var string $mode */
 
@@ -2128,6 +2130,11 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
          * Reset $collection attribute to remove prefix.
          */
         $document->setAttribute('$collection', $collectionId);
+
+        $deletes
+            ->setParam('type', DELETE_TYPE_AUDIT)
+            ->setParam('document', $document)
+        ;
 
         $usage
             ->setParam('database.documents.delete', 1)
