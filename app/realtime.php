@@ -14,7 +14,6 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
 use Utopia\Logger\Log;
 use Utopia\Database\Database;
 use Utopia\Cache\Adapter\Redis as RedisCache;
