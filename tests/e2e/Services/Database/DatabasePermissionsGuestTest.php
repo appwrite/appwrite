@@ -26,7 +26,7 @@ class DatabasePermissionsGuestTest extends Scope
         $collection = ['id' => $movies['body']['$id']];
 
         $this->client->call(Client::METHOD_POST, '/database/collections/' . $collection['id'] . '/attributes/string', $this->getServerHeader(), [
-            'attributeId' => 'title',
+            'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);

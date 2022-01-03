@@ -36,6 +36,12 @@ class Collection extends Model
                 'default' => '',
                 'example' => 'My Collection',
             ])
+            ->addRule('enabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Collection enabled.',
+                'default' => true,
+                'example' => false,
+            ])
             ->addRule('permission', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection permission model. Possible values: `document` or `collection`',
@@ -79,7 +85,7 @@ class Collection extends Model
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */

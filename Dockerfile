@@ -8,21 +8,33 @@ WORKDIR /usr/local/src/
 COPY composer.lock /usr/local/src/
 COPY composer.json /usr/local/src/
 
-RUN composer update --ignore-platform-reqs --optimize-autoloader \
+RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
+
+FROM node:16-alpine as node
+
+WORKDIR /usr/local/src/
+
+COPY package-lock.json /usr/local/src/
+COPY package.json /usr/local/src/
+COPY gulpfile.js /usr/local/src/
+COPY public /usr/local/src/public
+
+RUN npm ci
+RUN npm run build
 
 FROM php:8.0-cli-alpine as compile
 
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
 
-ENV PHP_REDIS_VERSION=5.3.4 \
+ENV PHP_REDIS_VERSION=5.3.5 \
     PHP_MONGODB_VERSION=1.9.1 \
-    PHP_SWOOLE_VERSION=v4.8.0 \
+    PHP_SWOOLE_VERSION=v4.8.5 \
     PHP_IMAGICK_VERSION=3.5.1 \
-    PHP_YAML_VERSION=2.2.1 \
-    PHP_MAXMINDDB_VERSION=v1.10.1
+    PHP_YAML_VERSION=2.2.2 \
+    PHP_MAXMINDDB_VERSION=v1.11.0
 
 RUN \
   apk add --no-cache --virtual .deps \
@@ -169,7 +181,9 @@ ENV _APP_SERVER=swoole \
     _APP_MAINTENANCE_RETENTION_AUDIT=1209600 \
     # 1 Day = 86400 s
     _APP_MAINTENANCE_RETENTION_ABUSE=86400 \
-    _APP_MAINTENANCE_INTERVAL=86400
+    _APP_MAINTENANCE_INTERVAL=86400 \
+    _APP_LOGGING_PROVIDER= \
+    _APP_LOGGING_CONFIG=
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
@@ -206,6 +220,7 @@ RUN \
 WORKDIR /usr/src/code
 
 COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
+COPY --from=node /usr/local/src/public/dist /usr/src/code/public/dist
 COPY --from=swoole /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yasd.so* /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
@@ -217,7 +232,8 @@ COPY --from=mongodb /usr/local/lib/php/extensions/no-debug-non-zts-20200930/mong
 COPY ./app /usr/src/code/app
 COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
-COPY ./public /usr/src/code/public
+COPY ./public/fonts /usr/src/code/public/fonts
+COPY ./public/images /usr/src/code/public/images
 COPY ./src /usr/src/code/src
 
 # Set Volumes
@@ -243,6 +259,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/realtime && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/sdks && \
+    chmod +x /usr/local/bin/specs && \
     chmod +x /usr/local/bin/ssl && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/vars && \

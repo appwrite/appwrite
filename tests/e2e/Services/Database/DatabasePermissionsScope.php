@@ -9,7 +9,7 @@ trait DatabasePermissionsScope
     public array $users = [];
     public array $teams = [];
 
-    public function createUser(string $id, string $email, string $password = 'test123'): array
+    public function createUser(string $id, string $email, string $password = 'test123!'): array
     {
         $user = $this->client->call(Client::METHOD_POST, '/account', [
             'origin' => 'http://localhost',

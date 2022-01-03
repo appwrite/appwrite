@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Validator\Password;
 use Appwrite\Database\Validator\CustomId;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
@@ -8,7 +9,6 @@ use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
-use Utopia\CLI\CLI;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -57,13 +57,11 @@ App::post('/v1/projects')
     ->param('legalTaxId', '', new Text(256), 'Project legal Tax ID. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->inject('dbForInternal')
-    ->inject('dbForExternal')
-    ->action(function ($projectId, $name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForInternal, $dbForExternal) {
+    ->inject('dbForProject')
+    ->action(function ($projectId, $name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForProject) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Utopia\Database\Database $dbForProject */
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -106,15 +104,13 @@ App::post('/v1/projects')
 
         $collections = Config::getParam('collections', []); /** @var array $collections */
 
-        $dbForInternal->setNamespace('project_' . $project->getId() . '_internal');
-        $dbForInternal->create();
-        $dbForExternal->setNamespace('project_' . $project->getId() . '_external');
-        $dbForExternal->create();
+        $dbForProject->setNamespace('_project_' . $project->getId());
+        $dbForProject->create('appwrite');
 
-        $audit = new Audit($dbForInternal);
+        $audit = new Audit($dbForProject);
         $audit->setup();
 
-        $adapter = new TimeLimit('', 0, 1, $dbForInternal);
+        $adapter = new TimeLimit('', 0, 1, $dbForProject);
         $adapter->setup();
 
         foreach ($collections as $key => $collection) {
@@ -143,7 +139,7 @@ App::post('/v1/projects')
                 ]);
             }
 
-            $dbForInternal->createCollection($key, $attributes, $indexes);
+            $dbForProject->createCollection($key, $attributes, $indexes);
         }
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -162,8 +158,8 @@ App::get('/v1/projects')
     ->label('sdk.response.model', Response::MODEL_PROJECT_LIST)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('cursor', '', new UID(), 'ID of the project used as the starting point for the query, excluding the project itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('cursor', '', new UID(), 'ID of the project used as the starting point for the query, excluding the project itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
@@ -235,12 +231,12 @@ App::get('/v1/projects/:projectId/usage')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('register')
-    ->action(function ($projectId, $range, $response, $dbForConsole, $dbForInternal, $register) {
+    ->action(function ($projectId, $range, $response, $dbForConsole, $dbForProject, $register) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Registry\Registry $register */
 
         $project = $dbForConsole->getDocument('projects', $projectId);
@@ -270,11 +266,11 @@ App::get('/v1/projects/:projectId/usage')
                 ],
             ];
 
-            $dbForInternal->setNamespace('project_' . $projectId . '_internal');
+            $dbForProject->setNamespace('_project_' . $projectId);
 
             $metrics = [
-                'requests', 
-                'network', 
+                'requests',
+                'network',
                 'executions',
                 'users.count',
                 'database.documents.count',
@@ -284,12 +280,12 @@ App::get('/v1/projects/:projectId/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForInternal, $periods, $range, $metrics, &$stats) {
+            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
 
-                    $requestDocs = $dbForInternal->find('stats', [
+                    $requestDocs = $dbForProject->find('stats', [
                         new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
                     ], $limit, 0, ['time'], [Database::ORDER_DESC]);
@@ -534,7 +530,7 @@ App::delete('/v1/projects/:projectId')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('password', '', new UID(), 'Your user password for confirmation. Must be between 6 to 32 chars.')
+    ->param('password', '', new Password(), 'Your user password for confirmation. Must be at least 8 chars.')
     ->inject('response')
     ->inject('user')
     ->inject('dbForConsole')

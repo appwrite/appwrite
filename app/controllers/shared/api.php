@@ -11,7 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 
-App::init(function ($utopia, $request, $response, $project, $user, $events, $audits, $usage, $deletes, $database, $dbForInternal, $mode) {
+App::init(function ($utopia, $request, $response, $project, $user, $events, $audits, $usage, $deletes, $database, $dbForProject, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
@@ -24,7 +24,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $database */
     /** @var Appwrite\Event\Event $functions */
-    /** @var Utopia\Database\Database $dbForInternal */
+    /** @var Utopia\Database\Database $dbForProject */
 
     Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
     Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
@@ -38,7 +38,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
     /*
      * Abuse Check
      */
-    $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForInternal);
+    $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
     $timeLimit
         ->setParam('{userId}', $user->getId())
         ->setParam('{userAgent}', $request->getUserAgent(''))
@@ -64,8 +64,9 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
         ;
     }
 
-    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-    $isAppUser = Auth::isAppUser(Authorization::$roles);
+    $roles = Authorization::getRoles();
+    $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+    $isAppUser = Auth::isAppUser($roles);
 
     if (($abuse->check() // Route is rate-limited
         && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not disabled
@@ -119,7 +120,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
     $database
         ->setParam('projectId', $project->getId())
     ;
-}, ['utopia', 'request', 'response', 'project', 'user', 'events', 'audits', 'usage', 'deletes', 'database', 'dbForInternal', 'mode'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'user', 'events', 'audits', 'usage', 'deletes', 'database', 'dbForProject', 'mode'], 'api');
 
 App::init(function ($utopia, $request, $project) {
     /** @var Utopia\App $utopia */
@@ -128,8 +129,8 @@ App::init(function ($utopia, $request, $project) {
 
     $route = $utopia->match($request);
 
-    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-    $isAppUser = Auth::isAppUser(Authorization::$roles);
+    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+    $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
     if($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
         return;
@@ -166,7 +167,7 @@ App::init(function ($utopia, $request, $project) {
                 throw new Exception('JWT authentication is disabled for this project', 501);
             }
             break;
-        
+
         default:
             throw new Exception('Unsupported authentication route');
             break;
@@ -187,7 +188,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     /** @var bool $mode */
 
     if (!empty($events->getParam('event'))) {
-        if(empty($events->getParam('eventData'))) {
+        if (empty($events->getParam('eventData'))) {
             $events->setParam('eventData', $response->getPayload());
         }
 
@@ -206,10 +207,17 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
 
         if ($project->getId() !== 'console') {
             $payload = new Document($response->getPayload());
-            $target = Realtime::fromPayload($events->getParam('event'), $payload);
+            $collection = new Document($events->getParam('collection') ?? []);
+
+            $target = Realtime::fromPayload(
+                event: $events->getParam('event'), 
+                payload: $payload, 
+                project: $project, 
+                collection: $collection
+            );
 
             Realtime::send(
-                $project->getId(),
+                $target['projectId'] ?? $project->getId(),
                 $response->getPayload(),
                 $events->getParam('event'),
                 $target['channels'],

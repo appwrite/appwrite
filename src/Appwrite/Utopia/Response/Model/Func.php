@@ -18,10 +18,10 @@ class Func extends Model
             ])
             ->addRule('execute', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Document execute permissions.',
+                'description' => 'Execution permissions.',
                 'default' => '',
-                'example' => 'role:all',
-                'array' => true,
+                'example' => 'role:member',
+                'array' => false,
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
@@ -110,7 +110,7 @@ class Func extends Model
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */

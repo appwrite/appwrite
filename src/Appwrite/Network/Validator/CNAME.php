@@ -22,7 +22,7 @@ class CNAME extends Validator
     /**
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return 'Invalid CNAME record';
     }
@@ -34,7 +34,7 @@ class CNAME extends Validator
      *
      * @return bool
      */
-    public function isValid($domain)
+    public function isValid($domain): bool
     {
         if (!is_string($domain)) {
             return false;

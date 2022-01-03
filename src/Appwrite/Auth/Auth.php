@@ -233,7 +233,7 @@ class Auth
     }
 
     /**
-     * Is Previligged User?
+     * Is Privileged User?
      *
      * @param array $roles
      *
@@ -242,9 +242,9 @@ class Auth
     public static function isPrivilegedUser(array $roles): bool
     {
         if (
-            array_key_exists('role:'.self::USER_ROLE_OWNER, $roles) ||
-            array_key_exists('role:'.self::USER_ROLE_DEVELOPER, $roles) ||
-            array_key_exists('role:'.self::USER_ROLE_ADMIN, $roles)
+            in_array('role:'.self::USER_ROLE_OWNER, $roles) ||
+            in_array('role:'.self::USER_ROLE_DEVELOPER, $roles) ||
+            in_array('role:'.self::USER_ROLE_ADMIN, $roles)
         ) {
             return true;
         }
@@ -261,7 +261,7 @@ class Auth
      */
     public static function isAppUser(array $roles): bool
     {
-        if (array_key_exists('role:'.self::USER_ROLE_APP, $roles)) {
+        if (in_array('role:'.self::USER_ROLE_APP, $roles)) {
             return true;
         }
 
@@ -278,7 +278,7 @@ class Auth
     {
         $roles = [];
 
-        if (!self::isPrivilegedUser(Authorization::$roles) && !self::isAppUser(Authorization::$roles)) {
+        if (!self::isPrivilegedUser(Authorization::getRoles()) && !self::isAppUser(Authorization::getRoles())) {
             if ($user->getId()) {
                 $roles[] = 'user:'.$user->getId();
                 $roles[] = 'role:'.Auth::USER_ROLE_MEMBER;

@@ -198,7 +198,7 @@ class Swagger2 extends Format
                     $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
                         'description' => $modelDescription,
                         'schema' => [
-                            'oneOf' => \array_map(function($m) {
+                            'x-oneOf' => \array_map(function($m) {
                                 return ['$ref' => '#/definitions/'.$m->getType()];
                             }, $model)
                         ],
@@ -392,11 +392,15 @@ class Swagger2 extends Format
 
         foreach ($this->models as $model) {
             foreach ($model->getRules() as $rule) {
-                if (
-                    in_array($model->getType(), $usedModels)
-                    && !in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])
-                ) {
-                    $usedModels[] = $rule['type'];
+                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
+                    if(\is_array($rule['type'])) {
+                        foreach ($rule['type'] as $value) {
+                            $usedModels[] = $value;
+                        }
+                    }
+                    else {
+                        $usedModels[] = $rule['type'];
+                    }
                 }
             }
         }
@@ -463,13 +467,13 @@ class Swagger2 extends Format
                         if(\is_array($rule['type'])) {
                             if($rule['array']) {
                                 $items = [
-                                    'anyOf' => \array_map(function($type) {
+                                    'x-anyOf' => \array_map(function($type) {
                                         return ['$ref' => '#/definitions/'.$type];
                                     }, $rule['type'])
                                 ];
                             } else {
                                 $items = [
-                                    'oneOf' => \array_map(function($type) {
+                                    'x-oneOf' => \array_map(function($type) {
                                         return ['$ref' => '#/definitions/'.$type];
                                     }, $rule['type'])
                                 ];
@@ -517,7 +521,7 @@ class Swagger2 extends Format
                     }
                 }
                 if (!in_array($name, $required)) {
-                    $output['definitions'][$model->getType()]['properties'][$name]['nullable'] = true;
+                    $output['definitions'][$model->getType()]['properties'][$name]['x-nullable'] = true;
                 }
             }
         }

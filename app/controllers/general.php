@@ -3,9 +3,11 @@
 require_once __DIR__.'/../init.php';
 
 use Utopia\App;
+use Utopia\Logger\Log;
+use Utopia\Logger\Log\User;
 use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
-use Utopia\View;
+use Appwrite\Utopia\View;
 use Utopia\Exception;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
@@ -47,20 +49,25 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         } else {
             Authorization::disable();
 
-            $certificate = $dbForConsole->findOne('certificates', [
+            $domainDocument = $dbForConsole->findOne('domains', [
                 new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
             ]);
 
-            if (empty($certificate)) {
-                $certificate = new Document([
+            if (!$domainDocument) {
+                $domainDocument = new Document([
                     'domain' => $domain->get(),
+                    'tld' => $domain->getSuffix(),
+                    'registerable' => $domain->getRegisterable(),
+                    'verification' => false,
+                    'certificateId' => null,
                 ]);
-                $certificate = $dbForConsole->createDocument('certificates', $certificate);
+
+                $domainDocument = $dbForConsole->createDocument('domains', $domainDocument);
 
                 Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...');
 
                 Resque::enqueue('v1-certificates', 'CertificatesV1', [
-                    'document' => $certificate,
+                    'document' => $domainDocument,
                     'domain' => $domain->get(),
                     'validateTarget' => false,
                     'validateCNAME' => false,
@@ -74,7 +81,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         Config::setParam('domains', $domains);
     }
 
-    $localeParam = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
+    $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
 
     if (\in_array($localeParam, Config::getParam('locale-codes'))) {
         $locale->setDefault($localeParam);
@@ -254,7 +261,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     if(!empty($service)) {
         if(array_key_exists($service, $project->getAttribute('services',[]))
             && !$project->getAttribute('services',[])[$service]
-            && !Auth::isPrivilegedUser(Authorization::$roles)) {
+            && !Auth::isPrivilegedUser(Authorization::getRoles())) {
             throw new Exception('Service is disabled', 503);
         }
     }
@@ -293,19 +300,72 @@ App::options(function ($request, $response) {
         ->noContent();
 }, ['request', 'response']);
 
-App::error(function ($error, $utopia, $request, $response, $layout, $project) {
+App::error(function ($error, $utopia, $request, $response, $layout, $project, $logger, $loggerBreadcrumbs) {
     /** @var Exception $error */
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\View $layout */
+    /** @var Appwrite\Utopia\View $layout */
     /** @var Utopia\Database\Document $project */
+    /** @var Utopia\Logger\Logger $logger */
+    /** @var Utopia\Logger\Log\Breadcrumb[] $loggerBreadcrumbs */
+
+    $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+    $route = $utopia->match($request);
+
+    if($logger) {
+        if($error->getCode() >= 500 || $error->getCode() === 0) {
+            try {
+                $user = $utopia->getResource('user');
+                /** @var Appwrite\Database\Document $user */
+            } catch(\Throwable $th) {
+                // All good, user is optional information for logger
+            }
+
+            $log = new Utopia\Logger\Log();
+
+            if(isset($user) && !$user->isEmpty()) {
+                $log->setUser(new User($user->getId()));
+            }
+
+            $log->setNamespace("http");
+            $log->setServer(\gethostname());
+            $log->setVersion($version);
+            $log->setType(Log::TYPE_ERROR);
+            $log->setMessage($error->getMessage());
+
+            $log->addTag('method', $route->getMethod());
+            $log->addTag('url',  $route->getPath());
+            $log->addTag('verboseType', get_class($error));
+            $log->addTag('code', $error->getCode());
+            $log->addTag('projectId', $project->getId());
+            $log->addTag('hostname', $request->getHostname());
+            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
+
+            $log->addExtra('file', $error->getFile());
+            $log->addExtra('line', $error->getLine());
+            $log->addExtra('trace', $error->getTraceAsString());
+            $log->addExtra('roles', Authorization::$roles);
+
+            $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
+            $log->setAction($action);
+
+            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+            foreach($loggerBreadcrumbs as $loggerBreadcrumb) {
+                $log->addBreadcrumb($loggerBreadcrumb);
+            }
+
+            $responseCode = $logger->addLog($log);
+            Console::info('Log pushed with status code: '.$responseCode);
+        }
+    }
 
     if ($error instanceof PDOException) {
         throw $error;
     }
 
-    $route = $utopia->match($request);
     $template = ($route) ? $route->getLabel('error', null) : null;
 
     if (php_sapi_name() === 'cli') {
@@ -321,8 +381,6 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         Console::error('[Error] File: '.$error->getFile());
         Console::error('[Error] Line: '.$error->getLine());
     }
-
-    $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
     switch ($error->getCode()) { // Don't show 500 errors!
         case 400: // Error allowed publicly
@@ -390,7 +448,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
 
     $response->dynamic(new Document($output),
         $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR);
-}, ['error', 'utopia', 'request', 'response', 'layout', 'project']);
+}, ['error', 'utopia', 'request', 'response', 'layout', 'project', 'logger', 'loggerBreadcrumbs']);
 
 App::get('/manifest.json')
     ->desc('Progressive app manifest file')

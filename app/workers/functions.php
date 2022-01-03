@@ -100,6 +100,10 @@ class FunctionsV1 extends Worker
 
     public array $allowed = [];
 
+    public function getName(): string {
+        return "functions";
+    }
+
     public function init(): void
     {
     }
@@ -118,7 +122,7 @@ class FunctionsV1 extends Worker
         $userId = $this->args['userId'] ?? '';
         $jwt = $this->args['jwt'] ?? '';
 
-        $database = $this->getInternalDB($projectId);
+        $database = $this->getProjectDB($projectId);
 
         switch ($trigger) {
             case 'event':
@@ -359,7 +363,7 @@ class FunctionsV1 extends Worker
             }
         }
 
-        if (isset($list[$container]) && !(\substr($list[$container]->getStatus(), 0, 2) === 'Up')) { // Remove conatiner if not online
+        if (isset($list[$container]) && !(\substr($list[$container]->getStatus(), 0, 2) === 'Up')) { // Remove container if not online
             $stdout = '';
             $stderr = '';
 
@@ -381,7 +385,7 @@ class FunctionsV1 extends Worker
          * Make sure no access to NFS server / storage volumes
          * Access Appwrite REST from internal network for improved performance
          */
-        if (!isset($list[$container])) { // Create contianer if not ready
+        if (!isset($list[$container])) { // Create container if not ready
             $stdout = '';
             $stderr = '';
 
@@ -481,16 +485,14 @@ class FunctionsV1 extends Worker
 
         Console::info('Function executed in ' . ($executionEnd - $executionStart) . ' seconds, status: ' . $functionStatus);
 
-        $execution = Authorization::skip(function() use ($database, $execution, $tag, $functionStatus, $exitCode, $stdout, $stderr, $executionTime) {
-            return $database->updateDocument('executions', $execution->getId(), new Document(array_merge($execution->getArrayCopy(), [
+        $execution = Authorization::skip(fn() => $database->updateDocument('executions', $execution->getId(), new Document(array_merge($execution->getArrayCopy(), [
                 'tagId' => $tag->getId(),
                 'status' => $functionStatus,
                 'exitCode' => $exitCode,
                 'stdout' => \utf8_encode(\mb_substr($stdout, -8000)), // log last 8000 chars output
                 'stderr' => \utf8_encode(\mb_substr($stderr, -8000)), // log last 8000 chars output
                 'time' => (float)$executionTime,
-            ])));
-        });
+            ]))));
 
         $executionModel = new Execution();
         $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');

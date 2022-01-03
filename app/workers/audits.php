@@ -11,6 +11,10 @@ Console::success(APP_NAME . ' audits worker v1 has started');
 
 class AuditsV1 extends Worker
 {
+    public function getName(): string {
+        return "audits";
+    }
+
     public function init(): void
     {
     }
@@ -28,8 +32,8 @@ class AuditsV1 extends Worker
         $ip = $this->args['ip'];
         $data = $this->args['data'];
         
-        $dbForInternal = $this->getInternalDB($projectId);
-        $audit = new Audit($dbForInternal);
+        $dbForProject = $this->getProjectDB($projectId);
+        $audit = new Audit($dbForProject);
 
         $audit->log($userId, $event, $resource, $userAgent, $ip, '', [
             'userName' => $userName,

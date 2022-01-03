@@ -83,12 +83,12 @@ $logs = $this->getParam('logs', null);
                                             name="documentId"
                                             id="documentId"
                                             maxlength="36"
-                                            pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{1,36}$" />
+                                            pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{1,36}$" />
                                     <?php endif; ?>
 
                                     <fieldset name="data" data-cast-to="object" data-ls-attrs="x-init=doc = {{project-document}}" x-data="{doc: {}}">
                                         <ul data-ls-attrs="x-init=attributes = {{project-collection.attributes}}" x-data="{attributes: []}">
-                                            <template x-for="attr in attributes">
+                                            <template x-for="attr in attributes.filter(a => a.status === 'available')">
                                                 <li>
                                                     <label>
                                                         <div x-text="attr.key" class="margin-bottom-tiny"></div>
@@ -280,15 +280,6 @@ $logs = $this->getParam('logs', null);
                                                             <button type="button" class="margin-end margin-bottom-small reverse" @click="doc = addAttribute(doc, attr.key)"> Add Attribute </button>
                                                         </div>
                                                     </template>
-                                                    <script type="text/javascript">
-                                                        function addAttribute(doc, key) {
-                                                            if (!Array.isArray(doc[key])) {
-                                                                doc[key] = [];
-                                                            }
-                                                            doc[key].push(null);
-                                                            return doc;
-                                                        }
-                                                    </script>
                                                 </li>
                                             </template>
                                         </ul>

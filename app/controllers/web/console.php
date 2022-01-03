@@ -1,14 +1,14 @@
 <?php
 
+use Appwrite\Utopia\View;
 use Utopia\App;
-use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
 
 App::init(function ($layout) {
-    /** @var Utopia\View $layout */
+    /** @var Appwrite\Utopia\View $layout */
 
     $layout
         ->setParam('description', 'Appwrite Console allows you to easily manage, monitor, and control your entire backend API and tools.')
@@ -18,7 +18,7 @@ App::init(function ($layout) {
 
 App::shutdown(function ($response, $layout) {
     /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\View $layout */
+    /** @var Appwrite\Utopia\View $layout */
 
     $header = new View(__DIR__.'/../../views/console/comps/header.phtml');
     $footer = new View(__DIR__.'/../../views/console/comps/footer.phtml');
@@ -43,7 +43,7 @@ App::get('/error/:code')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
     ->inject('layout')
     ->action(function ($code, $layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/error.phtml');
 
@@ -62,7 +62,7 @@ App::get('/console')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/index.phtml');
 
@@ -81,7 +81,7 @@ App::get('/console/account')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/account/index.phtml');
 
@@ -102,7 +102,7 @@ App::get('/console/notifications')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/v1/console/notifications/index.phtml');
 
@@ -117,7 +117,7 @@ App::get('/console/home')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/home/index.phtml');
         $page
@@ -133,7 +133,7 @@ App::get('/console/settings')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
@@ -157,7 +157,7 @@ App::get('/console/webhooks')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/webhooks/index.phtml');
 
@@ -176,7 +176,7 @@ App::get('/console/keys')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $scopes = array_keys(Config::getParam('scopes'));
         $page = new View(__DIR__.'/../../views/console/keys/index.phtml');
@@ -194,7 +194,7 @@ App::get('/console/database')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/database/index.phtml');
 
@@ -212,7 +212,7 @@ App::get('/console/database/collection')
     ->inject('layout')
     ->action(function ($id, $response, $layout) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $logs = new View(__DIR__.'/../../views/console/comps/logs.phtml');
 
@@ -247,7 +247,7 @@ App::get('/console/database/document')
     ->param('collection', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
     ->action(function ($collection, $layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $logs = new View(__DIR__.'/../../views/console/comps/logs.phtml');
 
@@ -280,7 +280,7 @@ App::get('/console/database/document/new')
     ->param('collection', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
     ->action(function ($collection, $layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/database/document.phtml');
 
@@ -301,7 +301,7 @@ App::get('/console/storage')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
         $page = new View(__DIR__.'/../../views/console/storage/index.phtml');
         
         $page
@@ -321,7 +321,7 @@ App::get('/console/users')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/users/index.phtml');
 
@@ -342,7 +342,7 @@ App::get('/console/users/user')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/users/user.phtml');
 
@@ -357,7 +357,7 @@ App::get('/console/users/teams/team')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/users/team.phtml');
 
