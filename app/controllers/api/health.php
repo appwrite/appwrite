@@ -341,8 +341,7 @@ App::get('/v1/health/anti-virus')
                 $output['version'] = @$antivirus->version();
                 $output['status'] = (@$antivirus->ping()) ? 'pass' : 'fail';
             } catch( \Exception $e) {
-                $output['status'] = 'offline';
-                $output['version'] = '';
+                throw new Exception('Antivirus is not available', 500);
             }
         }
 
