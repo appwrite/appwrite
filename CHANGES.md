@@ -1,17 +1,70 @@
-# Version 1.0.0
+# Version 0.12.0
 
 ## Features
 
-- Grouped auth related attributes in project collection. Introduced new attribute `auths` and removed all attributes related to auth methods and `usersAuthLimit` as well, all these are grouped under `auths` attribute
-- Grouped oAuth related attributes in project collection. Introduced new attribute `providers` and removed all attributes related to OAuth2 providers. All OAuth2 attributes are grouped under `providers`
-- Project model changed, `userAuth<AuthMethod>` => `auth<AuthMethod>` example `userAuthEmailPassword` => `authEmailPassword`, also `userOauth2<Provider>...` => `provider<Provider>...` example `userOauth2GithubAppid` => `providerGithubAppid`
-
-# Version 0.12.0
-
-## Breaking Changes (Read before upgrading!)
-
+- Completely rewritten Database service:
+  - Collection rules are now attributes
+  - Filters for have been replaced with a new, more powerful syntax
+  - Custom indexes for more performant queries
+  - Enum Attributes
+  - **DEPRECATED** Nested documents has been removed
+  - **DEPRECATED** Wildcard rule has been removed
+- You can now set custom ID’s when creating following resources:
+  - User
+  - Team
+  - Function
+  - Project
+  - File
+  - Collection
+  - Document
+- Wildcard permissions `*` are now `role:all`
+- Collections can be enabled and disabled
+- Permissions are now found as top-level keys `$read` and `$write` instead of nested under `$permissions`
+- Accessing collections with insufficient permissions now return a `401` isntead of `404` status code
+- Added Cursor pagination to all endpoints that provide pagination by offset
+- Added new Usage worker to aggregate usage statistics
+- Added new Database worker to handle heavy database tasks in the background
+- Added detailed Usage statistics to following services in the Console:
+  - Users
+  - Storage
+  - Database
+- You can now disable/enable following services in the Console:
+  - Account
+  - Avatars
+  - Database
+  - Locale
+  - Health
+  - Storage
+  - Teams
+  - Users
+  - Functions
+- Added Flutter Desktop Support
+- Fixed several memory leaks in the Console
+- Added pagination to account activities in the Console
+- Added following events from User service to Webhooks and Functions:
+  - `users.update.email`
+  - `users.update.name`
+  - `users.update.password`
+- Added new environment variable `_APP_USAGE_AGGREGATION_INTERVAL` to configure the usage worker interval
+- Added negative rotation values to file preview endpoint
 - Multiple HealthAPI response models were changed to new (better) schema
 - Method `health.getAntiVirus()` has been renamed to `health.getAntivirus()`
+- Added following langauges to the Locale service:
+  - Latin
+  - Sindhi
+  - Telugu
+- **DEPRECATED** Tasks service 
+
+## Bugs
+- Fixed `/v1/avatars/initials` when no space in the name, will try to split by `_`
+- Fixed all audit logs now saving all relevant informations
+- Fixed Health endpoints for `db` and `cache`
+
+## Security
+- Increased minimum password length to 8 and removed maximum length
+- Upgraded Redis to 6.2
+- Upgraded InfluxDB to 1.4.0
+- Upgraded Telegraf to 1.3.0
 
 # Version 0.11.0
 

@@ -2,8 +2,6 @@
 
 global $cli, $register;
 
-require_once __DIR__ . '/../init.php';
-
 use Utopia\App;
 use Utopia\Cache\Adapter\Redis;
 use Utopia\Cache\Cache;
