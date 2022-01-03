@@ -110,6 +110,7 @@ function getDatabase(Registry &$register, string $namespace)
 };
 
 $server->onStart(function () use ($stats, $register, $containerId, &$statsDocument, $logError) {
+    sleep(5); // wait for the initial database schema to be ready
     Console::success('Server started succefully');
 
     /**
@@ -138,7 +139,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     /**
      * Save current connections to the Database every 5 seconds.
      */
-    Timer::tick(5000, function () use ($register, $stats, $containerId, &$statsDocument, $logError) {
+    Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
         /** @var Document $statsDocument */
         foreach ($stats as $projectId => $value) {
             $connections = $stats->get($projectId, 'connections') ?? 0;

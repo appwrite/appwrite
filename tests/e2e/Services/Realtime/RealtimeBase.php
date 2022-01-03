@@ -40,9 +40,6 @@ trait RealtimeBase
 
     public function testConnectionFailureMissingChannels(): void
     {
-        /**
-         * Test for FAILURE
-         */
         $client = $this->getWebsocket();
         $payload = json_decode($client->receive(), true);
 
