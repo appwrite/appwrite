@@ -111,7 +111,7 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
     }
 
     $dbForProject->deleteCachedDocument('collections', $collectionId);
-    $dbForProject->deleteCachedCollection($collectionId);
+    $dbForProject->deleteCachedCollection('collection_' . $collectionId);
 
     // Pass clone of $attribute object to workers
     // so we can later modify Document to fit response model
@@ -1257,7 +1257,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
         }
 
         $dbForProject->deleteCachedDocument('collections', $collectionId);
-        $dbForProject->deleteCachedCollection($collectionId);
+        $dbForProject->deleteCachedCollection('collection_' . $collectionId);
 
         $database
             ->setParam('type', DATABASE_TYPE_DELETE_ATTRIBUTE)
