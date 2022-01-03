@@ -10,7 +10,7 @@ public void main() {
     Database database = new Database(client);
     database.createEnumAttribute(
         collectionId = "[COLLECTION_ID]",
-        attributeId = "",
+        key = "",
         elements = listOf(),
         required = false,
         new Continuation<Response>() {

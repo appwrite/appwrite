@@ -2,7 +2,7 @@ appwrite functions create \
         --functionId="" \
         --name="[NAME]" \
         --execute="" \
-        --runtime="dotnet-5.0" \
+        --runtime="node-14.5" \
         --vars="{}" \
         --events="" \
         --schedule="" \

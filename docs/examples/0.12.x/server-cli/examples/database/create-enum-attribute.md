@@ -1,6 +1,6 @@
 appwrite database createEnumAttribute \
         --collectionId="[COLLECTION_ID]" \
-        --attributeId="" \
+        --key="" \
         --elements="" \
         --required="" \
         --default="[DEFAULT]" \

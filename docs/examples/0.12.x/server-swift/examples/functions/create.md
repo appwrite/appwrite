@@ -11,7 +11,7 @@ func main() {
         functionId: "",
         name: "[NAME]",
         execute: [],
-        runtime: "dotnet-5.0"
+        runtime: "node-14.5"
     ) { result in
         switch result {
         case .failure(let error):

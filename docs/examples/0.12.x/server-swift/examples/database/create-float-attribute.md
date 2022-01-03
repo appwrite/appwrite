@@ -9,7 +9,7 @@ func main() {
     let database = Database(client)
     database.createFloatAttribute(
         collectionId: "[COLLECTION_ID]",
-        attributeId: "",
+        key: "",
         required: xfalse
     ) { result in
         switch result {

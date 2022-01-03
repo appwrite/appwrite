@@ -12,7 +12,7 @@ suspend fun main() {
         functionId = "",
         name = "[NAME]",
         execute = listOf(),
-        runtime = "dotnet-5.0",
+        runtime = "node-14.5",
     )
     val json = response.body?.string()
 }

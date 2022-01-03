@@ -9,6 +9,6 @@ client
 
 database = Appwrite::Database.new(client)
 
-response = database.create_index(collection_id: '[COLLECTION_ID]', index_id: '', type: 'key', attributes: [])
+response = database.create_index(collection_id: '[COLLECTION_ID]', key: '', type: 'key', attributes: [])
 
 puts response.inspect

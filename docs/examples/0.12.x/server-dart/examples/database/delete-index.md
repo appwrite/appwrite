@@ -12,7 +12,7 @@ void main() { // Init SDK
 
   Future result = database.deleteIndex(
     collectionId: '[COLLECTION_ID]',
-    indexId: '',
+    key: '',
   );
 
   result

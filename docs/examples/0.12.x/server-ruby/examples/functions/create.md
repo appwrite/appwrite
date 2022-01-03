@@ -9,6 +9,6 @@ client
 
 functions = Appwrite::Functions.new(client)
 
-response = functions.create(function_id: '', name: '[NAME]', execute: [], runtime: 'dotnet-5.0')
+response = functions.create(function_id: '', name: '[NAME]', execute: [], runtime: 'node-14.5')
 
 puts response.inspect
