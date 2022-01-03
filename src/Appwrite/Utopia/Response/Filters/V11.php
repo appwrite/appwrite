@@ -8,8 +8,6 @@ use Exception;
 
 class V11 extends Filter
 {
-    // TODO: Health
-    
     // Convert 0.12 Data format to 0.11 format
     public function parse(array $content, string $model): array
     {
@@ -30,6 +28,22 @@ class V11 extends Filter
             // Convert status from boolean to int
             case Response::MODEL_USER:
                 $parsedResponse = $this->parseStatus($content);
+                break;
+            // Convert all Health responses back to original
+            case Response::MODEL_HEALTH_STATUS:
+                $parsedResponse = $this->parseHealthStatus($content);
+                break;
+            case Response::MODEL_HEALTH_VERSION:
+                $parsedResponse = $this->parseHealthVersion($content);
+                break;
+            case Response::MODEL_HEALTH_TIME:
+                $parsedResponse = $this->parseHealthTime($content);
+                break;
+            case Response::MODEL_HEALTH_QUEUE:
+                $parsedResponse = $this->parseHealthQueue($content);
+                break;
+            case Response::MODEL_HEALTH_ANTIVIRUS:
+                $parsedResponse = $this->parseHealthAntivirus($content);
                 break;
 
             // Complex filters
@@ -58,6 +72,53 @@ class V11 extends Filter
         }
 
         return $parsedResponse;
+    }
+
+    protected function parseHealthAntivirus(array $content)
+    {
+        if($content['status'] === 'pass') {
+            $content['status'] = 'online';
+        }
+
+        if($content['status'] === 'fail') {
+            $content['status'] = 'offline';
+        }
+
+        return $content;
+    }
+
+    protected function parseHealthTime(array $content)
+    {
+        $content['remote'] = $content['remoteTime'];
+        unset($content['remoteTime']);
+
+        $content['local'] = $content['localTime'];
+        unset($content['localTime']);
+
+        return $content;
+    }
+
+    protected function parseHealthVersion(array $content)
+    {
+        // Did not change
+
+        return $content;
+    }
+
+
+    protected function parseHealthQueue(array $content)
+    {
+        // Did not change
+
+        return $content;
+    }
+
+    protected function parseHealthStatus(array $content)
+    {
+        $content['status'] = 'OK'; // Is always returning pass, was always returning OK
+        unset($content['ping']);
+
+        return $content;
     }
 
     protected function parseStatus(array $content)
