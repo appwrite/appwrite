@@ -36,6 +36,7 @@ trait RealtimeBase
         $client = $this->getWebsocket(['documents']);
         $this->assertNotEmpty($client->receive());
         $client->close();
+        sleep(1);
 
         /**
          * Test for FAILURE
@@ -50,6 +51,7 @@ trait RealtimeBase
         $this->assertEquals('Missing channels', $payload['data']['message']);
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
+        sleep(1);
 
         $client = new WebSocketClient('ws://appwrite-traefik/v1/realtime?channels[]=files"', [
             'headers' => [
@@ -65,6 +67,7 @@ trait RealtimeBase
         $this->assertEquals('Missing or unknown project ID', $payload['data']['message']);
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
+        sleep(1);
 
         $client = new WebSocketClient('ws://appwrite-traefik/v1/realtime?project=123', [
             'headers' => [
@@ -80,5 +83,6 @@ trait RealtimeBase
         $this->assertEquals('Missing or unknown project ID', $payload['data']['message']);
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
+        sleep(1);
     }
 }

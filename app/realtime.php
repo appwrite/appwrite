@@ -398,7 +398,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $abuse = new Abuse($timeLimit);
 
-        if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+        if (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check()) {
             throw new Exception('Too many requests', 1013);
         }
 
