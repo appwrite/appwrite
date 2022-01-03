@@ -7,7 +7,7 @@ use WebSocket\Client as WebSocketClient;
 
 trait RealtimeBase
 {
-    private function getWebsocket($channels = [], $headers = [], $projectId = null)
+    private function getWebsocket($channels = [], $headers = [], $projectId = null): WebSocketClient
     {
         if (is_null($projectId)) {
             $projectId = $this->getProject()['$id'];
@@ -28,7 +28,7 @@ trait RealtimeBase
         ]);
     }
 
-    public function testConnection()
+    public function testConnection(): void
     {
         /**
          * Test for SUCCESS
@@ -36,8 +36,10 @@ trait RealtimeBase
         $client = $this->getWebsocket(['documents']);
         $this->assertNotEmpty($client->receive());
         $client->close();
-        sleep(1);
+    }
 
+    public function testConnectionFailureMissingChannels(): void
+    {
         /**
          * Test for FAILURE
          */
@@ -51,24 +53,10 @@ trait RealtimeBase
         $this->assertEquals('Missing channels', $payload['data']['message']);
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
-        sleep(1);
+    }
 
-        $client = new WebSocketClient('ws://appwrite-traefik/v1/realtime?channels[]=files"', [
-            'headers' => [
-                'Origin' => 'appwrite.test'
-            ]
-        ]);
-        $payload = json_decode($client->receive(), true);
-
-        $this->assertArrayHasKey('type', $payload);
-        $this->assertArrayHasKey('data', $payload);
-        $this->assertEquals('error', $payload['type']);
-        $this->assertEquals(1008, $payload['data']['code']);
-        $this->assertEquals('Missing or unknown project ID', $payload['data']['message']);
-        $this->expectException(ConnectionException::class); // Check if server disconnnected client
-        $client->close();
-        sleep(1);
-
+    public function testConnectionFailureUnknownProject(): void
+    {
         $client = new WebSocketClient('ws://appwrite-traefik/v1/realtime?project=123', [
             'headers' => [
                 'Origin' => 'appwrite.test'
@@ -83,6 +71,5 @@ trait RealtimeBase
         $this->assertEquals('Missing or unknown project ID', $payload['data']['message']);
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
-        sleep(1);
     }
 }

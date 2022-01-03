@@ -366,10 +366,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
     try {
         /** @var \Utopia\Database\Document $user */
-        $user = $app->getResource('user', true);
+        $user = $app->getResource('user');
 
         /** @var \Utopia\Database\Document $project */
-        $project = $app->getResource('project', true);
+        $project = $app->getResource('project');
 
         /** @var \Utopia\Database\Document $console */
         $console = $app->getResource('console');
