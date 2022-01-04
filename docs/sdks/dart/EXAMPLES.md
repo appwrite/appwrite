@@ -19,7 +19,7 @@ Create a new user:
 Users users = Users(client);
 
 Response result = await users.create(
-    userId: 'unique()',
+    userId: '[USER_ID]',
     email: 'email@example.com',
     password: 'password',
 );
@@ -44,7 +44,7 @@ Storage storage = Storage(client);
 MultipartFile file = MultipartFile.fromFile('./path-to-file/image.jpg', filename: 'image.jpg');
 
 storage.createFile(
-    fileId: 'unique()',
+    fileId: '[FILE_ID]',
     file: file,
     read: ['role:all'],
     write: []
