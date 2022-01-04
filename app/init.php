@@ -664,7 +664,7 @@ App::setResource('clients', function ($request, $console, $project) {
 }, ['request', 'console', 'project']);
 
 App::setResource('user', function($mode, $project, $console, $request, $response, $dbForProject, $dbForConsole) {
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $project */
     /** @var Utopia\Database\Database $dbForProject */
@@ -748,7 +748,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForConsole']);
 
 App::setResource('project', function($dbForConsole, $request, $console) {
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Request $request */
     /** @var Utopia\Database\Database $dbForConsole */
     /** @var Utopia\Database\Document $console */
 
@@ -828,7 +828,7 @@ App::setResource('dbForConsole', function($db, $cache) {
 }, ['db', 'cache']);
 
 App::setResource('mode', function($request) {
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Request $request */
 
     /**
      * Defines the mode for the request:

@@ -21,7 +21,7 @@ App::get('/v1/locale')
     ->inject('locale')
     ->inject('geodb')
     ->action(function ($request, $response, $locale, $geodb) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */

@@ -5,7 +5,7 @@ require_once __DIR__.'/../init.php';
 use Utopia\App;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
-use Utopia\Swoole\Request;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
 use Utopia\Exception;
@@ -16,10 +16,12 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V06;
 use Appwrite\Utopia\Response\Filters\V07;
 use Appwrite\Utopia\Response\Filters\V08;
+use Appwrite\Utopia\Response\Filters\V11;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Appwrite\Utopia\Request\Filters\V12;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
@@ -27,7 +29,7 @@ Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 App::init(function ($utopia, $request, $response, $console, $project, $dbForConsole, $user, $locale, $clients) {
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $console */
     /** @var Utopia\Database\Document $project */
@@ -35,6 +37,25 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     /** @var Utopia\Database\Document $user */
     /** @var Utopia\Locale\Locale $locale */
     /** @var array $clients */
+
+    /*
+     * Request format
+    */
+    $route = $utopia->match($request);
+    Request::setRoute($route);
+
+    $requestFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+    if ($requestFormat) {
+        switch($requestFormat) {
+            case version_compare ($requestFormat , '0.12.0', '<') :
+                Request::setFilter(new V12());
+                break;
+            default:
+                Request::setFilter(null);
+        }
+    } else {
+        Request::setFilter(null);
+    }
 
     $domain = $request->getHostname();
     $domains = Config::getParam('domains', []);
@@ -82,12 +103,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     }
 
     $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
-
     if (\in_array($localeParam, Config::getParam('locale-codes'))) {
         $locale->setDefault($localeParam);
-    };
-
-    $route = $utopia->match($request);
+    }
 
     if ($project->isEmpty()) {
         throw new Exception('Project not found', 404);
@@ -149,6 +167,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
                 break;
             case version_compare ($responseFormat , '0.8.0', '<=') :
                 Response::setFilter(new V08());
+            case version_compare ($responseFormat , '0.11.0', '<=') :
+                Response::setFilter(new V11());
                 break;
             default:
                 Response::setFilter(null);
@@ -285,7 +305,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
 }, ['utopia', 'request', 'response', 'console', 'project', 'dbForConsole', 'user', 'locale', 'clients']);
 
 App::options(function ($request, $response) {
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
 
     $origin = $request->getOrigin();
@@ -303,7 +323,7 @@ App::options(function ($request, $response) {
 App::error(function ($error, $utopia, $request, $response, $layout, $project, $logger, $loggerBreadcrumbs) {
     /** @var Exception $error */
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Utopia\View $layout */
     /** @var Utopia\Database\Document $project */

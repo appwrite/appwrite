@@ -52,7 +52,7 @@ App::post('/v1/storage/files')
     ->inject('audits')
     ->inject('usage')
     ->action(function ($fileId, $file, $read, $write, $request, $response, $dbForProject, $user, $audits, $usage) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $user */
@@ -295,7 +295,7 @@ App::get('/v1/storage/files/:fileId/preview')
     ->inject('dbForProject')
     ->inject('usage')
     ->action(function ($fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForProject, $usage) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForProject */
