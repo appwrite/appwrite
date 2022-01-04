@@ -18,7 +18,7 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_OPTIONS, '/', array_merge([
+        $response = $this->client->call(Client::METHOD_OPTIONS, '/', \array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
         ]), []);
@@ -38,7 +38,7 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/error', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/error', \array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
         ]), []);
@@ -54,7 +54,7 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/manifest.json', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/manifest.json', \array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
         ]), []);
@@ -73,7 +73,7 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/humans.txt', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/humans.txt', \array_merge([
             'origin' => 'http://localhost',
         ]), []);
 
@@ -86,7 +86,7 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/robots.txt', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/robots.txt', \array_merge([
             'origin' => 'http://localhost',
         ]), []);
 
@@ -165,7 +165,7 @@ class HTTPTest extends Scope
         /**
          * Test without header
          */
-        $response = $this->client->call(Client::METHOD_GET, '/locale/continents', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/locale/continents', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], $this->getHeaders()));
@@ -183,7 +183,7 @@ class HTTPTest extends Scope
          /**
          * Test with header
          */
-        $response = $this->client->call(Client::METHOD_GET, '/locale/continents', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/locale/continents', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
             'x-appwrite-response-format' => '0.6.2'
@@ -202,7 +202,7 @@ class HTTPTest extends Scope
         /**
          * Test without header
          */
-        $response = $this->client->call(Client::METHOD_GET, '/versions', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/versions', \array_merge([
             'content-type' => 'application/json',
         ], $this->getHeaders()));
 

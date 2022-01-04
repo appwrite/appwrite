@@ -55,7 +55,7 @@ App::post('/v1/account')
     ->inject('audits')
     ->inject('usage')
     ->action(function ($userId, $email, $password, $name, $request, $response, $project, $dbForProject, $audits, $usage) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForProject */
@@ -155,7 +155,7 @@ App::post('/v1/account/sessions')
     ->inject('audits')
     ->inject('usage')
     ->action(function ($email, $password, $request, $response, $dbForProject, $locale, $geodb, $audits, $usage) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
@@ -267,7 +267,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->inject('response')
     ->inject('project')
     ->action(function ($provider, $success, $failure, $scopes, $request, $response, $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
 
@@ -320,7 +320,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->inject('request')
     ->inject('response')
     ->action(function ($projectId, $provider, $code, $state, $request, $response) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
 
         $domain = $request->getHostname();
@@ -347,7 +347,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->inject('request')
     ->inject('response')
     ->action(function ($projectId, $provider, $code, $state, $request, $response) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
 
         $domain = $request->getHostname();
@@ -382,7 +382,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('events')
     ->inject('usage')
     ->action(function ($provider, $code, $state, $request, $response, $project, $user, $dbForProject, $geodb, $audits, $events, $usage) use ($oauthDefaultSuccess) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Document $user */
@@ -627,7 +627,7 @@ App::post('/v1/account/sessions/magic-url')
     ->inject('events')
     ->inject('mails')
     ->action(function ($userId, $email, $url, $request, $response, $project, $dbForProject, $locale, $audits, $events, $mails) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForProject */
@@ -773,7 +773,7 @@ App::put('/v1/account/sessions/magic-url')
     ->action(function ($userId, $secret, $request, $response, $dbForProject, $locale, $geodb, $audits) {
         /** @var string $userId */
         /** @var string $secret */
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
@@ -899,7 +899,7 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('audits')
     ->inject('usage')
     ->action(function ($request, $response, $locale, $user, $project, $dbForProject, $geodb, $audits, $usage) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Utopia\Database\Document $user */
@@ -1512,7 +1512,7 @@ App::delete('/v1/account')
     ->inject('events')
     ->inject('usage')
     ->action(function ($request, $response, $user, $dbForProject, $audits, $events, $usage) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
@@ -1582,7 +1582,7 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('events')
     ->inject('usage')
     ->action(function ($sessionId, $request, $response, $user, $dbForProject, $locale, $audits, $events, $usage) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
@@ -1668,7 +1668,7 @@ App::delete('/v1/account/sessions')
     ->inject('events')
     ->inject('usage')
     ->action(function ($request, $response, $user, $dbForProject, $locale, $audits, $events, $usage) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
@@ -1753,7 +1753,7 @@ App::post('/v1/account/recovery')
     ->inject('events')
     ->inject('usage')
     ->action(function ($email, $url, $request, $response, $dbForProject, $project, $locale, $mails, $audits, $events, $usage) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
@@ -1945,7 +1945,7 @@ App::post('/v1/account/verification')
     ->inject('mails')
     ->inject('usage')
     ->action(function ($url, $request, $response, $project, $user, $dbForProject, $locale, $audits, $events, $mails, $usage) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Document $user */

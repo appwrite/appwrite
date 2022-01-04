@@ -15,7 +15,7 @@ use Utopia\Audit\Audit;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Database\Document;
 use Utopia\Swoole\Files;
-use Utopia\Swoole\Request;
+use Appwrite\Utopia\Request;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 

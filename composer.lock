@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c602e99a298c00b57253651a3108a6df",
+    "content-hash": "d0df4734e38f660ce979011d70155357",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2255,16 +2255,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.19.4",
+            "version": "0.19.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "b1c79f199a6adbf8526cea272d931213a8eb511d"
+                "reference": "1c28ba9a5b491cf7c90c535fefee5832c7133623"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/b1c79f199a6adbf8526cea272d931213a8eb511d",
-                "reference": "b1c79f199a6adbf8526cea272d931213a8eb511d",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/1c28ba9a5b491cf7c90c535fefee5832c7133623",
+                "reference": "1c28ba9a5b491cf7c90c535fefee5832c7133623",
                 "shasum": ""
             },
             "require": {
@@ -2298,9 +2298,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.19.4"
+                "source": "https://github.com/utopia-php/framework/tree/0.19.5"
             },
-            "time": "2021-12-29T15:05:19+00:00"
+            "time": "2022-01-04T14:40:23+00:00"
         },
         {
             "name": "utopia-php/image",

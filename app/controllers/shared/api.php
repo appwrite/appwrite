@@ -13,7 +13,7 @@ use Utopia\Storage\Storage;
 
 App::init(function ($utopia, $request, $response, $project, $user, $events, $audits, $usage, $deletes, $database, $dbForProject, $mode) {
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $project */
     /** @var Utopia\Database\Document $user */
@@ -134,7 +134,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
 
 App::init(function ($utopia, $request, $project) {
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Request $request */
     /** @var Utopia\Database\Document $project */
 
     $route = $utopia->match($request);
@@ -187,7 +187,7 @@ App::init(function ($utopia, $request, $project) {
 
 App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $database, $mode) {
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $project */
     /** @var Appwrite\Event\Event $events */

@@ -541,7 +541,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('dbForProject')
     ->inject('audits')
     ->action(function ($teamId, $membershipId, $roles, $request, $response, $user, $dbForProject, $audits) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
@@ -608,7 +608,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('geodb')
     ->inject('audits')
     ->action(function ($teamId, $membershipId, $userId, $secret, $request, $response, $user, $dbForProject, $geodb, $audits) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
