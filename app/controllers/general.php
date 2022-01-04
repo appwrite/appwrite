@@ -47,7 +47,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     $requestFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
     if ($requestFormat) {
         switch($requestFormat) {
-            case version_compare ($requestFormat , '0.11.0', '<=') :
+            case version_compare ($requestFormat , '0.12.0', '<') :
                 Request::setFilter(new V12());
                 break;
             default:
