@@ -295,6 +295,16 @@ For generating a new console SDK follow the next steps:
 5. Copy `iife/sdk.js` to `appwrite.js`
 6. Go back to the root of the project `run npm run build`
 
+## Checklist for Releasing SDKs
+
+Things to remember when releasing SDKs
+
+* Update the Changelogs in **docs/sdks** (right now only Dart and Flutter are using these)
+* Update **GETTING_STARTED.md** in **docs/sdks** for each SDKs if any changes in the related APIs in there
+* Update SDK versions as required on **app/config/platforms.php**
+* Generate SDKs using the command `php app/cli.php sdks` and follow the instructions
+* Release new tags on GitHub repository for each SDKs
+
 ## Debug
 
 Appwrite uses [yasd](https://github.com/swoole/yasd) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension or if you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection.
