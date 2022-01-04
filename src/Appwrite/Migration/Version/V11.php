@@ -175,6 +175,7 @@ class V11 extends Migration
                     '$collection!=' . OldDatabase::SYSTEM_COLLECTION_TASKS,
                     '$collection!=' . OldDatabase::SYSTEM_COLLECTION_PROJECTS,
                     '$collection!=' . OldDatabase::SYSTEM_COLLECTION_CONNECTIONS,
+                    '$collection!=' . OldDatabase::SYSTEM_COLLECTION_RESERVED,
                 ]
             ]);
 
@@ -421,7 +422,7 @@ class V11 extends Migration
          * Check attributes and set their default values.
          */
         if (array_key_exists($document->getCollection(), $this->oldCollections)) {
-            foreach ($this->newCollections[$document->getCollection()]['attributes'] as $attr) {
+            foreach ($this->newCollections[$document->getCollection()]['attributes'] ?? [] as $attr) {
                 if (
                     (!$attr['array'] ||
                         ($attr['array'] && array_key_exists('filter', $attr)
@@ -436,7 +437,9 @@ class V11 extends Migration
         switch ($document->getAttribute('$collection')) {
                 case OldDatabase::SYSTEM_COLLECTION_PROJECTS:
                     $newProviders = [];
+                    $newAuths = [];
                     $providers = Config::getParam('providers', []);
+                    $auths = Config::getParam('auth', []);
 
                     /*
                     * Add enabled OAuth2 providers to default data rules
@@ -455,6 +458,22 @@ class V11 extends Migration
                     }
 
                     $document->setAttribute('providers', $newProviders);
+
+                    /*
+                    * Migrate User providers settings
+                    */
+                    foreach ($auths as $index => $auth) {
+                        $enabled = $document->getAttribute('auth'.\ucfirst($auth['key']), true);
+                        $newAuths['auth'.\ucfirst($auth['key'])] = $enabled;
+                        $document->removeAttribute('auth'.\ucfirst($auth['key']));
+                    }
+
+                    if (!empty($document->getAttribute('usersAuthLimit'))) {
+                        $newAuths['limit'] = $document->getAttribute('usersAuthLimit');
+                        $document->removeAttribute('usersAuthLimit');
+                    }
+
+                    $document->setAttribute('auths', $newProviders);
 
                     break;
                 case OldDatabase::SYSTEM_COLLECTION_PLATFORMS:
