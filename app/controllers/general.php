@@ -47,7 +47,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     $requestFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
     if ($requestFormat) {
         switch($requestFormat) {
-            // TODO: For some reason console is still on 0.11. We dont want this filter logic in console, console uses 0.12 SDK
             case version_compare ($requestFormat , '0.11.0', '<=') :
                 Request::setFilter(new V12());
                 break;
