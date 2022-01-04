@@ -1,6 +1,6 @@
 ## 3.0.0
-- Support for 0.12
-- **BREAKING** Refactored database service 
+- Support for Appwrite 0.12
+- **BREAKING** Updated database service to adapt 0.12 API 
 - **BREAKING** Custom ID support while creating resources
 - [View all the changes](https://github.com/appwrite/appwrite/blob/master/CHANGES.md#version-0120)
 
