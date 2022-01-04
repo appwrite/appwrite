@@ -11,6 +11,7 @@ use Redis;
 use Swoole\Runtime;
 use Throwable;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -29,8 +30,7 @@ global $register;
 
 class V11 extends Migration
 {
-    protected Database $dbInternal;
-    protected Database $dbExternal;
+    protected Database $dbProject;
     protected Database $dbConsole;
 
     protected array $oldCollections;
@@ -42,11 +42,14 @@ class V11 extends Migration
         $this->options = array_map(fn ($option) => $option === 'yes' ? true : false, $this->options);
 
         if (!is_null($cache)) {
+            $this->cache->flushAll();
             $cacheAdapter = new Cache(new RedisCache($this->cache));
-            $this->dbInternal = new Database(new MariaDB($this->db), $cacheAdapter); // namespace is set on execution
-            $this->dbExternal = new Database(new MariaDB($this->db), $cacheAdapter); // namespace is set on execution
+            $this->dbProject = new Database(new MariaDB($this->db), $cacheAdapter); // namespace is set on execution
             $this->dbConsole = new Database(new MariaDB($this->db), $cacheAdapter);
-            $this->dbConsole->setNamespace('project_console_internal');
+
+            $this->dbProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $this->dbConsole->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $this->dbConsole->setNamespace('_project_console');
         }
 
         $this->newCollections = Config::getParam('collections', []);
@@ -60,8 +63,8 @@ class V11 extends Migration
 
         $oldProject = $this->project;
 
-        $this->dbInternal->setNamespace('project_' . $oldProject->getId() . '_internal');
-        $this->dbExternal->setNamespace('project_' . $oldProject->getId() . '_external');
+        $this->dbProject->setNamespace('_project_' . $oldProject->getId());
+        $this->dbConsole->setNamespace('_project_console');
 
         Console::info('');
         Console::info('------------------------------------');
@@ -72,7 +75,11 @@ class V11 extends Migration
          * Create internal/external structure for projects and skip the console project.
          */
         if ($oldProject->getId() !== 'console') {
-            $project = $this->dbConsole->getDocument('projects', $oldProject->getId());
+            try {
+                $project = $this->dbConsole->getDocument(collection: 'projects', id: $oldProject->getId());
+            } catch (\Throwable $th) {
+                Console::error($th->getTraceAsString());
+            }
 
             /**
              * Migrate Project Document.
@@ -85,26 +92,18 @@ class V11 extends Migration
             }
 
             /**
-             * Create internal DB tables
+             * Create internal tables
              */
-            if (!$this->dbInternal->exists()) {
-                $this->dbInternal->create();
+            try {
                 Console::log('Created internal tables for : ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
-            }
-
-            /**
-             * Create external DB tables
-             */
-            if (!$this->dbExternal->exists()) {
-                $this->dbExternal->create();
-                Console::log('Created external tables for : ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
-            }
+                $this->dbProject->createMetadata();
+            } catch (\Throwable $th) { }
 
             /**
              * Create Audit tables
              */
-            if ($this->dbInternal->getCollection(Audit::COLLECTION)->isEmpty()) {
-                $audit = new Audit($this->dbInternal);
+            if ($this->dbProject->getCollection(Audit::COLLECTION)->isEmpty()) {
+                $audit = new Audit($this->dbProject);
                 $audit->setup();
                 Console::log('Created audit tables for : ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
             }
@@ -112,8 +111,8 @@ class V11 extends Migration
             /**
              * Create Abuse tables
              */
-            if ($this->dbInternal->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
-                $adapter = new TimeLimit("", 0, 1, $this->dbInternal);
+            if ($this->dbProject->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
+                $adapter = new TimeLimit("", 0, 1, $this->dbProject);
                 $adapter->setup();
                 Console::log('Created abuse tables for : ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
             }
@@ -122,7 +121,7 @@ class V11 extends Migration
              * Create internal collections for Project
              */
             foreach ($this->newCollections as $key => $collection) {
-                if (!$this->dbInternal->getCollection($key)->isEmpty()) continue; // Skip if project collection already exists
+                if (!$this->dbProject->getCollection($key)->isEmpty()) continue; // Skip if project collection already exists
 
                 $attributes = [];
                 $indexes = [];
@@ -149,7 +148,7 @@ class V11 extends Migration
                     ]);
                 }
 
-                $this->dbInternal->createCollection($key, $attributes, $indexes);
+                $this->dbProject->createCollection($key, $attributes, $indexes);
             }
             if ($this->options['migrateCollections']) {
                 $this->migrateExternalCollections();
@@ -198,16 +197,12 @@ class V11 extends Migration
                 }
 
                 try {
-                    if ($this->dbInternal->getDocument($new->getCollection(), $new->getId())->isEmpty()) {
-                        $this->dbInternal->createDocument($new->getCollection(), $new);
+                    if ($this->dbProject->getDocument($new->getCollection(), $new->getId())->isEmpty()) {
+                        $this->dbProject->createDocument($new->getCollection(), $new);
                     }
                 } catch (\Throwable $th) {
-                    Console::error('Failed to update document: ' . $th->getMessage());
+                    Console::error("Failed to migrate document ({$new->getId()}) from collection ({$new->getCollection()}): " . $th->getMessage());
                     continue;
-
-                    if ($document && $new->getId() !== $document->getId()) {
-                        throw new Exception('Duplication Error');
-                    }
                 }
             }
 
@@ -249,10 +244,10 @@ class V11 extends Migration
                 $id = $oldCollection->getId();
                 $permissions = $oldCollection->getPermissions();
                 $name = $oldCollection->getAttribute('name');
-                $newCollection = $this->dbExternal->getCollection($id);
+                $newCollection = $this->dbProject->getCollection('collection_' . $id);
 
                 if ($newCollection->isEmpty()) {
-                    $this->dbExternal->createCollection($id);
+                    $this->dbProject->createCollection('collection_' . $id);
                     /**
                      * Migrate permissions
                      */
@@ -263,13 +258,13 @@ class V11 extends Migration
                      * Suffix collection name with a subsequent number to make it unique if possible.
                      */
                     $suffix = 1;
-                    while ($this->dbInternal->findOne('collections', [
+                    while ($this->dbProject->findOne('collections', [
                         new Query('name', Query::TYPE_EQUAL, [$name])
                     ])) {
                         $name .= ' - ' . $suffix++;
                     }
 
-                    $this->dbInternal->createDocument('collections', new Document([
+                    $this->dbProject->createDocument('collections', new Document([
                         '$id' => $id,
                         '$read' => [],
                         '$write' => [],
@@ -277,6 +272,7 @@ class V11 extends Migration
                         'dateCreated' => time(),
                         'dateUpdated' => time(),
                         'name' => $name,
+                        'enabled' => true,
                         'search' => implode(' ', [$id, $name]),
                     ]));
                 } else {
@@ -290,8 +286,8 @@ class V11 extends Migration
 
                 foreach ($attributes as $attribute) {
                     try {
-                        $this->dbExternal->createAttribute(
-                            collection: $attribute['$collection'],
+                        $this->dbProject->createAttribute(
+                            collection: 'collection_' . $attribute['$collection'],
                             id: $attribute['$id'],
                             type: $attribute['type'],
                             size: $attribute['size'],
@@ -303,8 +299,7 @@ class V11 extends Migration
                             formatOptions: $attribute['formatOptions'] ?? [],
                             filters: $attribute['filters']
                         );
-
-                        $this->dbInternal->createDocument('attributes', new Document([
+                        $this->dbProject->createDocument('attributes', new Document([
                             '$id' => $attribute['$collection'] . '_' . $attribute['$id'],
                             'key' => $attribute['$id'],
                             'collectionId' => $attribute['$collection'],
@@ -361,7 +356,7 @@ class V11 extends Migration
             Console::log('Migrating External Documents for Collection ' . $collection . ': ' . $offset . ' / ' . $this->oldProjectDB->getSum());
 
             foreach ($allDocs as $document) {
-                if (!$this->dbExternal->getDocument($collection, $document->getId())->isEmpty()) {
+                if (!$this->dbProject->getDocument('collection_' . $collection, $document->getId())->isEmpty()) {
                     continue;
                 }
                 go(function ($document) {
@@ -398,7 +393,13 @@ class V11 extends Migration
                 }, $document);
                 $document = new Document($document->getArrayCopy());
                 $document = $this->migratePermissions($document);
-                $this->dbExternal->createDocument($collection, $document);
+
+                try {
+                    $this->dbProject->createDocument('collection_' . $collection, $document);
+                } catch (\Throwable $th) {
+                    Console::error("Failed to migrate document ({$document->getId()}): " . $th->getMessage());
+                    continue;
+                }
             }
             $offset += $this->limit;
         }
@@ -433,7 +434,30 @@ class V11 extends Migration
         }
 
         switch ($document->getAttribute('$collection')) {
-            case OldDatabase::SYSTEM_COLLECTION_PLATFORMS:
+                case OldDatabase::SYSTEM_COLLECTION_PROJECTS:
+                    $newProviders = [];
+                    $providers = Config::getParam('providers', []);
+
+                    /*
+                    * Add enabled OAuth2 providers to default data rules
+                    */
+                    foreach ($providers as $index => $provider) {
+                        $appId = $document->getAttribute('usersOauth2'.\ucfirst($index).'Appid');
+                        $appSecret = $document->getAttribute('usersOauth2'.\ucfirst($index).'Secret');
+
+                        if (!is_null($appId) || !is_null($appId)) {
+                            $newProviders[$appId] = $appSecret;
+                        }
+
+                        $document
+                            ->removeAttribute('usersOauth2'.\ucfirst($index).'Appid')
+                            ->removeAttribute('usersOauth2'.\ucfirst($index).'Secret');
+                    }
+
+                    $document->setAttribute('providers', $newProviders);
+
+                    break;
+                case OldDatabase::SYSTEM_COLLECTION_PLATFORMS:
                 $projectId = $this->getProjectIdFromReadPermissions($document);
 
                 /**
@@ -458,6 +482,16 @@ class V11 extends Migration
                  */
                 $document->setAttribute('$read', ['role:all']);
                 $document->setAttribute('$write', ['role:all']);
+
+                break;
+            case OldDatabase::SYSTEM_COLLECTION_CERTIFICATES:
+                /**
+                 * Replace certificateId attribute.
+                 */
+                if ($document->getAttribute('certificateId') !== null) {
+                    $document->setAttribute('$id', $document->getAttribute('certificateId'));
+                    $document->removeAttribute('certificateId');
+                }
 
                 break;
             case OldDatabase::SYSTEM_COLLECTION_DOMAINS:
@@ -485,6 +519,29 @@ class V11 extends Migration
 
                 break;
             case OldDatabase::SYSTEM_COLLECTION_KEYS:
+                $projectId = $this->getProjectIdFromReadPermissions($document);
+
+                /**
+                 * Set Project ID
+                 */
+                if ($document->getAttribute('projectId') === null) {
+                    $document->setAttribute('projectId', $projectId);
+                }
+
+                /**
+                 * Set scopes if empty
+                 */
+                if (empty($document->getAttribute('scopes', []))) {
+                    $document->setAttribute('scopes', []);
+                }
+
+                /**
+                 * Reset Permissions
+                 */
+                $document->setAttribute('$read', ['role:all']);
+                $document->setAttribute('$write', ['role:all']);
+
+                break;
             case OldDatabase::SYSTEM_COLLECTION_WEBHOOKS:
                 $projectId = $this->getProjectIdFromReadPermissions($document);
 
@@ -522,7 +579,7 @@ class V11 extends Migration
                  * Set default values for arrays if not set.
                  */
                 if (empty($document->getAttribute('prefs', []))) {
-                    $document->setAttribute('prefs', []);
+                    $document->setAttribute('prefs', new \stdClass());
                 }
                 if (empty($document->getAttribute('sessions', []))) {
                     $document->setAttribute('sessions', []);
@@ -539,6 +596,19 @@ class V11 extends Migration
                  */
                 $write = $document->getWrite();
                 $document->setAttribute('$write', str_replace('user:{self}', "user:{$document->getId()}", $write));
+
+                break;
+
+            case OldDatabase::SYSTEM_COLLECTION_TEAMS:
+
+                /**
+                 * Replace team:{self} with team:TEAM_ID
+                 */
+                $read = $document->getWrite();
+                $write = $document->getWrite();
+
+                $document->setAttribute('$read', str_replace('team:{self}', "team:{$document->getId()}", $read));
+                $document->setAttribute('$write', str_replace('team:{self}', "team:{$document->getId()}", $write));
 
                 break;
             case OldDatabase::SYSTEM_COLLECTION_FILES:
@@ -640,6 +710,10 @@ class V11 extends Migration
             };
 
             $size = $type === Database::VAR_STRING ? 65_535 : 0; // Max size of text in MariaDB
+
+            if ($required) {
+                $default = null;
+            }
 
             $attributes[$key] = [
                 '$collection' => $collectionId,

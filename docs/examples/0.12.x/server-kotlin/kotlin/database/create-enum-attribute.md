@@ -10,7 +10,7 @@ suspend fun main() {
     val database = Database(client)
     val response = database.createEnumAttribute(
         collectionId = "[COLLECTION_ID]",
-        attributeId = "",
+        key = "",
         elements = listOf(),
         required = false,
     )

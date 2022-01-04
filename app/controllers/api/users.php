@@ -39,18 +39,18 @@ App::post('/v1/users')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($userId, $email, $password, $name, $response, $dbForInternal, $usage) {
+    ->action(function ($userId, $email, $password, $name, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
         $email = \strtolower($email);
 
         try {
-            $userId = $userId == 'unique()' ? $dbForInternal->getId() : $userId;
-            $user = $dbForInternal->createDocument('users', new Document([
+            $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
+            $user = $dbForProject->createDocument('users', new Document([
                 '$id' => $userId,
                 '$read' => ['role:all'],
                 '$write' => ['user:'.$userId],
@@ -62,7 +62,7 @@ App::post('/v1/users')
                 'registration' => \time(),
                 'reset' => false,
                 'name' => $name,
-                'prefs' => [],
+                'prefs' => new \stdClass(),
                 'sessions' => [],
                 'tokens' => [],
                 'memberships' => [],
@@ -99,15 +99,15 @@ App::get('/v1/users')
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $usage) {
+    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
         if (!empty($cursor)) {
-            $cursorUser = $dbForInternal->getDocument('users', $cursor);
+            $cursorUser = $dbForProject->getDocument('users', $cursor);
 
             if ($cursorUser->isEmpty()) {
                 throw new Exception("User '{$cursor}' for the 'cursor' value not found.", 400);
@@ -127,8 +127,8 @@ App::get('/v1/users')
         ;
 
         $response->dynamic(new Document([
-            'users' => $dbForInternal->find('users', $queries, $limit, $offset, [], [$orderType], $cursorUser ?? null, $cursorDirection),
-            'sum' => $dbForInternal->count('users', $queries, APP_LIMIT_COUNT),
+            'users' => $dbForProject->find('users', $queries, $limit, $offset, [], [$orderType], $cursorUser ?? null, $cursorDirection),
+            'sum' => $dbForProject->count('users', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_USER_LIST);
     });
 
@@ -145,14 +145,14 @@ App::get('/v1/users/:userId')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($userId, $response, $dbForInternal, $usage) {
+    ->action(function ($userId, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */ 
 
-        $user = $dbForInternal->getDocument('users', $userId);
+        $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
@@ -177,14 +177,14 @@ App::get('/v1/users/:userId/prefs')
     ->label('sdk.response.model', Response::MODEL_PREFERENCES)
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($userId, $response, $dbForInternal, $usage) {
+    ->action(function ($userId, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $user = $dbForInternal->getDocument('users', $userId);
+        $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
@@ -211,16 +211,16 @@ App::get('/v1/users/:userId/sessions')
     ->label('sdk.response.model', Response::MODEL_SESSION_LIST)
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('locale')
     ->inject('usage')
-    ->action(function ($userId, $response, $dbForInternal, $locale, $usage) {
+    ->action(function ($userId, $response, $dbForProject, $locale, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $user = $dbForInternal->getDocument('users', $userId);
+        $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
@@ -245,7 +245,7 @@ App::get('/v1/users/:userId/sessions')
             'sessions' => $sessions,
             'sum' => count($sessions),
         ]), Response::MODEL_SESSION_LIST);
-    }, ['response', 'dbForInternal', 'locale']);
+    });
 
 App::get('/v1/users/:userId/logs')
     ->desc('Get User Logs')
@@ -262,25 +262,25 @@ App::get('/v1/users/:userId/logs')
     ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
     ->inject('usage')
-    ->action(function ($userId, $limit, $offset, $response, $dbForInternal, $locale, $geodb, $usage) {
+    ->action(function ($userId, $limit, $offset, $response, $dbForProject, $locale, $geodb, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $user = $dbForInternal->getDocument('users', $userId);
+        $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
-        $audit = new Audit($dbForInternal);
+        $audit = new Audit($dbForProject);
         $auditEvents = [
             'account.create',
             'account.delete',
@@ -367,20 +367,20 @@ App::patch('/v1/users/:userId/status')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('status', null, new Boolean(true), 'User Status. To activate the user pass `true` and to block the user pass `false`.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($userId, $status, $response, $dbForInternal, $usage) {
+    ->action(function ($userId, $status, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $user = $dbForInternal->getDocument('users', $userId);
+        $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
 
         $usage
             ->setParam('users.update', 1)
@@ -403,20 +403,20 @@ App::patch('/v1/users/:userId/verification')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('emailVerification', false, new Boolean(), 'User email verification status.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($userId, $emailVerification, $response, $dbForInternal, $usage) {
+    ->action(function ($userId, $emailVerification, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $user = $dbForInternal->getDocument('users', $userId);
+        $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
 
         $usage
             ->setParam('users.update', 1)
@@ -439,20 +439,20 @@ App::patch('/v1/users/:userId/name')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('audits')
-    ->action(function ($userId, $name, $response, $dbForInternal, $audits) {
+    ->action(function ($userId, $name, $response, $dbForProject, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
 
-        $user = $dbForInternal->getDocument('users', $userId);
+        $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('name', $name));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('name', $name));
 
         $audits
             ->setParam('userId', $user->getId())
@@ -478,14 +478,14 @@ App::patch('/v1/users/:userId/password')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('audits')
-    ->action(function ($userId, $password, $response, $dbForInternal, $audits) {
+    ->action(function ($userId, $password, $response, $dbForProject, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
 
-        $user = $dbForInternal->getDocument('users', $userId);
+        $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
@@ -495,7 +495,7 @@ App::patch('/v1/users/:userId/password')
             ->setAttribute('password', Auth::passwordHash($password))
             ->setAttribute('passwordUpdate', \time());
 
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $audits
             ->setParam('userId', $user->getId())
@@ -521,14 +521,14 @@ App::patch('/v1/users/:userId/email')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('email', '', new Email(), 'User email.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('audits')
-    ->action(function ($userId, $email, $response, $dbForInternal, $audits) {
+    ->action(function ($userId, $email, $response, $dbForProject, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
 
-        $user = $dbForInternal->getDocument('users', $userId);
+        $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
@@ -542,7 +542,7 @@ App::patch('/v1/users/:userId/email')
         $email = \strtolower($email);
 
         try {
-            $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('email', $email));
+            $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('email', $email));
         } catch(Duplicate $th) {
             throw new Exception('Email already exists', 409);
         }
@@ -571,20 +571,20 @@ App::patch('/v1/users/:userId/prefs')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($userId, $prefs, $response, $dbForInternal, $usage) {
+    ->action(function ($userId, $prefs, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $user = $dbForInternal->getDocument('users', $userId);
+        $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
         }
 
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
 
         $usage
             ->setParam('users.update', 1)
@@ -606,16 +606,16 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('sessionId', null, new UID(), 'Session ID.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($userId, $sessionId, $response, $dbForInternal, $events, $usage) {
+    ->action(function ($userId, $sessionId, $response, $dbForProject, $events, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $user = $dbForInternal->getDocument('users', $userId);
+        $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
@@ -628,7 +628,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
             if ($sessionId == $session->getId()) {
                 unset($sessions[$key]);
 
-                $dbForInternal->deleteDocument('sessions', $session->getId());
+                $dbForProject->deleteDocument('sessions', $session->getId());
 
                 $user->setAttribute('sessions', $sessions);
 
@@ -636,7 +636,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
                     ->setParam('eventData', $response->output($user, Response::MODEL_USER))
                 ;
 
-                $dbForInternal->updateDocument('users', $user->getId(), $user);
+                $dbForProject->updateDocument('users', $user->getId(), $user);
             }
         }
 
@@ -661,16 +661,16 @@ App::delete('/v1/users/:userId/sessions')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($userId, $response, $dbForInternal, $events, $usage) {
+    ->action(function ($userId, $response, $dbForProject, $events, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $user = $dbForInternal->getDocument('users', $userId);
+        $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
@@ -679,10 +679,10 @@ App::delete('/v1/users/:userId/sessions')
         $sessions = $user->getAttribute('sessions', []);
 
         foreach ($sessions as $key => $session) { /** @var Document $session */
-            $dbForInternal->deleteDocument('sessions', $session->getId());
+            $dbForProject->deleteDocument('sessions', $session->getId());
         }
 
-        $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('sessions', []));
+        $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', []));
 
         $events
             ->setParam('eventData', $response->output($user, Response::MODEL_USER))
@@ -708,18 +708,18 @@ App::delete('/v1/users/:userId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('userId', '', function () {return new UID();}, 'User ID.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('events')
     ->inject('deletes')
     ->inject('usage')
-    ->action(function ($userId, $response, $dbForInternal, $events, $deletes, $usage) {
+    ->action(function ($userId, $response, $dbForProject, $events, $deletes, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $deletes */
         /** @var Appwrite\Stats\Stats $usage */
         
-        $user = $dbForInternal->getDocument('users', $userId);
+        $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404);
@@ -735,7 +735,7 @@ App::delete('/v1/users/:userId')
             ->setAttribute("deleted", true)
         ;
 
-        $dbForInternal->updateDocument('users', $userId, $user);
+        $dbForProject->updateDocument('users', $userId, $user);
 
         $deletes
             ->setParam('type', DELETE_TYPE_DOCUMENT)
@@ -764,13 +764,13 @@ App::get('/v1/users/usage')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_USERS)
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
-    ->param('provider', '', new WhiteList(\array_merge(['email', 'anonymous'], \array_map(function($value) { return "oauth-".$value; }, \array_keys(Config::getParam('providers', [])))), true), 'Provider Name.', true)
+    ->param('provider', '', new WhiteList(\array_merge(['email', 'anonymous'], \array_map(fn($value) => "oauth-".$value, \array_keys(Config::getParam('providers', [])))), true), 'Provider Name.', true)
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('register')
-    ->action(function ($range, $provider, $response, $dbForInternal) {
+    ->action(function ($range, $provider, $response, $dbForProject) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
 
         $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
@@ -806,12 +806,12 @@ App::get('/v1/users/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForInternal, $periods, $range, $metrics, &$stats) {
+            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
 
-                    $requestDocs = $dbForInternal->find('stats', [
+                    $requestDocs = $dbForProject->find('stats', [
                         new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
                     ], $limit, 0, ['time'], [Database::ORDER_DESC]);

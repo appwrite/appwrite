@@ -1,6 +1,6 @@
 appwrite database createUrlAttribute \
         --collectionId="[COLLECTION_ID]" \
-        --attributeId="" \
+        --key="" \
         --required="" \
         --default="https://example.com" \
         --array=""

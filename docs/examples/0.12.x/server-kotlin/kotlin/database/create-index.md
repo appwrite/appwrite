@@ -10,7 +10,7 @@ suspend fun main() {
     val database = Database(client)
     val response = database.createIndex(
         collectionId = "[COLLECTION_ID]",
-        indexId = "",
+        key = "",
         type = "key",
         attributes = listOf(),
     )

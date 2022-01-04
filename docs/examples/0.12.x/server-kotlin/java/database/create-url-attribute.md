@@ -10,7 +10,7 @@ public void main() {
     Database database = new Database(client);
     database.createUrlAttribute(
         collectionId = "[COLLECTION_ID]",
-        attributeId = "",
+        key = "",
         required = false,
         new Continuation<Response>() {
             @NotNull

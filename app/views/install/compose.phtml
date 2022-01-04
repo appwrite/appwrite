@@ -106,6 +106,8 @@ services:
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_FUNCTIONS_RUNTIMES
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
       - _APP_STATSD_HOST
       - _APP_STATSD_PORT
       - _APP_MAINTENANCE_INTERVAL
@@ -136,6 +138,7 @@ services:
     networks:
       - appwrite
     depends_on:
+      - mariadb
       - redis
     environment:
       - _APP_ENV
@@ -380,7 +383,7 @@ services:
       - _APP_REDIS_PASS
 
   mariadb:
-    image: appwrite/mariadb:1.2.0 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     restart: unless-stopped
     networks:

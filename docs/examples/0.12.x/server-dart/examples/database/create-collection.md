@@ -11,7 +11,7 @@ void main() { // Init SDK
   ;
 
   Future result = database.createCollection(
-    collectionId: '',
+    collectionId: '[COLLECTION_ID]',
     name: '[NAME]',
     permission: 'document',
     read: ["role:all"],

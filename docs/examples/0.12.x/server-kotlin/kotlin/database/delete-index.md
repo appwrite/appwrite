@@ -10,7 +10,7 @@ suspend fun main() {
     val database = Database(client)
     val response = database.deleteIndex(
         collectionId = "[COLLECTION_ID]",
-        indexId = ""
+        key = ""
     )
     val json = response.body?.string()
 }

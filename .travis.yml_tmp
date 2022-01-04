@@ -65,6 +65,7 @@ script:
     exit 1
   fi
 - docker-compose logs appwrite
+- docker-compose logs appwrite-realtime
 - docker-compose logs mariadb
 - docker-compose logs appwrite-worker-functions
 - docker-compose exec appwrite doctor

@@ -12,7 +12,7 @@ client
 ;
 
 
-let promise = storage.createFile('', new File([fileBlob], 'file.png'));
+let promise = storage.createFile('[FILE_ID]', new File([fileBlob], 'file.png'));
 
 promise.then(function (response) {
     console.log(response);

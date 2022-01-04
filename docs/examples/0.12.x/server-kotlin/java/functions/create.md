@@ -9,10 +9,10 @@ public void main() {
 
     Functions functions = new Functions(client);
     functions.create(
-        functionId = "",
+        functionId = "[FUNCTION_ID]",
         name = "[NAME]",
         execute = listOf(),
-        runtime = "dotnet-5.0",
+        runtime = "node-14.5",
         new Continuation<Response>() {
             @NotNull
             @Override

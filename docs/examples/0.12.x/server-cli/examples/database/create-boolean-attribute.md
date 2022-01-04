@@ -1,6 +1,6 @@
 appwrite database createBooleanAttribute \
         --collectionId="[COLLECTION_ID]" \
-        --attributeId="" \
+        --key="" \
         --required="" \
         --default="" \
         --array=""

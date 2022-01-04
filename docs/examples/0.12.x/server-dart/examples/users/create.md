@@ -11,7 +11,7 @@ void main() { // Init SDK
   ;
 
   Future result = users.create(
-    userId: '',
+    userId: '[USER_ID]',
     email: 'email@example.com',
     password: 'password',
   );

@@ -9,6 +9,6 @@ client
 
 database = Appwrite::Database.new(client)
 
-response = database.delete_attribute(collection_id: '[COLLECTION_ID]', attribute_id: '')
+response = database.delete_attribute(collection_id: '[COLLECTION_ID]', key: '')
 
 puts response.inspect
