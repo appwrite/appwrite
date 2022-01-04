@@ -9,7 +9,7 @@ func main() {
     let database = Database(client)
     database.getAttribute(
         collectionId: "[COLLECTION_ID]",
-        attributeId: ""
+        key: ""
     ) { result in
         switch result {
         case .failure(let error):

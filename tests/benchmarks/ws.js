@@ -21,7 +21,7 @@ export default function () {
     // const url = new URL('wss://appwrite-realtime.monitor-api.com/v1/realtime');
     // url.searchParams.append('project', '604249e6b1a9f');
     const url = new URL('ws://localhost/v1/realtime');
-    url.searchParams.append('project', '612625394933c');
+    url.searchParams.append('project', 'console');
     url.searchParams.append('channels[]', 'files');
 
     const res = ws.connect(url.toString(), function (socket) {

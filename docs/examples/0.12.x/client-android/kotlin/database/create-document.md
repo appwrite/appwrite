@@ -19,7 +19,7 @@ class MainActivity : AppCompatActivity() {
         GlobalScope.launch {
             val response = database.createDocument(
                 collectionId = "[COLLECTION_ID]",
-                documentId = "",
+                documentId = "[DOCUMENT_ID]",
                 data = mapOf( "a" to "b" ),
             )
             val json = response.body?.string()        

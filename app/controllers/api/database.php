@@ -111,7 +111,7 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
     }
 
     $dbForProject->deleteCachedDocument('collections', $collectionId);
-    $dbForProject->deleteCachedCollection($collectionId);
+    $dbForProject->deleteCachedCollection('collection_' . $collectionId);
 
     // Pass clone of $attribute object to workers
     // so we can later modify Document to fit response model
@@ -1257,7 +1257,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
         }
 
         $dbForProject->deleteCachedDocument('collections', $collectionId);
-        $dbForProject->deleteCachedCollection($collectionId);
+        $dbForProject->deleteCachedCollection('collection_' . $collectionId);
 
         $database
             ->setParam('type', DATABASE_TYPE_DELETE_ATTRIBUTE)
@@ -2076,13 +2076,15 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('audits')
+    ->inject('deletes')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($collectionId, $documentId, $response, $dbForProject, $events, $audits, $usage, $mode) {
+    ->action(function ($collectionId, $documentId, $response, $dbForProject, $events, $audits, $deletes, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $deletes */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var string $mode */
 
@@ -2128,6 +2130,11 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
          * Reset $collection attribute to remove prefix.
          */
         $document->setAttribute('$collection', $collectionId);
+
+        $deletes
+            ->setParam('type', DELETE_TYPE_AUDIT)
+            ->setParam('document', $document)
+        ;
 
         $usage
             ->setParam('database.documents.delete', 1)

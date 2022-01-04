@@ -484,6 +484,16 @@ class V11 extends Migration
                 $document->setAttribute('$write', ['role:all']);
 
                 break;
+            case OldDatabase::SYSTEM_COLLECTION_CERTIFICATES:
+                /**
+                 * Replace certificateId attribute.
+                 */
+                if ($document->getAttribute('certificateId') !== null) {
+                    $document->setAttribute('$id', $document->getAttribute('certificateId'));
+                    $document->removeAttribute('certificateId');
+                }
+
+                break;
             case OldDatabase::SYSTEM_COLLECTION_DOMAINS:
                 $projectId = $this->getProjectIdFromReadPermissions($document);
 

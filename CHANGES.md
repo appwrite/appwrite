@@ -2,11 +2,12 @@
 
 ## Features
 
-- Completely rewritten Database service:
+- Completely rewritten Database service: **Breaking Change**
   - Collection rules are now attributes
   - Filters for have been replaced with a new, more powerful syntax
   - Custom indexes for more performant queries
   - Enum Attributes
+  - Maximum `sum` returned does not exceed 5000 documents anymore **Breaking Change**
   - **DEPRECATED** Nested documents has been removed
   - **DEPRECATED** Wildcard rule has been removed
 - You can now set custom ID’s when creating following resources:
@@ -17,10 +18,14 @@
   - File
   - Collection
   - Document
-- Wildcard permissions `*` are now `role:all`
+- All resources with custom ID support required you to set an ID now
+  - Passing `unique()` will generate a unique ID
+- Auto-generated ID's are now 20 characters long
+- Wildcard permissions `*` are now `role:all` **Breaking Change**
 - Collections can be enabled and disabled
 - Permissions are now found as top-level keys `$read` and `$write` instead of nested under `$permissions`
 - Accessing collections with insufficient permissions now return a `401` isntead of `404` status code
+- Offset cannot be higher than 5000 now and cursor pagination is required
 - Added Cursor pagination to all endpoints that provide pagination by offset
 - Added new Usage worker to aggregate usage statistics
 - Added new Database worker to handle heavy database tasks in the background
@@ -38,22 +43,24 @@
   - Teams
   - Users
   - Functions
-- Added Flutter Desktop Support
 - Fixed several memory leaks in the Console
 - Added pagination to account activities in the Console
 - Added following events from User service to Webhooks and Functions:
   - `users.update.email`
   - `users.update.name`
   - `users.update.password`
+- Added new environment variables to enable error logging:
+  - The `_APP_LOGGING_PROVIDER` variable allows you to enable the logger set the value to one of `sentry`, `raygun`, `appsignal`.
+  - The `_APP_LOGGING_CONFIG` variable configures authentication to 3rd party error logging providers. If using Sentry, this should be 'SENTRY_API_KEY;SENTRY_APP_ID'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key.
 - Added new environment variable `_APP_USAGE_AGGREGATION_INTERVAL` to configure the usage worker interval
 - Added negative rotation values to file preview endpoint
-- Multiple HealthAPI response models were changed to new (better) schema
+- Multiple responses from the Health service were changed to new (better) schema  **Breaking Change**
 - Method `health.getAntiVirus()` has been renamed to `health.getAntivirus()`
 - Added following langauges to the Locale service:
   - Latin
   - Sindhi
   - Telugu
-- **DEPRECATED** Tasks service 
+- **DEPRECATED** Tasks service **Breaking Change**
 
 ## Bugs
 - Fixed `/v1/avatars/initials` when no space in the name, will try to split by `_`

@@ -72,7 +72,7 @@ Once your SDK object is set, create any of the Appwrite service objects and choo
 
 ```swift
 let users = Users(client: client)
-users.create(email: "email@example.com", password: "password") { result in
+users.create(userId: "[USER_ID]", email: "email@example.com", password: "password") { result in
     switch result {
     case .failure(let error): print(error.message)
     case .success(let user): print(String(describing: user))
@@ -92,7 +92,7 @@ func main() {
       .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
 
     let users = Users(client: client)
-    users.create(email: "email@example.com", password: "password") { result in
+    users.create(userId: "[USER_ID]", email: "email@example.com", password: "password") { result in
         switch result {
         case .failure(let error): print(error.message)
         case .success(let user): print(String(describing: user))
@@ -111,7 +111,7 @@ import Appwrite
 func main() {
     let users = Users(client: client)
     
-    users.create(email: "email@example.com", password: "password") { result in
+    users.create(userId: "[USER_ID]", email: "email@example.com", password: "password") { result in
         switch result {
         case .failure(let error): 
             print(error.message)

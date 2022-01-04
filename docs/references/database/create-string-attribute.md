@@ -1,1 +1,1 @@
-Create a new string attribute.
+Create a string attribute.

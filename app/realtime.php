@@ -14,7 +14,6 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
 use Utopia\Logger\Log;
 use Utopia\Database\Database;
 use Utopia\Cache\Adapter\Redis as RedisCache;
@@ -110,6 +109,7 @@ function getDatabase(Registry &$register, string $namespace)
 };
 
 $server->onStart(function () use ($stats, $register, $containerId, &$statsDocument, $logError) {
+    sleep(5); // wait for the initial database schema to be ready
     Console::success('Server started succefully');
 
     /**
@@ -138,7 +138,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     /**
      * Save current connections to the Database every 5 seconds.
      */
-    Timer::tick(5000, function () use ($register, $stats, $containerId, &$statsDocument, $logError) {
+    Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
         /** @var Document $statsDocument */
         foreach ($stats as $projectId => $value) {
             $connections = $stats->get($projectId, 'connections') ?? 0;
@@ -398,7 +398,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $abuse = new Abuse($timeLimit);
 
-        if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+        if (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check()) {
             throw new Exception('Too many requests', 1013);
         }
 

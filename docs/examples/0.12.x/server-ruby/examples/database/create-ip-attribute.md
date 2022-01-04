@@ -9,6 +9,6 @@ client
 
 database = Appwrite::Database.new(client)
 
-response = database.create_ip_attribute(collection_id: '[COLLECTION_ID]', attribute_id: '', required: false)
+response = database.create_ip_attribute(collection_id: '[COLLECTION_ID]', key: '', required: false)
 
 puts response.inspect

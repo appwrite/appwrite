@@ -23,7 +23,7 @@ Once your SDK object is set, access any of the Appwrite services and choose any 
 
 ```js
 // Register User
-sdk.account.create('me@example.com', 'password', 'Jane Doe')
+sdk.account.create('[USER_ID]', 'me@example.com', 'password', 'Jane Doe')
     .then(function (response) {
         console.log(response);
     }, function (error) {
@@ -43,7 +43,7 @@ sdk
 ;
 
 // Register User
-sdk.account.create('me@example.com', 'password', 'Jane Doe')
+sdk.account.create('[USER_ID]', 'me@example.com', 'password', 'Jane Doe')
     .then(function (response) {
         console.log(response);
     }, function (error) {

@@ -210,6 +210,7 @@ class DatabaseV1 extends Worker
         }
 
         $dbForProject->deleteCachedDocument('collections', $collectionId);
+        $dbForProject->deleteCachedCollection('collection_' . $collectionId);
     }
 
     /**

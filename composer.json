@@ -73,7 +73,7 @@
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "0.16.3",
+        "appwrite/sdk-generator": "0.17.0",
         "phpunit/phpunit": "9.5.10",
         "swoole/ide-helper": "4.8.3",
         "textalk/websocket": "1.5.5",

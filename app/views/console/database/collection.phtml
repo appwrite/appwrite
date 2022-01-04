@@ -47,7 +47,7 @@ $logs = $this->getParam('logs', null);
                     data-param-order-types-cast-to="array"
                     data-scope="sdk"
                     data-name="project-documents"
-                    x-data="{project: new URLSearchParams(location.search).get('project')}">
+                    x-data="{ project: new URLSearchParams(location.search).get('project') }">
 
                     <div data-ls-if="0 == {{project-documents.sum}}" class="box margin-bottom">
                         <h3 class="margin-bottom-small text-bold">No Documents Found</h3>
@@ -101,7 +101,6 @@ $logs = $this->getParam('logs', null);
                             data-service="database.listDocuments"
                             data-event="submit"
                             data-param-collection-id="{{router.params.id}}"
-                            data-param-search="{{router.params.search}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                             data-param-order-types="DESC"
                             data-param-order-types-cast-to="array"
@@ -118,7 +117,6 @@ $logs = $this->getParam('logs', null);
                             data-service="database.listDocuments"
                             data-event="submit"
                             data-param-collection-id="{{router.params.id}}"
-                            data-param-search="{{router.params.search}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                             data-param-order-types="DESC"
                             data-param-order-types-cast-to="array"
@@ -355,6 +353,7 @@ $logs = $this->getParam('logs', null);
                                     <span data-ls-if="{{index.status}} == 'processing'" class="text-size-small text-info">processing&nbsp;</span>
                                     <span data-ls-if="{{index.status}} == 'failed'" class="text-size-small text-danger">failed&nbsp;</span>
                                     <span data-ls-if="{{index.status}} == 'deleting'" class="text-size-small text-danger">deleting&nbsp;</span>
+                                    <span data-ls-if="{{index.status}} == 'stuck'" class="text-size-small text-danger">stuck&nbsp;</span>
                                 </td>
 
                                 <td data-title="Index Key: ">

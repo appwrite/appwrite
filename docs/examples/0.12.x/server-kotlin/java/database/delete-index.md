@@ -10,7 +10,7 @@ public void main() {
     Database database = new Database(client);
     database.deleteIndex(
         collectionId = "[COLLECTION_ID]",
-        indexId = ""
+        key = ""
         new Continuation<Response>() {
             @NotNull
             @Override

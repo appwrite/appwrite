@@ -8,7 +8,7 @@ func main() {
 
     let database = Database(client)
     database.createCollection(
-        collectionId: "",
+        collectionId: "[COLLECTION_ID]",
         name: "[NAME]",
         permission: "document",
         read: ["role:all"],

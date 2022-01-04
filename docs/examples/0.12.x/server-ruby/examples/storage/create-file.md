@@ -9,6 +9,6 @@ client
 
 storage = Appwrite::Storage.new(client)
 
-response = storage.create_file(file_id: '', file: File.new())
+response = storage.create_file(file_id: '[FILE_ID]', file: File.new())
 
 puts response.inspect
