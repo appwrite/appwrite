@@ -70,7 +70,6 @@ script:
 - docker-compose exec appwrite doctor
 - docker-compose exec appwrite vars
 - docker-compose exec appwrite test --debug
-- docker-compose logs appwrite
 
 after_script:
 # travis re-uses their build nodes so clean them up
