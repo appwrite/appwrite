@@ -755,7 +755,6 @@ trait AccountBase
         /**
          * Prefs size exceeded
          */
-
         $prefsObject = ["longValue" => str_repeat("🍰", 100000)];
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
@@ -771,7 +770,6 @@ trait AccountBase
 
         // Now let's test the same thing, but with normal symbol instead of multi-byte cake emoji
         $prefsObject = ["longValue" => str_repeat("-", 100000)];
-
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
