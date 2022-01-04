@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d32b727a743b3a8811ec64c56f308694",
+    "content-hash": "d0df4734e38f660ce979011d70155357",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2255,11 +2255,17 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-fix-get-args-after-init",
+            "version": "0.19.5",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/framework",
-                "reference": "36a42dce039f043288673f0ff46284353543624d"
+                "url": "https://github.com/utopia-php/framework.git",
+                "reference": "1c28ba9a5b491cf7c90c535fefee5832c7133623"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/1c28ba9a5b491cf7c90c535fefee5832c7133623",
+                "reference": "1c28ba9a5b491cf7c90c535fefee5832c7133623",
+                "shasum": ""
             },
             "require": {
                 "php": ">=8.0.0"
@@ -2274,6 +2280,7 @@
                     "Utopia\\": "src/"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2289,7 +2296,11 @@
                 "php",
                 "upf"
             ],
-            "time": "2022-01-03T08:38:34+00:00"
+            "support": {
+                "issues": "https://github.com/utopia-php/framework/issues",
+                "source": "https://github.com/utopia-php/framework/tree/0.19.5"
+            },
+            "time": "2022-01-04T14:40:23+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -3069,16 +3080,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.16.3",
+            "version": "0.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "6185cdfe4c4261287240639f3a7fdc05e7ae2337"
+                "reference": "a68e072170a81532cfb0ff914864d8f074a73a37"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6185cdfe4c4261287240639f3a7fdc05e7ae2337",
-                "reference": "6185cdfe4c4261287240639f3a7fdc05e7ae2337",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/a68e072170a81532cfb0ff914864d8f074a73a37",
+                "reference": "a68e072170a81532cfb0ff914864d8f074a73a37",
                 "shasum": ""
             },
             "require": {
@@ -3112,9 +3123,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.16.3"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.17.0"
             },
-            "time": "2021-12-16T23:56:47+00:00"
+            "time": "2022-01-04T09:24:44+00:00"
         },
         {
             "name": "composer/pcre",
@@ -6628,18 +6639,9 @@
             "time": "2015-12-17T08:42:14+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/framework",
-            "version": "dev-fix-get-args-after-init",
-            "alias": "0.19",
-            "alias_normalized": "0.19.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/framework": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

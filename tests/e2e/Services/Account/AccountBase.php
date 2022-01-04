@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Account;
 
 use Tests\E2E\Client;
+use function array_merge;
 
 trait AccountBase
 {
@@ -750,6 +751,36 @@ trait AccountBase
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
+
+        /**
+         * Prefs size exceeded
+         */
+        $prefsObject = ["longValue" => str_repeat("🍰", 100000)];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'prefs' => $prefsObject
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Now let's test the same thing, but with normal symbol instead of multi-byte cake emoji
+        $prefsObject = ["longValue" => str_repeat("-", 100000)];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'prefs' => $prefsObject
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;
     }
