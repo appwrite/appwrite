@@ -756,18 +756,7 @@ trait AccountBase
          * Prefs size exceeded
          */
 
-        $prefsObject = [];
-
-        $text1Kb = "";
-        for($i = 0; $i < 1024; $i++) {
-            $text1Kb .= "🍰";
-        }
-
-        // Add 100 keys, each is 1kB
-        for($i = 0; $i < 100; $i++) {
-            $prefsObject["k" . $i]  = $text1Kb;
-        }
-        // That makes total size minimum of 100kB, plus key size, plus any JSON syntax stuff. Max supported is 64kB, so this should exceed.
+        $prefsObject = ["longValue" => str_repeat("🍰", 100000)];
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
@@ -781,14 +770,8 @@ trait AccountBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Now let's test the same thing, but with normal symbol instead of multi-byte cake emoji
-        $prefsObject = [];
-        $text1Kb = "";
-        for($i = 0; $i < 1024; $i++) {
-            $text1Kb .= "A";
-        }
-        for($i = 0; $i < 100; $i++) {
-            $prefsObject["key" . $i]  = $text1Kb;
-        }
+        $prefsObject = ["longValue" => str_repeat("-", 100000)];
+
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
