@@ -2138,16 +2138,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.13.1",
+            "version": "0.13.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "a1b2849c991b6384fe70e3c2d0633256a4fb795b"
+                "reference": "bf92279b707b3a10ee5ec5df5c065023b2221357"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/a1b2849c991b6384fe70e3c2d0633256a4fb795b",
-                "reference": "a1b2849c991b6384fe70e3c2d0633256a4fb795b",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/bf92279b707b3a10ee5ec5df5c065023b2221357",
+                "reference": "bf92279b707b3a10ee5ec5df5c065023b2221357",
                 "shasum": ""
             },
             "require": {
@@ -2195,9 +2195,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.13.1"
+                "source": "https://github.com/utopia-php/database/tree/0.13.2"
             },
-            "time": "2021-12-29T14:04:55+00:00"
+            "time": "2022-01-04T10:51:22+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3200,16 +3200,16 @@
         },
         {
             "name": "composer/semver",
-            "version": "3.2.6",
+            "version": "3.2.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/semver.git",
-                "reference": "83e511e247de329283478496f7a1e114c9517506"
+                "reference": "deac27056b57e46faf136fae7b449eeaa71661ee"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/semver/zipball/83e511e247de329283478496f7a1e114c9517506",
-                "reference": "83e511e247de329283478496f7a1e114c9517506",
+                "url": "https://api.github.com/repos/composer/semver/zipball/deac27056b57e46faf136fae7b449eeaa71661ee",
+                "reference": "deac27056b57e46faf136fae7b449eeaa71661ee",
                 "shasum": ""
             },
             "require": {
@@ -3261,7 +3261,7 @@
             "support": {
                 "irc": "irc://irc.freenode.org/composer",
                 "issues": "https://github.com/composer/semver/issues",
-                "source": "https://github.com/composer/semver/tree/3.2.6"
+                "source": "https://github.com/composer/semver/tree/3.2.7"
             },
             "funding": [
                 {
@@ -3277,7 +3277,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-10-25T11:34:17+00:00"
+            "time": "2022-01-04T09:57:54+00:00"
         },
         {
             "name": "composer/xdebug-handler",
