@@ -7,7 +7,7 @@ func main() {
 
     let account = Account(client)
     account.updateMagicURLSession(
-        userId: "",
+        userId: "[USER_ID]",
         secret: "[SECRET]"
     ) { result in
         switch result {

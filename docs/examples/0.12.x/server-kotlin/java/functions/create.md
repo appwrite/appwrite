@@ -9,7 +9,7 @@ public void main() {
 
     Functions functions = new Functions(client);
     functions.create(
-        functionId = "",
+        functionId = "[FUNCTION_ID]",
         name = "[NAME]",
         execute = listOf(),
         runtime = "node-14.5",

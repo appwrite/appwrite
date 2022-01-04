@@ -9,7 +9,7 @@ suspend fun main() {
 
     val functions = Functions(client)
     val response = functions.create(
-        functionId = "",
+        functionId = "[FUNCTION_ID]",
         name = "[NAME]",
         execute = listOf(),
         runtime = "node-14.5",

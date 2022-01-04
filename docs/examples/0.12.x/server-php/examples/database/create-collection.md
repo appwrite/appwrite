@@ -13,4 +13,4 @@ $client
 
 $database = new Database($client);
 
-$result = $database->createCollection('', '[NAME]', 'document', ["role:all"], ["role:all"]);
+$result = $database->createCollection('[COLLECTION_ID]', '[NAME]', 'document', ["role:all"], ["role:all"]);

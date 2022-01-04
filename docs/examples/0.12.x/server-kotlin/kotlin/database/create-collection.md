@@ -9,7 +9,7 @@ suspend fun main() {
 
     val database = Database(client)
     val response = database.createCollection(
-        collectionId = "",
+        collectionId = "[COLLECTION_ID]",
         name = "[NAME]",
         permission = "document",
         read = ["role:all"],

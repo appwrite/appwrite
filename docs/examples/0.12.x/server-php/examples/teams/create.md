@@ -13,4 +13,4 @@ $client
 
 $teams = new Teams($client);
 
-$result = $teams->create('', '[NAME]');
+$result = $teams->create('[TEAM_ID]', '[NAME]');
