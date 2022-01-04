@@ -97,7 +97,8 @@ class V11 extends Migration
             try {
                 Console::log('Created internal tables for : ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
                 $this->dbProject->createMetadata();
-            } catch (\Throwable $th) { }
+            } catch (\Throwable $th) {
+            }
 
             /**
              * Create Audit tables
@@ -372,9 +373,10 @@ class V11 extends Migration
                         /**
                          * Convert numeric Attributes to float.
                          */
-                        if (is_numeric($attr)) {
+                        if (!is_string($attr) && is_numeric($attr)) {
                             $document[$key] = floatval($attr);
                         }
+
                         if (\is_array($attr)) {
                             foreach ($attr as $index => $child) {
                                 /**
@@ -386,7 +388,7 @@ class V11 extends Migration
                                 /**
                                  * Convert array of numeric Attributes to array float.
                                  */
-                                if (is_numeric($attr)) {
+                                if (!is_string($child) && is_numeric($child)) {
                                     $document[$key][$index] = floatval($child); // Convert any numeric to float
                                 }
                             }
@@ -436,61 +438,61 @@ class V11 extends Migration
         }
 
         switch ($document->getAttribute('$collection')) {
-                case OldDatabase::SYSTEM_COLLECTION_PROJECTS:
-                    $newProviders = [];
-                    $newAuths = [];
-                    $providers = Config::getParam('providers', []);
-                    $auths = Config::getParam('auth', []);
+            case OldDatabase::SYSTEM_COLLECTION_PROJECTS:
+                $newProviders = [];
+                $newAuths = [];
+                $providers = Config::getParam('providers', []);
+                $auths = Config::getParam('auth', []);
 
-                    /**
-                     * Remove Tasks
-                     */
-                    $document->removeAttribute('tasks');
+                /**
+                 * Remove Tasks
+                 */
+                $document->removeAttribute('tasks');
 
-                    /*
+                /*
                     * Add enabled OAuth2 providers to default data rules
                     */
-                    foreach ($providers as $index => $provider) {
-                        $appId = $document->getAttribute('usersOauth2'.\ucfirst($index).'Appid');
-                        $appSecret = $document->getAttribute('usersOauth2'.\ucfirst($index).'Secret');
+                foreach ($providers as $index => $provider) {
+                    $appId = $document->getAttribute('usersOauth2' . \ucfirst($index) . 'Appid');
+                    $appSecret = $document->getAttribute('usersOauth2' . \ucfirst($index) . 'Secret');
 
-                        if (!is_null($appId) || !is_null($appId)) {
-                            $newProviders[$appId] = $appSecret;
-                        }
-
-                        $document
-                            ->removeAttribute('usersOauth2'.\ucfirst($index).'Appid')
-                            ->removeAttribute('usersOauth2'.\ucfirst($index).'Secret');
+                    if (!is_null($appId) || !is_null($appId)) {
+                        $newProviders[$appId] = $appSecret;
                     }
 
-                    $document->setAttribute('providers', $newProviders);
+                    $document
+                        ->removeAttribute('usersOauth2' . \ucfirst($index) . 'Appid')
+                        ->removeAttribute('usersOauth2' . \ucfirst($index) . 'Secret');
+                }
 
-                    /*
+                $document->setAttribute('providers', $newProviders);
+
+                /*
                     * Migrate User providers settings
                     */
-                    $oldAuths = [
-                        'email-password'=> 'usersAuthEmailPassword',
-                        'magic-url' => 'usersAuthMagicURL',
-                        'anonymous' => 'usersAuthAnonymous',
-                        'invites' => 'usersAuthInvites',
-                        'jwt' => 'usersAuthJWT',
-                        'phone' => 'usersAuthPhone'
-                    ];
+                $oldAuths = [
+                    'email-password' => 'usersAuthEmailPassword',
+                    'magic-url' => 'usersAuthMagicURL',
+                    'anonymous' => 'usersAuthAnonymous',
+                    'invites' => 'usersAuthInvites',
+                    'jwt' => 'usersAuthJWT',
+                    'phone' => 'usersAuthPhone'
+                ];
 
-                    foreach ($oldAuths as $index => $auth) {
-                        $enabled = $document->getAttribute($auth, true);
-                        $newAuths['auth'.\ucfirst($auths[$index]['key'])] = $enabled;
-                        $document->removeAttribute($auth);
-                    }
+                foreach ($oldAuths as $index => $auth) {
+                    $enabled = $document->getAttribute($auth, true);
+                    $newAuths['auth' . \ucfirst($auths[$index]['key'])] = $enabled;
+                    $document->removeAttribute($auth);
+                }
 
-                    if (!empty($document->getAttribute('usersAuthLimit'))) {
-                        $newAuths['limit'] = $document->getAttribute('usersAuthLimit');
-                        $document->removeAttribute('usersAuthLimit');
-                    }
+                if (!empty($document->getAttribute('usersAuthLimit'))) {
+                    $newAuths['limit'] = $document->getAttribute('usersAuthLimit');
+                    $document->removeAttribute('usersAuthLimit');
+                }
 
-                    $document->setAttribute('auths', $newProviders);
+                $document->setAttribute('auths', $newProviders);
 
-                    break;
+                break;
             case OldDatabase::SYSTEM_COLLECTION_PLATFORMS:
                 $projectId = $this->getProjectIdFromReadPermissions($document);
 
@@ -638,7 +640,6 @@ class V11 extends Migration
                 $document->setAttribute('$write', str_replace('user:{self}', "user:{$document->getId()}", $write));
 
                 break;
-
             case OldDatabase::SYSTEM_COLLECTION_TEAMS:
 
                 /**
