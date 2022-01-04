@@ -11,4 +11,4 @@ client = Client()
 
 database = Database(client)
 
-result = database.create_collection('', '[NAME]', 'document', ["role:all"], ["role:all"])
+result = database.create_collection('[COLLECTION_ID]', '[NAME]', 'document', ["role:all"], ["role:all"])

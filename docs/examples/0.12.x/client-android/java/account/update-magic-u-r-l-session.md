@@ -19,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
         Account account = new Account(client);
 
         account.updateMagicURLSession(
-            "", 
+            "[USER_ID]", 
             "[SECRET]"
             new Continuation<Object>() {
                 @NotNull

@@ -29,7 +29,7 @@ class OpenAPI3 extends Format
      */
     public function parse(): array
     {
-        /*
+        /**
         * Specifications (v3.0.0):
         * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md
         */
@@ -275,6 +275,7 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = false;
                         break;
                     case 'Utopia\Database\Validator\UID':
+                    case 'Appwrite\Database\Validator\CustomId':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
@@ -393,20 +394,18 @@ class OpenAPI3 extends Format
 
             $output['paths'][$url][\strtolower($route->getMethod())] = $temp;
         }
+
         foreach ($this->models as $model) {
             foreach ($model->getRules() as $rule) {
-                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
-                    if(\is_array($rule['type'])) {
-                        foreach ($rule['type'] as $value) {
-                            $usedModels[] = $value;
-                        }
-                    }
-                    else {
-                        $usedModels[] = $rule['type'];
-                    }
+                if (
+                    in_array($model->getType(), $usedModels)
+                    && !in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])
+                ) {
+                    $usedModels[] = $rule['type'];
                 }
             }
         }
+
         foreach ($this->models as $model) {
             if (!in_array($model->getType(), $usedModels) && $model->getType() !== 'error') {
                 continue;

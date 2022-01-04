@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
 
         GlobalScope.launch {
             val response = account.createMagicURLSession(
-                userId = "",
+                userId = "[USER_ID]",
                 email = "email@example.com",
             )
             val json = response.body?.string()        
