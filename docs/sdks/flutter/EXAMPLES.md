@@ -18,7 +18,7 @@ Create a new user and session:
 ```dart
 Account account = Account(client);
 
-Response user = await account.create(email: 'me@appwrite.io', password: 'password', name: 'My Name');
+Response user = await account.create(userId: '[USER_ID]', email: 'me@appwrite.io', password: 'password', name: 'My Name');
  
 Response session = await account.createSession(email: 'me@appwrite.io', password: 'password');
 
@@ -40,6 +40,7 @@ Storage storage = Storage(client);
 MultipartFile file = MultipartFile.fromFile('./path-to-file/image.jpg', filename: 'image.jpg');
 
 storage.createFile(
+    fileId: '[FILE_ID]',
     file: file,
     read: ['role:all'],
     write: []

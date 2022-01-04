@@ -11,7 +11,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = database.createCollection('', '[NAME]', 'document', ["role:all"], ["role:all"]);
+let promise = database.createCollection('[COLLECTION_ID]', '[NAME]', 'document', ["role:all"], ["role:all"]);
 
 promise.then(function (response) {
     console.log(response);

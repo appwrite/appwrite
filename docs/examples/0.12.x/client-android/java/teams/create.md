@@ -19,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
         Teams teams = new Teams(client);
 
         teams.create(
-            "", 
+            "[TEAM_ID]", 
             "[NAME]", 
             new Continuation<Object>() {
                 @NotNull

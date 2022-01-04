@@ -5,7 +5,7 @@ sdk
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-let promise = sdk.account.createMagicURLSession('', 'email@example.com');
+let promise = sdk.account.createMagicURLSession('[USER_ID]', 'email@example.com');
 
 promise.then(function (response) {
     console.log(response); // Success

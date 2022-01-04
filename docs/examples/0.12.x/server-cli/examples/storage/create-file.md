@@ -1,5 +1,5 @@
 appwrite storage createFile \
-        --fileId="" \
+        --fileId="[FILE_ID]" \
         --file="" \
         --read="" \
         --write=""

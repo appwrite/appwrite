@@ -5,7 +5,7 @@ sdk
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-let promise = sdk.account.updateMagicURLSession('', '[SECRET]');
+let promise = sdk.account.updateMagicURLSession('[USER_ID]', '[SECRET]');
 
 promise.then(function (response) {
     console.log(response); // Success

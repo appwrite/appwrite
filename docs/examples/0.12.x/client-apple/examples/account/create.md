@@ -7,7 +7,7 @@ func main() {
 
     let account = Account(client)
     account.create(
-        userId: "",
+        userId: "[USER_ID]",
         email: "email@example.com",
         password: "password"
     ) { result in
