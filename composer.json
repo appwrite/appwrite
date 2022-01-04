@@ -38,7 +38,7 @@
         "appwrite/php-clamav": "1.1.*",
         "appwrite/php-runtimes": "0.6.*",
 
-        "utopia-php/framework": "dev-fix-get-args-after-init as 0.19",
+        "utopia-php/framework": "0.19.5",
         "utopia-php/logger": "0.1.*",
         "utopia-php/abuse": "0.7.*",
         "utopia-php/analytics": "0.2.*",
@@ -66,12 +66,6 @@
         "adhocore/jwt": "1.1.2",
         "slickdeals/statsd": "3.1.0"
     },
-    "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/utopia-php/framework"
-        }
-    ],
     "require-dev": {
         "appwrite/sdk-generator": "0.17.0",
         "phpunit/phpunit": "9.5.10",
