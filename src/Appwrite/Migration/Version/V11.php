@@ -273,7 +273,7 @@ class V11 extends Migration
                         'permission' => 'document',
                         'dateCreated' => time(),
                         'dateUpdated' => time(),
-                        'name' => $name,
+                        'name' => substr($name, 0, 256),
                         'enabled' => true,
                         'search' => implode(' ', [$id, $name]),
                     ]));
@@ -442,6 +442,11 @@ class V11 extends Migration
                     $providers = Config::getParam('providers', []);
                     $auths = Config::getParam('auth', []);
 
+                    /**
+                     * Remove Tasks
+                     */
+                    $document->removeAttribute('tasks');
+
                     /*
                     * Add enabled OAuth2 providers to default data rules
                     */
@@ -473,9 +478,9 @@ class V11 extends Migration
                     ];
 
                     foreach ($oldAuths as $index => $auth) {
-                        $enabled = $document->getAttribute(\ucfirst($auth), true);
+                        $enabled = $document->getAttribute($auth, true);
                         $newAuths['auth'.\ucfirst($auths[$index]['key'])] = $enabled;
-                        $document->removeAttribute(\ucfirst($auth));
+                        $document->removeAttribute($auth);
                     }
 
                     if (!empty($document->getAttribute('usersAuthLimit'))) {
@@ -486,7 +491,7 @@ class V11 extends Migration
                     $document->setAttribute('auths', $newProviders);
 
                     break;
-                case OldDatabase::SYSTEM_COLLECTION_PLATFORMS:
+            case OldDatabase::SYSTEM_COLLECTION_PLATFORMS:
                 $projectId = $this->getProjectIdFromReadPermissions($document);
 
                 /**
