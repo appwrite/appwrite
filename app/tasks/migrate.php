@@ -30,7 +30,7 @@ $cli
             Console::error('--------------------');
             Console::warning('Migrating to Version 0.12.x introduces a major breaking change within the Database Service!');
             Console::warning('Before migrating, please read about the breaking changes here:');
-            Console::info('https://appwrite.io/guide-to-db-migration');
+            Console::info('https://dev.to/appwrite/appwrite-012-migration-post-3cha');
             $confirm = Console::confirm("If you want to proceed, type 'yes':");
             if ($confirm != 'yes') {
                 Console::exit(1);
