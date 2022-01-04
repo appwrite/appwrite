@@ -1,5 +1,5 @@
 appwrite functions create \
-        --functionId="" \
+        --functionId="[FUNCTION_ID]" \
         --name="[NAME]" \
         --execute="" \
         --runtime="node-14.5" \
