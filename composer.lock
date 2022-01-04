@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e0243d2a276d074c4af4ac21f521c953",
+    "content-hash": "c602e99a298c00b57253651a3108a6df",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3080,16 +3080,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.16.3",
+            "version": "0.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "6185cdfe4c4261287240639f3a7fdc05e7ae2337"
+                "reference": "a68e072170a81532cfb0ff914864d8f074a73a37"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6185cdfe4c4261287240639f3a7fdc05e7ae2337",
-                "reference": "6185cdfe4c4261287240639f3a7fdc05e7ae2337",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/a68e072170a81532cfb0ff914864d8f074a73a37",
+                "reference": "a68e072170a81532cfb0ff914864d8f074a73a37",
                 "shasum": ""
             },
             "require": {
@@ -3123,9 +3123,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.16.3"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.17.0"
             },
-            "time": "2021-12-16T23:56:47+00:00"
+            "time": "2022-01-04T09:24:44+00:00"
         },
         {
             "name": "composer/pcre",
@@ -6403,16 +6403,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v2.14.9",
+            "version": "v2.14.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "d28b8d7390e21f02cbafc65b33a12fa0733777c2"
+                "reference": "95fb194cd4dd6ac373a27af2bde2bad5d3f27aba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/d28b8d7390e21f02cbafc65b33a12fa0733777c2",
-                "reference": "d28b8d7390e21f02cbafc65b33a12fa0733777c2",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/95fb194cd4dd6ac373a27af2bde2bad5d3f27aba",
+                "reference": "95fb194cd4dd6ac373a27af2bde2bad5d3f27aba",
                 "shasum": ""
             },
             "require": {
@@ -6467,7 +6467,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v2.14.9"
+                "source": "https://github.com/twigphp/Twig/tree/v2.14.10"
             },
             "funding": [
                 {
@@ -6479,7 +6479,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-01-03T10:46:18+00:00"
+            "time": "2022-01-03T21:13:26+00:00"
         },
         {
             "name": "vimeo/psalm",
