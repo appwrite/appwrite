@@ -263,6 +263,7 @@ class Swagger2 extends Format
                         $node['x-example'] = false;
                         break;
                     case 'Utopia\Database\Validator\UID':
+                    case 'Appwrite\Database\Validator\CustomId':
                         $node['type'] = $validator->getType();
                         $node['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
