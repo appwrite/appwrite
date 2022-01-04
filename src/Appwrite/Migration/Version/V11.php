@@ -176,6 +176,7 @@ class V11 extends Migration
                     '$collection!=' . OldDatabase::SYSTEM_COLLECTION_PROJECTS,
                     '$collection!=' . OldDatabase::SYSTEM_COLLECTION_CONNECTIONS,
                     '$collection!=' . OldDatabase::SYSTEM_COLLECTION_RESERVED,
+                    '$collection!=' . OldDatabase::SYSTEM_COLLECTION_TOKENS,
                 ]
             ]);
 
@@ -462,10 +463,19 @@ class V11 extends Migration
                     /*
                     * Migrate User providers settings
                     */
-                    foreach ($auths as $index => $auth) {
-                        $enabled = $document->getAttribute('auth'.\ucfirst($auth['key']), true);
-                        $newAuths['auth'.\ucfirst($auth['key'])] = $enabled;
-                        $document->removeAttribute('auth'.\ucfirst($auth['key']));
+                    $oldAuths = [
+                        'email-password'=> 'usersAuthEmailPassword',
+                        'magic-url' => 'usersAuthMagicURL',
+                        'anonymous' => 'usersAuthAnonymous',
+                        'invites' => 'usersAuthInvites',
+                        'jwt' => 'usersAuthJWT',
+                        'phone' => 'usersAuthPhone'
+                    ];
+
+                    foreach ($oldAuths as $index => $auth) {
+                        $enabled = $document->getAttribute(\ucfirst($auth), true);
+                        $newAuths['auth'.\ucfirst($auths[$index]['key'])] = $enabled;
+                        $document->removeAttribute(\ucfirst($auth));
                     }
 
                     if (!empty($document->getAttribute('usersAuthLimit'))) {
@@ -561,6 +571,10 @@ class V11 extends Migration
                 $document->setAttribute('$write', ['role:all']);
 
                 break;
+            case OldDatabase::SYSTEM_COLLECTION_FUNCTIONS:
+                $document->setAttribute('events', $document->getAttribute('events', []));
+
+                break;
             case OldDatabase::SYSTEM_COLLECTION_WEBHOOKS:
                 $projectId = $this->getProjectIdFromReadPermissions($document);
 
@@ -570,6 +584,8 @@ class V11 extends Migration
                 if ($document->getAttribute('projectId') === null) {
                     $document->setAttribute('projectId', $projectId);
                 }
+
+                $document->setAttribute('events', $document->getAttribute('events', []));
 
                 /**
                  * Reset Permissions
