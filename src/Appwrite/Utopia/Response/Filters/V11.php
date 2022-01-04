@@ -16,19 +16,41 @@ class V11 extends Filter
         switch ($model) {
             // Update permissions
             case Response::MODEL_DOCUMENT:
+                $parsedResponse = $this->parsePermissions($content);
+                break;
+            case Response::MODEL_DOCUMENT_LIST:
+                $parsedResponse = $this->parseDocumentList($content);
+                break;
+
             case Response::MODEL_FILE:
                 $parsedResponse = $this->parsePermissions($content);
                 break;
+            case Response::MODEL_FILE_LIST:
+                $parsedResponse = $this->parseFileList($content);
+                break;
+            
             case Response::MODEL_EXECUTION:
                 $parsedResponse = $this->parseExecutionPermissions($content);
                 break;
+            case Response::MODEL_EXECUTION_LIST:
+                $parsedResponse = $this->parseExecutionsList($content);
+                break;
+            
             case Response::MODEL_FUNCTION:
                 $parsedResponse = $this->parseFunctionPermissions($content);
                 break;
+            case Response::MODEL_FUNCTION_LIST:
+                $parsedResponse = $this->parseFunctionsList($content);
+                break;
+            
             // Convert status from boolean to int
             case Response::MODEL_USER:
                 $parsedResponse = $this->parseStatus($content);
                 break;
+            case Response::MODEL_USER_LIST:
+                $parsedResponse = $this->parseUserList($content);
+                break;
+            
             // Convert all Health responses back to original
             case Response::MODEL_HEALTH_STATUS:
                 $parsedResponse = $this->parseHealthStatus($content);
@@ -48,30 +70,152 @@ class V11 extends Filter
 
             // Complex filters
             case Response::MODEL_COLLECTION:
-                $parsedResponse = $this->parsePermissions($content);
-                $parsedResponse = $this->removeRule($content, 'enabled');
-                $parsedResponse = $this->removeRule($content, 'permission');
-                $parsedResponse = $this->removeRule($content, 'indexes');
-                $parsedResponse = $this->removeRule($content, 'enabled');
-                $parsedResponse = $this->addDate($content, 'dateCreated');
-                $parsedResponse = $this->addDate($content, 'dateUpdated');
-                $parsedResponse = $this->parseAttributes($content);
+                $parsedResponse = $this->parseCollection($content);
+                break;
+            case Response::MODEL_COLLECTION_LIST:
+                $parsedResponse = $this->parseCollectionList($content);
+                break;
+
             case Response::MODEL_LOG:
-                $parsedResponse = $this->removeRule($content, 'userId');
-                $parsedResponse = $this->removeRule($content, 'userEmail');
-                $parsedResponse = $this->removeRule($content, 'userName');
-                $parsedResponse = $this->removeRule($content, 'mode');
-                $parsedResponse = $this->removeRule($content, 'sum');
+                $parsedResponse = $this->parseLog($content);
+                break;
+            case Response::MODEL_LOG_LIST:
+                $parsedResponse = $this->parseLogList($content);
+                break;
+
             case Response::MODEL_PROJECT:
-                $parsedResponse = $this->addTasks($content);
-                $parsedResponse = $this->parseAuthLimit($content);
-                $parsedResponse = $this->parseOAuths($content);
-                $parsedResponse = $this->parseAuthsStatus($content);
-                $parsedResponse = $this->removeServicesStatus($content);
+                $parsedResponse = $this->parseProject($content);
+                break;
+            case Response::MODEL_PROJECT_LIST:
+                $parsedResponse = $this->parseProjectList($content);
                 break;
         }
 
         return $parsedResponse;
+    }
+
+    protected function parseDocumentList(array $content) 
+    {
+        $documents = $content['documents'];
+        $parsedResponse = [];
+        foreach ($documents as $document) {
+            $parsedResponse[] = $this->parsePermissions($document);
+        }
+        $content['documents'] = $parsedResponse;
+        return $content;
+    }
+
+    protected function parseFileList(array $content) 
+    {
+        $files = $content['files'];
+        $parsedResponse = [];
+        foreach ($files as $file) {
+            $parsedResponse[] = $this->parsePermissions($file);
+        }
+        $content['files'] = $parsedResponse;
+        return $content;
+    }
+
+    protected function parseExecutionsList(array $content) 
+    {
+        $executions = $content['executions'];
+        $parsedResponse = [];
+        foreach ($executions as $execution) {
+            $parsedResponse[] = $this->parseExecutionPermissions($execution);
+        }
+        $content['executions'] = $parsedResponse;
+        return $content;
+    }
+
+    protected function parseFunctionsList(array $content) 
+    {
+        $functions = $content['functions'];
+        $parsedResponse = [];
+        foreach ($functions as $function) {
+            $parsedResponse[] = $this->parseFunctionPermissions($function);
+        }
+        $content['functions'] = $parsedResponse;
+        return $content;
+    }
+
+    protected function parseUserList(array $content) 
+    {
+        $users = $content['users'];
+        $parsedResponse = [];
+        foreach ($users as $user) {
+            $parsedResponse[] = $this->parseStatus($user);
+        }
+        $content['users'] = $parsedResponse;
+        return $content;
+    }
+
+    protected function parseCollection(array $content) 
+    {
+        $parsedResponse = [];
+        $parsedResponse = $this->parsePermissions($content);
+        $parsedResponse = $this->removeRule($content, 'enabled');
+        $parsedResponse = $this->removeRule($content, 'permission');
+        $parsedResponse = $this->removeRule($content, 'indexes');
+        $parsedResponse = $this->removeRule($content, 'enabled');
+        $parsedResponse = $this->addDate($content, 'dateCreated');
+        $parsedResponse = $this->addDate($content, 'dateUpdated');
+        $parsedResponse = $this->parseAttributes($content);
+        return $parsedResponse;
+    }
+
+    protected function parseCollectionList(array $content) 
+    {
+        $collections = $content['collections'];
+        $parsedResponse = [];
+        foreach ($collections as $collection) {
+            $parsedResponse[] = $this->parseCollection($collection);
+        }
+        $content['collections'] = $parsedResponse;
+        return $content;
+    }
+
+    protected function parseLog(array $content) 
+    {
+        $parsedResponse = [];
+        $parsedResponse = $this->removeRule($content, 'userId');
+        $parsedResponse = $this->removeRule($content, 'userEmail');
+        $parsedResponse = $this->removeRule($content, 'userName');
+        $parsedResponse = $this->removeRule($content, 'mode');
+        $parsedResponse = $this->removeRule($content, 'sum');
+        return $parsedResponse;
+    }
+
+    protected function parseLogList(array $content) 
+    {
+        $logs = $content['logs'];
+        $parsedResponse = [];
+        foreach ($logs as $log) {
+            $parsedResponse[] = $this->parseLog($log);
+        }
+        $content['logs'] = $parsedResponse;
+        return $content;
+    }
+
+    protected function parseProject(array $content)
+    {
+        $parsedResponse = [];
+        $parsedResponse = $this->addTasks($content);
+        $parsedResponse = $this->parseAuthLimit($content);
+        $parsedResponse = $this->parseOAuths($content);
+        $parsedResponse = $this->parseAuthsStatus($content);
+        $parsedResponse = $this->removeServicesStatus($content);
+        return $parsedResponse;
+    }
+
+    protected function parseProjectList(array $content) 
+    {
+        $projects = $content['projects'];
+        $parsedResponse = [];
+        foreach ($projects as $project) {
+            $parsedResponse[] = $this->parseProject($project);
+        }
+        $content['projects'] = $parsedResponse;
+        return $content;
     }
 
     protected function parseHealthAntivirus(array $content)
@@ -237,7 +381,6 @@ class V11 extends Filter
         $content['$permissions'] = [ 'read' => $content['$read'], 'write' => $content['$write'] ];
         unset($content['$read']);
         unset($content['$write']);
-
         return $content;
     }
 

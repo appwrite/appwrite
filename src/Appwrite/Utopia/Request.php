@@ -29,39 +29,6 @@ class Request extends UtopiaRequest
     }
 
     /**
-     * Get Param
-     *
-     * Get param by current method name
-     *
-     * @param  string $key
-     * @param  mixed  $default
-     * @return mixed
-     */
-    public function getParam(string $key, $default = null): mixed
-    {
-        switch($this->getMethod()) {
-            case self::METHOD_GET:
-                return $this->getQuery($key, $default);
-                break;
-            case self::METHOD_POST:
-            case self::METHOD_PUT:
-            case self::METHOD_PATCH:
-            case self::METHOD_DELETE:
-                return $this->getPayload($key, $default);
-                break;
-            default:
-                return $this->getQuery($key, $default);
-        }
-
-        if (self::hasFilter() && self::hasRoute()) {
-            $endpointIdentifier = self::getRoute()->getLabel('sdk.namespace', 'unknown') . '.' . self::getRoute()->getLabel('sdk.method', 'unknown');
-            return self::getFilter()->parse($requestParameters, $endpointIdentifier);
-        } else {
-            return $requestParameters;
-        }
-    }
-
-    /**
      * Get Params
      *
      * Get all params of current method
@@ -88,10 +55,10 @@ class Request extends UtopiaRequest
 
         if (self::hasFilter() && self::hasRoute()) {
             $endpointIdentifier = self::getRoute()->getLabel('sdk.namespace', 'unknown') . '.' . self::getRoute()->getLabel('sdk.method', 'unknown');
-            return self::getFilter()->parse($requestParameters, $endpointIdentifier);
-        } else {
-            return $requestParameters;
+            $requestParameters = self::getFilter()->parse($requestParameters, $endpointIdentifier);
         }
+
+        return $requestParameters;
     }
 
 

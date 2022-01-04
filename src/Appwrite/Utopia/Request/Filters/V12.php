@@ -93,9 +93,9 @@ class V12 extends Filter
 
     protected function removeParentProperties(array $content): array
     {
-        unset($content['parentDocument']);
-        unset($content['parentProperty']);
-        unset($content['parentPropertyType']);
+        if (isset($content['parentDocument'])) unset($content['parentDocument']);
+        if (isset($content['parentProperty'])) unset($content['parentProperty']);
+        if (isset($content['parentPropertyType'])) unset($content['parentPropertyType']);
         return $content;
     }
 
@@ -103,17 +103,23 @@ class V12 extends Filter
 
     protected function convertStatus(array $content): array
     {
-        $content['status'] = $content['status'] === 2 ? false : true;
+        if (isset($content['status'])) {
+            $content['status'] = $content['status'] === 2 ? false : true;
+        }
         return $content;
     }
 
     protected function convertOrder(array $content): array
     {
-        $content['orderAttributes'] = [ $content['orderField'] ];
-        $content['orderTypes'] = [ $content['orderType'] ];
+        if (isset($content['orderField'])) {
+            $content['orderAttributes'] = [ $content['orderField'] ];
+            unset($content['orderField']);
+        }
 
-        unset($content['orderField']);
-        unset($content['orderType']);
+        if (isset($content['orderType'])) {
+            $content['orderTypes'] = [ $content['orderType'] ];
+            unset($content['orderType']);
+        }
 
         return $content;
     }
