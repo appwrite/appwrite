@@ -53,7 +53,7 @@ install:
 - docker pull php:8.0-cli-alpine
 - docker-compose build
 - docker-compose up -d
-- sleep 10
+- sleep 60
 
 script:
 - docker ps -a
