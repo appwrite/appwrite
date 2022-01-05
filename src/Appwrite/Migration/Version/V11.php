@@ -194,7 +194,7 @@ class V11 extends Migration
 
                 $new = $this->fixDocument($document);
 
-                if (empty($new->getId())) {
+                if (is_null($new) || empty($new->getId())) {
                     Console::warning('Skipped Document due to missing ID.');
                     continue;
                 }
@@ -496,6 +496,10 @@ class V11 extends Migration
             case OldDatabase::SYSTEM_COLLECTION_PLATFORMS:
                 $projectId = $this->getProjectIdFromReadPermissions($document);
 
+                if (is_null($projectId)) {
+                    return null;
+                }
+
                 /**
                  * Set Project ID
                  */
@@ -533,6 +537,10 @@ class V11 extends Migration
             case OldDatabase::SYSTEM_COLLECTION_DOMAINS:
                 $projectId = $this->getProjectIdFromReadPermissions($document);
 
+                if (is_null($projectId)) {
+                    return null;
+                }
+
                 /**
                  * Set Project ID
                  */
@@ -556,6 +564,10 @@ class V11 extends Migration
                 break;
             case OldDatabase::SYSTEM_COLLECTION_KEYS:
                 $projectId = $this->getProjectIdFromReadPermissions($document);
+
+                if (is_null($projectId)) {
+                    return null;
+                }
 
                 /**
                  * Set Project ID
@@ -584,6 +596,10 @@ class V11 extends Migration
                 break;
             case OldDatabase::SYSTEM_COLLECTION_WEBHOOKS:
                 $projectId = $this->getProjectIdFromReadPermissions($document);
+
+                if (is_null($projectId)) {
+                    return null;
+                }
 
                 /**
                  * Set Project ID
@@ -780,7 +796,7 @@ class V11 extends Migration
     }
 
     /**
-     * @param Document $document 
+     * @param Document $document
      * @return string|null 
      * @throws Exception 
      */
@@ -788,11 +804,17 @@ class V11 extends Migration
     {
         $readPermissions = $document->getRead();
         $teamId = str_replace('team:', '', reset($readPermissions));
-        return $this->oldConsoleDB->getCollectionFirst([
+        $project = $this->oldConsoleDB->getCollectionFirst([
             'filters' => [
                 '$collection=' . OldDatabase::SYSTEM_COLLECTION_PROJECTS,
                 'teamId=' . $teamId
             ]
-        ])->getId();
+        ]);
+
+        if (!$project) {
+            return null;
+        }
+
+        return $project->getId();
     }
 }
