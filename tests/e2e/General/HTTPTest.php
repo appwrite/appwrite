@@ -18,7 +18,7 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_OPTIONS, '/', array_merge([
+        $response = $this->client->call(Client::METHOD_OPTIONS, '/', \array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
         ]), []);
@@ -38,7 +38,7 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/error', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/error', \array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
         ]), []);
@@ -54,7 +54,7 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/manifest.json', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/manifest.json', \array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
         ]), []);
@@ -73,7 +73,7 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/humans.txt', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/humans.txt', \array_merge([
             'origin' => 'http://localhost',
         ]), []);
 
@@ -86,7 +86,7 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/robots.txt', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/robots.txt', \array_merge([
             'origin' => 'http://localhost',
         ]), []);
 
@@ -124,30 +124,40 @@ class HTTPTest extends Scope
 
     public function testSpecOpenAPI3()
     {
-        $response = $this->client->call(Client::METHOD_GET, '/specs/open-api3?platform=client', [
+        $response = $this->client->call(Client::METHOD_GET, '/specs/open-api3?platform=console', [
             'content-type' => 'application/json',
         ], []);
 
-        if(!file_put_contents(__DIR__ . '/../../resources/open-api3.json', json_encode($response['body']))) {
-            throw new Exception('Failed to save spec file');
-        }
+        $directory = __DIR__ . '/../../../app/config/specs/';
 
+        $files = scandir($directory);
         $client = new Client();
         $client->setEndpoint('https://validator.swagger.io');
 
-        /**
-         * Test for SUCCESS
-         */
-        $response = $client->call(Client::METHOD_POST, '/validator/debug', [
-            'content-type' => 'application/json',
-        ], json_decode(file_get_contents(realpath(__DIR__ . '/../../resources/open-api3.json')), true));
+        foreach($files as $file) {
+            if(in_array($file, ['.', '..'])) {
+                continue;
+            }
 
-        $response['body'] = json_decode($response['body'], true);
+            if(
+                (strpos($file, 'latest') === false) &&
+                (strpos($file, '0.12.x') === false)
+             ) {
+                continue;
+            }
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertTrue(empty($response['body']));
+            /**
+             * Test for SUCCESS
+             */
+            $response = $client->call(Client::METHOD_POST, '/validator/debug', [
+                'content-type' => 'application/json',
+            ], json_decode(file_get_contents($directory.$file), true));
 
-        unlink(realpath(__DIR__ . '/../../resources/open-api3.json'));
+            $response['body'] = json_decode($response['body'], true);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertTrue(empty($response['body']));
+        }
     }
 
     public function testResponseHeader() {
@@ -155,7 +165,7 @@ class HTTPTest extends Scope
         /**
          * Test without header
          */
-        $response = $this->client->call(Client::METHOD_GET, '/locale/continents', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/locale/continents', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], $this->getHeaders()));
@@ -173,7 +183,7 @@ class HTTPTest extends Scope
          /**
          * Test with header
          */
-        $response = $this->client->call(Client::METHOD_GET, '/locale/continents', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/locale/continents', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
             'x-appwrite-response-format' => '0.6.2'
@@ -192,7 +202,7 @@ class HTTPTest extends Scope
         /**
          * Test without header
          */
-        $response = $this->client->call(Client::METHOD_GET, '/versions', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/versions', \array_merge([
             'content-type' => 'application/json',
         ], $this->getHeaders()));
 

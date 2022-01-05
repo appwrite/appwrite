@@ -21,7 +21,7 @@ class Mock extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -30,8 +30,8 @@ class Mock extends Model
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
     public function getType():string

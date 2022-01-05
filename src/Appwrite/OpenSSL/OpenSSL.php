@@ -4,7 +4,7 @@ namespace Appwrite\OpenSSL;
 
 class OpenSSL
 {
-    const CIPHER_AES_128_GCM = 'aes-128-gcm';
+    public const CIPHER_AES_128_GCM = 'aes-128-gcm';
 
     /**
      * @param $data

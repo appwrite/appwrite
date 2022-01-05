@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Account;
 
 use Tests\E2E\Client;
+use function array_merge;
 
 trait AccountBase
 {
@@ -20,6 +21,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -42,6 +44,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -54,6 +57,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => '',
             'password' => '',
         ]);
@@ -65,6 +69,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => '',
         ]);
@@ -76,6 +81,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => '',
             'password' => $password,
         ]);
@@ -278,10 +284,10 @@ trait AccountBase
         $this->assertEquals('', $response['body']['sessions'][0]['deviceBrand']);
         $this->assertEquals('', $response['body']['sessions'][0]['deviceModel']);
         $this->assertEquals($response['body']['sessions'][0]['ip'], filter_var($response['body']['sessions'][0]['ip'], FILTER_VALIDATE_IP));
-        
+
         $this->assertEquals('--', $response['body']['sessions'][0]['countryCode']);
         $this->assertEquals('Unknown', $response['body']['sessions'][0]['countryName']);
-        
+
         $this->assertEquals(true, $response['body']['sessions'][0]['current']);
 
         /**
@@ -320,7 +326,8 @@ trait AccountBase
         $this->assertIsArray($response['body']['logs']);
         $this->assertNotEmpty($response['body']['logs']);
         $this->assertCount(2, $response['body']['logs']);
-        
+        $this->assertIsNumeric($response['body']['sum']);
+
         $this->assertContains($response['body']['logs'][0]['event'], ['account.create', 'account.sessions.create']);
         $this->assertEquals($response['body']['logs'][0]['ip'], filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP));
         $this->assertIsNumeric($response['body']['logs'][0]['time']);
@@ -339,7 +346,7 @@ trait AccountBase
         $this->assertEquals('', $response['body']['logs'][0]['deviceBrand']);
         $this->assertEquals('', $response['body']['logs'][0]['deviceModel']);
         $this->assertEquals($response['body']['logs'][0]['ip'], filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP));
-        
+
         $this->assertEquals('--', $response['body']['logs'][0]['countryCode']);
         $this->assertEquals('Unknown', $response['body']['logs'][0]['countryName']);
 
@@ -361,10 +368,61 @@ trait AccountBase
         $this->assertEquals('', $response['body']['logs'][1]['deviceBrand']);
         $this->assertEquals('', $response['body']['logs'][1]['deviceModel']);
         $this->assertEquals($response['body']['logs'][1]['ip'], filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP));
-        
+
         $this->assertEquals('--', $response['body']['logs'][1]['countryCode']);
         $this->assertEquals('Unknown', $response['body']['logs'][1]['countryName']);
-        
+
+        $responseLimit = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'limit' => 1
+        ]);
+
+        $this->assertEquals($responseLimit['headers']['status-code'], 200);
+        $this->assertIsArray($responseLimit['body']['logs']);
+        $this->assertNotEmpty($responseLimit['body']['logs']);
+        $this->assertCount(1, $responseLimit['body']['logs']);
+        $this->assertIsNumeric($responseLimit['body']['sum']);
+
+        $this->assertEquals($response['body']['logs'][0], $responseLimit['body']['logs'][0]);
+
+        $responseOffset = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'offset' => 1
+        ]);
+
+        $this->assertEquals($responseOffset['headers']['status-code'], 200);
+        $this->assertIsArray($responseOffset['body']['logs']);
+        $this->assertNotEmpty($responseOffset['body']['logs']);
+        $this->assertCount(1, $responseOffset['body']['logs']);
+        $this->assertIsNumeric($responseOffset['body']['sum']);
+
+        $this->assertEquals($response['body']['logs'][1], $responseOffset['body']['logs'][0]);
+
+        $responseLimitOffset = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'limit' => 1,
+            'offset' => 1
+        ]);
+
+        $this->assertEquals($responseLimitOffset['headers']['status-code'], 200);
+        $this->assertIsArray($responseLimitOffset['body']['logs']);
+        $this->assertNotEmpty($responseLimitOffset['body']['logs']);
+        $this->assertCount(1, $responseLimitOffset['body']['logs']);
+        $this->assertIsNumeric($responseLimitOffset['body']['sum']);
+
+        $this->assertEquals($response['body']['logs'][1], $responseLimitOffset['body']['logs'][0]);
         /**
          * Test for FAILURE
          */
@@ -379,7 +437,7 @@ trait AccountBase
         return $data;
     }
 
-    //TODO Add tests for OAuth2 session creation
+    // TODO Add tests for OAuth2 session creation
 
     /**
      * @depends testCreateAccountSession
@@ -601,6 +659,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' =>  $data['email'],
             'password' =>  $data['password'],
             'name' =>  $data['name'],
@@ -692,6 +751,36 @@ trait AccountBase
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
+
+        /**
+         * Prefs size exceeded
+         */
+        $prefsObject = ["longValue" => str_repeat("🍰", 100000)];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'prefs' => $prefsObject
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Now let's test the same thing, but with normal symbol instead of multi-byte cake emoji
+        $prefsObject = ["longValue" => str_repeat("-", 100000)];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'prefs' => $prefsObject
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;
     }
@@ -1170,6 +1259,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             // 'url' => 'http://localhost/magiclogin',
         ]);
@@ -1207,6 +1297,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'url' => 'localhost/magiclogin',
         ]);
@@ -1218,8 +1309,19 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'url' => 'http://remotehost/magiclogin',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -1237,7 +1339,7 @@ trait AccountBase
     {
         $id = $data['id'] ?? '';
         $token = $data['token'] ?? '';
-        
+
         /**
          * Test for SUCCESS
          */
@@ -1255,7 +1357,7 @@ trait AccountBase
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
-        
+
         /**
          * Test for FAILURE
          */
@@ -1280,7 +1382,7 @@ trait AccountBase
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-        
+
         return $data;
     }
 }

@@ -39,8 +39,8 @@ class ErrorDev extends Error
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
     public function getType():string

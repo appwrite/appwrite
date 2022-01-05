@@ -1,1 +1,1 @@
-Get a user activity logs list by its unique ID.
+Get the user activity logs list by its unique ID.

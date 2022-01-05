@@ -37,6 +37,7 @@ body:
       label: "🎲 Appwrite version"
       description: "What version of Appwrite are you running?"
       options:
+        - Version 0.11.x
         - Version 0.10.x
         - Version 0.9.x
         - Version 0.8.x
