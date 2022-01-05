@@ -12,7 +12,7 @@ void main() { // Init SDK
 
   Future result = database.createIndex(
     collectionId: '[COLLECTION_ID]',
-    indexId: '',
+    key: '',
     type: 'key',
     attributes: [],
   );

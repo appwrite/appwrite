@@ -57,10 +57,27 @@ window.addEventListener("load", async () => {
   const realtime = window.ls.container.get('realtime');
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
   let current = {};
-  window.ls.container.get('console').subscribe('project', event => {
-    for (let project in event.payload) {
-      current[project] = event.payload[project] ?? 0;
+  window.ls.container.get('console').subscribe(['project', 'console'], response => {
+    switch (response.event) {
+      case 'stats.connections':
+        for (let project in response.payload) {
+          current[project] = response.payload[project] ?? 0;
+        }
+        break;
+      case 'database.attributes.create':
+      case 'database.attributes.update':
+      case 'database.attributes.delete':
+        document.dispatchEvent(new CustomEvent('database.createAttribute'));
+
+        break;
+      case 'database.indexes.create':
+      case 'database.indexes.update':
+      case 'database.indexes.delete':
+        document.dispatchEvent(new CustomEvent('database.createIndex'));
+
+        break;
     }
+
   });
 
   while (true) {
@@ -123,72 +140,18 @@ window.addEventListener("load", async () => {
   }
 });
 
-window.formValidation = (form, fields) => {
-  const elements = Array.from(form.querySelectorAll('[name]')).reduce((prev, curr) => {
-    if(!curr.name) {
-      return prev;
-    }
-    prev[curr.name] = curr;
-    return prev;
-  }, {});
-  const actionHandler = (action, attribute) => {
-      switch (action) {
-          case "disable":
-              elements[attribute].setAttribute("disabled", true);
-              elements[attribute].dispatchEvent(new Event('change'));
-              break;
-          case "enable":
-              elements[attribute].removeAttribute("disabled");
-              elements[attribute].dispatchEvent(new Event('change'));
-              break;
-          case "unvalue":
-              elements[attribute].value = "";
-              break;
-          case "check":
-            elements[attribute].value = "true";
-            break;
-          case "uncheck":
-            elements[attribute].value = "false";
-            break;
-      }
-  };
-  for (const field in fields) {
-      for (const attribute in fields[field]) {
-          const attr = fields[field][attribute];
-          if (Array.isArray(attr)) {
-              attr.forEach(action => {
-                  if (elements[field].value === "true") {
-                      actionHandler(action, attribute);
-                  }
-              })
-          } else {
-              const condition = attr.if.some(c => {
-                  return elements[c].value === "true";
-              });
-              if (condition) {
-                  for (const thenAction in attr.then) {
-                      attr.then[thenAction].forEach(action => {
-                          actionHandler(action, thenAction);
-                      });
-                  }
-              } else {
-                  for (const elseAction in attr.else) {
-                      attr.else[elseAction].forEach(action => {
-                          actionHandler(action, elseAction);
-                      });
-                  }
-              }
-          }
-      }
+/**
+ * Method to add attribute for the UI on array attributes.
+ * 
+ * Needs to be global - since client side routing will break it.
+ * @param {*} doc 
+ * @param {*} key 
+ * @returns 
+ */
+function addAttribute(doc, key) {
+  if (!Array.isArray(doc[key])) {
+      doc[key] = [];
   }
-  form.addEventListener("reset", () => {
-    for (const key in fields) {
-        if (Object.hasOwnProperty.call(fields, key)) {
-            const element = elements[key];
-            element.setAttribute("value", "");
-            element.removeAttribute("disabled");
-            element.dispatchEvent(new Event("change"));
-        }
-    }
-});
-};
+  doc[key].push(null);
+  return doc;
+}

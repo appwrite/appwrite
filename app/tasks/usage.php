@@ -2,8 +2,6 @@
 
 global $cli, $register;
 
-require_once __DIR__ . '/../init.php';
-
 use Utopia\App;
 use Utopia\Cache\Adapter\Redis;
 use Utopia\Cache\Cache;
@@ -223,7 +221,9 @@ $cli
         $cacheAdapter = new Cache(new Redis($redis));
         $dbForProject = new Database(new MariaDB($db), $cacheAdapter);
         $dbForConsole = new Database(new MariaDB($db), $cacheAdapter);
-        $dbForConsole->setNamespace('project_console_internal');
+        $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $dbForConsole->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $dbForConsole->setNamespace('_project_console');
 
         $latestTime = [];
 
@@ -276,9 +276,7 @@ $cli
 
                         $filters = $options['filters'] ?? []; // Some metrics might have additional filters, like function's status
                         if (!empty($filters)) {
-                            $filters = ' AND ' . implode(' AND ', array_map(function ($filter, $value) {
-                                return "\"{$filter}\"='{$value}'";
-                            }, array_keys($filters), array_values($filters)));
+                            $filters = ' AND ' . implode(' AND ', array_map(fn ($filter, $value) => "\"{$filter}\"='{$value}'", array_keys($filters), array_values($filters)));
                         } else {
                             $filters = '';
                         }
@@ -291,7 +289,7 @@ $cli
                             $projectId = $point['projectId'];
 
                             if (!empty($projectId) && $projectId !== 'console') {
-                                $dbForProject->setNamespace('project_' . $projectId . '_internal');
+                                $dbForProject->setNamespace('_project_' . $projectId);
                                 $metricUpdated = $metric;
 
                                 if (!empty($groupBy)) {
@@ -371,7 +369,7 @@ $cli
                         $projectId = $project->getId();
 
                         // Get total storage
-                        $dbForProject->setNamespace('project_' . $projectId . '_internal');
+                        $dbForProject->setNamespace('_project_' . $projectId);
                         $storageTotal = $dbForProject->sum('files', 'sizeOriginal') + $dbForProject->sum('tags', 'size');
 
                         $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
@@ -435,9 +433,8 @@ $cli
 
                         foreach ($collections as $collection => $options) {
                             try {
-                                $dbForProject->setNamespace("project_{$projectId}_{$options['namespace']}");
+                                $dbForProject->setNamespace("_project_{$projectId}");
                                 $count = $dbForProject->count($collection);
-                                $dbForProject->setNamespace("project_{$projectId}_internal");
                                 $metricPrefix = $options['metricPrefix'] ?? '';
                                 $metric = empty($metricPrefix) ? "{$collection}.count" : "{$metricPrefix}.{$collection}.count";
 
@@ -491,7 +488,7 @@ $cli
                                 $subCollectionCounts = []; //total project level count of sub collections
 
                                 do { // Loop over all the parent collection document for each sub collection
-                                    $dbForProject->setNamespace("project_{$projectId}_{$options['namespace']}");
+                                    $dbForProject->setNamespace("_project_{$projectId}");
                                     $parents = $dbForProject->find($collection, [], 100, cursor: $latestParent); // Get all the parents for the sub collections for example for documents, this will get all the collections
 
                                     if (empty($parents)) {
@@ -502,12 +499,12 @@ $cli
 
                                     foreach ($parents as $parent) {
                                         foreach ($subCollections as $subCollection => $subOptions) { // Sub collection counts, like database.collections.collectionId.documents.count
-                                            $dbForProject->setNamespace("project_{$projectId}_{$subOptions['namespace']}");
+                                            $dbForProject->setNamespace("_project_{$projectId}");
                                             $count = $dbForProject->count($parent->getId());
 
                                             $subCollectionCounts[$subCollection] = ($subCollectionCounts[$subCollection] ?? 0) + $count; // Project level counts for sub collections like database.documents.count
 
-                                            $dbForProject->setNamespace("project_{$projectId}_internal");
+                                            $dbForProject->setNamespace("_project_{$projectId}");
 
                                             $metric = empty($metricPrefix) ? "{$collection}.{$parent->getId()}.{$subCollection}.count" : "{$metricPrefix}.{$collection}.{$parent->getId()}.{$subCollection}.count";
                                             $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
@@ -557,7 +554,7 @@ $cli
                                  * Inserting project level counts for sub collections like database.documents.count
                                  */
                                 foreach ($subCollectionCounts as $subCollection => $count) {
-                                    $dbForProject->setNamespace("project_{$projectId}_internal");
+                                    $dbForProject->setNamespace("_project_{$projectId}");
 
                                     $metric = empty($metricPrefix) ? "{$subCollection}.count" : "{$metricPrefix}.{$subCollection}.count";
 

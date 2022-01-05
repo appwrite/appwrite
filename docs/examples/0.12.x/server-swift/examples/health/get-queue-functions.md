@@ -11,8 +11,8 @@ func main() {
         switch result {
         case .failure(let error):
             print(error.message)
-        case .success(let ):
-            print(String(describing: )
+        case .success(let healthQueue):
+            print(String(describing: healthQueue)
         }
     }
 }

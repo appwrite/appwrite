@@ -8,6 +8,6 @@ appwrite storage getFilePreview \
         --borderColor="" \
         --borderRadius="0" \
         --opacity="0" \
-        --rotation="0" \
+        --rotation="-360" \
         --background="" \
         --output="jpg"

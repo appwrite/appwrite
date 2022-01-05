@@ -64,7 +64,7 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'indexId' => 'fullname',
+            'key' => 'fullname',
             'type' => 'key',
             'attributes' => ['lastName', 'firstName'],
             'orders' => ['ASC', 'ASC'],
@@ -125,7 +125,7 @@ class WebhooksCustomServerTest extends Scope
             'write' => ['role:all'],
             'permission' => 'document'
         ]);
-        
+
         $this->assertEquals($actors['headers']['status-code'], 201);
         $this->assertNotEmpty($actors['body']['$id']);
 
@@ -134,7 +134,7 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), []);
-        
+
         $this->assertEquals($actors['headers']['status-code'], 204);
 
         $webhook = $this->getLastRequest();

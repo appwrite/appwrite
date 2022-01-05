@@ -79,6 +79,10 @@ class FunctionsV1 extends Worker
 
     public array $allowed = [];
 
+    public function getName(): string {
+        return "functions";
+    }
+
     public function init(): void
     {
     }
@@ -97,7 +101,7 @@ class FunctionsV1 extends Worker
         $userId = $this->args['userId'] ?? '';
         $jwt = $this->args['jwt'] ?? '';
 
-        $database = $this->getInternalDB($projectId);
+        $database = $this->getProjectDB($projectId);
 
         switch ($trigger) {
             case 'event':

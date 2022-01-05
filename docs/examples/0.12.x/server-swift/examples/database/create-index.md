@@ -9,7 +9,7 @@ func main() {
     let database = Database(client)
     database.createIndex(
         collectionId: "[COLLECTION_ID]",
-        indexId: "",
+        key: "",
         type: "key",
         attributes: []
     ) { result in

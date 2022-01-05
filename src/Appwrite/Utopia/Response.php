@@ -35,7 +35,6 @@ use Appwrite\Utopia\Response\Model\Build;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\Index;
-use Appwrite\Utopia\Response\Model\FuncPermissions;
 use Appwrite\Utopia\Response\Model\JWT;
 use Appwrite\Utopia\Response\Model\Key;
 use Appwrite\Utopia\Response\Model\Language;
@@ -55,7 +54,13 @@ use Appwrite\Utopia\Response\Model\Tag;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
+use Appwrite\Utopia\Response\Model\HealthAntivirus;
+use Appwrite\Utopia\Response\Model\HealthQueue;
+use Appwrite\Utopia\Response\Model\HealthStatus;
+use Appwrite\Utopia\Response\Model\HealthTime;
+use Appwrite\Utopia\Response\Model\HealthVersion;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
+use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
 use Appwrite\Utopia\Response\Model\UsageDatabase;
@@ -143,6 +148,8 @@ class Response extends SwooleResponse
     // Functions
     const MODEL_FUNCTION = 'function';
     const MODEL_FUNCTION_LIST = 'functionList';
+    const MODEL_RUNTIME = 'runtime';
+    const MODEL_RUNTIME_LIST = 'runtimeList';
     const MODEL_TAG = 'tag';
     const MODEL_TAG_LIST = 'tagList';
     const MODEL_EXECUTION = 'execution';
@@ -163,6 +170,13 @@ class Response extends SwooleResponse
     const MODEL_PLATFORM_LIST = 'platformList';
     const MODEL_DOMAIN = 'domain';
     const MODEL_DOMAIN_LIST = 'domainList';
+
+    // Health
+    const MODEL_HEALTH_STATUS = 'healthStatus';
+    const MODEL_HEALTH_VERSION = 'healthVersion';
+    const MODEL_HEALTH_QUEUE = 'healthQueue';
+    const MODEL_HEALTH_TIME = 'healthTime';
+    const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
     
     // Deprecated
     const MODEL_PERMISSIONS = 'permissions';
@@ -206,6 +220,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
             ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
+            ->setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
             ->setModel(new BaseList('Tags List', self::MODEL_TAG_LIST, 'tags', self::MODEL_TAG))
             ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
             ->setModel(new BaseList('Builds List', self::MODEL_BUILD_LIST, 'builds', self::MODEL_BUILD))
@@ -245,7 +260,7 @@ class Response extends SwooleResponse
             ->setModel(new Team())
             ->setModel(new Membership())
             ->setModel(new Func())
-            ->setModel(new FuncPermissions())
+            ->setModel(new Runtime())
             ->setModel(new Tag())
             ->setModel(new Execution())
             ->setModel(new SyncExecution())
@@ -260,6 +275,11 @@ class Response extends SwooleResponse
             ->setModel(new Language())
             ->setModel(new Currency())
             ->setModel(new Phone())
+            ->setModel(new HealthAntivirus())
+            ->setModel(new HealthQueue())
+            ->setModel(new HealthStatus())
+            ->setModel(new HealthTime())
+            ->setModel(new HealthVersion())
             ->setModel(new Metric())
             ->setModel(new UsageDatabase())
             ->setModel(new UsageCollection())
@@ -337,7 +357,7 @@ class Response extends SwooleResponse
         $output = $this->output($document, $model);
 
         // If filter is set, parse the output
-        if (self::isFilter()) {
+        if (self::hasFilter()) {
             $output = self::getFilter()->parse($output, $model);
         }
 
@@ -476,7 +496,7 @@ class Response extends SwooleResponse
      *
      * @return bool
      */
-    public static function isFilter(): bool
+    public static function hasFilter(): bool
     {
         return self::$filter != null;
     }

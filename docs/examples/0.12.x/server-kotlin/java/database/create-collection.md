@@ -9,7 +9,7 @@ public void main() {
 
     Database database = new Database(client);
     database.createCollection(
-        collectionId = "",
+        collectionId = "[COLLECTION_ID]",
         name = "[NAME]",
         permission = "document",
         read = ["role:all"],

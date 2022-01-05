@@ -72,7 +72,7 @@
       const setIdType = function (idType) {
         if (idType == "custom") {
           element.setAttribute("data-id-type", idType);
-          info.innerHTML = "Allowed Characters A-Z, a-z, 0-9, and non-leading underscore";
+          info.innerHTML = "Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot";
           if (prevData === 'auto-generated') {
             prevData = ""
           }

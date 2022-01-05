@@ -2,7 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter\Realtime;
 use PHPUnit\Framework\TestCase;
 
@@ -194,5 +194,52 @@ class MessagingTest extends TestCase
         $this->assertArrayHasKey('account.123', $channels);
         $this->assertArrayHasKey('account', $channels);
         $this->assertArrayNotHasKey('account.456', $channels);
+    }
+
+    public function testFromPayloadCollectionLevelPermissions(): void
+    {
+        /**
+         * Test Collection Level Permissions
+         */
+        $result = Realtime::fromPayload(
+            event: 'database.documents.create',
+            payload: new Document([
+                '$id' => 'test',
+                '$collection' => 'collection',
+                '$read' => ['role:admin'],
+                '$write' => ['role:admin']
+            ]),
+            collection: new Document([
+                '$id' => 'collection',
+                '$read' => ['role:all'],
+                '$write' => ['role:all'],
+                'permission' => 'collection'
+            ])
+        );
+
+        $this->assertContains('role:all', $result['roles']);
+        $this->assertNotContains('role:admin', $result['roles']);
+
+        /**
+         * Test Document Level Permissions
+         */
+        $result = Realtime::fromPayload(
+            event: 'database.documents.create',
+            payload: new Document([
+                '$id' => 'test',
+                '$collection' => 'collection',
+                '$read' => ['role:all'],
+                '$write' => ['role:all']
+            ]),
+            collection: new Document([
+                '$id' => 'collection',
+                '$read' => ['role:admin'],
+                '$write' => ['role:admin'],
+                'permission' => 'document'
+            ])
+        );
+
+        $this->assertContains('role:all', $result['roles']);
+        $this->assertNotContains('role:admin', $result['roles']);
     }
 }

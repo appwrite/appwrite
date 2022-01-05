@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Validator\ArrayList;
@@ -40,23 +41,42 @@ App::post('/v1/storage/files')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE)
-    ->param('fileId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('fileId', '', new CustomId(), 'File ID. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('file', [], new File(), 'Binary file.', false)
-    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
+    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->inject('request')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('user')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($fileId, $file, $read, $write, $request, $response, $dbForInternal, $user, $audits, $usage) {
-        /** @var Utopia\Swoole\Request $request */
+    ->action(function ($fileId, $file, $read, $write, $request, $response, $dbForProject, $user, $audits, $usage) {
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+
+        $read = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; // By default set read permissions for user
+        $write = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; 
+
+        // Users can only add their roles to files, API keys and Admin users can add any
+        $roles = Authorization::getRoles();
+
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach ($read as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                }
+            }
+            foreach ($write as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                }
+            }
+        }
 
         $file = $request->getFiles('file');
 
@@ -102,10 +122,10 @@ App::post('/v1/storage/files')
         $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
 
         if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
-            $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+            $antivirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
                 (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
 
-            if (!$antiVirus->fileScan($path)) {
+            if (!$antivirus->fileScan($path)) {
                 $device->delete($path);
                 throw new Exception('Invalid file', 403);
             }
@@ -117,6 +137,7 @@ App::post('/v1/storage/files')
         $data = $compressor->compress($data);
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+        $tag = null;
         $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
 
         if (!$device->write($path, $data, $mimeType)) {
@@ -125,8 +146,8 @@ App::post('/v1/storage/files')
 
         $sizeActual = $device->getFileSize($path);
 
-        $fileId = ($fileId == 'unique()') ? $dbForInternal->getId() : $fileId;
-        $file = $dbForInternal->createDocument('files', new Document([
+        $fileId = ($fileId == 'unique()') ? $dbForProject->getId() : $fileId;
+        $file = $dbForProject->createDocument('files', new Document([
             '$id' => $fileId,
             '$read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], // By default set read permissions for user
             '$write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], // By default set write permissions for user
@@ -142,7 +163,7 @@ App::post('/v1/storage/files')
             'comment' => '',
             'openSSLVersion' => '1',
             'openSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
-            'openSSLTag' => \bin2hex($tag),
+            'openSSLTag' => \bin2hex($tag ?? ''),
             'openSSLIV' => \bin2hex($iv),
             'search' => implode(' ', [$fileId, $file['name'] ?? '',]),
         ]));
@@ -175,21 +196,21 @@ App::get('/v1/storage/files')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE_LIST)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('cursor', '', new UID(), 'ID of the file used as the starting point for the query, excluding the file itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of files to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('cursor', '', new UID(), 'ID of the file used as the starting point for the query, excluding the file itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $usage) {
+    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
         if (!empty($cursor)) {
-            $cursorFile = $dbForInternal->getDocument('files', $cursor);
+            $cursorFile = $dbForProject->getDocument('files', $cursor);
 
             if ($cursorFile->isEmpty()) {
                 throw new Exception("File '{$cursor}' for the 'cursor' value not found.", 400);
@@ -208,8 +229,8 @@ App::get('/v1/storage/files')
         ;
 
         $response->dynamic(new Document([
-            'files' => $dbForInternal->find('files', $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection),
-            'sum' => $dbForInternal->count('files', $queries, APP_LIMIT_COUNT),
+            'files' => $dbForProject->find('files', $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection),
+            'sum' => $dbForProject->count('files', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FILE_LIST);
     });
 
@@ -224,16 +245,16 @@ App::get('/v1/storage/files/:fileId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE)
-    ->param('fileId', '', new UID(), 'File unique ID.')
+    ->param('fileId', '', new UID(), 'File ID.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($fileId, $response, $dbForInternal, $usage) {
+    ->action(function ($fileId, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $file = $dbForInternal->getDocument('files', $fileId);
+        $file = $dbForProject->getDocument('files', $fileId);
 
         if (empty($file->getId())) {
             throw new Exception('File not found', 404);
@@ -256,7 +277,7 @@ App::get('/v1/storage/files/:fileId/preview')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE)
     ->label('sdk.methodType', 'location')
-    ->param('fileId', '', new UID(), 'File unique ID')
+    ->param('fileId', '', new UID(), 'File ID.')
     ->param('width', 0, new Range(0, 4000), 'Resize preview image width, Pass an integer between 0 to 4000.', true)
     ->param('height', 0, new Range(0, 4000), 'Resize preview image height, Pass an integer between 0 to 4000.', true)
     ->param('gravity', Image::GRAVITY_CENTER, new WhiteList(Image::getGravityTypes()), 'Image crop gravity. Can be one of ' . implode(",", Image::getGravityTypes()), true)
@@ -271,13 +292,13 @@ App::get('/v1/storage/files/:fileId/preview')
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForInternal, $usage) {
-        /** @var Utopia\Swoole\Request $request */
+    ->action(function ($fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForProject, $usage) {
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $stats */
 
         $storage = 'files';
@@ -301,7 +322,7 @@ App::get('/v1/storage/files/:fileId/preview')
         $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
         $key = \md5($fileId.$width.$height.$gravity.$quality.$borderWidth.$borderColor.$borderRadius.$opacity.$rotation.$background.$storage.$output);
 
-        $file = $dbForInternal->getDocument('files', $fileId);
+        $file = $dbForProject->getDocument('files', $fileId);
 
         if (empty($file->getId())) {
             throw new Exception('File not found', 404);
@@ -417,16 +438,16 @@ App::get('/v1/storage/files/:fileId/download')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', '*/*')
     ->label('sdk.methodType', 'location')
-    ->param('fileId', '', new UID(), 'File unique ID.')
+    ->param('fileId', '', new UID(), 'File ID.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($fileId, $response, $dbForInternal, $usage) {
+    ->action(function ($fileId, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $file = $dbForInternal->getDocument('files', $fileId);
+        $file = $dbForProject->getDocument('files', $fileId);
 
         if (empty($file->getId())) {
             throw new Exception('File not found', 404);
@@ -482,16 +503,16 @@ App::get('/v1/storage/files/:fileId/view')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', '*/*')
     ->label('sdk.methodType', 'location')
-    ->param('fileId', '', new UID(), 'File unique ID.')
+    ->param('fileId', '', new UID(), 'File ID.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($fileId, $response, $dbForInternal, $usage) {
+    ->action(function ($fileId, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $file  = $dbForInternal->getDocument('files', $fileId);
+        $file  = $dbForProject->getDocument('files', $fileId);
         $mimes = Config::getParam('storage-mimes');
 
         if (empty($file->getId())) {
@@ -558,25 +579,46 @@ App::put('/v1/storage/files/:fileId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE)
-    ->param('fileId', '', new UID(), 'File unique ID.')
-    ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('fileId', '', new UID(), 'File ID.')
+    ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
+    ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
+    ->inject('user')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($fileId, $read, $write, $response, $dbForInternal, $audits, $usage) {
+    ->action(function ($fileId, $read, $write, $response, $dbForProject, $user, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
 
-        $file = $dbForInternal->getDocument('files', $fileId);
+        $read = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; // By default set read permissions for user
+        $write = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; 
+
+        // Users can only add their roles to files, API keys and Admin users can add any
+        $roles = Authorization::getRoles();
+
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach ($read as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                }
+            }
+            foreach ($write as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                }
+            }
+        }
+
+        $file = $dbForProject->getDocument('files', $fileId);
 
         if (empty($file->getId())) {
             throw new Exception('File not found', 404);
         }
 
-        $file = $dbForInternal->updateDocument('files', $fileId, new Document(\array_merge($file->getArrayCopy(), [
+        $file = $dbForProject->updateDocument('files', $fileId, new Document(\array_merge($file->getArrayCopy(), [
             '$read' => $read,
             '$write' => $write,
             'bucketId' => '',
@@ -606,20 +648,20 @@ App::delete('/v1/storage/files/:fileId')
     ->label('sdk.description', '/docs/references/storage/delete-file.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('fileId', '', new UID(), 'File unique ID.')
+    ->param('fileId', '', new UID(), 'File ID.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($fileId, $response, $dbForInternal, $events, $audits, $usage) {
+    ->action(function ($fileId, $response, $dbForProject, $events, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
         
-        $file = $dbForInternal->getDocument('files', $fileId);
+        $file = $dbForProject->getDocument('files', $fileId);
 
         if (empty($file->getId())) {
             throw new Exception('File not found', 404);
@@ -628,7 +670,7 @@ App::delete('/v1/storage/files/:fileId')
         $device = Storage::getDevice('files');
 
         if ($device->delete($file->getAttribute('path', ''))) {
-            if (!$dbForInternal->deleteDocument('files', $fileId)) {
+            if (!$dbForProject->deleteDocument('files', $fileId)) {
                 throw new Exception('Failed to remove file from DB', 500);
             }
         }
@@ -663,10 +705,10 @@ App::get('/v1/storage/usage')
     ->label('sdk.response.model', Response::MODEL_USAGE_STORAGE)
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
-    ->inject('dbForInternal')
-    ->action(function ($range, $response, $dbForInternal) {
+    ->inject('dbForProject')
+    ->action(function ($range, $response, $dbForProject) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
 
         $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
@@ -696,12 +738,12 @@ App::get('/v1/storage/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForInternal, $periods, $range, $metrics, &$stats) {
+            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
 
-                    $requestDocs = $dbForInternal->find('stats', [
+                    $requestDocs = $dbForProject->find('stats', [
                         new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
                     ], $limit, 0, ['time'], [Database::ORDER_DESC]);
@@ -752,13 +794,13 @@ App::get('/v1/storage/:bucketId/usage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_BUCKETS)
-    ->param('bucketId', '', new UID(), 'Bucket unique ID.')
+    ->param('bucketId', '', new UID(), 'Bucket ID.')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
-    ->inject('dbForInternal')
-    ->action(function ($bucketId, $range, $response, $dbForInternal) {
+    ->inject('dbForProject')
+    ->action(function ($bucketId, $range, $response, $dbForProject) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
 
         // TODO: Check if the storage bucket exists else throw 404 
         
@@ -793,12 +835,12 @@ App::get('/v1/storage/:bucketId/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForInternal, $periods, $range, $metrics, &$stats) {
+            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
 
-                    $requestDocs = $dbForInternal->find('stats', [
+                    $requestDocs = $dbForProject->find('stats', [
                         new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
                     ], $limit, 0, ['time'], [Database::ORDER_DESC]);

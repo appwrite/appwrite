@@ -127,6 +127,8 @@ services:
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_FUNCTIONS_RUNTIMES
       - _APP_EXECUTOR_SECRET
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
 
   appwrite-realtime:
     entrypoint: realtime
@@ -156,7 +158,9 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      # - ./vendor:/usr/src/code/vendor
     depends_on:
+      - mariadb
       - redis
     environment:
       - _APP_ENV
@@ -170,6 +174,8 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_USAGE_STATS
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
 
   appwrite-worker-audits:
     entrypoint: worker-audits
@@ -195,6 +201,8 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
 
   appwrite-worker-webhooks:
     entrypoint: worker-webhooks
@@ -217,6 +225,8 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
 
   appwrite-worker-deletes:
     entrypoint: worker-deletes
@@ -246,6 +256,8 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
 
   appwrite-worker-database:
     entrypoint: worker-database
@@ -272,6 +284,8 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates
@@ -290,6 +304,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_DOMAIN_TARGET
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -300,6 +315,8 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
 
   appwrite-worker-functions:
     entrypoint: worker-functions
@@ -394,6 +411,8 @@ services:
       - _APP_STATSD_PORT
       - DOCKERHUB_PULL_USERNAME
       - DOCKERHUB_PULL_PASSWORD
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
 
   appwrite-worker-mails:
     entrypoint: worker-mails
@@ -422,6 +441,8 @@ services:
       - _APP_SMTP_SECURE
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
 
   appwrite-maintenance:
     entrypoint: maintenance
@@ -497,7 +518,7 @@ services:
       - _APP_REDIS_PASS
 
   mariadb:
-    image: appwrite/mariadb:1.2.0 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     networks:
       - appwrite

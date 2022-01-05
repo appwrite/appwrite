@@ -17,10 +17,10 @@ class Func extends Model
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('execute', [
-                'type' => Response::MODEL_FUNC_PERMISSIONS,
-                'description' => 'Function permissions.',
-                'default' => new \stdClass,
-                'example' => new \stdClass,
+                'type' => self::TYPE_STRING,
+                'description' => 'Execution permissions.',
+                'default' => '',
+                'example' => 'role:member',
                 'array' => false,
             ])
             ->addRule('name', [
@@ -110,7 +110,7 @@ class Func extends Model
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */
