@@ -1,3 +1,6 @@
+## 3.0.1
+- Export Query Builder
+
 ## 3.0.0
 - Support for Appwrite 0.12
 - **BREAKING** Updated database service to adapt 0.12 API 
