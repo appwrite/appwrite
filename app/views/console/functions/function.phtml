@@ -483,7 +483,6 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                 <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Leave blank for no schedule</div>
 
                                 <h3 class="margin-bottom-small">Variables <span class="tooltip small" data-tooltip="Set variables or secret keys that will be passed as env vars to your function at runtime."><i class="icon-info-circled"></i></span></h3>
-
                                 <div data-ls-if="(!{{project-function.vars.length}})">
                                     <hr class="margin-bottom margin-top-no" />
 
@@ -503,9 +502,9 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 
                                         <div data-forms-clone="" data-target="project-vars" data-label="Add Variable" data-first="0">
                                             <div class="margin-bottom-small">
-                                                <div data-forms-remove class="row thin margin-bottom-small">
+                                                <div data-forms-remove class="row thin">
                                                     <div class="col span-10">
-                                                        <input type="hidden" name="" data-forms-key-value />
+                                                        <input type="hidden" data-ls-attrs="data-forms-key-value"/>
                                                     </div>
                                                     <div class="col span-2">
                                                         <button type="button" data-remove class="reverse danger round pull-end"><i class="icon-cancel"></i></button>
