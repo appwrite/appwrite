@@ -1,3 +1,9 @@
+# Version 0.12.1
+
+## Bugs
+- Fixed some issues with the Migration
+- Fixed the UI to add Variables to Functions
+
 # Version 0.12.0
 
 ## Features
