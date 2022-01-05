@@ -487,8 +487,9 @@ class V11 extends Migration
 
                 if (!empty($document->getAttribute('usersAuthLimit'))) {
                     $newAuths['limit'] = $document->getAttribute('usersAuthLimit');
-                    $document->removeAttribute('usersAuthLimit');
                 }
+
+                $document->removeAttribute('usersAuthLimit');
 
                 $document->setAttribute('auths', $newProviders);
 
