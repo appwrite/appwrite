@@ -69,6 +69,7 @@
 
 ## Security
 - Increased minimum password length to 8 and removed maximum length
+- Limited User Preferences to 65kb total size
 - Upgraded Redis to 6.2
 - Upgraded InfluxDB to 1.4.0
 - Upgraded Telegraf to 1.3.0
