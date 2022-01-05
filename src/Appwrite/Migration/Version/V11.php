@@ -413,10 +413,10 @@ class V11 extends Migration
      * Migrates single docuemnt.
      *
      * @param OldDocument $oldDocument 
-     * @return Document 
+     * @return Document|null
      * @throws Exception 
      */
-    protected function fixDocument(OldDocument $oldDocument): Document
+    protected function fixDocument(OldDocument $oldDocument): Document|null
     {
         $document = new Document($oldDocument->getArrayCopy());
         $document = $this->migratePermissions($document);
