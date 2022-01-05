@@ -27,6 +27,21 @@ return [
         'model' => Response::MODEL_USER,
         'note' => '',
     ],
+    'users.update.email' => [
+        'description' => 'This event triggers when the user email address is updated.',
+        'model' => Response::MODEL_USER,
+        'note' => '',
+    ],
+    'users.update.name' => [
+        'description' => 'This event triggers when the user name is updated.',
+        'model' => Response::MODEL_USER,
+        'note' => '',
+    ],
+    'users.update.password' => [
+        'description' => 'This event triggers when the user password is updated.',
+        'model' => Response::MODEL_USER,
+        'note' => '',
+    ],
     'account.update.prefs' => [
         'description' => 'This event triggers when the account preferences are updated.',
         'model' => Response::MODEL_USER,
@@ -80,6 +95,26 @@ return [
     'database.collections.delete' => [
         'description' => 'This event triggers when a database collection is deleted.',
         'model' => Response::MODEL_COLLECTION,
+        'note' => '',
+    ],
+    'database.attributes.create' => [
+        'description' => 'This event triggers when a collection attribute is created.',
+        'model' => Response::MODEL_ATTRIBUTE,
+        'note' => '',
+    ],
+    'database.attributes.delete' => [
+        'description' => 'This event triggers when a collection attribute is deleted.',
+        'model' => Response::MODEL_ATTRIBUTE,
+        'note' => '',
+    ],
+    'database.indexes.create' => [
+        'description' => 'This event triggers when a collection index is created.',
+        'model' => Response::MODEL_INDEX,
+        'note' => '',
+    ],
+    'database.indexes.delete' => [
+        'description' => 'This event triggers when a collection index is deleted.',
+        'model' => Response::MODEL_INDEX,
         'note' => '',
     ],
     'database.documents.create' => [

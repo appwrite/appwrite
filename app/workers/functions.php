@@ -1,26 +1,25 @@
 <?php
 
-use Appwrite\Database\Database;
-use Appwrite\Database\Document;
-use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
-use Appwrite\Database\Adapter\Redis as RedisAdapter;
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
+use Appwrite\Stats\Stats;
 use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Orchestration\Orchestration;
 use Utopia\Orchestration\Adapter\DockerAPI;
 use Utopia\Orchestration\Container;
 use Utopia\Orchestration\Exception\Orchestration as OrchestrationException;
 use Utopia\Orchestration\Exception\Timeout as TimeoutException;
 
-require_once __DIR__ . '/../workers.php';
+require_once __DIR__.'/../init.php';
 
 Runtime::enableCoroutine(0);
 
@@ -93,7 +92,7 @@ Console::info(count($list) . ' functions listed in ' . ($executionEnd - $executi
  * 7. Trigger usage log - DONE
  */
 
-//TODO aviod scheduled execution if delay is bigger than X offest
+// TODO avoid scheduled execution if delay is bigger than X offest
 
 class FunctionsV1 extends Worker
 {
@@ -101,17 +100,16 @@ class FunctionsV1 extends Worker
 
     public array $allowed = [];
 
+    public function getName(): string {
+        return "functions";
+    }
+
     public function init(): void
     {
     }
 
     public function run(): void
     {
-        global $register;
-
-        $db = $register->get('db');
-        $cache = $register->get('cache');
-
         $projectId = $this->args['projectId'] ?? '';
         $functionId = $this->args['functionId'] ?? '';
         $webhooks = $this->args['webhooks'] ?? [];
@@ -124,10 +122,7 @@ class FunctionsV1 extends Worker
         $userId = $this->args['userId'] ?? '';
         $jwt = $this->args['jwt'] ?? '';
 
-        $database = new Database();
-        $database->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-        $database->setNamespace('app_' . $projectId);
-        $database->setMocks(Config::getParam('collections', []));
+        $database = $this->getProjectDB($projectId);
 
         switch ($trigger) {
             case 'event':
@@ -141,16 +136,7 @@ class FunctionsV1 extends Worker
 
                     Authorization::disable();
 
-                    $functions = $database->getCollection([
-                        'limit' => $limit,
-                        'offset' => $offset,
-                        'orderField' => 'name',
-                        'orderType' => 'ASC',
-                        'orderCast' => 'string',
-                        'filters' => [
-                            '$collection=' . Database::SYSTEM_COLLECTION_FUNCTIONS,
-                        ],
-                    ]);
+                    $functions = $database->find('functions', [], $limit, $offset, ['name'], [Database::ORDER_ASC]);
 
                     Authorization::reset();
 
@@ -204,11 +190,11 @@ class FunctionsV1 extends Worker
 
                 // Reschedule
                 Authorization::disable();
-                $function = $database->getDocument($functionId);
+                $function = $database->getDocument('functions', $functionId);
                 Authorization::reset();
 
-                if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-                    throw new Exception('Function not found (' . $functionId . ')');
+                if (empty($function->getId())) {
+                    throw new Exception('Function not found ('.$functionId.')');
                 }
 
                 if ($scheduleOriginal && $scheduleOriginal !== $function->getAttribute('schedule')) { // Schedule has changed from previous run, ignore this run.
@@ -224,9 +210,9 @@ class FunctionsV1 extends Worker
 
                 Authorization::disable();
 
-                $function = $database->updateDocument(array_merge($function->getArrayCopy(), [
-                    'scheduleNext' => $next,
-                ]));
+                $function = $database->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
+                    'scheduleNext' => (int)$next,
+                ])));
 
                 if ($function === false) {
                     throw new Exception('Function update failed (' . $functionId . ')');
@@ -258,11 +244,11 @@ class FunctionsV1 extends Worker
 
             case 'http':
                 Authorization::disable();
-                $function = $database->getDocument($functionId);
+                $function = $database->getDocument('functions', $functionId);
                 Authorization::reset();
 
-                if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-                    throw new Exception('Function not found (' . $functionId . ')');
+                if (empty($function->getId())) {
+                    throw new Exception('Function not found ('.$functionId.')');
                 }
 
                 $this->execute(
@@ -299,13 +285,12 @@ class FunctionsV1 extends Worker
      */
     public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $eventData = '', string $data = '', array $webhooks = [], string $userId = '', string $jwt = ''): void
     {
-        global $list;
-        global $orchestration;
+        global $list, $register, $orchestration;
 
         $runtimes = Config::getParam('runtimes');
 
         Authorization::disable();
-        $tag = $database->getDocument($function->getAttribute('tag', ''));
+        $tag = $database->getDocument('tags', $function->getAttribute('tag', ''));
         Authorization::reset();
 
         if ($tag->getAttribute('functionId') !== $function->getId()) {
@@ -314,12 +299,9 @@ class FunctionsV1 extends Worker
 
         Authorization::disable();
 
-        $execution = (!empty($executionId)) ? $database->getDocument($executionId) : $database->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
-            '$permissions' => [
-                'read' => [],
-                'write' => [],
-            ],
+        $execution = (!empty($executionId)) ? $database->getDocument('executions', $executionId) : $database->createDocument('executions', new Document([
+            '$read' => [],
+            '$write' => [],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
             'trigger' => $trigger, // http / schedule / event
@@ -328,7 +310,7 @@ class FunctionsV1 extends Worker
             'stdout' => '',
             'stderr' => '',
             'time' => 0,
-        ]);
+        ]));
 
         if ($execution->isEmpty()) {
             throw new Exception('Failed to create or read execution');
@@ -503,22 +485,14 @@ class FunctionsV1 extends Worker
 
         Console::info('Function executed in ' . ($executionEnd - $executionStart) . ' seconds, status: ' . $functionStatus);
 
-        Authorization::disable();
-
-        $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
-            'tagId' => $tag->getId(),
-            'status' => $functionStatus,
-            'exitCode' => $exitCode,
-            'stdout' => \utf8_encode(\mb_substr($stdout, -4000)), // log last 4000 chars output
-            'stderr' => \utf8_encode(\mb_substr($stderr, -4000)), // log last 4000 chars output
-            'time' => $executionTime
-        ]));
-
-        Authorization::reset();
-
-        if ($execution === false) {
-            throw new Exception('Failed saving execution to DB', 500);
-        }
+        $execution = Authorization::skip(fn() => $database->updateDocument('executions', $execution->getId(), new Document(array_merge($execution->getArrayCopy(), [
+                'tagId' => $tag->getId(),
+                'status' => $functionStatus,
+                'exitCode' => $exitCode,
+                'stdout' => \utf8_encode(\mb_substr($stdout, -8000)), // log last 8000 chars output
+                'stderr' => \utf8_encode(\mb_substr($stderr, -8000)), // log last 8000 chars output
+                'time' => (float)$executionTime,
+            ]))));
 
         $executionModel = new Execution();
         $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
@@ -542,19 +516,23 @@ class FunctionsV1 extends Worker
             roles: $target['roles']
         );
 
-        $usage = new Event('v1-usage', 'UsageV1');
+        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $statsd = $register->get('statsd');
 
-        $usage
-            ->setParam('projectId', $projectId)
-            ->setParam('functionId', $function->getId())
-            ->setParam('functionExecution', 1)
-            ->setParam('functionStatus', $functionStatus)
-            ->setParam('functionExecutionTime', $executionTime * 1000) // ms
-            ->setParam('networkRequestSize', 0)
-            ->setParam('networkResponseSize', 0);
+            $usage = new Stats($statsd);
 
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $usage->trigger();
+            $usage
+                ->setParam('projectId', $projectId)
+                ->setParam('functionId', $function->getId())
+                ->setParam('functionExecution', 1)
+                ->setParam('functionStatus', $functionStatus)
+                ->setParam('functionExecutionTime', $executionTime * 1000) // ms
+                ->setParam('networkRequestSize', 0)
+                ->setParam('networkResponseSize', 0)
+                ->submit()
+            ;
+
+            $usage->submit();
         }
 
         $this->cleanup();

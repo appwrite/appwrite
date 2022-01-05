@@ -17,27 +17,39 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
+use Appwrite\Extend\PDO;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Database;
-use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
-use Appwrite\Database\Adapter\Redis as RedisAdapter;
-use Appwrite\Database\Document;
-use Appwrite\Database\Validator\Authorization;
+use Appwrite\Database\Database as DatabaseOld;
 use Appwrite\Event\Event;
+use Appwrite\Network\Validator\Email;
+use Appwrite\Network\Validator\IP;
+use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Stats\Stats;
+use Appwrite\Utopia\View;
 use Utopia\App;
-use Utopia\View;
+use Utopia\Logger\Logger;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
+use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Cache;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Document;
+use Utopia\Database\Database;
+use Utopia\Database\Validator\Structure;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Validator\Range;
+use Utopia\Validator\WhiteList;
 use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
+use Utopia\Database\Query;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -47,8 +59,17 @@ const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
-const APP_CACHE_BUSTER = 171;
-const APP_VERSION_STABLE = '0.11.0';
+const APP_LIMIT_COUNT = 5000;
+const APP_LIMIT_USERS = 10000;
+const APP_CACHE_BUSTER = 200;
+const APP_VERSION_STABLE = '0.12.0';
+const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
+const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
+const APP_DATABASE_ATTRIBUTE_IP = 'ip';
+const APP_DATABASE_ATTRIBUTE_URL = 'url';
+const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
+const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
+const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1073741824; // 2^32 bits / 4 bits per char
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -65,13 +86,23 @@ const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
-
+// Database Worker Types
+const DATABASE_TYPE_CREATE_ATTRIBUTE = 'createAttribute';
+const DATABASE_TYPE_CREATE_INDEX = 'createIndex';
+const DATABASE_TYPE_DELETE_ATTRIBUTE = 'deleteAttribute';
+const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
 // Deletion Types
 const DELETE_TYPE_DOCUMENT = 'document';
+const DELETE_TYPE_COLLECTIONS = 'collections';
+const DELETE_TYPE_PROJECTS = 'projects';
+const DELETE_TYPE_FUNCTIONS = 'functions';
+const DELETE_TYPE_USERS = 'users';
+const DELETE_TYPE_TEAMS= 'teams';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_CERTIFICATES = 'certificates';
+const DELETE_TYPE_USAGE = 'usage';
 const DELETE_TYPE_REALTIME = 'realtime';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
@@ -114,7 +145,7 @@ Config::load('locale-continents', __DIR__.'/config/locale/continents.php');
 Config::load('storage-logos', __DIR__.'/config/storage/logos.php'); 
 Config::load('storage-mimes', __DIR__.'/config/storage/mimes.php'); 
 Config::load('storage-inputs', __DIR__.'/config/storage/inputs.php'); 
-Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php'); 
+Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php');
 
 $user = App::getEnv('_APP_REDIS_USER','');
 $pass = App::getEnv('_APP_REDIS_PASS','');
@@ -123,10 +154,11 @@ if(!empty($user) || !empty($pass)) {
 } else {
     Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
 }
+
 /**
- * DB Filters
+ * Old DB Filters
  */
-Database::addFilter('json',
+DatabaseOld::addFilter('json',
     function($value) {
         if(!is_array($value)) {
             return $value;
@@ -138,12 +170,12 @@ Database::addFilter('json',
     }
 );
 
-Database::addFilter('encrypt',
+DatabaseOld::addFilter('encrypt',
     function($value) {
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
-        
+
         return json_encode([
             'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
             'method' => OpenSSL::CIPHER_AES_128_GCM,
@@ -160,9 +192,206 @@ Database::addFilter('encrypt',
     }
 );
 
+/**
+ * New DB Filters
+ */
+Database::addFilter('casting',
+    function($value) {
+        return json_encode(['value' => $value]);
+    },
+    function($value) {
+        if (is_null($value)) {
+            return null;
+        }
+        return json_decode($value, true)['value'];
+    }
+);
+
+Database::addFilter('enum',
+    function($value, Document $attribute) {
+        if ($attribute->isSet('elements')) {
+            $attribute->removeAttribute('elements');
+        }
+        return $value;
+    },
+    function($value, Document $attribute) {
+        $formatOptions = json_decode($attribute->getAttribute('formatOptions', '[]'), true);
+        if (isset($formatOptions['elements'])) {
+            $attribute->setAttribute('elements', $formatOptions['elements']);
+        }
+        return $value;
+    }
+);
+
+Database::addFilter('range',
+    function($value, Document $attribute) {
+        if ($attribute->isSet('min')) {
+            $attribute->removeAttribute('min');
+        }
+        if ($attribute->isSet('max')) {
+            $attribute->removeAttribute('max');
+        }
+        return $value;
+    },
+    function($value, Document $attribute) {
+        $formatOptions = json_decode($attribute->getAttribute('formatOptions', '[]'), true);
+        if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
+            $attribute
+                ->setAttribute('min', $formatOptions['min'])
+                ->setAttribute('max', $formatOptions['max'])
+            ;
+        }
+        return $value;
+    }
+);
+
+Database::addFilter('subQueryAttributes',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('attributes', [
+                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getAttributeLimit(), 0, []);
+    }
+);
+
+Database::addFilter('subQueryIndexes',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('indexes', [
+                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
+            ], 64, 0, []);
+    }
+);
+
+Database::addFilter('subQueryPlatforms',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('platforms', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []);
+    }
+);
+
+Database::addFilter('subQueryDomains',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('domains', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []);
+    }
+);
+
+Database::addFilter('subQueryKeys',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('keys', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []);
+    }
+);
+
+Database::addFilter('subQueryWebhooks',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('webhooks', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []);
+    }
+);
+
+Database::addFilter('encrypt',
+    function($value) {
+        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+        $tag = null;
+        return json_encode([
+            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+            'method' => OpenSSL::CIPHER_AES_128_GCM,
+            'iv' => \bin2hex($iv),
+            'tag' => \bin2hex($tag ?? ''),
+            'version' => '1',
+        ]);
+    },
+    function($value) {
+        if(is_null($value)) {
+            return null;
+        }
+        $value = json_decode($value, true);
+        $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
+
+        return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+    }
+);
+
+/**
+ * DB Formats
+ */
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_EMAIL, function() {
+    return new Email();
+}, Database::VAR_STRING);
+
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_ENUM, function($attribute) {
+    $elements = $attribute['formatOptions']['elements'];
+    return new WhiteList($elements, true);
+}, Database::VAR_STRING);
+
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_IP, function() {
+    return new IP();
+}, Database::VAR_STRING);
+
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_URL, function() {
+    return new URL();
+}, Database::VAR_STRING);
+
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_INT_RANGE, function($attribute) {
+    $min = $attribute['formatOptions']['min'] ?? -INF;
+    $max = $attribute['formatOptions']['max'] ?? INF;
+    return new Range($min, $max, Range::TYPE_INTEGER);
+}, Database::VAR_INTEGER);
+
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function($attribute) {
+    $min = $attribute['formatOptions']['min'] ?? -INF;
+    $max = $attribute['formatOptions']['max'] ?? INF;
+    return new Range($min, $max, Range::TYPE_FLOAT);
+}, Database::VAR_FLOAT);
+
 /*
  * Registry
  */
+$register->set('logger', function () { // Register error logger
+    $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
+    $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
+
+    if(empty($providerName) || empty($providerConfig)) {
+        return null;
+    }
+
+    if(!Logger::hasProvider($providerName)) {
+        throw new Exception("Logging provider not supported. Logging disabled.");
+    }
+
+    $classname = '\\Utopia\\Logger\\Adapter\\'.\ucfirst($providerName);
+    $adapter = new $classname($providerConfig);
+    return new Logger($adapter);
+});
 $register->set('dbPool', function () { // Register DB connection
     $dbHost = App::getEnv('_APP_DB_HOST', '');
     $dbPort = App::getEnv('_APP_DB_PORT', '');
@@ -180,7 +409,7 @@ $register->set('dbPool', function () { // Register DB connection
         ->withOptions([
             PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
         ])
-    , 16);
+    , 64);
 
     return $pool;
 });
@@ -200,7 +429,7 @@ $register->set('redisPool', function () {
         ->withPort($redisPort)
         ->withAuth($redisAuth)
         ->withDbIndex(0)
-    , 16);
+    , 64);
 
     return $pool;
 });
@@ -255,7 +484,30 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-10.mmdb');
+    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-12.mmdb');
+});
+$register->set('db', function () { // This is usually for our workers or CLI commands scope
+    $dbHost = App::getEnv('_APP_DB_HOST', '');
+    $dbUser = App::getEnv('_APP_DB_USER', '');
+    $dbPass = App::getEnv('_APP_DB_PASS', '');
+    $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
+
+    $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
+        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
+        PDO::ATTR_TIMEOUT => 3, // Seconds
+        PDO::ATTR_PERSISTENT => true,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    ));
+
+    return $pdo;
+});
+$register->set('cache', function () { // This is usually for our workers or CLI commands scope
+    $redis = new Redis();
+    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
+    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+
+    return $redis;
 });
 
 /*
@@ -346,10 +598,15 @@ Locale::setLanguageFromJSON('zh-tw', __DIR__.'/config/locale/translations/zh-tw.
 ]);
 
 // Runtime Execution
+App::setResource('logger', function($register) {
+    return $register->get('logger');
+}, ['register']);
 
-App::setResource('register', function() use ($register) {
-    return $register;
+App::setResource('loggerBreadcrumbs', function() {
+    return [];
 });
+
+App::setResource('register', fn() => $register);
 
 App::setResource('layout', function($locale) {
     $layout = new View(__DIR__.'/views/layouts/default.phtml');
@@ -358,73 +615,60 @@ App::setResource('layout', function($locale) {
     return $layout;
 }, ['locale']);
 
-App::setResource('locale', function() {
-    return new Locale(App::getEnv('_APP_LOCALE', 'en'));
-});
+App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
 
 // Queues
-App::setResource('events', function($register) {
-    return new Event('', '');
-}, ['register']);
-
-App::setResource('audits', function($register) {
-    return new Event(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME);
-}, ['register']);
-
+App::setResource('events', fn() => new Event('', ''));
+App::setResource('audits', fn() => new Event(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME));
+App::setResource('mails', fn() => new Event(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME));
+App::setResource('deletes', fn() => new Event(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME));
+App::setResource('database', fn() => new Event(Event::DATABASE_QUEUE_NAME, Event::DATABASE_CLASS_NAME));
 App::setResource('usage', function($register) {
-    return new Event(Event::USAGE_QUEUE_NAME, Event::USAGE_CLASS_NAME);
+    return new Stats($register->get('statsd'));
 }, ['register']);
 
-App::setResource('mails', function($register) {
-    return new Event(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME);
-}, ['register']);
-
-App::setResource('deletes', function($register) {
-    return new Event(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME);
-}, ['register']);
-
-// Test Mock
-App::setResource('clients', function($request, $console, $project) {
-    $console->setAttribute('platforms', [ // Allways allow current host
-        '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+App::setResource('clients', function ($request, $console, $project) {
+    $console->setAttribute('platforms', [ // Always allow current host
+        '$collection' => 'platforms',
         'name' => 'Current Host',
         'type' => 'web',
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
-    
+
     /**
      * Get All verified client URLs for both console and current projects
      * + Filter for duplicated entries
      */
-    $clientsConsole = \array_map(function ($node) {
-        return $node['hostname'];
-    }, \array_filter($console->getAttribute('platforms', []), function ($node) {
-        if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
-            return true;
-        }
+    $clientsConsole = \array_map(
+        fn ($node) => $node['hostname'],
+        \array_filter(
+            $console->getAttribute('platforms', []),
+            fn ($node) => (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname']))
+        )
+    );
 
-        return false;
-    }));
-
-    $clients = \array_unique(\array_merge($clientsConsole, \array_map(function ($node) {
-        return $node['hostname'];
-    }, \array_filter($project->getAttribute('platforms', []), function ($node) {
-        if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
-            return true;
-        }
-
-        return false;
-    }))));
+    $clients = \array_unique(
+        \array_merge(
+            $clientsConsole,
+            \array_map(
+                fn ($node) => $node['hostname'],
+                \array_filter(
+                    $project->getAttribute('platforms', []),
+                    fn ($node) => (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname']))
+                )
+            )
+        )
+    );
 
     return $clients;
 }, ['request', 'console', 'project']);
 
-App::setResource('user', function($mode, $project, $console, $request, $response, $projectDB, $consoleDB) {
-    /** @var Utopia\Swoole\Request $request */
+App::setResource('user', function($mode, $project, $console, $request, $response, $dbForProject, $dbForConsole) {
+    /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
-    /** @var Appwrite\Database\Document $project */
-    /** @var Appwrite\Database\Database $consoleDB */
-    /** @var Appwrite\Database\Database $projectDB */
+    /** @var Utopia\Database\Document $project */
+    /** @var Utopia\Database\Database $dbForProject */
+    /** @var Utopia\Database\Database $dbForConsole */
     /** @var string $mode */
 
     Authorization::setDefaultStatus(true);
@@ -449,36 +693,37 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
     }
 
-    Auth::$unique = $session['id'];
-    Auth::$secret = $session['secret'];
+    Auth::$unique = $session['id'] ?? '';
+    Auth::$secret = $session['secret'] ?? '';
 
     if (APP_MODE_ADMIN !== $mode) {
-        $user = $projectDB->getDocument(Auth::$unique);
-    } else {
-        $user = $consoleDB->getDocument(Auth::$unique);
-
-        $user
-            ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
-        ;
+        if ($project->isEmpty()) {
+            $user = new Document(['$id' => '', '$collection' => 'users']);
+        }
+        else {
+            $user = $dbForProject->getDocument('users', Auth::$unique);
+        }
+    }
+    else {
+        $user = $dbForConsole->getDocument('users', Auth::$unique);
     }
 
-    if (empty($user->getId()) // Check a document has been found in the DB
-        || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
+    if ($user->isEmpty() // Check a document has been found in the DB
         || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)) { // Validate user has valid login token
-        $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+        $user = new Document(['$id' => '', '$collection' => 'users']);
     }
 
     if (APP_MODE_ADMIN === $mode) {
-        if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
+        if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
-            $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+            $user = new Document(['$id' => '', '$collection' => 'users']);
         }
     }
 
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
-    if (!empty($authJWT)) { // JWT authentication
+    if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
         $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
         try {
@@ -491,55 +736,105 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         $jwtSessionId = $payload['sessionId'] ?? '';
 
         if($jwtUserId && $jwtSessionId) {
-            $user = $projectDB->getDocument($jwtUserId);
+            $user = $dbForProject->getDocument('users', $jwtUserId);
         }
 
-        if (empty($user->search('$id', $jwtSessionId, $user->getAttribute('sessions')))) { // Match JWT to active token
-            $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+        if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
+            $user = new Document(['$id' => '', '$collection' => 'users']);
         }
     }
 
     return $user;
-}, ['mode', 'project', 'console', 'request', 'response', 'projectDB', 'consoleDB']);
+}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForConsole']);
 
-App::setResource('project', function($consoleDB, $request) {
-    /** @var Utopia\Swoole\Request $request */
-    /** @var Appwrite\Database\Database $consoleDB */
+App::setResource('project', function($dbForConsole, $request, $console) {
+    /** @var Appwrite\Utopia\Request $request */
+    /** @var Utopia\Database\Database $dbForConsole */
+    /** @var Utopia\Database\Document $console */
 
-    Authorization::disable();
+    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
 
-    $project = $consoleDB->getDocument($request->getParam('project',
-        $request->getHeader('x-appwrite-project', '')));
+    if($projectId === 'console') {
+        return $console;
+    }
 
-    Authorization::reset();
+    $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
 
     return $project;
-}, ['consoleDB', 'request']);
+}, ['dbForConsole', 'request', 'console']);
 
-App::setResource('console', function($consoleDB) {
-    return $consoleDB->getDocument('console');
-}, ['consoleDB']);
+App::setResource('console', function() {
+    return new Document([
+        '$id' => 'console',
+        'name' => 'Appwrite',
+        '$collection' => 'projects',
+        'description' => 'Appwrite core engine',
+        'logo' => '',
+        'teamId' => -1,
+        'webhooks' => [],
+        'keys' => [],
+        'platforms' => [
+            [
+                '$collection' => 'platforms',
+                'name' => 'Production',
+                'type' => 'web',
+                'hostname' => 'appwrite.io',
+            ],
+            [
+                '$collection' => 'platforms',
+                'name' => 'Development',
+                'type' => 'web',
+                'hostname' => 'appwrite.test',
+            ],
+            [
+                '$collection' => 'platforms',
+                'name' => 'Localhost',
+                'type' => 'web',
+                'hostname' => 'localhost',
+            ], // Current host is added on app init
+        ],
+        'legalName' => '',
+        'legalCountry' => '',
+        'legalState' => '',
+        'legalCity' => '',
+        'legalAddress' => '',
+        'legalTaxId' => '',
+        'auths' => [
+            'limit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
+        ],
+        'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
+        'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
+    ]);
+}, []);
 
-App::setResource('consoleDB', function($db, $cache) {
-    $consoleDB = new Database();
-    $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-    $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
-    $consoleDB->setMocks(Config::getParam('collections', []));
+App::setResource('dbForProject', function($db, $cache, $project) {
+    $cache = new Cache(new RedisCache($cache));
 
-    return $consoleDB;
-}, ['db', 'cache']);
+    $database = new Database(new MariaDB($db), $cache);
+    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+    $database->setNamespace('_project_'.$project->getId());
 
-App::setResource('projectDB', function($db, $cache, $project) {
-    $projectDB = new Database();
-    $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-    $projectDB->setNamespace('app_'.$project->getId());
-    $projectDB->setMocks(Config::getParam('collections', []));
-
-    return $projectDB;
+    return $database;
 }, ['db', 'cache', 'project']);
 
+App::setResource('dbForConsole', function($db, $cache) {
+    $cache = new Cache(new RedisCache($cache));
+
+    $database = new Database(new MariaDB($db), $cache);
+    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+    $database->setNamespace('_project_console');
+
+    return $database;
+}, ['db', 'cache']);
+
 App::setResource('mode', function($request) {
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Request $request */
+
+    /**
+     * Defines the mode for the request:
+     * - 'default' => Requests for Client and Server Side
+     * - 'admin' => Request from the Console on non-console projects
+     */
     return $request->getParam('mode', $request->getHeader('x-appwrite-mode', APP_MODE_DEFAULT));
 }, ['request']);
 

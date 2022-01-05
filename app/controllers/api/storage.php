@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Validator\ArrayList;
@@ -10,9 +11,10 @@ use Utopia\Validator\HexColor;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
 use Appwrite\ClamAV\Network;
-use Appwrite\Database\Database;
-use Appwrite\Database\Document;
-use Appwrite\Database\Validator\UID;
+use Utopia\Database\Validator\Authorization;
+use Appwrite\Database\Validator\CustomId;
+use Utopia\Database\Document;
+use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileSize;
@@ -22,6 +24,8 @@ use Utopia\Image\Image;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\Query;
 
 App::post('/v1/storage/files')
     ->desc('Create File')
@@ -37,22 +41,42 @@ App::post('/v1/storage/files')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE)
+    ->param('fileId', '', new CustomId(), 'File ID. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('file', [], new File(), 'Binary file.', false)
-    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
+    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->inject('request')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForProject')
     ->inject('user')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($file, $read, $write, $request, $response, $projectDB, $user, $audits, $usage) {
-        /** @var Utopia\Swoole\Request $request */
+    ->action(function ($fileId, $file, $read, $write, $request, $response, $dbForProject, $user, $audits, $usage) {
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Event\Event $usage */
+        /** @var Appwrite\Stats\Stats $usage */
+
+        $read = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; // By default set read permissions for user
+        $write = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; 
+
+        // Users can only add their roles to files, API keys and Admin users can add any
+        $roles = Authorization::getRoles();
+
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach ($read as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                }
+            }
+            foreach ($write as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                }
+            }
+        }
 
         $file = $request->getFiles('file');
 
@@ -90,7 +114,7 @@ App::post('/v1/storage/files')
         // Save to storage
         $size = $device->getFileSize($file['tmp_name']);
         $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
-        
+
         if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
             throw new Exception('Failed moving file', 500);
         }
@@ -98,10 +122,10 @@ App::post('/v1/storage/files')
         $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
 
         if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
-            $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+            $antivirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
                 (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
 
-            if (!$antiVirus->fileScan($path)) {
+            if (!$antivirus->fileScan($path)) {
                 $device->delete($path);
                 throw new Exception('Invalid file', 403);
             }
@@ -113,6 +137,7 @@ App::post('/v1/storage/files')
         $data = $compressor->compress($data);
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+        $tag = null;
         $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
 
         if (!$device->write($path, $data, $mimeType)) {
@@ -120,46 +145,42 @@ App::post('/v1/storage/files')
         }
 
         $sizeActual = $device->getFileSize($path);
-        
-        $file = $projectDB->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_FILES,
-            '$permissions' => [
-                'read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], // By default set read permissions for user
-                'write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], // By default set write permissions for user
-            ],
+
+        $fileId = ($fileId == 'unique()') ? $dbForProject->getId() : $fileId;
+        $file = $dbForProject->createDocument('files', new Document([
+            '$id' => $fileId,
+            '$read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], // By default set read permissions for user
+            '$write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], // By default set write permissions for user
             'dateCreated' => \time(),
-            'folderId' => '',
-            'name' => $file['name'],
+            'bucketId' => '',
+            'name' => $file['name'] ?? '',
             'path' => $path,
             'signature' => $device->getFileHash($path),
             'mimeType' => $mimeType,
             'sizeOriginal' => $size,
             'sizeActual' => $sizeActual,
             'algorithm' => $compressor->getName(),
-            'token' => \bin2hex(\random_bytes(64)),
             'comment' => '',
-            'fileOpenSSLVersion' => '1',
-            'fileOpenSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
-            'fileOpenSSLTag' => \bin2hex($tag),
-            'fileOpenSSLIV' => \bin2hex($iv),
-        ]);
-
-        if (false === $file) {
-            throw new Exception('Failed saving file to DB', 500);
-        }
+            'openSSLVersion' => '1',
+            'openSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
+            'openSSLTag' => \bin2hex($tag ?? ''),
+            'openSSLIV' => \bin2hex($iv),
+            'search' => implode(' ', [$fileId, $file['name'] ?? '',]),
+        ]));
 
         $audits
             ->setParam('event', 'storage.files.create')
-            ->setParam('resource', 'storage/files/'.$file->getId())
+            ->setParam('resource', 'file/'.$file->getId())
         ;
 
         $usage
             ->setParam('storage', $sizeActual)
+            ->setParam('storage.files.create', 1)
+            ->setParam('bucketId', 'default')
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($file, Response::MODEL_FILE)
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($file, Response::MODEL_FILE);
         ;
     });
 
@@ -175,28 +196,41 @@ App::get('/v1/storage/files')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE_LIST)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of files to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('cursor', '', new UID(), 'ID of the file used as the starting point for the query, excluding the file itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var Appwrite\Stats\Stats $usage */
 
-        $results = $projectDB->getCollection([
-            'limit' => $limit,
-            'offset' => $offset,
-            'orderType' => $orderType,
-            'search' => $search,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_FILES,
-            ],
-        ]);
+        if (!empty($cursor)) {
+            $cursorFile = $dbForProject->getDocument('files', $cursor);
+
+            if ($cursorFile->isEmpty()) {
+                throw new Exception("File '{$cursor}' for the 'cursor' value not found.", 400);
+            }
+        }
+
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
+
+        $usage
+            ->setParam('storage.files.read', 1)
+            ->setParam('bucketId', 'default')
+        ;
 
         $response->dynamic(new Document([
-            'sum' => $projectDB->getSum(),
-            'files' => $results
+            'files' => $dbForProject->find('files', $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection),
+            'sum' => $dbForProject->count('files', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FILE_LIST);
     });
 
@@ -211,19 +245,24 @@ App::get('/v1/storage/files/:fileId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE)
-    ->param('fileId', '', new UID(), 'File unique ID.')
+    ->param('fileId', '', new UID(), 'File ID.')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($fileId, $response, $projectDB) {
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->action(function ($fileId, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var Appwrite\Stats\Stats $usage */
 
-        $file = $projectDB->getDocument($fileId);
+        $file = $dbForProject->getDocument('files', $fileId);
 
-        if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+        if (empty($file->getId())) {
             throw new Exception('File not found', 404);
         }
-
+        $usage
+            ->setParam('storage.files.read', 1)
+            ->setParam('bucketId', 'default')
+        ;
         $response->dynamic($file, Response::MODEL_FILE);
     });
 
@@ -238,7 +277,7 @@ App::get('/v1/storage/files/:fileId/preview')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE)
     ->label('sdk.methodType', 'location')
-    ->param('fileId', '', new UID(), 'File unique ID')
+    ->param('fileId', '', new UID(), 'File ID.')
     ->param('width', 0, new Range(0, 4000), 'Resize preview image width, Pass an integer between 0 to 4000.', true)
     ->param('height', 0, new Range(0, 4000), 'Resize preview image height, Pass an integer between 0 to 4000.', true)
     ->param('gravity', Image::GRAVITY_CENTER, new WhiteList(Image::getGravityTypes()), 'Image crop gravity. Can be one of ' . implode(",", Image::getGravityTypes()), true)
@@ -253,12 +292,14 @@ App::get('/v1/storage/files/:fileId/preview')
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->inject('projectDB')
-    ->action(function ($fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $projectDB) {
-        /** @var Utopia\Swoole\Request $request */
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->action(function ($fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForProject, $usage) {
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $project */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Document $project */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var Appwrite\Stats\Stats $stats */
 
         $storage = 'files';
 
@@ -281,16 +322,16 @@ App::get('/v1/storage/files/:fileId/preview')
         $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
         $key = \md5($fileId.$width.$height.$gravity.$quality.$borderWidth.$borderColor.$borderRadius.$opacity.$rotation.$background.$storage.$output);
 
-        $file = $projectDB->getDocument($fileId);
+        $file = $dbForProject->getDocument('files', $fileId);
 
-        if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+        if (empty($file->getId())) {
             throw new Exception('File not found', 404);
         }
 
         $path = $file->getAttribute('path');
         $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
         $algorithm = $file->getAttribute('algorithm');
-        $cipher = $file->getAttribute('fileOpenSSLCipher');
+        $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
 
         if (!\in_array($mime, $inputs)) {
@@ -328,11 +369,11 @@ App::get('/v1/storage/files/:fileId/preview')
         if (!empty($cipher)) { // Decrypt
             $source = OpenSSL::decrypt(
                 $source,
-                $file->getAttribute('fileOpenSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
+                $file->getAttribute('openSSLCipher'),
+                App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('openSSLVersion')),
                 0,
-                \hex2bin($file->getAttribute('fileOpenSSLIV')),
-                \hex2bin($file->getAttribute('fileOpenSSLTag'))
+                \hex2bin($file->getAttribute('openSSLIV')),
+                \hex2bin($file->getAttribute('openSSLTag'))
             );
         }
 
@@ -371,6 +412,11 @@ App::get('/v1/storage/files/:fileId/preview')
 
         $cache->save($key, $data);
 
+        $usage
+            ->setParam('storage.files.read', 1)
+            ->setParam('bucketId', 'default')
+        ;
+
         $response
             ->setContentType($outputs[$output])
             ->addHeader('Expires', $date)
@@ -392,16 +438,18 @@ App::get('/v1/storage/files/:fileId/download')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', '*/*')
     ->label('sdk.methodType', 'location')
-    ->param('fileId', '', new UID(), 'File unique ID.')
+    ->param('fileId', '', new UID(), 'File ID.')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($fileId, $response, $projectDB) {
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->action(function ($fileId, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var Appwrite\Stats\Stats $usage */
 
-        $file = $projectDB->getDocument($fileId);
+        $file = $dbForProject->getDocument('files', $fileId);
 
-        if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+        if (empty($file->getId())) {
             throw new Exception('File not found', 404);
         }
 
@@ -416,18 +464,23 @@ App::get('/v1/storage/files/:fileId/download')
 
         $source = $device->read($path);
 
-        if (!empty($file->getAttribute('fileOpenSSLCipher'))) { // Decrypt
+        if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
             $source = OpenSSL::decrypt(
                 $source,
-                $file->getAttribute('fileOpenSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
+                $file->getAttribute('openSSLCipher'),
+                App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('openSSLVersion')),
                 0,
-                \hex2bin($file->getAttribute('fileOpenSSLIV')),
-                \hex2bin($file->getAttribute('fileOpenSSLTag'))
+                \hex2bin($file->getAttribute('openSSLIV')),
+                \hex2bin($file->getAttribute('openSSLTag'))
             );
         }
 
         $source = $compressor->decompress($source);
+
+        $usage
+            ->setParam('storage.files.read', 1)
+            ->setParam('bucketId', 'default')
+        ;
 
         // Response
         $response
@@ -450,17 +503,19 @@ App::get('/v1/storage/files/:fileId/view')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', '*/*')
     ->label('sdk.methodType', 'location')
-    ->param('fileId', '', new UID(), 'File unique ID.')
+    ->param('fileId', '', new UID(), 'File ID.')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($fileId, $response, $projectDB) {
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->action(function ($fileId, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var Appwrite\Stats\Stats $usage */
 
-        $file  = $projectDB->getDocument($fileId);
+        $file  = $dbForProject->getDocument('files', $fileId);
         $mimes = Config::getParam('storage-mimes');
 
-        if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+        if (empty($file->getId())) {
             throw new Exception('File not found', 404);
         }
 
@@ -481,19 +536,24 @@ App::get('/v1/storage/files/:fileId/view')
 
         $source = $device->read($path);
 
-        if (!empty($file->getAttribute('fileOpenSSLCipher'))) { // Decrypt
+        if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
             $source = OpenSSL::decrypt(
                 $source,
-                $file->getAttribute('fileOpenSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
+                $file->getAttribute('openSSLCipher'),
+                App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('openSSLVersion')),
                 0,
-                \hex2bin($file->getAttribute('fileOpenSSLIV')),
-                \hex2bin($file->getAttribute('fileOpenSSLTag'))
+                \hex2bin($file->getAttribute('openSSLIV')),
+                \hex2bin($file->getAttribute('openSSLTag'))
             );
         }
 
         $output = $compressor->decompress($source);
         $fileName = $file->getAttribute('name', '');
+
+        $usage
+            ->setParam('storage.files.read', 1)
+            ->setParam('bucketId', 'default')
+        ;
 
         // Response
         $response
@@ -519,38 +579,59 @@ App::put('/v1/storage/files/:fileId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE)
-    ->param('fileId', '', new UID(), 'File unique ID.')
-    ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('fileId', '', new UID(), 'File ID.')
+    ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
+    ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForProject')
+    ->inject('user')
     ->inject('audits')
-    ->action(function ($fileId, $read, $write, $response, $projectDB, $audits) {
+    ->inject('usage')
+    ->action(function ($fileId, $read, $write, $response, $dbForProject, $user, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
 
-        $file = $projectDB->getDocument($fileId);
+        $read = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; // By default set read permissions for user
+        $write = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; 
 
-        if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+        // Users can only add their roles to files, API keys and Admin users can add any
+        $roles = Authorization::getRoles();
+
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach ($read as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                }
+            }
+            foreach ($write as $role) {
+                if (!Authorization::isRole($role)) {
+                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                }
+            }
+        }
+
+        $file = $dbForProject->getDocument('files', $fileId);
+
+        if (empty($file->getId())) {
             throw new Exception('File not found', 404);
         }
 
-        $file = $projectDB->updateDocument(\array_merge($file->getArrayCopy(), [
-            '$permissions' => [
-                'read' => $read,
-                'write' => $write,
-            ],
-            'folderId' => '',
-        ]));
-
-        if (false === $file) {
-            throw new Exception('Failed saving file to DB', 500);
-        }
+        $file = $dbForProject->updateDocument('files', $fileId, new Document(\array_merge($file->getArrayCopy(), [
+            '$read' => $read,
+            '$write' => $write,
+            'bucketId' => '',
+        ])));
 
         $audits
             ->setParam('event', 'storage.files.update')
-            ->setParam('resource', 'storage/files/'.$file->getId())
+            ->setParam('resource', 'file/'.$file->getId())
+        ;
+
+        $usage
+            ->setParam('storage.files.update', 1)
+            ->setParam('bucketId', 'default')
         ;
 
         $response->dynamic($file, Response::MODEL_FILE);
@@ -567,40 +648,42 @@ App::delete('/v1/storage/files/:fileId')
     ->label('sdk.description', '/docs/references/storage/delete-file.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('fileId', '', new UID(), 'File unique ID.')
+    ->param('fileId', '', new UID(), 'File ID.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForProject')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($fileId, $response, $projectDB, $events, $audits, $usage) {
+    ->action(function ($fileId, $response, $dbForProject, $events, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Event\Event $usage */
+        /** @var Appwrite\Stats\Stats $usage */
         
-        $file = $projectDB->getDocument($fileId);
+        $file = $dbForProject->getDocument('files', $fileId);
 
-        if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+        if (empty($file->getId())) {
             throw new Exception('File not found', 404);
         }
 
         $device = Storage::getDevice('files');
 
         if ($device->delete($file->getAttribute('path', ''))) {
-            if (!$projectDB->deleteDocument($fileId)) {
+            if (!$dbForProject->deleteDocument('files', $fileId)) {
                 throw new Exception('Failed to remove file from DB', 500);
             }
         }
         
         $audits
             ->setParam('event', 'storage.files.delete')
-            ->setParam('resource', 'storage/files/'.$file->getId())
+            ->setParam('resource', 'file/'.$file->getId())
         ;
 
         $usage
             ->setParam('storage', $file->getAttribute('size', 0) * -1)
+            ->setParam('storage.files.delete', 1)
+            ->setParam('bucketId', 'default')
         ;
 
         $events
@@ -610,53 +693,193 @@ App::delete('/v1/storage/files/:fileId')
         $response->noContent();
     });
 
-// App::get('/v1/storage/files/:fileId/scan')
-//     ->desc('Scan Storage')
-//     ->groups(['api', 'storage'])
-//     ->label('scope', 'root')
-//     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-//     ->label('sdk.namespace', 'storage')
-//     ->label('sdk.method', 'getFileScan')
-//     ->label('sdk.hide', true)
-//     ->param('fileId', '', new UID(), 'File unique ID.')
-//     ->param('storage', 'files', new WhiteList(['files']);})
-//     ->action(
-//         function ($fileId, $storage) use ($response, $request, $projectDB) {
-//             $file = $projectDB->getDocument($fileId);
+App::get('/v1/storage/usage')
+    ->desc('Get usage stats for storage')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_STORAGE)
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function ($range, $response, $dbForProject) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForProject */
 
-//             if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
-//                 throw new Exception('File not found', 404);
-//             }
+        $usage = [];
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $periods = [
+                '24h' => [
+                    'period' => '30m',
+                    'limit' => 48,
+                ],
+                '7d' => [
+                    'period' => '1d',
+                    'limit' => 7,
+                ],
+                '30d' => [
+                    'period' => '1d',
+                    'limit' => 30,
+                ],
+                '90d' => [
+                    'period' => '1d',
+                    'limit' => 90,
+                ],
+            ];
 
-//             $path = $file->getAttribute('path', '');
+            $metrics = [
+                'storage.total',
+                'storage.files.count'
+            ];
 
-//             if (!file_exists($path)) {
-//                 throw new Exception('File not found in '.$path, 404);
-//             }
+            $stats = [];
 
-//             $compressor = new GZIP();
-//             $device = Storage::getDevice($storage);
+            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $limit = $periods[$range]['limit'];
+                    $period = $periods[$range]['period'];
 
-//             $source = $device->read($path);
+                    $requestDocs = $dbForProject->find('stats', [
+                        new Query('period', Query::TYPE_EQUAL, [$period]),
+                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
 
-//             if (!empty($file->getAttribute('fileOpenSSLCipher'))) { // Decrypt
-//                 $source = OpenSSL::decrypt(
-//                     $source,
-//                     $file->getAttribute('fileOpenSSLCipher'),
-//                     App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
-//                     0,
-//                     hex2bin($file->getAttribute('fileOpenSSLIV')),
-//                     hex2bin($file->getAttribute('fileOpenSSLTag'))
-//                 );
-//             }
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
 
-//             $source = $compressor->decompress($source);
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                            '30m' => 1800,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                        ];
+                        $backfill--;
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
+                }
+            });
 
-//             $antiVirus = new Network('clamav', 3310);
+            $usage = new Document([
+                'range' => $range,
+                'storage' => $stats['storage.total'],
+                'files' => $stats['storage.files.count']
+            ]);
+        }
 
-//             //var_dump($antiVirus->ping());
-//             //var_dump($antiVirus->version());
-//             //var_dump($antiVirus->fileScan('/storage/uploads/app-1/5/9/f/e/59fecaed49645.pdf'));
+        $response->dynamic($usage, Response::MODEL_USAGE_STORAGE);
+    });
 
-//         }
-//     );
+App::get('/v1/storage/:bucketId/usage')
+    ->desc('Get usage stats for a storage bucket')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'getBucketUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_BUCKETS)
+    ->param('bucketId', '', new UID(), 'Bucket ID.')
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function ($bucketId, $range, $response, $dbForProject) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForProject */
+
+        // TODO: Check if the storage bucket exists else throw 404 
+        
+        $usage = [];
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $periods = [
+                '24h' => [
+                    'period' => '30m',
+                    'limit' => 48,
+                ],
+                '7d' => [
+                    'period' => '1d',
+                    'limit' => 7,
+                ],
+                '30d' => [
+                    'period' => '1d',
+                    'limit' => 30,
+                ],
+                '90d' => [
+                    'period' => '1d',
+                    'limit' => 90,
+                ],
+            ];
+
+            $metrics = [
+                "storage.buckets.$bucketId.files.count",
+                "storage.buckets.$bucketId.files.create",
+                "storage.buckets.$bucketId.files.read",
+                "storage.buckets.$bucketId.files.update",
+                "storage.buckets.$bucketId.files.delete"
+            ];
+
+            $stats = [];
+
+            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $limit = $periods[$range]['limit'];
+                    $period = $periods[$range]['period'];
+
+                    $requestDocs = $dbForProject->find('stats', [
+                        new Query('period', Query::TYPE_EQUAL, [$period]),
+                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
+
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                            '30m' => 1800,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                        ];
+                        $backfill--;
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
+                }
+            });
+
+            $usage = new Document([
+                'range' => $range,
+                'filesCount' => $stats["storage.buckets.$bucketId.files.count"],
+                'filesCreate' => $stats["storage.buckets.$bucketId.files.create"],
+                'filesRead' => $stats["storage.buckets.$bucketId.files.read"],
+                'filesUpdate' => $stats["storage.buckets.$bucketId.files.update"],
+                'filesDelete' => $stats["storage.buckets.$bucketId.files.delete"]
+            ]);
+        }
+
+        $response->dynamic($usage, Response::MODEL_USAGE_BUCKETS);
+    });

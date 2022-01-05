@@ -1,10 +1,6 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Adapter\Redis as RedisAdapter;
-use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
-use Appwrite\Database\Database;
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
@@ -18,8 +14,16 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
-use Utopia\Swoole\Request;
+use Utopia\Logger\Log;
+use Utopia\Database\Database;
+use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Cache;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Document;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Registry\Registry;
+use Appwrite\Utopia\Request;
 use Utopia\WebSocket\Server;
 use Utopia\WebSocket\Adapter;
 
@@ -41,75 +45,104 @@ $stats->column('messages', Table::TYPE_INT);
 $stats->create();
 
 $containerId = uniqid();
-$documentId = null;
+$statsDocument = null;
 
 $adapter = new Adapter\Swoole(port: App::getEnv('PORT', 80));
 $adapter->setPackageMaxLength(64000); // Default maximum Package Size (64kb)
 
 $server = new Server($adapter);
 
-$server->onStart(function () use ($stats, $register, $containerId, &$documentId) {
+$logError = function(Throwable $error, string $action) use ($register) {
+    $logger = $register->get('logger');
+
+    if($logger) {
+        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+
+        $log = new Log();
+        $log->setNamespace("realtime");
+        $log->setServer(\gethostname());
+        $log->setVersion($version);
+        $log->setType(Log::TYPE_ERROR);
+        $log->setMessage($error->getMessage());
+
+        $log->addTag('code', $error->getCode());
+        $log->addTag('verboseType', get_class($error));
+
+        $log->addExtra('file', $error->getFile());
+        $log->addExtra('line', $error->getLine());
+        $log->addExtra('trace', $error->getTraceAsString());
+
+        $log->setAction($action);
+
+        $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+        $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+        $responseCode = $logger->addLog($log);
+        Console::info('Realtime log pushed with status code: '.$responseCode);
+    }
+
+    Console::error('[Error] Type: ' . get_class($error));
+    Console::error('[Error] Message: ' . $error->getMessage());
+    Console::error('[Error] File: ' . $error->getFile());
+    Console::error('[Error] Line: ' . $error->getLine());
+};
+
+$server->error($logError);
+
+function getDatabase(Registry &$register, string $namespace)
+{
+    $db = $register->get('dbPool')->get();
+    $redis = $register->get('redisPool')->get();
+
+    $cache = new Cache(new RedisCache($redis));
+    $database = new Database(new MariaDB($db), $cache);
+    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+    $database->setNamespace($namespace);
+
+    return [
+        $database,
+        function () use ($register, $db, $redis) {
+            $register->get('dbPool')->put($db);
+            $register->get('redisPool')->put($redis);
+        }
+    ];
+};
+
+$server->onStart(function () use ($stats, $register, $containerId, &$statsDocument, $logError) {
+    sleep(5); // wait for the initial database schema to be ready
     Console::success('Server started succefully');
-
-    $getConsoleDb = function () use ($register) {
-        $db = $register->get('dbPool')->get();
-        $cache = $register->get('redisPool')->get();
-
-        $consoleDb = new Database();
-        $consoleDb->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-        $consoleDb->setNamespace('app_console');
-        $consoleDb->setMocks(Config::getParam('collections', []));
-
-        return [
-            $consoleDb,
-            function () use ($register, $db, $cache) {
-                $register->get('dbPool')->put($db);
-                $register->get('redisPool')->put($cache);
-            }
-        ];
-    };
 
     /**
      * Create document for this worker to share stats across Containers.
      */
-    go(function () use ($getConsoleDb, $containerId, &$documentId) {
+    go(function () use ($register, $containerId, &$statsDocument, $logError) {
         try {
-            [$consoleDb, $returnConsoleDb] = call_user_func($getConsoleDb);
-            $document = [
-                '$collection' => Database::SYSTEM_COLLECTION_CONNECTIONS,
-                '$permissions' => [
-                    'read' => ['*'],
-                    'write' => ['*'],
-                ],
+            [$database, $returnDatabase] = getDatabase($register, '_project_console');
+            $document = new Document([
+                '$id' => $database->getId(),
+                '$collection' => 'realtime',
+                '$read' => [],
+                '$write' => [],
                 'container' => $containerId,
                 'timestamp' => time(),
                 'value' => '{}'
-            ];
-            Authorization::disable();
-            $document = $consoleDb->createDocument($document);
-            Authorization::enable();
-            $documentId = $document->getId();
+            ]);
+            $statsDocument = Authorization::skip(fn() => $database->createDocument('realtime', $document));
         } catch (\Throwable $th) {
-            Console::error('[Error] Type: ' . get_class($th));
-            Console::error('[Error] Message: ' . $th->getMessage());
-            Console::error('[Error] File: ' . $th->getFile());
-            Console::error('[Error] Line: ' . $th->getLine());
+            call_user_func($logError, $th, "createWorkerDocument");
         } finally {
-            call_user_func($returnConsoleDb);
+            call_user_func($returnDatabase);
         }
     });
 
     /**
      * Save current connections to the Database every 5 seconds.
      */
-    Timer::tick(5000, function () use ($stats, $getConsoleDb, $containerId, &$documentId) {
+    Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
+        /** @var Document $statsDocument */
         foreach ($stats as $projectId => $value) {
-            if (empty($value['connections']) && empty($value['messages'])) {
-                continue;
-            }
-
-            $connections = $stats->get($projectId, 'connections');
-            $messages = $stats->get($projectId, 'messages');
+            $connections = $stats->get($projectId, 'connections') ?? 0;
+            $messages = $stats->get($projectId, 'messages' ?? 0);
 
             $usage = new Event('v1-usage', 'UsageV1');
             $usage
@@ -130,65 +163,47 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
         }
         $payload = [];
         foreach ($stats as $projectId => $value) {
-            if (!empty($value['connectionsTotal'])) {
-                $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
-            }
+            $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
         }
-        if (empty($payload)) {
+        if (empty($payload) || empty($statsDocument)) {
             return;
         }
 
         try {
-            [$consoleDb, $returnConsoleDb] = call_user_func($getConsoleDb);
+            [$database, $returnDatabase] = getDatabase($register, '_project_console');
 
-            $consoleDb->updateDocument([
-                '$id' => $documentId,
-                '$collection' => Database::SYSTEM_COLLECTION_CONNECTIONS,
-                '$permissions' => [
-                    'read' => ['*'],
-                    'write' => ['*'],
-                ],
-                'container' => $containerId,
-                'timestamp' => time(),
-                'value' => json_encode($payload)
-            ]);
+            $statsDocument
+                ->setAttribute('timestamp', time())
+                ->setAttribute('value', json_encode($payload));
+
+            Authorization::skip(fn() => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
         } catch (\Throwable $th) {
-            Console::error('[Error] Type: ' . get_class($th));
-            Console::error('[Error] Message: ' . $th->getMessage());
-            Console::error('[Error] File: ' . $th->getFile());
-            Console::error('[Error] Line: ' . $th->getLine());
+            call_user_func($logError, $th, "updateWorkerDocument");
         } finally {
-            call_user_func($returnConsoleDb);
+            call_user_func($returnDatabase);
         }
     });
 });
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $logError) {
     Console::success('Worker ' . $workerId . ' started succefully');
 
     $attempts = 0;
     $start = time();
 
-    Timer::tick(5000, function () use ($server, $register, $realtime, $stats) {
+    Timer::tick(5000, function () use ($server, $register, $realtime, $stats, $logError) {
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
         if ($realtime->hasSubscriber('console', 'role:member', 'project')) {
-            $db = $register->get('dbPool')->get();
-            $cache = $register->get('redisPool')->get();
 
-            $consoleDb = new Database();
-            $consoleDb->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-            $consoleDb->setNamespace('app_console');
-            $consoleDb->setMocks(Config::getParam('collections', []));
+            [$database, $returnDatabase] = getDatabase($register, '_project_console');
 
             $payload = [];
-            $list = $consoleDb->getCollection([
-                'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_CONNECTIONS,
-                    'timestamp>' . (time() - 15)
-                ],
-            ]);
+
+            $list = Authorization::skip(fn() => $database->find('realtime', [
+                    new Query('timestamp', Query::TYPE_GREATER, [(time() - 15)])
+                ]));
 
             /**
              * Aggregate stats across containers.
@@ -227,8 +242,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 ]));
             }
 
-            $register->get('dbPool')->put($db);
-            $register->get('redisPool')->put($cache);
+            call_user_func($returnDatabase);
         }
         /**
          * Sending test message for SDK E2E tests every 5 seconds.
@@ -287,22 +301,15 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         return;
                     }
 
-                    $db = $register->get('dbPool')->get();
-                    $cache = $register->get('redisPool')->get();
+                    [$database, $returnDatabase] = getDatabase($register, '_project_' . $projectId);
 
-                    $projectDB = new Database();
-                    $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-                    $projectDB->setNamespace('app_' . $projectId);
-                    $projectDB->setMocks(Config::getParam('collections', []));
-
-                    $user = $projectDB->getDocument($userId);
+                    $user = $database->getDocument('users', $userId);
 
                     $roles = Auth::getRoles($user);
 
                     $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
 
-                    $register->get('dbPool')->put($db);
-                    $register->get('redisPool')->put($cache);
+                    call_user_func($returnDatabase);
                 }
 
                 $receivers = $realtime->getSubscribers($event);
@@ -326,6 +333,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 }
             });
         } catch (\Throwable $th) {
+            call_user_func($logError, $th, "pubSubConnection");
+
             Console::error('Pub/sub error: ' . $th->getMessage());
             $register->get('redisPool')->put($redis);
             $attempts++;
@@ -338,7 +347,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     Console::error('Failed to restart pub/sub...');
 });
 
-$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime) {
+$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $logError) {
     $app = new App('UTC');
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
@@ -350,31 +359,25 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
     Console::info("Connection open (user: {$connection})");
 
-    App::setResource('db', function () use (&$db) {
-        return $db;
-    });
-
-    App::setResource('cache', function () use (&$redis) {
-        return $redis;
-    });
-
-    App::setResource('request', function () use ($request) {
-        return $request;
-    });
-
-    App::setResource('response', function () use ($response) {
-        return $response;
-    });
+    App::setResource('db', fn() => $db);
+    App::setResource('cache', fn() => $redis);
+    App::setResource('request', fn() => $request);
+    App::setResource('response', fn() => $response);
 
     try {
-        /** @var \Appwrite\Database\Document $user */
+        /** @var \Utopia\Database\Document $user */
         $user = $app->getResource('user');
 
-        /** @var \Appwrite\Database\Document $project */
+        /** @var \Utopia\Database\Document $project */
         $project = $app->getResource('project');
 
-        /** @var \Appwrite\Database\Document $console */
+        /** @var \Utopia\Database\Document $console */
         $console = $app->getResource('console');
+
+        $cache = new Cache(new RedisCache($redis));
+        $database = new Database(new MariaDB($db), $cache);
+        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $database->setNamespace('_project_' . $project->getId());
 
         /*
          *  Project Check
@@ -388,15 +391,14 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          *
          * Abuse limits are connecting 128 times per minute and ip address.
          */
-        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, $db);
+        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, $database);
         $timeLimit
-            ->setNamespace('app_' . $project->getId())
             ->setParam('{ip}', $request->getIP())
             ->setParam('{url}', $request->getURI());
 
         $abuse = new Abuse($timeLimit);
 
-        if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+        if (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check()) {
             throw new Exception('Too many requests', 1013);
         }
 
@@ -442,6 +444,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $stats->incr($project->getId(), 'connections');
         $stats->incr($project->getId(), 'connectionsTotal');
     } catch (\Throwable $th) {
+        call_user_func($logError, $th, "initServer");
+
         $response = [
             'type' => 'error',
             'data' => [
@@ -475,21 +479,21 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
     try {
         $response = new Response(new SwooleResponse());
         $db = $register->get('dbPool')->get();
-        $cache = $register->get('redisPool')->get();
+        $redis = $register->get('redisPool')->get();
 
-        $projectDB = new Database();
-        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-        $projectDB->setNamespace('app_' . $realtime->connections[$connection]['projectId']);
-        $projectDB->setMocks(Config::getParam('collections', []));
+        $cache = new Cache(new RedisCache($redis));
+        $database = new Database(new MariaDB($db), $cache);
+        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $database->setNamespace('_project_' . $realtime->connections[$connection]['projectId']);
 
         /*
          * Abuse Check
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $timeLimit = new TimeLimit('url:{url},connection:{connection}', 32, 60, $db);
+        $timeLimit = new TimeLimit('url:{url},connection:{connection}', 32, 60, $database);
+
         $timeLimit
-            ->setNamespace('app_' . $realtime->connections[$connection]['projectId'])
             ->setParam('{connection}', $connection)
             ->setParam('{container}', $containerId);
 
@@ -515,14 +519,13 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 }
 
                 $session = Auth::decodeSession($message['data']['session']);
-                Auth::$unique = $session['id'];
-                Auth::$secret = $session['secret'];
+                Auth::$unique = $session['id'] ?? '';
+                Auth::$secret = $session['secret'] ?? '';
 
-                $user = $projectDB->getDocument(Auth::$unique);
+                $user = $database->getDocument('users', Auth::$unique);
 
                 if (
                     empty($user->getId()) // Check a document has been found in the DB
-                    || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
                     || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret) // Validate user has valid login token
                 ) {
                     // cookie not valid
@@ -565,7 +568,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         }
     } finally {
         $register->get('dbPool')->put($db);
-        $register->get('redisPool')->put($cache);
+        $register->get('redisPool')->put($redis);
     }
 });
 

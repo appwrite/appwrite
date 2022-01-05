@@ -23,6 +23,7 @@ class WebhooksTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'teamId' => 'unique()',
             'name' => 'Project Test',
         ]);
 
@@ -34,6 +35,7 @@ class WebhooksTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'projectId' => 'unique()',
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
         ]);
@@ -45,7 +47,6 @@ class WebhooksTest extends Scope
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
-        $this->assertArrayHasKey('tasks', $response['body']);
 
         $projectId = $response['body']['$id'];
 
@@ -56,6 +57,7 @@ class WebhooksTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'projectId' => 'unique()',
             'name' => '',
             'teamId' => $team['body']['$id'],
         ]);
@@ -130,6 +132,7 @@ class WebhooksTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -141,7 +144,7 @@ class WebhooksTest extends Scope
 
         $this->assertNotEmpty($webhook['data']);
         $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertIsNumeric($webhook['data']['status']);
+        $this->assertIsBool($webhook['data']['status']);
         $this->assertIsNumeric($webhook['data']['registration']);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['name'], $name);

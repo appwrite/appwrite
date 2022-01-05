@@ -20,7 +20,7 @@ class Email extends Validator
      *
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return 'Value must be a valid email address';
     }
@@ -33,7 +33,7 @@ class Email extends Validator
      * @param  mixed $value
      * @return bool
      */
-    public function isValid($value)
+    public function isValid($value): bool
     {
         if (!\filter_var($value, FILTER_VALIDATE_EMAIL)) {
             return false;

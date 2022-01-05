@@ -38,7 +38,7 @@
     class Appwrite {
         constructor() {
             this.config = {
-                endpoint: 'https://appwrite.io/v1',
+                endpoint: 'https://HOSTNAME/v1',
                 endpointRealtime: '',
                 project: '',
                 key: '',
@@ -47,8 +47,8 @@
                 mode: '',
             };
             this.headers = {
-                'x-sdk-version': 'appwrite:web:4.0.1',
-                'X-Appwrite-Response-Format': '0.10.0',
+                'x-sdk-version': 'appwrite:web:4.0.4',
+                'X-Appwrite-Response-Format': '0.12.0',
             };
             this.realtime = {
                 socket: undefined,
@@ -199,18 +199,22 @@
                  *
                  * Use this endpoint to allow a new user to register a new account in your
                  * project. After the user registration completes successfully, you can use
-                 * the [/account/verification](/docs/client/account#accountCreateVerification)
+                 * the [/account/verfication](/docs/client/account#accountCreateVerification)
                  * route to start verifying the user email address. To allow the new user to
                  * login to their new account, you need to create a new [account
                  * session](/docs/client/account#accountCreateSession).
                  *
+                 * @param {string} userId
                  * @param {string} email
                  * @param {string} password
                  * @param {string} name
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                create: (email, password, name) => __awaiter(this, void 0, void 0, function* () {
+                create: (userId, email, password, name) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
                     if (typeof email === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "email"');
                     }
@@ -219,6 +223,9 @@
                     }
                     let path = '/account';
                     let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
                     if (typeof email !== 'undefined') {
                         payload['email'] = email;
                     }
@@ -257,11 +264,13 @@
                  * Update Account Email
                  *
                  * Update currently logged in user account email address. After changing user
-                 * address, user confirmation status is being reset and a new confirmation
-                 * mail is sent. For security measures, user password is required to complete
-                 * this request.
+                 * address, the user confirmation status will get reset. A new confirmation
+                 * email is not sent automatically however you can use the send confirmation
+                 * email endpoint again to send the confirmation email. For security measures,
+                 * user password is required to complete this request.
                  * This endpoint can also be used to convert an anonymous account to a normal
                  * one, by passing an email address and a new password.
+                 *
                  *
                  * @param {string} email
                  * @param {string} password
@@ -314,12 +323,20 @@
                  * Get currently logged in user list of latest security activity logs. Each
                  * log returns user IP address, location and date and time of log.
                  *
+                 * @param {number} limit
+                 * @param {number} offset
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getLogs: () => __awaiter(this, void 0, void 0, function* () {
+                getLogs: (limit, offset) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/account/logs';
                     let payload = {};
+                    if (typeof limit !== 'undefined') {
+                        payload['limit'] = limit;
+                    }
+                    if (typeof offset !== 'undefined') {
+                        payload['offset'] = offset;
+                    }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
                         'content-type': 'application/json',
@@ -606,17 +623,24 @@
                  * the URL parameter empty, so that the login completion will be handled by
                  * your Appwrite instance by default.
                  *
+                 * @param {string} userId
                  * @param {string} email
                  * @param {string} url
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createMagicURLSession: (email, url) => __awaiter(this, void 0, void 0, function* () {
+                createMagicURLSession: (userId, email, url) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
                     if (typeof email === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "email"');
                     }
                     let path = '/account/sessions/magic-url';
                     let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
                     if (typeof email !== 'undefined') {
                         payload['email'] = email;
                     }
@@ -1103,11 +1127,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listCollections: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                listCollections: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/database/collections';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -1118,6 +1144,12 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -1132,16 +1164,23 @@
                  *
                  * Create a new Collection.
                  *
+                 * @param {string} collectionId
                  * @param {string} name
+                 * @param {string} permission
                  * @param {string[]} read
                  * @param {string[]} write
-                 * @param {string[]} rules
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createCollection: (name, read, write, rules) => __awaiter(this, void 0, void 0, function* () {
+                createCollection: (collectionId, name, permission, read, write) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
                     if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
+                    }
+                    if (typeof permission === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "permission"');
                     }
                     if (typeof read === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "read"');
@@ -1149,22 +1188,22 @@
                     if (typeof write === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "write"');
                     }
-                    if (typeof rules === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "rules"');
-                    }
                     let path = '/database/collections';
                     let payload = {};
+                    if (typeof collectionId !== 'undefined') {
+                        payload['collectionId'] = collectionId;
+                    }
                     if (typeof name !== 'undefined') {
                         payload['name'] = name;
+                    }
+                    if (typeof permission !== 'undefined') {
+                        payload['permission'] = permission;
                     }
                     if (typeof read !== 'undefined') {
                         payload['read'] = read;
                     }
                     if (typeof write !== 'undefined') {
                         payload['write'] = write;
-                    }
-                    if (typeof rules !== 'undefined') {
-                        payload['rules'] = rules;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
@@ -1199,23 +1238,30 @@
                  *
                  * @param {string} collectionId
                  * @param {string} name
+                 * @param {string} permission
                  * @param {string[]} read
                  * @param {string[]} write
-                 * @param {string[]} rules
+                 * @param {boolean} enabled
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateCollection: (collectionId, name, read, write, rules) => __awaiter(this, void 0, void 0, function* () {
+                updateCollection: (collectionId, name, permission, read, write, enabled) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
                     if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
+                    if (typeof permission === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "permission"');
+                    }
                     let path = '/database/collections/{collectionId}'.replace('{collectionId}', collectionId);
                     let payload = {};
                     if (typeof name !== 'undefined') {
                         payload['name'] = name;
+                    }
+                    if (typeof permission !== 'undefined') {
+                        payload['permission'] = permission;
                     }
                     if (typeof read !== 'undefined') {
                         payload['read'] = read;
@@ -1223,8 +1269,8 @@
                     if (typeof write !== 'undefined') {
                         payload['write'] = write;
                     }
-                    if (typeof rules !== 'undefined') {
-                        payload['rules'] = rules;
+                    if (typeof enabled !== 'undefined') {
+                        payload['enabled'] = enabled;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('put', uri, {
@@ -1253,6 +1299,445 @@
                     }, payload);
                 }),
                 /**
+                 * List Attributes
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                listAttributes: (collectionId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Boolean Attribute
+                 *
+                 * Create a boolean attribute.
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} key
+                 * @param {boolean} required
+                 * @param {boolean} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createBooleanAttribute: (collectionId, key, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/boolean'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['default'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Email Attribute
+                 *
+                 * Create an email attribute.
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} key
+                 * @param {boolean} required
+                 * @param {string} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createEmailAttribute: (collectionId, key, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/email'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['default'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Enum Attribute
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} key
+                 * @param {string[]} elements
+                 * @param {boolean} required
+                 * @param {string} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createEnumAttribute: (collectionId, key, elements, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
+                    }
+                    if (typeof elements === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "elements"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/enum'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
+                    }
+                    if (typeof elements !== 'undefined') {
+                        payload['elements'] = elements;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['default'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Float Attribute
+                 *
+                 * Create a float attribute. Optionally, minimum and maximum values can be
+                 * provided.
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} key
+                 * @param {boolean} required
+                 * @param {string} min
+                 * @param {string} max
+                 * @param {string} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createFloatAttribute: (collectionId, key, required, min, max, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/float'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof min !== 'undefined') {
+                        payload['min'] = min;
+                    }
+                    if (typeof max !== 'undefined') {
+                        payload['max'] = max;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['default'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Integer Attribute
+                 *
+                 * Create an integer attribute. Optionally, minimum and maximum values can be
+                 * provided.
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} key
+                 * @param {boolean} required
+                 * @param {number} min
+                 * @param {number} max
+                 * @param {number} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createIntegerAttribute: (collectionId, key, required, min, max, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/integer'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof min !== 'undefined') {
+                        payload['min'] = min;
+                    }
+                    if (typeof max !== 'undefined') {
+                        payload['max'] = max;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['default'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create IP Address Attribute
+                 *
+                 * Create IP address attribute.
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} key
+                 * @param {boolean} required
+                 * @param {string} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createIpAttribute: (collectionId, key, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/ip'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['default'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create String Attribute
+                 *
+                 * Create a new string attribute.
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} key
+                 * @param {number} size
+                 * @param {boolean} required
+                 * @param {string} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createStringAttribute: (collectionId, key, size, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
+                    }
+                    if (typeof size === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "size"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/string'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
+                    }
+                    if (typeof size !== 'undefined') {
+                        payload['size'] = size;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['default'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create URL Attribute
+                 *
+                 * Create a URL attribute.
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} key
+                 * @param {boolean} required
+                 * @param {string} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createUrlAttribute: (collectionId, key, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/url'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['default'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Get Attribute
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} key
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getAttribute: (collectionId, key) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/{key}'.replace('{collectionId}', collectionId).replace('{key}', key);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Delete Attribute
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} key
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                deleteAttribute: (collectionId, key) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/{key}'.replace('{collectionId}', collectionId).replace('{key}', key);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('delete', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * List Documents
                  *
                  * Get a list of all the user documents. You can use the query params to
@@ -1261,24 +1746,24 @@
                  * modes](/docs/admin).
                  *
                  * @param {string} collectionId
-                 * @param {string[]} filters
+                 * @param {string[]} queries
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} orderField
-                 * @param {string} orderType
-                 * @param {string} orderCast
-                 * @param {string} search
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
+                 * @param {string[]} orderAttributes
+                 * @param {string[]} orderTypes
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listDocuments: (collectionId, filters, limit, offset, orderField, orderType, orderCast, search) => __awaiter(this, void 0, void 0, function* () {
+                listDocuments: (collectionId, queries, limit, offset, cursor, cursorDirection, orderAttributes, orderTypes) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
                     let path = '/database/collections/{collectionId}/documents'.replace('{collectionId}', collectionId);
                     let payload = {};
-                    if (typeof filters !== 'undefined') {
-                        payload['filters'] = filters;
+                    if (typeof queries !== 'undefined') {
+                        payload['queries'] = queries;
                     }
                     if (typeof limit !== 'undefined') {
                         payload['limit'] = limit;
@@ -1286,17 +1771,17 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof orderField !== 'undefined') {
-                        payload['orderField'] = orderField;
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
                     }
-                    if (typeof orderType !== 'undefined') {
-                        payload['orderType'] = orderType;
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
-                    if (typeof orderCast !== 'undefined') {
-                        payload['orderCast'] = orderCast;
+                    if (typeof orderAttributes !== 'undefined') {
+                        payload['orderAttributes'] = orderAttributes;
                     }
-                    if (typeof search !== 'undefined') {
-                        payload['search'] = search;
+                    if (typeof orderTypes !== 'undefined') {
+                        payload['orderTypes'] = orderTypes;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
@@ -1312,24 +1797,28 @@
                  * directly from your database console.
                  *
                  * @param {string} collectionId
+                 * @param {string} documentId
                  * @param {object} data
                  * @param {string[]} read
                  * @param {string[]} write
-                 * @param {string} parentDocument
-                 * @param {string} parentProperty
-                 * @param {string} parentPropertyType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createDocument: (collectionId, data, read, write, parentDocument, parentProperty, parentPropertyType) => __awaiter(this, void 0, void 0, function* () {
+                createDocument: (collectionId, documentId, data, read, write) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof documentId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "documentId"');
                     }
                     if (typeof data === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "data"');
                     }
                     let path = '/database/collections/{collectionId}/documents'.replace('{collectionId}', collectionId);
                     let payload = {};
+                    if (typeof documentId !== 'undefined') {
+                        payload['documentId'] = documentId;
+                    }
                     if (typeof data !== 'undefined') {
                         payload['data'] = data;
                     }
@@ -1338,15 +1827,6 @@
                     }
                     if (typeof write !== 'undefined') {
                         payload['write'] = write;
-                    }
-                    if (typeof parentDocument !== 'undefined') {
-                        payload['parentDocument'] = parentDocument;
-                    }
-                    if (typeof parentProperty !== 'undefined') {
-                        payload['parentProperty'] = parentProperty;
-                    }
-                    if (typeof parentPropertyType !== 'undefined') {
-                        payload['parentPropertyType'] = parentPropertyType;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
@@ -1443,6 +1923,217 @@
                     return yield this.call('delete', uri, {
                         'content-type': 'application/json',
                     }, payload);
+                }),
+                /**
+                 * List Document Logs
+                 *
+                 * Get the document activity logs list by its unique ID.
+                 *
+                 * @param {string} collectionId
+                 * @param {string} documentId
+                 * @param {number} limit
+                 * @param {number} offset
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                listDocumentLogs: (collectionId, documentId, limit, offset) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof documentId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "documentId"');
+                    }
+                    let path = '/database/collections/{collectionId}/documents/{documentId}/logs'.replace('{collectionId}', collectionId).replace('{documentId}', documentId);
+                    let payload = {};
+                    if (typeof limit !== 'undefined') {
+                        payload['limit'] = limit;
+                    }
+                    if (typeof offset !== 'undefined') {
+                        payload['offset'] = offset;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * List Indexes
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                listIndexes: (collectionId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    let path = '/database/collections/{collectionId}/indexes'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Index
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} key
+                 * @param {string} type
+                 * @param {string[]} attributes
+                 * @param {string[]} orders
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createIndex: (collectionId, key, type, attributes, orders) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
+                    }
+                    if (typeof type === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "type"');
+                    }
+                    if (typeof attributes === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "attributes"');
+                    }
+                    let path = '/database/collections/{collectionId}/indexes'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
+                    }
+                    if (typeof type !== 'undefined') {
+                        payload['type'] = type;
+                    }
+                    if (typeof attributes !== 'undefined') {
+                        payload['attributes'] = attributes;
+                    }
+                    if (typeof orders !== 'undefined') {
+                        payload['orders'] = orders;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Get Index
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} key
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getIndex: (collectionId, key) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
+                    }
+                    let path = '/database/collections/{collectionId}/indexes/{key}'.replace('{collectionId}', collectionId).replace('{key}', key);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Delete Index
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} key
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                deleteIndex: (collectionId, key) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
+                    }
+                    let path = '/database/collections/{collectionId}/indexes/{key}'.replace('{collectionId}', collectionId).replace('{key}', key);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('delete', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * List Collection Logs
+                 *
+                 * Get the collection activity logs list by its unique ID.
+                 *
+                 * @param {string} collectionId
+                 * @param {number} limit
+                 * @param {number} offset
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                listCollectionLogs: (collectionId, limit, offset) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    let path = '/database/collections/{collectionId}/logs'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof limit !== 'undefined') {
+                        payload['limit'] = limit;
+                    }
+                    if (typeof offset !== 'undefined') {
+                        payload['offset'] = offset;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Get usage stats for the database
+                 *
+                 *
+                 * @param {string} range
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getUsage: (range) => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/database/usage';
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Get usage stats for a collection
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} range
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getCollectionUsage: (collectionId, range) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    let path = '/database/{collectionId}/usage'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
                 })
             };
             this.functions = {
@@ -1455,11 +2146,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/functions';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -1470,6 +2163,12 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -1486,6 +2185,7 @@
                  * [permissions](/docs/permissions) to allow different project users or team
                  * with access to execute the function using the client API.
                  *
+                 * @param {string} functionId
                  * @param {string} name
                  * @param {string[]} execute
                  * @param {string} runtime
@@ -1496,7 +2196,10 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                create: (name, execute, runtime, vars, events, schedule, timeout) => __awaiter(this, void 0, void 0, function* () {
+                create: (functionId, name, execute, runtime, vars, events, schedule, timeout) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
                     if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
@@ -1508,6 +2211,9 @@
                     }
                     let path = '/functions';
                     let payload = {};
+                    if (typeof functionId !== 'undefined') {
+                        payload['functionId'] = functionId;
+                    }
                     if (typeof name !== 'undefined') {
                         payload['name'] = name;
                     }
@@ -1531,6 +2237,22 @@
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * List the currently active function runtimes.
+                 *
+                 * Get a list of all runtimes that are currently active in your project.
+                 *
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                listRuntimes: () => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/functions/runtimes';
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
@@ -1633,30 +2355,34 @@
                  * different API modes](/docs/admin).
                  *
                  * @param {string} functionId
-                 * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
-                 * @param {string} orderType
+                 * @param {string} search
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listExecutions: (functionId, search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                listExecutions: (functionId, limit, offset, search, cursor, cursorDirection) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
                     let path = '/functions/{functionId}/executions'.replace('{functionId}', functionId);
                     let payload = {};
-                    if (typeof search !== 'undefined') {
-                        payload['search'] = search;
-                    }
                     if (typeof limit !== 'undefined') {
                         payload['limit'] = limit;
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
-                    if (typeof orderType !== 'undefined') {
-                        payload['orderType'] = orderType;
+                    if (typeof search !== 'undefined') {
+                        payload['search'] = search;
+                    }
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
@@ -1753,11 +2479,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listTags: (functionId, search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                listTags: (functionId, search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -1771,6 +2499,12 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -1913,14 +2647,14 @@
                     }, payload);
                 }),
                 /**
-                 * Get Anti virus
+                 * Get Antivirus
                  *
-                 * Check the Appwrite Anti Virus server is up and connection is successful.
+                 * Check the Appwrite Antivirus server is up and connection is successful.
                  *
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getAntiVirus: () => __awaiter(this, void 0, void 0, function* () {
+                getAntivirus: () => __awaiter(this, void 0, void 0, function* () {
                     let path = '/health/anti-virus';
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
@@ -1962,7 +2696,7 @@
                     }, payload);
                 }),
                 /**
-                 * Get Certificate Queue
+                 * Get Certificates Queue
                  *
                  * Get the number of certificates that are waiting to be issued against
                  * [Letsencrypt](https://letsencrypt.org/) in the Appwrite internal queue
@@ -2005,23 +2739,6 @@
                  */
                 getQueueLogs: () => __awaiter(this, void 0, void 0, function* () {
                     let path = '/health/queue/logs';
-                    let payload = {};
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('get', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Get Tasks Queue
-                 *
-                 * Get the number of tasks that are waiting to be processed in the Appwrite
-                 * internal queue server.
-                 *
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                getQueueTasks: () => __awaiter(this, void 0, void 0, function* () {
-                    let path = '/health/queue/tasks';
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
@@ -2235,11 +2952,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/projects';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -2250,6 +2969,12 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -2263,6 +2988,7 @@
                  * Create Project
                  *
                  *
+                 * @param {string} projectId
                  * @param {string} name
                  * @param {string} teamId
                  * @param {string} description
@@ -2277,7 +3003,10 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                create: (name, teamId, description, logo, url, legalName, legalCountry, legalState, legalCity, legalAddress, legalTaxId) => __awaiter(this, void 0, void 0, function* () {
+                create: (projectId, name, teamId, description, logo, url, legalName, legalCountry, legalState, legalCity, legalAddress, legalTaxId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof projectId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "projectId"');
+                    }
                     if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
@@ -2286,6 +3015,9 @@
                     }
                     let path = '/projects';
                     let payload = {};
+                    if (typeof projectId !== 'undefined') {
+                        payload['projectId'] = projectId;
+                    }
                     if (typeof name !== 'undefined') {
                         payload['name'] = name;
                     }
@@ -2923,222 +3655,40 @@
                     }, payload);
                 }),
                 /**
-                 * List Tasks
+                 * Update service status
                  *
                  *
                  * @param {string} projectId
+                 * @param {string} service
+                 * @param {boolean} status
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listTasks: (projectId) => __awaiter(this, void 0, void 0, function* () {
+                updateServiceStatus: (projectId, service, status) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
-                    let path = '/projects/{projectId}/tasks'.replace('{projectId}', projectId);
-                    let payload = {};
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('get', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Create Task
-                 *
-                 *
-                 * @param {string} projectId
-                 * @param {string} name
-                 * @param {string} status
-                 * @param {string} schedule
-                 * @param {boolean} security
-                 * @param {string} httpMethod
-                 * @param {string} httpUrl
-                 * @param {string[]} httpHeaders
-                 * @param {string} httpUser
-                 * @param {string} httpPass
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                createTask: (projectId, name, status, schedule, security, httpMethod, httpUrl, httpHeaders, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof projectId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "projectId"');
-                    }
-                    if (typeof name === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "name"');
+                    if (typeof service === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "service"');
                     }
                     if (typeof status === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "status"');
                     }
-                    if (typeof schedule === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "schedule"');
-                    }
-                    if (typeof security === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "security"');
-                    }
-                    if (typeof httpMethod === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "httpMethod"');
-                    }
-                    if (typeof httpUrl === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "httpUrl"');
-                    }
-                    let path = '/projects/{projectId}/tasks'.replace('{projectId}', projectId);
+                    let path = '/projects/{projectId}/service'.replace('{projectId}', projectId);
                     let payload = {};
-                    if (typeof name !== 'undefined') {
-                        payload['name'] = name;
+                    if (typeof service !== 'undefined') {
+                        payload['service'] = service;
                     }
                     if (typeof status !== 'undefined') {
                         payload['status'] = status;
                     }
-                    if (typeof schedule !== 'undefined') {
-                        payload['schedule'] = schedule;
-                    }
-                    if (typeof security !== 'undefined') {
-                        payload['security'] = security;
-                    }
-                    if (typeof httpMethod !== 'undefined') {
-                        payload['httpMethod'] = httpMethod;
-                    }
-                    if (typeof httpUrl !== 'undefined') {
-                        payload['httpUrl'] = httpUrl;
-                    }
-                    if (typeof httpHeaders !== 'undefined') {
-                        payload['httpHeaders'] = httpHeaders;
-                    }
-                    if (typeof httpUser !== 'undefined') {
-                        payload['httpUser'] = httpUser;
-                    }
-                    if (typeof httpPass !== 'undefined') {
-                        payload['httpPass'] = httpPass;
-                    }
                     const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('post', uri, {
+                    return yield this.call('patch', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
                 /**
-                 * Get Task
-                 *
-                 *
-                 * @param {string} projectId
-                 * @param {string} taskId
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                getTask: (projectId, taskId) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof projectId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "projectId"');
-                    }
-                    if (typeof taskId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "taskId"');
-                    }
-                    let path = '/projects/{projectId}/tasks/{taskId}'.replace('{projectId}', projectId).replace('{taskId}', taskId);
-                    let payload = {};
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('get', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Update Task
-                 *
-                 *
-                 * @param {string} projectId
-                 * @param {string} taskId
-                 * @param {string} name
-                 * @param {string} status
-                 * @param {string} schedule
-                 * @param {boolean} security
-                 * @param {string} httpMethod
-                 * @param {string} httpUrl
-                 * @param {string[]} httpHeaders
-                 * @param {string} httpUser
-                 * @param {string} httpPass
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                updateTask: (projectId, taskId, name, status, schedule, security, httpMethod, httpUrl, httpHeaders, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof projectId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "projectId"');
-                    }
-                    if (typeof taskId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "taskId"');
-                    }
-                    if (typeof name === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "name"');
-                    }
-                    if (typeof status === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "status"');
-                    }
-                    if (typeof schedule === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "schedule"');
-                    }
-                    if (typeof security === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "security"');
-                    }
-                    if (typeof httpMethod === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "httpMethod"');
-                    }
-                    if (typeof httpUrl === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "httpUrl"');
-                    }
-                    let path = '/projects/{projectId}/tasks/{taskId}'.replace('{projectId}', projectId).replace('{taskId}', taskId);
-                    let payload = {};
-                    if (typeof name !== 'undefined') {
-                        payload['name'] = name;
-                    }
-                    if (typeof status !== 'undefined') {
-                        payload['status'] = status;
-                    }
-                    if (typeof schedule !== 'undefined') {
-                        payload['schedule'] = schedule;
-                    }
-                    if (typeof security !== 'undefined') {
-                        payload['security'] = security;
-                    }
-                    if (typeof httpMethod !== 'undefined') {
-                        payload['httpMethod'] = httpMethod;
-                    }
-                    if (typeof httpUrl !== 'undefined') {
-                        payload['httpUrl'] = httpUrl;
-                    }
-                    if (typeof httpHeaders !== 'undefined') {
-                        payload['httpHeaders'] = httpHeaders;
-                    }
-                    if (typeof httpUser !== 'undefined') {
-                        payload['httpUser'] = httpUser;
-                    }
-                    if (typeof httpPass !== 'undefined') {
-                        payload['httpPass'] = httpPass;
-                    }
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('put', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Delete Task
-                 *
-                 *
-                 * @param {string} projectId
-                 * @param {string} taskId
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                deleteTask: (projectId, taskId) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof projectId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "projectId"');
-                    }
-                    if (typeof taskId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "taskId"');
-                    }
-                    let path = '/projects/{projectId}/tasks/{taskId}'.replace('{projectId}', projectId).replace('{taskId}', taskId);
-                    let payload = {};
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('delete', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Get Project
+                 * Get usage stats for a project
                  *
                  *
                  * @param {string} projectId
@@ -3351,11 +3901,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listFiles: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                listFiles: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/storage/files';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -3366,6 +3918,12 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -3382,18 +3940,25 @@
                  * assigned to read and write access unless he has passed custom values for
                  * read and write arguments.
                  *
+                 * @param {string} fileId
                  * @param {File} file
                  * @param {string[]} read
                  * @param {string[]} write
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createFile: (file, read, write) => __awaiter(this, void 0, void 0, function* () {
+                createFile: (fileId, file, read, write) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof fileId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "fileId"');
+                    }
                     if (typeof file === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "file"');
                     }
                     let path = '/storage/files';
                     let payload = {};
+                    if (typeof fileId !== 'undefined') {
+                        payload['fileId'] = fileId;
+                    }
                     if (typeof file !== 'undefined') {
                         payload['file'] = file;
                     }
@@ -3601,25 +4166,70 @@
                         uri.searchParams.append(key, value);
                     }
                     return uri;
-                }
+                },
+                /**
+                 * Get usage stats for storage
+                 *
+                 *
+                 * @param {string} range
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getUsage: (range) => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/storage/usage';
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Get usage stats for a storage bucket
+                 *
+                 *
+                 * @param {string} bucketId
+                 * @param {string} range
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getBucketUsage: (bucketId, range) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof bucketId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "bucketId"');
+                    }
+                    let path = '/storage/{bucketId}/usage'.replace('{bucketId}', bucketId);
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                })
             };
             this.teams = {
                 /**
                  * List Teams
                  *
-                 * Get a list of all the current user teams. You can use the query params to
-                 * filter your results. On admin mode, this endpoint will return a list of all
-                 * of the project's teams. [Learn more about different API
-                 * modes](/docs/admin).
+                 * Get a list of all the teams in which the current user is a member. You can
+                 * use the parameters to filter your results.
+                 *
+                 * In admin mode, this endpoint returns a list of all the teams in the current
+                 * project. [Learn more about different API modes](/docs/admin).
                  *
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/teams';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -3630,6 +4240,12 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -3643,21 +4259,27 @@
                  * Create Team
                  *
                  * Create a new team. The user who creates the team will automatically be
-                 * assigned as the owner of the team. The team owner can invite new members,
-                 * who will be able add new owners and update or delete the team from your
-                 * project.
+                 * assigned as the owner of the team. Only the users with the owner role can
+                 * invite new members, add new owners and delete or update the team.
                  *
+                 * @param {string} teamId
                  * @param {string} name
                  * @param {string[]} roles
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                create: (name, roles) => __awaiter(this, void 0, void 0, function* () {
+                create: (teamId, name, roles) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof teamId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "teamId"');
+                    }
                     if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
                     let path = '/teams';
                     let payload = {};
+                    if (typeof teamId !== 'undefined') {
+                        payload['teamId'] = teamId;
+                    }
                     if (typeof name !== 'undefined') {
                         payload['name'] = name;
                     }
@@ -3672,8 +4294,7 @@
                 /**
                  * Get Team
                  *
-                 * Get a team by its unique ID. All team members have read access for this
-                 * resource.
+                 * Get a team by its ID. All team members have read access for this resource.
                  *
                  * @param {string} teamId
                  * @throws {AppwriteException}
@@ -3693,8 +4314,8 @@
                 /**
                  * Update Team
                  *
-                 * Update a team by its unique ID. Only team owners have write access for this
-                 * resource.
+                 * Update a team using its ID. Only members with the owner role can update the
+                 * team.
                  *
                  * @param {string} teamId
                  * @param {string} name
@@ -3721,8 +4342,8 @@
                 /**
                  * Delete Team
                  *
-                 * Delete a team by its unique ID. Only team owners have write access for this
-                 * resource.
+                 * Delete a team using its ID. Only team members with the owner role can
+                 * delete the team.
                  *
                  * @param {string} teamId
                  * @throws {AppwriteException}
@@ -3742,18 +4363,20 @@
                 /**
                  * Get Team Memberships
                  *
-                 * Get a team members by the team unique ID. All team members have read access
-                 * for this list of resources.
+                 * Use this endpoint to list a team's members using the team's ID. All team
+                 * members have read access to this endpoint.
                  *
                  * @param {string} teamId
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getMemberships: (teamId, search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                getMemberships: (teamId, search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof teamId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "teamId"');
                     }
@@ -3768,6 +4391,12 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
+                    }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
                     }
@@ -3779,22 +4408,21 @@
                 /**
                  * Create Team Membership
                  *
-                 * Use this endpoint to invite a new member to join your team. If initiated
-                 * from Client SDK, an email with a link to join the team will be sent to the
-                 * new member's email address if the member doesn't exist in the project it
-                 * will be created automatically. If initiated from server side SDKs, new
-                 * member will automatically be added to the team.
+                 * Invite a new member to join your team. If initiated from the client SDK, an
+                 * email with a link to join the team will be sent to the member's email
+                 * address and an account will be created for them should they not be signed
+                 * up already. If initiated from server-side SDKs, the new member will
+                 * automatically be added to the team.
                  *
-                 * Use the 'URL' parameter to redirect the user from the invitation email back
+                 * Use the 'url' parameter to redirect the user from the invitation email back
                  * to your app. When the user is redirected, use the [Update Team Membership
                  * Status](/docs/client/teams#teamsUpdateMembershipStatus) endpoint to allow
-                 * the user to accept the invitation to the team.  While calling from side
-                 * SDKs the redirect url can be empty string.
+                 * the user to accept the invitation to the team.
                  *
-                 * Please note that in order to avoid a [Redirect
-                 * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+                 * Please note that to avoid a [Redirect
+                 * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
                  * the only valid redirect URL's are the once from domains you have set when
-                 * added your platforms in the console interface.
+                 * adding your platforms in the console interface.
                  *
                  * @param {string} teamId
                  * @param {string} email
@@ -3822,14 +4450,14 @@
                     if (typeof email !== 'undefined') {
                         payload['email'] = email;
                     }
-                    if (typeof name !== 'undefined') {
-                        payload['name'] = name;
-                    }
                     if (typeof roles !== 'undefined') {
                         payload['roles'] = roles;
                     }
                     if (typeof url !== 'undefined') {
                         payload['url'] = url;
+                    }
+                    if (typeof name !== 'undefined') {
+                        payload['name'] = name;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
@@ -3837,8 +4465,36 @@
                     }, payload);
                 }),
                 /**
+                 * Get Team Membership
+                 *
+                 * Get a team member by the membership unique id. All team members have read
+                 * access for this resource.
+                 *
+                 * @param {string} teamId
+                 * @param {string} membershipId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getMembership: (teamId, membershipId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof teamId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "teamId"');
+                    }
+                    if (typeof membershipId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "membershipId"');
+                    }
+                    let path = '/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Update Membership Roles
                  *
+                 * Modify the roles of a team member. Only team members with the owner role
+                 * have access to this endpoint. Learn more about [roles and
+                 * permissions](/docs/permissions).
                  *
                  * @param {string} teamId
                  * @param {string} membershipId
@@ -3943,11 +4599,13 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/users';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -3958,6 +4616,12 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -3972,13 +4636,17 @@
                  *
                  * Create a new user.
                  *
+                 * @param {string} userId
                  * @param {string} email
                  * @param {string} password
                  * @param {string} name
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                create: (email, password, name) => __awaiter(this, void 0, void 0, function* () {
+                create: (userId, email, password, name) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
                     if (typeof email === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "email"');
                     }
@@ -3987,6 +4655,9 @@
                     }
                     let path = '/users';
                     let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
                     if (typeof email !== 'undefined') {
                         payload['email'] = email;
                     }
@@ -3998,6 +4669,29 @@
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Get usage stats for the users API
+                 *
+                 *
+                 * @param {string} range
+                 * @param {string} provider
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getUsage: (range, provider) => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/users/usage';
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
+                    }
+                    if (typeof provider !== 'undefined') {
+                        payload['provider'] = provider;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
@@ -4071,18 +4765,26 @@
                 /**
                  * Get User Logs
                  *
-                 * Get a user activity logs list by its unique ID.
+                 * Get the user activity logs list by its unique ID.
                  *
                  * @param {string} userId
+                 * @param {number} limit
+                 * @param {number} offset
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getLogs: (userId) => __awaiter(this, void 0, void 0, function* () {
+                getLogs: (userId, limit, offset) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
                     let path = '/users/{userId}/logs'.replace('{userId}', userId);
                     let payload = {};
+                    if (typeof limit !== 'undefined') {
+                        payload['limit'] = limit;
+                    }
+                    if (typeof offset !== 'undefined') {
+                        payload['offset'] = offset;
+                    }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
                         'content-type': 'application/json',
@@ -4260,7 +4962,7 @@
                  * Update the user status by its unique ID.
                  *
                  * @param {string} userId
-                 * @param {number} status
+                 * @param {boolean} status
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */

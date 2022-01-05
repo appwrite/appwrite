@@ -1,1 +1,1 @@
-Check the Appwrite Anti Virus server is up and connection is successful.
+Check the Appwrite Antivirus server is up and connection is successful.
