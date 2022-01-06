@@ -12,7 +12,7 @@ void main() { // Init SDK
 
   Future result = database.deleteAttribute(
     collectionId: '[COLLECTION_ID]',
-    attributeId: '',
+    key: '',
   );
 
   result

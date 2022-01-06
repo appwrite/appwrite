@@ -12,7 +12,7 @@ void main() { // Init SDK
 
   Future result = database.getAttribute(
     collectionId: '[COLLECTION_ID]',
-    attributeId: '',
+    key: '',
   );
 
   result

@@ -20,13 +20,20 @@ trait UsersBase
             'email' => 'cristiano.ronaldo@manchester-united.co.uk',
             'password' => 'password',
             'name' => 'Cristiano Ronaldo',
-        ]);
+        ], false);
+
+        // Test empty prefs is object not array
+        $bodyString = $user['body'];
+        $prefs = substr($bodyString, strpos($bodyString, '"prefs":')+8,2);
+        $this->assertEquals('{}', $prefs);
+        
+        $body = json_decode($bodyString, true);
 
         $this->assertEquals($user['headers']['status-code'], 201);
-        $this->assertEquals($user['body']['name'], 'Cristiano Ronaldo');
-        $this->assertEquals($user['body']['email'], 'cristiano.ronaldo@manchester-united.co.uk');
-        $this->assertEquals($user['body']['status'], true);
-        $this->assertGreaterThan(0, $user['body']['registration']);
+        $this->assertEquals($body['name'], 'Cristiano Ronaldo');
+        $this->assertEquals($body['email'], 'cristiano.ronaldo@manchester-united.co.uk');
+        $this->assertEquals($body['status'], true);
+        $this->assertGreaterThan(0, $body['registration']);
 
         /**
          * Test Create with Custom ID for SUCCESS
@@ -48,7 +55,7 @@ trait UsersBase
         $this->assertEquals(true, $res['body']['status']);
         $this->assertGreaterThan(0, $res['body']['registration']);
 
-        return ['userId' => $user['body']['$id']];
+        return ['userId' => $body['$id']];
     }
 
     /**

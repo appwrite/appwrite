@@ -20,7 +20,7 @@ class Index extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Index type.',
                 'default' => '',
-                'example' => '',
+                'example' => 'primary',
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,

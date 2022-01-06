@@ -205,7 +205,7 @@ App::get('/v1/mock/tests/general/download')
     ->label('sdk.mock', true)
     ->inject('response')
     ->action(function ($response) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         
         $response
             ->setContentType('text/plain')
@@ -236,7 +236,7 @@ App::post('/v1/mock/tests/general/upload')
     ->inject('request')
     ->inject('response')
     ->action(function ($x, $y, $z, $file, $request, $response) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Utopia\Swoole\Response $response */
         
         $file = $request->getFiles('file');
@@ -373,7 +373,7 @@ App::get('/v1/mock/tests/general/get-cookie')
     ->label('sdk.mock', true)
     ->inject('request')
     ->action(function ($request) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
 
         if ($request->getCookie('cookieName', '') !== 'cookieValue') {
             throw new Exception('Missing cookie value', 400);
@@ -551,7 +551,7 @@ App::get('/v1/mock/tests/general/oauth2/failure')
 
 App::shutdown(function($utopia, $response, $request) {
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
 
     $result = [];

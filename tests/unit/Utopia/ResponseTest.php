@@ -22,13 +22,13 @@ class ResponseTest extends TestCase
 
     public function testSetFilter() 
     {
-        $this->assertEquals($this->object->isFilter(), false);
+        $this->assertEquals($this->object->hasFilter(), false);
         $this->assertEquals($this->object->getFilter(), null);
 
         $filter = new V06();
         $this->object->setFilter($filter);
         
-        $this->assertEquals($this->object->isFilter(), true);
+        $this->assertEquals($this->object->hasFilter(), true);
         $this->assertEquals($this->object->getFilter(), $filter);
     }
 }

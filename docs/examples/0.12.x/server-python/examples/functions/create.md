@@ -11,4 +11,4 @@ client = Client()
 
 functions = Functions(client)
 
-result = functions.create('', '[NAME]', [], 'dotnet-5.0')
+result = functions.create('[FUNCTION_ID]', '[NAME]', [], 'node-14.5')

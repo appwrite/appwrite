@@ -9,7 +9,7 @@ func main() {
     let database = Database(client)
     database.createEnumAttribute(
         collectionId: "[COLLECTION_ID]",
-        attributeId: "",
+        key: "",
         elements: [],
         required: xfalse
     ) { result in

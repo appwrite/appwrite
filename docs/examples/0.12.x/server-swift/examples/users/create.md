@@ -8,7 +8,7 @@ func main() {
 
     let users = Users(client)
     users.create(
-        userId: "",
+        userId: "[USER_ID]",
         email: "email@example.com",
         password: "password"
     ) { result in

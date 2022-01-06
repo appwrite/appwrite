@@ -9,7 +9,7 @@ func main() {
     let database = Database(client)
     database.getIndex(
         collectionId: "[COLLECTION_ID]",
-        indexId: ""
+        key: ""
     ) { result in
         switch result {
         case .failure(let error):

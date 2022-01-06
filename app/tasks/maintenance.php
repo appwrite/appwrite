@@ -2,8 +2,6 @@
 
 global $cli;
 
-require_once __DIR__.'/../init.php';
-
 use Appwrite\Event\Event;
 use Utopia\App;
 use Utopia\CLI\Console;

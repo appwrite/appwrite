@@ -9,6 +9,6 @@ client
 
 database = Appwrite::Database.new(client)
 
-response = database.create_collection(collection_id: '', name: '[NAME]', permission: 'document', read: ["role:all"], write: ["role:all"])
+response = database.create_collection(collection_id: '[COLLECTION_ID]', name: '[NAME]', permission: 'document', read: ["role:all"], write: ["role:all"])
 
 puts response.inspect

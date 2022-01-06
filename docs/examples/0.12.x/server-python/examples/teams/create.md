@@ -11,4 +11,4 @@ client = Client()
 
 teams = Teams(client)
 
-result = teams.create('', '[NAME]')
+result = teams.create('[TEAM_ID]', '[NAME]')

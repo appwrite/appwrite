@@ -1,3 +1,16 @@
+## 3.0.1
+- Export Query Builder
+
+## 3.0.0
+- Support for Appwrite 0.12
+- **BREAKING** Updated database service to adapt 0.12 API 
+- **BREAKING** Custom ID support while creating resources
+- [View all the changes](https://github.com/appwrite/appwrite/blob/master/CHANGES.md#version-0120)
+
+## 2.1.0
+- Updated `flutter_we_auth` plugin now supports Flutter web for OAuth2 sessions [read more](https://github.com/appwrite/sdk-for-flutter/blob/master/README.md#web)
+- Added linters and updated codebase to match the rules
+
 ## 2.0.3
 - Support for Appwrite 0.11
 - Fix comments on `sum` attributes

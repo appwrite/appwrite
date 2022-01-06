@@ -9,10 +9,10 @@ suspend fun main() {
 
     val functions = Functions(client)
     val response = functions.create(
-        functionId = "",
+        functionId = "[FUNCTION_ID]",
         name = "[NAME]",
         execute = listOf(),
-        runtime = "dotnet-5.0",
+        runtime = "node-14.5",
     )
     val json = response.body?.string()
 }

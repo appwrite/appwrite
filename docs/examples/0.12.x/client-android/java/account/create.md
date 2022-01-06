@@ -19,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
         Account account = new Account(client);
 
         account.create(
-            "", 
+            "[USER_ID]", 
             "email@example.com", 
             "password", 
             new Continuation<Object>() {

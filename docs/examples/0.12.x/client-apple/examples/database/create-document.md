@@ -8,7 +8,7 @@ func main() {
     let database = Database(client)
     database.createDocument(
         collectionId: "[COLLECTION_ID]",
-        documentId: "",
+        documentId: "[DOCUMENT_ID]",
         data: 
     ) { result in
         switch result {
