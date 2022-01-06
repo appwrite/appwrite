@@ -5,7 +5,7 @@ sdk
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-let promise = sdk.database.createCollection('', '[NAME]', 'document', ["role:all"], ["role:all"]);
+let promise = sdk.database.createCollection('[COLLECTION_ID]', '[NAME]', 'document', ["role:all"], ["role:all"]);
 
 promise.then(function (response) {
     console.log(response); // Success

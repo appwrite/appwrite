@@ -39,7 +39,7 @@ class ErrorDev extends Error
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */

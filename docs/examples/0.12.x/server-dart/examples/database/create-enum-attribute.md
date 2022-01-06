@@ -12,7 +12,7 @@ void main() { // Init SDK
 
   Future result = database.createEnumAttribute(
     collectionId: '[COLLECTION_ID]',
-    attributeId: '',
+    key: '',
     elements: [],
     required: false,
   );

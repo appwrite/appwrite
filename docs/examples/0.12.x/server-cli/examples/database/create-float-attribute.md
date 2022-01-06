@@ -1,6 +1,6 @@
 appwrite database createFloatAttribute \
         --collectionId="[COLLECTION_ID]" \
-        --attributeId="" \
+        --key="" \
         --required="" \
         --min="" \
         --max="" \

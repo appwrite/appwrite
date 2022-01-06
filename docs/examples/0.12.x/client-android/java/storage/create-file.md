@@ -19,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
         Storage storage = new Storage(client);
 
         storage.createFile(
-            "", 
+            "[FILE_ID]", 
             File("./path-to-files/image.jpg"), 
             new Continuation<Object>() {
                 @NotNull

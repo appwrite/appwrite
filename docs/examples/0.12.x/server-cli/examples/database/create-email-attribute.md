@@ -1,6 +1,6 @@
 appwrite database createEmailAttribute \
         --collectionId="[COLLECTION_ID]" \
-        --attributeId="" \
+        --key="" \
         --required="" \
         --default="email@example.com" \
         --array=""

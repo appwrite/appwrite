@@ -8,10 +8,10 @@ func main() {
 
     let functions = Functions(client)
     functions.create(
-        functionId: "",
+        functionId: "[FUNCTION_ID]",
         name: "[NAME]",
         execute: [],
-        runtime: "dotnet-5.0"
+        runtime: "node-14.5"
     ) { result in
         switch result {
         case .failure(let error):

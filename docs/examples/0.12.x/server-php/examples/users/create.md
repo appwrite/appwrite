@@ -13,4 +13,4 @@ $client
 
 $users = new Users($client);
 
-$result = $users->create('', 'email@example.com', 'password');
+$result = $users->create('[USER_ID]', 'email@example.com', 'password');

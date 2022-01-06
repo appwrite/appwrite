@@ -57,13 +57,11 @@ App::post('/v1/projects')
     ->param('legalTaxId', '', new Text(256), 'Project legal Tax ID. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->inject('dbForInternal')
-    ->inject('dbForExternal')
-    ->action(function ($projectId, $name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForInternal, $dbForExternal) {
+    ->inject('dbForProject')
+    ->action(function ($projectId, $name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForProject) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Utopia\Database\Database $dbForProject */
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -106,15 +104,13 @@ App::post('/v1/projects')
 
         $collections = Config::getParam('collections', []); /** @var array $collections */
 
-        $dbForInternal->setNamespace('project_' . $project->getId() . '_internal');
-        $dbForInternal->create();
-        $dbForExternal->setNamespace('project_' . $project->getId() . '_external');
-        $dbForExternal->create();
+        $dbForProject->setNamespace('_project_' . $project->getId());
+        $dbForProject->create('appwrite');
 
-        $audit = new Audit($dbForInternal);
+        $audit = new Audit($dbForProject);
         $audit->setup();
 
-        $adapter = new TimeLimit('', 0, 1, $dbForInternal);
+        $adapter = new TimeLimit('', 0, 1, $dbForProject);
         $adapter->setup();
 
         foreach ($collections as $key => $collection) {
@@ -143,7 +139,7 @@ App::post('/v1/projects')
                 ]);
             }
 
-            $dbForInternal->createCollection($key, $attributes, $indexes);
+            $dbForProject->createCollection($key, $attributes, $indexes);
         }
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -235,12 +231,12 @@ App::get('/v1/projects/:projectId/usage')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('register')
-    ->action(function ($projectId, $range, $response, $dbForConsole, $dbForInternal, $register) {
+    ->action(function ($projectId, $range, $response, $dbForConsole, $dbForProject, $register) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Registry\Registry $register */
 
         $project = $dbForConsole->getDocument('projects', $projectId);
@@ -270,11 +266,11 @@ App::get('/v1/projects/:projectId/usage')
                 ],
             ];
 
-            $dbForInternal->setNamespace('project_' . $projectId . '_internal');
+            $dbForProject->setNamespace('_project_' . $projectId);
 
             $metrics = [
-                'requests', 
-                'network', 
+                'requests',
+                'network',
                 'executions',
                 'users.count',
                 'database.documents.count',
@@ -284,12 +280,12 @@ App::get('/v1/projects/:projectId/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForInternal, $periods, $range, $metrics, &$stats) {
+            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
 
-                    $requestDocs = $dbForInternal->find('stats', [
+                    $requestDocs = $dbForProject->find('stats', [
                         new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
                     ], $limit, 0, ['time'], [Database::ORDER_DESC]);

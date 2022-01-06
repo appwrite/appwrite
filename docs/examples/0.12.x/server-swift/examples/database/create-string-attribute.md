@@ -9,7 +9,7 @@ func main() {
     let database = Database(client)
     database.createStringAttribute(
         collectionId: "[COLLECTION_ID]",
-        attributeId: "",
+        key: "",
         size: 1,
         required: xfalse
     ) { result in

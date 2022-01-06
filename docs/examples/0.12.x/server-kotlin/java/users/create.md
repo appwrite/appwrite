@@ -9,7 +9,7 @@ public void main() {
 
     Users users = new Users(client);
     users.create(
-        userId = "",
+        userId = "[USER_ID]",
         email = "email@example.com",
         password = "password",
         new Continuation<Response>() {

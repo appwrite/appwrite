@@ -9,6 +9,6 @@ client
 
 users = Appwrite::Users.new(client)
 
-response = users.create(user_id: '', email: 'email@example.com', password: 'password')
+response = users.create(user_id: '[USER_ID]', email: 'email@example.com', password: 'password')
 
 puts response.inspect
