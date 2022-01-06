@@ -3,6 +3,7 @@
 ## Bugs
 - Fixed some issues with the Migration
 - Fixed the UI to add Variables to Functions
+- Fixed wrong data type for String Attribute size
 
 # Version 0.12.0
 
