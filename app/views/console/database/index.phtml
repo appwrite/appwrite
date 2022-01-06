@@ -29,7 +29,7 @@
                         <p class="margin-bottom-no">You haven't created any collections for your project yet.</p>
                     </div>
                 </div>
-                
+
                 <div data-ls-if="0 != {{project-collections.sum}}">
                     <ul data-ls-loop="project-collections.collections" data-ls-as="collection" data-ls-append="" class="tiles cell-3 margin-bottom-small">
                         <li class="margin-bottom">
@@ -48,7 +48,7 @@
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
                         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                        data-param-order-type="DESC"
+                        data-param-order-type="ASC"
                         data-scope="sdk"
                         data-name="project-collections"
                         data-success="state"
@@ -63,7 +63,7 @@
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
                         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                        data-param-order-type="DESC"
+                        data-param-order-type="ASC"
                         data-scope="sdk"
                         data-name="project-collections"
                         data-success="state"
@@ -94,12 +94,23 @@
                         data-failure-param-alert-text="Failed to create collection"
                         data-failure-param-alert-classname="error">
 
-                        <label for="user-name">Name</label>
+                        <label for="collection-id">Collection ID</label>
+                        <input
+                            type="hidden"
+                            data-custom-id
+                            data-id-type="auto"
+                            data-validator="database.getCollection"
+                            required
+                            maxlength="36"
+                            pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{1,36}$"
+                            name="collectionId" />
+
+                        <label for="collection-name">Name</label>
                         <input type="text" class="full-width" id="collection-name" name="name" required autocomplete="off" maxlength="128" />
 
+                        <input type="hidden" id="collection-permission" name="permission" required value="document" />
                         <input type="hidden" id="collection-read" name="read" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
                         <input type="hidden" id="collection-write" name="write" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
-                        <input type="hidden" id="collection-rules" name="rules" required data-cast-to="json" value="{}" />
 
                         <hr />
 
@@ -108,9 +119,110 @@
                 </div>
 
             </li>
-            <!-- <li data-state="/console/database/usage?project={{router.params.project}}">
+            <li data-state="/console/database/usage?project={{router.params.project}}">
+                <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
+                    data-service="database.getUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-range="90d">
+                    <button class="tick">90d</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
+
+                <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '30d'"
+                    data-service="database.getUsage"
+                    data-event="submit"
+                    data-name="usage">
+                    <button class="tick">30d</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
+
+                <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '24h'"
+                    data-service="database.getUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-range="24h">
+                    <button class="tick">24h</button>
+                </form>
+
+                <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
+
                 <h2>Usage</h2>
-            </li> -->
+
+                <div
+                    data-service="database.getUsage"
+                    data-event="load"
+                    data-name="usage">
+                    <h3 class="margin-bottom-tiny">Objects</h3>
+                    <p class="text-fade">Count of collections and documents over time</p>
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart background-image-no border-no margin-bottom-no">
+                                <input 
+                                type="hidden" 
+                                data-ls-bind="{{usage}}" 
+                                data-forms-chart="Collections=collectionsCount,Documents=documentsCount" 
+                                data-show-y-axis="true"
+                                data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large">
+                        <li>Total Collections <span data-ls-bind="({{usage.collectionsCount|statsGetLast|statsTotal}})"></span></li>
+                        <li>Total Documents <span data-ls-bind="({{usage.documentsCount|statsGetLast|statsTotal}})"></span></li>
+                    </ul>
+
+
+                    <h3 class="margin-bottom-tiny">Collections</h3>
+                    <p class="text-fade">Count of collections create, read, update and delete operations over time</p>
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart background-image-no border-no margin-bottom-no">
+                                <input 
+                                    type="hidden"
+                                    data-ls-bind="{{usage}}"
+                                    data-forms-chart="Created=collectionsCreate,Read=collectionsRead,Updated=collectionsUpdate,Deleted=collectionsDelete"
+                                    data-show-y-axis="true"
+                                    data-colors="create,read,update,delete"
+                                    data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large crud">
+                        <li>Created</li>
+                        <li>Read</li>
+                        <li>Updated</li>
+                        <li>Deleted</li>
+                    </ul>
+
+                    <h3 class="margin-bottom-tiny">Documents</h3>
+                    <p class="text-fade">Count of documents create, read, update and delete operations over time</p>
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart background-image-no border-no margin-bottom-no">
+                                <input
+                                    type="hidden"
+                                    data-ls-bind="{{usage}}"
+                                    data-forms-chart="Created=documentsCreate,Read=documentsRead,Updated=documentsUpdate,Deleted=documentsDelete"
+                                    data-show-y-axis="true"
+                                    data-colors="create,read,update,delete"
+                                    data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large crud">
+                        <li>Created</li>
+                        <li>Read</li>
+                        <li>Updated</li>
+                        <li>Deleted</li>
+                    </ul>
+                </div>
+            </li>
         </ul>
     </div>
 </div>

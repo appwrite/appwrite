@@ -1,3 +1,79 @@
+# Version 0.12.0
+
+## Features
+
+- Completely rewritten Database service: **Breaking Change**
+  - Collection rules are now attributes
+  - Filters for have been replaced with a new, more powerful syntax
+  - Custom indexes for more performant queries
+  - Enum Attributes
+  - Maximum `sum` returned does not exceed 5000 documents anymore **Breaking Change**
+  - **DEPRECATED** Nested documents has been removed
+  - **DEPRECATED** Wildcard rule has been removed
+- You can now set custom ID’s when creating following resources:
+  - User
+  - Team
+  - Function
+  - Project
+  - File
+  - Collection
+  - Document
+- All resources with custom ID support required you to set an ID now
+  - Passing `unique()` will generate a unique ID
+- Auto-generated ID's are now 20 characters long
+- Wildcard permissions `*` are now `role:all` **Breaking Change**
+- Collections can be enabled and disabled
+- Permissions are now found as top-level keys `$read` and `$write` instead of nested under `$permissions`
+- Accessing collections with insufficient permissions now return a `401` isntead of `404` status code
+- Offset cannot be higher than 5000 now and cursor pagination is required
+- Added Cursor pagination to all endpoints that provide pagination by offset
+- Added new Usage worker to aggregate usage statistics
+- Added new Database worker to handle heavy database tasks in the background
+- Added detailed Usage statistics to following services in the Console:
+  - Users
+  - Storage
+  - Database
+- You can now disable/enable following services in the Console:
+  - Account
+  - Avatars
+  - Database
+  - Locale
+  - Health
+  - Storage
+  - Teams
+  - Users
+  - Functions
+- Fixed several memory leaks in the Console
+- Added pagination to account activities in the Console
+- Added following events from User service to Webhooks and Functions:
+  - `users.update.email`
+  - `users.update.name`
+  - `users.update.password`
+- Added new environment variables to enable error logging:
+  - The `_APP_LOGGING_PROVIDER` variable allows you to enable the logger set the value to one of `sentry`, `raygun`, `appsignal`.
+  - The `_APP_LOGGING_CONFIG` variable configures authentication to 3rd party error logging providers. If using Sentry, this should be 'SENTRY_API_KEY;SENTRY_APP_ID'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key.
+- Added new environment variable `_APP_USAGE_AGGREGATION_INTERVAL` to configure the usage worker interval
+- Added negative rotation values to file preview endpoint
+- Multiple responses from the Health service were changed to new (better) schema  **Breaking Change**
+- Method `health.getAntiVirus()` has been renamed to `health.getAntivirus()`
+- Added following langauges to the Locale service:
+  - Latin
+  - Sindhi
+  - Telugu
+- **DEPRECATED** Tasks service **Breaking Change**
+
+## Bugs
+- Fixed `/v1/avatars/initials` when no space in the name, will try to split by `_`
+- Fixed all audit logs now saving all relevant informations
+- Fixed Health endpoints for `db` and `cache`
+
+## Security
+- Increased minimum password length to 8 and removed maximum length
+- Limited User Preferences to 65kb total size
+- Upgraded Redis to 6.2
+- Upgraded InfluxDB to 1.4.0
+- Upgraded Telegraf to 1.3.0
+
 # Version 0.11.0
 
 ## Features
@@ -9,6 +85,8 @@
   - Deno 1.12
   - Deno 1.13
   - Deno 1.14
+  - PHP 8.1
+  - Node 17
 - Added translations:
   - German `de` by @SoftCreatR in https://github.com/appwrite/appwrite/pull/1790
   - Hebrew `he` by @Kokoden in https://github.com/appwrite/appwrite/pull/1846
@@ -100,7 +178,7 @@
 - Refactored E-Mail template (#1422)
 - Improved locale management (#1440)
 - Added `$permissions` to execution response (#948)
-- Switch from using Docker CLI to Docker API by intergrating [utopia-php/orchestration](https://github.com/utopia-php/orchestration) (#1420)
+- Switch from using Docker CLI to Docker API by integrating [utopia-php/orchestration](https://github.com/utopia-php/orchestration) (#1420)
 - Added DOCKERHUB_PULL_USERNAME, DOCKERHUB_PULL_PASSWORD and DOCKERHUB_PULL_EMAIL env variables for pulling from private DockerHub repos (#1420)
 - Added `updateName`, `updateEmail` and `updatePassword` to Users service and console (#1547)
 
@@ -155,7 +233,7 @@
 - Added internal support for connection pools for improved performance (#1278)
 - Added new abstraction for workers executable files (#1276)
 - Added a new API in the Users API to allow you to force update your user verification status (#1223)
-- Using a fixed commit to avoid breaking changes for imagemagick extenstion (#1274)
+- Using a fixed commit to avoid breaking changes for imagemagick extension (#1274)
 - Updated the design of all the email templates (#1225)
 - Refactored Devices page in Console: (#1167)
   - Renamed *Devices* to *Sessions*
@@ -186,7 +264,7 @@
 - Fixed a bug in the Twitch OAuth adapter (#1209)
 - Fixed missing session object when OAuth session creation event is triggered (#1208)
 - Fixed bug where we didn't ignore the email case, converted all emails to lowercase internally (#1243)
-- Fixed a console bug where you can't click a user with no name, added a placehoder for anonyomous users (#1220)
+- Fixed a console bug where you can't click a user with no name, added a placeholder for anonymous users (#1220)
 - Fixed unique keys not being updated when changing a user's email address (#1301)
 - Fixed a bug where decimal integers where wrongly used with database filters (#1349)
 
@@ -280,8 +358,8 @@
 
 ## Upgrades
 
-- Upgraded redis extenstion lib to version 5.3.3
-- Upgraded maxmind extenstion lib to version 1.10.0
+- Upgraded redis extension lib to version 5.3.3
+- Upgraded maxmind extension lib to version 1.10.0
 - Upgraded utopia-php/cli lib to version 0.10.0
 - Upgraded matomo/device-detector lib to version 4.1.0
 - Upgraded dragonmantank/cron-expression lib to version 3.1.0
@@ -293,7 +371,7 @@
 ## Bug Fixes
 
 - Updated missing storage env vars
-- Fixed a bug, that added a wrong timzone offset to user log timestamps
+- Fixed a bug, that added a wrong timezone offset to user log timestamps
 - Fixed a bug, that Response format header was not added in the access-control-allow-header list.
 - Fixed a bug where countryName is unknown on sessions (#933)
 - Added missing event users.update.prefs (#952)
@@ -372,13 +450,13 @@
 - Upgraded Influxdb Docker image to version 1.8 (alpine)
 - Upgraded Redis Resque queue library to version 1.3.6 ([#319](https://github.com/appwrite/appwrite/issues/319))
 - Upgraded ClamAV container image to version 1.0.11 ([#412](https://github.com/appwrite/appwrite/issues/412))
-- Upgraded device detctor to version 3.12.6
+- Upgraded device detector to version 3.12.6
 - Upgraded GEOIP DB file to Feb 2021 release
 
 ## Breaking Changes (Read before upgrading!)
 
 - **Deprecated** `first` and `last` query params for documents list route in the database API
-- **Deprecated** Deprectaed Pubjabi Translations ('pn')
+- **Deprecated** Deprecated Pubjabi Translations ('pn')
 - **Deprecated** `PATCH /account/prefs` is now updating the prefs payload and not just merging it
 - **Deprecated** `PATCH /users/:userId/prefs` is now updating the prefs payload and not just merging it
 - Switched order of limit and offset params in all the SDKs `listDocuments` method for better consistency
@@ -424,7 +502,7 @@
 - Block iframe access to Appwrite console using the `X-Frame-Options` header.
 - Fixed `roles` param input validator
 - API Keys are now stored encrypted 
-- Disabled domains whitlist ACL for the Appwrite console
+- Disabled domains whitelist ACL for the Appwrite console
 
 # Version 0.6.2 (PRE-RELEASE)
 

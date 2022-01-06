@@ -7,9 +7,26 @@ table {
   position: relative;
   table-layout: fixed;
 
-
   &.y-scroll {
     overflow-y: auto;
+  }
+
+  &.multi-line {
+    thead th, tbody td {
+      line-height: inherit;
+      text-overflow:inherit;
+      white-space: inherit;
+    }
+  }
+
+  &.borders {
+    td, th {
+      .func-border-end(1px, var(--config-border-fade-super));
+
+      &:last-child{
+        border: none;
+      }
+    }
   }
 
   thead {
@@ -94,10 +111,6 @@ table {
 
     &:first-child {
       .func-padding-start(30px);
-    }
-
-    &:last-child {
-      .func-padding-end(30px);
     }
   }
 

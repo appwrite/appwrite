@@ -33,8 +33,8 @@ abstract class Scope extends TestCase
 
     protected function getLastEmail():array
     {
-        sleep(10);
-        
+        sleep(5);
+
         $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
 
         if ($emails && is_array($emails)) {
@@ -87,6 +87,7 @@ abstract class Scope extends TestCase
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -138,6 +139,7 @@ abstract class Scope extends TestCase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,

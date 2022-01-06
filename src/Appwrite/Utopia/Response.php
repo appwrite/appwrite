@@ -5,11 +5,21 @@ namespace Appwrite\Utopia;
 use Exception;
 use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Any;
+use Appwrite\Utopia\Response\Model\Attribute;
+use Appwrite\Utopia\Response\Model\AttributeList;
+use Appwrite\Utopia\Response\Model\AttributeString;
+use Appwrite\Utopia\Response\Model\AttributeInteger;
+use Appwrite\Utopia\Response\Model\AttributeFloat;
+use Appwrite\Utopia\Response\Model\AttributeBoolean;
+use Appwrite\Utopia\Response\Model\AttributeEmail;
+use Appwrite\Utopia\Response\Model\AttributeEnum;
+use Appwrite\Utopia\Response\Model\AttributeIP;
+use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\Continent;
@@ -22,7 +32,7 @@ use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Func;
-use Appwrite\Utopia\Response\Model\FuncPermissions;
+use Appwrite\Utopia\Response\Model\Index;
 use Appwrite\Utopia\Response\Model\JWT;
 use Appwrite\Utopia\Response\Model\Key;
 use Appwrite\Utopia\Response\Model\Language;
@@ -32,18 +42,30 @@ use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Log;
 use Appwrite\Utopia\Response\Model\Membership;
+use Appwrite\Utopia\Response\Model\Metric;
 use Appwrite\Utopia\Response\Model\Permissions;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Tag;
-use Appwrite\Utopia\Response\Model\Task;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
+use Appwrite\Utopia\Response\Model\HealthAntivirus;
+use Appwrite\Utopia\Response\Model\HealthQueue;
+use Appwrite\Utopia\Response\Model\HealthStatus;
+use Appwrite\Utopia\Response\Model\HealthTime;
+use Appwrite\Utopia\Response\Model\HealthVersion;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
-use stdClass;
+use Appwrite\Utopia\Response\Model\Runtime;
+use Appwrite\Utopia\Response\Model\UsageBuckets;
+use Appwrite\Utopia\Response\Model\UsageCollection;
+use Appwrite\Utopia\Response\Model\UsageDatabase;
+use Appwrite\Utopia\Response\Model\UsageFunctions;
+use Appwrite\Utopia\Response\Model\UsageProject;
+use Appwrite\Utopia\Response\Model\UsageStorage;
+use Appwrite\Utopia\Response\Model\UsageUsers;
 
 /**
  * @method Response setStatusCode(int $code = 200)
@@ -56,16 +78,37 @@ class Response extends SwooleResponse
     const MODEL_LOG = 'log';
     const MODEL_LOG_LIST = 'logList';
     const MODEL_ERROR = 'error';
+    const MODEL_METRIC = 'metric';
+    const MODEL_METRIC_LIST = 'metricList';
     const MODEL_ERROR_DEV = 'errorDev';
     const MODEL_BASE_LIST = 'baseList';
-    const MODEL_PERMISSIONS = 'permissions';
+    const MODEL_USAGE_DATABASE = 'usageDatabase';
+    const MODEL_USAGE_COLLECTION = 'usageCollection';
+    const MODEL_USAGE_USERS = 'usageUsers';
+    const MODEL_USAGE_BUCKETS = 'usageBuckets';
+    const MODEL_USAGE_STORAGE = 'usageStorage';
+    const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
+    const MODEL_USAGE_PROJECT = 'usageProject';
     
     // Database
     const MODEL_COLLECTION = 'collection';
     const MODEL_COLLECTION_LIST = 'collectionList';
-    const MODEL_RULE = 'rule';
+    const MODEL_INDEX = 'index';
+    const MODEL_INDEX_LIST = 'indexList';
     const MODEL_DOCUMENT = 'document';
     const MODEL_DOCUMENT_LIST = 'documentList';
+
+    // Database Attributes
+    const MODEL_ATTRIBUTE = 'attribute';
+    const MODEL_ATTRIBUTE_LIST = 'attributeList';
+    const MODEL_ATTRIBUTE_STRING = 'attributeString';
+    const MODEL_ATTRIBUTE_INTEGER = 'attributeInteger';
+    const MODEL_ATTRIBUTE_FLOAT = 'attributeFloat';
+    const MODEL_ATTRIBUTE_BOOLEAN = 'attributeBoolean';
+    const MODEL_ATTRIBUTE_EMAIL = 'attributeEmail';
+    const MODEL_ATTRIBUTE_ENUM = 'attributeEnum';
+    const MODEL_ATTRIBUTE_IP = 'attributeIp';
+    const MODEL_ATTRIBUTE_URL= 'attributeUrl';
 
     // Users
     const MODEL_USER = 'user';
@@ -103,6 +146,8 @@ class Response extends SwooleResponse
     // Functions
     const MODEL_FUNCTION = 'function';
     const MODEL_FUNCTION_LIST = 'functionList';
+    const MODEL_RUNTIME = 'runtime';
+    const MODEL_RUNTIME_LIST = 'runtimeList';
     const MODEL_TAG = 'tag';
     const MODEL_TAG_LIST = 'tagList';
     const MODEL_EXECUTION = 'execution';
@@ -116,13 +161,23 @@ class Response extends SwooleResponse
     const MODEL_WEBHOOK_LIST = 'webhookList';
     const MODEL_KEY = 'key';
     const MODEL_KEY_LIST = 'keyList';
-    const MODEL_TASK = 'task';
-    const MODEL_TASK_LIST = 'taskList';
     const MODEL_PLATFORM = 'platform';
     const MODEL_PLATFORM_LIST = 'platformList';
     const MODEL_DOMAIN = 'domain';
     const MODEL_DOMAIN_LIST = 'domainList';
+
+    // Health
+    const MODEL_HEALTH_STATUS = 'healthStatus';
+    const MODEL_HEALTH_VERSION = 'healthVersion';
+    const MODEL_HEALTH_QUEUE = 'healthQueue';
+    const MODEL_HEALTH_TIME = 'healthTime';
+    const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
     
+    // Deprecated
+    const MODEL_PERMISSIONS = 'permissions';
+    const MODEL_RULE = 'rule';
+    const MODEL_TASK = 'task';
+
     // Tests (keep last)
     const MODEL_MOCK = 'mock';
 
@@ -151,20 +206,21 @@ class Response extends SwooleResponse
             ->setModel(new ErrorDev())
             // Lists
             ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
+            ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
             ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
             ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
             ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
-            ->setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG, false))
+            ->setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG))
             ->setModel(new BaseList('Files List', self::MODEL_FILE_LIST, 'files', self::MODEL_FILE))
             ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
             ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
+            ->setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
             ->setModel(new BaseList('Tags List', self::MODEL_TAG_LIST, 'tags', self::MODEL_TAG))
             ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
             ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
             ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
-            ->setModel(new BaseList('Tasks List', self::MODEL_TASK_LIST, 'tasks', self::MODEL_TASK, true, false))
             ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
             ->setModel(new BaseList('Domains List', self::MODEL_DOMAIN_LIST, 'domains', self::MODEL_DOMAIN, true, false))
             ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
@@ -172,11 +228,21 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Languages List', self::MODEL_LANGUAGE_LIST, 'languages', self::MODEL_LANGUAGE))
             ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
+            ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             // Entities
-            ->setModel(new Permissions())
             ->setModel(new Collection())
+            ->setModel(new Attribute())
+            ->setModel(new AttributeList())
+            ->setModel(new AttributeString())
+            ->setModel(new AttributeInteger())
+            ->setModel(new AttributeFloat())
+            ->setModel(new AttributeBoolean())
+            ->setModel(new AttributeEmail())
+            ->setModel(new AttributeEnum())
+            ->setModel(new AttributeIP())
+            ->setModel(new AttributeURL())
+            ->setModel(new Index())
             ->setModel(new ModelDocument())
-            ->setModel(new Rule())
             ->setModel(new Log())
             ->setModel(new User())
             ->setModel(new Preferences())
@@ -188,13 +254,12 @@ class Response extends SwooleResponse
             ->setModel(new Team())
             ->setModel(new Membership())
             ->setModel(new Func())
-            ->setModel(new FuncPermissions())
+            ->setModel(new Runtime())
             ->setModel(new Tag())
             ->setModel(new Execution())
             ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())
-            ->setModel(new Task())
             ->setModel(new Domain())
             ->setModel(new Platform())
             ->setModel(new Country())
@@ -202,6 +267,19 @@ class Response extends SwooleResponse
             ->setModel(new Language())
             ->setModel(new Currency())
             ->setModel(new Phone())
+            ->setModel(new HealthAntivirus())
+            ->setModel(new HealthQueue())
+            ->setModel(new HealthStatus())
+            ->setModel(new HealthTime())
+            ->setModel(new HealthVersion())
+            ->setModel(new Metric())
+            ->setModel(new UsageDatabase())
+            ->setModel(new UsageCollection())
+            ->setModel(new UsageUsers())
+            ->setModel(new UsageStorage())
+            ->setModel(new UsageBuckets())
+            ->setModel(new UsageFunctions())
+            ->setModel(new UsageProject())
             // Verification
             // Recovery
             // Tests (keep last)
@@ -271,11 +349,11 @@ class Response extends SwooleResponse
         $output = $this->output($document, $model);
 
         // If filter is set, parse the output
-        if (self::isFilter()) {
+        if (self::hasFilter()) {
             $output = self::getFilter()->parse($output, $model);
         }
 
-        $this->json(!empty($output) ? $output : new stdClass());
+        $this->json(!empty($output) ? $output : new \stdClass());
     }
 
     /**
@@ -297,8 +375,10 @@ class Response extends SwooleResponse
             return $this->payload;
         }
 
+        $document = $model->filter($document);
+
         foreach ($model->getRules() as $key => $rule) {
-            if (!$document->isSet($key)) {
+            if (!$document->isSet($key) && $rule['require']) { // do not set attribute in response if not required
                 if (!is_null($rule['default'])) {
                     $document->setAttribute($key, $rule['default']);
                 } else {
@@ -313,15 +393,33 @@ class Response extends SwooleResponse
 
                 foreach ($data[$key] as &$item) {
                     if ($item instanceof Document) {
-                        if (!array_key_exists($rule['type'], $this->models)) {
-                            throw new Exception('Missing model for rule: '. $rule['type']);
+                        if (\is_array($rule['type'])) {
+                            foreach ($rule['type'] as $type) {
+                                $condition = false;
+                                foreach ($this->getModel($type)->conditions as $attribute => $val) {
+                                    $condition = $item->getAttribute($attribute) === $val;
+                                    if(!$condition) {
+                                        break;
+                                    }
+                                }
+                                if ($condition) {
+                                    $ruleType = $type;
+                                    break;
+                                }
+                            }
+                        } else {
+                            $ruleType = $rule['type'];
                         }
 
-                        $item = $this->output($item, $rule['type']);
+                        if (!array_key_exists($ruleType, $this->models)) {
+                            throw new Exception('Missing model for rule: '. $ruleType);
+                        }
+
+                        $item = $this->output($item, $ruleType);
                     }
                 }
             }
-            
+
             $output[$key] = $data[$key];
         }
 
@@ -390,7 +488,7 @@ class Response extends SwooleResponse
      *
      * @return bool
      */
-    public static function isFilter(): bool
+    public static function hasFilter(): bool
     {
         return self::$filter != null;
     }

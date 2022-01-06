@@ -2,7 +2,7 @@
 
 global $utopia, $request, $response;
 
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
 use Appwrite\Network\Validator\Host;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -205,7 +205,7 @@ App::get('/v1/mock/tests/general/download')
     ->label('sdk.mock', true)
     ->inject('response')
     ->action(function ($response) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         
         $response
             ->setContentType('text/plain')
@@ -236,7 +236,7 @@ App::post('/v1/mock/tests/general/upload')
     ->inject('request')
     ->inject('response')
     ->action(function ($x, $y, $z, $file, $request, $response) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Utopia\Swoole\Response $response */
         
         $file = $request->getFiles('file');
@@ -373,7 +373,7 @@ App::get('/v1/mock/tests/general/get-cookie')
     ->label('sdk.mock', true)
     ->inject('request')
     ->action(function ($request) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
 
         if ($request->getCookie('cookieName', '') !== 'cookieValue') {
             throw new Exception('Missing cookie value', 400);
@@ -551,7 +551,7 @@ App::get('/v1/mock/tests/general/oauth2/failure')
 
 App::shutdown(function($utopia, $response, $request) {
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
 
     $result = [];
@@ -568,7 +568,7 @@ App::shutdown(function($utopia, $response, $request) {
     $tests = \array_merge($tests, $result);
 
     if (!\file_put_contents($path, \json_encode($tests), LOCK_EX)) {
-        throw new Exception('Failed to save resutls', 500);
+        throw new Exception('Failed to save results', 500);
     }
 
     $response->dynamic(new Document(['result' => $route->getMethod() . ':' . $route->getPath() . ':passed']), Response::MODEL_MOCK);

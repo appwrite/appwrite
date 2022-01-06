@@ -1,1 +1,1 @@
-Get a team members by the team unique ID. All team members have read access for this list of resources.
+Use this endpoint to list a team's members using the team's ID. All team members have read access to this endpoint.
