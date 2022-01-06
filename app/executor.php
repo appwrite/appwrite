@@ -98,15 +98,15 @@ App::post('/v1/execute') // Define Route
     ->param('event', '', new Text(1024), '', true)
     ->param('eventData', '', new Text(10240), '', true)
     ->param('data', '', new Text(1024), '', true)
-    ->param('webhooks', [], new ArrayList(new JSON()), [], true)
+    ->param('webhooks', [], new ArrayList(new JSON()), '', true)
     ->param('userId', '', new Text(1024), '', true)
     ->param('jwt', '', new Text(1024), '', true)
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->action(
-        function ($trigger, $projectId, $executionId, $functionId, $event, $eventData, $data, $webhooks, $userId, $jwt, $request, $response, $dbForInternal) {
+        function ($trigger, $projectId, $executionId, $functionId, $event, $eventData, $data, $webhooks, $userId, $jwt, $request, $response, $dbForProject) {
             try {
-                $data = execute($trigger, $projectId, $executionId, $functionId, $dbForInternal, $event, $eventData, $data, $webhooks, $userId, $jwt);
+                $data = execute($trigger, $projectId, $executionId, $functionId, $dbForProject, $event, $eventData, $data, $webhooks, $userId, $jwt);
                 $response->json($data);
             } catch (Exception $e) {
                 $response
@@ -123,20 +123,20 @@ App::post('/v1/execute') // Define Route
 App::post('/v1/cleanup/function')
     ->param('functionId', '', new UID())
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('projectID')
-    ->action(function ($functionId, $response, $dbForInternal, $projectID) {
+    ->action(function ($functionId, $response, $dbForProject, $projectID) {
         /** @var string $functionId */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var string $projectID */
 
         global $orchestration;
 
         try {
             // Get function document
-            $function = Authorization::skip(function () use ($dbForInternal, $functionId) {
-                return $dbForInternal->getDocument('functions', $functionId);
+            $function = Authorization::skip(function () use ($dbForProject, $functionId) {
+                return $dbForProject->getDocument('functions', $functionId);
             });
 
             // Check if function exists
@@ -144,8 +144,8 @@ App::post('/v1/cleanup/function')
                 throw new Exception('Function not found', 404);
             }
 
-            $results = Authorization::skip(function () use ($dbForInternal, $functionId) {
-                return $dbForInternal->find('tags', [new Query('functionId', Query::TYPE_EQUAL, [$functionId])], 999);
+            $results = Authorization::skip(function () use ($dbForProject, $functionId) {
+                return $dbForProject->find('tags', [new Query('functionId', Query::TYPE_EQUAL, [$functionId])], 999);
             });
 
             // If amount is 0 then we simply return true
@@ -158,8 +158,8 @@ App::post('/v1/cleanup/function')
                 try {
                     // Remove any ongoing builds
                     if ($tag->getAttribute('buildId')) {
-                        $build = Authorization::skip(function () use ($dbForInternal, $tag) {
-                            return $dbForInternal->getDocument('builds', $tag->getAttribute('buildId'));
+                        $build = Authorization::skip(function () use ($dbForProject, $tag) {
+                            return $dbForProject->getDocument('builds', $tag->getAttribute('buildId'));
                         });
 
                         if ($build->getAttribute('status') == 'building') {
@@ -186,20 +186,20 @@ App::post('/v1/cleanup/function')
 App::post('/v1/cleanup/tag')
     ->param('tagId', '', new UID(), 'Tag unique ID.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('projectID')
-    ->action(function ($tagId, $response, $dbForInternal, $projectID) {
+    ->action(function ($tagId, $response, $dbForProject, $projectID) {
         /** @var string $tagId */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $dbForInternal */
+        /** @var Appwrite\Database\Database $dbForProject */
         /** @var string $projectID */
 
         global $orchestration;
 
         try {
             // Get tag document
-            $tag = Authorization::skip(function () use ($dbForInternal, $tagId) {
-                return $dbForInternal->getDocument('tags', $tagId);
+            $tag = Authorization::skip(function () use ($dbForProject, $tagId) {
+                return $dbForProject->getDocument('tags', $tagId);
             });
 
             // Check if tag exists
@@ -210,8 +210,8 @@ App::post('/v1/cleanup/tag')
             try {
                 // Remove any ongoing builds
                 if ($tag->getAttribute('buildId')) {
-                    $build = Authorization::skip(function () use ($dbForInternal, $tag) {
-                        return $dbForInternal->getDocument('builds', $tag->getAttribute('buildId'));
+                    $build = Authorization::skip(function () use ($dbForProject, $tag) {
+                        return $dbForProject->getDocument('builds', $tag->getAttribute('buildId'));
                     });
             
                     if ($build->getAttribute('status') == 'building') {
@@ -241,19 +241,19 @@ App::post('/v1/tag')
     ->param('userId', '', new UID(), 'User unique ID.', true)
     ->param('autoDeploy', false, new Boolean(), '', true)
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('projectID')
-    ->action(function ($functionId, $tagId, $userId, $autoDeploy, $response, $dbForInternal, $projectID) {
+    ->action(function ($functionId, $tagId, $userId, $autoDeploy, $response, $dbForProject, $projectID) {
         global $runtimes;
 
         // Get function document
-        $function = Authorization::skip(function () use ($functionId, $dbForInternal) {
-            return $dbForInternal->getDocument('functions', $functionId);
+        $function = Authorization::skip(function () use ($functionId, $dbForProject) {
+            return $dbForProject->getDocument('functions', $functionId);
         });
 
         // Get tag document
-        $tag = Authorization::skip(function () use ($tagId, $dbForInternal) {
-            return $dbForInternal->getDocument('tags', $tagId);
+        $tag = Authorization::skip(function () use ($tagId, $dbForProject) {
+            return $dbForProject->getDocument('tags', $tagId);
         });
 
         // Check if both documents exist
@@ -270,13 +270,13 @@ App::post('/v1/tag')
             : null;
 
         // Create a new build entry
-        $buildId = $dbForInternal->getId();
+        $buildId = $dbForProject->getId();
 
         if ($tag->getAttribute('buildId')) {
             $buildId = $tag->getAttribute('buildId');   
         } else {
-            Authorization::skip(function () use ($buildId, $dbForInternal, $tag, $userId, $function, $projectID, $runtime) {
-                $dbForInternal->createDocument('builds', new Document([
+            Authorization::skip(function () use ($buildId, $dbForProject, $tag, $userId, $function, $projectID, $runtime) {
+                $dbForProject->createDocument('builds', new Document([
                     '$id' => $buildId,
                     '$read' => (!empty($userId)) ? ['user:' . $userId] : [],
                     '$write' => [],
@@ -301,14 +301,14 @@ App::post('/v1/tag')
 
                 $tag->setAttribute('buildId', $buildId);
 
-                $dbForInternal->updateDocument('tags', $tag->getId(), $tag);
+                $dbForProject->updateDocument('tags', $tag->getId(), $tag);
             });
         }
 
         // Build Code
-        go(function () use ($dbForInternal, $projectID, $tagId, $buildId, $functionId, $function) {
+        go(function () use ($dbForProject, $projectID, $tagId, $buildId, $functionId, $function) {
             // Build Code
-            runBuildStage($buildId, $projectID, $dbForInternal);
+            runBuildStage($buildId, $projectID, $dbForProject);
 
             // Update the schedule
             $schedule = $function->getAttribute('schedule', '');
@@ -316,13 +316,13 @@ App::post('/v1/tag')
             $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
 
             // Grab tag
-            $tag = Authorization::skip(function () use ($dbForInternal, $tagId, $next, $buildId) {
-                return $dbForInternal->getDocument('tags', $tagId);
+            $tag = Authorization::skip(function () use ($dbForProject, $tagId, $next, $buildId) {
+                return $dbForProject->getDocument('tags', $tagId);
             });
 
             // Grab build
-            $build = Authorization::skip(function () use ($dbForInternal, $buildId) {
-                return $dbForInternal->getDocument('builds', $buildId);
+            $build = Authorization::skip(function () use ($dbForProject, $buildId) {
+                return $dbForProject->getDocument('builds', $buildId);
             });
 
             // If the build failed, it won't be possible to deploy
@@ -332,8 +332,8 @@ App::post('/v1/tag')
 
             if ($tag->getAttribute('automaticDeploy') === true) {
                 // Update the function document setting the tag as the active one
-                $function = Authorization::skip(function () use ($function, $dbForInternal, $tag, $next) {
-                    return $function = $dbForInternal->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
+                $function = Authorization::skip(function () use ($function, $dbForProject, $tag, $next) {
+                    return $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
                         'tag' => $tag->getId(),
                         'scheduleNext' => (int)$next,
                     ])));
@@ -341,7 +341,7 @@ App::post('/v1/tag')
             }
 
             // Deploy Runtime Server
-            createRuntimeServer($functionId, $projectID, $tagId, $dbForInternal);
+            createRuntimeServer($functionId, $projectID, $tagId, $dbForProject);
         });
 
         if (false === $function) {
@@ -368,18 +368,18 @@ App::get('/v1/healthz')
 App::post('/v1/build/:buildId') // Start a Build
     ->param('buildId', '', new UID(), 'Build unique ID.', false)
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('projectID')
-    ->action(function ($buildId, $response, $dbForInternal, $projectID) {
+    ->action(function ($buildId, $response, $dbForProject, $projectID) {
         /** @var string $buildId */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var string $projectID */
 
         try {
             // Get build document
-            $build = Authorization::skip(function () use ($buildId, $dbForInternal) {
-                return $dbForInternal->getDocument('builds', $buildId);
+            $build = Authorization::skip(function () use ($buildId, $dbForProject) {
+                return $dbForProject->getDocument('builds', $buildId);
             });
 
             // Check if build exists
@@ -397,9 +397,9 @@ App::post('/v1/build/:buildId') // Start a Build
                 throw new Exception('Build is already finished', 409);
             }
 
-            go(function () use ($buildId, $dbForInternal, $projectID) {
+            go(function () use ($buildId, $dbForProject, $projectID) {
                 // Build Code
-                runBuildStage($buildId, $projectID, $dbForInternal);
+                runBuildStage($buildId, $projectID, $dbForProject);
             });
 
             // return success
@@ -1233,12 +1233,13 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         return $swooleResponse->end('401: Authentication Error');
     }
 
-    App::setResource('dbForInternal', function ($db, $cache) use ($projectId) {
+    App::setResource('dbForProject', function ($db, $cache) use ($projectId) {
         $cache = new Cache(new RedisCache($cache));
 
         $database = new Database(new MariaDB($db), $cache);
-        $database->setNamespace('project_' . $projectId . '_internal');
-
+        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $database->setNamespace('_project_'.$projectId);
+    
         return $database;
     }, ['db', 'cache']);
 

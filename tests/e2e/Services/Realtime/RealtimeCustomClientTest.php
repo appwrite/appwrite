@@ -990,7 +990,7 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'command' => 'php index.php',
+            'entrypoint' => 'index.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/timeout.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
 
@@ -998,6 +998,9 @@ class RealtimeCustomClientTest extends Scope
 
         $this->assertEquals($tag['headers']['status-code'], 201);
         $this->assertNotEmpty($tag['body']['$id']);
+
+        // Wait for tag to be built.
+        sleep(5);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/tag', array_merge([
             'content-type' => 'application/json',

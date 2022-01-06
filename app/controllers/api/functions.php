@@ -364,9 +364,9 @@ App::patch('/v1/functions/:functionId/tag')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
 
-        $function = $dbForInternal->getDocument('functions', $functionId);
-        $tag = $dbForInternal->getDocument('tags', $tag);
-        $build = $dbForInternal->getDocument('builds', $tag->getAttribute('buildId'));
+        $function = $dbForProject->getDocument('functions', $functionId);
+        $tag = $dbForProject->getDocument('tags', $tag);
+        $build = $dbForProject->getDocument('builds', $tag->getAttribute('buildId'));
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
@@ -552,13 +552,13 @@ App::post('/v1/functions/:functionId/tags')
 
         if ($automaticDeploy === 'true') {
             // Remove automaticDeploy for all other tags.
-            $tags = $dbForInternal->find('tags', [
+            $tags = $dbForProject->find('tags', [
                 new Query('automaticDeploy', Query::TYPE_EQUAL, [true]),
             ]);
 
             foreach ($tags as $tag) {
                 $tag->setAttribute('automaticDeploy', false);
-                $dbForInternal->updateDocument('tags', $tag->getId(), $tag);
+                $dbForProject->updateDocument('tags', $tag->getId(), $tag);
             }
         }
         
@@ -585,7 +585,7 @@ App::post('/v1/functions/:functionId/tags')
         ;
 
         // Send start build reqeust to executor using /v1/build/:buildId
-        $function = $dbForInternal->getDocument('functions', $functionId);
+        $function = $dbForProject->getDocument('functions', $functionId);
 
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/tag");
@@ -675,7 +675,7 @@ App::get('/v1/functions/:functionId/tags')
 
         // Get Current Build Data
         foreach ($results as &$tag) {
-            $build = $dbForInternal->getDocument('builds', $tag->getAttribute('buildId', ''));
+            $build = $dbForProject->getDocument('builds', $tag->getAttribute('buildId', ''));
 
             $tag['status'] = $build->getAttribute('status', 'pending');
             $tag['buildStdout'] = $build->getAttribute('stdout', '');
@@ -1068,13 +1068,13 @@ App::get('/v1/builds')
     ->param('cursor', '', new UID(), 'ID of the build used as the starting point for the query, excluding the build itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->inject('response')
-    ->inject('dbForInternal')
-    ->action(function ($limit, $offset, $search, $cursor, $cursorDirection, $response, $dbForInternal) {
+    ->inject('dbForProject')
+    ->action(function ($limit, $offset, $search, $cursor, $cursorDirection, $response, $dbForProject) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
 
         if (!empty($cursor)) {
-            $cursorExecution = $dbForInternal->getDocument('builds', $cursor);
+            $cursorExecution = $dbForProject->getDocument('builds', $cursor);
 
             if ($cursorExecution->isEmpty()) {
                 throw new Exception("Execution '{$cursor}' for the 'cursor' value not found.", 400);
@@ -1087,9 +1087,9 @@ App::get('/v1/builds')
             $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
-        $results = $dbForInternal->find('builds', $queries, $limit, $offset, [], [Database::ORDER_DESC], $cursorExecution ?? null, $cursorDirection);
+        $results = $dbForProject->find('builds', $queries, $limit, $offset, [], [Database::ORDER_DESC], $cursorExecution ?? null, $cursorDirection);
 
-        $sum = $dbForInternal->count('builds', $queries, APP_LIMIT_COUNT);
+        $sum = $dbForProject->count('builds', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'builds' => $results,
@@ -1110,13 +1110,13 @@ App::get('/v1/builds/:buildId')
     ->label('sdk.response.model', Response::MODEL_BUILD)
     ->param('buildId', '', new UID(), 'Build unique ID.')
     ->inject('response')
-    ->inject('dbForInternal')
-    ->action(function ($buildId, $response, $dbForInternal) {
+    ->inject('dbForProject')
+    ->action(function ($buildId, $response, $dbForProject) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         
         Authorization::disable();
-        $build = $dbForInternal->getDocument('builds', $buildId);
+        $build = $dbForProject->getDocument('builds', $buildId);
         Authorization::reset();
 
         if ($build->isEmpty()) {
@@ -1138,14 +1138,14 @@ App::post('/v1/builds/:buildId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('buildId', '', new UID(), 'Build unique ID.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('project')
-    ->action(function ($buildId, $response, $dbForInternal, $project) {
+    ->action(function ($buildId, $response, $dbForProject, $project) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
 
-        $build = $dbForInternal->getDocument('builds', $buildId);
+        $build = $dbForProject->getDocument('builds', $buildId);
 
         if ($build->isEmpty()) {
             throw new Exception('Build not found', 404);
