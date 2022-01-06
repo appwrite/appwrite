@@ -550,7 +550,7 @@ App::post('/v1/functions/:functionId/tags')
                     'search' => implode(' ', [$tagId, $command]),
                 ]));
             } else {
-                $tag = $dbForProject->updateDocument('tags', $tagId, $tag->setAttribute('size', $size));
+                $tag = $dbForProject->updateDocument('tags', $tagId, $tag->setAttribute('size', $fileSize));
             }
         } else {
             if($tag->isEmpty()) {
