@@ -100,10 +100,10 @@ class PDOStatement extends PDOStatementNative
 
     /**
      * Fetch All
-     * 
+     *
      * @param int $fetch_style
      * @param mixed $fetch_args
-     * 
+     *
      * @return array|false
      */
     public function fetchAll(int $fetch_style = PDO::FETCH_BOTH, mixed ...$fetch_args)

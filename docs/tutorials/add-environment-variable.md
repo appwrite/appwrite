@@ -9,7 +9,7 @@ Adding new features may require various configurations options to be set by the 
 
 This tutorial will cover, how to properly add a new environment variable in Appwrite.
 
-### Naming environment varialbe
+### Naming environment variable
 The environment variables in Appwrite are prefixed with `_APP_`. If it belongs to a specific category, the category name is appended as `_APP_REDIS` for the redis category. The available categories are General, Redis, MariaDB, InfluxDB, StatsD, SMTP, Storage and Functions. Finally a properly describing name is given to the variable. For example `_APP_REDIS_HOST` is an environment variable for redis connection host. You can find more information on available categories and existing environment variables in the [environment variables doc](https://appwrite.io/docs/environment-variables).
 
 ### Describe new environment variable

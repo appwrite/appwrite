@@ -5,9 +5,9 @@ use Utopia\Config\Config;
 
 App::init(function ($utopia, $request, $response, $layout) {
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\View $layout */
+    /** @var Appwrite\Utopia\View $layout */
 
     /* AJAX check  */
     if (!empty($request->getQuery('version', ''))) {
@@ -47,7 +47,11 @@ App::init(function ($utopia, $request, $response, $layout) {
     ;
 
     $route = $utopia->match($request);
+
+    $route->label('error', __DIR__.'/../../views/general/error.phtml');
+
     $scope = $route->getLabel('scope', '');
+    
     $layout
         ->setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'))
         ->setParam('isDev', App::isDevelopment())

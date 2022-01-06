@@ -2,9 +2,10 @@
 
 namespace Appwrite\Migration;
 
-use Appwrite\Database\Document;
-use Appwrite\Database\Database;
+use Appwrite\Database\Document as OldDocument;
+use Appwrite\Database\Database as OldDatabase;
 use PDO;
+use Redis;
 use Swoole\Runtime;
 use Utopia\CLI\Console;
 use Utopia\Exception;
@@ -12,24 +13,39 @@ use Utopia\Exception;
 abstract class Migration
 {
     /**
+     * @var array
+     */
+    protected array $options;
+
+    /**
      * @var PDO
      */
-    protected $db;
+    protected PDO $db;
+
+    /**
+     * @var Redis
+     */
+    protected Redis $cache;
 
     /**
      * @var int
      */
-    protected $limit = 50;
+    protected int $limit = 500;
 
     /**
-     * @var Document
+     * @var OldDocument
      */
-    protected $project;
+    protected OldDocument $project;
 
     /**
-     * @var Database
+     * @var OldDatabase
      */
-    protected $projectDB;
+    protected OldDatabase $oldProjectDB;
+
+    /**
+     * @var OldDatabase
+     */
+    protected OldDatabase $oldConsoleDB;
 
     /**
      * @var array
@@ -49,31 +65,44 @@ abstract class Migration
         '0.10.3' => 'V09',
         '0.10.4' => 'V09',
         '0.11.0' => 'V10',
+        '0.12.0' => 'V11',
     ];
 
     /**
      * Migration constructor.
      *
-     * @param PDO $pdo
+     * @param PDO $db
+     * @param Redis|null $cache
+     * @param array $options
+     * @return void 
      */
-    public function __construct(PDO $db)
+    public function __construct(PDO $db, Redis $cache = null, array $options = [])
     {
+        $this->options = $options;
         $this->db = $db;
+        if (!is_null($cache)) {
+            $this->cache = $cache;
+        }
     }
 
     /**
      * Set project for migration.
      *
-     * @param Document $project
-     * @param Database $projectDB
+     * @param OldDocument $project
+     * @param OldDatabase $projectDB
+     * @param OldDatabase $oldConsoleDB
      *
-     * @return Migration
+     * @return self
      */
-    public function setProject(Document $project, Database $projectDB): Migration
+    public function setProject(OldDocument $project, OldDatabase $projectDB, OldDatabase $oldConsoleDB): self
     {
         $this->project = $project;
-        $this->projectDB = $projectDB;
-        $this->projectDB->setNamespace('app_' . $project->getId());
+
+        $this->oldProjectDB = $projectDB;
+        $this->oldProjectDB->setNamespace('app_' . $project->getId());
+
+        $this->oldConsoleDB = $oldConsoleDB;
+
         return $this;
     }
 
@@ -116,7 +145,7 @@ abstract class Migration
                         }
 
                         try {
-                            $new = $this->projectDB->overwriteDocument($document->getArrayCopy());
+                            $new = $this->projectDB->overwriteDocument($new->getArrayCopy());
                         } catch (\Throwable $th) {
                             Console::error('Failed to update document: ' . $th->getMessage());
                             return;
@@ -133,7 +162,14 @@ abstract class Migration
         }
     }
 
-    public function check_diff_multi($array1, $array2)
+    /**
+     * Checks 2 arrays for differences.
+     * 
+     * @param array $array1 
+     * @param array $array2 
+     * @return array 
+     */
+    public function check_diff_multi(array $array1, array $array2): array
     {
         $result = array();
 

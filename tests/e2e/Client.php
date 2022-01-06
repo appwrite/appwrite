@@ -151,12 +151,12 @@ class Client
      * @param string $path
      * @param array $params
      * @param array $headers
+     * @param bool $decode
      * @return array|string
      * @throws Exception
      */
-    public function call(string $method, string $path = '', array $headers = [], array $params = [])
+    public function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true)
     {
-        usleep(50000);
         $headers            = array_merge($this->headers, $headers);
         $ch                 = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
         $responseHeaders    = [];
@@ -217,17 +217,19 @@ class Client
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        switch (substr($responseType, 0, strpos($responseType, ';'))) {
-            case 'application/json':
-                $json = json_decode($responseBody, true);
-
-                if ($json === null) {
-                    throw new Exception('Failed to parse response: '.$responseBody);
-                }
-
-                $responseBody = $json;
-                $json = null;
-            break;
+        if($decode) {
+            switch (substr($responseType, 0, strpos($responseType, ';'))) {
+                case 'application/json':
+                    $json = json_decode($responseBody, true);
+    
+                    if ($json === null) {
+                        throw new Exception('Failed to parse response: '.$responseBody);
+                    }
+    
+                    $responseBody = $json;
+                    $json = null;
+                break;
+            }
         }
 
         if ((curl_errno($ch)/* || 200 != $responseStatus*/)) {

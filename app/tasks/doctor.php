@@ -3,6 +3,7 @@
 global $cli;
 
 use Appwrite\ClamAV\Network;
+use Utopia\Logger\Logger;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\App;
@@ -82,6 +83,16 @@ $cli
             Console::log('🟢 HTTPS force option is enabled');
         }
 
+
+        $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
+        $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
+
+        if(empty($providerName) || empty($providerConfig) || !Logger::hasProvider($providerName)) {
+            Console::log('🔴 Logging adapter is disabled');
+        } else {
+            Console::log('🟢 Logging adapter is enabled (' . $providerName . ')');
+        }
+
         \sleep(0.2);
 
         try {
@@ -113,17 +124,17 @@ $cli
 
         if(App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
             try {
-                $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+                $antivirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
                     (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
 
-                if((@$antiVirus->ping())) {
-                    Console::success('AntiVirus...........connected 👍');
+                if((@$antivirus->ping())) {
+                    Console::success('Antivirus...........connected 👍');
                 }
                 else {
-                    Console::error('AntiVirus........disconnected 👎');
+                    Console::error('Antivirus........disconnected 👎');
                 }
             } catch (\Throwable $th) {
-                Console::error('AntiVirus........disconnected 👎');
+                Console::error('Antivirus........disconnected 👎');
             }
         }
 

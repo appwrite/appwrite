@@ -12,7 +12,7 @@
         formData["name"] =
           formData["name"] || (element.dataset["defaultName"] || "");
 
-        console.teams.create(formData["name"] || "").then(
+        console.teams.create('unique()', formData["name"] || "").then(
           function(data) {
             let team = data["$id"];
 
@@ -23,7 +23,7 @@
               )
             ); //convert to JSON string
 
-            console.projects.create(formData["name"], team).then(
+            console.projects.create(formData["projectId"], formData["name"], team).then(
               function(project) {
                 alerts.remove(loaderId);
                 //router.change("/console/home?project=" + project["$id"]);
