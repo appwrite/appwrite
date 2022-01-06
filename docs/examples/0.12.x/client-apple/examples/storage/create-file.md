@@ -7,7 +7,7 @@ func main() {
 
     let storage = Storage(client)
     storage.createFile(
-        fileId: "",
+        fileId: "[FILE_ID]",
         file: File(name: "image.jpg", buffer: yourByteBuffer)
     ) { result in
         switch result {

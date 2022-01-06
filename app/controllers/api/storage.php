@@ -58,20 +58,18 @@ App::post('/v1/storage/buckets')
     ->param('encryption', true, new Boolean(), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antiVirus', true, new Boolean(), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
     ->inject('response')
-    ->inject('dbForInternal')
-    ->inject('dbForExternal')
+    ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($bucketId, $name, $permission, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antiVirus, $response, $dbForInternal, $dbForExternal, $audits, $usage) {
+    ->action(function ($bucketId, $name, $permission, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antiVirus, $response, $dbForProject, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $bucketId = $bucketId === 'unique()' ? $dbForInternal->getId() : $bucketId;
+        $bucketId = $bucketId === 'unique()' ? $dbForProject->getId() : $bucketId;
         try {
-            $dbForExternal->createCollection('bucket_' . $bucketId, [
+            $dbForProject->createCollection('bucket_' . $bucketId, [
                 new Document([
                     '$id' => 'dateCreated',
                     'type' => Database::VAR_INTEGER,
@@ -288,7 +286,7 @@ App::post('/v1/storage/buckets')
                 ]),
             ]);
 
-            $bucket = $dbForInternal->createDocument('buckets', new Document([
+            $bucket = $dbForProject->createDocument('buckets', new Document([
                 '$id' => $bucketId,
                 '$collection' => 'buckets',
                 'dateCreated' => \time(),
@@ -339,17 +337,17 @@ App::get('/v1/storage/buckets')
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $usage) {
+    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, $search)] : [];
         
         if (!empty($cursor)) {
-            $cursorBucket = $dbForInternal->getDocument('buckets', $cursor);
+            $cursorBucket = $dbForProject->getDocument('buckets', $cursor);
 
             if ($cursorBucket->isEmpty()) {
                 throw new Exception("Bucket '{$cursor}' for the 'cursor' value not found.", 400);
@@ -359,8 +357,8 @@ App::get('/v1/storage/buckets')
         $usage->setParam('storage.buckets.read', 1);
 
         $response->dynamic(new Document([
-            'buckets' => $dbForInternal->find('buckets', $queries, $limit, $offset, [], [$orderType], $cursorBucket ?? null, $cursorDirection),
-            'sum' => $dbForInternal->count('buckets', $queries, APP_LIMIT_COUNT),
+            'buckets' => $dbForProject->find('buckets', $queries, $limit, $offset, [], [$orderType], $cursorBucket ?? null, $cursorDirection),
+            'sum' => $dbForProject->count('buckets', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_BUCKET_LIST);
     });
 
@@ -377,14 +375,14 @@ App::get('/v1/storage/buckets/:bucketId')
     ->label('sdk.response.model', Response::MODEL_BUCKET)
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($bucketId, $response, $dbForInternal, $usage) {
+    ->action(function ($bucketId, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+        $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404);
@@ -417,16 +415,16 @@ App::put('/v1/storage/buckets/:bucketId')
     ->param('encryption', true, new Boolean(), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antiVirus', true, new Boolean(), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($bucketId, $name, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $encryption, $antiVirus, $response, $dbForInternal, $audits, $usage) {
+    ->action(function ($bucketId, $name, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $encryption, $antiVirus, $response, $dbForProject, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+        $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404);
@@ -440,15 +438,15 @@ App::put('/v1/storage/buckets/:bucketId')
         $encryption ??= $bucket->getAttribute('encryption', true);
         $antiVirus ??= $bucket->getAttribute('antiVirus', true);
 
-        $bucket = $dbForInternal->updateDocument('buckets', $bucket->getId(), $bucket
-                ->setAttribute('name', $name)
-                ->setAttribute('$read', $read)
-                ->setAttribute('$write', $write)
-                ->setAttribute('maximumFileSize', $maximumFileSize)
-                ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
-                ->setAttribute('enabled', $enabled)
-                ->setAttribute('encryption', $encryption)
-                ->setAttribute('antiVirus', $antiVirus)
+        $bucket = $dbForProject->updateDocument('buckets', $bucket->getId(), $bucket
+                ->setAttribute('name',$name)
+                ->setAttribute('$read',$read)
+                ->setAttribute('$write',$write)
+                ->setAttribute('maximumFileSize',$maximumFileSize)
+                ->setAttribute('allowedFileExtensions',$allowedFileExtensions)
+                ->setAttribute('enabled',$enabled)
+                ->setAttribute('encryption',$encryption)
+                ->setAttribute('antiVirus',$antiVirus)
         );
 
         $audits
@@ -475,26 +473,26 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForProject')
     ->inject('audits')
     ->inject('deletes')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($bucketId, $response, $dbForInternal, $audits, $deletes, $events, $usage) {
+    ->action(function ($bucketId, $response, $dbForProject, $audits, $deletes, $events, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $deletes */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+        $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404);
         }
 
-        if (!$dbForInternal->deleteDocument('buckets', $bucketId)) {
+        if(!$dbForProject->deleteDocument('buckets', $bucketId)) {
             throw new Exception('Failed to remove project from DB', 500);
         }
         
@@ -540,23 +538,21 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->inject('request')
     ->inject('response')
-    ->inject('dbForInternal')
-    ->inject('dbForExternal')
+    ->inject('dbForProject')
     ->inject('user')
     ->inject('audits')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($bucketId, $fileId, $file, $read, $write, $request, $response, $dbForInternal, $dbForExternal, $user, $audits, $usage, $mode) {
+    ->action(function ($bucketId, $fileId, $file, $read, $write, $request, $response, $dbForProject, $user, $audits, $usage, $mode) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var string $mode */
 
-        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+        $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty() 
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
@@ -617,7 +613,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         $contentRange = $request->getHeader('content-range');
-        $fileId = $fileId === 'unique()' ? $dbForExternal->getId() : $fileId;
+        $fileId = $fileId === 'unique()' ? $dbForProject->getId() : $fileId;
         $chunk = 1;
         $chunks = 1;
 
@@ -662,11 +658,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $path = str_ireplace($device->getRoot(), $device->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
 
         if($permissionBucket) {
-            $file = Authorization::skip(function() use ($dbForExternal, $bucketId, $fileId) {
-                return $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
+            $file = Authorization::skip(function() use ($dbForProject, $bucketId, $fileId) {
+                return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
             });
         } else {
-            $file = $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
         }
 
         $metadata = ['content_type' => $localDevice->getFileMimeType($fileTmpName)];
@@ -758,11 +754,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'metadata' => $metadata,
                     ]);
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function() use ($dbForExternal, $bucketId, $doc) {
-                            return $dbForExternal->createDocument('bucket_' . $bucketId, $doc);
+                        $file = Authorization::skip(function() use ($dbForProject, $bucketId, $doc) {
+                            return $dbForProject->createDocument('bucket_' . $bucketId, $doc);
                         });
                     } else {
-                        $file = $dbForExternal->createDocument('bucket_' . $bucketId, $doc);
+                        $file = $dbForProject->createDocument('bucket_' . $bucketId, $doc);
                     }
                 } else {
                     $file = $file
@@ -780,11 +776,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('chunksUploaded', $chunksUploaded);
 
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function() use ($dbForExternal, $bucketId, $fileId, $file) {
-                            return $dbForExternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
+                        $file = Authorization::skip(function() use ($dbForProject, $bucketId, $fileId, $file) {
+                            return $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file);
                         });
                     } else {
-                        $file = $dbForExternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
+                        $file = $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file);
                     }
                             
                 }
@@ -818,11 +814,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'metadata' => $metadata,
                     ]);
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function() use ($dbForExternal, $bucketId, $doc) {
-                            return $dbForExternal->createDocument('bucket_' . $bucketId, $doc);
+                        $file = Authorization::skip(function() use ($dbForProject, $bucketId, $doc) {
+                            return $dbForProject->createDocument('bucket_' . $bucketId, $doc);
                         });
                     } else {
-                        $file = $dbForExternal->createDocument('bucket_' . $bucketId, $doc);
+                        $file = $dbForProject->createDocument('bucket_' . $bucketId, $doc);
                     }
                 } else {
                     $file = $file
@@ -830,11 +826,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('metadata', $metadata);
 
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function() use ($dbForExternal, $bucketId, $fileId, $file) {
-                            return $dbForExternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
+                        $file = Authorization::skip(function() use ($dbForProject, $bucketId, $fileId, $file) {
+                            return $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file);
                         });
                     } else {
-                        $file = $dbForExternal->updateDocument('bucket_' . $bucketId, $fileId, $file);
+                        $file = $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file);
                     }
                 }
             }
@@ -884,18 +880,16 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
-    ->inject('dbForInternal')
-    ->inject('dbForExternal')
+    ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($bucketId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForInternal, $dbForExternal, $usage, $mode) {
+    ->action(function ($bucketId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var string $mode */
 
-        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+        $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty() 
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
@@ -918,11 +912,11 @@ App::get('/v1/storage/buckets/:bucketId/files')
 
         if (!empty($cursor)) {
             if ($bucket->getAttribute('permission') ==='bucket') {
-                $cursorFile = Authorization::skip(function() use ($dbForExternal, $bucket, $cursor) {
-                    return $dbForExternal->getDocument('bucket_' . $bucket->getId(), $cursor);
+                $cursorFile = Authorization::skip(function() use ($dbForProject, $bucket, $cursor) {
+                    return $dbForProject->getDocument('bucket_' . $bucket->getId(), $cursor);
                 });
             } else {
-                $cursorFile = $dbForExternal->getDocument('bucket_' . $bucket->getId(), $cursor);
+                $cursorFile = $dbForProject->getDocument('bucket_' . $bucket->getId(), $cursor);
             }
 
             if ($cursorFile->isEmpty()) {
@@ -936,12 +930,12 @@ App::get('/v1/storage/buckets/:bucketId/files')
             $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
-        if ($bucket->getAttribute('permission') === 'bucket') {
-            $files = Authorization::skip(function() use ($dbForExternal, $bucketId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderType) {
-                return $dbForExternal->find('bucket_' . $bucketId, $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection);
+        if($bucket->getAttribute('permission') === 'bucket') {
+            $files = Authorization::skip(function() use ($dbForProject, $bucketId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderType) {
+                return $dbForProject->find('bucket_' . $bucketId, $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection);
             });
         } else {
-            $files = $dbForExternal->find('bucket_' . $bucketId, $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection);
+            $files = $dbForProject->find('bucket_' . $bucketId, $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection);
         }
 
         $usage
@@ -951,7 +945,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
 
         $response->dynamic(new Document([
             'files' => $files,
-            'sum' => $dbForExternal->count('bucket_' . $bucketId, $queries, APP_LIMIT_COUNT),
+            'sum' => $dbForProject->count('bucket_' . $bucketId, $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FILE_LIST);
     });
 
@@ -970,18 +964,16 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')
     ->inject('response')
-    ->inject('dbForInternal')
-    ->inject('dbForExternal')
+    ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $dbForExternal, $usage, $mode) {
+    ->action(function ($bucketId, $fileId, $response, $dbForProject, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var string $mode */
 
-        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+        $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty() 
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
@@ -996,12 +988,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
             }
         }
 
-        if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function() use ($dbForExternal, $bucketId, $fileId) {
-                return $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
+        if($bucket->getAttribute('permission') === 'bucket') {
+            $file = Authorization::skip(function() use ($dbForProject, $bucketId, $fileId) {
+                return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
             });
         } else {
-            $file = $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
         }
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId)  {
@@ -1041,16 +1033,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->inject('dbForInternal')
-    ->inject('dbForExternal')
+    ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($bucketId, $fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForInternal, $dbForExternal, $usage, $mode) {
+    ->action(function ($bucketId, $fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForProject, $usage, $mode) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var string $mode */
 
@@ -1063,7 +1053,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         if (!Storage::exists($storage)) {
             throw new Exception('No such storage device', 400);
         }
-        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+        $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty() 
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
@@ -1091,11 +1081,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         if ($bucket->getAttribute('permission')==='bucket') {
             // skip authorization
-            $file = Authorization::skip(function () use ($dbForExternal, $bucketId, $fileId) {
-                return $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
+            $file = Authorization::skip(function () use ($dbForProject, $bucketId, $fileId) {
+                return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
             });
         } else {
-            $file = $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
         }
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
@@ -1216,19 +1206,17 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->param('fileId', '', new UID(), 'File ID.')
     ->inject('request')
     ->inject('response')
-    ->inject('dbForInternal')
-    ->inject('dbForExternal')
+    ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($bucketId, $fileId, $request, $response, $dbForInternal, $dbForExternal, $usage, $mode) {
+    ->action(function ($bucketId, $fileId, $request, $response, $dbForProject, $usage, $mode) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var string $mode */
 
-        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+        $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty() 
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
@@ -1243,12 +1231,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             }
         }
 
-        if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function() use ($dbForExternal, $fileId, $bucketId) {
-                return $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
+        if($bucket->getAttribute('permission') === 'bucket') {
+            $file = Authorization::skip(function() use ($dbForProject, $fileId, $bucketId) {
+                return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
             });
         } else {
-            $file = $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
         }
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
@@ -1363,18 +1351,17 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->param('fileId', '', new UID(), 'File ID.')
     ->inject('response')
     ->inject('request')
-    ->inject('dbForInternal')
-    ->inject('dbForExternal')
+    ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($bucketId, $fileId, $response, $request, $dbForInternal, $dbForExternal, $usage, $mode) {
+    ->action(function ($bucketId, $fileId, $response, $request, $dbForProject, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Swoole\Request $request */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var string $mode */
 
-        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+        $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty() 
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
@@ -1389,12 +1376,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             }
         }
 
-        if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function() use ($dbForExternal, $fileId, $bucketId) {
-                return $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
+        if($bucket->getAttribute('permission') === 'bucket') {
+            $file = Authorization::skip(function() use ($dbForProject, $fileId, $bucketId) {
+                return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
             });
         } else {
-            $file = $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
         }
 
         $mimes = Config::getParam('storage-mimes');
@@ -1523,21 +1510,20 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
-    ->inject('dbForInternal')
-    ->inject('dbForExternal')
+    ->inject('dbForProject')
     ->inject('user')
     ->inject('audits')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($bucketId, $fileId, $read, $write, $response, $dbForInternal, $dbForExternal, $user, $audits, $usage, $mode) {
+    ->action(function ($bucketId, $fileId, $read, $write, $response, $dbForProject, $user, $audits, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var string $mode */
 
-        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+        $bucket = $dbForProject->getDocument('buckets', $bucketId);
         $read = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; // By default set read permissions for user
         $write = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; 
 
@@ -1570,27 +1556,27 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             }
         }
 
-        if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function() use ($dbForExternal, $fileId, $bucketId) {
-                return $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
+        if($bucket->getAttribute('permission') === 'bucket') {
+            $file = Authorization::skip(function() use ($dbForProject, $fileId, $bucketId) {
+                return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
             });
         } else {
-            $file = $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
         }
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
             throw new Exception('File not found', 404);
         }
 
-        if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function() use ($dbForExternal, $fileId, $bucketId, $file, $read, $write) {
-                return $dbForExternal->updateDocument('bucket_' . $bucketId, $fileId, $file
+        if($bucket->getAttribute('permission') === 'bucket') {
+            $file = Authorization::skip(function() use ($dbForProject, $fileId, $bucketId, $file, $read, $write) {
+                return $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file
                     ->setAttribute('$read', $read)
                     ->setAttribute('$write', $write)
                 );
             });
         } else {
-            $file = $dbForExternal->updateDocument('bucket_' . $bucketId, $fileId, $file
+            $file = $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file
                 ->setAttribute('$read', $read)
                 ->setAttribute('$write', $write)
             );
@@ -1624,22 +1610,21 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')
     ->inject('response')
-    ->inject('dbForInternal')
-    ->inject('dbForExternal')
+    ->inject('dbForProject')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $dbForExternal, $events, $audits, $usage, $mode) {
+    ->action(function ($bucketId, $fileId, $response, $dbForProject, $events, $audits, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var string $mode */
         
-        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+        $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty() 
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
@@ -1654,12 +1639,12 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             }
         }
 
-        if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function() use ($dbForExternal, $fileId, $bucketId) {
-                return $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
+        if($bucket->getAttribute('permission') === 'bucket') {
+            $file = Authorization::skip(function() use ($dbForProject, $fileId, $bucketId) {
+                return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
             });
         } else {
-            $file = $dbForExternal->getDocument('bucket_' . $bucketId, $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
         }
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
@@ -1668,13 +1653,20 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $device = Storage::getDevice('files');
 
-        if ($device->delete($file->getAttribute('path', ''))) {
+        $deviceDeleted = false;
+        if($file->getAttribute('chunksTotal') !== $file->getAttribute('chunksUploaded')) {
+            $deviceDeleted = $device->abort($file->getAttribute('path'));
+        } else {
+            $deviceDeleted = $device->delete($file->getAttribute('path'));
+        }
+
+        if ($deviceDeleted) {
             if ($bucket->getAttribute('permission') === 'bucket') {
-                $deleted = Authorization::skip(function() use ($dbForExternal, $fileId, $bucketId) {
-                    return $dbForExternal->deleteDocument('bucket_' . $bucketId, $fileId);
+                $deleted = Authorization::skip(function() use ($dbForProject, $fileId, $bucketId) {
+                    return $dbForProject->deleteDocument('bucket_' . $bucketId, $fileId);
                 });
             } else {
-                $deleted = $dbForExternal->deleteDocument('bucket_' . $bucketId, $fileId);
+                $deleted = $dbForProject->deleteDocument('bucket_' . $bucketId, $fileId);
             }
             if (!$deleted) {
                 throw new Exception('Failed to remove file from DB', 500);
@@ -1713,10 +1705,10 @@ App::get('/v1/storage/usage')
     ->label('sdk.response.model', Response::MODEL_USAGE_STORAGE)
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
-    ->inject('dbForInternal')
-    ->action(function ($range, $response, $dbForInternal) {
+    ->inject('dbForProject')
+    ->action(function ($range, $response, $dbForProject) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
 
         $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
@@ -1756,12 +1748,12 @@ App::get('/v1/storage/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForInternal, $periods, $range, $metrics, &$stats) {
+            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
 
-                    $requestDocs = $dbForInternal->find('stats', [
+                    $requestDocs = $dbForProject->find('stats', [
                         new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
                     ], $limit, 0, ['time'], [Database::ORDER_DESC]);
@@ -1825,12 +1817,12 @@ App::get('/v1/storage/:bucketId/usage')
     ->param('bucketId', '', new UID(), 'Bucket ID.')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
-    ->inject('dbForInternal')
-    ->action(function ($bucketId, $range, $response, $dbForInternal) {
+    ->inject('dbForProject')
+    ->action(function ($bucketId, $range, $response, $dbForProject) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForProject */
 
-        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+        $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404);
@@ -1868,11 +1860,11 @@ App::get('/v1/storage/:bucketId/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForInternal, $periods, $range, $metrics, &$stats) {
+            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
-                    $requestDocs = $dbForInternal->find('stats', [
+                    $requestDocs = $dbForProject->find('stats', [
                         new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
                     ], $limit, 0, ['time'], [Database::ORDER_DESC]);

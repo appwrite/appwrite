@@ -10,7 +10,7 @@ suspend fun main() {
     val database = Database(client)
     val response = database.createDocument(
         collectionId = "[COLLECTION_ID]",
-        documentId = "",
+        documentId = "[DOCUMENT_ID]",
         data = mapOf( "a" to "b" ),
     )
     val json = response.body?.string()

@@ -16,7 +16,7 @@
 [![Translate](https://img.shields.io/badge/translate-f02e65?style=flat-square)](docs/tutorials/add-translations.md)
 [![Swag Store](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io)
 
-[**Appwrite 0.11 has been released! Learn what's new!**](https://dev.to/appwrite/building-apps-just-got-swifter-announcing-appwrite-v011-4g62)
+[**Appwrite 0.12 has been released! Learn what's new!**](https://dev.to/appwrite/its-here-announcing-the-release-of-appwrite-012-5c8b)
 
 Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
@@ -58,7 +58,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:0.11.0
+    appwrite/appwrite:0.12.0
 ```
 
 ### Windows
@@ -70,7 +70,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:0.11.0
+    appwrite/appwrite:0.12.0
 ```
 
 #### PowerShell
@@ -80,7 +80,7 @@ docker run -it --rm ,
     --volume /var/run/docker.sock:/var/run/docker.sock ,
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw ,
     --entrypoint="install" ,
-    appwrite/appwrite:0.11.0
+    appwrite/appwrite:0.12.0
 ```
 
 Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after installation completes.

@@ -16,6 +16,10 @@ Console::success(APP_NAME . ' certificates worker v1 has started');
 
 class CertificatesV1 extends Worker
 {
+    public function getName(): string {
+        return "certificates";
+    }
+
     public function init(): void
     {
     }
@@ -160,7 +164,7 @@ class CertificatesV1 extends Worker
                 'certificateId' => $certificate->getId(),
             ]));
 
-            $certificate = $dbForConsole->updateDocument('certificates', $certificate->getId(), $certificate);
+            $certificate = $dbForConsole->updateDocument('domains', $certificate->getId(), $certificate);
 
             if(!$certificate) {
                 throw new Exception('Failed saving domain to DB');

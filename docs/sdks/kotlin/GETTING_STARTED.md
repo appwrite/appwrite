@@ -24,6 +24,7 @@ Once your SDK object is set, create any of the Appwrite service objects and choo
 ```kotlin
 val users = Users(client)
 val response = users.create(
+    user = "[USER_ID]",
     email = "email@example.com",
     password = "password",
 )
@@ -45,6 +46,7 @@ suspend fun main() {
 
     val users = Users(client)
     val response = users.create(
+        user = "[USER_ID]",
         email = "email@example.com",
         password = "password",
     )
@@ -64,6 +66,7 @@ suspend fun main() {
     val users = Users(client)
     try {
         val response = users.create(
+            user = "[USER_ID]",
             email = "email@example.com",
             password = "password",
         )

@@ -22,7 +22,7 @@ class Preferences extends Any
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */

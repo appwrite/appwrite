@@ -12,7 +12,7 @@ void main() { // Init SDK
 
   Future result = database.createStringAttribute(
     collectionId: '[COLLECTION_ID]',
-    attributeId: '',
+    key: '',
     size: 1,
     required: false,
   );

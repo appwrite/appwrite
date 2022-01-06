@@ -10,7 +10,7 @@ suspend fun main() {
     val database = Database(client)
     val response = database.createEmailAttribute(
         collectionId = "[COLLECTION_ID]",
-        attributeId = "",
+        key = "",
         required = false,
     )
     val json = response.body?.string()

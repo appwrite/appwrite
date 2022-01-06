@@ -288,12 +288,22 @@ The Runtimes for all supported cloud functions (multicore builds) can be found a
 
 For generating a new console SDK follow the next steps:
 
-1. Update the console spec file located at `app/config/specs/0.10.x.console.json` from the dynamic version located at `https://localhost/specs/swagger2?platform=console`
+1. Update the console spec file located at `app/config/specs/swagger2-0.12.x.console.json` from the dynamic version located at `https://localhost/specs/swagger2?platform=console`
 2. Generate a new SDK using the command `php app/cli.php sdks`
 3. Change your working dir using `cd app/sdks/console-web`
 4. Build the new SDK `npm run build`
 5. Copy `iife/sdk.js` to `appwrite.js`
 6. Go back to the root of the project `run npm run build`
+
+## Checklist for Releasing SDKs
+
+Things to remember when releasing SDKs
+
+* Update the Changelogs in **docs/sdks** (right now only Dart and Flutter are using these)
+* Update **GETTING_STARTED.md** in **docs/sdks** for each SDKs if any changes in the related APIs in there
+* Update SDK versions as required on **app/config/platforms.php**
+* Generate SDKs using the command `php app/cli.php sdks` and follow the instructions
+* Release new tags on GitHub repository for each SDKs
 
 ## Debug
 
