@@ -67,12 +67,18 @@
         "slickdeals/statsd": "3.1.0"
     },
     "require-dev": {
-        "appwrite/sdk-generator": "0.17.0",
+        "appwrite/sdk-generator": "dev-fix-kotlin-android as 0.17.0",
         "phpunit/phpunit": "9.5.10",
         "swoole/ide-helper": "4.8.3",
         "textalk/websocket": "1.5.5",
         "vimeo/psalm": "4.13.1"
     },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/appwrite/sdk-generator"
+        }
+    ],
     "provide": {
         "ext-phpiredis": "*"
     },
