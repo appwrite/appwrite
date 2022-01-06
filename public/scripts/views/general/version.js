@@ -12,7 +12,7 @@
             xhr.onload = function () {
               if (this.readyState == 4 && this.status == 200) {
                 let data = JSON.parse(this.responseText);
-                let text = 'Appwrite version ' + data.version + ' is avaliable, check the';
+                let text = 'Appwrite version ' + data.version + ' is available, check the';
 
                 if(isNewerVersion(env.VERSION, data.version)) {
                   alerts.add({

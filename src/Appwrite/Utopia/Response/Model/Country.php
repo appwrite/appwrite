@@ -36,7 +36,7 @@ class Country extends Model
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */

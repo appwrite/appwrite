@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class User extends Model
 {
@@ -29,10 +30,10 @@ class User extends Model
                 'example' => 1592981250,
             ])
             ->addRule('status', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'User status. 0 for Unactivated, 1 for active and 2 is blocked.',
-                'default' => 0,
-                'example' => 0,
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'User status. Pass `true` for enabled and `false` for disabled.',
+                'default' => true,
+                'example' => true,
             ])
             ->addRule('passwordUpdate', [
                 'type' => self::TYPE_INTEGER,
@@ -62,6 +63,24 @@ class User extends Model
     }
 
     /**
+     * Get Collection
+     * 
+     * @return string
+     */
+    public function filter(Document $document): Document
+    {
+        $prefs = $document->getAttribute('prefs');
+        if($prefs instanceof Document) {
+            $prefs = $prefs->getArrayCopy();
+        }
+
+        if(is_array($prefs) && empty($prefs)) {
+            $document->setAttribute('prefs', new \stdClass);
+        }
+        return $document;
+    }
+
+    /**
      * Get Name
      *
      * @return string
@@ -72,7 +91,7 @@ class User extends Model
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */

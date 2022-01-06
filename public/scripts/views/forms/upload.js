@@ -108,7 +108,7 @@
           expression.parse(element.dataset["write"] || "[]")
         );
 
-        sdk.storage.createFile(files[0], read, write, 1).then(
+        sdk.storage.createFile('unique()', files[0], read, write, 1).then(
           function(response) {
             onComplete(message);
 
@@ -160,7 +160,7 @@
           search.path = path;
 
           document.dispatchEvent(
-            new CustomEvent("open-file-serach", {
+            new CustomEvent("open-file-search", {
               bubbles: false,
               cancelable: true
             }));

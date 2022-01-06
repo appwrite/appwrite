@@ -304,7 +304,7 @@ class MySQL extends Adapter
             $st2->execute();
         }
 
-        //TODO remove this dependency (check if related to nested documents)
+        // TODO remove this dependency (check if related to nested documents)
         $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
         $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
 
