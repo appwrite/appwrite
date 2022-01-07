@@ -40,6 +40,7 @@ Table of Contents:
     - [Client](#client)
     - [Server](#server)
     - [Community](#community)
+- [Architecture](#architecture)
 - [Contributing](#contributing)
 - [Security](#security)
 - [Follow Us](#follow-us)
@@ -142,6 +143,15 @@ Below is a list of currently supported platforms and languages. If you wish to h
 * ✅  &nbsp; [Godot Engine](https://github.com/GodotNuts/appwrite-sdk) (Maintained by [fenix-hub @GodotNuts](https://github.com/fenix-hub))  
 
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
+
+
+## Architecture
+
+![Appwrite Architecture](docs/specs/overview.drawio.svg)
+
+Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs (REST, WebSocket, and GraphQL-soon) to allow you to interact with your resources leveraging your existing knowledge and protocols of choice.
+
+The Appwrite API layer was designed to be extremely fast by leveraging in-memory caching and delegating any heavy-lifting tasks to the Appwrite background workers. The background workers also allow you to precisely control your compute capacity and costs using a message queue to handle the load. You can learn more about our architecture in the [contribution guide](CONTRIBUTING.md#architecture-1).
 
 ## Contributing
 
