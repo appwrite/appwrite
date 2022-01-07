@@ -145,7 +145,7 @@ class V12 extends Filter
                         // Let's keep it at true and false string, but without "" around
                         // No action needed
                     } else {
-                        $filterValue =\is_numeric($filterValue) ? $filterValue : '"' . $filterValue . '"';
+                        $filterValue = \is_numeric($filterValue) ? $filterValue : '"' . $filterValue . '"';
                     }
 
                     $query = $attributeKey . '.' . $operators[$usedOperator] . '(' . $filterValue . ')';
