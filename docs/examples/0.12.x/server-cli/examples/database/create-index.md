@@ -1,6 +1,6 @@
 appwrite database createIndex \
         --collectionId="[COLLECTION_ID]" \
-        --indexId="" \
+        --key="" \
         --type="key" \
         --attributes="" \
         --orders=""

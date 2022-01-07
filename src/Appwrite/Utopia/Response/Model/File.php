@@ -92,7 +92,7 @@ class File extends Model
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */

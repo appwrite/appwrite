@@ -9,7 +9,7 @@ public void main() {
 
     Storage storage = new Storage(client);
     storage.createFile(
-        fileId = "",
+        fileId = "[FILE_ID]",
         file = File("./path-to-files/image.jpg"),
         new Continuation<Response>() {
             @NotNull

@@ -1,5 +1,5 @@
 appwrite database createCollection \
-        --collectionId="" \
+        --collectionId="[COLLECTION_ID]" \
         --name="[NAME]" \
         --permission="document" \
         --read="[&quot;role:all&quot;]" \

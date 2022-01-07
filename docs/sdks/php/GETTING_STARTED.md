@@ -39,7 +39,7 @@ $client
 
 $users = new Users($client);
 
-$result = $users->create('email@example.com', 'password');
+$result = $users->create('[USER_ID]', 'email@example.com', 'password');
 ```
 
 ### Error Handling
@@ -48,7 +48,7 @@ The Appwrite PHP SDK raises `AppwriteException` object with `message`, `code` an
 ```php
 $users = new Users($client);
 try {
-    $result = $users->create('email@example.com', 'password');
+    $result = $users->create('[USER_ID]', 'email@example.com', 'password');
 } catch(AppwriteException $error) {
     echo $error->message;
 }

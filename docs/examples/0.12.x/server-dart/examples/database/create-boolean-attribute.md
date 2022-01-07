@@ -12,7 +12,7 @@ void main() { // Init SDK
 
   Future result = database.createBooleanAttribute(
     collectionId: '[COLLECTION_ID]',
-    attributeId: '',
+    key: '',
     required: false,
   );
 

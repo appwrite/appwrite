@@ -10,7 +10,7 @@ suspend fun main() {
     val database = Database(client)
     val response = database.createStringAttribute(
         collectionId = "[COLLECTION_ID]",
-        attributeId = "",
+        key = "",
         size = 1,
         required = false,
     )

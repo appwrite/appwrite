@@ -16,7 +16,9 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Swoole\Files;
-use Utopia\Swoole\Request;
+use Appwrite\Utopia\Request;
+use Utopia\Logger\Log;
+use Utopia\Logger\Log\User;
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
@@ -79,23 +81,39 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 
         $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
 
-        if(!$dbForConsole->exists()) {
-            Console::success('[Setup] - Server database init started...');
+        Console::success('[Setup] - Server database init started...');
+        $collections = Config::getParam('collections', []); /** @var array $collections */
 
-            $collections = Config::getParam('collections', []); /** @var array $collections */
-
+        if(!$dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'))) {
             $redis->flushAll();
 
-            $dbForConsole->create();
+            Console::success('[Setup] - Creating database: appwrite...');
 
+            $dbForConsole->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        }
+
+        try {
+            Console::success('[Setup] - Creating metadata table: appwrite...');
+            $dbForConsole->createMetadata();
+        } catch (\Throwable $th) {
+            Console::success('[Setup] - Skip: metadata table already exists');
+        }
+
+        if($dbForConsole->getCollection(Audit::COLLECTION)->isEmpty()) {
             $audit = new Audit($dbForConsole);
             $audit->setup();
+        }
 
+        if ($dbForConsole->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
             $adapter = new TimeLimit("", 0, 1, $dbForConsole);
             $adapter->setup();
+        }
 
             foreach ($collections as $key => $collection) {
                 if(($collection['$collection'] ?? '') !== Database::METADATA) {
+                    continue;
+                }
+                if(!$dbForConsole->getCollection($key)->isEmpty()) {
                     continue;
                 }
                 Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
@@ -147,46 +165,40 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 'search' => 'buckets Default',
             ]));
 
-            $dbForConsoleExternal = $app->getResource('dbForConsoleExternal'); /** @var Utopia\Database\Database $dbForConsoleExternal */
-
-            if(!$dbForConsoleExternal->exists()) {
-                $dbForConsoleExternal->create();
-                Console::success('[Setup] - Creating files collection for default bucket...');
-                $files = $collections['files'] ?? [];
-                if(empty($files)) {
-                    throw new Exception('Files collection is not configured.');
-                }
-
-                $attributes = [];
-                $indexes = [];
-
-                foreach ($files['attributes'] as $attribute) {
-                    $attributes[] = new Document([
-                        '$id' => $attribute['$id'],
-                        'type' => $attribute['type'],
-                        'size' => $attribute['size'],
-                        'required' => $attribute['required'],
-                        'signed' => $attribute['signed'],
-                        'array' => $attribute['array'],
-                        'filters' => $attribute['filters'],
-                    ]);
-                }
-
-                foreach ($files['indexes'] as $index) {
-                    $indexes[] = new Document([
-                        '$id' => $index['$id'],
-                        'type' => $index['type'],
-                        'attributes' => $index['attributes'],
-                        'lengths' => $index['lengths'],
-                        'orders' => $index['orders'],
-                    ]);
-                }
-
-                $dbForConsoleExternal->createCollection('bucket_' . 'default', $attributes, $indexes);
+            Console::success('[Setup] - Creating files collection for default bucket...');
+            $files = $collections['files'] ?? [];
+            if(empty($files)) {
+                throw new Exception('Files collection is not configured.');
             }
 
+            $attributes = [];
+            $indexes = [];
+
+            foreach ($files['attributes'] as $attribute) {
+                $attributes[] = new Document([
+                    '$id' => $attribute['$id'],
+                    'type' => $attribute['type'],
+                    'size' => $attribute['size'],
+                    'required' => $attribute['required'],
+                    'signed' => $attribute['signed'],
+                    'array' => $attribute['array'],
+                    'filters' => $attribute['filters'],
+                ]);
+            }
+
+            foreach ($files['indexes'] as $index) {
+                $indexes[] = new Document([
+                    '$id' => $index['$id'],
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]);
+            }
+
+            $dbForConsole->createCollection('bucket_' . 'default', $attributes, $indexes);
+
             Console::success('[Setup] - Server database init completed...');
-        }
     });
 
     Console::success('Server started successfully (max payload is '.number_format($payloadSize).' bytes)');
@@ -231,6 +243,59 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $app->run($request, $response);
     } catch (\Throwable $th) {
+        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+
+        $logger = $app->getResource("logger");
+        if($logger) {
+            try {
+                $user = $app->getResource('user');
+                /** @var Appwrite\Database\Document $user */
+            } catch(\Throwable $_th) {
+                // All good, user is optional information for logger
+            }
+
+            $loggerBreadcrumbs = $app->getResource("loggerBreadcrumbs");
+            $route = $app->match($request);
+
+            $log = new Utopia\Logger\Log();
+
+            if(isset($user) && !$user->isEmpty()) {
+                $log->setUser(new User($user->getId()));
+            }
+
+            $log->setNamespace("http");
+            $log->setServer(\gethostname());
+            $log->setVersion($version);
+            $log->setType(Log::TYPE_ERROR);
+            $log->setMessage($th->getMessage());
+
+            $log->addTag('method', $route->getMethod());
+            $log->addTag('url',  $route->getPath());
+            $log->addTag('verboseType', get_class($th));
+            $log->addTag('code', $th->getCode());
+            // $log->addTag('projectId', $project->getId()); // TODO: Figure out how to get ProjectID, if it becomes relevant
+            $log->addTag('hostname', $request->getHostname());
+            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
+
+            $log->addExtra('file', $th->getFile());
+            $log->addExtra('line', $th->getLine());
+            $log->addExtra('trace', $th->getTraceAsString());
+            $log->addExtra('roles', Authorization::$roles);
+
+            $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
+            $log->setAction($action);
+
+            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+            foreach($loggerBreadcrumbs as $loggerBreadcrumb) {
+                $log->addBreadcrumb($loggerBreadcrumb);
+            }
+
+            $responseCode = $logger->addLog($log);
+            Console::info('Log pushed with status code: '.$responseCode);
+        }
+
         Console::error('[Error] Type: '.get_class($th));
         Console::error('[Error] Message: '.$th->getMessage());
         Console::error('[Error] File: '.$th->getFile());
@@ -243,12 +308,22 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $db = null;
         }
 
-        if(App::isDevelopment()) {
-            $swooleResponse->end('error: '.$th->getMessage());
-        }
-        else {
-            $swooleResponse->end('500: Server Error');
-        }
+        $swooleResponse->setStatusCode(500);
+
+        $output = ((App::isDevelopment())) ? [
+            'message' => 'Error: '. $th->getMessage(),
+            'code' => 500,
+            'file' => $th->getFile(),
+            'line' => $th->getLine(),
+            'trace' => $th->getTrace(),
+            'version' => $version,
+        ] : [
+            'message' => 'Error: Server Error',
+            'code' => 500,
+            'version' => $version,
+        ];
+
+        $swooleResponse->end(\json_encode($output));
     } finally {
         /** @var PDOPool $dbPool */
         $dbPool = $register->get('dbPool');

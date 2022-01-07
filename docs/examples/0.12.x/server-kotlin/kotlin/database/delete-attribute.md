@@ -10,7 +10,7 @@ suspend fun main() {
     val database = Database(client)
     val response = database.deleteAttribute(
         collectionId = "[COLLECTION_ID]",
-        attributeId = ""
+        key = ""
     )
     val json = response.body?.string()
 }

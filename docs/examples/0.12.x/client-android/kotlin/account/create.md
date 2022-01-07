@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
 
         GlobalScope.launch {
             val response = account.create(
-                userId = "",
+                userId = "[USER_ID]",
                 email = "email@example.com",
                 password = "password",
             )

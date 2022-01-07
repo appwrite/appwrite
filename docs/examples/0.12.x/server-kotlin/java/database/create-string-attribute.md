@@ -10,7 +10,7 @@ public void main() {
     Database database = new Database(client);
     database.createStringAttribute(
         collectionId = "[COLLECTION_ID]",
-        attributeId = "",
+        key = "",
         size = 1,
         required = false,
         new Continuation<Response>() {
