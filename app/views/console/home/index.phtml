@@ -97,13 +97,13 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                         </div>
 
                         <div class="chart-metric">
-                            <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.requests|statsGetLast|statsTotal}}">N/A</span></div>
+                            <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.requests|statsGetSum|statsTotal}}">N/A</span></div>
                             <div class="unit margin-start-no margin-bottom-small">Requests</div>
                         </div>
                     </div>
                     <div class="col span-3">
                         <div class="value margin-bottom-small">
-                            <span class="sum" data-ls-bind="{{realtime.current|accessProject}}" data-default="0">0</span>
+                            <span class="sum" data-ls-bind="{{realtime.current|accessProject|statsTotal}}" data-default="0">0</span>
                         </div>
                         <div class="unit margin-start-no margin-bottom-small">Connections</div>
                         <div class="chart-bar margin-top-small margin-bottom-small" data-ls-attrs="data-history={{realtime.history|accessProject}}" data-forms-chart-bars="{{realtime.history|accessProject}}"></div>
