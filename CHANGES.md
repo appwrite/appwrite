@@ -3,6 +3,9 @@
 ## Bugs
 - Fixed some issues with the Migration
 - Fixed the UI to add Variables to Functions
+- Fixed wrong data type for String Attribute size
+- Fixed Request stats on the console
+- Fixed Realtime Connection stats with high number by abbreviation
 
 # Version 0.12.0
 
