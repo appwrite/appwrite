@@ -840,7 +840,6 @@ App::put('/v1/account/sessions/magic-url')
             ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND)
             ->setAttribute('tokens', $tokens);
 
-
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         if (false === $user) {
