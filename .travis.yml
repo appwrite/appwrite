@@ -4,8 +4,6 @@ arch:
   - amd64
 
 os: linux
-services:
-  - docker
 
 vm:
   size: large 
