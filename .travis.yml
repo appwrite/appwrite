@@ -56,7 +56,7 @@ install:
 # https://github.com/moby/moby/issues/41864
 - docker pull composer:2.0
 - docker pull php:8.0-cli-alpine
-- docker compose build -q
+- docker compose build
 - docker compose up -d
 - sleep 30
 
