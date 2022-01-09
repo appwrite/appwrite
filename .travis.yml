@@ -18,9 +18,6 @@ cache:
   directories:
   - docker_images
 
-before_install:
-- docker load -i docker_images/images.tar || true
-
 before_cache:
 - docker save -o docker_images/images.tar $(docker images -a -q)
 
@@ -53,6 +50,8 @@ before_install:
 - echo "_APP_FUNCTIONS_RUNTIMES=php-8.0" >> .env
 # Ensure Travis scripts are executable
 - chmod -R u+x ./.travis-ci
+# Init Build Cache
+- docker load -i docker_images/images.tar || true
 
 install:
 - docker-compose pull
