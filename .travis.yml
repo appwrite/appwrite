@@ -31,7 +31,7 @@ before_install:
 - mkdir -p ~/.docker/cli-plugins/
 - curl -SL https://github.com/docker/compose/releases/download/v2.2.2/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
 - chmod +x ~/.docker/cli-plugins/docker-compose
-- docker-compose --version
+- docker compose --version
 # Enable Buildkit
 - docker buildx create --name travis_builder --use
 - export COMPOSE_INTERACTIVE_NO_CLI
