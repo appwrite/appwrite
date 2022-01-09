@@ -14,10 +14,6 @@ notifications:
   email:
   - team@appwrite.io
 
-cache:
-  directories:
-  - docker_images
-
 before_install:
 # Install latest Docker
 - curl -fsSL https://get.docker.com | sh
@@ -48,6 +44,7 @@ before_install:
 # Ensure Travis scripts are executable
 - chmod -R u+x ./.travis-ci
 # Init Build Cache
+- docker pull appwrite/appwrite:latest
 - docker load -i docker_images/images.tar || true
 
 install:
@@ -72,9 +69,6 @@ after_script:
 
 after_failure:
 - docker-compose logs appwrite
-
-before_cache:
-- docker save -o docker_images/images.tar $(docker images -a -q)
 
 deploy:
   - provider: script
