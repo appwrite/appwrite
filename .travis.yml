@@ -14,6 +14,16 @@ notifications:
   email:
   - team@appwrite.io
 
+cache:
+  directories:
+  - docker_images
+
+before_install:
+- docker load -i docker_images/images.tar || true
+
+before_cache:
+- docker save -o docker_images/images.tar $(docker images -a -q)
+
 before_install:
 # Install latest Docker
 - curl -fsSL https://get.docker.com | sh
@@ -29,10 +39,9 @@ before_install:
   fi
 - docker --version
 # Install latest Compose
-- sudo rm /usr/local/bin/docker-compose
-- curl -L https://github.com/docker/compose/releases/download/1.29.2/docker-compose-`uname -s`-`uname -m` > docker-compose
-- chmod +x docker-compose
-- sudo mv docker-compose /usr/local/bin
+- mkdir -p ~/.docker/cli-plugins/
+- curl -SL https://github.com/docker/compose/releases/download/v2.2.2/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+- chmod +x ~/.docker/cli-plugins/docker-compose
 - docker-compose --version
 # Enable Buildkit
 - docker buildx create --name travis_builder --use
@@ -53,16 +62,10 @@ install:
 - docker pull php:8.0-cli-alpine
 - docker-compose build
 - docker-compose up -d
-- sleep 60
+- sleep 30
 
 script:
 - docker ps -a
-# Tests should fail if any container is in exited status
-# - ALL_UP=`docker ps -aq --filter "status=exited"`
-# - >
-#   if [[ "$ALL_UP" != "" ]]; then
-#     exit 1
-#   fi
 - docker-compose logs appwrite
 - docker-compose logs appwrite-realtime
 - docker-compose logs mariadb
