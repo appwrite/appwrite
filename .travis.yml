@@ -4,6 +4,8 @@ arch:
   - amd64
 
 os: linux
+services:
+  - docker
 
 vm:
   size: large 
@@ -18,17 +20,7 @@ cache:
   directories:
   - docker_images
 
-before_cache:
-- docker save -o docker_images/images.tar $(docker images -a -q)
-
 before_install:
-# Install latest Docker
-- curl -fsSL https://get.docker.com | sh
-# Enable Buildkit in Docker config
-- echo '{"experimental":"enabled"}' | sudo tee /etc/docker/daemon.json
-- mkdir -p $HOME/.docker
-- echo '{"experimental":"enabled"}' | sudo tee $HOME/.docker/config.json
-- sudo service docker start
 # Login to increase Docker Hub ratelimit
 - >
   if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
@@ -54,31 +46,30 @@ before_install:
 - docker load -i docker_images/images.tar || true
 
 install:
-- docker-compose pull
+- docker compose pull
 # Upstream bug causes buildkit pulls to fail so prefetch base images
 # https://github.com/moby/moby/issues/41864
 - docker pull composer:2.0
 - docker pull php:8.0-cli-alpine
-- docker-compose build
-- docker-compose up -d
+- docker compose build
+- docker compose up -d
 - sleep 30
 
 script:
-- docker ps -a
-- docker-compose logs appwrite
-- docker-compose logs appwrite-realtime
-- docker-compose logs mariadb
-- docker-compose logs appwrite-worker-functions
-- docker-compose exec appwrite doctor
-- docker-compose exec appwrite vars
-- docker-compose exec appwrite test --debug
+- docker compose exec appwrite doctor
+- docker compose exec appwrite vars
+- docker compose exec appwrite test --debug
 
 after_script:
 # travis re-uses their build nodes so clean them up
 - docker buildx rm travis_builder
 
 after_failure:
-- docker-compose logs appwrite
+- docker compose logs appwrite
+
+before_cache:
+- docker save -o docker_images/images.tar $(docker images -a -q)
+
 
 deploy:
   - provider: script
