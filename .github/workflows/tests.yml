@@ -4,7 +4,6 @@ on: [pull_request]
 jobs:
   tests:
     name: Unit & E2E
-    runs-on: self-hosted
 
     steps:
     - name: Checkout repository
@@ -19,6 +18,8 @@ jobs:
     - run: git checkout HEAD^2
       if: ${{ github.event_name == 'pull_request' }}
 
+    - run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
+    - run: docker pull docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache || true
     - name: Build Appwrite
       # Upstream bug causes buildkit pulls to fail so prefetch base images
       # https://github.com/moby/moby/issues/41864
@@ -27,8 +28,14 @@ jobs:
         docker pull composer:2.0
         docker pull php:8.0-cli-alpine
         docker compose build --progress=plain
+
+    - run: docker tag appwrite_appwrite docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache && docker push docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache || true
+
+    - name: Start Appwrite
+      run: |
         docker compose up -d
         sleep 30
+
     - name: Doctor
       run: docker compose exec -T appwrite doctor
 
