@@ -36,7 +36,7 @@ before_install:
 - mkdir -p ~/.docker/cli-plugins/
 - curl -SL https://github.com/docker/compose/releases/download/v2.2.2/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
 - chmod +x ~/.docker/cli-plugins/docker-compose
-- docker compose version
+- docker-compose --version
 # Enable Buildkit
 - docker buildx create --name travis_builder --use
 - export COMPOSE_INTERACTIVE_NO_CLI
@@ -51,28 +51,30 @@ before_install:
 - docker load -i docker_images/images.tar || true
 
 install:
-- docker compose pull -q
+- docker compose pull
 # Upstream bug causes buildkit pulls to fail so prefetch base images
 # https://github.com/moby/moby/issues/41864
 - docker pull composer:2.0
 - docker pull php:8.0-cli-alpine
-- docker compose build
-- docker compose up -d
+- docker-compose build
+- docker-compose up -d
 - sleep 30
 
 script:
-- docker compose exec appwrite doctor
-- docker compose exec appwrite vars
-- docker compose exec appwrite test --debug
+- docker ps -a
+- docker-compose exec appwrite doctor
+- docker-compose exec appwrite vars
+- docker-compose exec appwrite test --debug
 
 after_script:
 # travis re-uses their build nodes so clean them up
 - docker buildx rm travis_builder
 
 after_failure:
-- docker compose logs appwrite
+- docker-compose logs appwrite
 
-
+before_cache:
+- docker save -o docker_images/images.tar $(docker images -a -q)
 
 deploy:
   - provider: script
