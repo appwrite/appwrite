@@ -143,7 +143,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                             <div class="text-size-small margin-top-small clear">
                                                 <span data-ls-if="{{tag.status}} == 'failed'" style="color: var(--config-color-danger)" class="pull-start" data-ls-bind="{{tag.status}}"></span>
                                                 <span data-ls-if="{{tag.status}} == 'ready'" style="color: var(--config-color-success)" class="pull-start" data-ls-bind="{{tag.status}}"></span>
-                                                <span data-ls-if="{{tag.status}} == 'processing' || {{tag.status}} == 'building' || {{tag.status}} == 'pending'" style="color: var(--config-color-info)" class="pull-start" data-ls-bind="{{tag.status}}"></span>
+                                                <span data-ls-if="{{tag.status}} == 'processing' || {{tag.status}} == 'building'" style="color: var(--config-color-info)" class="pull-start" data-ls-bind="{{tag.status}}"></span>
                                                 <span class="pull-start" data-ls-bind="&nbsp; | &nbsp; Created {{tag.dateCreated|timeSince}} &nbsp; | &nbsp; {{tag.size|humanFileSize}}{{tag.size|humanFileUnit}}"></span>
 
                                                 <span data-ls-if="{{tag.status}} == 'failed'">&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-stderr-{{tag.$id}}">Logs</button></span>

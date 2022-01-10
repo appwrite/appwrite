@@ -2089,7 +2089,7 @@ $collections = [
                 'size' => 256,
                 'signed' => true,
                 'required' => true,
-                'default' => 'pending',
+                'default' => 'processing',
                 'array' => false,
                 'filters' => [],
             ],

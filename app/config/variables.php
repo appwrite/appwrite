@@ -438,7 +438,7 @@ return [
             [
                 'name' => '_APP_FUNCTIONS_BUILD_TIMEOUT',
                 'description' => 'The maximum number of seconds allowed as a timeout value when building a new function. The default value is 900 seconds.',
-                'introduction' => '0.12.0',
+                'introduction' => '0.13.0',
                 'default' => '900',
                 'required' => false,
                 'question' => '',
@@ -491,8 +491,8 @@ return [
             ],
             [
                 'name' => '_APP_EXECUTOR_SECRET',
-                'description' => 'The secret key used by appwrite to communicate with the function executor. Make sure to change this!',
-                'introduction' => '0.11.0',
+                'description' => 'The secret key used by Appwrite to communicate with the function executor. Make sure to change this!',
+                'introduction' => '0.13.0',
                 'default' => 'your-secret-key',
                 'required' => false,
                 'question' => '',

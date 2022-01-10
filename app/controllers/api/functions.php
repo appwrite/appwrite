@@ -573,7 +573,7 @@ App::post('/v1/functions/:functionId/tags')
             'path' => $path,
             'size' => $size,
             'search' => implode(' ', [$tagId, $entrypoint]),
-            'status' => 'pending',
+            'status' => 'processing',
             'buildPath' => '',
             'buildStdout' => '',
             'buildStderr' => '',
@@ -677,7 +677,7 @@ App::get('/v1/functions/:functionId/tags')
         foreach ($results as &$tag) {
             $build = $dbForProject->getDocument('builds', $tag->getAttribute('buildId', ''));
 
-            $tag['status'] = $build->getAttribute('status', 'pending');
+            $tag['status'] = $build->getAttribute('status', 'processing');
             $tag['buildStdout'] = $build->getAttribute('stdout', '');
             $tag['buildStderr'] = $build->getAttribute('stderr', '');
         }
