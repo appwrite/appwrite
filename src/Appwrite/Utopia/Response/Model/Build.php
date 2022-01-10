@@ -22,6 +22,11 @@ class Build extends Model
                 'default' => 0,
                 'example' => 1592981250,
             ])
+            // Build Status
+            // Failed - The tag build has failed. More details can usually be found in buildStderr
+            // Ready - The tag build was successful and the tag is ready to be deployed
+            // Processing - The tag is currently waiting to have a build triggered
+            // Building - The tag is currently being built
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The build status.',
