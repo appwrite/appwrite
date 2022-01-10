@@ -109,43 +109,44 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $adapter->setup();
         }
 
-            foreach ($collections as $key => $collection) {
-                if(($collection['$collection'] ?? '') !== Database::METADATA) {
-                    continue;
-                }
-                if(!$dbForConsole->getCollection($key)->isEmpty()) {
-                    continue;
-                }
-                Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
+        foreach ($collections as $key => $collection) {
+            if(($collection['$collection'] ?? '') !== Database::METADATA) {
+                continue;
+            }
+            if(!$dbForConsole->getCollection($key)->isEmpty()) {
+                continue;
+            }
+            Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
 
-                $attributes = [];
-                $indexes = [];
+            $attributes = [];
+            $indexes = [];
 
-                foreach ($collection['attributes'] as $attribute) {
-                    $attributes[] = new Document([
-                        '$id' => $attribute['$id'],
-                        'type' => $attribute['type'],
-                        'size' => $attribute['size'],
-                        'required' => $attribute['required'],
-                        'signed' => $attribute['signed'],
-                        'array' => $attribute['array'],
-                        'filters' => $attribute['filters'],
-                    ]);
-                }
-
-                foreach ($collection['indexes'] as $index) {
-                    $indexes[] = new Document([
-                        '$id' => $index['$id'],
-                        'type' => $index['type'],
-                        'attributes' => $index['attributes'],
-                        'lengths' => $index['lengths'],
-                        'orders' => $index['orders'],
-                    ]);
-                }
-
-                $dbForConsole->createCollection($key, $attributes, $indexes);
+            foreach ($collection['attributes'] as $attribute) {
+                $attributes[] = new Document([
+                    '$id' => $attribute['$id'],
+                    'type' => $attribute['type'],
+                    'size' => $attribute['size'],
+                    'required' => $attribute['required'],
+                    'signed' => $attribute['signed'],
+                    'array' => $attribute['array'],
+                    'filters' => $attribute['filters'],
+                ]);
             }
 
+            foreach ($collection['indexes'] as $index) {
+                $indexes[] = new Document([
+                    '$id' => $index['$id'],
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]);
+            }
+
+            $dbForConsole->createCollection($key, $attributes, $indexes);
+        }
+
+        if($dbForConsole->getDocument('buckets', 'default')->isEmpty()) {
             Console::success('[Setup] - Creating default bucket...');
             $dbForConsole->createDocument('buckets', new Document([
                 '$id' => 'default',
@@ -164,16 +165,16 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 '$write' => ['role:all'],
                 'search' => 'buckets Default',
             ]));
-
+    
             Console::success('[Setup] - Creating files collection for default bucket...');
             $files = $collections['files'] ?? [];
             if(empty($files)) {
                 throw new Exception('Files collection is not configured.');
             }
-
+    
             $attributes = [];
             $indexes = [];
-
+    
             foreach ($files['attributes'] as $attribute) {
                 $attributes[] = new Document([
                     '$id' => $attribute['$id'],
@@ -185,7 +186,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                     'filters' => $attribute['filters'],
                 ]);
             }
-
+    
             foreach ($files['indexes'] as $index) {
                 $indexes[] = new Document([
                     '$id' => $index['$id'],
@@ -195,10 +196,11 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                     'orders' => $index['orders'],
                 ]);
             }
-
+    
             $dbForConsole->createCollection('bucket_' . 'default', $attributes, $indexes);
+        }
 
-            Console::success('[Setup] - Server database init completed...');
+        Console::success('[Setup] - Server database init completed...');
     });
 
     Console::success('Server started successfully (max payload is '.number_format($payloadSize).' bytes)');
