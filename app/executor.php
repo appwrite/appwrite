@@ -90,6 +90,7 @@ $executionEnd = \microtime(true);
 Console::info(count($activeFunctions) . ' functions listed in ' . ($executionEnd - $executionStart) . ' seconds');
 
 App::post('/v1/execute') // Define Route
+    ->desc('Execute a function')
     ->inject('request')
     ->param('trigger', '', new Text(1024))
     ->param('projectId', '', new Text(1024))
@@ -351,11 +352,10 @@ App::post('/v1/tag')
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
-App::get('/v1/healthz')
+App::get('/v1/')
     ->inject('request')
     ->inject('response')
-    ->action(
-        function ($request, $response) {
+    ->action(function ($request, $response) {
             $response
                 ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                 ->addHeader('Expires', '0')

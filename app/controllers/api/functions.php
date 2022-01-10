@@ -305,6 +305,7 @@ App::put('/v1/functions/:functionId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
+        /** @var Appwrite\Auth\User $user */
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -426,6 +427,7 @@ App::delete('/v1/functions/:functionId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $deletes */
+        /** @var Utopia\Database\Document $project */
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -550,7 +552,7 @@ App::post('/v1/functions/:functionId/tags')
             throw new Exception('Failed moving file', 500);
         }
 
-        if ($automaticDeploy === 'true') {
+        if ((bool) $automaticDeploy) {
             // Remove automaticDeploy for all other tags.
             $tags = $dbForProject->find('tags', [
                 new Query('automaticDeploy', Query::TYPE_EQUAL, [true]),
@@ -786,7 +788,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
         $error = \curl_error($ch);
 
         if (!empty($error)) {
-            throw new Exception('Curl error: ' . $error, 500);
+            throw new Exception('Executor Cleanup error: ' . $error, 500);
         }
 
         // Check status code
