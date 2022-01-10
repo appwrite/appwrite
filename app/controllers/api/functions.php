@@ -452,7 +452,7 @@ App::delete('/v1/functions/:functionId')
         $error = \curl_error($ch);
 
         if (!empty($error)) {
-            throw new Exception('Curl error: ' . $error, 500);
+            throw new Exception('Executor Cleanup Error: ' . $error, 500);
         }
 
         // Check status code
@@ -611,7 +611,7 @@ App::post('/v1/functions/:functionId/tags')
         $error = \curl_error($ch);
 
         if (!empty($error)) {
-            throw new Exception('Curl error: ' . $error, 500);
+            throw new Exception('Executor Communication Error: ' . $error, 500);
         }
 
         // Check status code
@@ -1178,7 +1178,7 @@ App::post('/v1/builds/:buildId')
         $error = \curl_error($ch);
     
         if (!empty($error)) {
-            throw new Exception('Curl error: ' . $error, 500);
+            throw new Exception('Executor Communication Error: ' . $error, 500);
         }
     
         // Check status code
