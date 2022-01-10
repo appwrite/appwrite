@@ -1993,17 +1993,6 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'buildPath',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 2048,
-                'signed' => true,
-                'required' => false,
-                'default' => '',
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => 'buildStdout',
                 'type' => Database::VAR_STRING,
                 'format' => '',
