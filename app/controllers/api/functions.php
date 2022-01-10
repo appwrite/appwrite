@@ -576,7 +576,6 @@ App::post('/v1/functions/:functionId/tags')
             'size' => $size,
             'search' => implode(' ', [$tagId, $entrypoint]),
             'status' => 'processing',
-            'buildPath' => '',
             'buildStdout' => '',
             'buildStderr' => '',
             'automaticDeploy' => ($automaticDeploy === 'true'),
