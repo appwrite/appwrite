@@ -586,7 +586,7 @@ App::post('/v1/functions/:functionId/tags')
             ->setParam('storage', $tag->getAttribute('size', 0))
         ;
 
-        // Send start build reqeust to executor using /v1/build/:buildId
+        // Send start build reqeust to executor using /v1/tag
         $function = $dbForProject->getDocument('functions', $functionId);
 
         $ch = \curl_init();
@@ -924,41 +924,42 @@ App::post('/v1/functions/:functionId/executions')
             $response->dynamic($execution, Response::MODEL_EXECUTION);
             return $response;
         }
-            // Directly execute function.
-            $ch = \curl_init();
-            \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/execute");
-            \curl_setopt($ch, CURLOPT_POST, true);
-            \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-                'trigger' => 'http',
-                'projectId' => $project->getId(),
-                'executionId' => $execution->getId(),
-                'functionId' => $function->getId(),
-                'data' => $data,
-                'webhooks' => $project->getAttribute('webhooks', []),
-                'userId' => $user->getId(),
-                'jwt' => $jwt,
-            ]));
-            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            \curl_setopt($ch, CURLOPT_TIMEOUT, App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900) + 200); // + 200 for safety margin
-            \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-            \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json',
-                'x-appwrite-project: '.$project->getId(),
-                'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
-            ]);
-    
-            $responseExecute = \curl_exec($ch);
-    
-            $error = \curl_error($ch);
-            if (!empty($error)) {
-                Console::error('Curl error: '.$error);
-            }
-    
-            \curl_close($ch);
 
-            $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic(new Document(json_decode($responseExecute, true)), Response::MODEL_SYNC_EXECUTION);
+        // Directly execute function.
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/execute");
+        \curl_setopt($ch, CURLOPT_POST, true);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+            'trigger' => 'http',
+            'projectId' => $project->getId(),
+            'executionId' => $execution->getId(),
+            'functionId' => $function->getId(),
+            'data' => $data,
+            'webhooks' => $project->getAttribute('webhooks', []),
+            'userId' => $user->getId(),
+            'jwt' => $jwt,
+        ]));
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900) + 200); // + 200 for safety margin
+        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'x-appwrite-project: '.$project->getId(),
+            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
+        ]);
+    
+        $responseExecute = \curl_exec($ch);
+    
+        $error = \curl_error($ch);
+        if (!empty($error)) {
+            Console::error('Curl error: '.$error);
+        }
+    
+        \curl_close($ch);
+
+        $response
+        ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ->dynamic(new Document(json_decode($responseExecute, true)), Response::MODEL_SYNC_EXECUTION);
     });
 
 App::get('/v1/functions/:functionId/executions')
@@ -1116,10 +1117,10 @@ App::get('/v1/builds/:buildId')
     ->action(function ($buildId, $response, $dbForProject) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        
-        Authorization::disable();
-        $build = $dbForProject->getDocument('builds', $buildId);
-        Authorization::reset();
+
+        $build = Authorization::skip(function () use ($dbForProject, $buildId) {
+            return $dbForProject->getDocument('builds', $buildId);
+        });
 
         if ($build->isEmpty()) {
             throw new Exception('Build not found', 404);
@@ -1147,7 +1148,9 @@ App::post('/v1/builds/:buildId')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
 
-        $build = $dbForProject->getDocument('builds', $buildId);
+        $build = Authorization::skip(function () use ($dbForProject, $buildId) {
+            return $dbForProject->getDocument('builds', $buildId);
+        });
 
         if ($build->isEmpty()) {
             throw new Exception('Build not found', 404);
