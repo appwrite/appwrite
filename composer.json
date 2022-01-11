@@ -22,7 +22,7 @@
     },
     "repositories": [
         {
-            "url": "https://github.com/appwrite/php-runtimes.git",
+            "url": "https://github.com/appwrite/runtimes.git",
             "type": "git"
         }
     ],
