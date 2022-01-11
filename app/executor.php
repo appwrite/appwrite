@@ -291,7 +291,7 @@ App::post('/v1/tag')
                     'stderr' => '',
                     'buildTime' => 0,
                     'envVars' => [
-                        'APPWRITE_ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint'),
+                        'ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint'),
                         'APPWRITE_FUNCTION_ID' => $function->getId(),
                         'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
                         'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
@@ -705,7 +705,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
         'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
         'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
         'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
-        'APPWRITE_INTERNAL_RUNTIME_KEY' => $secret
+        'INTERNAL_RUNTIME_KEY' => $secret
     ]);
 
     $vars = \array_merge($vars, $build->getAttribute('envVars', [])); // for gettng endpoint.
@@ -931,7 +931,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
                     'stderr' => '',
                     'buildTime' => 0,
                     'envVars' => [
-                        'APPWRITE_ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint'),
+                        'ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint'),
                         'APPWRITE_FUNCTION_ID' => $function->getId(),
                         'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
                         'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
@@ -1027,7 +1027,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
         $body = \json_encode([
             'path' => '/usr/code',
-            'file' => $build->getAttribute('envVars', [])['APPWRITE_ENTRYPOINT_NAME'],
+            'file' => $build->getAttribute('envVars', [])['ENTRYPOINT_NAME'],
             'env' => $vars,
             'payload' => $data,
             'timeout' => $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900))

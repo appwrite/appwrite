@@ -53,7 +53,7 @@ The `launch.sh` file for an interpreted runtime should extract the `/tmp/code.ta
 
 ---
 Compiled Languages only have a `build.sh` file.
-The `build.sh` script for a compiled runtime is used to move the user's source code and rename it into source files for the runtime (The `APPWRITE_ENTRYPOINT_NAME` environment variable can help with this) it will also build the code and move it into the `/usr/code` folder. Compiled runtime executables **must** be called `runtime` for the ubuntu or alpine images to detect and run them.
+The `build.sh` script for a compiled runtime is used to move the user's source code and rename it into source files for the runtime (The `ENTRYPOINT_NAME` environment variable can help with this) it will also build the code and move it into the `/usr/code` folder. Compiled runtime executables **must** be called `runtime` for the ubuntu or alpine images to detect and run them.
 
 #### Note:
 `/tmp/code.tar.gz` is always created from the `/usr/code` folder in the build stage. If you need any files for either compiled or interpreted runtimes you should place them there and extract them from the `/tmp/code.tar.gz` during the `launch.sh` script to get the files you need.
@@ -63,7 +63,7 @@ Internally the runtime can be anything you like as long as it follows the standa
 
 The best way to go about writing a runtime is like so:
 Initialize a web server that runs on port 3000 and uses any IP Address (0.0.0.0) and on each `POST` request do the following:
-1. Check that the `x-internal-challenge` header matches the `APPWRITE_INTERNAL_RUNTIME_KEY` environment variable. If not return an error with a `401` status code and an `unauthorized` error message.
+1. Check that the `x-internal-challenge` header matches the `INTERNAL_RUNTIME_KEY` environment variable. If not return an error with a `401` status code and an `unauthorized` error message.
 2. Decode the executor's JSON POST request. This normally looks like so:
 ```json
 {
