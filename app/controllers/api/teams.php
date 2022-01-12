@@ -627,6 +627,10 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception('Team IDs don\'t match', 404);
         }
 
+        if ($membership->getAttribute('confirm') !== false) {
+            throw new Exception('Membership already confirmed', 400);
+        }
+
         $team = Authorization::skip(fn() => $dbForProject->getDocument('teams', $teamId));
 
         if ($team->isEmpty()) {
