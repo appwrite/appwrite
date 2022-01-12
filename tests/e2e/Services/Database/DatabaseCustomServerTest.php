@@ -7,7 +7,6 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
-use function array_merge;
 
 class DatabaseCustomServerTest extends Scope
 {
