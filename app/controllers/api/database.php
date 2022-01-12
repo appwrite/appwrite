@@ -166,8 +166,6 @@ App::post('/v1/database/collections')
         $collectionId = $collectionId == 'unique()' ? $dbForProject->getId() : $collectionId;
 
         try {
-            $dbForProject->createCollection('collection_' . $collectionId);
-
             $collection = $dbForProject->createDocument('collections', new Document([
                 '$id' => $collectionId,
                 '$read' => $read ?? [], // Collection permissions for collection documents (based on permission model)
@@ -182,6 +180,8 @@ App::post('/v1/database/collections')
         } catch (DuplicateException $th) {
             throw new Exception('Collection already exists', 409);
         }
+
+        $dbForProject->createCollection('collection_' . $collectionId);
 
         $audits
             ->setParam('event', 'database.collections.create')
