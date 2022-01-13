@@ -776,18 +776,6 @@ App::setResource('console', function() {
         'platforms' => [
             [
                 '$collection' => 'platforms',
-                'name' => 'Production',
-                'type' => 'web',
-                'hostname' => 'appwrite.io',
-            ],
-            [
-                '$collection' => 'platforms',
-                'name' => 'Development',
-                'type' => 'web',
-                'hostname' => 'appwrite.test',
-            ],
-            [
-                '$collection' => 'platforms',
                 'name' => 'Localhost',
                 'type' => 'web',
                 'hostname' => 'localhost',
