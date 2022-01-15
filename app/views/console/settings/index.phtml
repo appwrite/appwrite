@@ -473,8 +473,8 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                     <input name="teamId" data-ls-attrs="id=leave-teamId-{{member.$id}}" type="hidden" data-ls-bind="{{console-project.teamId}}">
                                     <input name="membershipId" data-ls-attrs="id=leave-membershipId-{{member.$id}}" type="hidden" data-ls-bind="{{member.$id}}">
 
-                                    <button data-ls-if="1 === {{members.memberships.length}}" class="danger" disabled>Leave</button>
-                                    <button data-ls-if="1 < {{members.memberships.length}}" class="danger">Leave</button>
+                                    <button data-ls-if="1 === {{members.memberships.length}}" class="danger" disabled>Remove</button>
+                                    <button data-ls-if="1 < {{members.memberships.length}}" class="danger">Remove</button>
                                 </form>
 
                                 <form class="pull-end" data-ls-if="{{account.$id}} === {{member.userId}}"
@@ -498,8 +498,8 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                     <input name="teamId" data-ls-attrs="id=leave-teamId-{{member.$id}}" type="hidden" data-ls-bind="{{console-project.teamId}}">
                                     <input name="membershipId" data-ls-attrs="id=leave-membershipId-{{member.$id}}" type="hidden" data-ls-bind="{{member.$id}}">
 
-                                    <button data-ls-if="1 === {{members.memberships.length}}" class="danger" disabled>Leave</button>
-                                    <button data-ls-if="1 < {{members.memberships.length}}" class="danger">Leave</button>
+                                    <button data-ls-if="1 === {{members.memberships.length}}" class="danger" disabled>Remove</button>
+                                    <button data-ls-if="1 < {{members.memberships.length}}" class="danger">Remove</button>
                                 </form>
 
                                 <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end">
