@@ -190,7 +190,14 @@ class DeletesV1 extends Worker
     {
         $userId = $document->getId();
 
-        // Tokens and Sessions removed with user document
+        // Delete all sessions of this user
+        $this->deleteByGroup('sessions', [
+            new Query('userId', Query::TYPE_EQUAL, [$userId])
+        ], $this->getProjectDB($projectId));
+
+        // Delete user ( tokens are deleted as part of the user object )
+        $this->deleteById($document, $this->getProjectDB($projectId));
+
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
             new Query('userId', Query::TYPE_EQUAL, [$userId])
