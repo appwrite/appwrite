@@ -353,10 +353,12 @@ App::get('/v1/mock/tests/general/set-cookie')
     ->label('sdk.response.model', Response::MODEL_MOCK)
     ->label('sdk.mock', true)
     ->inject('response')
-    ->action(function ($response) {
+    ->inject('request')
+    ->action(function ($response, $request) {
         /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Utopia\Request $request */
 
-        $response->addCookie('cookieName', 'cookieValue', \time() + 31536000, '/', 'localhost', true, true);
+        $response->addCookie('cookieName', 'cookieValue', \time() + 31536000, '/', $request->getHostname(), true, true);
     });
 
 App::get('/v1/mock/tests/general/get-cookie')

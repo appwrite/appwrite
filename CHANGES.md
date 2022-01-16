@@ -1,3 +1,13 @@
+# Version 0.12.1
+
+## Bugs
+- Fixed some issues with the Migration
+- Fixed the UI to add Variables to Functions
+- Fixed wrong data type for String Attribute size
+- Fixed Request stats on the console
+- Fixed Realtime Connection stats with high number by abbreviation
+- Fixed backward compatibility of account status attribute.
+
 # Version 0.12.0
 
 ## Features

@@ -3077,16 +3077,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.17.0",
+            "version": "0.17.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "a68e072170a81532cfb0ff914864d8f074a73a37"
+                "reference": "3542c6ed0f808b6a9f6735a8aad7ccda961bea29"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/a68e072170a81532cfb0ff914864d8f074a73a37",
-                "reference": "a68e072170a81532cfb0ff914864d8f074a73a37",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/3542c6ed0f808b6a9f6735a8aad7ccda961bea29",
+                "reference": "3542c6ed0f808b6a9f6735a8aad7ccda961bea29",
                 "shasum": ""
             },
             "require": {
@@ -3120,9 +3120,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.17.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.17.1"
             },
-            "time": "2022-01-04T09:24:44+00:00"
+            "time": "2022-01-07T12:55:37+00:00"
         },
         {
             "name": "composer/pcre",
