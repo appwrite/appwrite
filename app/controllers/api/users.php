@@ -725,6 +725,11 @@ App::delete('/v1/users/:userId')
             throw new Exception('User not found', 404);
         }
 
+        /**
+         * DO NOT DELETE THE USER RECORD ITSELF. 
+         * WE RETAIN THE USER RECORD TO RESERVE THE USER ID AND ENSURE THAT THE USER ID IS NOT REUSED.
+         */
+        
         // clone user object to send to workers
         $clone = clone $user;
 
@@ -733,6 +738,8 @@ App::delete('/v1/users/:userId')
             ->setAttribute("email", null)
             ->setAttribute("password", null)
             ->setAttribute("deleted", true)
+            ->setAttribute("tokens", [])
+            ->setAttribute("search", null)
         ;
 
         $dbForProject->updateDocument('users', $userId, $user);
