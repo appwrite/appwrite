@@ -433,7 +433,7 @@ return [
                 'description' => 'AWS S3 storage access key. Required when the storage adapter is set to S3. You can get your access key from your AWS console',
                 'introduction' => '0.13.0',
                 'default' => '',
-                'required' => true,
+                'required' => false,
                 'question' => '',
             ],
             [
@@ -441,7 +441,7 @@ return [
                 'description' => 'AWS S3 storage secret key. Required when the storage adapter is set to S3. You can get your secret key from your AWS console.',
                 'introduction' => '0.13.0',
                 'default' => '',
-                'required' => true,
+                'required' => false,
                 'question' => '',
             ],
             [
@@ -457,7 +457,7 @@ return [
                 'description' => 'AWS S3 storage bucket. Required when storage adapter is set to S3. You can create buckets in your AWS console.',
                 'introduction' => '0.13.0',
                 'default' => '',
-                'required' => true,
+                'required' => false,
                 'question' => '',
             ],
             [
@@ -465,7 +465,7 @@ return [
                 'description' => 'DigitalOcean spaces access key. Required when the storage adapter is set to DoSpaces. You can get your access key from your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
-                'required' => true,
+                'required' => false,
                 'question' => '',
             ],
             [
@@ -473,7 +473,7 @@ return [
                 'description' => 'DigitalOcean spaces secret key. Required when the storage adapter is set to DoSpaces. You can get your secret key from your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
-                'required' => true,
+                'required' => false,
                 'question' => '',
             ],
             [
@@ -489,7 +489,7 @@ return [
                 'description' => 'DigitalOcean spaces bucket. Required when storage adapter is set to DoSpaces. You can create spaces in your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
-                'required' => true,
+                'required' => false,
                 'question' => '',
             ],
         ],
