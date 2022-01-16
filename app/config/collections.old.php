@@ -21,18 +21,6 @@ $collections = [
         'platforms' => [
             [
                 '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
-                'name' => 'Production',
-                'type' => 'web',
-                'hostname' => 'appwrite.io',
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
-                'name' => 'Development',
-                'type' => 'web',
-                'hostname' => 'appwrite.test',
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
                 'name' => 'Localhost',
                 'type' => 'web',
                 'hostname' => 'localhost',
