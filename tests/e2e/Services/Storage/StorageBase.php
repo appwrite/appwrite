@@ -135,7 +135,7 @@ trait StorageBase
         ]);
         @fclose($handle);
         
-        $this->assertEquals(400, $largeFile['headers']['status-code']);
+        $this->assertEquals(413, $largeFile['headers']['status-code']);
         
 
         /**
