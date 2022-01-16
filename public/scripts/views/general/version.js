@@ -7,7 +7,7 @@
           if (!cookie.get(cookieName)) {
             var xhr = new XMLHttpRequest();
 
-            xhr.open('GET', '/console/version', true);
+            xhr.open('GET', 'https://appwrite.io/version', true);
 
             xhr.onload = function () {
               if (this.readyState == 4 && this.status == 200) {

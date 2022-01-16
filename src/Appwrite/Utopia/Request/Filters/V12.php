@@ -141,7 +141,13 @@ class V12 extends Filter
                 if(isset($usedOperator)) {
                     [ $attributeKey, $filterValue ] = \explode($usedOperator, $filter);
 
-                    $filterValue = \is_numeric($filterValue) ? $filterValue : '"' . $filterValue . '"';
+                    if($filterValue === 'true' || $filterValue === 'false') {
+                        // Let's keep it at true and false string, but without "" around
+                        // No action needed
+                    } else {
+                        $filterValue = \is_numeric($filterValue) ? $filterValue : '"' . $filterValue . '"';
+                    }
+
                     $query = $attributeKey . '.' . $operators[$usedOperator] . '(' . $filterValue . ')';
                     \array_push($queries, $query);
                 }
@@ -152,7 +158,6 @@ class V12 extends Filter
         unset($content['search']);
 
         unset($content['filters']);
-        unset($content['search']);
         $content['queries'] = $queries;
 
         return $content;
