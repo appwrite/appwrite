@@ -4,4 +4,4 @@ Larger files should be uploaded using multiple requests with the [content-range]
 
 When the first request is sent, the server will return the **File** object, and the subsequent part request must include the file's **id** in `x-appwrite-upload-id` header to allow the server to know that the partial upload is for the existing file and not for a new one.
 
-If you're creating a new file using one the Appwrite SDKs, all the chunking logic will be managed by the SDK internally.
+If you're creating a new file using one of the Appwrite SDKs, all the chunking logic will be managed by the SDK internally.

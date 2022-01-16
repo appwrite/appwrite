@@ -500,7 +500,7 @@ App::post('/v1/functions/:functionId/tags')
                 throw new Exception('Invalid content-range header', 400);
             }
 
-            if ($end == $fileSize) {
+            if ($end === $fileSize) {
                 //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
                 $chunks = $chunk = -1;
             } else {
@@ -537,7 +537,7 @@ App::post('/v1/functions/:functionId/tags')
             throw new Exception('Failed moving file', 500);
         }
         
-        if($chunksUploaded == $chunks) {
+        if($chunksUploaded === $chunks) {
             $fileSize = $deviceFunctions->getFileSize($path);
 
             if ($tag->isEmpty()) {

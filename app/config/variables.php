@@ -470,7 +470,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DEVICE_DO_SPACES_SECRET',
-                'description' => 'DigitalOcean spaces secret key. Required when the storage adapter is set to DoSpaces. You can get your secret key from your DigitalOcean console..',
+                'description' => 'DigitalOcean spaces secret key. Required when the storage adapter is set to DoSpaces. You can get your secret key from your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => true,
@@ -478,7 +478,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DEVICE_DO_SPACES_REGION',
-                'description' => 'DigitalOcean spaces region. Required when storage adapter is set to DoSpaces. You can find your region info for your space from DigitalOcean console..',
+                'description' => 'DigitalOcean spaces region. Required when storage adapter is set to DoSpaces. You can find your region info for your space from DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => 'us-eas-1',
                 'required' => false,
