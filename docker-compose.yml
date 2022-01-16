@@ -412,11 +412,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_AUDIT
 
   appwrite-usage:
-    entrypoint:
-     - php
-     - -e
-     - /usr/src/code/app/cli.php
-     - usage
+    entrypoint: usage
     container_name: appwrite-usage
     build:
       context: .
