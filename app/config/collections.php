@@ -2158,7 +2158,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => 'antiVirus',
+                '$id' => 'antivirus',
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,
                 'size' => 0,

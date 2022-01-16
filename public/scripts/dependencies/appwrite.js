@@ -3947,11 +3947,11 @@
                  * @param {boolean} enabled
                  * @param {string} adapter
                  * @param {boolean} encryption
-                 * @param {boolean} antiVirus
+                 * @param {boolean} antivirus
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createBucket: (bucketId, name, permission, read, write, maximumFileSize, allowedFileExtensions, enabled, adapter, encryption, antiVirus) => __awaiter(this, void 0, void 0, function* () {
+                createBucket: (bucketId, name, permission, read, write, maximumFileSize, allowedFileExtensions, enabled, adapter, encryption, antivirus) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof bucketId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "bucketId"');
                     }
@@ -3993,8 +3993,8 @@
                     if (typeof encryption !== 'undefined') {
                         payload['encryption'] = encryption;
                     }
-                    if (typeof antiVirus !== 'undefined') {
-                        payload['antiVirus'] = antiVirus;
+                    if (typeof antivirus !== 'undefined') {
+                        payload['antivirus'] = antivirus;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
@@ -4035,11 +4035,11 @@
                  * @param {string[]} allowedFileExtensions
                  * @param {boolean} enabled
                  * @param {boolean} encryption
-                 * @param {boolean} antiVirus
+                 * @param {boolean} antivirus
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateBucket: (bucketId, name, read, write, maximumFileSize, allowedFileExtensions, enabled, encryption, antiVirus) => __awaiter(this, void 0, void 0, function* () {
+                updateBucket: (bucketId, name, read, write, maximumFileSize, allowedFileExtensions, enabled, encryption, antivirus) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof bucketId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "bucketId"');
                     }
@@ -4069,8 +4069,8 @@
                     if (typeof encryption !== 'undefined') {
                         payload['encryption'] = encryption;
                     }
-                    if (typeof antiVirus !== 'undefined') {
-                        payload['antiVirus'] = antiVirus;
+                    if (typeof antivirus !== 'undefined') {
+                        payload['antivirus'] = antivirus;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('put', uri, {

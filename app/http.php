@@ -160,7 +160,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 'enabled' => true,
                 'adapter' => '',
                 'encryption' => true,
-                'antiVirus' => true,
+                'antivirus' => true,
                 '$read' => ['role:all'],
                 '$write' => ['role:all'],
                 'search' => 'buckets Default',

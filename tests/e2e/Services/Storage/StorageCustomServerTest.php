@@ -2,10 +2,10 @@
 
 namespace Tests\E2E\Services\Storage;
 
+use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Tests\E2E\Client;
 
 class StorageCustomServerTest extends Scope
 {
@@ -13,7 +13,7 @@ class StorageCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    public function testCreateBucket():array
+    public function testCreateBucket(): array
     {
         /**
          * Test for SUCCESS
@@ -35,7 +35,7 @@ class StorageCustomServerTest extends Scope
         $this->assertEquals('Test Bucket', $bucket['body']['name']);
         $this->assertEquals(true, $bucket['body']['enabled']);
         $this->assertEquals(true, $bucket['body']['encryption']);
-        $this->assertEquals(true, $bucket['body']['antiVirus']);
+        $this->assertEquals(true, $bucket['body']['antivirus']);
         $this->assertEquals('local', $bucket['body']['adapter']);
         $bucketId = $bucket['body']['$id'];
 
@@ -52,7 +52,7 @@ class StorageCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $this->assertEquals('bucket1', $bucket['body']['$id']);
-        
+
         /**
          * Test for FAILURE
          */
@@ -92,7 +92,7 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $response['body']['buckets'][0]['$id']
+            'cursor' => $response['body']['buckets'][0]['$id'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -122,18 +122,18 @@ class StorageCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']);
         $this->assertEquals($id, $response['body']['$id']);
         $this->assertEquals('Test Bucket', $response['body']['name']);
-        
+
         /**
          * Test for FAILURE
          */
-        
+
         $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/empty',
             array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
         $this->assertEquals(404, $response['headers']['status-code']);
-        
+
         $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/id-is-really-long-id-is-really-long-id-is-really-long-id-is-really-long',
             array_merge([
                 'content-type' => 'application/json',
@@ -147,7 +147,7 @@ class StorageCustomServerTest extends Scope
     /**
      * @depends testCreateBucket
      */
-    public function testUpdateBucket(array $data):array
+    public function testUpdateBucket(array $data): array
     {
         $id = $data['bucketId'] ?? '';
         /**
@@ -170,7 +170,7 @@ class StorageCustomServerTest extends Scope
         $this->assertEquals('Test Bucket Updated', $bucket['body']['name']);
         $this->assertEquals(false, $bucket['body']['enabled']);
         $this->assertEquals(true, $bucket['body']['encryption']);
-        $this->assertEquals(true, $bucket['body']['antiVirus']);
+        $this->assertEquals(true, $bucket['body']['antivirus']);
         $this->assertEquals('local', $bucket['body']['adapter']);
         $bucketId = $bucket['body']['$id'];
         /**
@@ -204,7 +204,7 @@ class StorageCustomServerTest extends Scope
             ], $this->getHeaders()));
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEmpty($response['body']);
-        
+
         $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $id,
             array_merge([
                 'content-type' => 'application/json',

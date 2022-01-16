@@ -406,7 +406,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                 </div>
 
                                 <div class="margin-bottom">
-                                    <input name="antiVirus" type="hidden" data-forms-switch data-cast-to="boolean" data-ls-bind="{{project-bucket.antiVirus}}" /> &nbsp; Anti Virus <span class="tooltip" data-tooltip="Mark whether anti virus scanning is enabled"><i class="icon-info-circled"></i></span>
+                                    <input name="antivirus" type="hidden" data-forms-switch data-cast-to="boolean" data-ls-bind="{{project-bucket.antivirus}}" /> &nbsp; Anti Virus <span class="tooltip" data-tooltip="Mark whether anti virus scanning is enabled"><i class="icon-info-circled"></i></span>
                                 </div>
 
                                 <label for="bucket-allowedFileExtensions">Allowed File Extensions</label>
@@ -436,7 +436,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                         <p class="text-fade margin-top-tiny">With Bucket Level permissions, you assign permissions only once in the bucket.</p>
                                         <p class="text-fade margin-top-tiny">In this permission level permissions assigned to bucket takes the precedence and file permissions are ignored</p>
                                         <div data-ls-if="{{project-bucket.permission}} == 'bucket'">
-                                            
+
                                             <label for="bucket-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
                                             <input type="hidden" id="bucket-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-bucket.$permissions.read}}" placeholder="User ID, Team ID or Role" />
                                             <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
