@@ -1474,7 +1474,10 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $deviceDeleted = false;
         if($file->getAttribute('chunksTotal') !== $file->getAttribute('chunksUploaded')) {
-            $deviceDeleted = $deviceFiles->abort($file->getAttribute('path'));
+            $deviceDeleted = $deviceFiles->abort(
+                $file->getAttribute('path'),
+                ($file->getAttribute('metadata', [])['uploadId'] ?? '')
+            );
         } else {
             $deviceDeleted = $deviceFiles->delete($file->getAttribute('path'));
         }
