@@ -107,6 +107,36 @@ trait StorageBase
         $this->assertEquals('video/mp4', $largeFile['body']['mimeType']);
         $this->assertEquals($totalSize, $largeFile['body']['sizeOriginal']);
         $this->assertEquals(md5_file(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4')), $largeFile['body']['signature']); // should validate that the file is not encrypted
+        
+        /**
+         * Failure
+         * Test for Chunk above 5MB
+         */
+        $source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
+        $totalSize = \filesize($source);
+        $chunkSize = 6*1024*1024;
+        $handle = @fopen($source, "rb");
+        $fileId = 'unique()';
+        $mimeType = mime_content_type($source);
+        $counter = 0;
+        $size = filesize($source);
+        $headers = [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ];
+        $id = '';
+        $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
+        $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
+        $largeFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files',  $this->getHeaders(), [
+            'fileId' => $fileId,
+            'file' => $curlFile,
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+        @fclose($handle);
+        
+        $this->assertEquals(400, $largeFile['headers']['status-code']);
+        
 
         /**
          * Test for FAILURE unknown Bucket
