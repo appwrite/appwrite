@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "043d8afcc90e4dc5a0602d71ef6287d7",
+    "content-hash": "368924595cfbf7dc32394c09481df6c3",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2640,7 +2640,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage",
-                "reference": "d9ea68c5e0ee2a1d4b11c6c64769f0d1e620e808"
+                "reference": "15a787e3c8c084e8d2cb08c2ece3ba20df76d6c9"
             },
             "require": {
                 "php": ">=8.0",
@@ -2678,7 +2678,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2021-12-30T11:14:10+00:00"
+            "time": "2022-01-16T07:43:42+00:00"
         },
         {
             "name": "utopia-php/swoole",
