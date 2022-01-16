@@ -68,9 +68,9 @@ class Bucket extends Model
             'example' => 'local',
         ])
         ->addRule('adapterCredentials', [
-            'type' => self::TYPE_STRING,
+            'type' => self::TYPE_JSON,
             'description' => 'Storage adapter credentials.',
-            'default' => '',
+            'default' => new \stdClass,
             'example' => ['key' => 'value'],
         ])
         ->addRule('maximumFileSize', [
@@ -82,8 +82,9 @@ class Bucket extends Model
         ->addRule('allowedFileExtensions', [
             'type' => self::TYPE_STRING,
             'description' => 'Allowed file extensions.',
-            'default' => '',
-            'example' => 'jpg,png',
+            'default' => [],
+            'example' => ['jpg', 'png'],
+            'array' => true
         ])
         ->addRule('encryption', [
             'type' => self::TYPE_BOOLEAN,
