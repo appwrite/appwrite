@@ -127,7 +127,7 @@ trait StorageBase
         $id = '';
         $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
         $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
-        $largeFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files',  $this->getHeaders(), [
+        $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files',  $this->getHeaders(), [
             'fileId' => $fileId,
             'file' => $curlFile,
             'read' => ['role:all'],
@@ -135,7 +135,7 @@ trait StorageBase
         ]);
         @fclose($handle);
         
-        $this->assertEquals(413, $largeFile['headers']['status-code']);
+        $this->assertEquals(413, $res['headers']['status-code']);
         
 
         /**
