@@ -3,6 +3,7 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
+use Utopia\Database\Document as DatabaseDocument;
 
 class Document extends Any
 {
@@ -56,5 +57,12 @@ class Document extends Any
                 'array' => true,
             ])
         ;
+    }
+
+    public function filter(DatabaseDocument $document): DatabaseDocument
+    {
+        $document->removeAttribute('$internalId');
+
+        return $document;
     }
 }
