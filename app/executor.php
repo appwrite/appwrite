@@ -494,7 +494,7 @@ function runBuildStage(string $buildId, string $projectID, Database $database): 
         }
 
         if (!\file_exists('/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode')) {
-            if (!\mkdir('/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode', 0755, true)) {
+            if (!\mkdir('/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode', 0777, true)) {
                 throw new Exception('Can\'t create directory /tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode');
             }
         };
