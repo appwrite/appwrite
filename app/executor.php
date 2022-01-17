@@ -459,7 +459,7 @@ function runBuildStage(string $buildId, string $projectID, Database $database): 
 
         // Perform various checks
         if (!\file_exists($tagPathTargetDir)) {
-            if (!\mkdir($tagPathTargetDir, 0755, true)) {
+            if (!\mkdir($tagPathTargetDir, 0777, true)) {
                 throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
             }
         }
@@ -595,7 +595,7 @@ function runBuildStage(string $buildId, string $projectID, Database $database): 
         $path = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
 
         if (!\file_exists(\dirname($path))) { // Checks if directory path to file exists
-            if (!@\mkdir(\dirname($path), 0755, true)) {
+            if (!@\mkdir(\dirname($path), 0777, true)) {
                 throw new Exception('Can\'t create directory: ' . \dirname($path));
             }
         }
@@ -741,7 +741,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
     $device = Storage::getDevice('builds');
 
     if (!\file_exists($tagPathTargetDir)) {
-        if (!\mkdir($tagPathTargetDir, 0755, true)) {
+        if (!\mkdir($tagPathTargetDir, 0777, true)) {
             throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
         }
     }
