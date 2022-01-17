@@ -34,12 +34,12 @@ class Collection extends Structure
      * Is valid.
      *
      * Returns true if valid or false if not.
-     * 
+     *
      * @param mixed $document
      *
      * @return bool
      */
-    public function isValid($document)
+    public function isValid($document): bool
     {
         $document = new Document(
             \array_merge($this->merge, ($document instanceof Document) ? $document->getArrayCopy() : $document)

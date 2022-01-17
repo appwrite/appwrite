@@ -2,21 +2,15 @@
 
 namespace Appwrite\Auth;
 
-use Appwrite\Database\Document;
-use Appwrite\Database\Validator\Authorization;
+use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 
 class Auth
 {
     /**
-     * User Status.
-     */
-    const USER_STATUS_UNACTIVATED = 0;
-    const USER_STATUS_ACTIVATED = 1;
-    const USER_STATUS_BLOCKED = 2;
-
-    /**
      * User Roles.
      */
+    const USER_ROLE_ALL = 'all';
     const USER_ROLE_GUEST = 'guest';
     const USER_ROLE_MEMBER = 'member';
     const USER_ROLE_ADMIN = 'admin';
@@ -24,7 +18,6 @@ class Auth
     const USER_ROLE_OWNER = 'owner';
     const USER_ROLE_APP = 'app';
     const USER_ROLE_SYSTEM = 'system';
-    const USER_ROLE_ALL = '*';
 
     /**
      * Token Types.
@@ -240,18 +233,18 @@ class Auth
     }
 
     /**
-     * Is Previligged User?
-     * 
+     * Is Privileged User?
+     *
      * @param array $roles
-     * 
+     *
      * @return bool
      */
     public static function isPrivilegedUser(array $roles): bool
     {
-        if(
-            array_key_exists('role:'.self::USER_ROLE_OWNER, $roles) ||
-            array_key_exists('role:'.self::USER_ROLE_DEVELOPER, $roles) ||
-            array_key_exists('role:'.self::USER_ROLE_ADMIN, $roles)
+        if (
+            in_array('role:'.self::USER_ROLE_OWNER, $roles) ||
+            in_array('role:'.self::USER_ROLE_DEVELOPER, $roles) ||
+            in_array('role:'.self::USER_ROLE_ADMIN, $roles)
         ) {
             return true;
         }
@@ -261,14 +254,14 @@ class Auth
 
     /**
      * Is App User?
-     * 
+     *
      * @param array $roles
-     * 
+     *
      * @return bool
      */
     public static function isAppUser(array $roles): bool
     {
-        if(array_key_exists('role:'.self::USER_ROLE_APP, $roles)) {
+        if (in_array('role:'.self::USER_ROLE_APP, $roles)) {
             return true;
         }
 
@@ -277,15 +270,15 @@ class Auth
 
     /**
      * Returns all roles for a user.
-     * 
-     * @param Document $user 
-     * @return array 
+     *
+     * @param Document $user
+     * @return array
      */
     public static function getRoles(Document $user): array
     {
         $roles = [];
 
-        if (!self::isPrivilegedUser(Authorization::$roles) && !self::isAppUser(Authorization::$roles)) {
+        if (!self::isPrivilegedUser(Authorization::getRoles()) && !self::isAppUser(Authorization::getRoles())) {
             if ($user->getId()) {
                 $roles[] = 'user:'.$user->getId();
                 $roles[] = 'role:'.Auth::USER_ROLE_MEMBER;

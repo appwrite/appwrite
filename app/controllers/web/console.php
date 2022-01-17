@@ -1,16 +1,14 @@
 <?php
 
+use Appwrite\Utopia\View;
 use Utopia\App;
-use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
-use Appwrite\Database\Database;
-use Appwrite\Database\Validator\Authorization;
-use Appwrite\Database\Validator\UID;
+use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
 
 App::init(function ($layout) {
-    /** @var Utopia\View $layout */
+    /** @var Appwrite\Utopia\View $layout */
 
     $layout
         ->setParam('description', 'Appwrite Console allows you to easily manage, monitor, and control your entire backend API and tools.')
@@ -20,7 +18,7 @@ App::init(function ($layout) {
 
 App::shutdown(function ($response, $layout) {
     /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\View $layout */
+    /** @var Appwrite\Utopia\View $layout */
 
     $header = new View(__DIR__.'/../../views/console/comps/header.phtml');
     $footer = new View(__DIR__.'/../../views/console/comps/footer.phtml');
@@ -45,7 +43,7 @@ App::get('/error/:code')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
     ->inject('layout')
     ->action(function ($code, $layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/error.phtml');
 
@@ -64,7 +62,7 @@ App::get('/console')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/index.phtml');
 
@@ -83,7 +81,7 @@ App::get('/console/account')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/account/index.phtml');
 
@@ -104,7 +102,7 @@ App::get('/console/notifications')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/v1/console/notifications/index.phtml');
 
@@ -119,7 +117,7 @@ App::get('/console/home')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/home/index.phtml');
         $page
@@ -135,13 +133,14 @@ App::get('/console/settings')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         $page = new View(__DIR__.'/../../views/console/settings/index.phtml');
 
         $page
+            ->setParam('services', array_filter(Config::getParam('services'), function($element) {return $element['optional'];}))
             ->setParam('customDomainsEnabled', ($target->isKnown() && !$target->isTest()))
             ->setParam('customDomainsTarget', $target->get())
             ->setParam('smtpEnabled', (!empty(App::getEnv('_APP_SMTP_HOST'))))
@@ -158,7 +157,7 @@ App::get('/console/webhooks')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/webhooks/index.phtml');
 
@@ -177,7 +176,7 @@ App::get('/console/keys')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $scopes = array_keys(Config::getParam('scopes'));
         $page = new View(__DIR__.'/../../views/console/keys/index.phtml');
@@ -189,28 +188,13 @@ App::get('/console/keys')
             ->setParam('body', $page);
     });
 
-App::get('/console/tasks')
-    ->groups(['web', 'console'])
-    ->label('permission', 'public')
-    ->label('scope', 'console')
-    ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Utopia\View $layout */
-
-        $page = new View(__DIR__.'/../../views/console/tasks/index.phtml');
-
-        $layout
-            ->setParam('title', APP_NAME.' - Tasks')
-            ->setParam('body', $page);
-    });
-
 App::get('/console/database')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/database/index.phtml');
 
@@ -226,25 +210,23 @@ App::get('/console/database/collection')
     ->param('id', '', new UID(), 'Collection unique ID.')
     ->inject('response')
     ->inject('layout')
-    ->inject('projectDB')
-    ->action(function ($id, $response, $layout, $projectDB) {
+    ->action(function ($id, $response, $layout) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\View $layout */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Utopia\View $layout */
 
-        Authorization::disable();
-        $collection = $projectDB->getDocument($id, false);
-        Authorization::reset();
+        $logs = new View(__DIR__.'/../../views/console/comps/logs.phtml');
 
-        if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            throw new Exception('Collection not found', 404);
-        }
+        $logs
+            ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 0))
+            ->setParam('method', 'database.listCollectionLogs')
+            ->setParam('params', [
+                'collection-id' => '{{router.params.id}}',
+            ])
+        ;
 
         $page = new View(__DIR__.'/../../views/console/database/collection.phtml');
-
-        $page
-            ->setParam('collection', $collection)
-        ;
+        
+        $page->setParam('logs', $logs);
         
         $layout
             ->setParam('title', APP_NAME.' - Database Collection')
@@ -264,28 +246,48 @@ App::get('/console/database/document')
     ->label('scope', 'console')
     ->param('collection', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
-    ->inject('projectDB')
-    ->action(function ($collection, $layout, $projectDB) {
-        /** @var Utopia\View $layout */
-        /** @var Appwrite\Database\Database $projectDB */
+    ->action(function ($collection, $layout) {
+        /** @var Appwrite\Utopia\View $layout */
 
-        Authorization::disable();
-        $collection = $projectDB->getDocument($collection, false);
-        Authorization::reset();
+        $logs = new View(__DIR__.'/../../views/console/comps/logs.phtml');
 
-        if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            throw new Exception('Collection not found', 404);
-        }
+        $logs
+            ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 0))
+            ->setParam('method', 'database.listDocumentLogs')
+            ->setParam('params', [
+                'collection-id' => '{{router.params.collection}}',
+                'document-id' => '{{router.params.id}}',
+            ])
+        ;
 
         $page = new View(__DIR__.'/../../views/console/database/document.phtml');
-        $searchFiles = new View(__DIR__.'/../../views/console/database/search/files.phtml');
-        $searchDocuments = new View(__DIR__.'/../../views/console/database/search/documents.phtml');
 
         $page
-            ->setParam('db', $projectDB)
+            ->setParam('new', false)
             ->setParam('collection', $collection)
-            ->setParam('searchFiles', $searchFiles)
-            ->setParam('searchDocuments', $searchDocuments)
+            ->setParam('logs', $logs)
+        ;
+
+        $layout
+            ->setParam('title', APP_NAME.' - Database Document')
+            ->setParam('body', $page);
+    });
+
+App::get('/console/database/document/new')
+    ->groups(['web', 'console'])
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->param('collection', '', new UID(), 'Collection unique ID.')
+    ->inject('layout')
+    ->action(function ($collection, $layout) {
+        /** @var Appwrite\Utopia\View $layout */
+
+        $page = new View(__DIR__.'/../../views/console/database/document.phtml');
+
+        $page
+            ->setParam('new', true)
+            ->setParam('collection', $collection)
+            ->setParam('logs', new View())
         ;
 
         $layout
@@ -299,7 +301,7 @@ App::get('/console/storage')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
         $page = new View(__DIR__.'/../../views/console/storage/index.phtml');
         
         $page
@@ -319,7 +321,7 @@ App::get('/console/users')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/users/index.phtml');
 
@@ -340,7 +342,7 @@ App::get('/console/users/user')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/users/user.phtml');
 
@@ -355,7 +357,7 @@ App::get('/console/users/teams/team')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
-        /** @var Utopia\View $layout */
+        /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/users/team.phtml');
 

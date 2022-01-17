@@ -3,13 +3,16 @@
 
   window.ls.container.get("view").add({
     selector: "data-forms-clone",
-    controller: function(element, document, view) {
+    controller: function(element, document, view, expression) {
+      element.removeAttribute('data-forms-clone');
+      view.render(element);
       var template = element.innerHTML.toString();
       var label = element.dataset["label"] || "Add";
       var icon = element.dataset["icon"] || null;
-      var target = element.dataset["target"] || null;
+      var target = expression.parse(element.dataset["target"] || null);
       var first = parseInt(element.dataset["first"] || 1);
       var button = document.createElement("button");
+      var debug = element.dataset["debug"] || false;
 
       button.type = "button";
       button.innerText = " " + label + " ";
@@ -38,7 +41,14 @@
         clone.innerHTML = template;
         clone.className = element.className;
 
+        var input = clone.querySelector("input, select, textarea");
+
         view.render(clone);
+
+        if(debug) {
+          console.log('Debug: clone: ', clone);
+          console.log('Debug: target: ', target);
+        }
 
         if (target) {
           target.appendChild(clone);
@@ -46,7 +56,9 @@
           button.parentNode.insertBefore(clone, button);
         }
 
-        clone.querySelector("input").focus();
+        if(input) {
+          input.focus();
+        }
 
         Array.prototype.slice
           .call(clone.querySelectorAll("[data-remove]"))
@@ -86,6 +98,15 @@
       element.parentNode.insertBefore(button, element.nextSibling);
 
       element.parentNode.removeChild(element);
+
+
+      button.form.addEventListener('reset', function (event) {
+        target.innerHTML = '';
+
+        if (first) {
+          button.click();
+        }
+      });
 
       if (first) {
         button.click();

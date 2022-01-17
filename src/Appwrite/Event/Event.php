@@ -7,6 +7,9 @@ use Resque;
 class Event
 {
 
+    const DATABASE_QUEUE_NAME= 'v1-database';
+    const DATABASE_CLASS_NAME = 'DatabaseV1';
+
     const DELETE_QUEUE_NAME = 'v1-deletes';
     const DELETE_CLASS_NAME = 'DeletesV1';
 
@@ -25,12 +28,8 @@ class Event
     const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
     const WEBHOOK_CLASS_NAME = 'WebhooksV1';
 
-    const TASK_QUEUE_NAME = 'v1-tasks';
-    const TASK_CLASS_NAME = 'TasksV1';
-
     const CERTIFICATES_QUEUE_NAME = 'v1-certificates';
     const CERTIFICATES_CLASS_NAME = 'CertificatesV1';
-    
     
     /**
      * @var string

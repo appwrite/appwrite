@@ -16,11 +16,11 @@ class Func extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('$permissions', [
-                'type' => Response::MODEL_PERMISSIONS,
-                'description' => 'Function permissions.',
-                'default' => new \stdClass,
-                'example' => new \stdClass,
+            ->addRule('execute', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Execution permissions.',
+                'default' => '',
+                'example' => 'role:member',
                 'array' => false,
             ])
             ->addRule('name', [
@@ -43,7 +43,7 @@ class Func extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function status. Possible values: disabled, enabled',
+                'description' => 'Function status. Possible values: `disabled`, `enabled`',
                 'default' => '',
                 'example' => 'enabled',
             ])
@@ -101,7 +101,7 @@ class Func extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -110,8 +110,8 @@ class Func extends Model
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
     public function getType():string

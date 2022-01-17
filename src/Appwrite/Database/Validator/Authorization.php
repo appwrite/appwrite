@@ -10,7 +10,7 @@ class Authorization extends Validator
     /**
      * @var array
      */
-    static $roles = ['*' => true];
+    public static $roles = ['*' => true];
 
     /**
      * @var Document
@@ -46,7 +46,7 @@ class Authorization extends Validator
      *
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return $this->message;
     }
@@ -60,7 +60,7 @@ class Authorization extends Validator
      *
      * @return bool
      */
-    public function isValid($permissions)
+    public function isValid($permissions): bool
     {
         if (!self::$status) {
             return true;
@@ -125,7 +125,7 @@ class Authorization extends Validator
 
     /**
      * @param string $role
-     * 
+     *
      * @return bool
      */
     public static function isRole(string $role): bool

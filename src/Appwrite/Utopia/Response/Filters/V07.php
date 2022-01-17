@@ -5,19 +5,25 @@ namespace Appwrite\Utopia\Response\Filters;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
 use Exception;
-class V07 extends Filter {
+
+class V07 extends Filter
+{
     
     // Convert 0.8 Data format to 0.7 format
-    public function parse(array $content, string $model): array {
-        
+    public function parse(array $content, string $model): array
+    {
         $parsedResponse = [];
 
-        switch($model) {
+        switch ($model) {
 
             case Response::MODEL_DOCUMENT_LIST: /** ANY was replaced by DOCUMENT in 0.8.x but this is backward compatible with 0.7.x */
+            // no break
             case Response::MODEL_DOCUMENT: /** ANY was replaced by DOCUMENT in 0.8.x but this is backward compatible with 0.7.x */
+            // no break
             case Response::MODEL_USER_LIST: /** [FIELDS ADDED in 0.8.x] passwordUpdate */
+            // no break
             case Response::MODEL_USER: /** [FIELDS ADDED in 0.8.x] passwordUpdate */
+            // no break
             case Response::MODEL_COLLECTION_LIST:
             case Response::MODEL_COLLECTION:
             case Response::MODEL_FILE_LIST:
@@ -31,7 +37,9 @@ class V07 extends Filter {
             case Response::MODEL_MEMBERSHIP_LIST:
             case Response::MODEL_MEMBERSHIP:
             case Response::MODEL_SESSION_LIST: /** [FIELDS ADDED in 0.8.x] provider, providerUid, providerToken */
+            // no break
             case Response::MODEL_SESSION: /** [FIELDS ADDED in 0.8.x] provider, providerUid, providerToken */
+            // no break
             case Response::MODEL_JWT:
             case Response::MODEL_LOG:
             case Response::MODEL_LOG_LIST:
@@ -63,10 +71,11 @@ class V07 extends Filter {
             case Response::MODEL_MOCK:
             case Response::MODEL_ANY:
             case Response::MODEL_PREFERENCES: /** ANY was replaced by PREFERENCES in 0.8.x but this is backward compatible with 0.7.x */
+            // no break
             case Response::MODEL_NONE:
             case Response::MODEL_ERROR:
             case Response::MODEL_ERROR_DEV:
-                $parsedResponse = $content; 
+                $parsedResponse = $content;
                 break;
             case Response::MODEL_FUNCTION_LIST: /** Function property env was renamed to runtime in 0.9.x  */
                 $parsedResponse = $this->parseFunctionList($content);
@@ -81,20 +90,21 @@ class V07 extends Filter {
         return $parsedResponse;
     }
 
-    protected function parseFunction(array $content) {
+    protected function parseFunction(array $content)
+    {
         $content['env'] = $content['runtime'];
         unset($content['runtime']);
         return $content;
     }
 
-    protected function parseFunctionList(array $content){
+    protected function parseFunctionList(array $content)
+    {
         $functions = $content['functions'];
         $parsedResponse = [];
-        foreach($functions as $function) {
+        foreach ($functions as $function) {
             $parsedResponse[] = $this->parseFunction($function);
         }
         $content['functions'] = $parsedResponse;
         return $content;
     }
-
 }
