@@ -825,6 +825,9 @@ trait DatabaseBase
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $documents['body']['documents'][2]['releaseYear']);
+        $this->assertEmpty($documents['body']['documents'][0]['$internalId']);
+        $this->assertEmpty($documents['body']['documents'][1]['$internalId']);
+        $this->assertEmpty($documents['body']['documents'][2]['$internalId']);
         $this->assertCount(3, $documents['body']['documents']);
 
         foreach ($documents['body']['documents'] as $document) {
@@ -866,6 +869,7 @@ trait DatabaseBase
             $this->assertEquals($response['body']['releaseYear'], $document['releaseYear']);
             $this->assertEquals($response['body']['$read'], $document['$read']);
             $this->assertEquals($response['body']['$write'], $document['$write']);
+            $this->assertEmpty($response['body']['$internalId']);
         }
     }
 

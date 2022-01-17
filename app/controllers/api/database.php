@@ -1832,7 +1832,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
         $usage
             ->setParam('database.documents.read', 1)
             ->setParam('collectionId', $collectionId)
-            ;
+        ;
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
