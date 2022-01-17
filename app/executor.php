@@ -64,30 +64,24 @@ Co\run(function () use ($runtimes, $orchestration) {
 /**
  * List function servers
  */
-$executionStart = \microtime(true);
+Co\run(function () use ($orchestration, $activeFunctions) {
+    $executionStart = \microtime(true);
 
-$response = $orchestration->list(['label' => 'appwrite-type=function']);
+    $residueList = $orchestration->list(['label' => 'appwrite-type=function']);
 
-$activeFunctions = new Swoole\Table(1024);
-$activeFunctions->column('id', Swoole\Table::TYPE_STRING, 512);
-$activeFunctions->column('name', Swoole\Table::TYPE_STRING, 512);
-$activeFunctions->column('status', Swoole\Table::TYPE_STRING, 512);
-$activeFunctions->column('key', Swoole\Table::TYPE_STRING, 4096);
-$activeFunctions->create();
+    foreach ($residueList as $value) {
+        $activeFunctions->set($value->getName(), [
+            'id' => $value->getId(),
+            'name' => $value->getName(),
+            'status' => $value->getStatus(),
+            'private-key' => ''
+        ]);
+    }
 
+    $executionEnd = \microtime(true);
 
-foreach ($response as $value) {
-    $activeFunctions->set($value->getName(), [
-        'id' => $value->getId(),
-        'name' => $value->getName(),
-        'status' => $value->getStatus(),
-        'private-key' => ''
-    ]);
-}
-
-$executionEnd = \microtime(true);
-
-Console::info(count($activeFunctions) . ' functions listed in ' . ($executionEnd - $executionStart) . ' seconds');
+    Console::info(count($activeFunctions) . ' functions listed in ' . ($executionEnd - $executionStart) . ' seconds');
+});
 
 App::post('/v1/execute') // Define Route
     ->desc('Execute a function')
