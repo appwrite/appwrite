@@ -61,9 +61,13 @@ Co\run(function () use ($runtimes, $orchestration) {
     }
 });
 
-/**
- * List function servers
- */
+$activeFunctions = new Swoole\Table(1024);
+$activeFunctions->column('id', Swoole\Table::TYPE_STRING, 512);
+$activeFunctions->column('name', Swoole\Table::TYPE_STRING, 512);
+$activeFunctions->column('status', Swoole\Table::TYPE_STRING, 512);
+$activeFunctions->column('key', Swoole\Table::TYPE_STRING, 4096);
+$activeFunctions->create();
+
 Co\run(function () use ($orchestration, $activeFunctions) {
     $executionStart = \microtime(true);
 
