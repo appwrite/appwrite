@@ -485,9 +485,9 @@ function runBuildStage(string $buildId, string $projectID, Database $database): 
         $buildStart = \microtime(true);
         $buildTime = \time();
 
-        $orchestration->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', '1'));
-        $orchestration->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', '256'));
-        $orchestration->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '256'));
+        $orchestration->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0));
+        $orchestration->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256));
+        $orchestration->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
 
         foreach ($vars as &$value) {
             $value = strval($value);
