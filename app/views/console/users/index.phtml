@@ -480,7 +480,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                         <?php
                                             $form_view = new View(__DIR__.'/oauth/'.$this->escape($form));
                                             echo $form_view
-                                                ->setParam("provider",$provider)
+                                                ->setParam("provider", $provider)
                                                 ->render();
                                             ?>
                                     <?php endif; ?>
