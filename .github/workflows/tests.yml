@@ -33,7 +33,7 @@ jobs:
       continue-on-error: true
 
     - name: Build Appwrite
-      run: docker compose build --progress=plain appwrite
+      run: docker compose build --progress=plain
 
     - name: Start Appwrite
       run: |
