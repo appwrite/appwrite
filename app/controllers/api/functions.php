@@ -24,6 +24,8 @@ use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Config\Config;
 use Cron\CronExpression;
+use Utopia\CLI\Console;
+use Utopia\Validator\Boolean;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -43,7 +45,7 @@ App::post('/v1/functions')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('execute', [], new ArrayList(new Text(64)), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
-    ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
+    ->param('vars', new stdClass(), new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
     ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
@@ -298,10 +300,12 @@ App::put('/v1/functions/:functionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $dbForProject, $project) {
+    ->inject('user')
+    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $dbForProject, $project, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
+        /** @var Appwrite\Auth\User $user */
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -330,6 +334,7 @@ App::put('/v1/functions/:functionId')
                 'projectId' => $project->getId(),
                 'webhooks' => $project->getAttribute('webhooks', []),
                 'functionId' => $function->getId(),
+                'userId' => $user->getId(),
                 'executionId' => null,
                 'trigger' => 'schedule',
             ]);  // Async task rescheduale
@@ -362,6 +367,7 @@ App::patch('/v1/functions/:functionId/tag')
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $tag = $dbForProject->getDocument('tags', $tag);
+        $build = $dbForProject->getDocument('builds', $tag->getAttribute('buildId'));
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
@@ -369,6 +375,14 @@ App::patch('/v1/functions/:functionId/tag')
 
         if ($tag->isEmpty()) {
             throw new Exception('Tag not found', 404);
+        }
+
+        if ($build->isEmpty()) {
+            throw new Exception('Build not found', 404);
+        }
+
+        if ($build->getAttribute('status') !== 'ready') {
+            throw new Exception('Build not ready', 400);
         }
 
         $schedule = $function->getAttribute('schedule', '');
@@ -408,12 +422,46 @@ App::delete('/v1/functions/:functionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('deletes')
-    ->action(function ($functionId, $response, $dbForProject, $deletes) {
+    ->inject('project')
+    ->action(function ($functionId, $response, $dbForProject, $deletes, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $deletes */
+        /** @var Utopia\Database\Document $project */
 
         $function = $dbForProject->getDocument('functions', $functionId);
+
+        // Request executor to delete tag containers
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/cleanup/function");
+        \curl_setopt($ch, CURLOPT_POST, true);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+            'functionId' => $functionId
+        ]));
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
+        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'x-appwrite-project: '.$project->getId(),
+            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
+        ]);
+
+        $executorResponse = \curl_exec($ch);
+
+        $error = \curl_error($ch);
+
+        if (!empty($error)) {
+            throw new Exception('Executor Cleanup Error: ' . $error, 500);
+        }
+
+        // Check status code
+        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if (200 !== $statusCode) {
+            throw new Exception('Executor error: ' . $executorResponse, $statusCode);
+        }
+
+        \curl_close($ch);
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
@@ -446,17 +494,22 @@ App::post('/v1/functions/:functionId/tags')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TAG)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('command', '', new Text('1028'), 'Code execution command.')
+    ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
     ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
+    ->param('automaticDeploy', false, new Boolean(true), 'Automatically deploy the function when it is finished building.', false)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($functionId, $command, $file, $request, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Request $request */
+    ->inject('user')
+    ->inject('project')
+    ->action(function ($functionId, $entrypoint, $file, $automaticDeploy, $request, $response, $dbForProject, $usage, $user, $project) {
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
+        /** @var Appwrite\Auth\User $user */
+        /** @var Appwrite\Project\Project $project */
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -498,6 +551,18 @@ App::post('/v1/functions/:functionId/tags')
         if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
             throw new Exception('Failed moving file', 500);
         }
+
+        if ((bool) $automaticDeploy) {
+            // Remove automaticDeploy for all other tags.
+            $tags = $dbForProject->find('tags', [
+                new Query('automaticDeploy', Query::TYPE_EQUAL, [true]),
+            ]);
+
+            foreach ($tags as $tag) {
+                $tag->setAttribute('automaticDeploy', false);
+                $dbForProject->updateDocument('tags', $tag->getId(), $tag);
+            }
+        }
         
         $tagId = $dbForProject->getId();
         $tag = $dbForProject->createDocument('tags', new Document([
@@ -506,15 +571,55 @@ App::post('/v1/functions/:functionId/tags')
             '$write' => [],
             'functionId' => $function->getId(),
             'dateCreated' => time(),
-            'command' => $command,
+            'entrypoint' => $entrypoint,
             'path' => $path,
             'size' => $size,
-            'search' => implode(' ', [$tagId, $command]),
+            'search' => implode(' ', [$tagId, $entrypoint]),
+            'status' => 'processing',
+            'buildStdout' => '',
+            'buildStderr' => '',
+            'automaticDeploy' => ($automaticDeploy === 'true'),
         ]));
 
         $usage
             ->setParam('storage', $tag->getAttribute('size', 0))
         ;
+
+        // Send start build reqeust to executor using /v1/tag
+        $function = $dbForProject->getDocument('functions', $functionId);
+
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/tag");
+        \curl_setopt($ch, CURLOPT_POST, true);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+            'functionId' => $functionId,
+            'tagId' => $tag->getId(),
+            'userId' => $user->getId(),
+        ]));
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
+        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'x-appwrite-project: '.$project->getId(),
+            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
+        ]);
+
+        $executorResponse = \curl_exec($ch);
+
+        $error = \curl_error($ch);
+
+        if (!empty($error)) {
+            throw new Exception('Executor Communication Error: ' . $error, 500);
+        }
+
+        // Check status code
+        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if (200 !== $statusCode) {
+            throw new Exception('Executor error: ' . $executorResponse, $statusCode);
+        }
+
+        \curl_close($ch);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($tag, Response::MODEL_TAG);
@@ -568,6 +673,15 @@ App::get('/v1/functions/:functionId/tags')
 
         $results = $dbForProject->find('tags', $queries, $limit, $offset, [], [$orderType], $cursorTag ?? null, $cursorDirection);
         $sum = $dbForProject->count('tags', $queries, APP_LIMIT_COUNT);
+
+        // Get Current Build Data
+        foreach ($results as &$tag) {
+            $build = $dbForProject->getDocument('builds', $tag->getAttribute('buildId', ''));
+
+            $tag['status'] = $build->getAttribute('status', 'processing');
+            $tag['buildStdout'] = $build->getAttribute('stdout', '');
+            $tag['buildStderr'] = $build->getAttribute('stderr', '');
+        }
 
         $response->dynamic(new Document([
             'tags' => $results,
@@ -629,10 +743,12 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($functionId, $tagId, $response, $dbForProject, $usage) {
+    ->inject('project')
+    ->action(function ($functionId, $tagId, $response, $dbForProject, $usage, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
+        /** @var Utopia\Database\Document $project */
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -649,6 +765,38 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
         if ($tag->isEmpty()) {
             throw new Exception('Tag not found', 404);
         }
+
+        // Request executor to delete tag containers
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/cleanup/tag");
+        \curl_setopt($ch, CURLOPT_POST, true);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+            'tagId' => $tagId
+        ]));
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
+        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'x-appwrite-project: '.$project->getId(),
+            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
+        ]);
+
+        $executorResponse = \curl_exec($ch);
+
+        $error = \curl_error($ch);
+
+        if (!empty($error)) {
+            throw new Exception('Executor Cleanup error: ' . $error, 500);
+        }
+
+        // Check status code
+        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if (200 !== $statusCode) {
+            throw new Exception('Executor error: ' . $executorResponse, $statusCode);
+        }
+
+        \curl_close($ch);
 
         $device = Storage::getDevice('functions');
 
@@ -687,12 +835,12 @@ App::post('/v1/functions/:functionId/executions')
     ->label('abuse-time', 60)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('data', '', new Text(8192), 'String of custom data to send to function.', true)
-    // ->param('async', 1, new Range(0, 1), 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
+    ->param('async', true, new Boolean(), 'Execute code asynchronously. Default value is true.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('user')
-    ->action(function ($functionId, $data, /*$async,*/ $response, $project, $dbForProject, $user) {
+    ->action(function ($functionId, $data, $async, $response, $project, $dbForProject, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForProject */
@@ -731,7 +879,7 @@ App::post('/v1/functions/:functionId/executions')
             'tagId' => $tag->getId(),
             'trigger' => 'http', // http / schedule / event
             'status' => 'waiting', // waiting / processing / completed / failed
-            'exitCode' => 0,
+            'statusCode' => 0,
             'stdout' => '',
             'stderr' => '',
             'time' => 0.0,
@@ -759,19 +907,58 @@ App::post('/v1/functions/:functionId/executions')
             }
         }
 
-        Resque::enqueue('v1-functions', 'FunctionsV1', [
-            'projectId' => $project->getId(),
-            'webhooks' => $project->getAttribute('webhooks', []),
-            'functionId' => $function->getId(),
-            'executionId' => $execution->getId(),
+        if ($async) {
+            Resque::enqueue('v1-functions', 'FunctionsV1', [
+                'projectId' => $project->getId(),
+                'webhooks' => $project->getAttribute('webhooks', []),
+                'functionId' => $function->getId(),
+                'executionId' => $execution->getId(),
+                'trigger' => 'http',
+                'data' => $data,
+                'userId' => $user->getId(),
+                'jwt' => $jwt
+            ]);
+
+            $response->setStatusCode(Response::STATUS_CODE_CREATED);
+            $response->dynamic($execution, Response::MODEL_EXECUTION);
+            return $response;
+        }
+
+        // Directly execute function.
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/execute");
+        \curl_setopt($ch, CURLOPT_POST, true);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             'trigger' => 'http',
+            'projectId' => $project->getId(),
+            'executionId' => $execution->getId(),
+            'functionId' => $function->getId(),
             'data' => $data,
+            'webhooks' => $project->getAttribute('webhooks', []),
             'userId' => $user->getId(),
             'jwt' => $jwt,
+        ]));
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900) + 200); // + 200 for safety margin
+        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'x-appwrite-project: '.$project->getId(),
+            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
         ]);
+    
+        $responseExecute = \curl_exec($ch);
+    
+        $error = \curl_error($ch);
+        if (!empty($error)) {
+            Console::error('Curl error: '.$error);
+        }
+    
+        \curl_close($ch);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($execution, Response::MODEL_EXECUTION);
+        $response
+        ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ->dynamic(new Document(json_decode($responseExecute, true)), Response::MODEL_SYNC_EXECUTION);
     });
 
 App::get('/v1/functions/:functionId/executions')
@@ -864,4 +1051,142 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         }
 
         $response->dynamic($execution, Response::MODEL_EXECUTION);
+    });
+
+App::get('/v1/builds')
+    ->groups(['api', 'functions'])
+    ->desc('Get Builds')
+    ->label('scope', 'execution.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'listBuilds')
+    ->label('sdk.description', '/docs/references/functions/list-builds.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BUILD_LIST)
+    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('cursor', '', new UID(), 'ID of the build used as the starting point for the query, excluding the build itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function ($limit, $offset, $search, $cursor, $cursorDirection, $response, $dbForProject) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForProject */
+
+        if (!empty($cursor)) {
+            $cursorExecution = $dbForProject->getDocument('builds', $cursor);
+
+            if ($cursorExecution->isEmpty()) {
+                throw new Exception("Execution '{$cursor}' for the 'cursor' value not found.", 400);
+            }
+        }
+
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
+
+        $results = $dbForProject->find('builds', $queries, $limit, $offset, [], [Database::ORDER_DESC], $cursorExecution ?? null, $cursorDirection);
+
+        $sum = $dbForProject->count('builds', $queries, APP_LIMIT_COUNT);
+
+        $response->dynamic(new Document([
+            'builds' => $results,
+            'sum' => $sum,
+        ]), Response::MODEL_BUILD_LIST);
+    });
+
+App::get('/v1/builds/:buildId')
+    ->groups(['api', 'functions'])
+    ->desc('Get Build')
+    ->label('scope', 'execution.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'getBuild')
+    ->label('sdk.description', '/docs/references/functions/get-build.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BUILD)
+    ->param('buildId', '', new UID(), 'Build unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function ($buildId, $response, $dbForProject) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForProject */
+
+        $build = Authorization::skip(function () use ($dbForProject, $buildId) {
+            return $dbForProject->getDocument('builds', $buildId);
+        });
+
+        if ($build->isEmpty()) {
+            throw new Exception('Build not found', 404);
+        }
+
+        $response->dynamic($build, Response::MODEL_BUILD);
+    });
+App::post('/v1/builds/:buildId')
+    ->groups(['api', 'functions'])
+    ->desc('Retry Build')
+    ->label('scope', 'functions.write')
+    ->label('event', 'functions.tags.update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'retryBuild')
+    ->label('sdk.description', '/docs/references/functions/retry-build.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('buildId', '', new UID(), 'Build unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->action(function ($buildId, $response, $dbForProject, $project) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var Utopia\Database\Document $project */
+
+        $build = Authorization::skip(function () use ($dbForProject, $buildId) {
+            return $dbForProject->getDocument('builds', $buildId);
+        });
+
+        if ($build->isEmpty()) {
+            throw new Exception('Build not found', 404);
+        }
+
+        if ($build->getAttribute('status') !== 'failed') {
+            throw new Exception('Build not failed', 400);
+        }
+
+        // Retry build
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/build/{$buildId}");
+        \curl_setopt($ch, CURLOPT_POST, true);
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
+        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'x-appwrite-project: '.$project->getId(),
+            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
+        ]);
+    
+        $executorResponse = \curl_exec($ch);
+    
+        $error = \curl_error($ch);
+    
+        if (!empty($error)) {
+            throw new Exception('Executor Communication Error: ' . $error, 500);
+        }
+    
+        // Check status code
+        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if (200 !== $statusCode) {
+            throw new Exception('Executor error: ' . $executorResponse, $statusCode);
+        }
+    
+        \curl_close($ch);
+
+        $response->noContent();
     });

@@ -402,7 +402,7 @@ class WebhooksCustomServerTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'command' => 'php index.php',
+            'entrypoint' => 'index.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/timeout.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
 
@@ -445,6 +445,9 @@ class WebhooksCustomServerTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']['$id']);
+
+        // Wait for tag to be built.
+        sleep(5);
 
         $webhook = $this->getLastRequest();
 

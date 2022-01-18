@@ -31,6 +31,8 @@ use Appwrite\Utopia\Response\Model\Domain;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
+use Appwrite\Utopia\Response\Model\SyncExecution;
+use Appwrite\Utopia\Response\Model\Build;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\Index;
@@ -152,9 +154,12 @@ class Response extends SwooleResponse
     const MODEL_TAG = 'tag';
     const MODEL_TAG_LIST = 'tagList';
     const MODEL_EXECUTION = 'execution';
+    const MODEL_SYNC_EXECUTION = 'syncExecution';
     const MODEL_EXECUTION_LIST = 'executionList';
+    const MODEL_BUILD = 'build';
+    const MODEL_BUILD_LIST = 'buildList';
     const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
-    
+ 
     // Project
     const MODEL_PROJECT = 'project';
     const MODEL_PROJECT_LIST = 'projectList';
@@ -219,6 +224,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
             ->setModel(new BaseList('Tags List', self::MODEL_TAG_LIST, 'tags', self::MODEL_TAG))
             ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
+            ->setModel(new BaseList('Builds List', self::MODEL_BUILD_LIST, 'builds', self::MODEL_BUILD))
             ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
             ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
@@ -258,6 +264,8 @@ class Response extends SwooleResponse
             ->setModel(new Runtime())
             ->setModel(new Tag())
             ->setModel(new Execution())
+            ->setModel(new SyncExecution())
+            ->setModel(new Build())
             ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())

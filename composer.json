@@ -20,6 +20,12 @@
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
+    "repositories": [
+        {
+            "url": "https://github.com/appwrite/runtimes.git",
+            "type": "git"
+        }
+    ],
     "require": {
         "php": ">=8.0.0",
         "ext-curl": "*",
@@ -34,10 +40,8 @@
         "ext-openssl": "*",
         "ext-zlib": "*",
         "ext-sockets": "*",
-
         "appwrite/php-clamav": "1.1.*",
-        "appwrite/php-runtimes": "0.6.*",
-
+        "appwrite/php-runtimes": "dev-refactor",
         "utopia-php/framework": "0.19.*",
         "utopia-php/logger": "0.1.*",
         "utopia-php/abuse": "0.7.*",
@@ -48,7 +52,6 @@
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.13.*",
         "utopia-php/locale": "0.4.*",
-        "utopia-php/orchestration": "0.2.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
@@ -56,7 +59,7 @@
         "utopia-php/storage": "0.5.*",
         "utopia-php/websocket": "0.1.0",
         "utopia-php/image": "0.5.*",
-
+        "utopia-php/orchestration": "0.3.*",
         "resque/php-resque": "1.3.6",
         "matomo/device-detector": "5.0.1",
         "dragonmantank/cron-expression": "3.1.0",

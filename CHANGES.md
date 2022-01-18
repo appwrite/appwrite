@@ -1,3 +1,6 @@
+# Unreleased Version 0.13.0
+- Added ability to create syncronous function executions
+- Introduced new execution model for functions
 # Version 0.12.1
 
 ## Bugs
@@ -83,7 +86,6 @@
 - Upgraded Redis to 6.2
 - Upgraded InfluxDB to 1.4.0
 - Upgraded Telegraf to 1.3.0
-
 # Version 0.11.0
 
 ## Features
@@ -164,7 +166,6 @@
 ## Bugs
 - Fixed memory leak in realtime service (#1606)
 - Fixed function execution output now being UTF-8 encoded before saved (#1607)
-
 # Version 0.10.2
 
 ## Bugs
@@ -196,9 +197,7 @@
 - Fixed MariaDB timeout after 24 hours (#1510)
 - Fixed upgrading installation with customized `docker-compose.yml` file (#1513)
 - Fixed usage stats on the dashboard displaying invalid total users count (#1514)
-
 # Version 0.9.4
-
 ## Security
 
 - Fixed security vulnerability that exposes project ID's from other admin users (#1453)

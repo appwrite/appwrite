@@ -436,6 +436,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_FUNCTIONS_BUILD_TIMEOUT',
+                'description' => 'The maximum number of seconds allowed as a timeout value when building a new function. The default value is 900 seconds.',
+                'introduction' => '0.13.0',
+                'default' => '900',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_FUNCTIONS_CONTAINERS',
                 'description' => 'The maximum number of containers Appwrite is allowed to keep alive in the background for function environments. Running containers allow faster execution time as there is no need to recreate each container every time a function gets executed. The default value is 10.',
                 'introduction' => '0.7.0',
@@ -476,6 +485,15 @@ return [
                 'description' => "This option allows you to limit the available environments for cloud functions. This option is very useful for low-cost servers to safe disk space.\n\nTo enable/activate this option, pass a list of allowed environments separated by a comma.\n\nCurrently, supported environments are: " . \implode(', ', \array_keys(Config::getParam('runtimes'))),
                 'introduction' => '0.8.0',
                 'default' => 'node-16.0,php-8.0,python-3.9,ruby-3.0,java-16.0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EXECUTOR_SECRET',
+                'description' => 'The secret key used by Appwrite to communicate with the function executor. Make sure to change this!',
+                'introduction' => '0.13.0',
+                'default' => 'your-secret-key',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

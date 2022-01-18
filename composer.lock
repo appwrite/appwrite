@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f022f43cc2d6023c3dad3805b7c4455a",
+    "content-hash": "0674f59e4259487551f294c7cc8ef1ee",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -115,20 +115,15 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.6.2",
+            "version": "dev-refactor",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/php-runtimes.git",
-                "reference": "33e087933f4353b1b3aad8d00e32ef82af18a292"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/php-runtimes/zipball/33e087933f4353b1b3aad8d00e32ef82af18a292",
-                "reference": "33e087933f4353b1b3aad8d00e32ef82af18a292",
-                "shasum": ""
+                "reference": "30bf6781acee1e3f32c89821e5706ac6cf7d7c0e"
             },
             "require": {
                 "php": ">=8.0",
+                "utopia-php/orchestration": "0.3.x",
                 "utopia-php/system": "0.4.*"
             },
             "require-dev": {
@@ -142,7 +137,6 @@
                     "Appwrite\\Runtimes\\": "src/Runtimes"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "BSD-3-Clause"
             ],
@@ -154,6 +148,10 @@
                 {
                     "name": "Torsten Dittmann",
                     "email": "torsten@appwrite.io"
+                },
+                {
+                    "name": "Bradley Schofield",
+                    "email": "bradley@appwrite.io"
                 }
             ],
             "description": "Appwrite repository for Cloud Function runtimes that contains the configurations and tests for all of the Appwrite runtime environments.",
@@ -162,11 +160,7 @@
                 "php",
                 "runtimes"
             ],
-            "support": {
-                "issues": "https://github.com/appwrite/php-runtimes/issues",
-                "source": "https://github.com/appwrite/php-runtimes/tree/0.6.2"
-            },
-            "time": "2021-12-31T07:16:48+00:00"
+            "time": "2022-01-05T13:09:45+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -2476,16 +2470,16 @@
         },
         {
             "name": "utopia-php/orchestration",
-            "version": "0.2.1",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/orchestration.git",
-                "reference": "55da7a331a45d5887de8122268dfccd15fee94d1"
+                "reference": "5398361b39fdb7a15b561ebf243c4cb75a68432a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/55da7a331a45d5887de8122268dfccd15fee94d1",
-                "reference": "55da7a331a45d5887de8122268dfccd15fee94d1",
+                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/5398361b39fdb7a15b561ebf243c4cb75a68432a",
+                "reference": "5398361b39fdb7a15b561ebf243c4cb75a68432a",
                 "shasum": ""
             },
             "require": {
@@ -2525,9 +2519,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/orchestration/issues",
-                "source": "https://github.com/utopia-php/orchestration/tree/0.2.1"
+                "source": "https://github.com/utopia-php/orchestration/tree/0.3.0"
             },
-            "time": "2021-09-03T11:29:20+00:00"
+            "time": "2021-12-20T14:08:08+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -3083,16 +3077,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.17.1",
+            "version": "0.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "3542c6ed0f808b6a9f6735a8aad7ccda961bea29"
+                "reference": "a68e072170a81532cfb0ff914864d8f074a73a37"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/3542c6ed0f808b6a9f6735a8aad7ccda961bea29",
-                "reference": "3542c6ed0f808b6a9f6735a8aad7ccda961bea29",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/a68e072170a81532cfb0ff914864d8f074a73a37",
+                "reference": "a68e072170a81532cfb0ff914864d8f074a73a37",
                 "shasum": ""
             },
             "require": {
@@ -3126,9 +3120,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.17.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.17.0"
             },
-            "time": "2022-01-07T12:55:37+00:00"
+            "time": "2022-01-04T09:24:44+00:00"
         },
         {
             "name": "composer/pcre",
@@ -6647,7 +6641,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "appwrite/php-runtimes": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
