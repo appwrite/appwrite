@@ -61,7 +61,7 @@ const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
-const APP_CACHE_BUSTER = 200;
+const APP_CACHE_BUSTER = 201;
 const APP_VERSION_STABLE = '0.13.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -775,18 +775,6 @@ App::setResource('console', function() {
         'webhooks' => [],
         'keys' => [],
         'platforms' => [
-            [
-                '$collection' => 'platforms',
-                'name' => 'Production',
-                'type' => 'web',
-                'hostname' => 'appwrite.io',
-            ],
-            [
-                '$collection' => 'platforms',
-                'name' => 'Development',
-                'type' => 'web',
-                'hostname' => 'appwrite.test',
-            ],
             [
                 '$collection' => 'platforms',
                 'name' => 'Localhost',

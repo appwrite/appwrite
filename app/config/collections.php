@@ -2391,6 +2391,7 @@ $collections = [
             ],
         ],
     ],
+
     'stats' => [
         '$collection' => Database::METADATA,
         '$id' => 'stats',
@@ -2476,6 +2477,7 @@ $collections = [
             ],
         ],
     ],
+    
     'realtime' => [
         '$collection' => Database::METADATA,
         '$id' => 'realtime',

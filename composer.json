@@ -40,10 +40,9 @@
         "ext-openssl": "*",
         "ext-zlib": "*",
         "ext-sockets": "*",
-
         "appwrite/php-clamav": "1.1.*",
         "appwrite/php-runtimes": "dev-refactor",
-        "utopia-php/framework": "0.19.5",
+        "utopia-php/framework": "0.19.*",
         "utopia-php/logger": "0.1.*",
         "utopia-php/abuse": "0.7.*",
         "utopia-php/analytics": "0.2.*",
@@ -71,7 +70,7 @@
         "slickdeals/statsd": "3.1.0"
     },
     "require-dev": {
-        "appwrite/sdk-generator": "0.17.0",
+        "appwrite/sdk-generator": "0.17.1",
         "phpunit/phpunit": "9.5.10",
         "swoole/ide-helper": "4.8.3",
         "textalk/websocket": "1.5.5",
