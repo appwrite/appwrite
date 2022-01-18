@@ -627,10 +627,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception('Team IDs don\'t match', 404);
         }
 
-        if ($membership->getAttribute('confirm') === true) {
-            throw new Exception('Membership already confirmed', 409);
-        }
-
         $team = Authorization::skip(fn() => $dbForProject->getDocument('teams', $teamId));
 
         if ($team->isEmpty()) {
@@ -651,6 +647,10 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         if ($membership->getAttribute('userId') !== $user->getId()) {
             throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
+        }
+
+        if ($membership->getAttribute('confirm') === true) {
+            throw new Exception('Membership already confirmed', 409);
         }
 
         $membership // Attach user to team
