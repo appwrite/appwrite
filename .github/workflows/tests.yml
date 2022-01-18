@@ -28,7 +28,8 @@ jobs:
         docker pull php:8.0-cli-alpine
         docker compose pull
 
-    - uses: satackey/action-docker-layer-caching@v0.0.11
+    - name: Prepare Cache
+      uses: satackey/action-docker-layer-caching@v0.0.11
       # Ignore the failure of a step and avoid terminating the job.
       continue-on-error: true
 
