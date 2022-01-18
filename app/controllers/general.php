@@ -167,6 +167,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
                 break;
             case version_compare ($responseFormat , '0.8.0', '<=') :
                 Response::setFilter(new V08());
+                break;
             case version_compare ($responseFormat , '0.11.0', '<=') :
                 Response::setFilter(new V11());
                 break;
