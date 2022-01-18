@@ -714,7 +714,7 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
         }
 
-        $validator = new Authorization($function, 'execute');
+        $validator = new Authorization('execute');
 
         if (!$validator->isValid($function->getAttribute('execute'))) { // Check if user has write access to execute function
             throw new Exception($validator->getDescription(), 401);
