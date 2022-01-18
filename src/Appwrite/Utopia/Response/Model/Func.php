@@ -4,6 +4,8 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use stdClass;
+use Utopia\Database\Document;
 
 class Func extends Model
 {
@@ -62,7 +64,7 @@ class Func extends Model
             ->addRule('vars', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Function environment variables.',
-                'default' => new \stdClass,
+                'default' => new \stdClass(),
                 'example' => ['key' => 'value'],
             ])
             ->addRule('events', [
@@ -117,5 +119,23 @@ class Func extends Model
     public function getType():string
     {
         return Response::MODEL_FUNCTION;
+    }
+
+    /**
+     * Get Collection
+     * 
+     * @return string
+     */
+    public function filter(Document $document): Document
+    {
+        $prefs = $document->getAttribute('vars');
+        if($prefs instanceof Document) {
+            $prefs = $prefs->getArrayCopy();
+        }
+
+        if(is_array($prefs) && empty($prefs)) {
+            $document->setAttribute('vars', new stdClass);
+        }
+        return $document;
     }
 }
