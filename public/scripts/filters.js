@@ -183,6 +183,13 @@ window.ls.filter
 
     return $value[$value.length - 1].value;
   })
+  .add("statsGetSum", function ($value) {
+    if (!$value || $value.length < 1) {
+      return 0;
+    }
+
+    return $value.reduce(function(value, object) { return value + object.value }, 0);
+  })
   .add("isEmpty", function ($value) {
     return (!!$value);
   })

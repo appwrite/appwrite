@@ -188,9 +188,22 @@ class DeletesV1 extends Worker
      */
     protected function deleteUser(Document $document, string $projectId): void
     {
+        /**
+         * DO NOT DELETE THE USER RECORD ITSELF. 
+         * WE RETAIN THE USER RECORD TO RESERVE THE USER ID AND ENSURE THAT THE USER ID IS NOT REUSED.
+         */
+        
         $userId = $document->getId();
+        $user = $this->getProjectDB($projectId)->getDocument('users', $userId);
 
-        // Tokens and Sessions removed with user document
+        // Delete all sessions of this user from the sessions table and update the sessions field of the user record
+        $this->deleteByGroup('sessions', [
+            new Query('userId', Query::TYPE_EQUAL, [$userId])
+        ], $this->getProjectDB($projectId));
+        
+        $user->setAttribute('sessions', []);
+        $updated = Authorization::skip(fn() => $this->getProjectDB($projectId)->updateDocument('users', $userId, $user));
+
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
             new Query('userId', Query::TYPE_EQUAL, [$userId])

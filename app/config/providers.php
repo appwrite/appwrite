@@ -131,6 +131,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'notion' => [
+        'name' => 'Notion',
+        'developers' => 'https://developers.notion.com/docs',
+        'icon' => 'icon-notion',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'paypal' => [
         'name' => 'PayPal',
         'developers' => 'https://developer.paypal.com/docs/api/overview/',

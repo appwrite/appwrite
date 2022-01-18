@@ -706,10 +706,10 @@ $logs = $this->getParam('logs', null);
         <label for="integer-default">Default Value</label>
 
         <template x-if="!(array || required)">
-            <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off">
+            <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off" data-cast-to="integer">
         </template>
         <template x-if="(array || required)">
-            <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off" disabled value="">
+            <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off" data-cast-to="integer" disabled>
         </template>
 
         <footer>
@@ -770,10 +770,10 @@ $logs = $this->getParam('logs', null);
         <label for="float-default">Default Value</label>
 
         <template x-if="!(array || required)">
-            <input name="xdefault" type="number" step="0.01" class="margin-bottom-large" autocomplete="off">
+            <input name="xdefault" type="number" step="0.01" class="margin-bottom-large" autocomplete="off" data-cast-to="float">
         </template>
         <template x-if="(array || required)">
-            <input name="xdefault" type="number" step="0.01" class="margin-bottom-large" autocomplete="off" disabled value="">
+            <input name="xdefault" type="number" step="0.01" class="margin-bottom-large" autocomplete="off" data-cast-to="float" disabled>
         </template>
 
         <footer>
