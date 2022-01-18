@@ -104,9 +104,9 @@ docker run -it --rm ,
 
 ### 软件服务
 
-* [**帐户**](https://appwrite.io/docs/client/account) -管理当前用户的帐户和登录方式。跟踪和管理用户 Session, 的名号，登录设备，登录方法和记录。
+* [**帐户**](https://appwrite.io/docs/client/account) -管理当前用户的帐户和登录方式。跟踪和管理用户 Session，登录设备，登录方法和查看相关记录。
 * [**用户**](https://appwrite.io/docs/server/users) - 在以管理员模式登录时管理和列出所有用户。
-* [**团队**](https://appwrite.io/docs/client/teams) - 管理用户分组。管理团队中的成员权限，邀请，和用户角色。
+* [**团队**](https://appwrite.io/docs/client/teams) - 管理用户分组。邀请成员，管理团队中的用户权限和用户角色。
 * [**数据库**](https://appwrite.io/docs/client/database) - 管理数据库文档和文档集。用检索界面来对文档和文档集进行读取，创建，更新，和删除。
 * [**贮存**](https://appwrite.io/docs/client/storage) - 管理文件的阅读、创建、删除和预览。设置文件的预览来满足程序的个性化需求。所有文件都由 ClamAV 扫描并安全存储和加密。
 * [**云函数**](https://appwrite.io/docs/server/functions) - 在安全，隔离的环境中运行自定义代码。这些代码可以被事件，CRON，或者手动操作触发。
@@ -121,19 +121,19 @@ docker run -it --rm ,
 #### 客户端
 * ✅  &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (由 Appwrite 团队维护)
 * ✅  &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (由 Appwrite 团队维护)
-* ✅  &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **公侧** (由 Appwrite 团队维护)
+* ✅  &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **公测** (由 Appwrite 团队维护)
 * ✅  &nbsp; [Android](https://github.com/appwrite/sdk-for-android) (由 Appwrite 团队维护)
 
 #### 服务器
 * ✅  &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node) (由 Appwrite 团队维护)
 * ✅  &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (由 Appwr实验 团队维护)
 * ✅  &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) - (由 Appwrite 团队维护)
-* ✅  &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) - **公侧** (由 Appwrite 团队维护)
+* ✅  &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) - **公测** (由 Appwrite 团队维护)
 * ✅  &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (由 Appwrite 团队维护)
 * ✅  &nbsp; [Python](https://github.com/appwrite/sdk-for-python) (由 Appwrite 团队维护)
-* ✅  &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) - **公侧** (由 Appwrite 团队维护)
-* ✅  &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **公侧** (由 Appwrite 团队维护)
-* ✅  &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **公侧** (由 Appwrite 团队维护)
+* ✅  &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) - **公测** (由 Appwrite 团队维护)
+* ✅  &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **公测** (由 Appwrite 团队维护)
+* ✅  &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **公测** (由 Appwrite 团队维护)
 
 #### 开发者社区
 * ✅  &nbsp; [Appcelerator Titanium](https://github.com/m1ga/ti.appwrite) (维护者 [Michael Gangolf](https://github.com/m1ga/))  
@@ -148,7 +148,7 @@ docker run -it --rm ,
 
 Appwrite 使用高拓展性的微服务架构。此外，Appwrite 支持多种 API（REST、WebSocket 和 即将推出的 GraphQL），来迎合您的个性化开发习惯。
 
-Appwrite API 界面层利用后台缓存和任务委派来提供极地的反应时间。后台的 Worker 代理还允许您使用消息队列来处理负载，并精确控制硬件合理分配和成本。您可以在 [贡献指南](CONTRIBUTING.md#architecture-1) 中了解有关我们架构的更多信息。
+Appwrite API 界面层利用后台缓存和任务委派来提供极速的响应时间。后台的 Worker 代理还允许您使用消息队列来处理负载，并精确控制硬件合理分配和成本。您可以在 [贡献指南](CONTRIBUTING.md#architecture-1) 中了解有关我们架构的更多信息。
 
 ## 贡献代码
 
