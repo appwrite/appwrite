@@ -2295,7 +2295,7 @@ $collections = [
             ],
         ],
     ],
-    
+
     'realtime' => [
         '$collection' => Database::METADATA,
         '$id' => 'realtime',

@@ -1,16 +1,11 @@
 <?php
 
-namespace Appwrite\Database\Validator;
+namespace Appwrite\Utopia\Database\Validator;
 
 use Utopia\Validator;
 
-class Key extends Validator
+class UID extends Validator
 {
-    /**
-     * @var string
-     */
-    protected $message = 'Parameter must contain only letters with no spaces or special chars and be shorter than 32 chars';
-
     /**
      * Get Description.
      *
@@ -20,7 +15,7 @@ class Key extends Validator
      */
     public function getDescription(): string
     {
-        return $this->message;
+        return 'Invalid UID format';
     }
 
     /**
@@ -28,26 +23,27 @@ class Key extends Validator
      *
      * Returns true if valid or false if not.
      *
-     * @param $value
+     * @param mixed $value
      *
      * @return bool
      */
     public function isValid($value): bool
     {
-        if (!\is_string($value)) {
+        if ($value === 0) { // TODO Deprecate confition when we get the chance.
+            return true;
+        }
+
+        if (!is_string($value)) {
             return false;
         }
         
-        if (\preg_match('/[^A-Za-z0-9\-\_]/', $value)) {
-            return false;
-        }
-
-        if (\mb_strlen($value) > 32) {
+        if (mb_strlen($value) > 32) {
             return false;
         }
 
         return true;
     }
+
     /**
      * Is array
      *
