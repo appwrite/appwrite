@@ -32,6 +32,7 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Query;
 use Utopia\Orchestration\Adapter\DockerCLI;
 use Utopia\Validator\Boolean;
+use Utopia\Logger\Log;
 
 require_once __DIR__ . '/init.php';
 
