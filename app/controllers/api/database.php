@@ -230,7 +230,7 @@ App::get('/v1/database/collections')
         $queries = [];
 
         if (!empty($search)) {
-            $queries[] = new Query('name', Query::TYPE_SEARCH, [$search]);
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
         $usage->setParam('database.collections.read', 1);
