@@ -51,7 +51,7 @@ $cli
         $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
         $migration = new $class();
 
-        while ($sum > 0) {
+        while (!empty($projects)) {
             foreach ($projects as $project) {
                 try {
                     $migration
@@ -69,9 +69,7 @@ $cli
             $offset = $offset + $limit;
             $count = $count + $sum;
 
-            if ($sum > 0) {
-                Console::log('Migrated ' . $count . '/' . $totalProjects . ' projects...');
-            }
+            Console::log('Migrated ' . $count . '/' . $totalProjects . ' projects...');
         }
 
         Swoole\Event::wait(); // Wait for Coroutines to finish
