@@ -16,14 +16,85 @@ class MigrationV12Test extends MigrationTest
         $this->method->setAccessible(true);
     }
 
-    public function testMigration()
+    public function testMigrationProjects()
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'project',
             '$collection' => 'projects',
-            'version' => '0.12.0'
+            'name' => 'Appwrite',
+            'version' => '0.12.0',
+            'search' => ''
         ]));
 
         $this->assertEquals($document->getAttribute('version'), '0.13.0');
+        $this->assertEquals($document->getAttribute('search'), 'project Appwrite');
+    }
+
+    public function testMigrationUsers()
+    {
+        $document = $this->fixDocument(new Document([
+            '$id' => 'user',
+            '$collection' => 'users',
+            'email' => 'test@appwrite.io',
+            'name' => 'Torsten Dittmann'
+        ]));
+
+        $this->assertEquals($document->getAttribute('search'), 'user test@appwrite.io Torsten Dittmann');
+    }
+
+    public function testMigrationTeams()
+    {
+        $document = $this->fixDocument(new Document([
+            '$id' => 'team',
+            '$collection' => 'teams',
+            'name' => 'Appwrite'
+        ]));
+
+        $this->assertEquals($document->getAttribute('search'), 'team Appwrite');
+    }
+
+    public function testMigrationFiles()
+    {
+        $document = $this->fixDocument(new Document([
+            '$id' => 'file',
+            '$collection' => 'files',
+            'name' => 'Dog.jpeg'
+        ]));
+
+        $this->assertEquals($document->getAttribute('search'), 'file Dog.jpeg');
+    }
+
+    public function testMigrationFunctions()
+    {
+        $document = $this->fixDocument(new Document([
+            '$id' => 'function',
+            '$collection' => 'functions',
+            'name' => 'My Function',
+            'runtime' => 'php-8.0'
+        ]));
+
+        $this->assertEquals($document->getAttribute('search'), 'function My Function php-8.0');
+    }
+
+    public function testMigrationTags()
+    {
+        $document = $this->fixDocument(new Document([
+            '$id' => 'tag',
+            '$collection' => 'tags',
+            'command' => 'php main.php'
+        ]));
+
+        $this->assertEquals($document->getAttribute('search'), 'tag php main.php');
+    }
+
+    public function testMigrationExecutions()
+    {
+        $document = $this->fixDocument(new Document([
+            '$id' => 'execution',
+            '$collection' => 'executions',
+            'functionId' => 'function'
+        ]));
+
+        $this->assertEquals($document->getAttribute('search'), 'execution function');
     }
 }

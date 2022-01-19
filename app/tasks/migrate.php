@@ -1,8 +1,7 @@
 <?php
 
-global $cli, $register, $projectDB, $console;
+global $cli, $register;
 
-use Utopia\Config\Config;
 use Utopia\CLI\Console;
 use Appwrite\Migration\Migration;
 use Utopia\App;
@@ -24,6 +23,8 @@ $cli
             return;
         }
 
+        $app = new App('UTC');
+
         Console::success('Starting Data Migration to version ' . $version);
 
         $db = $register->get('db', true);
@@ -38,21 +39,19 @@ $cli
         $consoleDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $consoleDB->setNamespace('_project_console');
 
-        $console = $consoleDB->getDocument('projects', 'console');
+        $console = $app->getResource('console');
 
         $limit = 30;
         $sum = 30;
         $offset = 0;
         $projects = [$console];
         $count = 0;
-        $totalProjects = $consoleDB->count('projects');
+        $totalProjects = $consoleDB->count('projects') + 1;
 
         $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
         $migration = new $class();
 
         while ($sum > 0) {
-            $projects = $consoleDB->find('projects', limit: $limit, offset: $offset);
-
             foreach ($projects as $project) {
                 try {
                     $migration
@@ -65,6 +64,8 @@ $cli
             }
 
             $sum = \count($projects);
+            $projects = $consoleDB->find('projects', limit: $limit, offset: $offset);
+
             $offset = $offset + $limit;
             $count = $count + $sum;
 
