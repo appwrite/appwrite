@@ -102,13 +102,6 @@ $collections = [
                 'lengths' => [1024],
                 'orders' => [Database::ORDER_ASC],
             ],
-            [
-                '$id' => '_fulltext_name',
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['name'],
-                'lengths' => [256],
-                'orders' => [Database::ORDER_ASC],
-            ],
         ],
     ],
 
