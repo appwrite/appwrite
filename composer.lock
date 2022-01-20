@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0674f59e4259487551f294c7cc8ef1ee",
+    "content-hash": "adf8727742248da9d7143546e513f96d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -118,8 +118,8 @@
             "version": "dev-refactor",
             "source": {
                 "type": "git",
-                "url": "https://github.com/appwrite/php-runtimes.git",
-                "reference": "30bf6781acee1e3f32c89821e5706ac6cf7d7c0e"
+                "url": "https://github.com/appwrite/runtimes.git",
+                "reference": "96a536e0ad7e3788cd2493e39cdf94b44206411d"
             },
             "require": {
                 "php": ">=8.0",
@@ -160,7 +160,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2022-01-05T13:09:45+00:00"
+            "time": "2022-01-19T09:26:05+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -349,16 +349,16 @@
         },
         {
             "name": "composer/package-versions-deprecated",
-            "version": "1.11.99.4",
+            "version": "1.11.99.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/package-versions-deprecated.git",
-                "reference": "b174585d1fe49ceed21928a945138948cb394600"
+                "reference": "b4f54f74ef3453349c24a845d22392cd31e65f1d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/package-versions-deprecated/zipball/b174585d1fe49ceed21928a945138948cb394600",
-                "reference": "b174585d1fe49ceed21928a945138948cb394600",
+                "url": "https://api.github.com/repos/composer/package-versions-deprecated/zipball/b4f54f74ef3453349c24a845d22392cd31e65f1d",
+                "reference": "b4f54f74ef3453349c24a845d22392cd31e65f1d",
                 "shasum": ""
             },
             "require": {
@@ -402,7 +402,7 @@
             "description": "Composer plugin that provides efficient querying for installed package versions (no runtime IO)",
             "support": {
                 "issues": "https://github.com/composer/package-versions-deprecated/issues",
-                "source": "https://github.com/composer/package-versions-deprecated/tree/1.11.99.4"
+                "source": "https://github.com/composer/package-versions-deprecated/tree/1.11.99.5"
             },
             "funding": [
                 {
@@ -418,7 +418,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-09-13T08:41:34+00:00"
+            "time": "2022-01-17T14:14:24+00:00"
         },
         {
             "name": "dragonmantank/cron-expression",
@@ -3077,16 +3077,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.17.0",
+            "version": "0.17.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "a68e072170a81532cfb0ff914864d8f074a73a37"
+                "reference": "3542c6ed0f808b6a9f6735a8aad7ccda961bea29"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/a68e072170a81532cfb0ff914864d8f074a73a37",
-                "reference": "a68e072170a81532cfb0ff914864d8f074a73a37",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/3542c6ed0f808b6a9f6735a8aad7ccda961bea29",
+                "reference": "3542c6ed0f808b6a9f6735a8aad7ccda961bea29",
                 "shasum": ""
             },
             "require": {
@@ -3120,9 +3120,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.17.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.17.1"
             },
-            "time": "2022-01-04T09:24:44+00:00"
+            "time": "2022-01-07T12:55:37+00:00"
         },
         {
             "name": "composer/pcre",

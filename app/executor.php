@@ -36,9 +36,13 @@ use Utopia\Logger\Log;
 
 require_once __DIR__ . '/init.php';
 
+Swoole\Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
+
 global $register;
 $logError = function(Throwable $error, string $action, Utopia\Route $route = null) use ($register) {
     $logger = $register->get('logger');
+
+    var_dump($error->getTraceAsString());
 
     if($logger) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
@@ -84,8 +88,6 @@ try {
     $orchestration = new Orchestration(new DockerCLI($dockerUser, $dockerPass));
 
     $runtimes = Config::getParam('runtimes');
-
-    Swoole\Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
 
     // Warmup: make sure images are ready to run fast 🚀
     Co\run(function () use ($runtimes, $orchestration) {
@@ -149,6 +151,7 @@ $createRuntimeServer = function(string $functionId, string $projectId, string $t
     });
 
     if ($tag->getAttribute('buildId') === null) {
+        var_dump($tag->getArrayCopy());
         throw new Exception('Tag has no buildId');
     }
 
@@ -337,7 +340,7 @@ $execute = function(string $trigger, string $projectId, string $executionId, str
         return (!empty($executionId)) ? $database->getDocument('executions', $executionId) : $database->createDocument('executions', new Document([
             '$id' => $executionId,
             '$read' => (!$userId == '') ? ['user:' . $userId] : [],
-            '$write' => [],
+            '$write' => ['role:all'],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
             'tagId' => $tag->getId(),
@@ -407,7 +410,7 @@ $execute = function(string $trigger, string $projectId, string $executionId, str
                 $database->createDocument('builds', new Document([
                     '$id' => $buildId,
                     '$read' => (!$userId == '') ? ['user:' . $userId] : [],
-                    '$write' => [],
+                    '$write' => ['role:all'],
                     'dateCreated' => time(),
                     'status' => 'processing',
                     'outputPath' => '',
@@ -856,7 +859,7 @@ App::post('/v1/tag')
                 $dbForProject->createDocument('builds', new Document([
                     '$id' => $buildId,
                     '$read' => (!empty($userId)) ? ['user:' . $userId] : [],
-                    '$write' => [],
+                    '$write' => ['role:all'],
                     'dateCreated' => time(),
                     'status' => 'processing',
                     'runtime' => $function->getAttribute('runtime'),
@@ -995,9 +998,18 @@ function runBuildStage(string $buildId, string $projectID, Database $database): 
 {
     global $runtimes;
     global $orchestration;
+    global $register;
 
     $buildStdout = '';
     $buildStderr = '';
+
+    $db = $register->get('dbPool')->get();
+    $redis = $register->get('redisPool')->get();
+    $cache = new Cache(new RedisCache($redis));
+
+    $database = new Database(new MariaDB($db), $cache);
+    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+    $database->setNamespace('_project_'.$projectID);
 
     // Check if build has already been run
     $build = Authorization::skip(function () use ($buildId, $database) {
@@ -1223,6 +1235,9 @@ function runBuildStage(string $buildId, string $projectID, Database $database): 
         }
 
         throw new Exception('Build failed: ' . $e->getMessage());
+    } finally {
+        $register->get('dbPool')->put($db);
+        $register->get('redisPool')->put($redis);
     }
 
     return $build;
@@ -1252,9 +1267,9 @@ $handleShutdown = function() use($logError)
             $cache = $register->get('redisPool')->get();
 
             $cache = new Cache(new RedisCache($cache));
-
             $database = new Database(new MariaDB($db), $cache);
-            $database->setNamespace('project_'.$container->getLabels()["appwrite-project"].'_internal');
+            $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $database->setNamespace('_project_'.$container->getLabels()["appwrite-project"]);
 
             // Get list of all processing executions
             $executions = Authorization::skip(function () use ($database, $container) {
@@ -1386,7 +1401,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->addHeader('Expires', '0')
             ->addHeader('Pragma', 'no-cache')
-            ->setStatusCode($code);
+            ->setStatusCode(500);
 
         $response->dynamic(
             new Document($output),

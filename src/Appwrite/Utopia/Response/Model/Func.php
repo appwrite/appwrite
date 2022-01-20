@@ -128,13 +128,13 @@ class Func extends Model
      */
     public function filter(Document $document): Document
     {
-        $prefs = $document->getAttribute('vars');
-        if($prefs instanceof Document) {
-            $prefs = $prefs->getArrayCopy();
+        $vars = $document->getAttribute('vars');
+        if($vars instanceof Document) {
+            $vars = $vars->getArrayCopy();
         }
 
-        if(is_array($prefs) && empty($prefs)) {
-            $document->setAttribute('vars', new stdClass);
+        if(is_array($vars) && empty($vars)) {
+            $document->setAttribute('vars', new stdClass());
         }
         return $document;
     }
