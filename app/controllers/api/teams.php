@@ -51,15 +51,19 @@ App::post('/v1/teams')
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
         $teamId = $teamId == 'unique()' ? $dbForProject->getId() : $teamId;
-        $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
-            '$id' => $teamId ,
-            '$read' => ['team:'.$teamId],
-            '$write' => ['team:'.$teamId .'/owner'],
-            'name' => $name,
-            'sum' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
-            'dateCreated' => \time(),
-            'search' => implode(' ', [$teamId, $name]),
-        ])));
+        try {
+            $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
+                '$id' => $teamId ,
+                '$read' => ['team:'.$teamId],
+                '$write' => ['team:'.$teamId .'/owner'],
+                'name' => $name,
+                'sum' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
+                'dateCreated' => \time(),
+                'search' => implode(' ', [$teamId, $name]),
+            ])));
+        }  catch (Duplicate $th) {
+            throw new Exception('Team already exists', 409);
+        }
 
         if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
             $membership = new Document([

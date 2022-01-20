@@ -147,26 +147,30 @@ App::post('/v1/storage/files')
         $sizeActual = $device->getFileSize($path);
 
         $fileId = ($fileId == 'unique()') ? $dbForProject->getId() : $fileId;
-        $file = $dbForProject->createDocument('files', new Document([
-            '$id' => $fileId,
-            '$read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], // By default set read permissions for user
-            '$write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], // By default set write permissions for user
-            'dateCreated' => \time(),
-            'bucketId' => '',
-            'name' => $file['name'] ?? '',
-            'path' => $path,
-            'signature' => $device->getFileHash($path),
-            'mimeType' => $mimeType,
-            'sizeOriginal' => $size,
-            'sizeActual' => $sizeActual,
-            'algorithm' => $compressor->getName(),
-            'comment' => '',
-            'openSSLVersion' => '1',
-            'openSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
-            'openSSLTag' => \bin2hex($tag ?? ''),
-            'openSSLIV' => \bin2hex($iv),
-            'search' => implode(' ', [$fileId, $file['name'] ?? '',]),
-        ]));
+        try {
+            $file = $dbForProject->createDocument('files', new Document([
+                '$id' => $fileId,
+                '$read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], // By default set read permissions for user
+                '$write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], // By default set write permissions for user
+                'dateCreated' => \time(),
+                'bucketId' => '',
+                'name' => $file['name'] ?? '',
+                'path' => $path,
+                'signature' => $device->getFileHash($path),
+                'mimeType' => $mimeType,
+                'sizeOriginal' => $size,
+                'sizeActual' => $sizeActual,
+                'algorithm' => $compressor->getName(),
+                'comment' => '',
+                'openSSLVersion' => '1',
+                'openSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
+                'openSSLTag' => \bin2hex($tag ?? ''),
+                'openSSLIV' => \bin2hex($iv),
+                'search' => implode(' ', [$fileId, $file['name'] ?? '',]),
+            ]));
+        } catch (Duplicate $th) {
+            throw new Exception('File already exists', 409);
+        }
 
         $audits
             ->setParam('event', 'storage.files.create')

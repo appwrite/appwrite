@@ -54,23 +54,27 @@ App::post('/v1/functions')
         /** @var Utopia\Database\Database $dbForProject */
 
         $functionId = ($functionId == 'unique()') ? $dbForProject->getId() : $functionId;
-        $function = $dbForProject->createDocument('functions', new Document([
-            '$id' => $functionId,
-            'execute' => $execute,
-            'dateCreated' => time(),
-            'dateUpdated' => time(),
-            'status' => 'disabled',
-            'name' => $name,
-            'runtime' => $runtime,
-            'tag' => '',
-            'vars' => $vars,
-            'events' => $events,
-            'schedule' => $schedule,
-            'schedulePrevious' => 0,
-            'scheduleNext' => 0,
-            'timeout' => $timeout,
-            'search' => implode(' ', [$functionId, $name, $runtime]),
-        ]));
+        try {
+            $function = $dbForProject->createDocument('functions', new Document([
+                '$id' => $functionId,
+                'execute' => $execute,
+                'dateCreated' => time(),
+                'dateUpdated' => time(),
+                'status' => 'disabled',
+                'name' => $name,
+                'runtime' => $runtime,
+                'tag' => '',
+                'vars' => $vars,
+                'events' => $events,
+                'schedule' => $schedule,
+                'schedulePrevious' => 0,
+                'scheduleNext' => 0,
+                'timeout' => $timeout,
+                'search' => implode(' ', [$functionId, $name, $runtime]),
+            ]));
+        } catch (Duplicate $th) {
+            throw new Exception('Function already exists', 409);
+        }
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($function, Response::MODEL_FUNCTION);
@@ -141,7 +145,7 @@ App::get('/v1/functions/runtimes')
             return $runtimes[$key];
         }, array_keys($runtimes));
 
-        $response->dynamic(new Document([ 
+        $response->dynamic(new Document([
             'sum' => count($runtimes),
             'runtimes' => $runtimes
         ]), Response::MODEL_RUNTIME_LIST);
@@ -199,7 +203,7 @@ App::get('/v1/functions/:functionId/usage')
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
-        
+
         $usage = [];
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
@@ -220,10 +224,10 @@ App::get('/v1/functions/:functionId/usage')
                     'limit' => 90,
                 ],
             ];
-            
+
             $metrics = [
-                "functions.$functionId.executions", 
-                "functions.$functionId.failures", 
+                "functions.$functionId.executions",
+                "functions.$functionId.failures",
                 "functions.$functionId.compute"
             ];
 
@@ -238,7 +242,7 @@ App::get('/v1/functions/:functionId/usage')
                         new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
                     ], $limit, 0, ['time'], [Database::ORDER_DESC]);
-    
+
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
                         $stats[$metric][] = [
@@ -262,7 +266,7 @@ App::get('/v1/functions/:functionId/usage')
                         $backfill--;
                     }
                     $stats[$metric] = array_reverse($stats[$metric]);
-                }    
+                }
             });
 
             $usage = new Document([
@@ -494,11 +498,11 @@ App::post('/v1/functions/:functionId/tags')
         // Save to storage
         $size = $device->getFileSize($file['tmp_name']);
         $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
-        
+
         if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
             throw new Exception('Failed moving file', 500);
         }
-        
+
         $tagId = $dbForProject->getId();
         $tag = $dbForProject->createDocument('tags', new Document([
             '$id' => $tagId,
@@ -639,7 +643,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
-        
+
         $tag = $dbForProject->getDocument('tags', $tagId);
 
         if ($tag->getAttribute('functionId') !== $function->getId()) {

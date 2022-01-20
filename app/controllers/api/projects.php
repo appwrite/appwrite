@@ -76,31 +76,35 @@ App::post('/v1/projects')
         }
 
         $projectId = ($projectId == 'unique()') ? $dbForConsole->getId() : $projectId;
-        $project = $dbForConsole->createDocument('projects', new Document([
-            '$id' => $projectId == 'unique()' ? $dbForConsole->getId() : $projectId,
-            '$read' => ['team:' . $teamId],
-            '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
-            'name' => $name,
-            'teamId' => $team->getId(),
-            'description' => $description,
-            'logo' => $logo,
-            'url' => $url,
-            'version' => APP_VERSION_STABLE,
-            'legalName' => $legalName,
-            'legalCountry' => $legalCountry,
-            'legalState' => $legalState,
-            'legalCity' => $legalCity,
-            'legalAddress' => $legalAddress,
-            'legalTaxId' => $legalTaxId,
-            'services' => new stdClass(),
-            'platforms' => null,
-            'providers' => [],
-            'webhooks' => null,
-            'keys' => null,
-            'domains' => null,
-            'auths' => $auths,
-            'search' => implode(' ', [$projectId, $name]),
-        ]));
+        try {
+            $project = $dbForConsole->createDocument('projects', new Document([
+                '$id' => $projectId == 'unique()' ? $dbForConsole->getId() : $projectId,
+                '$read' => ['team:' . $teamId],
+                '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+                'name' => $name,
+                'teamId' => $team->getId(),
+                'description' => $description,
+                'logo' => $logo,
+                'url' => $url,
+                'version' => APP_VERSION_STABLE,
+                'legalName' => $legalName,
+                'legalCountry' => $legalCountry,
+                'legalState' => $legalState,
+                'legalCity' => $legalCity,
+                'legalAddress' => $legalAddress,
+                'legalTaxId' => $legalTaxId,
+                'services' => new stdClass(),
+                'platforms' => null,
+                'providers' => [],
+                'webhooks' => null,
+                'keys' => null,
+                'domains' => null,
+                'auths' => $auths,
+                'search' => implode(' ', [$projectId, $name]),
+            ]));
+        }  catch (Duplicate $th) {
+            throw new Exception('Project already exists', 409);
+        }
 
         $collections = Config::getParam('collections', []); /** @var array $collections */
 
