@@ -661,24 +661,28 @@ App::post('/v1/account/sessions/magic-url')
 
             $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
 
-            $user = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
-                '$id' => $userId,
-                '$read' => ['role:all'],
-                '$write' => ['user:' . $userId],
-                'email' => $email,
-                'emailVerification' => false,
-                'status' => true,
-                'password' => null,
-                'passwordUpdate' => \time(),
-                'registration' => \time(),
-                'reset' => false,
-                'prefs' => new \stdClass(),
-                'sessions' => [],
-                'tokens' => [],
-                'memberships' => [],
-                'search' => implode(' ', [$userId, $email]),
-                'deleted' => false
-            ])));
+            try {
+                $user = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
+                    '$id' => $userId,
+                    '$read' => ['role:all'],
+                    '$write' => ['user:' . $userId],
+                    'email' => $email,
+                    'emailVerification' => false,
+                    'status' => true,
+                    'password' => null,
+                    'passwordUpdate' => \time(),
+                    'registration' => \time(),
+                    'reset' => false,
+                    'prefs' => new \stdClass(),
+                    'sessions' => [],
+                    'tokens' => [],
+                    'memberships' => [],
+                    'search' => implode(' ', [$userId, $email]),
+                    'deleted' => false
+                ])));
+            } catch (Duplicate $th) {
+                throw new Exception('Account already exists', 409);
+            }
 
             $mails->setParam('event', 'users.create');
             $audits->setParam('event', 'users.create');
@@ -932,25 +936,30 @@ App::post('/v1/account/sessions/anonymous')
         }
 
         $userId = $dbForProject->getId();
-        $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
-            '$id' => $userId,
-            '$read' => ['role:all'],
-            '$write' => ['user:' . $userId],
-            'email' => null,
-            'emailVerification' => false,
-            'status' => true,
-            'password' => null,
-            'passwordUpdate' => \time(),
-            'registration' => \time(),
-            'reset' => false,
-            'name' => null,
-            'prefs' => new \stdClass(),
-            'sessions' => [],
-            'tokens' => [],
-            'memberships' => [],
-            'search' => $userId,
-            'deleted' => false
-        ])));
+
+        try {
+            $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
+                '$id' => $userId,
+                '$read' => ['role:all'],
+                '$write' => ['user:' . $userId],
+                'email' => null,
+                'emailVerification' => false,
+                'status' => true,
+                'password' => null,
+                'passwordUpdate' => \time(),
+                'registration' => \time(),
+                'reset' => false,
+                'name' => null,
+                'prefs' => new \stdClass(),
+                'sessions' => [],
+                'tokens' => [],
+                'memberships' => [],
+                'search' => $userId,
+                'deleted' => false
+            ])));
+        } catch (Duplicate $th) {
+            throw new Exception('Account already exists', 409);
+        }
 
         // Create session token
 
