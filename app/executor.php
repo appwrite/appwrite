@@ -200,7 +200,6 @@ $createRuntimeServer = function(string $functionId, string $projectId, string $t
         try {
             $orchestration->remove($container, true);
         } catch (Exception $e) {
-
             try {
                 throw new Exception('Failed to remove container: ' . $e->getMessage());
             } catch (Throwable $error) {
@@ -446,7 +445,6 @@ $execute = function(string $trigger, string $projectId, string $executionId, str
             return $database->updateDocument('executions', $execution->getId(), $execution);
         });
 
-
         throw new Error('Something went wrong building the code. ' . $e->getMessage());
     }
 
@@ -467,7 +465,6 @@ $execute = function(string $trigger, string $projectId, string $executionId, str
         $execution = Authorization::skip(function () use ($database, $execution) {
             return $database->updateDocument('executions', $execution->getId(), $execution);
         });
-
 
         try {
             throw new Exception('Something went wrong building the runtime server. ' . $e->getMessage());
@@ -681,11 +678,13 @@ App::post('/v1/execute') // Define Route
     ->inject('response')
     ->inject('dbForProject')
     ->action(
-        function ($trigger, $projectId, $executionId, $functionId, $event, $eventData, $data, $webhooks, $userId, $jwt, $request, $response, $dbForProject) use ($execute) {
+        function ($trigger, $projectId, $executionId, $functionId, $event, $eventData, $data, $webhooks, $userId, $jwt, $request, $response, $dbForProject) use ($execute, $logError) {
             try {
                 $data = $execute($trigger, $projectId, $executionId, $functionId, $dbForProject, $event, $eventData, $data, $webhooks, $userId, $jwt);
                 $response->json($data);
             } catch (Exception $e) {
+                call_user_func($logError, $e, "executeEndpoint");
+
                 $response
                     ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                     ->addHeader('Expires', '0')
@@ -947,7 +946,7 @@ App::post('/v1/build/:buildId') // Start a Build
     ->inject('response')
     ->inject('dbForProject')
     ->inject('projectID')
-    ->action(function ($buildId, $response, $dbForProject, $projectID) {
+    ->action(function ($buildId, $response, $dbForProject, $projectID) use ($logError) {
         /** @var string $buildId */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
@@ -982,6 +981,8 @@ App::post('/v1/build/:buildId') // Start a Build
             // return success
             return $response->json(['success' => true]);
         } catch (Exception $e) {
+            call_user_func($logError, $e, "buildEndpoint");
+
             $response
                 ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                 ->addHeader('Expires', '0')
@@ -1400,7 +1401,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     try {
         $app->run($request, $response);
     } catch (Exception $e) {
-        // Console::error('There\'s a problem with ' . $request->getURI());
+        call_user_func($logError, $e, "serverError");
         $swooleResponse->end('500: Server Error');
     } finally {
         /** @var PDOPool $dbPool */
