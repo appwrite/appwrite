@@ -509,7 +509,7 @@ App::post('/v1/functions/:functionId/tags')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
         /** @var Appwrite\Auth\User $user */
-        /** @var Appwrite\Project\Project $project */
+        /** @var Appwrite\Database\Document $project */
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -556,6 +556,7 @@ App::post('/v1/functions/:functionId/tags')
             // Remove automaticDeploy for all other tags.
             $tags = $dbForProject->find('tags', [
                 new Query('automaticDeploy', Query::TYPE_EQUAL, [true]),
+                new Query('functionId', Query::TYPE_EQUAL, [$functionId])
             ]);
 
             foreach ($tags as $tag) {
@@ -567,8 +568,8 @@ App::post('/v1/functions/:functionId/tags')
         $tagId = $dbForProject->getId();
         $tag = $dbForProject->createDocument('tags', new Document([
             '$id' => $tagId,
-            '$read' => [],
-            '$write' => [],
+            '$read' => ['role:all'],
+            '$write' => ['role:all'],
             'functionId' => $function->getId(),
             'dateCreated' => time(),
             'entrypoint' => $entrypoint,
@@ -592,7 +593,7 @@ App::post('/v1/functions/:functionId/tags')
         \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/tag");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-            'functionId' => $functionId,
+            'functionId' => $function->getId(),
             'tagId' => $tag->getId(),
             'userId' => $user->getId(),
         ]));
@@ -873,7 +874,7 @@ App::post('/v1/functions/:functionId/executions')
         $execution = Authorization::skip(fn() => $dbForProject->createDocument('executions', new Document([
             '$id' => $executionId,
             '$read' => (!$user->isEmpty()) ? ['user:' . $user->getId()] : [],
-            '$write' => [],
+            '$write' => ['role:all'],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
             'tagId' => $tag->getId(),
