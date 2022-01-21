@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f864e323b153e24e1392840eb114b951",
+    "content-hash": "ab493f0a7f01a1105f8bc5caaf9b928b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2141,16 +2141,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-feat-check-if-collection-exists",
+            "version": "0.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "49b4eef6728f44a33df2707993319a2f352e75fa"
+                "reference": "2f2527bb080cf578fba327ea2ec637064561d403"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/49b4eef6728f44a33df2707993319a2f352e75fa",
-                "reference": "49b4eef6728f44a33df2707993319a2f352e75fa",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/2f2527bb080cf578fba327ea2ec637064561d403",
+                "reference": "2f2527bb080cf578fba327ea2ec637064561d403",
                 "shasum": ""
             },
             "require": {
@@ -2198,9 +2198,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/feat-check-if-collection-exists"
+                "source": "https://github.com/utopia-php/database/tree/0.14.0"
             },
-            "time": "2022-01-19T21:01:38+00:00"
+            "time": "2022-01-21T16:34:34+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -6642,18 +6642,9 @@
             "time": "2015-12-17T08:42:14+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-feat-check-if-collection-exists",
-            "alias": "0.14.0",
-            "alias_normalized": "0.14.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
