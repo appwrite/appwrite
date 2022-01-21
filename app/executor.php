@@ -320,7 +320,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
         ? $database->getDocument('executions', $executionId)
         : $database->createDocument('executions', new Document([
             '$id' => $executionId,
-            '$read' => (!$userId == '') ? ['user:' . $userId] : [],
+            '$read' => ($userId !== '') ? ['user:' . $userId] : [],
             '$write' => ['role:all'],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
@@ -385,7 +385,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
             $buildId = $database->getId();
             $database->createDocument('builds', new Document([
                 '$id' => $buildId,
-                '$read' => (!$userId == '') ? ['user:' . $userId] : [],
+                '$read' => ($userId !== '') ? ['user:' . $userId] : [],
                 '$write' => ['role:all'],
                 'dateCreated' => time(),
                 'status' => 'processing',
@@ -413,7 +413,8 @@ function execute(string $trigger, string $projectId, string $executionId, string
             runBuildStage($buildId, $projectId, $database);
         }
     } catch (Exception $e) {
-        $execution->setAttribute('status', 'failed')
+        $execution
+            ->setAttribute('status', 'failed')
             ->setAttribute('statusCode', 500)
             ->setAttribute('stderr', \utf8_encode(\mb_substr($e->getMessage(), -4000))) // log last 4000 chars output
             ->setAttribute('time', 0);
@@ -694,7 +695,7 @@ App::post('/v1/cleanup/function')
                         if ($tag->getAttribute('buildId')) {
                             $build = $dbForProject->getDocument('builds', $tag->getAttribute('buildId'));
 
-                            if ($build->getAttribute('status') == 'building') {
+                            if ($build->getAttribute('status') === 'building') {
                                 // Remove the build
                                 $orchestration->remove('build-stage-' . $tag->getAttribute('buildId'), true);
                                 Console::info('Removed build for tag ' . $tag['$id']);
@@ -847,7 +848,9 @@ App::post('/v1/tag')
 
             if ($tag->getAttribute('automaticDeploy') === true) {
                 // Update the function document setting the tag as the active one
-                $function->setAttribute('tag', $tag->getId())->setAttribute('scheduleNext', (int)$next);
+                $function
+                    ->setAttribute('tag', $tag->getId())
+                    ->setAttribute('scheduleNext', (int)$next);
                 $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
             }
 
