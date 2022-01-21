@@ -33,6 +33,7 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Query;
 use Utopia\Orchestration\Adapter\DockerCLI;
 use Utopia\Logger\Log;
+use Utopia\Orchestration\Adapter\DockerAPI;
 use Utopia\Registry\Registry;
 
 require_once __DIR__ . '/init.php';
@@ -89,7 +90,7 @@ $orchestrationPool = new ConnectionPool(function () {
     $orchestration = new Orchestration(new DockerCLI($dockerUser, $dockerPass));
 
     return $orchestration;
-}, 2);
+}, 6);
 try {
     $runtimes = Config::getParam('runtimes');
 
