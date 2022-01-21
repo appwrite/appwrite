@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM node:16-alpine3.15 as node
+FROM node:16.13.2-alpine3.15 as node
 
 WORKDIR /usr/local/src/
 
