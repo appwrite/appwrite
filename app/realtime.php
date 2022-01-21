@@ -92,8 +92,6 @@ $server->error($logError);
 function getDatabase(Registry &$register, string $namespace)
 {
     $attempts = 0;
-    $sleep = 2;
-    $maxAttempts = 10;
 
     do {
         try {
@@ -107,18 +105,18 @@ function getDatabase(Registry &$register, string $namespace)
             $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
             $database->setNamespace($namespace);
 
-            if (!$database->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'realtime')) {
+            if (!$database->exists($database->getDefaultDatabase(), 'realtime')) {
                 throw new Exception('Collection not ready');
             }
             break; // leave loop if successful
         } catch(\Exception $e) {
             Console::warning("Database not ready. Retrying connection ({$attempts})...");
-            if ($attempts >= $maxAttempts) {
+            if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
                 throw new \Exception('Failed to connect to database: '. $e->getMessage());
             }
-            sleep($sleep);
+            sleep(DATABASE_RECONNECT_SLEEP);
         }
-    } while ($attempts < $maxAttempts);
+    } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
 
     return [
         $database,
