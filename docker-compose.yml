@@ -359,6 +359,7 @@ services:
       - DOCKERHUB_PULL_PASSWORD
 
   appwrite-executor:
+    container_name: appwrite-executor
     entrypoint:
       - php
       - -e
