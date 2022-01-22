@@ -11,6 +11,11 @@
         "Microsoft": {
           "clientSecret": "oauth2MicrosoftClientSecret",
           "tenantId": "oauth2MicrosoftTenantId"
+        },
+        "Apple": {
+          "keyId": "oauth2AppleKeyId",
+          "teamId": "oauth2AppleTeamId",
+          "p8": "oauth2AppleP8"
         }
       }
       let provider = element.getAttribute("data-forms-oauth-custom");
