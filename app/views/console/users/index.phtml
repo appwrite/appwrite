@@ -478,8 +478,8 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                         <input name="secret" data-forms-show-secret id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret" type="password" autocomplete="off" data-ls-bind="{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
                                     <?php else: ?>
                                         <?php
-                                            $form_view = new View(__DIR__.'/oauth/'.$this->escape($form));
-                                            echo $form_view
+                                            $form = new View(__DIR__.'/oauth/'.$this->escape($form));
+                                            echo $form
                                                 ->setParam("provider", $provider)
                                                 ->render();
                                             ?>
