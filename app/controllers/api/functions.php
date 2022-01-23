@@ -1092,9 +1092,7 @@ App::get('/v1/builds/:buildId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
 
-        $build = Authorization::skip(function () use ($dbForProject, $buildId) {
-            return $dbForProject->getDocument('builds', $buildId);
-        });
+        $build = Authorization::skip(fn() => $dbForProject->getDocument('builds', $buildId));
 
         if ($build->isEmpty()) {
             throw new Exception('Build not found', 404);
@@ -1102,6 +1100,7 @@ App::get('/v1/builds/:buildId')
 
         $response->dynamic($build, Response::MODEL_BUILD);
     });
+    
 App::post('/v1/builds/:buildId')
     ->groups(['api', 'functions'])
     ->desc('Retry Build')
@@ -1122,9 +1121,7 @@ App::post('/v1/builds/:buildId')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
 
-        $build = Authorization::skip(function () use ($dbForProject, $buildId) {
-            return $dbForProject->getDocument('builds', $buildId);
-        });
+        $build = Authorization::skip(fn() => $dbForProject->getDocument('builds', $buildId));
 
         if ($build->isEmpty()) {
             throw new Exception('Build not found', 404);
