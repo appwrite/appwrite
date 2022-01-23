@@ -9,8 +9,8 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Orchestration\Orchestration;
 use Utopia\Orchestration\Adapter\DockerAPI;
+use Utopia\Orchestration\Orchestration;
 
 require_once __DIR__.'/../init.php';
 
@@ -224,7 +224,7 @@ class FunctionsV1 extends Worker
     public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $eventData = '', string $data = '', array $webhooks = [], string $userId = '', string $jwt = ''): void
     {
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/execute");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/execute");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             'trigger' => $trigger,
