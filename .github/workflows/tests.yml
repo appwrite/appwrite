@@ -1,10 +1,9 @@
 name: "Tests"
-
 on: [pull_request]
 jobs:
   tests:
     name: Unit & E2E
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
@@ -19,16 +18,29 @@ jobs:
     - run: git checkout HEAD^2
       if: ${{ github.event_name == 'pull_request' }}
 
-    - name: Build Appwrite
-      # Upstream bug causes buildkit pulls to fail so prefetch base images
-      # https://github.com/moby/moby/issues/41864
+    - name: Prepare Docker
       run:  |
+        export COMPOSE_INTERACTIVE_NO_CLI
+        export DOCKER_BUILDKIT=1
+        export COMPOSE_DOCKER_CLI_BUILD=1
         echo "_APP_FUNCTIONS_RUNTIMES=php-8.0" >> .env
         docker pull composer:2.0
         docker pull php:8.0-cli-alpine
-        docker compose build --progress=plain
+        docker compose pull
+
+    - name: Prepare Cache
+      uses: satackey/action-docker-layer-caching@v0.0.11
+      # Ignore the failure of a step and avoid terminating the job.
+      continue-on-error: true
+
+    - name: Build Appwrite
+      run: docker compose build --progress=plain
+
+    - name: Start Appwrite
+      run: |
         docker compose up -d
         sleep 30
+
     - name: Doctor
       run: docker compose exec -T appwrite doctor
 
@@ -37,9 +49,3 @@ jobs:
 
     - name: Run Tests
       run: docker compose exec -T appwrite test --debug
-
-    - name: Teardown
-      if: always()
-      run: |
-        docker compose down -v
-        docker ps -aq | xargs docker rm --force

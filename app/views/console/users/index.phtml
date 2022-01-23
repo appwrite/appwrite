@@ -174,7 +174,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                         <input type="email" class="full-width" id="user-email" name="email" required autocomplete="off" />
 
                         <label for="user-password">Password</label>
-                        <input type="password" class="full-width" id="user-password" name="password" required pattern=".{6,}" title="Six or more characters" autocomplete="off" />
+                        <input type="password" class="full-width" id="user-password" name="password" required minlength="8" title="Eight or more characters" autocomplete="off" />
 
                         <hr />
 
