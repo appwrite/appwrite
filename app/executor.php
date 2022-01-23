@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Utopia\App;
+use Utopia\Swoole\Request;
 use Utopia\Database\Document;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
@@ -9,11 +11,10 @@ use Appwrite\Event\Event;
 use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Stats\Stats;
-use Utopia\App;
-use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
 use Utopia\CLI\Console;
 use Swoole\Process;
+use Swoole\Coroutine as Co;
 use Swoole\Http\Server;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
@@ -28,7 +29,6 @@ use Cron\CronExpression;
 use Swoole\ConnectionPool;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
-use Swoole\Coroutine as Co;
 use Utopia\Cache\Cache;
 use Utopia\Database\Query;
 use Utopia\Orchestration\Adapter\DockerCLI;
