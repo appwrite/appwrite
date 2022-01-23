@@ -566,6 +566,8 @@ App::post('/v1/functions/:functionId/tags')
         }
         
         $tagId = $dbForProject->getId();
+
+        // TODO : What should be the read and write permissons of a tag? 
         $tag = $dbForProject->createDocument('tags', new Document([
             '$id' => $tagId,
             '$read' => ['role:all'],
@@ -586,41 +588,13 @@ App::post('/v1/functions/:functionId/tags')
             ->setParam('storage', $tag->getAttribute('size', 0))
         ;
 
-        // Send start build reqeust to executor using /v1/tag
-        $function = $dbForProject->getDocument('functions', $functionId);
-
-        $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/tag");
-        \curl_setopt($ch, CURLOPT_POST, true);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+        // Enqueue a message to start the build
+        Resque::enqueue('v1-builds', 'BuildsV1', [
+            'projectId' => $project->getId(),
             'functionId' => $function->getId(),
-            'tagId' => $tag->getId(),
-            'userId' => $user->getId(),
-        ]));
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
-        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'x-appwrite-project: '.$project->getId(),
-            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
+            'tagId' => $tagId,
+            'type' => 'tag'
         ]);
-
-        $executorResponse = \curl_exec($ch);
-
-        $error = \curl_error($ch);
-
-        if (!empty($error)) {
-            throw new Exception('Executor Communication Error: ' . $error, 500);
-        }
-
-        // Check status code
-        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        if (200 !== $statusCode) {
-            throw new Exception('Executor error: ' . $executorResponse, $statusCode);
-        }
-
-        \curl_close($ch);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($tag, Response::MODEL_TAG);
