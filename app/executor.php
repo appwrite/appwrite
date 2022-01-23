@@ -234,8 +234,8 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
         $device = Storage::getDevice('builds');
 
         if (!\file_exists($tagPathTargetDir)) {
-            if (@\mkdir($tagPathTargetDir, 0755, true)) {
-                \chmod($tagPathTargetDir, 0755);
+            if (@\mkdir($tagPathTargetDir, 0777, true)) {
+                \chmod($tagPathTargetDir, 0777);
             } else {
                 throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
             }
@@ -1015,8 +1015,8 @@ function runBuildStage(string $buildId, string $projectID): Document
 
         // Perform various checks
         if (!\file_exists($tagPathTargetDir)) {
-            if (@\mkdir($tagPathTargetDir, 0755, true)) {
-                \chmod($tagPathTargetDir, 0755);
+            if (@\mkdir($tagPathTargetDir, 0777, true)) {
+                \chmod($tagPathTargetDir, 0777);
             } else {
                 throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
             }
@@ -1052,8 +1052,8 @@ function runBuildStage(string $buildId, string $projectID): Document
         $path = '/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode';
 
         if (!\file_exists($path)) {
-            if (@\mkdir($path, 0755, true)) {
-                \chmod($path, 0755);
+            if (@\mkdir($path, 0777, true)) {
+                \chmod($path, 0777);
             } else {
                 throw new Exception('Can\'t create directory /tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode');
             }
@@ -1155,8 +1155,8 @@ function runBuildStage(string $buildId, string $projectID): Document
         $path = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
 
         if (!\file_exists(\dirname($path))) { // Checks if directory path to file exists
-            if (@\mkdir(\dirname($path), 0755, true)) {
-                \chmod(\dirname($path), 0755);
+            if (@\mkdir(\dirname($path), 0777, true)) {
+                \chmod(\dirname($path), 0777);
             } else {
                 throw new Exception('Can\'t create directory: ' . \dirname($path));
             }
@@ -1201,8 +1201,8 @@ function runBuildStage(string $buildId, string $projectID): Document
         if (isset($id)) {
             $orchestration->remove($id, true);
         }
-        $orchestrationPool->put(null);
 
+        $orchestrationPool->put($orchestration);
         $register->get('dbPool')->put($db);
         $register->get('redisPool')->put($redis);
 
