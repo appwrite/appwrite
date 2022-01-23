@@ -234,7 +234,9 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
         $device = Storage::getDevice('builds');
 
         if (!\file_exists($tagPathTargetDir)) {
-            if (!\mkdir($tagPathTargetDir, 0777, true)) {
+            if (@\mkdir($tagPathTargetDir, 0755, true)) {
+                \chmod($tagPathTargetDir, 0755);
+            } else {
                 throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
             }
         }
@@ -268,9 +270,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
                 ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', '256'))
                 ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '256'));
 
-            foreach ($vars as $key => $value) {
-                $vars[$key] = strval($value);
-            }
+            $vars = array_map(fn ($v) => strval($v), $vars);
 
             // Launch runtime server
             $id = $orchestration->run(
@@ -1015,7 +1015,9 @@ function runBuildStage(string $buildId, string $projectID): Document
 
         // Perform various checks
         if (!\file_exists($tagPathTargetDir)) {
-            if (!\mkdir($tagPathTargetDir, 0777, true)) {
+            if (@\mkdir($tagPathTargetDir, 0755, true)) {
+                \chmod($tagPathTargetDir, 0755);
+            } else {
                 throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
             }
         }
@@ -1046,12 +1048,13 @@ function runBuildStage(string $buildId, string $projectID): Document
             ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
             ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
 
-        foreach ($vars as &$value) {
-            $value = strval($value);
-        }
+        $vars = array_map(fn ($v) => strval($v), $vars);
+        $path = '/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode';
 
-        if (!\file_exists('/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode')) {
-            if (!\mkdir('/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode', 0777, true)) {
+        if (!\file_exists($path)) {
+            if (@\mkdir($path, 0755, true)) {
+                \chmod($path, 0755);
+            } else {
                 throw new Exception('Can\'t create directory /tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode');
             }
         };
@@ -1152,7 +1155,9 @@ function runBuildStage(string $buildId, string $projectID): Document
         $path = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
 
         if (!\file_exists(\dirname($path))) { // Checks if directory path to file exists
-            if (!@\mkdir(\dirname($path), 0777, true)) {
+            if (@\mkdir(\dirname($path), 0755, true)) {
+                \chmod(\dirname($path), 0755);
+            } else {
                 throw new Exception('Can\'t create directory: ' . \dirname($path));
             }
         }
