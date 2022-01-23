@@ -593,7 +593,7 @@ App::post('/v1/functions/:functionId/tags')
             'projectId' => $project->getId(),
             'functionId' => $function->getId(),
             'tagId' => $tagId,
-            'type' => 'tag'
+            'type' => BUILD_TYPE_TAG
         ]);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -1134,34 +1134,12 @@ App::post('/v1/builds/:buildId')
             throw new Exception('Build not failed', 400);
         }
 
-        // Retry build
-        $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/build/{$buildId}");
-        \curl_setopt($ch, CURLOPT_POST, true);
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
-        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'x-appwrite-project: '.$project->getId(),
-            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
+        // Enqueue a message to start the build
+        Resque::enqueue('v1-builds', 'BuildsV1', [
+            'projectId' => $project->getId(),
+            'buildId' => $buildId,
+            'type' => BUILD_TYPE_RETRY
         ]);
-    
-        $executorResponse = \curl_exec($ch);
-    
-        $error = \curl_error($ch);
-    
-        if (!empty($error)) {
-            throw new Exception('Executor Communication Error: ' . $error, 500);
-        }
-    
-        // Check status code
-        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        if (200 !== $statusCode) {
-            throw new Exception('Executor error: ' . $executorResponse, $statusCode);
-        }
-    
-        \curl_close($ch);
 
         $response->noContent();
     });

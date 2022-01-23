@@ -15,7 +15,7 @@ Console::title('Builds V1 Worker');
 Console::success(APP_NAME.' build worker v1 has started');
 
 class BuildsV1 extends Worker
-{
+{ 
 
     public function getName(): string {
         return "builds";
@@ -32,14 +32,21 @@ class BuildsV1 extends Worker
         $projectId = $this->args['projectId'] ?? '';
 
         switch ($type) {
-            case 'tag':
+            case BUILD_TYPE_TAG:
                 $functionId = $this->args['functionId'] ?? '';
                 $tagId = $this->args['tagId'] ?? '';
                 Console::success("Creating build for tag: $tagId");
                 $this->buildTag($projectId, $functionId, $tagId);
                 break;
+
+            case BUILD_TYPE_RETRY:
+                $buildId = $this->args['buildId'] ?? '';
+                Console::success("Retrying build for id: $buildId");
+                $this->triggerBuildStage($projectId, $buildId,);
+                break;
+
             default:
-                throw new \Exception('Invalid trigger');
+                throw new \Exception('Invalid build type');
                 break;
         }
     }
@@ -229,7 +236,9 @@ class BuildsV1 extends Worker
             $function
                 ->setAttribute('tag', $tag->getId())
                 ->setAttribute('scheduleNext', (int)$next);
-            $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
+
+            // TODO: Why should we disable auth  ?
+            $function = Authorization::skip(fn() => $dbForProject->updateDocument('functions', $functionId, $function));
         }
 
         // Deploy Runtime Server
