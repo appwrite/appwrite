@@ -627,22 +627,22 @@ App::post('/v1/functions/:functionId/deployments')
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
-App::get('/v1/functions/:functionId/tags')
+App::get('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
-    ->desc('List Tags')
+    ->desc('List Deployments')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listTags')
-    ->label('sdk.description', '/docs/references/functions/list-tags.md')
+    ->label('sdk.method', 'listDeployments')
+    ->label('sdk.description', '/docs/references/functions/list-deployments.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TAG_LIST)
+    ->label('sdk.response.model', Response::MODEL_DEPLOYMENT_LIST)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of tags to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of deployments to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursor', '', new UID(), 'ID of the tag used as the starting point for the query, excluding the tag itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('cursor', '', new UID(), 'ID of the deployment used as the starting point for the query, excluding the deployment itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
@@ -658,10 +658,10 @@ App::get('/v1/functions/:functionId/tags')
         }
 
         if (!empty($cursor)) {
-            $cursorTag = $dbForProject->getDocument('tags', $cursor);
+            $cursorDeployment = $dbForProject->getDocument('deployments', $cursor);
 
-            if ($cursorTag->isEmpty()) {
-                throw new Exception("Tag '{$cursor}' for the 'cursor' value not found.", 400);
+            if ($cursorDeployment->isEmpty()) {
+                throw new Exception("Deployment '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
 
@@ -673,22 +673,22 @@ App::get('/v1/functions/:functionId/tags')
 
         $queries[] = new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]);
 
-        $results = $dbForProject->find('tags', $queries, $limit, $offset, [], [$orderType], $cursorTag ?? null, $cursorDirection);
-        $sum = $dbForProject->count('tags', $queries, APP_LIMIT_COUNT);
+        $results = $dbForProject->find('deployments', $queries, $limit, $offset, [], [$orderType], $cursorDeployment ?? null, $cursorDirection);
+        $sum = $dbForProject->count('deployments', $queries, APP_LIMIT_COUNT);
 
         // Get Current Build Data
-        foreach ($results as &$tag) {
-            $build = $dbForProject->getDocument('builds', $tag->getAttribute('buildId', ''));
+        foreach ($results as &$deployment) {
+            $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
 
-            $tag['status'] = $build->getAttribute('status', 'processing');
-            $tag['buildStdout'] = $build->getAttribute('stdout', '');
-            $tag['buildStderr'] = $build->getAttribute('stderr', '');
+            $deployment['status'] = $build->getAttribute('status', 'processing');
+            $deployment['buildStdout'] = $build->getAttribute('stdout', '');
+            $deployment['buildStderr'] = $build->getAttribute('stderr', '');
         }
 
         $response->dynamic(new Document([
-            'tags' => $results,
+            'deployments' => $results,
             'sum' => $sum,
-        ]), Response::MODEL_TAG_LIST);
+        ]), Response::MODEL_DEPLOYMENT_LIST);
     });
 
 App::get('/v1/functions/:functionId/tags/:tagId')
