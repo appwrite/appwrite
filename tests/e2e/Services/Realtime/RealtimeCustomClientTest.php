@@ -985,7 +985,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals($function['headers']['status-code'], 201);
         $this->assertNotEmpty($function['body']['$id']);
 
-        $tag = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/tags', array_merge([
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -994,20 +994,20 @@ class RealtimeCustomClientTest extends Scope
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/timeout.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
 
-        $tagId = $tag['body']['$id'] ?? '';
+        $deploymentId = $deployment['body']['$id'] ?? '';
 
-        $this->assertEquals($tag['headers']['status-code'], 201);
-        $this->assertNotEmpty($tag['body']['$id']);
+        $this->assertEquals($deployment['headers']['status-code'], 201);
+        $this->assertNotEmpty($deployment['body']['$id']);
 
-        // Wait for tag to be built.
+        // Wait for deployment to be built.
         sleep(5);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/tag', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployment', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'tag' => $tagId,
+            'deployment' => $deploymentId,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
