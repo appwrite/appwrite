@@ -431,7 +431,7 @@ App::delete('/v1/functions/:functionId')
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
-        // Request executor to delete tag containers
+        // Request executor to delete deployment containers
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/cleanup/function");
         \curl_setopt($ch, CURLOPT_POST, true);
@@ -479,20 +479,20 @@ App::delete('/v1/functions/:functionId')
         $response->noContent();
     });
 
-App::post('/v1/functions/:functionId/tags')
+App::post('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
-    ->desc('Create Tag')
+    ->desc('Create Deployment')
     ->label('scope', 'functions.write')
-    ->label('event', 'functions.tags.create')
+    ->label('event', 'functions.deployments.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'createTag')
-    ->label('sdk.description', '/docs/references/functions/create-tag.md')
+    ->label('sdk.method', 'createDeployment')
+    ->label('sdk.description', '/docs/references/functions/create-deployment.md')
     ->label('sdk.packaging', true)
     ->label('sdk.request.type', 'multipart/form-data')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TAG)
+    ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
     ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
@@ -553,21 +553,21 @@ App::post('/v1/functions/:functionId/tags')
         }
 
         if ((bool) $deploy) {
-            // Remove deploy for all other tags.
-            $tags = $dbForProject->find('tags', [
+            // Remove deploy for all other deployments.
+            $deployments = $dbForProject->find('tags', [
                 new Query('deploy', Query::TYPE_EQUAL, [true]),
                 new Query('functionId', Query::TYPE_EQUAL, [$functionId])
             ]);
 
-            foreach ($tags as $tag) {
-                $tag->setAttribute('deploy', false);
-                $dbForProject->updateDocument('tags', $tag->getId(), $tag);
+            foreach ($deployments as $deployment) {
+                $deployment->setAttribute('deploy', false);
+                $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
             }
         }
         
-        $tagId = $dbForProject->getId();
-        $tag = $dbForProject->createDocument('tags', new Document([
-            '$id' => $tagId,
+        $deploymentId = $dbForProject->getId();
+        $deployment = $dbForProject->createDocument('deployments', new Document([
+            '$id' => $deploymentId,
             '$read' => ['role:all'],
             '$write' => ['role:all'],
             'functionId' => $function->getId(),
@@ -575,7 +575,7 @@ App::post('/v1/functions/:functionId/tags')
             'entrypoint' => $entrypoint,
             'path' => $path,
             'size' => $size,
-            'search' => implode(' ', [$tagId, $entrypoint]),
+            'search' => implode(' ', [$deploymentId, $entrypoint]),
             'status' => 'processing',
             'buildStdout' => '',
             'buildStderr' => '',
@@ -583,7 +583,7 @@ App::post('/v1/functions/:functionId/tags')
         ]));
 
         $usage
-            ->setParam('storage', $tag->getAttribute('size', 0))
+            ->setParam('storage', $deployment->getAttribute('size', 0))
         ;
 
         // Send start build reqeust to executor using /v1/tag
@@ -594,7 +594,7 @@ App::post('/v1/functions/:functionId/tags')
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             'functionId' => $function->getId(),
-            'tagId' => $tag->getId(),
+            'deploymentId' => $deployment->getId(),
             'userId' => $user->getId(),
         ]));
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -623,7 +623,7 @@ App::post('/v1/functions/:functionId/tags')
         \curl_close($ch);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($tag, Response::MODEL_TAG);
+        $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
 App::get('/v1/functions/:functionId/tags')
