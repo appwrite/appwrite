@@ -691,22 +691,22 @@ App::get('/v1/functions/:functionId/deployments')
         ]), Response::MODEL_DEPLOYMENT_LIST);
     });
 
-App::get('/v1/functions/:functionId/tags/:tagId')
+App::get('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
-    ->desc('Get Tag')
+    ->desc('Get Deployment')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getTag')
-    ->label('sdk.description', '/docs/references/functions/get-tag.md')
+    ->label('sdk.method', 'getDeployment')
+    ->label('sdk.description', '/docs/references/functions/get-deployment.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TAG)
+    ->label('sdk.response.model', Response::MODEL_DEPLOYMENT_LIST)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('tagId', '', new UID(), 'Tag ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($functionId, $tagId, $response, $dbForProject) {
+    ->action(function ($functionId, $deploymentId, $response, $dbForProject) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
 
@@ -716,17 +716,17 @@ App::get('/v1/functions/:functionId/tags/:tagId')
             throw new Exception('Function not found', 404);
         }
 
-        $tag = $dbForProject->getDocument('tags', $tagId);
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        if ($tag->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception('Tag not found', 404);
+        if ($deployment->getAttribute('functionId') !== $function->getId()) {
+            throw new Exception('Deployment not found', 404);
         }
 
-        if ($tag->isEmpty()) {
-            throw new Exception('Tag not found', 404);
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found', 404);
         }
 
-        $response->dynamic($tag, Response::MODEL_TAG);
+        $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
 App::delete('/v1/functions/:functionId/tags/:tagId')
