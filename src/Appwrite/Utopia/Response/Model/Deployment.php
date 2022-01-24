@@ -5,14 +5,14 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class Tag extends Model
+class Deployment extends Model
 {
     public function __construct()
     {
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Tag ID.',
+                'description' => 'Deployment ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
@@ -24,13 +24,13 @@ class Tag extends Model
             ])
             ->addRule('dateCreated', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'The tag creation date in Unix timestamp.',
+                'description' => 'The deployment creation date in Unix timestamp.',
                 'default' => 0,
                 'example' => 1592981250,
             ])
             ->addRule('entrypoint', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The entrypoint file to use to execute the tag code.',
+                'description' => 'The entrypoint file to use to execute the delpoyment code.',
                 'default' => '',
                 'example' => 'enabled',
             ])
@@ -41,13 +41,13 @@ class Tag extends Model
                 'example' => 128,
             ])
             // Build Status
-            // Failed - The tag build has failed. More details can usually be found in buildStderr
-            // Ready - The tag build was successful and the tag is ready to be deployed
-            // Processing - The tag is currently waiting to have a build triggered
-            // Building - The tag is currently being built
+            // Failed - The deployment build has failed. More details can usually be found in buildStderr
+            // Ready - The deployment build was successful and the deployment is ready to be deployed
+            // Processing - The deployment is currently waiting to have a build triggered
+            // Building - The deployment is currently being built
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The tags current built status',
+                'description' => 'The deployment\'s current built status',
                 'default' => '',
                 'example' => 'ready',
             ])
@@ -71,7 +71,7 @@ class Tag extends Model
             ])
             ->addRule('deploy', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether the tag should be automatically deployed.',
+                'description' => 'Whether the deployment should be automatically deployed.',
                 'default' => false,
                 'example' => true,
             ])
@@ -85,7 +85,7 @@ class Tag extends Model
      */
     public function getName():string
     {
-        return 'Tag';
+        return 'Deployment';
     }
 
     /**
@@ -95,6 +95,6 @@ class Tag extends Model
      */
     public function getType():string
     {
-        return Response::MODEL_TAG;
+        return Response::MODEL_DEPLOYMENT;
     }
 }

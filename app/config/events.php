@@ -149,7 +149,7 @@ return [
     ],
     'functions.deployments.create' => [
         'description' => 'This event triggers when a function delpoyment is created.',
-        'model' => Response::MODEL_TAG,
+        'model' => Response::MODEL_DEPLOYMENT,
         'note' => 'version >= 0.7',
     ],
     'functions.deployments.update' => [
