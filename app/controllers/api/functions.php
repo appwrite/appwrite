@@ -554,7 +554,7 @@ App::post('/v1/functions/:functionId/deployments')
 
         if ((bool) $deploy) {
             // Remove deploy for all other deployments.
-            $deployments = $dbForProject->find('tags', [
+            $deployments = $dbForProject->find('deployments', [
                 new Query('deploy', Query::TYPE_EQUAL, [true]),
                 new Query('functionId', Query::TYPE_EQUAL, [$functionId])
             ]);
