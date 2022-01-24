@@ -590,8 +590,7 @@ App::post('/v1/functions/:functionId/deployments')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         $ch = \curl_init();
-        // TODO: rename the tag endpoints to deployment in the executor
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/tag");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/deployment");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             'functionId' => $function->getId(),
