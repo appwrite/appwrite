@@ -195,7 +195,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
             'INTERNAL_RUNTIME_KEY' => $secret
         ]);
 
-        $vars = \array_merge($vars, $build->getAttribute('envVars', [])); // for gettng endpoint.
+        $vars = \array_merge($vars, $build->getAttribute('vars', [])); // for gettng endpoint.
 
         $container = 'appwrite-function-' . $tag->getId();
 
@@ -234,7 +234,9 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
         $device = Storage::getDevice('builds');
 
         if (!\file_exists($tagPathTargetDir)) {
-            if (!\mkdir($tagPathTargetDir, 0777, true)) {
+            if (@\mkdir($tagPathTargetDir, 0777, true)) {
+                \chmod($tagPathTargetDir, 0777);
+            } else {
                 throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
             }
         }
@@ -268,9 +270,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
                 ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', '256'))
                 ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '256'));
 
-            foreach ($vars as $key => $value) {
-                $vars[$key] = strval($value);
-            }
+            $vars = array_map(fn ($v) => strval($v), $vars);
 
             // Launch runtime server
             $id = $orchestration->run(
@@ -393,7 +393,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
         'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
     ]);
 
-    $vars = \array_merge($vars, $build->getAttribute('envVars', []));
+    $vars = \array_merge($vars, $build->getAttribute('vars', []));
 
     $container = 'appwrite-function-' . $tag->getId();
 
@@ -413,8 +413,8 @@ function execute(string $trigger, string $projectId, string $executionId, string
                 'sourceType' => Storage::DEVICE_LOCAL,
                 'stdout' => '',
                 'stderr' => '',
-                'buildTime' => 0,
-                'envVars' => [
+                'time' => 0,
+                'vars' => [
                     'ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint'),
                     'APPWRITE_FUNCTION_ID' => $function->getId(),
                     'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
@@ -489,7 +489,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
         'APPWRITE_FUNCTION_PROJECT_ID' => $projectId
     ]);
 
-    $vars = \array_merge($vars, $build->getAttribute('envVars', []));
+    $vars = \array_merge($vars, $build->getAttribute('vars', []));
 
     $stdout = '';
     $stderr = '';
@@ -511,7 +511,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
         $body = \json_encode([
             'path' => '/usr/code',
-            'file' => $build->getAttribute('envVars', [])['ENTRYPOINT_NAME'],
+            'file' => $build->getAttribute('vars', [])['ENTRYPOINT_NAME'],
             'env' => $vars,
             'payload' => $data,
             'timeout' => $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900))
@@ -835,8 +835,8 @@ App::post('/v1/tag')
                     'sourceType' => Storage::DEVICE_LOCAL,
                     'stdout' => '',
                     'stderr' => '',
-                    'buildTime' => 0,
-                    'envVars' => [
+                    'time' => 0,
+                    'vars' => [
                         'ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint'),
                         'APPWRITE_FUNCTION_ID' => $function->getId(),
                         'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
@@ -883,7 +883,7 @@ App::post('/v1/tag')
                 return;
             }
 
-            if ($tag->getAttribute('automaticDeploy') === true) {
+            if ($tag->getAttribute('deploy') === true) {
                 // Update the function document setting the tag as the active one
                 $function
                     ->setAttribute('tag', $tag->getId())
@@ -1015,7 +1015,9 @@ function runBuildStage(string $buildId, string $projectID): Document
 
         // Perform various checks
         if (!\file_exists($tagPathTargetDir)) {
-            if (!\mkdir($tagPathTargetDir, 0777, true)) {
+            if (@\mkdir($tagPathTargetDir, 0777, true)) {
+                \chmod($tagPathTargetDir, 0777);
+            } else {
                 throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
             }
         }
@@ -1035,23 +1037,24 @@ function runBuildStage(string $buildId, string $projectID): Document
             throw new Exception('Code is not readable: ' . $build->getAttribute('source', ''));
         }
 
-        $vars = $build->getAttribute('envVars', []);
+        $vars = $build->getAttribute('vars', []);
 
         // Start tracking time
         $buildStart = \microtime(true);
-        $buildTime = \time();
+        $time = \time();
 
         $orchestration
             ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
             ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
             ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
 
-        foreach ($vars as &$value) {
-            $value = strval($value);
-        }
+        $vars = array_map(fn ($v) => strval($v), $vars);
+        $path = '/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode';
 
-        if (!\file_exists('/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode')) {
-            if (!\mkdir('/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode', 0777, true)) {
+        if (!\file_exists($path)) {
+            if (@\mkdir($path, 0777, true)) {
+                \chmod($path, 0777);
+            } else {
                 throw new Exception('Can\'t create directory /tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode');
             }
         };
@@ -1064,7 +1067,7 @@ function runBuildStage(string $buildId, string $projectID): Document
             workdir: '/usr/code',
             labels: [
                 'appwrite-type' => 'function',
-                'appwrite-created' => strval($buildTime),
+                'appwrite-created' => strval($time),
                 'appwrite-runtime' => $build->getAttribute('runtime', ''),
                 'appwrite-project' => $projectID,
                 'appwrite-build' => $build->getId(),
@@ -1152,7 +1155,9 @@ function runBuildStage(string $buildId, string $projectID): Document
         $path = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
 
         if (!\file_exists(\dirname($path))) { // Checks if directory path to file exists
-            if (!@\mkdir(\dirname($path), 0777, true)) {
+            if (@\mkdir(\dirname($path), 0777, true)) {
+                \chmod(\dirname($path), 0777);
+            } else {
                 throw new Exception('Can\'t create directory: ' . \dirname($path));
             }
         }
@@ -1176,7 +1181,7 @@ function runBuildStage(string $buildId, string $projectID): Document
             ->setAttribute('status', 'ready')
             ->setAttribute('stdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
             ->setAttribute('stderr', \utf8_encode(\mb_substr($buildStderr, -4096)))
-            ->setAttribute('buildTime', $buildTime);
+            ->setAttribute('time', $time);
 
         // Update build with built code attribute
         $build = $database->updateDocument('builds', $buildId, $build);
@@ -1196,8 +1201,8 @@ function runBuildStage(string $buildId, string $projectID): Document
         if (isset($id)) {
             $orchestration->remove($id, true);
         }
-        $orchestrationPool->put(null);
 
+        $orchestrationPool->put($orchestration);
         $register->get('dbPool')->put($db);
         $register->get('redisPool')->put($redis);
 
