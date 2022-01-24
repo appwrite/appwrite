@@ -151,21 +151,14 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
     global $runtimes;
     global $activeFunctions;
 
-    var_dump("Im here 1");
-
     try {
         $orchestration = $orchestrationPool->get();
-        var_dump("Im here 2");
         $function = $database->getDocument('functions', $functionId);
-        var_dump("Im here 3");
         $tag = $database->getDocument('tags', $tagId);
-        var_dump("Im here 4");
 
         if ($tag->getAttribute('buildId') === null) {
             throw new Exception('Tag has no buildId');
         }
-
-        var_dump("Im here 5");
 
         // Grab Build Document
         $build = $database->getDocument('builds', $tag->getAttribute('buildId'));
@@ -176,8 +169,6 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
         if (\count($functions) > 0) {
             return;
         }
-
-        var_dump("Im here");
 
         // Generate random secret key
         $secret = \bin2hex(\random_bytes(16));
@@ -318,7 +309,8 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
             Console::info('Runtime server is ready to run');
         }
     } catch (\Throwable $th) {
-        $orchestrationPool->put($orchestration);
+        var_dump($th->getTraceAsString());
+        $orchestrationPool->put($orchestration ?? null);
         throw $th;
     } finally {
         $orchestrationPool->put($orchestration);
@@ -797,7 +789,7 @@ App::post('/v1/cleanup/tag')
     });
 
 
-App::post('/v1/create/runtime')
+App::post('/v1/executor/runtime')
     ->desc('Create a new runtime server')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('tagId', '', new UID(), 'Tag unique ID.')
@@ -857,6 +849,7 @@ App::post('/v1/build/:buildId') // Start a Build
                 throw new Exception('Build is already finished', 409);
             }
 
+            Console::success('Starting build ' . $buildId);
             // Build Code
             runBuildStage($buildId, $projectID, $dbForProject);
 

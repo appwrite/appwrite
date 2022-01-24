@@ -11,9 +11,13 @@ use Utopia\Config\Config;
 
 require_once __DIR__.'/../init.php';
 
+// Disable Auth since we already validate it in the API
+Authorization::disable();
+
 Console::title('Builds V1 Worker');
 Console::success(APP_NAME.' build worker v1 has started');
 
+// TODO: Executor should return appropriate response codes.
 class BuildsV1 extends Worker
 { 
 
@@ -35,14 +39,14 @@ class BuildsV1 extends Worker
             case BUILD_TYPE_TAG:
                 $functionId = $this->args['functionId'] ?? '';
                 $tagId = $this->args['tagId'] ?? '';
-                Console::success("Creating build for tag: $tagId");
+                Console::info("[ INFO ] Creating build for tag: $tagId");
                 $this->buildTag($projectId, $functionId, $tagId);
                 break;
 
             case BUILD_TYPE_RETRY:
                 $buildId = $this->args['buildId'] ?? '';
-                Console::success("Retrying build for id: $buildId");
-                $this->triggerBuildStage($projectId, $buildId,);
+                Console::info("[ INFO ] Retrying build for id: $buildId");
+                $this->triggerBuild($projectId, $buildId);
                 break;
 
             default:
@@ -51,7 +55,7 @@ class BuildsV1 extends Worker
         }
     }
 
-    protected function triggerBuildStage(string $projectId, string $buildId)
+    protected function triggerBuild(string $projectId, string $buildId)
     {
         // TODO: What is a reasonable time to wait for a build to complete?
         $ch = \curl_init();
@@ -95,7 +99,7 @@ class BuildsV1 extends Worker
     protected function triggerCreateRuntimeServer(string $projectId, string $functionId, string $tagId) 
     {
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/create/runtime");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/executor/runtime");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
@@ -120,7 +124,7 @@ class BuildsV1 extends Worker
 
         \curl_close($ch);
 
-        if ($responseStatus !== 200) {
+        if ($responseStatus >= 400) {
             throw new \Exception("Build failed with status code: $responseStatus");
         }
 
@@ -128,20 +132,13 @@ class BuildsV1 extends Worker
         if (isset($response['error'])) {
             throw new \Exception($response['error']);
         }
-
-        if (isset($response['success']) && $response['success'] === true) {
-            return;
-        } else {
-            throw new \Exception("Build failed");
-        }
     }
 
     protected function buildTag(string $projectId, string $functionId, string $tagId) 
     {
         $dbForProject = $this->getProjectDB($projectId);
         
-        // TODO: Why does it need to skip authorization?
-        $function = Authorization::skip(fn() => $dbForProject->getDocument('functions', $functionId));
+        $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
@@ -170,8 +167,8 @@ class BuildsV1 extends Worker
                 // TODO : What should be the read and write permissions for a build ? 
                 $dbForProject->createDocument('builds', new Document([
                     '$id' => $buildId,
-                    '$read' => ['role:all'],
-                    '$write' => ['role:all'],
+                    '$read' => [],
+                    '$write' => [],
                     'dateCreated' => time(),
                     'status' => 'processing',
                     'runtime' => $function->getAttribute('runtime'),
@@ -205,10 +202,10 @@ class BuildsV1 extends Worker
 
         // Build the Code
         try {
-            Console::success("Creating Build with id: $buildId");
+            Console::info("[ INFO ] Creating build with id: $buildId");
             $tag->setAttribute('status', 'building');
             $tag = $dbForProject->updateDocument('tags', $tagId, $tag);
-            $this->triggerBuildStage($projectId, $buildId);
+            $this->triggerBuild($projectId, $buildId);
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
             $tag->setAttribute('status', 'failed');
@@ -216,7 +213,7 @@ class BuildsV1 extends Worker
             return;
         }
         
-        Console::success("Build id: $buildId completed successfully");
+        Console::success("[ SUCCESS ] Build id: $buildId completed");
 
         // Update the schedule
         $schedule = $function->getAttribute('schedule', '');
@@ -237,14 +234,13 @@ class BuildsV1 extends Worker
                 ->setAttribute('tag', $tag->getId())
                 ->setAttribute('scheduleNext', (int)$next);
 
-            // TODO: Why should we disable auth  ?
-            $function = Authorization::skip(fn() => $dbForProject->updateDocument('functions', $functionId, $function));
+            $function = $dbForProject->updateDocument('functions', $functionId, $function);
         }
 
         // Deploy Runtime Server
         try {
-            Console::success("Creating Runtime Server");
-            $this->triggerCreateRuntimeServer($functionId, $projectId, $tagId, $dbForProject);
+            Console::info("[ INFO ] Creating runtime server");
+            $this->triggerCreateRuntimeServer($projectId, $functionId, $tagId, $dbForProject);
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
             $tag->setAttribute('status', 'failed');
@@ -252,7 +248,7 @@ class BuildsV1 extends Worker
             return;
         }
 
-        Console::success("Runtime Server created successfully");
+        Console::success("Runtime Server created");
     }
 
     public function shutdown(): void
