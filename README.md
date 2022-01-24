@@ -1,3 +1,6 @@
+<p align="right">
+    <a href="#translations">🌍 Translations</a>
+</p>
 <br />
 <p align="center">
     <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/appwrite.svg" alt="Appwrite Logo"></a>
@@ -170,3 +173,7 @@ Join our growing community around the world! See our official [Blog](https://med
 ## License
 
 This repository is available under the [BSD 3-Clause License](./LICENSE).
+
+## Translations
+- [English](README.md)
+- [简体中文](README-CN.md)
