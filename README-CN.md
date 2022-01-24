@@ -1,3 +1,6 @@
+<p align="right">
+    <a href="#其他语言">🌍 其他语言</a>
+</p>
 <br />
 <p align="center">
     <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/appwrite.svg" alt="Appwrite Logo"></a>
@@ -167,3 +170,7 @@ Appwrite API 界面层利用后台缓存和任务委派来提供极速的响应�
 ## 版权说明
 
 版权详情，访问 [BSD 3-Clause License](./LICENSE)。
+
+## 其他语言
+- [English](README.md)
+- [简体中文](README-CN.md)
