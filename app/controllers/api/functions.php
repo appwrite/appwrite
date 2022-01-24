@@ -586,7 +586,7 @@ App::post('/v1/functions/:functionId/deployments')
             ->setParam('storage', $deployment->getAttribute('size', 0))
         ;
 
-        // Send start build reqeust to executor using /v1/tag
+        // Send start build reqeust to executor using /v1/deployment
         $function = $dbForProject->getDocument('functions', $functionId);
 
         $ch = \curl_init();
