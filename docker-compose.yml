@@ -360,14 +360,8 @@ services:
 
   appwrite-executor:
     container_name: appwrite-executor
-    entrypoint:
-      - php
-      - -e
-      - /usr/src/code/app/executor.php
-      - -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
+    entrypoint: executor
     stop_signal: SIGINT
-    ports:
-      - "8080:8080"
     build:
       context: .
       args: 
@@ -410,10 +404,10 @@ services:
       - _APP_USAGE_STATS
       - _APP_STATSD_HOST
       - _APP_STATSD_PORT
-      - DOCKERHUB_PULL_USERNAME
-      - DOCKERHUB_PULL_PASSWORD
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - DOCKERHUB_PULL_USERNAME
+      - DOCKERHUB_PULL_PASSWORD
 
   appwrite-worker-mails:
     entrypoint: worker-mails
