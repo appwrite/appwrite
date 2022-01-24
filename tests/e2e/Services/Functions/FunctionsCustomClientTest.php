@@ -73,7 +73,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(201, $function['headers']['status-code']);
 
-        $tag = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/tags', [
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/deployments', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -82,19 +82,19 @@ class FunctionsCustomClientTest extends Scope
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
 
-        $tagId = $tag['body']['$id'] ?? '';
+        $deploymentId = $deployment['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $tag['headers']['status-code']);
+        $this->assertEquals(201, $deployment['headers']['status-code']);
 
-        // Wait for tag to be built.
+        // Wait for deployment to be built.
         sleep(5);
 
-        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$function['body']['$id'].'/tag', [
+        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$function['body']['$id'].'/deployment', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'tag' => $tagId,
+            'deployment' => $deploymentId,
         ]);
 
         $this->assertEquals(200, $function['headers']['status-code']);
