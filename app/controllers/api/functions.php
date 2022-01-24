@@ -729,24 +729,24 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
-App::delete('/v1/functions/:functionId/tags/:tagId')
+App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
-    ->desc('Delete Tag')
+    ->desc('Delete Deployment')
     ->label('scope', 'functions.write')
-    ->label('event', 'functions.tags.delete')
+    ->label('event', 'functions.deployments.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'deleteTag')
-    ->label('sdk.description', '/docs/references/functions/delete-tag.md')
+    ->label('sdk.method', 'deleteDeployment')
+    ->label('sdk.description', '/docs/references/functions/delete-deployment.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('tagId', '', new UID(), 'Tag ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('project')
-    ->action(function ($functionId, $tagId, $response, $dbForProject, $usage, $project) {
+    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $usage, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
@@ -758,22 +758,22 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
             throw new Exception('Function not found', 404);
         }
         
-        $tag = $dbForProject->getDocument('tags', $tagId);
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        if ($tag->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception('Tag not found', 404);
+        if ($deployment->getAttribute('functionId') !== $function->getId()) {
+            throw new Exception('Deployment not found', 404);
         }
 
-        if ($tag->isEmpty()) {
-            throw new Exception('Tag not found', 404);
+        if ($deployment->isEmpty()) {
+            throw new Exception('deployment not found', 404);
         }
 
-        // Request executor to delete tag containers
+        // Request executor to delete deployment containers
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/cleanup/tag");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/cleanup/deployment");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-            'tagId' => $tagId
+            'deploymentId' => $deploymentId
         ]));
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
@@ -802,20 +802,20 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
 
         $device = Storage::getDevice('functions');
 
-        if ($device->delete($tag->getAttribute('path', ''))) {
-            if (!$dbForProject->deleteDocument('tags', $tag->getId())) {
-                throw new Exception('Failed to remove tag from DB', 500);
+        if ($device->delete($deployment->getAttribute('path', ''))) {
+            if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                throw new Exception('Failed to remove deployment from DB', 500);
             }
         }
 
-        if($function->getAttribute('tag') === $tag->getId()) { // Reset function tag
+        if($function->getAttribute('deployment') === $deployment->getId()) { // Reset function deployment
             $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
-                'tag' => '',
+                'deployment' => '',
             ])));
         }
 
         $usage
-            ->setParam('storage', $tag->getAttribute('size', 0) * -1)
+            ->setParam('storage', $deployment->getAttribute('size', 0) * -1)
         ;
 
         $response->noContent();
