@@ -64,7 +64,7 @@ App::post('/v1/functions')
             'status' => 'disabled',
             'name' => $name,
             'runtime' => $runtime,
-            'tag' => '',
+            'deployment' => '',
             'vars' => $vars,
             'events' => $events,
             'schedule' => $schedule,
@@ -314,8 +314,8 @@ App::put('/v1/functions/:functionId')
         }
 
         $original = $function->getAttribute('schedule', '');
-        $cron = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
+        $cron = (!empty($function->getAttribute('deployment', null)) && !empty($schedule)) ? new CronExpression($schedule) : null;
+        $next = (!empty($function->getAttribute('deployment', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
@@ -343,38 +343,38 @@ App::put('/v1/functions/:functionId')
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
-App::patch('/v1/functions/:functionId/tag')
+App::patch('/v1/functions/:functionId/deployment')
     ->groups(['api', 'functions'])
-    ->desc('Update Function Tag')
+    ->desc('Update Function Deployment')
     ->label('scope', 'functions.write')
-    ->label('event', 'functions.tags.update')
+    ->label('event', 'functions.deployments.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'updateTag')
-    ->label('sdk.description', '/docs/references/functions/update-function-tag.md')
+    ->label('sdk.method', 'updateDeployment')
+    ->label('sdk.description', '/docs/references/functions/update-function-deployment.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('tag', '', new UID(), 'Tag ID.')
+    ->param('deployment', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->action(function ($functionId, $tag, $response, $dbForProject, $project) {
+    ->action(function ($functionId, $deployment, $response, $dbForProject, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
 
         $function = $dbForProject->getDocument('functions', $functionId);
-        $tag = $dbForProject->getDocument('tags', $tag);
-        $build = $dbForProject->getDocument('builds', $tag->getAttribute('buildId'));
+        $deployment = $dbForProject->getDocument('deployments', $deployment);
+        $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
 
-        if ($tag->isEmpty()) {
-            throw new Exception('Tag not found', 404);
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found', 404);
         }
 
         if ($build->isEmpty()) {
@@ -386,11 +386,11 @@ App::patch('/v1/functions/:functionId/tag')
         }
 
         $schedule = $function->getAttribute('schedule', '');
-        $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
+        $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
+        $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
-            'tag' => $tag->getId(),
+            'deployment' => $deployment->getId(),
             'scheduleNext' => (int)$next,
         ])));
 
