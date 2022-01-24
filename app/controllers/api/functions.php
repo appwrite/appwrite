@@ -853,14 +853,14 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception('Function not found', 404);
         }
 
-        $tag = Authorization::skip(fn() => $dbForProject->getDocument('tags', $function->getAttribute('tag')));
+        $deployment = Authorization::skip(fn() => $dbForProject->getDocument('deployments', $function->getAttribute('deployment')));
 
-        if ($tag->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
+        if ($deployment->getAttribute('functionId') !== $function->getId()) {
+            throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404);
         }
 
-        if ($tag->isEmpty()) {
-            throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404);
         }
 
         $validator = new Authorization('execute');
@@ -877,7 +877,7 @@ App::post('/v1/functions/:functionId/executions')
             '$write' => ['role:all'],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
-            'tagId' => $tag->getId(),
+            'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event
             'status' => 'waiting', // waiting / processing / completed / failed
             'statusCode' => 0,
