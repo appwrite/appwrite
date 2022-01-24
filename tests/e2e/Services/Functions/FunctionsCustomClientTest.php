@@ -208,7 +208,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals('completed', $executions['body']['status']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
         $this->assertEquals('Test', $output['APPWRITE_FUNCTION_NAME']);
-        $this->assertEquals($tagId, $output['APPWRITE_FUNCTION_TAG']);
+        $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_TAG']);
         $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
         $this->assertEquals('PHP', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
         $this->assertEquals('8.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
