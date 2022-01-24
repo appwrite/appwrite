@@ -174,7 +174,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                         <input type="email" class="full-width" id="user-email" name="email" required autocomplete="off" />
 
                         <label for="user-password">Password</label>
-                        <input type="password" class="full-width" id="user-password" name="password" required pattern=".{6,}" title="Six or more characters" autocomplete="off" />
+                        <input type="password" class="full-width" id="user-password" name="password" required minlength="8" title="Eight or more characters" autocomplete="off" />
 
                         <hr />
 
@@ -353,13 +353,13 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                     data-failure-param-alert-text="Failed to update project users limit"
                     data-failure-param-alert-classname="error">
 
-                    <input name="limit" id="users-limit" type="number" data-ls-bind="{{console-project.authLimit}}" data-cast-to="numeric" min="0" />
+                    <input name="limit" id="users-limit" type="number" data-ls-bind="{{console-project.authLimit}}" data-cast-to="numeric" min="0" max="<?php echo APP_LIMIT_USERS; ?>" />
 
                     <div class="info row thin margin-bottom margin-top">
                         <div class="col span-1">
                             <i class="icon-info-circled text-sign"></i>
                         </div>
-                        <div class="col span-11">This limit will prevent new users from signing up for your project, no matter what auth method has been used. You will still be able to create users and team memberships from your Appwrite console. For an unlimited amount of users, set the limit to 0.</div>
+                        <div class="col span-11">This limit will prevent new users from signing up for your project, no matter what auth method has been used. You will still be able to create users and team memberships from your Appwrite console. For an unlimited amount of users, set the limit to 0. Max limit is <?php echo number_format(APP_LIMIT_USERS); ?>.</div>
                     </div>
 
                     <button>Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>

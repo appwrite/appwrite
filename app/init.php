@@ -86,6 +86,9 @@ const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
+// Database Reconnect
+const DATABASE_RECONNECT_SLEEP = 2;
+const DATABASE_RECONNECT_MAX_ATTEMPTS = 10;
 // Database Worker Types
 const DATABASE_TYPE_CREATE_ATTRIBUTE = 'createAttribute';
 const DATABASE_TYPE_CREATE_INDEX = 'createIndex';
@@ -774,18 +777,6 @@ App::setResource('console', function() {
         'webhooks' => [],
         'keys' => [],
         'platforms' => [
-            [
-                '$collection' => 'platforms',
-                'name' => 'Production',
-                'type' => 'web',
-                'hostname' => 'appwrite.io',
-            ],
-            [
-                '$collection' => 'platforms',
-                'name' => 'Development',
-                'type' => 'web',
-                'hostname' => 'appwrite.test',
-            ],
             [
                 '$collection' => 'platforms',
                 'name' => 'Localhost',

@@ -126,6 +126,39 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEmpty($collections['body']['collections']);
 
         /**
+         * Test for Search
+         */
+        $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'first'
+        ]);
+
+        $this->assertEquals(1, $collections['body']['sum']);
+        $this->assertEquals('first', $collections['body']['collections'][0]['$id']);
+
+        $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'Test'
+        ]);
+        
+        $this->assertEquals(2, $collections['body']['sum']);
+        $this->assertEquals('Test 1', $collections['body']['collections'][0]['name']);
+        $this->assertEquals('Test 2', $collections['body']['collections'][1]['name']);
+
+        $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'Nonexistent'
+        ]);
+        
+        $this->assertEquals(0, $collections['body']['sum']);
+
+        /**
          * Test for FAILURE
          */
         $response = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([

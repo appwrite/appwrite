@@ -39,14 +39,14 @@ App::post('/v1/functions')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
-    ->param('functionId', '', new CustomId(), 'Function ID. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('functionId', '', new CustomId(), 'Function ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('execute', [], new ArrayList(new Text(64)), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
     ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
+    ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function ($functionId, $name, $execute, $runtime, $vars, $events, $schedule, $timeout, $response, $dbForProject) {
@@ -294,7 +294,7 @@ App::put('/v1/functions/:functionId')
     ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
     ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, new Range(1, 900), 'Maximum execution time in seconds.', true)
+    ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
@@ -714,7 +714,7 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
         }
 
-        $validator = new Authorization($function, 'execute');
+        $validator = new Authorization('execute');
 
         if (!$validator->isValid($function->getAttribute('execute'))) { // Check if user has write access to execute function
             throw new Exception($validator->getDescription(), 401);
