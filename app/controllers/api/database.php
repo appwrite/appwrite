@@ -177,11 +177,13 @@ App::post('/v1/database/collections')
                 'name' => $name,
                 'search' => implode(' ', [$collectionId, $name]),
             ]));
+
+            $dbForProject->createCollection('collection_' . $collectionId);
         } catch (DuplicateException $th) {
             throw new Exception('Collection already exists', 409);
+        } catch (LimitException $th) {
+            throw new Exception('Collection limit exceeded', 400);
         }
-
-        $dbForProject->createCollection('collection_' . $collectionId);
 
         $audits
             ->setParam('event', 'database.collections.create')
