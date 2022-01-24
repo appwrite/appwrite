@@ -45,7 +45,7 @@ class Build extends Model
                 'default' => '',
                 'example' => '',
             ])
-            ->addRule('buildTime', [
+            ->addRule('time', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'The build time in seconds.',
                 'default' => 0,

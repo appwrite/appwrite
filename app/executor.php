@@ -183,7 +183,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
         'INTERNAL_RUNTIME_KEY' => $secret
     ]);
 
-    $vars = \array_merge($vars, $build->getAttribute('envVars', [])); // for gettng endpoint.
+    $vars = \array_merge($vars, $build->getAttribute('vars', [])); // for gettng endpoint.
 
     $container = 'appwrite-function-' . $tag->getId();
 
@@ -375,7 +375,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
         'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
     ]);
 
-    $vars = \array_merge($vars, $build->getAttribute('envVars', []));
+    $vars = \array_merge($vars, $build->getAttribute('vars', []));
 
     $container = 'appwrite-function-' . $tag->getId();
 
@@ -395,8 +395,8 @@ function execute(string $trigger, string $projectId, string $executionId, string
                 'sourceType' => Storage::DEVICE_LOCAL,
                 'stdout' => '',
                 'stderr' => '',
-                'buildTime' => 0,
-                'envVars' => [
+                'time' => 0,
+                'vars' => [
                     'ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint'),
                     'APPWRITE_FUNCTION_ID' => $function->getId(),
                     'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
@@ -471,7 +471,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
         'APPWRITE_FUNCTION_PROJECT_ID' => $projectId
     ]);
 
-    $vars = \array_merge($vars, $build->getAttribute('envVars', []));
+    $vars = \array_merge($vars, $build->getAttribute('vars', []));
 
     $stdout = '';
     $stderr = '';
@@ -493,7 +493,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
         $body = \json_encode([
             'path' => '/usr/code',
-            'file' => $build->getAttribute('envVars', [])['ENTRYPOINT_NAME'],
+            'file' => $build->getAttribute('vars', [])['ENTRYPOINT_NAME'],
             'env' => $vars,
             'payload' => $data,
             'timeout' => $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900))
@@ -805,8 +805,8 @@ App::post('/v1/tag')
                     'sourceType' => Storage::DEVICE_LOCAL,
                     'stdout' => '',
                     'stderr' => '',
-                    'buildTime' => 0,
-                    'envVars' => [
+                    'time' => 0,
+                    'vars' => [
                         'ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint'),
                         'APPWRITE_FUNCTION_ID' => $function->getId(),
                         'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
@@ -846,7 +846,7 @@ App::post('/v1/tag')
                 return;
             }
 
-            if ($tag->getAttribute('automaticDeploy') === true) {
+            if ($tag->getAttribute('deploy') === true) {
                 // Update the function document setting the tag as the active one
                 $function
                     ->setAttribute('tag', $tag->getId())
@@ -991,11 +991,11 @@ function runBuildStage(string $buildId, string $projectID, Database $database): 
             throw new Exception('Code is not readable: ' . $build->getAttribute('source', ''));
         }
 
-        $vars = $build->getAttribute('envVars', []);
+        $vars = $build->getAttribute('vars', []);
 
         // Start tracking time
         $buildStart = \microtime(true);
-        $buildTime = \time();
+        $time = \time();
 
         $orchestration
             ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
@@ -1020,7 +1020,7 @@ function runBuildStage(string $buildId, string $projectID, Database $database): 
             workdir: '/usr/code',
             labels: [
                 'appwrite-type' => 'function',
-                'appwrite-created' => strval($buildTime),
+                'appwrite-created' => strval($time),
                 'appwrite-runtime' => $build->getAttribute('runtime', ''),
                 'appwrite-project' => $projectID,
                 'appwrite-build' => $build->getId(),
@@ -1132,7 +1132,7 @@ function runBuildStage(string $buildId, string $projectID, Database $database): 
             ->setAttribute('status', 'ready')
             ->setAttribute('stdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
             ->setAttribute('stderr', \utf8_encode(\mb_substr($buildStderr, -4096)))
-            ->setAttribute('buildTime', $buildTime);
+            ->setAttribute('time', $time);
 
         // Update build with built code attribute
         $build = $database->updateDocument('builds', $buildId, $build);

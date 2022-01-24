@@ -2015,7 +2015,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'automaticDeploy',
+                '$id' => 'deploy',
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
                 'size' => 0,
@@ -2116,7 +2116,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'buildTime',
+                '$id' => 'time',
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -2127,7 +2127,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'envVars',
+                '$id' => 'vars',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,

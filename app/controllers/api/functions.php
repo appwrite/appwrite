@@ -496,14 +496,14 @@ App::post('/v1/functions/:functionId/tags')
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
     ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
-    ->param('automaticDeploy', false, new Boolean(true), 'Automatically deploy the function when it is finished building.', false)
+    ->param('deploy', false, new Boolean(true), 'Automatically deploy the function when it is finished building.', false)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('user')
     ->inject('project')
-    ->action(function ($functionId, $entrypoint, $file, $automaticDeploy, $request, $response, $dbForProject, $usage, $user, $project) {
+    ->action(function ($functionId, $entrypoint, $file, $deploy, $request, $response, $dbForProject, $usage, $user, $project) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
@@ -552,15 +552,15 @@ App::post('/v1/functions/:functionId/tags')
             throw new Exception('Failed moving file', 500);
         }
 
-        if ((bool) $automaticDeploy) {
-            // Remove automaticDeploy for all other tags.
+        if ((bool) $deploy) {
+            // Remove deploy for all other tags.
             $tags = $dbForProject->find('tags', [
-                new Query('automaticDeploy', Query::TYPE_EQUAL, [true]),
+                new Query('deploy', Query::TYPE_EQUAL, [true]),
                 new Query('functionId', Query::TYPE_EQUAL, [$functionId])
             ]);
 
             foreach ($tags as $tag) {
-                $tag->setAttribute('automaticDeploy', false);
+                $tag->setAttribute('deploy', false);
                 $dbForProject->updateDocument('tags', $tag->getId(), $tag);
             }
         }
@@ -579,7 +579,7 @@ App::post('/v1/functions/:functionId/tags')
             'status' => 'processing',
             'buildStdout' => '',
             'buildStderr' => '',
-            'automaticDeploy' => ($automaticDeploy === 'true'),
+            'deploy' => ($deploy === 'true'),
         ]));
 
         $usage
@@ -1056,7 +1056,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
 
 App::get('/v1/builds')
     ->groups(['api', 'functions'])
-    ->desc('Get Builds')
+    ->desc('List Builds')
     ->label('scope', 'execution.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
