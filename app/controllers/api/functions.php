@@ -343,7 +343,7 @@ App::put('/v1/functions/:functionId')
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
-App::patch('/v1/functions/:functionId/deployment')
+App::patch('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
     ->desc('Update Function Deployment')
     ->label('scope', 'functions.write')
