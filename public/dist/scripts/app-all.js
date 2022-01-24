@@ -1,5 +1,5 @@
 
-import'isomorphic-form-data';import{fetch}from'cross-fetch';function __awaiter(thisArg,_arguments,P,generator){function adopt(value){return value instanceof P?value:new P(function(resolve){resolve(value);});}
+(function(exports,isomorphicFormData,crossFetch){'use strict';function __awaiter(thisArg,_arguments,P,generator){function adopt(value){return value instanceof P?value:new P(function(resolve){resolve(value);});}
 return new(P||(P=Promise))(function(resolve,reject){function fulfilled(value){try{step(generator.next(value));}catch(e){reject(e);}}
 function rejected(value){try{step(generator["throw"](value));}catch(e){reject(e);}}
 function step(result){result.done?resolve(result.value):adopt(result.value).then(fulfilled,rejected);}
@@ -590,7 +590,7 @@ if(method==='GET'){for(const[key,value]of Object.entries(this.flatten(params))){
 else{switch(headers['content-type']){case'application/json':options.body=JSON.stringify(params);break;case'multipart/form-data':let formData=new FormData();for(const key in params){if(Array.isArray(params[key])){params[key].forEach((value)=>{formData.append(key+'[]',value);});}
 else{formData.append(key,params[key]);}}
 options.body=formData;delete headers['content-type'];break;}}
-try{let data=null;const response=yield fetch(url.toString(),options);if((_b=response.headers.get('content-type'))===null||_b===void 0?void 0:_b.includes('application/json')){data=yield response.json();}
+try{let data=null;const response=yield crossFetch.fetch(url.toString(),options);if((_b=response.headers.get('content-type'))===null||_b===void 0?void 0:_b.includes('application/json')){data=yield response.json();}
 else{data={message:yield response.text()};}
 if(400<=response.status){throw new AppwriteException(data===null||data===void 0?void 0:data.message,response.status,data);}
 const cookieFallback=response.headers.get('X-Fallback-Cookies');if(typeof window!=='undefined'&&window.localStorage&&cookieFallback){window.console.warn('Appwrite is using localStorage for session management. Increase your security by adding a custom domain as your API endpoint.');window.localStorage.setItem('cookieFallback',cookieFallback);}
@@ -603,7 +603,7 @@ return output;}}
 class Query{}
 Query.equal=(attribute,value)=>Query.addQuery(attribute,"equal",value);Query.notEqual=(attribute,value)=>Query.addQuery(attribute,"notEqual",value);Query.lesser=(attribute,value)=>Query.addQuery(attribute,"lesser",value);Query.lesserEqual=(attribute,value)=>Query.addQuery(attribute,"lesserEqual",value);Query.greater=(attribute,value)=>Query.addQuery(attribute,"greater",value);Query.greaterEqual=(attribute,value)=>Query.addQuery(attribute,"greaterEqual",value);Query.search=(attribute,value)=>Query.addQuery(attribute,"search",value);Query.addQuery=(attribute,oper,value)=>value instanceof Array?`${attribute}.${oper}(${value
         .map((v) => Query.parseValues(v))
-        .join(",")})`:`${attribute}.${oper}(${Query.parseValues(value)})`;Query.parseValues=(value)=>typeof value==="string"||value instanceof String?`"${value}"`:`${value}`;export{Appwrite,Query};(function(global,factory){typeof exports==='object'&&typeof module!=='undefined'?module.exports=factory():typeof define==='function'&&define.amd?define(factory):(global=typeof globalThis!=='undefined'?globalThis:global||self,global.Chart=factory());})(this,(function(){'use strict';function fontString(pixelSize,fontStyle,fontFamily){return fontStyle+' '+pixelSize+'px '+fontFamily;}
+        .join(",")})`:`${attribute}.${oper}(${Query.parseValues(value)})`;Query.parseValues=(value)=>typeof value==="string"||value instanceof String?`"${value}"`:`${value}`;exports.Appwrite=Appwrite;exports.Query=Query;Object.defineProperty(exports,'__esModule',{value:true});}(this.window=this.window||{},null,window));(function(global,factory){typeof exports==='object'&&typeof module!=='undefined'?module.exports=factory():typeof define==='function'&&define.amd?define(factory):(global=typeof globalThis!=='undefined'?globalThis:global||self,global.Chart=factory());})(this,(function(){'use strict';function fontString(pixelSize,fontStyle,fontFamily){return fontStyle+' '+pixelSize+'px '+fontFamily;}
 const requestAnimFrame=(function(){if(typeof window==='undefined'){return function(callback){return callback();};}
 return window.requestAnimationFrame;}());function throttled(fn,thisArg,updateFn){const updateArgs=updateFn||((args)=>Array.prototype.slice.call(args));let ticking=false;let args=[];return function(...rest){args=updateArgs(rest);if(!ticking){ticking=true;requestAnimFrame.call(window,()=>{ticking=false;fn.apply(thisArg,args);});}};}
 function debounce(fn,delay){let timeout;return function(...args){if(delay){clearTimeout(timeout);timeout=setTimeout(fn,delay,args);}else{fn.apply(this,args);}
