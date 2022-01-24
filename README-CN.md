@@ -16,7 +16,7 @@
 [![翻译](https://img.shields.io/badge/translate-f02e65?style=flat-square)](docs/tutorials/add-translations.md)
 [![周边商店](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io)
 
-Appwrite 是一个可应用于网页，移动，和后端开发的端到端后端平台, 以一系列 Docker 容器化的微服务形式包装发行。Appwrite 以高度抽象化的界面简化了从零编写 API 的繁琐过程，在保证软件安全的前提下给开发者一个高效的开发过程。
+Appwrite是一个基于dcoker的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，以及后端。Appwrite 通过视觉化界面极简了从零编写 API 的繁琐过程，在保证软件安全的前提下为开发者创造了一个高效的开发环境。
 
 Appwrite 可以提供给开发者用户验证，外部授权，用户数据读写检索，文件储存, 图像处理，云函数计算，[等多种服务]（https：/ /appwrite.io/docs）。
 
@@ -82,7 +82,7 @@ docker run -it --rm ,
     appwrite/appwrite:0.12.1
 ```
 
-运行后，可以在浏览器上访问 http://localhost 找到 Appwrite 控制台。请注意，在非 Linux 本机主机上，安装完成后服务器可能需要几分钟才能启动。
+运行后，可以在浏览器上访问 http://localhost 找到 Appwrite 控制台。在非 Linux 的本机主机上完成安装后，服务器可能需要几分钟才能启动。
 
 
 需要自定义容器构架，请查看我们的 Docker [环境变量](https://appwrite.io/docs/environment-variables) 文档。您还可以参考我们的 [docker-compose.yml](https://gist.github.com/eldadfux/977869ff6bdd7312adfd4e629ee15cc5#file-docker-compose-yml) 文件手动设置环境。
@@ -158,7 +158,7 @@ Appwrite API 界面层利用后台缓存和任务委派来提供极速的响应�
 
 ## 安全
 
-对于安全问题，请发送电子邮件至 [security@appwrite.io](mailto:security@appwrite.io)，而不是在 GitHub 上发布公开问题。
+为了保护您的隐私，请避免在GitHub 上发布安全问题。发送问题至 security@appwrite.io，我们将为您做更细致的解答。
 
 ## 订阅我们
 
