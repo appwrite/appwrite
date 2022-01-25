@@ -367,7 +367,7 @@ App::patch('/v1/functions/:functionId/tag')
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $tag = $dbForProject->getDocument('tags', $tag);
-        $build = $dbForProject->getDocument('builds', $tag->getAttribute('buildId'));
+        $build = $dbForProject->getDocument('builds', $tag->getAttribute('buildId', ''));
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
@@ -433,11 +433,8 @@ App::delete('/v1/functions/:functionId')
 
         // Request executor to delete tag containers
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/cleanup/function");
-        \curl_setopt($ch, CURLOPT_POST, true);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-            'functionId' => $functionId
-        ]));
+        \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/$functionId");
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
         \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
@@ -743,11 +740,8 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
 
         // Request executor to delete tag containers
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/cleanup/tag");
-        \curl_setopt($ch, CURLOPT_POST, true);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-            'tagId' => $tagId
-        ]));
+        \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/tags/$tagId");
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
         \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
@@ -901,13 +895,12 @@ App::post('/v1/functions/:functionId/executions')
 
         // Directly execute function.
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/execute");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/{$function->getId()}/executions");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             'trigger' => 'http',
             'projectId' => $project->getId(),
             'executionId' => $execution->getId(),
-            'functionId' => $function->getId(),
             'data' => $data,
             'webhooks' => $project->getAttribute('webhooks', []),
             'userId' => $user->getId(),

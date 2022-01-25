@@ -21,14 +21,12 @@ Console::success(APP_NAME.' build worker v1 has started');
 class BuildsV1 extends Worker
 { 
 
-    public function getName(): string {
+    public function getName(): string 
+    {
         return "builds";
     }
 
-    public function init(): void
-    {
-        Console::success("Initializing...");
-    }
+    public function init(): void {}
 
     public function run(): void
     {
@@ -59,7 +57,7 @@ class BuildsV1 extends Worker
     {
         // TODO: What is a reasonable time to wait for a build to complete?
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/build/$buildId");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/builds/$buildId");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
@@ -88,7 +86,7 @@ class BuildsV1 extends Worker
     protected function triggerCreateRuntimeServer(string $projectId, string $functionId, string $tagId) 
     {
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/executor/runtime");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/$functionId/tags/$tagId/runtime");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
@@ -98,10 +96,6 @@ class BuildsV1 extends Worker
             'x-appwrite-project: '.$projectId,
             'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
         ]);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-            'functionId' => $functionId,
-            'tagId' => $tagId
-        ]));
 
         $response = \curl_exec($ch);
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -161,8 +155,8 @@ class BuildsV1 extends Worker
                     'sourceType' => Storage::DEVICE_LOCAL,
                     'stdout' => '',
                     'stderr' => '',
-                    'buildTime' => 0,
-                    'envVars' => [
+                    'time' => 0,
+                    'vars' => [
                         'ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint'),
                         'APPWRITE_FUNCTION_ID' => $function->getId(),
                         'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
@@ -232,11 +226,8 @@ class BuildsV1 extends Worker
             return;
         }
 
-        Console::success("Runtime Server created");
+        Console::success("[ SUCCESS ] Runtime Server created");
     }
 
-    public function shutdown(): void
-    {
-        Console::success("Shutting Down...");
-    }
+    public function shutdown(): void {}
 }

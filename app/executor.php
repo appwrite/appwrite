@@ -312,7 +312,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
                 'key' => $secret,
             ]);
 
-            Console::info('Runtime Server created in ' . ($executionEnd - $executionStart) . ' seconds');
+            Console::success('Runtime Server created in ' . ($executionEnd - $executionStart) . ' seconds');
         } else {
             Console::info('Runtime server is ready to run');
         }
@@ -601,7 +601,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
     $executionTime = ($executionEnd - $executionStart);
     $functionStatus = ($statusCode >= 200 && $statusCode < 300) ? 'completed' : 'failed';
 
-    Console::info('Function executed in ' . ($executionEnd - $executionStart) . ' seconds, status: ' . $functionStatus);
+    Console::success('Function executed in ' . ($executionEnd - $executionStart) . ' seconds, status: ' . $functionStatus);
 
     $execution->setAttribute('tagId', $tag->getId())
         ->setAttribute('status', $functionStatus)
@@ -914,7 +914,7 @@ function runBuildStage(string $buildId, string $projectID): Document
     return $build;
 }
 
-App::post('/v1/execute') // Define Route
+App::post('/v1/functions/:functionId/executions')
     ->desc('Execute a function')
     ->param('trigger', '', new Text(1024))
     ->param('projectId', '', new Text(1024))
@@ -932,21 +932,17 @@ App::post('/v1/execute') // Define Route
         function (string $trigger, string $projectId, string $executionId, string $functionId, string $event, string $eventData, string $data, array $webhooks, string $userId, string $jwt, Response $response, Database $dbForProject) {
             try {
                 $data = execute($trigger, $projectId, $executionId, $functionId, $dbForProject, $event, $eventData, $data, $webhooks, $userId, $jwt);
-                $response->json($data);
+                $response
+                    ->setStatusCode(Response::STATUS_CODE_OK)
+                    ->send();
             } catch (Exception $e) {
                 logError($e, 'executeEndpoint');
-
-                $response
-                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-                    ->addHeader('Expires', '0')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->json(['error' => $e->getMessage()]);
+                throw $e;
             }
         }
     );
 
-// Cleanup Endpoints used internally by appwrite when a function or tag gets deleted to also clean up their containers
-App::post('/v1/cleanup/function')
+App::delete('/v1/functions/:functionId')
     ->param('functionId', '', new UID())
     ->inject('response')
     ->inject('dbForProject')
@@ -1003,7 +999,39 @@ App::post('/v1/cleanup/function')
         }
     );
 
-App::post('/v1/cleanup/tag')
+App::post('/v1/functions/:functionId/tags/:tagId/runtime')
+    ->desc('Create a new runtime server for a tag')
+    ->param('functionId', '', new UID(), 'Function unique ID.')
+    ->param('tagId', '', new UID(), 'Tag unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('projectID')
+    ->action(function (string $functionId, string $tagId, Response $response, Database $dbForProject, string $projectID) use ($runtimes) {
+        // Get function document
+        $function = $dbForProject->getDocument('functions', $functionId);
+        if ($function->isEmpty()) {
+            throw new Exception('Function not found', 404);
+        }
+
+        // Get tag document
+        $tag = $dbForProject->getDocument('tags', $tagId);
+        if ($tag->isEmpty()) {
+            throw new Exception('Tag not found', 404);
+        }
+
+        $runtime = $runtimes[$function->getAttribute('runtime')] ?? null;
+        if (\is_null($runtime)) {
+            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" not found.', 404);
+        }
+
+        createRuntimeServer($functionId, $projectID, $tagId, $dbForProject);
+
+        $response
+            ->setStatusCode(201)
+            ->send();
+    });
+
+App::delete('/v1/tags/:tagId')
     ->param('tagId', '', new UID(), 'Tag unique ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1049,130 +1077,7 @@ App::post('/v1/cleanup/tag')
         return $response->json(['success' => true]);
     });
 
-App::post('/v1/tag')
-    ->desc('Create a new build')
-    ->param('functionId', '', new UID(), 'Function unique ID.')
-    ->param('tagId', '', new UID(), 'Tag unique ID.')
-    ->param('userId', '', new UID(), 'User unique ID.', true)
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('projectID')
-    ->inject('register')
-    ->action(function (string $functionId, string $tagId, string $userId, Response $response, Database $dbForProject, string $projectID, Registry $register) use ($runtimes) {
-        // Get function document
-        $function = $dbForProject->getDocument('functions', $functionId);
-        // Get tag document
-        $tag = $dbForProject->getDocument('tags', $tagId);
-
-        // Check if both documents exist
-        if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404);
-        }
-
-        if ($tag->isEmpty()) {
-            throw new Exception('Tag not found', 404);
-        }
-
-        $runtime = $runtimes[$function->getAttribute('runtime')] ?? null;
-
-        if (\is_null($runtime)) {
-            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
-        }
-
-        // Create a new build entry
-        $buildId = $dbForProject->getId();
-
-        if ($tag->getAttribute('buildId')) {
-            $buildId = $tag->getAttribute('buildId');
-        } else {
-            try {
-                $dbForProject->createDocument('builds', new Document([
-                    '$id' => $buildId,
-                    '$read' => (!empty($userId)) ? ['user:' . $userId] : [],
-                    '$write' => ['role:all'],
-                    'dateCreated' => time(),
-                    'status' => 'processing',
-                    'runtime' => $function->getAttribute('runtime'),
-                    'outputPath' => '',
-                    'source' => $tag->getAttribute('path'),
-                    'sourceType' => Storage::DEVICE_LOCAL,
-                    'stdout' => '',
-                    'stderr' => '',
-                    'time' => 0,
-                    'vars' => [
-                        'ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint'),
-                        'APPWRITE_FUNCTION_ID' => $function->getId(),
-                        'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-                        'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
-                        'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
-                        'APPWRITE_FUNCTION_PROJECT_ID' => $projectID,
-                    ]
-                ]));
-
-                $tag->setAttribute('buildId', $buildId);
-
-                $dbForProject->updateDocument('tags', $tag->getId(), $tag);
-            } catch (\Throwable $th) {
-                var_dump($tag->getArrayCopy());
-                throw $th;
-            }
-        }
-
-        // Build Code
-        go(function () use ($projectID, $tagId, $buildId, $functionId, $function, $register) {
-            try {
-                $db = $register->get('dbPool')->get();
-                $redis = $register->get('redisPool')->get();
-                $cache = new Cache(new RedisCache($redis));
-
-                $dbForProject = new Database(new MariaDB($db), $cache);
-                $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-                $dbForProject->setNamespace('_project_' . $projectID);
-                // Build Code
-                runBuildStage($buildId, $projectID);
-
-                // Update the schedule
-                $schedule = $function->getAttribute('schedule', '');
-                $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-                $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
-
-                // Grab tag
-                $tag = $dbForProject->getDocument('tags', $tagId);
-
-                // Grab build
-                $build = $dbForProject->getDocument('builds', $buildId);
-
-                // If the build failed, it won't be possible to deploy
-                if ($build->getAttribute('status') !== 'ready') {
-                    return;
-                }
-
-                if ($tag->getAttribute('automaticDeploy') === true) {
-                    // Update the function document setting the tag as the active one
-                    $function
-                        ->setAttribute('tag', $tag->getId())
-                        ->setAttribute('scheduleNext', (int)$next);
-                    $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
-                }
-
-                // Deploy Runtime Server
-                createRuntimeServer($functionId, $projectID, $tagId, $dbForProject);
-            } catch (\Throwable $th) {
-            } finally {
-                $register->get('dbPool')->put($db);
-                $register->get('redisPool')->put($redis);
-            }
-        });
-
-        if (false === $function) {
-            throw new Exception('Failed saving function to DB', 500);
-        }
-
-        $response->dynamic($function, Response::MODEL_FUNCTION);
-    });
-
-// Build Endpoints
-App::post('/v1/build/:buildId') // Start a Build
+App::post('/v1/builds/:buildId')
     ->desc('Start a build')
     ->param('buildId', '', new UID(), 'Build unique ID.', false)
     ->inject('response')
@@ -1197,11 +1102,8 @@ App::post('/v1/build/:buildId') // Start a Build
             if ($build->getAttribute('status') === 'finished') {
                 throw new Exception('Build is already finished', 409);
             }
-
-            go(function () use ($buildId, $dbForProject, $projectID) {
-                // Build Code
-                runBuildStage($buildId, $projectID, $dbForProject);
-            });
+            
+            runBuildStage($buildId, $projectID, $dbForProject);
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
