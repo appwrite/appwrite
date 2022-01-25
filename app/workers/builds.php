@@ -88,7 +88,7 @@ class BuildsV1 extends Worker
     protected function triggerCreateRuntimeServer(string $projectId, string $functionId, string $tagId) 
     {
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/executor/runtime");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/executor/runtime");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
