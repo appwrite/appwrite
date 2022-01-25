@@ -1050,6 +1050,7 @@ App::post('/v1/cleanup/tag')
     });
 
 App::post('/v1/tag')
+    ->desc('Create a new build')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('tagId', '', new UID(), 'Tag unique ID.')
     ->param('userId', '', new UID(), 'User unique ID.', true)
@@ -1170,20 +1171,9 @@ App::post('/v1/tag')
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
-App::get('/v1/')
-    ->inject('response')
-    ->action(
-        function (Response $response) {
-            $response
-                ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-                ->addHeader('Expires', '0')
-                ->addHeader('Pragma', 'no-cache')
-                ->json(['status' => 'online']);
-        }
-    );
-
 // Build Endpoints
 App::post('/v1/build/:buildId') // Start a Build
+    ->desc('Start a build')
     ->param('buildId', '', new UID(), 'Build unique ID.', false)
     ->inject('response')
     ->inject('dbForProject')
@@ -1213,16 +1203,13 @@ App::post('/v1/build/:buildId') // Start a Build
                 runBuildStage($buildId, $projectID, $dbForProject);
             });
 
-            // return success
-            return $response->json(['success' => true]);
-        } catch (Exception $e) {
-            logError($e, "buildEndpoint");
-
             $response
-                ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-                ->addHeader('Expires', '0')
-                ->addHeader('Pragma', 'no-cache')
-                ->json(['error' => $e->getMessage()]);
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->send();
+        } catch (Exception $e) {
+            // TODO : @matej,why do we need to log here ? There is a global error handler that logs errors
+            logError($e, "buildEndpoint");
+            throw $e;
         }
     });
 

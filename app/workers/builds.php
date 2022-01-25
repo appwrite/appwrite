@@ -59,7 +59,7 @@ class BuildsV1 extends Worker
     {
         // TODO: What is a reasonable time to wait for a build to complete?
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/build/$buildId");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/build/$buildId");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
@@ -80,19 +80,8 @@ class BuildsV1 extends Worker
 
         \curl_close($ch);
 
-        if ($responseStatus !== 200) {
+        if ($responseStatus >= 400) {
             throw new \Exception("Build failed with status code: $responseStatus");
-        }
-
-        $response = json_decode($response, true);
-        if (isset($response['error'])) {
-            throw new \Exception($response['error']);
-        }
-
-        if (isset($response['success']) && $response['success'] === true) {
-            return;
-        } else {
-            throw new \Exception("Build failed");
         }
     }
 
@@ -126,11 +115,6 @@ class BuildsV1 extends Worker
 
         if ($responseStatus >= 400) {
             throw new \Exception("Build failed with status code: $responseStatus");
-        }
-
-        $response = json_decode($response, true);
-        if (isset($response['error'])) {
-            throw new \Exception($response['error']);
         }
     }
 
