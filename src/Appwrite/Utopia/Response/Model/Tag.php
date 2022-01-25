@@ -69,7 +69,7 @@ class Tag extends Model
                 'default' => '',
                 'example' => '',
             ])
-            ->addRule('automaticDeploy', [
+            ->addRule('deploy', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether the tag should be automatically deployed.',
                 'default' => false,

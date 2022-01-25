@@ -2015,7 +2015,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'automaticDeploy',
+                '$id' => 'deploy',
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
                 'size' => 0,
@@ -2116,7 +2116,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'buildTime',
+                '$id' => 'time',
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -2127,7 +2127,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'envVars',
+                '$id' => 'vars',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -2159,6 +2159,17 @@ $collections = [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => 'search',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
@@ -2166,6 +2177,13 @@ $collections = [
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['status'],
                 'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_search',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['search'],
+                'lengths' => [2048],
                 'orders' => [Database::ORDER_ASC],
             ],
         ],

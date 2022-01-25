@@ -1,40 +1,40 @@
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Utopia\Database\Document;
-use Utopia\Database\Database;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\UID;
 use Appwrite\Event\Event;
-use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Stats\Stats;
-use Utopia\App;
-use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
-use Utopia\CLI\Console;
-use Swoole\Process;
-use Swoole\Http\Server;
+use Appwrite\Utopia\Response\Model\Execution;
+use Cron\CronExpression;
+use Swoole\ConnectionPool;
+use Swoole\Coroutine as Co;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
-use Utopia\Orchestration\Orchestration;
-use Utopia\Database\Adapter\MariaDB;
+use Swoole\Http\Server;
+use Swoole\Process;
+use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\UID;
+use Utopia\Logger\Log;
+use Utopia\Orchestration\Adapter\DockerAPI;
+use Utopia\Orchestration\Adapter\DockerCLI;
+use Utopia\Orchestration\Orchestration;
+use Utopia\Registry\Registry;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Storage;
+use Utopia\Swoole\Request;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
-use Cron\CronExpression;
-use Swoole\ConnectionPool;
-use Utopia\Storage\Device\Local;
-use Utopia\Storage\Storage;
-use Swoole\Coroutine as Co;
-use Utopia\Cache\Cache;
-use Utopia\Database\Query;
-use Utopia\Orchestration\Adapter\DockerCLI;
-use Utopia\Logger\Log;
-use Utopia\Orchestration\Adapter\DockerAPI;
-use Utopia\Registry\Registry;
 
 require_once __DIR__ . '/init.php';
 
@@ -91,6 +91,7 @@ $orchestrationPool = new ConnectionPool(function () {
 
     return $orchestration;
 }, 6);
+
 try {
     $runtimes = Config::getParam('runtimes');
 
@@ -98,19 +99,22 @@ try {
     Co\run(function () use ($runtimes, $orchestrationPool) {
         foreach ($runtimes as $runtime) {
             go(function () use ($runtime, $orchestrationPool) {
-                $orchestration = $orchestrationPool->get();
+                try {
+                    $orchestration = $orchestrationPool->get();
 
-                Console::info('Warming up ' . $runtime['name'] . ' ' . $runtime['version'] . ' environment...');
+                    Console::info('Warming up ' . $runtime['name'] . ' ' . $runtime['version'] . ' environment...');
 
-                $response = $orchestration->pull($runtime['image']);
+                    $response = $orchestration->pull($runtime['image']);
 
-                if ($response) {
-                    Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
-                } else {
-                    Console::warning("Failed to Warmup {$runtime['name']} {$runtime['version']}!");
+                    if ($response) {
+                        Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
+                    } else {
+                        Console::warning("Failed to Warmup {$runtime['name']} {$runtime['version']}!");
+                    }
+                } catch (\Throwable $th) {
+                } finally {
+                    $orchestrationPool->put($orchestration);
                 }
-
-                $orchestrationPool->put($orchestration);
             });
         }
     });
@@ -123,11 +127,15 @@ try {
     $activeFunctions->create();
 
     Co\run(function () use ($orchestrationPool, $activeFunctions) {
-        $orchestration = $orchestrationPool->get();
-        $executionStart = \microtime(true);
+        try {
+            $orchestration = $orchestrationPool->get();
+            $executionStart = \microtime(true);
+            $residueList = $orchestration->list(['label' => 'appwrite-type=function']);
+        } catch (\Throwable $th) {
+        } finally {
+            $orchestrationPool->put($orchestration);
+        }
 
-        $residueList = $orchestration->list(['label' => 'appwrite-type=function']);
-        $orchestrationPool->put($orchestration);
 
         foreach ($residueList as $value) {
             go(fn () => $activeFunctions->set($value->getName(), [
@@ -195,7 +203,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
             'INTERNAL_RUNTIME_KEY' => $secret
         ]);
 
-        $vars = \array_merge($vars, $build->getAttribute('envVars', [])); // for gettng endpoint.
+        $vars = \array_merge($vars, $build->getAttribute('vars', [])); // for gettng endpoint.
 
         $container = 'appwrite-function-' . $tag->getId();
 
@@ -234,7 +242,9 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
         $device = Storage::getDevice('builds');
 
         if (!\file_exists($tagPathTargetDir)) {
-            if (!\mkdir($tagPathTargetDir, 0777, true)) {
+            if (@\mkdir($tagPathTargetDir, 0777, true)) {
+                \chmod($tagPathTargetDir, 0777);
+            } else {
                 throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
             }
         }
@@ -268,9 +278,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
                 ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', '256'))
                 ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '256'));
 
-            foreach ($vars as $key => $value) {
-                $vars[$key] = strval($value);
-            }
+            $vars = array_map(fn ($v) => strval($v), $vars);
 
             // Launch runtime server
             $id = $orchestration->run(
@@ -312,9 +320,8 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
         var_dump($th->getTraceAsString());
         $orchestrationPool->put($orchestration ?? null);
         throw $th;
-    } finally {
-        $orchestrationPool->put($orchestration);
     }
+    $orchestrationPool->put($orchestration);
 };
 
 function execute(string $trigger, string $projectId, string $executionId, string $functionId, Database $database, string $event = '', string $eventData = '', string $data = '', array $webhooks = [], string $userId = '', string $jwt = ''): array
@@ -394,7 +401,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
         'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
     ]);
 
-    $vars = \array_merge($vars, $build->getAttribute('envVars', []));
+    $vars = \array_merge($vars, $build->getAttribute('vars', []));
 
     $container = 'appwrite-function-' . $tag->getId();
 
@@ -405,7 +412,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
             $database->createDocument('builds', new Document([
                 '$id' => $buildId,
                 '$read' => ($userId !== '') ? ['user:' . $userId] : [],
-                '$write' => ['role:all'],
+                '$write' => [],
                 'dateCreated' => time(),
                 'status' => 'processing',
                 'outputPath' => '',
@@ -414,8 +421,8 @@ function execute(string $trigger, string $projectId, string $executionId, string
                 'sourceType' => Storage::DEVICE_LOCAL,
                 'stdout' => '',
                 'stderr' => '',
-                'buildTime' => 0,
-                'envVars' => [
+                'time' => 0,
+                'vars' => [
                     'ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint'),
                     'APPWRITE_FUNCTION_ID' => $function->getId(),
                     'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
@@ -444,7 +451,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
     }
 
     try {
-        if (!$activeFunctions->exists($container)) { // Create contianer if not ready
+        if (!$activeFunctions->exists($container)) { // Create container if not ready
             createRuntimeServer($functionId, $projectId, $tag->getId(), $database);
         } else if ($activeFunctions->get($container)['status'] === 'Down') {
             sleep(1);
@@ -490,7 +497,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
         'APPWRITE_FUNCTION_PROJECT_ID' => $projectId
     ]);
 
-    $vars = \array_merge($vars, $build->getAttribute('envVars', []));
+    $vars = \array_merge($vars, $build->getAttribute('vars', []));
 
     $stdout = '';
     $stderr = '';
@@ -512,7 +519,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
         $body = \json_encode([
             'path' => '/usr/code',
-            'file' => $build->getAttribute('envVars', [])['ENTRYPOINT_NAME'],
+            'file' => $build->getAttribute('vars', [])['ENTRYPOINT_NAME'],
             'env' => $vars,
             'payload' => $data,
             'timeout' => $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900))
@@ -652,6 +659,261 @@ function execute(string $trigger, string $projectId, string $executionId, string
     ];
 };
 
+function runBuildStage(string $buildId, string $projectID): Document
+{
+    global $runtimes;
+    global $orchestrationPool;
+    global $register;
+
+    /** @var Orchestration $orchestration */
+    $orchestration = $orchestrationPool->get();
+
+    $buildStdout = '';
+    $buildStderr = '';
+
+    $db = $register->get('dbPool')->get();
+    $redis = $register->get('redisPool')->get();
+    $cache = new Cache(new RedisCache($redis));
+
+    $database = new Database(new MariaDB($db), $cache);
+    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+    $database->setNamespace('_project_' . $projectID);
+
+    // Check if build has already been run
+    $build = $database->getDocument('builds', $buildId);
+
+    try {
+        // If we already have a built package ready there is no need to rebuild.
+        if ($build->getAttribute('status') === 'ready' && \file_exists($build->getAttribute('outputPath'))) {
+            return $build;
+        }
+
+        // Update Tag Status
+        $build->setAttribute('status', 'building');
+
+        $database->updateDocument('builds', $build->getId(), $build);
+
+        // Check if runtime is active
+        $runtime = $runtimes[$build->getAttribute('runtime', '')] ?? null;
+
+        if (\is_null($runtime)) {
+            throw new Exception('Runtime "' . $build->getAttribute('runtime', '') . '" is not supported');
+        }
+
+        // Grab Tag Files
+        $tagPath = $build->getAttribute('source', '');
+        $sourceType = $build->getAttribute('sourceType', '');
+
+        $device = Storage::getDevice('builds');
+
+        $tagPathTarget = '/tmp/project-' . $projectID . '/' . $build->getId() . '/code.tar.gz';
+        $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
+
+        $container = 'build-stage-' . $build->getId();
+
+        // Perform various checks
+        if (!\file_exists($tagPathTargetDir)) {
+            if (@\mkdir($tagPathTargetDir, 0777, true)) {
+                \chmod($tagPathTargetDir, 0777);
+            } else {
+                throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
+            }
+        }
+
+        if (!\file_exists($tagPathTarget)) {
+            if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
+                if (!\copy($tagPath, $tagPathTarget)) {
+                    throw new Exception('Can\'t create temporary code file ' . $tagPathTarget);
+                }
+            } else {
+                $buffer = $device->read($tagPath);
+                \file_put_contents($tagPathTarget, $buffer);
+            }
+        }
+
+        if (!$device->exists($tagPath)) {
+            throw new Exception('Code is not readable: ' . $build->getAttribute('source', ''));
+        }
+
+        $vars = $build->getAttribute('vars', []);
+
+        // Start tracking time
+        $buildStart = \microtime(true);
+        $time = \time();
+
+        $orchestration
+            ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
+            ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
+            ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
+
+        $vars = array_map(fn ($v) => strval($v), $vars);
+        $path = '/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode';
+
+        if (!\file_exists($path)) {
+            if (@\mkdir($path, 0777, true)) {
+                \chmod($path, 0777);
+            } else {
+                throw new Exception('Can\'t create directory /tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode');
+            }
+        }
+
+        // Launch build container
+        $id = $orchestration->run(
+            image: $runtime['base'],
+            name: $container,
+            vars: $vars,
+            workdir: '/usr/code',
+            labels: [
+                'appwrite-type' => 'function',
+                'appwrite-created' => strval($time),
+                'appwrite-runtime' => $build->getAttribute('runtime', ''),
+                'appwrite-project' => $projectID,
+                'appwrite-build' => $build->getId(),
+            ],
+            command: [
+                'tail',
+                '-f',
+                '/dev/null'
+            ],
+            hostname: $container,
+            mountFolder: $tagPathTargetDir,
+            volumes: [
+                '/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode' . ':/usr/builtCode:rw'
+            ]
+        );
+
+        if (empty($id)) {
+            throw new Exception('Failed to start build container');
+        }
+
+        // Extract user code into build container
+        $untarStdout = '';
+        $untarStderr = '';
+
+        $untarSuccess = $orchestration->execute(
+            name: $container,
+            command: [
+                'sh',
+                '-c',
+                'mkdir -p /usr/code && cp /tmp/code.tar.gz /usr/workspace/code.tar.gz && cd /usr/workspace/ && tar -zxf /usr/workspace/code.tar.gz -C /usr/code && rm /usr/workspace/code.tar.gz'
+            ],
+            stdout: $untarStdout,
+            stderr: $untarStderr,
+            timeout: 60
+        );
+
+        if (!$untarSuccess) {
+            throw new Exception('Failed to extract tar: ' . $untarStderr);
+        }
+
+        // Build Code / Install Dependencies
+        $buildSuccess = $orchestration->execute(
+            name: $container,
+            command: ['sh', '-c', 'cd /usr/local/src && ./build.sh'],
+            stdout: $buildStdout,
+            stderr: $buildStderr,
+            timeout: App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900)
+        );
+
+        if (!$buildSuccess) {
+            throw new Exception('Failed to build dependencies: ' . $buildStderr);
+        }
+
+        // Repackage Code and Save.
+        $compressStdout = '';
+        $compressStderr = '';
+
+        $builtCodePath = '/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode/code.tar.gz';
+
+        $compressSuccess = $orchestration->execute(
+            name: $container,
+            command: [
+                'tar', '-C', '/usr/code', '-czvf', '/usr/builtCode/code.tar.gz', './'
+            ],
+            stdout: $compressStdout,
+            stderr: $compressStderr,
+            timeout: 60
+        );
+
+        if (!$compressSuccess) {
+            throw new Exception('Failed to compress built code: ' . $compressStderr);
+        }
+
+        // Remove Container
+        $orchestration->remove($id, true);
+
+        // Check if the build was successful by checking if file exists
+        if (!\file_exists($builtCodePath)) {
+            throw new Exception('Something went wrong during the build process.');
+        }
+
+        // Upload new code
+        $device = Storage::getDevice('builds');
+
+        $path = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+
+        if (!\file_exists(\dirname($path))) { // Checks if directory path to file exists
+            if (@\mkdir(\dirname($path), 0777, true)) {
+                \chmod(\dirname($path), 0777);
+            } else {
+                throw new Exception('Can\'t create directory: ' . \dirname($path));
+            }
+        }
+
+        if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
+            if (!$device->move($builtCodePath, $path)) {
+                throw new Exception('Failed to upload built code upload to storage', 500);
+            }
+        } else {
+            if (!$device->upload($builtCodePath, $path)) {
+                throw new Exception('Failed to upload built code upload to storage', 500);
+            }
+        }
+
+        if ($buildStdout == '') {
+            $buildStdout = 'Build Successful!';
+        }
+
+        $build
+            ->setAttribute('outputPath', $path)
+            ->setAttribute('status', 'ready')
+            ->setAttribute('stdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
+            ->setAttribute('stderr', \utf8_encode(\mb_substr($buildStderr, -4096)))
+            ->setAttribute('time', $time);
+
+        // Update build with built code attribute
+        $build = $database->updateDocument('builds', $buildId, $build);
+
+        $buildEnd = \microtime(true);
+
+        Console::info('Build Stage Ran in ' . ($buildEnd - $buildStart) . ' seconds');
+    } catch (Exception $e) {
+        $build
+            ->setAttribute('status', 'failed')
+            ->setAttribute('stdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
+            ->setAttribute('stderr', \utf8_encode(\mb_substr($e->getMessage(), -4096)));
+
+        $build = $database->updateDocument('builds', $buildId, $build);
+
+        // also remove the container if it exists
+        if (isset($id)) {
+            $orchestration->remove($id, true);
+        }
+
+        $register->get('dbPool')->put($db);
+        $register->get('redisPool')->put($redis);
+
+        throw new Exception('Build failed: ' . $e->getMessage());
+    }
+
+    $orchestrationPool->put($orchestration);
+
+    $register->get('dbPool')->put($db);
+    $register->get('redisPool')->put($redis);
+
+    return $build;
+}
+
 App::post('/v1/execute') // Define Route
     ->desc('Execute a function')
     ->param('trigger', '', new Text(1024))
@@ -682,7 +944,6 @@ App::post('/v1/execute') // Define Route
             }
         }
     );
-
 
 // Cleanup Endpoints used internally by appwrite when a function or tag gets deleted to also clean up their containers
 App::post('/v1/cleanup/function')
@@ -788,27 +1049,125 @@ App::post('/v1/cleanup/tag')
         return $response->json(['success' => true]);
     });
 
-
-App::post('/v1/executor/runtime')
-    ->desc('Create a new runtime server')
+App::post('/v1/tag')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('tagId', '', new UID(), 'Tag unique ID.')
-    ->inject('projectID')
+    ->param('userId', '', new UID(), 'User unique ID.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, string $tagId, string $projectID, Response $response, Database $dbForProject) {
-        try {
-            Console::success('Creating runtime for tag ' . $tagId);
-            createRuntimeServer($functionId, $projectID, $tagId, $dbForProject);
-        } catch (\Throwable $th) {
-            $response
-                ->setStatusCode(400)
-                ->json(['error' => $th->getMessage()]);
-        };
+    ->inject('projectID')
+    ->inject('register')
+    ->action(function (string $functionId, string $tagId, string $userId, Response $response, Database $dbForProject, string $projectID, Registry $register) use ($runtimes) {
+        // Get function document
+        $function = $dbForProject->getDocument('functions', $functionId);
+        // Get tag document
+        $tag = $dbForProject->getDocument('tags', $tagId);
 
-        $response
-            ->setStatusCode(201)
-            ->noContent();
+        // Check if both documents exist
+        if ($function->isEmpty()) {
+            throw new Exception('Function not found', 404);
+        }
+
+        if ($tag->isEmpty()) {
+            throw new Exception('Tag not found', 404);
+        }
+
+        $runtime = $runtimes[$function->getAttribute('runtime')] ?? null;
+
+        if (\is_null($runtime)) {
+            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
+        }
+
+        // Create a new build entry
+        $buildId = $dbForProject->getId();
+
+        if ($tag->getAttribute('buildId')) {
+            $buildId = $tag->getAttribute('buildId');
+        } else {
+            try {
+                $dbForProject->createDocument('builds', new Document([
+                    '$id' => $buildId,
+                    '$read' => (!empty($userId)) ? ['user:' . $userId] : [],
+                    '$write' => ['role:all'],
+                    'dateCreated' => time(),
+                    'status' => 'processing',
+                    'runtime' => $function->getAttribute('runtime'),
+                    'outputPath' => '',
+                    'source' => $tag->getAttribute('path'),
+                    'sourceType' => Storage::DEVICE_LOCAL,
+                    'stdout' => '',
+                    'stderr' => '',
+                    'time' => 0,
+                    'vars' => [
+                        'ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint'),
+                        'APPWRITE_FUNCTION_ID' => $function->getId(),
+                        'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
+                        'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
+                        'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
+                        'APPWRITE_FUNCTION_PROJECT_ID' => $projectID,
+                    ]
+                ]));
+
+                $tag->setAttribute('buildId', $buildId);
+
+                $dbForProject->updateDocument('tags', $tag->getId(), $tag);
+            } catch (\Throwable $th) {
+                var_dump($tag->getArrayCopy());
+                throw $th;
+            }
+        }
+
+        // Build Code
+        go(function () use ($projectID, $tagId, $buildId, $functionId, $function, $register) {
+            try {
+                $db = $register->get('dbPool')->get();
+                $redis = $register->get('redisPool')->get();
+                $cache = new Cache(new RedisCache($redis));
+
+                $dbForProject = new Database(new MariaDB($db), $cache);
+                $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+                $dbForProject->setNamespace('_project_' . $projectID);
+                // Build Code
+                runBuildStage($buildId, $projectID);
+
+                // Update the schedule
+                $schedule = $function->getAttribute('schedule', '');
+                $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? new CronExpression($schedule) : null;
+                $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
+
+                // Grab tag
+                $tag = $dbForProject->getDocument('tags', $tagId);
+
+                // Grab build
+                $build = $dbForProject->getDocument('builds', $buildId);
+
+                // If the build failed, it won't be possible to deploy
+                if ($build->getAttribute('status') !== 'ready') {
+                    return;
+                }
+
+                if ($tag->getAttribute('automaticDeploy') === true) {
+                    // Update the function document setting the tag as the active one
+                    $function
+                        ->setAttribute('tag', $tag->getId())
+                        ->setAttribute('scheduleNext', (int)$next);
+                    $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
+                }
+
+                // Deploy Runtime Server
+                createRuntimeServer($functionId, $projectID, $tagId, $dbForProject);
+            } catch (\Throwable $th) {
+            } finally {
+                $register->get('dbPool')->put($db);
+                $register->get('redisPool')->put($redis);
+            }
+        });
+
+        if (false === $function) {
+            throw new Exception('Failed saving function to DB', 500);
+        }
+
+        $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
 App::get('/v1/')
@@ -849,9 +1208,10 @@ App::post('/v1/build/:buildId') // Start a Build
                 throw new Exception('Build is already finished', 409);
             }
 
-            Console::success('Starting build ' . $buildId);
-            // Build Code
-            runBuildStage($buildId, $projectID, $dbForProject);
+            go(function () use ($buildId, $dbForProject, $projectID) {
+                // Build Code
+                runBuildStage($buildId, $projectID, $dbForProject);
+            });
 
             // return success
             return $response->json(['success' => true]);
@@ -866,260 +1226,9 @@ App::post('/v1/build/:buildId') // Start a Build
         }
     });
 
-function runBuildStage(string $buildId, string $projectID): Document
-{
-    global $runtimes;
-    global $orchestrationPool;
-    global $register;
-
-    /** @var Orchestration $orchestration */
-    $orchestration = $orchestrationPool->get();
-
-    $buildStdout = '';
-    $buildStderr = '';
-
-    $db = $register->get('dbPool')->get();
-    $redis = $register->get('redisPool')->get();
-    $cache = new Cache(new RedisCache($redis));
-
-    $database = new Database(new MariaDB($db), $cache);
-    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace('_project_' . $projectID);
-
-    // Check if build has already been run
-    $build = $database->getDocument('builds', $buildId);
-
-    try {
-        // If we already have a built package ready there is no need to rebuild.
-        if ($build->getAttribute('status') === 'ready' && \file_exists($build->getAttribute('outputPath'))) {
-            return $build;
-        }
-
-        // Update Tag Status
-        $build->setAttribute('status', 'building');
-
-        $database->updateDocument('builds', $build->getId(), $build);
-
-        // Check if runtime is active
-        $runtime = $runtimes[$build->getAttribute('runtime', '')] ?? null;
-
-        if (\is_null($runtime)) {
-            throw new Exception('Runtime "' . $build->getAttribute('runtime', '') . '" is not supported');
-        }
-
-        // Grab Tag Files
-        $tagPath = $build->getAttribute('source', '');
-        $sourceType = $build->getAttribute('sourceType', '');
-
-        $device = Storage::getDevice('builds');
-
-        $tagPathTarget = '/tmp/project-' . $projectID . '/' . $build->getId() . '/code.tar.gz';
-        $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
-
-        $container = 'build-stage-' . $build->getId();
-
-        // Perform various checks
-        if (!\file_exists($tagPathTargetDir)) {
-            if (!\mkdir($tagPathTargetDir, 0777, true)) {
-                throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
-            }
-        }
-
-        if (!\file_exists($tagPathTarget)) {
-            if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
-                if (!\copy($tagPath, $tagPathTarget)) {
-                    throw new Exception('Can\'t create temporary code file ' . $tagPathTarget);
-                }
-            } else {
-                $buffer = $device->read($tagPath);
-                \file_put_contents($tagPathTarget, $buffer);
-            }
-        }
-
-        if (!$device->exists($tagPath)) {
-            throw new Exception('Code is not readable: ' . $build->getAttribute('source', ''));
-        }
-
-        $vars = $build->getAttribute('envVars', []);
-
-        // Start tracking time
-        $buildStart = \microtime(true);
-        $buildTime = \time();
-
-        $orchestration
-            ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
-            ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
-            ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
-
-        foreach ($vars as &$value) {
-            $value = strval($value);
-        }
-
-        if (!\file_exists('/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode')) {
-            if (!\mkdir('/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode', 0777, true)) {
-                throw new Exception('Can\'t create directory /tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode');
-            }
-        };
-
-        // Launch build container
-        $id = $orchestration->run(
-            image: $runtime['base'],
-            name: $container,
-            vars: $vars,
-            workdir: '/usr/code',
-            labels: [
-                'appwrite-type' => 'function',
-                'appwrite-created' => strval($buildTime),
-                'appwrite-runtime' => $build->getAttribute('runtime', ''),
-                'appwrite-project' => $projectID,
-                'appwrite-build' => $build->getId(),
-            ],
-            command: [
-                'tail',
-                '-f',
-                '/dev/null'
-            ],
-            hostname: $container,
-            mountFolder: $tagPathTargetDir,
-            volumes: [
-                '/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode' . ':/usr/builtCode:rw'
-            ]
-        );
-
-        if (empty($id)) {
-            throw new Exception('Failed to start build container');
-        }
-
-        // Extract user code into build container
-        $untarStdout = '';
-        $untarStderr = '';
-
-        $untarSuccess = $orchestration->execute(
-            name: $container,
-            command: [
-                'sh',
-                '-c',
-                'mkdir -p /usr/code && cp /tmp/code.tar.gz /usr/workspace/code.tar.gz && cd /usr/workspace/ && tar -zxf /usr/workspace/code.tar.gz -C /usr/code && rm /usr/workspace/code.tar.gz'
-            ],
-            stdout: $untarStdout,
-            stderr: $untarStderr,
-            timeout: 60
-        );
-
-        if (!$untarSuccess) {
-            throw new Exception('Failed to extract tar: ' . $untarStderr);
-        }
-
-        // Build Code / Install Dependencies
-        $buildSuccess = $orchestration->execute(
-            name: $container,
-            command: ['sh', '-c', 'cd /usr/local/src && ./build.sh'],
-            stdout: $buildStdout,
-            stderr: $buildStderr,
-            timeout: App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900)
-        );
-
-        if (!$buildSuccess) {
-            throw new Exception('Failed to build dependencies: ' . $buildStderr);
-        }
-
-        // Repackage Code and Save.
-        $compressStdout = '';
-        $compressStderr = '';
-
-        $builtCodePath = '/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode/code.tar.gz';
-
-        $compressSuccess = $orchestration->execute(
-            name: $container,
-            command: [
-                'tar', '-C', '/usr/code', '-czvf', '/usr/builtCode/code.tar.gz', './'
-            ],
-            stdout: $compressStdout,
-            stderr: $compressStderr,
-            timeout: 60
-        );
-
-        if (!$compressSuccess) {
-            throw new Exception('Failed to compress built code: ' . $compressStderr);
-        }
-
-        // Remove Container
-        $orchestration->remove($id, true);
-
-        // Check if the build was successful by checking if file exists
-        if (!\file_exists($builtCodePath)) {
-            throw new Exception('Something went wrong during the build process.');
-        }
-
-        // Upload new code
-        $device = Storage::getDevice('builds');
-
-        $path = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-
-        if (!\file_exists(\dirname($path))) { // Checks if directory path to file exists
-            if (!@\mkdir(\dirname($path), 0777, true)) {
-                throw new Exception('Can\'t create directory: ' . \dirname($path));
-            }
-        }
-
-        if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
-            if (!$device->move($builtCodePath, $path)) {
-                throw new Exception('Failed to upload built code upload to storage', 500);
-            }
-        } else {
-            if (!$device->upload($builtCodePath, $path)) {
-                throw new Exception('Failed to upload built code upload to storage', 500);
-            }
-        }
-
-        if ($buildStdout == '') {
-            $buildStdout = 'Build Successful!';
-        }
-
-        $build
-            ->setAttribute('outputPath', $path)
-            ->setAttribute('status', 'ready')
-            ->setAttribute('stdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
-            ->setAttribute('stderr', \utf8_encode(\mb_substr($buildStderr, -4096)))
-            ->setAttribute('buildTime', $buildTime);
-
-        // Update build with built code attribute
-        $build = $database->updateDocument('builds', $buildId, $build);
-
-        $buildEnd = \microtime(true);
-
-        Console::info('Build Stage Ran in ' . ($buildEnd - $buildStart) . ' seconds');
-    } catch (Exception $e) {
-        $build
-            ->setAttribute('status', 'failed')
-            ->setAttribute('stdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
-            ->setAttribute('stderr', \utf8_encode(\mb_substr($e->getMessage(), -4096)));
-
-        $build = $database->updateDocument('builds', $buildId, $build);
-
-        // also remove the container if it exists
-        if (isset($id)) {
-            $orchestration->remove($id, true);
-        }
-        $orchestrationPool->put(null);
-
-        $register->get('dbPool')->put($db);
-        $register->get('redisPool')->put($redis);
-
-        throw new Exception('Build failed: ' . $e->getMessage());
-    } finally {
-        $orchestrationPool->put($orchestration);
-
-        $register->get('dbPool')->put($db);
-        $register->get('redisPool')->put($redis);
-    }
-
-    return $build;
-}
-
 App::setMode(App::MODE_TYPE_PRODUCTION); // Define Mode
 
-$http = new Server("0.0.0.0", 8080);
+$http = new Server("0.0.0.0", 80);
 
 function handleShutdown()
 {
