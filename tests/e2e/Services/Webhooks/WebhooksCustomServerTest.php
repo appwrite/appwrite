@@ -421,9 +421,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
 
-        /**
-         * Test for FAILURE 
-         */
+        sleep(5);
 
         return array_merge($data, ['deploymentId' => $deploymentId]);
     }
