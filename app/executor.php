@@ -176,7 +176,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $depl
         // Check if runtime is active
         $runtime = $runtimes[$function->getAttribute('runtime', '')] ?? null;
 
-        if ($deployment->getAttribute('functionId') !== $function->getId()) {
+        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception('deployment not found', 404);
         }
 
@@ -186,6 +186,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $depl
 
         // Process environment variables
         $vars = \array_merge($function->getAttribute('vars', []), [
+            'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint', ''),
             'APPWRITE_FUNCTION_ID' => $function->getId(),
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
@@ -194,8 +195,6 @@ function createRuntimeServer(string $functionId, string $projectId, string $depl
             'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
             'INTERNAL_RUNTIME_KEY' => $secret
         ]);
-
-        $vars = \array_merge($vars, $build->getAttribute('vars', [])); // for gettng endpoint.
 
         $container = 'appwrite-function-' . $deployment->getId();
 
@@ -328,7 +327,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
     $deployment = $database->getDocument('deployments', $function->getAttribute('deployment', ''));
     $build = $database->getDocument('builds', $deployment->getAttribute('buildId', ''));
 
-    if ($deployment->getAttribute('functionId') !== $function->getId()) {
+    if ($deployment->getAttribute('resourceId') !== $function->getId()) {
         throw new Exception('Deployment not found', 404);
     }
 
@@ -379,6 +378,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     // Process environment variables
     $vars = \array_merge($function->getAttribute('vars', []), [
+        'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint', ''),
         'APPWRITE_FUNCTION_ID' => $function->getId(),
         'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
         'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
@@ -393,8 +393,6 @@ function execute(string $trigger, string $projectId, string $executionId, string
         'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
     ]);
 
-    $vars = \array_merge($vars, $build->getAttribute('vars', []));
-
     $container = 'appwrite-function-' . $deployment->getId();
 
     try {
@@ -405,7 +403,8 @@ function execute(string $trigger, string $projectId, string $executionId, string
                 '$id' => $buildId,
                 '$read' => ($userId !== '') ? ['user:' . $userId] : [],
                 '$write' => ['role:all'],
-                'dateCreated' => time(),
+                'startTime' => time(),
+                'deploymentId' => $deployment->getId(),
                 'status' => 'processing',
                 'outputPath' => '',
                 'runtime' => $function->getAttribute('runtime', ''),
@@ -413,15 +412,9 @@ function execute(string $trigger, string $projectId, string $executionId, string
                 'sourceType' => Storage::DEVICE_LOCAL,
                 'stdout' => '',
                 'stderr' => '',
-                'time' => 0,
-                'vars' => [
-                    'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint'),
-                    'APPWRITE_FUNCTION_ID' => $function->getId(),
-                    'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-                    'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
-                    'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
-                    'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
-                ]
+                'endTime' => 0,
+                'duration' => 0,
+                'search' => implode(' ', [$deployment->getId(), $buildId]),
             ]));
 
             $deployment->setAttribute('buildId', $buildId);
@@ -475,6 +468,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     // Process environment variables
     $vars = \array_merge($function->getAttribute('vars', []), [
+        'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint', ''),
         'APPWRITE_FUNCTION_ID' => $function->getId(),
         'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
         'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
@@ -488,8 +482,6 @@ function execute(string $trigger, string $projectId, string $executionId, string
         'APPWRITE_FUNCTION_JWT' => $jwt,
         'APPWRITE_FUNCTION_PROJECT_ID' => $projectId
     ]);
-
-    $vars = \array_merge($vars, $build->getAttribute('vars', []));
 
     $stdout = '';
     $stderr = '';
@@ -511,7 +503,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
         $body = \json_encode([
             'path' => '/usr/code',
-            'file' => $build->getAttribute('vars', [])['ENTRYPOINT_NAME'],
+            'file' => $vars['ENTRYPOINT_NAME'],
             'env' => $vars,
             'payload' => $data,
             'timeout' => $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900))
@@ -827,7 +819,8 @@ App::post('/v1/deployment')
                     '$id' => $buildId,
                     '$read' => (!empty($userId)) ? ['user:' . $userId] : [],
                     '$write' => ['role:all'],
-                    'dateCreated' => time(),
+                    'startTime' => time(),
+                    'deploymentId' => $deploymentId,
                     'status' => 'processing',
                     'runtime' => $function->getAttribute('runtime'),
                     'outputPath' => '',
@@ -835,15 +828,9 @@ App::post('/v1/deployment')
                     'sourceType' => Storage::DEVICE_LOCAL,
                     'stdout' => '',
                     'stderr' => '',
-                    'time' => 0,
-                    'vars' => [
-                        'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint'),
-                        'APPWRITE_FUNCTION_ID' => $function->getId(),
-                        'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-                        'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
-                        'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
-                        'APPWRITE_FUNCTION_PROJECT_ID' => $projectID,
-                    ]
+                    'endTime' => 0,
+                    'duration' => 0,
+                    'search' => implode(' ', [$deployment->getId(), $buildId])
                 ]));
 
                 $deployment->setAttribute('buildId', $buildId);
@@ -1037,11 +1024,28 @@ function runBuildStage(string $buildId, string $projectID): Document
             throw new Exception('Code is not readable: ' . $build->getAttribute('source', ''));
         }
 
-        $vars = $build->getAttribute('vars', []);
+        $deployment = $database->getDocument('deployments', $build->getAttribute('deploymentId', ''));
+        $resourceId = $deployment->getAttribute('resourceId', '');
+        $resourceType = $deployment->getAttribute('resourceType', '');
+
+        if (empty($resourceId)) {
+            throw new Exception('Invalid resource ID on build ' . $build->getId());
+        }
+
+        if (empty($resourceType)) {
+            throw new Exception('Invalid resource type on build' . $build->getId());
+        }
+
+        $resource = $database->getDocument($resourceType, $resourceId);
+
+        if ($resource->isEmpty()) {
+            throw new Exception('Resource not found on build ' . $build->getId());
+        }
+
+        $vars = $resource->getAttribute('vars', []);
 
         // Start tracking time
-        $buildStart = \microtime(true);
-        $time = \time();
+        $buildStart = \time();
 
         $orchestration
             ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
@@ -1067,7 +1071,7 @@ function runBuildStage(string $buildId, string $projectID): Document
             workdir: '/usr/code',
             labels: [
                 'appwrite-type' => 'function',
-                'appwrite-created' => strval($time),
+                'appwrite-created' => strval($buildStart),
                 'appwrite-runtime' => $build->getAttribute('runtime', ''),
                 'appwrite-project' => $projectID,
                 'appwrite-build' => $build->getId(),
@@ -1181,19 +1185,24 @@ function runBuildStage(string $buildId, string $projectID): Document
             ->setAttribute('status', 'ready')
             ->setAttribute('stdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
             ->setAttribute('stderr', \utf8_encode(\mb_substr($buildStderr, -4096)))
-            ->setAttribute('time', $time);
+            ->setAttribute('startTime', $buildStart)
+            ->setAttribute('endTime', \time())
+            ->setAttribute('duration', \time() - $buildStart);
 
         // Update build with built code attribute
         $build = $database->updateDocument('builds', $buildId, $build);
 
-        $buildEnd = \microtime(true);
+        $buildEnd = \time();
 
         Console::info('Build Stage Ran in ' . ($buildEnd - $buildStart) . ' seconds');
     } catch (Exception $e) {
         $build
             ->setAttribute('status', 'failed')
             ->setAttribute('stdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
-            ->setAttribute('stderr', \utf8_encode(\mb_substr($e->getMessage(), -4096)));
+            ->setAttribute('stderr', \utf8_encode(\mb_substr($e->getMessage(), -4096)))
+            ->setAttribute('startTime', $buildStart)
+            ->setAttribute('endTime', \microtime(true))
+            ->setAttribute('duration', \microtime(true) - $buildStart);
 
         $build = $database->updateDocument('builds', $buildId, $build);
 

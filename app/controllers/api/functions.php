@@ -556,7 +556,8 @@ App::post('/v1/functions/:functionId/deployments')
             // Remove deploy for all other deployments.
             $deployments = $dbForProject->find('deployments', [
                 new Query('deploy', Query::TYPE_EQUAL, [true]),
-                new Query('functionId', Query::TYPE_EQUAL, [$functionId])
+                new Query('resourceId', Query::TYPE_EQUAL, [$functionId]),
+                new Query('resourceType', Query::TYPE_EQUAL, ['functions'])
             ]);
 
             foreach ($deployments as $deployment) {
@@ -570,15 +571,13 @@ App::post('/v1/functions/:functionId/deployments')
             '$id' => $deploymentId,
             '$read' => ['role:all'],
             '$write' => ['role:all'],
-            'functionId' => $function->getId(),
+            'resourceId' => $function->getId(),
+            'resourceType' => 'functions',
             'dateCreated' => time(),
             'entrypoint' => $entrypoint,
             'path' => $path,
             'size' => $size,
             'search' => implode(' ', [$deploymentId, $entrypoint]),
-            'status' => 'processing',
-            'buildStdout' => '',
-            'buildStderr' => '',
             'deploy' => ($deploy === 'true'),
         ]));
 
@@ -670,21 +669,11 @@ App::get('/v1/functions/:functionId/deployments')
             $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
-        $queries[] = new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]);
+        $queries[] = new Query('resourceId', Query::TYPE_EQUAL, [$function->getId()]);
+        $queries[] = new Query('resourceType', Query::TYPE_EQUAL, ['functions']);
 
         $results = $dbForProject->find('deployments', $queries, $limit, $offset, [], [$orderType], $cursorDeployment ?? null, $cursorDirection);
         $sum = $dbForProject->count('deployments', $queries, APP_LIMIT_COUNT);
-
-        // Get Current Build Data
-        foreach ($results as &$deployment) {
-            $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
-
-            $deployment['status'] = $build->getAttribute('status', 'processing');
-            $deployment['buildStdout'] = $build->getAttribute('stdout', '');
-            $deployment['buildStderr'] = $build->getAttribute('stderr', '');
-        }
-
-        var_dump($results);
 
         $response->dynamic(new Document([
             'deployments' => $results,
@@ -719,7 +708,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
 
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        if ($deployment->getAttribute('functionId') !== $function->getId()) {
+        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception('Deployment not found', 404);
         }
 
@@ -761,7 +750,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        if ($deployment->getAttribute('functionId') !== $function->getId()) {
+        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception('Deployment not found', 404);
         }
 
@@ -857,7 +846,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $deployment = Authorization::skip(fn() => $dbForProject->getDocument('deployments', $function->getAttribute('deployment')));
 
-        if ($deployment->getAttribute('functionId') !== $function->getId()) {
+        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404);
         }
 
