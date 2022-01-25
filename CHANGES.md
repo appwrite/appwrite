@@ -3,6 +3,7 @@
 - Introduced new execution model for functions
 - Improved functions execution times
 - Improved functions execution times
+- Create a new builds worker to handle building of deployments
 # Version 0.12.1
 
 ## Bugs
