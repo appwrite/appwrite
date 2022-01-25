@@ -44,10 +44,10 @@ return [ // List of publicly visible scopes
         'description' => 'Access to create, update, and delete your project\'s storage files',
     ],
     'functions.read' => [
-        'description' => 'Access to read your project\'s functions and deployments',
+        'description' => 'Access to read your project\'s functions and code deployments',
     ],
     'functions.write' => [
-        'description' => 'Access to create, update, and delete your project\'s functions and deployments',
+        'description' => 'Access to create, update, and delete your project\'s functions and code deployments',
     ],
     'execution.read' => [
         'description' => 'Access to read your project\'s execution logs',
