@@ -1055,50 +1055,47 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     });
 
 App::get('/v1/builds')
-    ->groups(['api', 'functions'])
-    ->desc('List Builds')
-    ->label('scope', 'execution.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listBuilds')
-    ->label('sdk.description', '/docs/references/functions/list-builds.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_BUILD_LIST)
-    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('cursor', '', new UID(), 'ID of the build used as the starting point for the query, excluding the build itself. Should be used for efficient pagination when working with large sets of data.', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
-    ->inject('response')
-    ->inject('dbForProject')
-    ->action(function ($limit, $offset, $search, $cursor, $cursorDirection, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+->groups(['api', 'functions'])
+->desc('List Builds')
+->label('scope', 'functions.read')
+->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+->label('sdk.namespace', 'functions')
+->label('sdk.method', 'builds')
+->label('sdk.description', '/docs/references/functions/list-builds.md')
+->label('sdk.response.code', Response::STATUS_CODE_OK)
+->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+->label('sdk.response.model', Response::MODEL_BUILD_LIST)
+->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+->param('limit', 25, new Range(0, 100), 'Maximum number of builds to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+->param('cursor', '', new UID(), 'ID of the function used as the starting point for the query, excluding the function itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
+->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+->inject('response')
+->inject('dbForProject')
+->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject) {
+    /** @var Appwrite\Utopia\Response $response */
+    /** @var Utopia\Database\Database $dbForProject */
 
-        if (!empty($cursor)) {
-            $cursorExecution = $dbForProject->getDocument('builds', $cursor);
+    if (!empty($cursor)) {
+        $cursorFunction = $dbForProject->getDocument('builds', $cursor);
 
-            if ($cursorExecution->isEmpty()) {
-                throw new Exception("Execution '{$cursor}' for the 'cursor' value not found.", 400);
-            }
+        if ($cursorFunction->isEmpty()) {
+            throw new Exception("Build '{$cursor}' for the 'cursor' value not found.", 400);
         }
+    }
 
-        $queries = [];
+    $queries = [];
 
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
-        }
+    if (!empty($search)) {
+        $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+    }
 
-        $results = $dbForProject->find('builds', $queries, $limit, $offset, [], [Database::ORDER_DESC], $cursorExecution ?? null, $cursorDirection);
-
-        $sum = $dbForProject->count('builds', $queries, APP_LIMIT_COUNT);
-
-        $response->dynamic(new Document([
-            'builds' => $results,
-            'sum' => $sum,
-        ]), Response::MODEL_BUILD_LIST);
-    });
+    $response->dynamic(new Document([
+        'builds' => $dbForProject->find('builds', $queries, $limit, $offset, [], [$orderType], $cursorFunction ?? null, $cursorDirection),
+        'sum' => $dbForProject->count('builds', $queries, APP_LIMIT_COUNT),
+    ]), Response::MODEL_BUILD_LIST);
+});
 
 App::get('/v1/builds/:buildId')
     ->groups(['api', 'functions'])

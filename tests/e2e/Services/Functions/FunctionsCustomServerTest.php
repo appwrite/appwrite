@@ -334,6 +334,38 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testCreateTag
      */
+    public function testListBuild(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/builds', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertEquals($response['body']['builds'][0]['status'], 'ready');
+
+        /**
+         * Check Queries work
+         */
+        $responseQuery = $this->client->call(Client::METHOD_GET, '/builds?status=status.equal(\"ready\")', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $responseQuery['headers']['status-code']);
+        $this->assertEquals(1, $responseQuery['body']['sum']);
+        $this->assertEquals($responseQuery['body']['builds'][0]['status'], 'ready');
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateTag
+     */
     public function testListTags(array $data):array
     {
         /**
