@@ -427,6 +427,93 @@ trait StorageBase
     /**
      * @depends testCreateBucketFile
      */
+    public function testFilePreviewCache(array $data): array
+    {
+        $bucketId = $data['bucketId'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => 'testcache',
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertNotEmpty($file['body']['$id']);
+        
+        $fileId = $file['body']['$id'];
+
+        //get image preview
+        $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 300,
+            'height' => 100,
+            'borderRadius' => '50',
+            'opacity' => '0.5',
+            'output' => 'png',
+            'rotation' => '45',
+        ]);
+
+        $this->assertEquals(200, $file3['headers']['status-code']);
+        $this->assertEquals('image/png', $file3['headers']['content-type']);
+        $this->assertNotEmpty($file3['body']);
+
+        $imageBefore = new \Imagick();
+        $imageBefore->readImageBlob($file3['body']);
+
+        $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $data['bucketId'] . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $file['headers']['status-code']);
+        $this->assertEmpty($file['body']);
+
+        //upload again using the same ID
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => 'testcache',
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-b/kitten-1.png'), 'image/png', 'logo.png'),
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertNotEmpty($file['body']['$id']);
+        
+        //get image preview after
+        $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 300,
+            'height' => 100,
+            'borderRadius' => '50',
+            'opacity' => '0.5',
+            'output' => 'png',
+            'rotation' => '45',
+        ]);
+
+        $this->assertEquals(200, $file3['headers']['status-code']);
+        $this->assertEquals('image/png', $file3['headers']['content-type']);
+        $this->assertNotEmpty($file3['body']);
+
+        $imageAfter = new \Imagick();
+        $imageAfter->readImageBlob($file3['body']);
+
+        $this->assertNotEquals($imageBefore, $imageAfter);
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateBucketFile
+     */
     public function testUpdateBucketFile(array $data): array
     {
         /**
