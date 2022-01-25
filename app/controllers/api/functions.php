@@ -433,7 +433,7 @@ App::delete('/v1/functions/:functionId')
 
         // Request executor to delete tag containers
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/cleanup/function");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/cleanup/function");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             'functionId' => $functionId
@@ -590,7 +590,7 @@ App::post('/v1/functions/:functionId/tags')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/tag");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/tag");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             'functionId' => $function->getId(),
@@ -769,7 +769,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
 
         // Request executor to delete tag containers
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/cleanup/tag");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/cleanup/tag");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             'tagId' => $tagId
@@ -927,7 +927,7 @@ App::post('/v1/functions/:functionId/executions')
 
         // Directly execute function.
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/execute");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/execute");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             'trigger' => 'http',
@@ -1159,7 +1159,7 @@ App::post('/v1/builds/:buildId')
 
         // Retry build
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/build/{$buildId}");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/build/{$buildId}");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
