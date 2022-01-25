@@ -684,6 +684,8 @@ App::get('/v1/functions/:functionId/deployments')
             $deployment['buildStderr'] = $build->getAttribute('stderr', '');
         }
 
+        var_dump($results);
+
         $response->dynamic(new Document([
             'deployments' => $results,
             'sum' => $sum,
