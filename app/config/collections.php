@@ -1169,6 +1169,17 @@ $collections = [
                 'filters' => ['encrypt'],
             ],
             [
+                '$id' => 'providerIdToken',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['encrypt'],
+            ],
+            [
                 '$id' => 'secret',
                 'type' => Database::VAR_STRING,
                 'format' => '',

@@ -46,6 +46,12 @@ class Session extends Model
                 'default' => '',
                 'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
             ])
+            ->addRule('providerIdToken', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Session Provider Id Token.',
+                'default' => '',
+                'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
+            ])
             ->addRule('ip', [
                 'type' => self::TYPE_STRING,
                 'description' => 'IP in use when the session was created.',

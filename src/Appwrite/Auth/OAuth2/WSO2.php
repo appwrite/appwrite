@@ -19,7 +19,10 @@ class WSO2 extends OAuth2
      * @var array
      */
     protected $user = [];
-
+    /**
+     * @var string
+    */
+    protected $idToken  = '';
     /**
      * @return string
      */
@@ -50,7 +53,7 @@ class WSO2 extends OAuth2
      */
     public function getAccessToken(string $code): string
     {
-        $accessToken = $this->request(
+        $response = $this->request(
             'POST',
             'https://api.conta.stag.intelbras.com/auth/token',
             ['Content-Type: application/x-www-form-urlencoded'],
@@ -63,13 +66,27 @@ class WSO2 extends OAuth2
             ])
         );
 
-        $accessToken = \json_decode($accessToken, true);
+        $accessToken = \json_decode($response, true);
+        $idToken = \json_decode($response, true);
+
+        if (isset($idToken['id_token'])) {
+            $this->idToken = $idToken['id_token'];
+        }
 
         if (isset($accessToken['access_token'])) {
             return $accessToken['access_token'];
         }
 
         return '';
+    }
+    /**
+     * @param string $idToken
+     *
+     * @return string
+     */
+    public function getAccessIdToken(): string
+    { 
+        return $this->idToken;
     }
 
     /**
