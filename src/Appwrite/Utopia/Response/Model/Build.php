@@ -18,15 +18,15 @@ class Build extends Model
             ])
             ->addRule('dateCreated', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'The tag creation date in Unix timestamp.',
+                'description' => 'The deployment creation date in Unix timestamp.',
                 'default' => 0,
                 'example' => 1592981250,
             ])
             // Build Status
-            // Failed - The tag build has failed. More details can usually be found in buildStderr
-            // Ready - The tag build was successful and the tag is ready to be deployed
-            // Processing - The tag is currently waiting to have a build triggered
-            // Building - The tag is currently being built
+            // Failed - The deployment build has failed. More details can usually be found in buildStderr
+            // Ready - The deployment build was successful and the deployment is ready to be deployed
+            // Processing - The deployment is currently waiting to have a build triggered
+            // Building - The deployment is currently being built
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The build status.',

@@ -73,7 +73,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(201, $function['headers']['status-code']);
 
-        $tag = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/tags', [
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/deployments', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -82,19 +82,19 @@ class FunctionsCustomClientTest extends Scope
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
 
-        $tagId = $tag['body']['$id'] ?? '';
+        $deploymentId = $deployment['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $tag['headers']['status-code']);
+        $this->assertEquals(201, $deployment['headers']['status-code']);
 
-        // Wait for tag to be built.
+        // Wait for deployment to be built.
         sleep(5);
 
-        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$function['body']['$id'].'/tag', [
+        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$function['body']['$id'].'/deployment', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'tag' => $tagId,
+            'deployment' => $deploymentId,
         ]);
 
         $this->assertEquals(200, $function['headers']['status-code']);
@@ -158,7 +158,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(201, $function['headers']['status-code']);
 
-        $tag = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/tags', [
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
@@ -167,19 +167,19 @@ class FunctionsCustomClientTest extends Scope
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php-fn.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'), //different tarball names intentional
         ]);
 
-        $tagId = $tag['body']['$id'] ?? '';
+        $deploymentId = $deployment['body']['$id'] ?? '';
 
-        // Wait for tag to be built.
+        // Wait for deployment to be built.
         sleep(5);
 
-        $this->assertEquals(201, $tag['headers']['status-code']);
+        $this->assertEquals(201, $deployment['headers']['status-code']);
 
-        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/tag', [
+        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployment', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
-            'tag' => $tagId,
+            'deployment' => $deploymentId,
         ]);
 
         $this->assertEquals(200, $function['headers']['status-code']);
@@ -208,7 +208,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals('completed', $executions['body']['status']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
         $this->assertEquals('Test', $output['APPWRITE_FUNCTION_NAME']);
-        $this->assertEquals($tagId, $output['APPWRITE_FUNCTION_TAG']);
+        $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
         $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
         $this->assertEquals('PHP', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
         $this->assertEquals('8.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
@@ -332,7 +332,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(201, $function['headers']['status-code']);
 
-        $tag = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/tags', [
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
@@ -341,19 +341,19 @@ class FunctionsCustomClientTest extends Scope
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php-fn.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'), //different tarball names intentional
         ]);
 
-        $tagId = $tag['body']['$id'] ?? '';
+        $deploymentId = $deployment['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $tag['headers']['status-code']);
+        $this->assertEquals(201, $deployment['headers']['status-code']);
 
-        // Wait for tag to be built.
+        // Wait for deployment to be built.
         sleep(5);
 
-        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/tag', [
+        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployment', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
-            'tag' => $tagId,
+            'deployment' => $deploymentId,
         ]);
 
         $this->assertEquals(200, $function['headers']['status-code']);
@@ -371,7 +371,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
         $this->assertEquals('Test', $output['APPWRITE_FUNCTION_NAME']);
-        $this->assertEquals($tagId, $output['APPWRITE_FUNCTION_TAG']);
+        $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
         $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
         $this->assertEquals('PHP', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
         $this->assertEquals('8.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);

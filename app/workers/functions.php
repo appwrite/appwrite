@@ -1,10 +1,6 @@
 <?php
 
-use Appwrite\Event\Event;
-use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
-use Appwrite\Stats\Stats;
-use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
 use Swoole\Runtime;
 use Utopia\App;
@@ -13,11 +9,8 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Orchestration\Orchestration;
 use Utopia\Orchestration\Adapter\DockerAPI;
-use Utopia\Orchestration\Container;
-use Utopia\Orchestration\Exception\Orchestration as OrchestrationException;
-use Utopia\Orchestration\Exception\Timeout as TimeoutException;
+use Utopia\Orchestration\Orchestration;
 
 require_once __DIR__.'/../init.php';
 
@@ -37,41 +30,6 @@ $warmupEnd = \microtime(true);
 $warmupTime = $warmupEnd - $warmupStart;
 
 Console::success('Finished warmup in ' . $warmupTime . ' seconds');
-
-/**
- * List function servers
- */
-$stdout = '';
-$stderr = '';
-
-$executionStart = \microtime(true);
-
-$response = $orchestration->list(['label' => 'appwrite-type=function']);
-/** @var Container[] $list */
-$list = [];
-
-foreach ($response as $value) {
-    $list[$value->getName()] = $value;
-}
-
-$executionEnd = \microtime(true);
-
-Console::info(count($list) . ' functions listed in ' . ($executionEnd - $executionStart) . ' seconds');
-
-/**
- * 1. Get event args - DONE
- * 2. Unpackage code in the isolated container - DONE
- * 3. Execute in container with timeout
- *      + messure execution time - DONE
- *      + pass env vars - DONE
- *      + pass one-time api key
- * 4. Update execution status - DONE
- * 5. Update execution stdout & stderr - DONE
- * 6. Trigger audit log - DONE
- * 7. Trigger usage log - DONE
- */
-
-// TODO avoid scheduled execution if delay is bigger than X offest
 
 class FunctionsV1 extends Worker
 {
@@ -126,11 +84,11 @@ class FunctionsV1 extends Worker
 
                     foreach ($functions as $function) {
                         $events =  $function->getAttribute('events', []);
-                        $tag =  $function->getAttribute('tag', []);
+                        $deployment =  $function->getAttribute('deployment', []);
 
                         Console::success('Itterating function: ' . $function->getAttribute('name'));
 
-                        if (!\in_array($event, $events) || empty($tag)) {
+                        if (!\in_array($event, $events) || empty($deployment)) {
                             continue;
                         }
 
@@ -247,7 +205,7 @@ class FunctionsV1 extends Worker
     }
 
     /**
-     * Execute function tag
+     * Execute function deployment
      * 
      * @param string $trigger
      * @param string $projectId
@@ -266,7 +224,7 @@ class FunctionsV1 extends Worker
     public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $eventData = '', string $data = '', array $webhooks = [], string $userId = '', string $jwt = ''): void
     {
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/execute");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/execute");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             'trigger' => $trigger,
@@ -297,67 +255,6 @@ class FunctionsV1 extends Worker
         }
 
         \curl_close($ch);
-    }
-
-    /**
-     * Cleanup any hanging containers above the allowed max containers.
-     * 
-     * @return void
-     */
-    public function cleanup(): void
-    {
-        /** @var Container[] $list */
-        global $list;
-        /** @var Orchestration $orchestration */
-        global $orchestration;
-
-        Console::success(count($list) . ' running containers counted');
-
-        $max = (int) App::getEnv('_APP_FUNCTIONS_CONTAINERS');
-
-        if (\count($list) > $max) {
-            Console::info('Starting containers cleanup');
-
-            \uasort($list, function (Container $item1, Container $item2) {
-                return (int)($item1->getLabels['appwrite-created'] ?? 0) <=> (int)($item2->getLabels['appwrite-created'] ?? 0);
-            });
-
-            while (\count($list) > $max) {
-                $first = \array_shift($list);
-
-                try {
-                    $orchestration->remove($first->getName(), true);
-                    Console::info('Removed container: ' . $first->getName());
-                } catch (Exception $e) {
-                    Console::error('Failed to remove container: ' . $e);
-                }
-            }
-        }
-    }
-
-    /**
-     * Filter ENV vars
-     * 
-     * @param string $string
-     * 
-     * @return string
-     */
-    public function filterEnvKey(string $string): string
-    {
-        if (empty($this->allowed)) {
-            $this->allowed = array_fill_keys(\str_split('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_'), true);
-        }
-
-        $string     = \str_split($string);
-        $output     = '';
-
-        foreach ($string as $char) {
-            if (\array_key_exists($char, $this->allowed)) {
-                $output .= $char;
-            }
-        }
-
-        return $output;
     }
 
     public function shutdown(): void
