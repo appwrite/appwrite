@@ -157,8 +157,8 @@ class Microsoft extends OAuth2
      * Decode the JSON stored in appSecret
      * @return array
      */
-    protected function decodeJson():array{
-        
+    protected function decodeJson(): array
+    {    
         try {
             $secret = \json_decode($this->appSecret, true);
         } catch (\Throwable $th) {
