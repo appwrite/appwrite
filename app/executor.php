@@ -934,7 +934,7 @@ App::post('/v1/functions/:functionId/executions')
                 $data = execute($trigger, $projectId, $executionId, $functionId, $dbForProject, $event, $eventData, $data, $webhooks, $userId, $jwt);
                 $response
                     ->setStatusCode(Response::STATUS_CODE_OK)
-                    ->send();
+                    ->json($data);
             } catch (Exception $e) {
                 logError($e, 'executeEndpoint');
                 throw $e;
