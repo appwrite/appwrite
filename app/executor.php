@@ -1155,7 +1155,7 @@ App::post('/v1/deployment')
                     return;
                 }
 
-                if ($deployment->getAttribute('automaticDeploy') === true) {
+                if ($deployment->getAttribute('deploy') === true) {
                     // Update the function document setting the deployment as the active one
                     $function
                         ->setAttribute('deployment', $deployment->getId())
