@@ -1,6 +1,3 @@
-<p align="right">
-    <a href="#translations">🌍 Translations</a>
-</p>
 <br />
 <p align="center">
     <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/appwrite.svg" alt="Appwrite Logo"></a>
@@ -18,6 +15,8 @@
 [![Twitter Account](https://img.shields.io/twitter/follow/appwrite?color=00acee&label=twitter&style=flat-square)](https://twitter.com/appwrite)
 [![Translate](https://img.shields.io/badge/translate-f02e65?style=flat-square)](docs/tutorials/add-translations.md)
 [![Swag Store](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io)
+
+English | [简体中文](README-CN.md)
 
 [**Appwrite 0.12 has been released! Learn what's new!**](https://dev.to/appwrite/its-here-announcing-the-release-of-appwrite-012-5c8b)
 
@@ -173,7 +172,3 @@ Join our growing community around the world! See our official [Blog](https://med
 ## License
 
 This repository is available under the [BSD 3-Clause License](./LICENSE).
-
-## Translations
-- [English](README.md)
-- [简体中文](README-CN.md)
