@@ -22,6 +22,7 @@ use Utopia\Logger\Log\User;
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
 $payloadSize = max(4000000 /* 4mb */, App::getEnv('_APP_STORAGE_LIMIT', 10000000 /* 10mb */));
+$workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
 
 $http
     ->set([
@@ -29,6 +30,7 @@ $http
         // 'document_root' => __DIR__.'/../public',
         // 'enable_static_handler' => true,
         'http_compression' => true,
+        'worker_num' => $workerNumber,
         'http_compression_level' => 6,
         'package_max_length' => $payloadSize,
         'buffer_output_size' => $payloadSize,

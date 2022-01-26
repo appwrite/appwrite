@@ -41,48 +41,15 @@ require_once __DIR__ . '/init.php';
 Authorization::disable();
 Swoole\Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
 
-function logError(Throwable $error, string $action, Utopia\Route $route = null)
-{
-    global $register;
+App::setMode(App::MODE_TYPE_PRODUCTION); // Define Mode
 
-    $logger = $register->get('logger');
+$workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
 
-    if ($logger) {
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+$http = new Server("0.0.0.0", 80);
+$http->set([
+    'worker_num' => $workerNumber,
+]);
 
-        $log = new Log();
-        $log->setNamespace("executor");
-        $log->setServer(\gethostname());
-        $log->setVersion($version);
-        $log->setType(Log::TYPE_ERROR);
-        $log->setMessage($error->getMessage());
-
-        if ($route) {
-            $log->addTag('method', $route->getMethod());
-            $log->addTag('url',  $route->getPath());
-        }
-
-        $log->addTag('code', $error->getCode());
-        $log->addTag('verboseType', get_class($error));
-
-        $log->addExtra('file', $error->getFile());
-        $log->addExtra('line', $error->getLine());
-        $log->addExtra('trace', $error->getTraceAsString());
-
-        $log->setAction($action);
-
-        $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
-        $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-        $responseCode = $logger->addLog($log);
-        Console::info('Executor log pushed with status code: ' . $responseCode);
-    }
-
-    Console::error('[Error] Type: ' . get_class($error));
-    Console::error('[Error] Message: ' . $error->getMessage());
-    Console::error('[Error] File: ' . $error->getFile());
-    Console::error('[Error] Line: ' . $error->getLine());
-};
 
 $orchestrationPool = new ConnectionPool(function () {
     $dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
@@ -90,7 +57,7 @@ $orchestrationPool = new ConnectionPool(function () {
     $orchestration = new Orchestration(new DockerCLI($dockerUser, $dockerPass));
 
     return $orchestration;
-}, 6);
+}, $workerNumber);
 
 try {
     $runtimes = Config::getParam('runtimes');
@@ -913,6 +880,49 @@ function runBuildStage(string $buildId, string $projectID): Document
     return $build;
 }
 
+function logError(Throwable $error, string $action, Utopia\Route $route = null)
+{
+    global $register;
+
+    $logger = $register->get('logger');
+
+    if ($logger) {
+        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+
+        $log = new Log();
+        $log->setNamespace("executor");
+        $log->setServer(\gethostname());
+        $log->setVersion($version);
+        $log->setType(Log::TYPE_ERROR);
+        $log->setMessage($error->getMessage());
+
+        if ($route) {
+            $log->addTag('method', $route->getMethod());
+            $log->addTag('url',  $route->getPath());
+        }
+
+        $log->addTag('code', $error->getCode());
+        $log->addTag('verboseType', get_class($error));
+
+        $log->addExtra('file', $error->getFile());
+        $log->addExtra('line', $error->getLine());
+        $log->addExtra('trace', $error->getTraceAsString());
+
+        $log->setAction($action);
+
+        $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+        $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+        $responseCode = $logger->addLog($log);
+        Console::info('Executor log pushed with status code: ' . $responseCode);
+    }
+
+    Console::error('[Error] Type: ' . get_class($error));
+    Console::error('[Error] Message: ' . $error->getMessage());
+    Console::error('[Error] File: ' . $error->getFile());
+    Console::error('[Error] Line: ' . $error->getLine());
+}
+
 App::post('/v1/execute') // Define Route
     ->desc('Execute a function')
     ->param('trigger', '', new Text(1024))
@@ -1225,9 +1235,6 @@ App::post('/v1/build/:buildId') // Start a Build
         }
     });
 
-App::setMode(App::MODE_TYPE_PRODUCTION); // Define Mode
-
-$http = new Server("0.0.0.0", 80);
 
 function handleShutdown()
 {
@@ -1236,8 +1243,6 @@ function handleShutdown()
 
     try {
         Console::info('Cleaning up containers before shutdown...');
-
-        // Remove all containers.
 
         /** @var Orchestration $orchestration */
         $orchestration = $orchestrationPool->get();
@@ -1405,6 +1410,10 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         $redisPool = $register->get('redisPool');
         $redisPool->put($redis);
     }
+});
+
+$http->on('WorkerStart', function ($server, $workerId) {
+    Console::success('Worker ' . ++$workerId . ' started successfully');
 });
 
 $http->start();

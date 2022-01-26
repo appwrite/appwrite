@@ -26,11 +26,6 @@ $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
 $dockerEmail = App::getEnv('DOCKERHUB_PULL_EMAIL', null);
 $orchestration = new Orchestration(new DockerAPI($dockerUser, $dockerPass, $dockerEmail));
 
-$warmupEnd = \microtime(true);
-$warmupTime = $warmupEnd - $warmupStart;
-
-Console::success('Finished warmup in ' . $warmupTime . ' seconds');
-
 class FunctionsV1 extends Worker
 {
     public array $args = [];

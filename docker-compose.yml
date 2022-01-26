@@ -128,6 +128,7 @@ services:
       - _APP_EXECUTOR_SECRET
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_WORKER_PER_CORE
 
   appwrite-realtime:
     entrypoint: realtime
@@ -175,6 +176,7 @@ services:
       - _APP_USAGE_STATS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_WORKER_PER_CORE
 
   appwrite-worker-audits:
     entrypoint: worker-audits
@@ -354,10 +356,6 @@ services:
     stop_signal: SIGINT
     build:
       context: .
-      args: 
-        - DEBUG=false
-        - TESTING=true
-        - VERSION=dev
     networks:
       appwrite:
       runtimes:
@@ -396,6 +394,7 @@ services:
       - _APP_STATSD_PORT
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_WORKER_PER_CORE
       - DOCKERHUB_PULL_USERNAME
       - DOCKERHUB_PULL_PASSWORD
 
