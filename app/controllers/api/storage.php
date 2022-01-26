@@ -21,6 +21,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Exception;
 use Utopia\Image\Image;
 use Utopia\Storage\Compression\Algorithms\GZIP;
+use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
@@ -349,7 +350,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE)
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
-    ->param('fileId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('fileId', '', new CustomId(), 'File ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('file', [], new File(), 'Binary file.', false)
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
@@ -930,7 +931,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception('File not found', 404);
         }
 
-        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-' . $project->getId())); // Limit file number or size
+        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId() . DIRECTORY_SEPARATOR . $bucketId . DIRECTORY_SEPARATOR . $fileId)); // Limit file number or size
         $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
 
         if ($data) {
@@ -1433,7 +1434,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('usage')
     ->inject('mode')
     ->inject('deviceFiles')
-    ->action(function ($bucketId, $fileId, $response, $dbForProject, $events, $audits, $usage, $mode, $deviceFiles) {
+    ->inject('project')
+    ->action(function ($bucketId, $fileId, $response, $dbForProject, $events, $audits, $usage, $mode, $deviceFiles, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Database $dbForProject */
@@ -1481,6 +1483,11 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         if ($deviceDeleted) {
+            //delete related cache
+            $cacheDir = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId() . DIRECTORY_SEPARATOR . $bucketId . DIRECTORY_SEPARATOR . $fileId;
+            $deviceLocal = new Local($cacheDir);
+            $deviceLocal->delete($cacheDir);
+
             if ($bucket->getAttribute('permission') === 'bucket') {
                 $deleted = Authorization::skip(function () use ($dbForProject, $fileId, $bucketId) {
                     return $dbForProject->deleteDocument('bucket_' . $bucketId, $fileId);

@@ -115,7 +115,7 @@ $logs = $this->getParam('logs', null);
                                                                     :name="attr.key"
                                                                     :required="attr.required"
                                                                     x-model="doc[attr.key]"
-                                                                    data-cast-to="integer" />
+                                                                    data-cast-to="float" />
                                                             </template>
                                                             <template x-if="attr.type === 'boolean'">
                                                                 <input
@@ -205,7 +205,7 @@ $logs = $this->getParam('logs', null);
                                                                                 :name="attr.key"
                                                                                 :required="attr.required"
                                                                                 x-model="doc[attr.key][index]"
-                                                                                data-cast-to="integer" />
+                                                                                data-cast-to="float" />
                                                                         </template>
                                                                         <template x-if="attr.type === 'boolean'">
                                                                             <input

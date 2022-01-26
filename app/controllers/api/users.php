@@ -34,7 +34,7 @@ App::post('/v1/users')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
@@ -725,6 +725,11 @@ App::delete('/v1/users/:userId')
             throw new Exception('User not found', 404);
         }
 
+        /**
+         * DO NOT DELETE THE USER RECORD ITSELF. 
+         * WE RETAIN THE USER RECORD TO RESERVE THE USER ID AND ENSURE THAT THE USER ID IS NOT REUSED.
+         */
+        
         // clone user object to send to workers
         $clone = clone $user;
 
@@ -733,6 +738,8 @@ App::delete('/v1/users/:userId')
             ->setAttribute("email", null)
             ->setAttribute("password", null)
             ->setAttribute("deleted", true)
+            ->setAttribute("tokens", [])
+            ->setAttribute("search", null)
         ;
 
         $dbForProject->updateDocument('users', $userId, $user);
