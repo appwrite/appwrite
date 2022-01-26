@@ -288,14 +288,14 @@ return [ // Ordered by ABC.
         'mock' => false
     ],
     'wso2' => [
-        'name' => 'WSO2',
+        'name' => 'Wso2',
         'developers' => 'https://is.docs.wso2.com/en/5.10.0/learn/oauth-2.0-with-wso2-playground/',
         'icon' => 'icon-wso2',
         'enabled' => true,
         'sandbox' => true,
-        'form' => false,
+        'form' => 'wso2.phtml',
         'beta' => false,
-        'mock' => false,
+        'mock' => false
     ],
     // Keep Last
     'mock' => [
