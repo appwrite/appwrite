@@ -730,7 +730,25 @@ function runBuildStage(string $buildId, string $projectID): Document
             throw new Exception('Code is not readable: ' . $build->getAttribute('source', ''));
         }
 
-        $vars = $build->getAttribute('vars', []);
+        $deployment = $database->getDocument('deployments', $build->getAttribute('deploymentId', ''));
+        $resourceId = $deployment->getAttribute('resourceId', '');
+        $resourceType = $deployment->getAttribute('resourceType', '');
+
+        if (empty($resourceId)) {
+            throw new Exception('Invalid resource ID on build ' . $build->getId());
+        }
+
+        if (empty($resourceType)) {
+            throw new Exception('Invalid resource type on build' . $build->getId());
+        }
+
+        $resource = $database->getDocument($resourceType, $resourceId);
+
+        if ($resource->isEmpty()) {
+            throw new Exception('Resource not found on build ' . $build->getId());
+        }
+
+        $vars = $resource->getAttribute('vars', []);
 
         $orchestration
             ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
