@@ -5,7 +5,6 @@ namespace Tests\E2E\Services\Storage;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
-use Utopia\Image\Image;
 
 trait StorageBase
 {
@@ -34,6 +33,18 @@ trait StorageBase
         /**
          * Test for FAILURE
          */
+        $file = $this->client->call(Client::METHOD_POST, '/storage/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => $file['body']['$id'],
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+
+        $this->assertEquals(409, $file['headers']['status-code']);
+
         return ['fileId' => $file['body']['$id']];
     }
 

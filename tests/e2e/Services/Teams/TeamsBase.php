@@ -73,6 +73,17 @@ trait TeamsBase
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
+
+        $response1 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => $teamUid,
+            'name' => 'Arsenal'
+        ]);
+
+        $this->assertEquals(409, $response1['headers']['status-code']);
+
         return ['teamUid' => $teamUid, 'teamName' => $teamName];
     }
 

@@ -937,29 +937,25 @@ App::post('/v1/account/sessions/anonymous')
 
         $userId = $dbForProject->getId();
 
-        try {
-            $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
-                '$id' => $userId,
-                '$read' => ['role:all'],
-                '$write' => ['user:' . $userId],
-                'email' => null,
-                'emailVerification' => false,
-                'status' => true,
-                'password' => null,
-                'passwordUpdate' => \time(),
-                'registration' => \time(),
-                'reset' => false,
-                'name' => null,
-                'prefs' => new \stdClass(),
-                'sessions' => [],
-                'tokens' => [],
-                'memberships' => [],
-                'search' => $userId,
-                'deleted' => false
-            ])));
-        } catch (Duplicate $th) {
-            throw new Exception('Account already exists', 409);
-        }
+        $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
+            '$id' => $userId,
+            '$read' => ['role:all'],
+            '$write' => ['user:' . $userId],
+            'email' => null,
+            'emailVerification' => false,
+            'status' => true,
+            'password' => null,
+            'passwordUpdate' => \time(),
+            'registration' => \time(),
+            'reset' => false,
+            'name' => null,
+            'prefs' => new \stdClass(),
+            'sessions' => [],
+            'tokens' => [],
+            'memberships' => [],
+            'search' => $userId,
+            'deleted' => false
+        ])));
 
         // Create session token
 

@@ -64,6 +64,27 @@ class FunctionsCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
+        $response1 = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => $functionId,
+            'name' => 'Test',
+            'runtime' => 'php-8.0',
+            'vars' => [
+                'funcKey1' => 'funcValue1',
+                'funcKey2' => 'funcValue2',
+                'funcKey3' => 'funcValue3',
+            ],
+            'events' => [
+                'account.create',
+                'account.delete',
+            ],
+            'schedule' => '0 0 1 1 *',
+            'timeout' => 10,
+        ]);
+
+        $this->assertEquals(409, $response1['headers']['status-code']);
 
         return [
             'functionId' => $functionId,

@@ -13,8 +13,6 @@ class HTTPTest extends Scope
     use ProjectNone;
     use SideNone;
 
-    // TODO: We are missing a lof of tests for each create and update endpoint that can take customID. There should be FAILED check with 409 conflict, if ID is already used.
-
     public function testOptions()
     {
         /**
