@@ -4,7 +4,7 @@ return function ($request, $response) {
     $response->json([
         'APPWRITE_FUNCTION_ID' => $request->env['APPWRITE_FUNCTION_ID'],
         'APPWRITE_FUNCTION_NAME' => $request->env['APPWRITE_FUNCTION_NAME'],
-        'APPWRITE_FUNCTION_TAG' => $request->env['APPWRITE_FUNCTION_TAG'],
+        'APPWRITE_FUNCTION_DEPLOYMENT' => $request->env['APPWRITE_FUNCTION_DEPLOYMENT'],
         'APPWRITE_FUNCTION_TRIGGER' => $request->env['APPWRITE_FUNCTION_TRIGGER'],
         'APPWRITE_FUNCTION_RUNTIME_NAME' => $request->env['APPWRITE_FUNCTION_RUNTIME_NAME'],
         'APPWRITE_FUNCTION_RUNTIME_VERSION' => $request->env['APPWRITE_FUNCTION_RUNTIME_VERSION'],

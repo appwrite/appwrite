@@ -28,8 +28,8 @@ class V07 extends Filter
             case Response::MODEL_COLLECTION:
             case Response::MODEL_FILE_LIST:
             case Response::MODEL_FILE:
-            case Response::MODEL_TAG_LIST:
-            case Response::MODEL_TAG:
+            case Response::MODEL_DEPLOYMENT_LIST:
+            case Response::MODEL_DEPLOYMENT:
             case Response::MODEL_EXECUTION_LIST:
             case Response::MODEL_EXECUTION:
             case Response::MODEL_TEAM_LIST:

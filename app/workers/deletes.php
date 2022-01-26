@@ -309,15 +309,15 @@ class DeletesV1 extends Worker
         $dbForProject = $this->getProjectDB($projectId);
         $device = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
 
-        // Delete Tags
-        $this->deleteByGroup('tags', [
+        // Delete Deployments
+        $this->deleteByGroup('deployments', [
             new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
         ], $dbForProject, function (Document $document) use ($device) {
 
             if ($device->delete($document->getAttribute('path', ''))) {
-                Console::success('Delete code tag: ' . $document->getAttribute('path', ''));
+                Console::success('Delete code deployment: ' . $document->getAttribute('path', ''));
             } else {
-                Console::error('Failed to delete code tag: ' . $document->getAttribute('path', ''));
+                Console::error('Failed to delete code deployment: ' . $document->getAttribute('path', ''));
             }
         });
 
