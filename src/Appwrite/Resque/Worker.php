@@ -70,9 +70,6 @@ abstract class Worker
         throw new Exception("Please implement getName method in worker");
     }
 
-    const MAX_ATTEMPTS = 10;
-    const SLEEP_TIME = 2;
-
     const DATABASE_PROJECT = 'project';
     const DATABASE_CONSOLE = 'console';
 
@@ -174,7 +171,7 @@ abstract class Worker
         global $register;
 
         $namespace = '';
-        $sleep = self::SLEEP_TIME; // overwritten when necessary
+        $sleep = DATABASE_RECONNECT_SLEEP; // overwritten when necessary
 
         switch ($type) {
             case self::DATABASE_PROJECT:
@@ -201,18 +198,24 @@ abstract class Worker
                 $database = new Database(new MariaDB($register->get('db')), $cache);
                 $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
                 $database->setNamespace($namespace); // Main DB
+
                 if (!empty($projectId) && !$database->getDocument('projects', $projectId)->isEmpty()) {
                     throw new \Exception("Project does not exist: {$projectId}");
                 }
+
+                if ($type === self::DATABASE_CONSOLE && !$database->exists($database->getDefaultDatabase(), 'realtime')) {
+                    throw new \Exception('Console project not ready');
+                }
+
                 break; // leave loop if successful
             } catch(\Exception $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= self::MAX_ATTEMPTS) {
+                if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
                     throw new \Exception('Failed to connect to database: '. $e->getMessage());
                 }
                 sleep($sleep);
             }
-        } while ($attempts < self::MAX_ATTEMPTS);
+        } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
 
         return $database;
     }

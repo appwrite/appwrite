@@ -453,7 +453,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                     <div class="box margin-bottom">
                         <ul data-ls-loop="members.memberships" data-ls-as="member" class="list">
                             <li class="clear">
-                                <form class="pull-end"
+                                <form class="pull-end" data-ls-if="{{account.$id}} !== {{member.userId}}"
                                     data-analytics
                                     data-analytics-activity
                                     data-analytics-event="submit"
@@ -473,7 +473,33 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                     <input name="teamId" data-ls-attrs="id=leave-teamId-{{member.$id}}" type="hidden" data-ls-bind="{{console-project.teamId}}">
                                     <input name="membershipId" data-ls-attrs="id=leave-membershipId-{{member.$id}}" type="hidden" data-ls-bind="{{member.$id}}">
 
-                                    <button class="danger">Leave</button>
+                                    <button data-ls-if="1 === {{members.memberships.length}}" class="danger" disabled>Remove</button>
+                                    <button data-ls-if="1 < {{members.memberships.length}}" class="danger">Remove</button>
+                                </form>
+
+                                <form class="pull-end" data-ls-if="{{account.$id}} === {{member.userId}}"
+                                    data-analytics
+                                    data-analytics-activity
+                                    data-analytics-event="submit"
+                                    data-analytics-category="console"
+                                    data-analytics-label="Delete Project Membership"
+                                    data-service="teams.deleteMembership"
+                                    data-scope="console"
+                                    data-event="submit"
+                                    data-success="alert,trigger,redirect"
+                                    data-confirm="Are you sure you want to remove that user from the team?"
+                                    data-success-param-alert-text="Member Removed Successfully"
+                                    data-success-param-trigger-events="teams.deleteMembership"
+                                    data-success-param-redirect-url="/console"
+                                    data-failure="alert"
+                                    data-failure-param-alert-text="Failed to Remove Member"
+                                    data-failure-param-alert-classname="error">
+
+                                    <input name="teamId" data-ls-attrs="id=leave-teamId-{{member.$id}}" type="hidden" data-ls-bind="{{console-project.teamId}}">
+                                    <input name="membershipId" data-ls-attrs="id=leave-membershipId-{{member.$id}}" type="hidden" data-ls-bind="{{member.$id}}">
+
+                                    <button data-ls-if="1 === {{members.memberships.length}}" class="danger" disabled>Remove</button>
+                                    <button data-ls-if="1 < {{members.memberships.length}}" class="danger">Remove</button>
                                 </form>
 
                                 <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end">
