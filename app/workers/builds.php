@@ -34,11 +34,11 @@ class BuildsV1 extends Worker
         $projectId = $this->args['projectId'] ?? '';
 
         switch ($type) {
-            case BUILD_TYPE_TAG:
+            case BUILD_TYPE_DEPLOYMENT:
                 $functionId = $this->args['functionId'] ?? '';
-                $tagId = $this->args['tagId'] ?? '';
-                Console::info("[ INFO ] Creating build for tag: $tagId");
-                $this->buildTag($projectId, $functionId, $tagId);
+                $deploymentId = $this->args['deploymentId'] ?? '';
+                Console::info("[ INFO ] Creating build for deployment: $deploymentId");
+                $this->buildDeployment($projectId, $functionId, $deploymentId);
                 break;
 
             case BUILD_TYPE_RETRY:
@@ -83,10 +83,10 @@ class BuildsV1 extends Worker
         }
     }
 
-    protected function triggerCreateRuntimeServer(string $projectId, string $functionId, string $tagId) 
+    protected function triggerCreateRuntimeServer(string $projectId, string $functionId, string $deploymentId) 
     {
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/$functionId/tags/$tagId/runtime");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/$functionId/deployments/$deploymentId/runtime");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
@@ -112,7 +112,7 @@ class BuildsV1 extends Worker
         }
     }
 
-    protected function buildTag(string $projectId, string $functionId, string $tagId) 
+    protected function buildDeployment(string $projectId, string $functionId, string $deploymentId) 
     {
         $dbForProject = $this->getProjectDB($projectId);
         
@@ -122,10 +122,10 @@ class BuildsV1 extends Worker
             throw new Exception('Function not found', 404);
         }
 
-        // Get tag document
-        $tag = $dbForProject->getDocument('tags', $tagId);
-        if ($tag->isEmpty()) {
-            throw new Exception('Tag not found', 404);
+        // Get deployment document
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found', 404);
         }
 
         $runtimes = Config::getParam('runtimes', []);
@@ -135,13 +135,13 @@ class BuildsV1 extends Worker
             throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
-        $buildId = $tag->getAttribute('buildId', '');
+        $buildId = $deployment->getAttribute('buildId', '');
 
         // If build ID is empty, create a new build
         if (empty($buildId)) {
             try {
                 $buildId = $dbForProject->getId();
-                // TODO : There is no way to associate a build with a tag. So we need to add a tagId attribute to the build document
+                // TODO : There is no way to associate a build with a deployment. So we need to add a deploymentId attribute to the build document
                 // TODO : What should be the read and write permissions for a build ? 
                 $dbForProject->createDocument('builds', new Document([
                     '$id' => $buildId,
@@ -151,13 +151,13 @@ class BuildsV1 extends Worker
                     'status' => 'processing',
                     'runtime' => $function->getAttribute('runtime'),
                     'outputPath' => '',
-                    'source' => $tag->getAttribute('path'),
+                    'source' => $deployment->getAttribute('path'),
                     'sourceType' => Storage::DEVICE_LOCAL,
                     'stdout' => '',
                     'stderr' => '',
                     'time' => 0,
                     'vars' => [
-                        'ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint'),
+                        'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint'),
                         'APPWRITE_FUNCTION_ID' => $function->getId(),
                         'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
                         'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
@@ -166,14 +166,14 @@ class BuildsV1 extends Worker
                     ]
                 ]));
 
-                $tag->setAttribute('buildId', $buildId);
-                $tag = $dbForProject->updateDocument('tags', $tagId, $tag);
+                $deployment->setAttribute('buildId', $buildId);
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
 
             } catch (\Throwable $th) {
                 Console::error($th->getMessage());
-                $tag->setAttribute('status', 'failed');
-                $tag->setAttribute('buildId', '');
-                $tag = $dbForProject->updateDocument('tags', $tagId, $tag);
+                $deployment->setAttribute('status', 'failed');
+                $deployment->setAttribute('buildId', '');
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
                 return;
             }
         }
@@ -181,13 +181,13 @@ class BuildsV1 extends Worker
         // Build the Code
         try {
             Console::info("[ INFO ] Creating build with id: $buildId");
-            $tag->setAttribute('status', 'building');
-            $tag = $dbForProject->updateDocument('tags', $tagId, $tag);
+            $deployment->setAttribute('status', 'building');
+            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
             $this->triggerBuild($projectId, $buildId);
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
-            $tag->setAttribute('status', 'failed');
-            $tag = $dbForProject->updateDocument('tags', $tagId, $tag);
+            $deployment->setAttribute('status', 'failed');
+            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
             return;
         }
         
@@ -195,8 +195,8 @@ class BuildsV1 extends Worker
 
         // Update the schedule
         $schedule = $function->getAttribute('schedule', '');
-        $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
+        $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
+        $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
 
         // Grab build
         $build = $dbForProject->getDocument('builds', $buildId);
@@ -206,10 +206,10 @@ class BuildsV1 extends Worker
             throw new Exception('Build failed', 500);
         }
 
-        if ($tag->getAttribute('automaticDeploy') === true) {
-            // Update the function document setting the tag as the active one
+        if ($deployment->getAttribute('deploy') === true) {
+            // Update the function document setting the deployment as the active one
             $function
-                ->setAttribute('tag', $tag->getId())
+                ->setAttribute('deployment', $deployment->getId())
                 ->setAttribute('scheduleNext', (int)$next);
 
             $function = $dbForProject->updateDocument('functions', $functionId, $function);
@@ -218,11 +218,11 @@ class BuildsV1 extends Worker
         // Deploy Runtime Server
         try {
             Console::info("[ INFO ] Creating runtime server");
-            $this->triggerCreateRuntimeServer($projectId, $functionId, $tagId, $dbForProject);
+            $this->triggerCreateRuntimeServer($projectId, $functionId, $deploymentId, $dbForProject);
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
-            $tag->setAttribute('status', 'failed');
-            $tag = $dbForProject->updateDocument('tags', $tagId, $tag);
+            $deployment->setAttribute('status', 'failed');
+            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
             return;
         }
 

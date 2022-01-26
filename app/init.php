@@ -93,7 +93,7 @@ const DATABASE_TYPE_CREATE_INDEX = 'createIndex';
 const DATABASE_TYPE_DELETE_ATTRIBUTE = 'deleteAttribute';
 const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
 // Build Worker Types
-const BUILD_TYPE_TAG = 'tag';
+const BUILD_TYPE_DEPLOYMENT = 'deployment';
 const BUILD_TYPE_RETRY = 'retry';
 // Deletion Types
 const DELETE_TYPE_DOCUMENT = 'document';

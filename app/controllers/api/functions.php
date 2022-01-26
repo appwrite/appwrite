@@ -584,7 +584,7 @@ App::post('/v1/functions/:functionId/deployments')
             'projectId' => $project->getId(),
             'functionId' => $function->getId(),
             'deploymentId' => $deploymentId,
-            'type' => BUILD_TYPE_TAG
+            'type' => BUILD_TYPE_DEPLOYMENT
         ]);
 
         $usage

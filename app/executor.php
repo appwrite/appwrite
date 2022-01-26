@@ -688,7 +688,7 @@ function runBuildStage(string $buildId, string $projectID): Document
             return $build;
         }
 
-        // Update Tag Status
+        // Update deployment Status
         $build->setAttribute('status', 'building');
 
         $database->updateDocument('builds', $build->getId(), $build);
@@ -700,7 +700,7 @@ function runBuildStage(string $buildId, string $projectID): Document
             throw new Exception('Runtime "' . $build->getAttribute('runtime', '') . '" is not supported');
         }
 
-        // Grab Tag Files
+        // Grab Deployment Files
         $deploymentPath = $build->getAttribute('source', '');
         $sourceType = $build->getAttribute('sourceType', '');
 
@@ -999,24 +999,24 @@ App::delete('/v1/functions/:functionId')
         }
     );
 
-App::post('/v1/functions/:functionId/tags/:tagId/runtime')
-    ->desc('Create a new runtime server for a tag')
+App::post('/v1/functions/:functionId/deployments/:deploymentId/runtime')
+    ->desc('Create a new runtime server for a deployment')
     ->param('functionId', '', new UID(), 'Function unique ID.')
-    ->param('tagId', '', new UID(), 'Tag unique ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment unique ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('projectID')
-    ->action(function (string $functionId, string $tagId, Response $response, Database $dbForProject, string $projectID) use ($runtimes) {
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, string $projectID) use ($runtimes) {
         // Get function document
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
 
-        // Get tag document
-        $tag = $dbForProject->getDocument('tags', $tagId);
-        if ($tag->isEmpty()) {
-            throw new Exception('Tag not found', 404);
+        // Get deployment document
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found', 404);
         }
 
         $runtime = $runtimes[$function->getAttribute('runtime')] ?? null;
@@ -1024,7 +1024,7 @@ App::post('/v1/functions/:functionId/tags/:tagId/runtime')
             throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" not found.', 404);
         }
 
-        createRuntimeServer($functionId, $projectID, $tagId, $dbForProject);
+        createRuntimeServer($functionId, $projectID, $deploymentId, $dbForProject);
 
         $response
             ->setStatusCode(201)
