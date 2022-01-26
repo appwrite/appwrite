@@ -171,7 +171,7 @@ class Microsoft extends OAuth2
      * Extracts the Tenant Id from the JSON stored in appSecret. Defaults to 'common' as a fallback
      * @return string
      */
-    protected function getTenantId():string
+    protected function getTenantId(): string
     {
         $secret = $this->decodeJson();
         return (isset($secret['tenantId'])) ? $secret['tenantId'] : 'common'; 
