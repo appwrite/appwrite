@@ -146,7 +146,7 @@ class Microsoft extends OAuth2
      * Extracts the Client Secret from the JSON stored in appSecret
      * @return string
      */
-    protected function getClientSecret():string
+    protected function getClientSecret(): string
     {
         $secret = $this->decodeJson();
 
