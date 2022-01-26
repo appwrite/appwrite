@@ -151,7 +151,6 @@ class BuildsV1 extends Worker
 
         // Build the Code
         try {
-            Console::info("[ INFO ] Creating build with id: $buildId");
             $deployment->setAttribute('status', 'building');
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
             $this->createBuild($projectId, $functionId, $deploymentId, $buildId);

@@ -367,7 +367,7 @@ App::patch('/v1/functions/:functionId/deployment')
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deployment);
-        $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
+        $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
@@ -924,8 +924,8 @@ App::post('/v1/functions/:functionId/executions')
         \curl_close($ch);
 
         $response
-        ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ->dynamic(new Document(json_decode($responseExecute, true)), Response::MODEL_SYNC_EXECUTION);
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document(json_decode($responseExecute, true)), Response::MODEL_SYNC_EXECUTION);
     });
 
 App::get('/v1/functions/:functionId/executions')

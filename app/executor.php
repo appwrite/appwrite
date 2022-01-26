@@ -930,15 +930,10 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('dbForProject')
     ->action(
         function (string $trigger, string $projectId, string $executionId, string $functionId, string $event, string $eventData, string $data, array $webhooks, string $userId, string $jwt, Response $response, Database $dbForProject) {
-            try {
-                $data = execute($trigger, $projectId, $executionId, $functionId, $dbForProject, $event, $eventData, $data, $webhooks, $userId, $jwt);
-                $response
-                    ->setStatusCode(Response::STATUS_CODE_OK)
-                    ->json($data);
-            } catch (Exception $e) {
-                logError($e, 'executeEndpoint');
-                throw $e;
-            }
+            $data = execute($trigger, $projectId, $executionId, $functionId, $dbForProject, $event, $eventData, $data, $webhooks, $userId, $jwt);
+            $response
+                ->setStatusCode(Response::STATUS_CODE_OK)
+                ->json($data);
         }
     );
 
