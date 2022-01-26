@@ -146,7 +146,7 @@ class Microsoft extends OAuth2
      * Extracts the Client Secret from the JSON stored in appSecret
      * @return string
      */
-    protected function getClientSecret():string
+    protected function getClientSecret(): string
     {
         $secret = $this->decodeJson();
 
@@ -157,8 +157,8 @@ class Microsoft extends OAuth2
      * Decode the JSON stored in appSecret
      * @return array
      */
-    protected function decodeJson():array{
-        
+    protected function decodeJson(): array
+    {    
         try {
             $secret = \json_decode($this->appSecret, true);
         } catch (\Throwable $th) {
@@ -171,7 +171,7 @@ class Microsoft extends OAuth2
      * Extracts the Tenant Id from the JSON stored in appSecret. Defaults to 'common' as a fallback
      * @return string
      */
-    protected function getTenantId():string
+    protected function getTenantId(): string
     {
         $secret = $this->decodeJson();
         return (isset($secret['tenantId'])) ? $secret['tenantId'] : 'common'; 
