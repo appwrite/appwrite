@@ -3,6 +3,12 @@
 - Introduced new execution model for functions
 - Improved functions execution times
 - Improved functions execution times
+- **[ Breaking ]** **Tags** have been renamed to **Deployments**
+  - Rename `tagId` to `deplyomentId` in collections
+  - Rename tags to deployments in the docs
+  - Updated endpoints to reflect the new terminology 
+  - Updated UI with these changes
+  - Updated event names from `function.tags.*` to `function.deployments.*`
 # Version 0.12.1
 
 ## Bugs
