@@ -673,6 +673,10 @@ function runBuildStage(string $buildId, string $projectID): Document
     // Check if build has already been run
     $build = $database->getDocument('builds', $buildId);
 
+
+    // Start tracking time
+    $buildStart = \time();
+
     try {
         // If we already have a built package ready there is no need to rebuild.
         if ($build->getAttribute('status') === 'ready' && \file_exists($build->getAttribute('outputPath'))) {
@@ -727,9 +731,6 @@ function runBuildStage(string $buildId, string $projectID): Document
         }
 
         $vars = $build->getAttribute('vars', []);
-
-        // Start tracking time
-        $buildStart = \time();
 
         $orchestration
             ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
@@ -1084,23 +1085,17 @@ App::post('/v1/deployment')
                     '$id' => $buildId,
                     '$read' => (!empty($userId)) ? ['user:' . $userId] : [],
                     '$write' => ['role:all'],
-                    'dateCreated' => time(),
+                    'startTime' => time(),
                     'status' => 'processing',
+                    'deploymentId' => $deploymentId,
                     'runtime' => $function->getAttribute('runtime'),
                     'outputPath' => '',
                     'source' => $deployment->getAttribute('path'),
                     'sourceType' => Storage::DEVICE_LOCAL,
                     'stdout' => '',
                     'stderr' => '',
-                    'time' => 0,
-                    'vars' => [
-                        'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint'),
-                        'APPWRITE_FUNCTION_ID' => $function->getId(),
-                        'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-                        'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
-                        'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
-                        'APPWRITE_FUNCTION_PROJECT_ID' => $projectID,
-                    ]
+                    'endTime' => 0,
+                    'duration' => 0
                 ]));
 
                 $deployment->setAttribute('buildId', $buildId);
