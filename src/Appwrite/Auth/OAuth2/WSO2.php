@@ -6,7 +6,7 @@ use Appwrite\Auth\OAuth2;
 
 // Reference Material
 
-class WSO2 extends OAuth2
+class Wso2 extends OAuth2
 {
     /**
      * @var array
@@ -19,10 +19,12 @@ class WSO2 extends OAuth2
      * @var array
      */
     protected $user = [];
+
     /**
-     * @var string
+    * @var string
     */
     protected $idToken  = '';
+
     /**
      * @return string
      */
@@ -37,7 +39,16 @@ class WSO2 extends OAuth2
 
     public function getLoginURL(): string
     {
-        return 'https://api.conta.stag.intelbras.com/auth/authorize?'. \http_build_query([
+
+        try {
+            $params = \json_decode($this->appSecret, true);
+        } catch (\Throwable $th) {
+            throw new Exception('Invalid secret');
+        }   
+
+        $url = $params['clientUrl'].'/'.$params['clientAuthorizeEndPoint'];
+
+        return $url.'?'. \http_build_query([
             'response_type' => 'code',
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
@@ -53,37 +64,46 @@ class WSO2 extends OAuth2
      */
     public function getAccessToken(string $code): string
     {
+
+        try {
+            $params = \json_decode($this->appSecret, true);
+        } catch (\Throwable $th) {
+            throw new Exception('Invalid secret');
+        }
+
+        $url = $params['clientUrl'].'/'.$params['clientTokenEndPoint'];
+         
         $response = $this->request(
             'POST',
-            'https://api.conta.stag.intelbras.com/auth/token',
+            $url,
             ['Content-Type: application/x-www-form-urlencoded'],
             \http_build_query([
                 'grant_type' => 'authorization_code',
                 'code' => $code,
                 'redirect_uri' => $this->callback,
                 'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
+                'client_secret' => $params['clientSecret'],
             ])
         );
 
-        $accessToken = \json_decode($response, true);
-        $idToken = \json_decode($response, true);
+        $data = \json_decode($response, true);
 
-        if (isset($idToken['id_token'])) {
+        if (isset($data['id_token'])) {
             $this->idToken = $idToken['id_token'];
         }
 
-        if (isset($accessToken['access_token'])) {
-            return $accessToken['access_token'];
+        if (isset($data['access_token'])) {
+            return $data['access_token'];
         }
 
         return '';
     }
+
     /**
-     * @param string $idToken
-     *
-     * @return string
-     */
+    * @param string $idToken
+    *
+    * @return string
+    */
     public function getAccessIdToken(): string
     { 
         return $this->idToken;
@@ -150,8 +170,17 @@ class WSO2 extends OAuth2
      */
     protected function getUser(string $accessToken): array
     {
+
+        try {
+            $params = \json_decode($this->appSecret, true);
+        } catch (\Throwable $th) {
+            throw new Exception('Invalid secret');
+        }
+
+        $url = $params['clientUrl'].'/'.$params['clientMeEndPoint'];
+
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', 'https://api.conta.stag.intelbras.com/me', ['Authorization: Bearer '.\urlencode($accessToken)]), true);
+            $this->user = \json_decode($this->request('GET', $url, ['Authorization: Bearer '.\urlencode($accessToken)]), true);
         }
 
         return $this->user;
