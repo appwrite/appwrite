@@ -231,6 +231,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                         <form
                             data-service="storage.listFiles"
                             data-event="submit"
+                            data-param-bucket-id="{{router.params.id}}"
                             data-param-search="{{router.params.search}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                             data-param-order-type="DESC"
