@@ -3,6 +3,7 @@
 - Introduced new execution model for functions
 - Improved functions execution times
 - Improved functions execution times
+- Improved functions execution times
 - **[ Breaking ]** **Tags** have been renamed to **Deployments**
   - Rename `tagId` to `deplyomentId` in collections
   - Rename tags to deployments in the docs
