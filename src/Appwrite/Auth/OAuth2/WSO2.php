@@ -89,7 +89,7 @@ class Wso2 extends OAuth2
         $data = \json_decode($response, true);
 
         if (isset($data['id_token'])) {
-            $this->idToken = $idToken['id_token'];
+            $this->idToken = $data['id_token'];
         }
 
         if (isset($data['access_token'])) {
@@ -100,8 +100,6 @@ class Wso2 extends OAuth2
     }
 
     /**
-    * @param string $idToken
-    *
     * @return string
     */
     public function getAccessIdToken(): string
