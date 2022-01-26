@@ -1095,7 +1095,8 @@ App::post('/v1/deployment')
                     'stdout' => '',
                     'stderr' => '',
                     'endTime' => 0,
-                    'duration' => 0
+                    'duration' => 0,
+                    'search' => implode(' ', [$deployment->getId(), $buildId])
                 ]));
 
                 $deployment->setAttribute('buildId', $buildId);
