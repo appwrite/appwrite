@@ -55,9 +55,9 @@ class Func extends Model
                 'default' => '',
                 'example' => 'python-3.8',
             ])
-            ->addRule('tag', [
+            ->addRule('deployment', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function active tag ID.',
+                'description' => 'Function\'s active deployment ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])

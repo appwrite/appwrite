@@ -1322,8 +1322,8 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Tag',
-                'key' => 'tag',
+                'label' => 'Deployment',
+                'key' => 'deployment',
                 'type' => Database::SYSTEM_VAR_TYPE_KEY,
                 'default' => '',
                 'required' => false,
@@ -1386,11 +1386,11 @@ $collections = [
             ],
         ],
     ],
-    Database::SYSTEM_COLLECTION_TAGS => [
+    Database::SYSTEM_COLLECTION_DEPLOYMENTS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$id' => Database::SYSTEM_COLLECTION_TAGS,
+        '$id' => Database::SYSTEM_COLLECTION_DEPLOYMENTS,
         '$permissions' => ['read' => ['role:all']],
-        'name' => 'Tags',
+        'name' => 'Deployments',
         'structure' => true,
         'rules' => [
             [
@@ -1467,8 +1467,8 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Tag ID',
-                'key' => 'tagId',
+                'label' => 'Deployment ID',
+                'key' => 'deploymentId',
                 'type' => Database::SYSTEM_VAR_TYPE_KEY,
                 'default' => '',
                 'required' => false,

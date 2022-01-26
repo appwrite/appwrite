@@ -1799,7 +1799,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'tag',
+                '$id' => 'deployment',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1898,10 +1898,10 @@ $collections = [
         ],
     ],
 
-    'tags' => [
+    'deployments' => [
         '$collection' => Database::METADATA,
-        '$id' => 'tags',
-        'name' => 'Tags',
+        '$id' => 'deployments',
+        'name' => 'Deployments',
         'attributes' => [
             [
                 '$id' => 'dateCreated',
@@ -2217,7 +2217,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'tagId',
+                '$id' => 'deploymentId',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,

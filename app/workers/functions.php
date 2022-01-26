@@ -84,11 +84,11 @@ class FunctionsV1 extends Worker
 
                     foreach ($functions as $function) {
                         $events =  $function->getAttribute('events', []);
-                        $tag =  $function->getAttribute('tag', []);
+                        $deployment =  $function->getAttribute('deployment', []);
 
                         Console::success('Itterating function: ' . $function->getAttribute('name'));
 
-                        if (!\in_array($event, $events) || empty($tag)) {
+                        if (!\in_array($event, $events) || empty($deployment)) {
                             continue;
                         }
 
@@ -205,7 +205,7 @@ class FunctionsV1 extends Worker
     }
 
     /**
-     * Execute function tag
+     * Execute function deployment
      * 
      * @param string $trigger
      * @param string $projectId

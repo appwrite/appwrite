@@ -153,7 +153,7 @@ try {
     call_user_func($logError, $error, "startupError");
 }
 
-function createRuntimeServer(string $functionId, string $projectId, string $tagId, Database $database): void
+function createRuntimeServer(string $functionId, string $projectId, string $deploymentId, Database $database): void
 {
     global $orchestrationPool;
     global $runtimes;
@@ -162,17 +162,17 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
     try {
         $orchestration = $orchestrationPool->get();
         $function = $database->getDocument('functions', $functionId);
-        $tag = $database->getDocument('tags', $tagId);
+        $deployment = $database->getDocument('deployments', $deploymentId);
 
-        if ($tag->getAttribute('buildId') === null) {
-            throw new Exception('Tag has no buildId');
+        if ($deployment->getAttribute('buildId') === null) {
+            throw new Exception('Deployment has no buildId');
         }
 
         // Grab Build Document
-        $build = $database->getDocument('builds', $tag->getAttribute('buildId'));
+        $build = $database->getDocument('builds', $deployment->getAttribute('buildId'));
 
         // Check if function isn't already created
-        $functions = $orchestration->list(['label' => 'appwrite-type=function', 'name' => 'appwrite-function-' . $tag->getId()]);
+        $functions = $orchestration->list(['label' => 'appwrite-type=function', 'name' => 'appwrite-function-' . $deployment->getId()]);
 
         if (\count($functions) > 0) {
             return;
@@ -184,8 +184,8 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
         // Check if runtime is active
         $runtime = $runtimes[$function->getAttribute('runtime', '')] ?? null;
 
-        if ($tag->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception('Tag not found', 404);
+        if ($deployment->getAttribute('functionId') !== $function->getId()) {
+            throw new Exception('deployment not found', 404);
         }
 
         if (\is_null($runtime)) {
@@ -196,7 +196,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
         $vars = \array_merge($function->getAttribute('vars', []), [
             'APPWRITE_FUNCTION_ID' => $function->getId(),
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-            'APPWRITE_FUNCTION_TAG' => $tag->getId(),
+            'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
             'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
@@ -205,7 +205,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
 
         $vars = \array_merge($vars, $build->getAttribute('vars', [])); // for gettng endpoint.
 
-        $container = 'appwrite-function-' . $tag->getId();
+        $container = 'appwrite-function-' . $deployment->getId();
 
         if ($activeFunctions->exists($container) && !(\substr($activeFunctions->get($container)['status'], 0, 2) === 'Up')) { // Remove container if not online
             // If container is online then stop and remove it
@@ -222,41 +222,41 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
             $activeFunctions->del($container);
         }
 
-        // Check if tag hasn't failed
+        // Check if deployment hasn't failed
         if ($build->getAttribute('status') === 'failed') {
-            throw new Exception('Tag build failed, please check your logs.', 500);
+            throw new Exception('Deployment build failed, please check your logs.', 500);
         }
 
-        // Check if tag is built yet.
+        // Check if deployment is built yet.
         if ($build->getAttribute('status') !== 'ready') {
-            throw new Exception('Tag is not built yet', 500);
+            throw new Exception('Deployment is not built yet', 500);
         }
 
-        // Grab Tag Files
-        $tagPath = $build->getAttribute('outputPath', '');
+        // Grab Deployment Files
+        $deploymentPath = $build->getAttribute('outputPath', '');
 
-        $tagPathTarget = '/tmp/project-' . $projectId . '/' . $build->getId() . '/builtCode/code.tar.gz';
-        $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
-        $container = 'appwrite-function-' . $tag->getId();
+        $deploymentPathTarget = '/tmp/project-' . $projectId . '/' . $build->getId() . '/builtCode/code.tar.gz';
+        $deploymentPathTargetDir = \pathinfo($deploymentPathTarget, PATHINFO_DIRNAME);
+        $container = 'appwrite-function-' . $deployment->getId();
 
         $device = Storage::getDevice('builds');
 
-        if (!\file_exists($tagPathTargetDir)) {
-            if (@\mkdir($tagPathTargetDir, 0777, true)) {
-                \chmod($tagPathTargetDir, 0777);
+        if (!\file_exists($deploymentPathTargetDir)) {
+            if (@\mkdir($deploymentPathTargetDir, 0777, true)) {
+                \chmod($deploymentPathTargetDir, 0777);
             } else {
-                throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
+                throw new Exception('Can\'t create directory ' . $deploymentPathTargetDir);
             }
         }
 
-        if (!\file_exists($tagPathTarget)) {
+        if (!\file_exists($deploymentPathTarget)) {
             if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
-                if (!\copy($tagPath, $tagPathTarget)) {
-                    throw new Exception('Can\'t create temporary code file ' . $tagPathTarget);
+                if (!\copy($deploymentPath, $deploymentPathTarget)) {
+                    throw new Exception('Can\'t create temporary code file ' . $deploymentPathTarget);
                 }
             } else {
-                $buffer = $device->read($tagPath);
-                \file_put_contents($tagPathTarget, $buffer);
+                $buffer = $device->read($deploymentPath);
+                \file_put_contents($deploymentPathTarget, $buffer);
             }
         };
 
@@ -290,10 +290,10 @@ function createRuntimeServer(string $functionId, string $projectId, string $tagI
                     'appwrite-created' => strval($executionTime),
                     'appwrite-runtime' => $function->getAttribute('runtime', ''),
                     'appwrite-project' => $projectId,
-                    'appwrite-tag' => $tag->getId(),
+                    'appwrite-deployment' => $deployment->getId(),
                 ],
                 hostname: $container,
-                mountFolder: $tagPathTargetDir,
+                mountFolder: $deploymentPathTargetDir,
             );
 
             if (empty($id)) {
@@ -333,11 +333,11 @@ function execute(string $trigger, string $projectId, string $executionId, string
     global $register;
 
     $function = $database->getDocument('functions', $functionId);
-    $tag = $database->getDocument('tags', $function->getAttribute('tag', ''));
-    $build = $database->getDocument('builds', $tag->getAttribute('buildId', ''));
+    $deployment = $database->getDocument('deployments', $function->getAttribute('deployment', ''));
+    $build = $database->getDocument('builds', $deployment->getAttribute('buildId', ''));
 
-    if ($tag->getAttribute('functionId') !== $function->getId()) {
-        throw new Exception('Tag not found', 404);
+    if ($deployment->getAttribute('functionId') !== $function->getId()) {
+        throw new Exception('Deployment not found', 404);
     }
 
     // Grab execution document if exists
@@ -350,7 +350,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
             '$write' => ['role:all'],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
-            'tagId' => $tag->getId(),
+            'deploymentId' => $deployment->getId(),
             'trigger' => $trigger, // http / schedule / event
             'status' => 'processing', // waiting / processing / completed / failed
             'statusCode' => 0,
@@ -370,12 +370,12 @@ function execute(string $trigger, string $projectId, string $executionId, string
         $execution
             ->setAttribute('status', 'failed')
             ->setAttribute('statusCode', 500)
-            ->setAttribute('stderr', 'Tag is still being built.')
+            ->setAttribute('stderr', 'Deployment is still being built.')
             ->setAttribute('time', 0);
 
         $database->updateDocument('executions', $execution->getId(), $execution);
 
-        throw new Exception('Execution Failed. Reason: Tag is still being built.');
+        throw new Exception('Execution Failed. Reason: Deployment is still being built.');
     }
 
     // Check if runtime is active
@@ -389,7 +389,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
     $vars = \array_merge($function->getAttribute('vars', []), [
         'APPWRITE_FUNCTION_ID' => $function->getId(),
         'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-        'APPWRITE_FUNCTION_TAG' => $tag->getId(),
+        'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
         'APPWRITE_FUNCTION_TRIGGER' => $trigger,
         'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
         'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
@@ -403,7 +403,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     $vars = \array_merge($vars, $build->getAttribute('vars', []));
 
-    $container = 'appwrite-function-' . $tag->getId();
+    $container = 'appwrite-function-' . $deployment->getId();
 
     try {
         if ($build->getAttribute('status') !== 'ready') {
@@ -417,13 +417,13 @@ function execute(string $trigger, string $projectId, string $executionId, string
                 'status' => 'processing',
                 'outputPath' => '',
                 'runtime' => $function->getAttribute('runtime', ''),
-                'source' => $tag->getAttribute('path'),
+                'source' => $deployment->getAttribute('path'),
                 'sourceType' => Storage::DEVICE_LOCAL,
                 'stdout' => '',
                 'stderr' => '',
                 'time' => 0,
                 'vars' => [
-                    'ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint'),
+                    'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint'),
                     'APPWRITE_FUNCTION_ID' => $function->getId(),
                     'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
                     'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
@@ -432,9 +432,9 @@ function execute(string $trigger, string $projectId, string $executionId, string
                 ]
             ]));
 
-            $tag->setAttribute('buildId', $buildId);
+            $deployment->setAttribute('buildId', $buildId);
 
-            $database->updateDocument('tags', $tag->getId(), $tag);
+            $database->updateDocument('deployments', $deployment->getId(), $deployment);
 
             runBuildStage($buildId, $projectId);
         }
@@ -452,7 +452,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     try {
         if (!$activeFunctions->exists($container)) { // Create container if not ready
-            createRuntimeServer($functionId, $projectId, $tag->getId(), $database);
+            createRuntimeServer($functionId, $projectId, $deployment->getId(), $database);
         } else if ($activeFunctions->get($container)['status'] === 'Down') {
             sleep(1);
         } else {
@@ -479,13 +479,13 @@ function execute(string $trigger, string $projectId, string $executionId, string
         ];
     }
 
-    $key = $activeFunctions->get('appwrite-function-' . $tag->getId(), 'key');
+    $key = $activeFunctions->get('appwrite-function-' . $deployment->getId(), 'key');
 
     // Process environment variables
     $vars = \array_merge($function->getAttribute('vars', []), [
         'APPWRITE_FUNCTION_ID' => $function->getId(),
         'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-        'APPWRITE_FUNCTION_TAG' => $tag->getId(),
+        'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
         'APPWRITE_FUNCTION_TRIGGER' => $trigger,
         'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
         'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
@@ -603,7 +603,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     Console::success('Function executed in ' . ($executionEnd - $executionStart) . ' seconds, status: ' . $functionStatus);
 
-    $execution->setAttribute('tagId', $tag->getId())
+    $execution->setAttribute('deploymentId', $deployment->getId())
         ->setAttribute('status', $functionStatus)
         ->setAttribute('statusCode', $statusCode)
         ->setAttribute('stdout', \utf8_encode(\mb_substr($stdout, -8000)))
@@ -701,37 +701,37 @@ function runBuildStage(string $buildId, string $projectID): Document
         }
 
         // Grab Tag Files
-        $tagPath = $build->getAttribute('source', '');
+        $deploymentPath = $build->getAttribute('source', '');
         $sourceType = $build->getAttribute('sourceType', '');
 
         $device = Storage::getDevice('builds');
 
-        $tagPathTarget = '/tmp/project-' . $projectID . '/' . $build->getId() . '/code.tar.gz';
-        $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
+        $deploymentPathTarget = '/tmp/project-' . $projectID . '/' . $build->getId() . '/code.tar.gz';
+        $deploymentPathTargetDir = \pathinfo($deploymentPathTarget, PATHINFO_DIRNAME);
 
         $container = 'build-stage-' . $build->getId();
 
         // Perform various checks
-        if (!\file_exists($tagPathTargetDir)) {
-            if (@\mkdir($tagPathTargetDir, 0777, true)) {
-                \chmod($tagPathTargetDir, 0777);
+        if (!\file_exists($deploymentPathTargetDir)) {
+            if (@\mkdir($deploymentPathTargetDir, 0777, true)) {
+                \chmod($deploymentPathTargetDir, 0777);
             } else {
-                throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
+                throw new Exception('Can\'t create directory ' . $deploymentPathTargetDir);
             }
         }
 
-        if (!\file_exists($tagPathTarget)) {
+        if (!\file_exists($deploymentPathTarget)) {
             if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
-                if (!\copy($tagPath, $tagPathTarget)) {
-                    throw new Exception('Can\'t create temporary code file ' . $tagPathTarget);
+                if (!\copy($deploymentPath, $deploymentPathTarget)) {
+                    throw new Exception('Can\'t create temporary code file ' . $deploymentPathTarget);
                 }
             } else {
-                $buffer = $device->read($tagPath);
-                \file_put_contents($tagPathTarget, $buffer);
+                $buffer = $device->read($deploymentPath);
+                \file_put_contents($deploymentPathTarget, $buffer);
             }
         }
 
-        if (!$device->exists($tagPath)) {
+        if (!$device->exists($deploymentPath)) {
             throw new Exception('Code is not readable: ' . $build->getAttribute('source', ''));
         }
 
@@ -776,7 +776,7 @@ function runBuildStage(string $buildId, string $projectID): Document
                 '/dev/null'
             ],
             hostname: $container,
-            mountFolder: $tagPathTargetDir,
+            mountFolder: $deploymentPathTargetDir,
             volumes: [
                 '/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode' . ':/usr/builtCode:rw'
             ]
@@ -960,29 +960,29 @@ App::delete('/v1/functions/:functionId')
                     throw new Exception('Function not found', 404);
                 }
 
-                $results = $dbForProject->find('tags', [new Query('functionId', Query::TYPE_EQUAL, [$functionId])], 999);
+                $results = $dbForProject->find('deployments', [new Query('functionId', Query::TYPE_EQUAL, [$functionId])], 999);
 
                 // If amount is 0 then we simply return true
                 if (count($results) === 0) {
                     return $response->json(['success' => true]);
                 }
 
-                // Delete the containers of all tags
-                foreach ($results as $tag) {
+                // Delete the containers of all deployments
+                foreach ($results as $deployment) {
                     try {
                         // Remove any ongoing builds
-                        if ($tag->getAttribute('buildId')) {
-                            $build = $dbForProject->getDocument('builds', $tag->getAttribute('buildId'));
+                        if ($deployment->getAttribute('buildId')) {
+                            $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
 
                             if ($build->getAttribute('status') === 'building') {
                                 // Remove the build
-                                $orchestration->remove('build-stage-' . $tag->getAttribute('buildId'), true);
-                                Console::info('Removed build for tag ' . $tag['$id']);
+                                $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
+                                Console::info('Removed build for deployment ' . $deployment['$id']);
                             }
                         }
 
-                        $orchestration->remove('appwrite-function-' . $tag['$id'], true);
-                        Console::info('Removed container for tag ' . $tag['$id']);
+                        $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
+                        Console::info('Removed container for deployment ' . $deployment['$id']);
                     } catch (Exception $e) {
                         // Do nothing, we don't care that much if it fails
                     }
@@ -1031,38 +1031,38 @@ App::post('/v1/functions/:functionId/tags/:tagId/runtime')
             ->send();
     });
 
-App::delete('/v1/tags/:tagId')
-    ->param('tagId', '', new UID(), 'Tag unique ID.')
+App::delete('/v1/deployments/:deploymentId')
+    ->param('deploymentId', '', new UID(), 'Deployment unique ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $tagId, Response $response, Database $dbForProject) use ($orchestrationPool) {
+    ->action(function (string $deploymentId, Response $response, Database $dbForProject) use ($orchestrationPool) {
         try {
             /** @var Orchestration $orchestration */
             $orchestration = $orchestrationPool->get();
 
-            // Get tag document
-            $tag = $dbForProject->getDocument('tags', $tagId);
+            // Get deployment document
+            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-            // Check if tag exists
-            if ($tag->isEmpty()) {
-                throw new Exception('Tag not found', 404);
+            // Check if deployment exists
+            if ($deployment->isEmpty()) {
+                throw new Exception('Deployment not found', 404);
             }
 
             try {
                 // Remove any ongoing builds
-                if ($tag->getAttribute('buildId')) {
-                    $build = $dbForProject->getDocument('builds', $tag->getAttribute('buildId'));
+                if ($deployment->getAttribute('buildId')) {
+                    $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
 
                     if ($build->getAttribute('status') == 'building') {
                         // Remove the build
-                        $orchestration->remove('build-stage-' . $tag->getAttribute('buildId'), true);
-                        Console::info('Removed build for tag ' . $tag['$id']);
+                        $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
+                        Console::info('Removed build for deployment ' . $deployment['$id']);
                     }
                 }
 
-                // Remove the container of the tag
-                $orchestration->remove('appwrite-function-' . $tag['$id'], true);
-                Console::info('Removed container for tag ' . $tag['$id']);
+                // Remove the container of the deployment
+                $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
+                Console::info('Removed container for deployment ' . $deployment['$id']);
             } catch (Exception $e) {
                 // Do nothing, we don't care that much if it fails
             }
@@ -1078,7 +1078,6 @@ App::delete('/v1/tags/:tagId')
     });
 
 App::post('/v1/builds/:buildId')
-    ->desc('Start a build')
     ->param('buildId', '', new UID(), 'Build unique ID.', false)
     ->inject('response')
     ->inject('dbForProject')
@@ -1148,7 +1147,7 @@ function handleShutdown()
 
             // Get list of all processing executions
             $executions = $database->find('executions', [
-                new Query('tagId', Query::TYPE_EQUAL, [$container->getLabels()["appwrite-tag"]]),
+                new Query('deploymentId', Query::TYPE_EQUAL, [$container->getLabels()["appwrite-deployment"]]),
                 new Query('status', Query::TYPE_EQUAL, ['waiting'])
             ]);
 
