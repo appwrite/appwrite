@@ -43,8 +43,10 @@ class BuildsV1 extends Worker
 
             case BUILD_TYPE_RETRY:
                 $buildId = $this->args['buildId'] ?? '';
+                $functionId = $this->args['functionId'] ?? '';
+                $deploymentId = $this->args['deploymentId'] ?? '';
                 Console::info("[ INFO ] Retrying build for id: $buildId");
-                $this->triggerBuild($projectId, $buildId);
+                $this->createBuild($projectId, $functionId, $deploymentId, $buildId);
                 break;
 
             default:
@@ -53,40 +55,11 @@ class BuildsV1 extends Worker
         }
     }
 
-    protected function triggerBuild(string $projectId, string $buildId)
+    protected function createBuild(string $projectId, string $functionId, string $deploymentId, string $buildId)
     {
         // TODO: What is a reasonable time to wait for a build to complete?
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/builds/$buildId");
-        \curl_setopt($ch, CURLOPT_POST, true);
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
-        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'x-appwrite-project: '.$projectId,
-            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
-        ]);
-
-        $response = \curl_exec($ch);
-        $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        $error = \curl_error($ch);
-        if (!empty($error)) {
-            throw new \Exception($error);
-        }
-
-        \curl_close($ch);
-
-        if ($responseStatus >= 400) {
-            throw new \Exception("Build failed with status code: $responseStatus");
-        }
-    }
-
-    protected function triggerCreateRuntimeServer(string $projectId, string $functionId, string $deploymentId) 
-    {
-        $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/$functionId/deployments/$deploymentId/runtime");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/$functionId/deployments/$deploymentId/builds/$buildId");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
@@ -117,7 +90,6 @@ class BuildsV1 extends Worker
         $dbForProject = $this->getProjectDB($projectId);
         
         $function = $dbForProject->getDocument('functions', $functionId);
-
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
@@ -142,7 +114,6 @@ class BuildsV1 extends Worker
             try {
                 $buildId = $dbForProject->getId();
                 // TODO : There is no way to associate a build with a deployment. So we need to add a deploymentId attribute to the build document
-                // TODO : What should be the read and write permissions for a build ? 
                 $dbForProject->createDocument('builds', new Document([
                     '$id' => $buildId,
                     '$read' => [],
@@ -170,11 +141,11 @@ class BuildsV1 extends Worker
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
 
             } catch (\Throwable $th) {
-                Console::error($th->getMessage());
                 $deployment->setAttribute('status', 'failed');
                 $deployment->setAttribute('buildId', '');
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
-                return;
+                Console::error($th->getMessage());
+                throw $th;
             }
         }
 
@@ -183,50 +154,15 @@ class BuildsV1 extends Worker
             Console::info("[ INFO ] Creating build with id: $buildId");
             $deployment->setAttribute('status', 'building');
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
-            $this->triggerBuild($projectId, $buildId);
+            $this->createBuild($projectId, $functionId, $deploymentId, $buildId);
         } catch (\Throwable $th) {
-            Console::error($th->getMessage());
             $deployment->setAttribute('status', 'failed');
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
-            return;
-        }
-        
-        Console::success("[ SUCCESS ] Build id: $buildId completed");
-
-        // Update the schedule
-        $schedule = $function->getAttribute('schedule', '');
-        $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
-
-        // Grab build
-        $build = $dbForProject->getDocument('builds', $buildId);
-
-        // If the build failed, it won't be possible to deploy
-        if ($build->getAttribute('status') !== 'ready') {
-            throw new Exception('Build failed', 500);
-        }
-
-        if ($deployment->getAttribute('deploy') === true) {
-            // Update the function document setting the deployment as the active one
-            $function
-                ->setAttribute('deployment', $deployment->getId())
-                ->setAttribute('scheduleNext', (int)$next);
-
-            $function = $dbForProject->updateDocument('functions', $functionId, $function);
-        }
-
-        // Deploy Runtime Server
-        try {
-            Console::info("[ INFO ] Creating runtime server");
-            $this->triggerCreateRuntimeServer($projectId, $functionId, $deploymentId, $dbForProject);
-        } catch (\Throwable $th) {
             Console::error($th->getMessage());
-            $deployment->setAttribute('status', 'failed');
-            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
-            return;
+            throw $th;
         }
 
-        Console::success("[ SUCCESS ] Runtime Server created");
+        Console::success("[ SUCCESS ] Build id: $buildId started");
     }
 
     public function shutdown(): void {}

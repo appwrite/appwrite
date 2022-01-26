@@ -378,8 +378,14 @@ services:
 
   appwrite-executor:
     container_name: appwrite-executor
-    entrypoint: executor
+    entrypoint:
+      - php
+      - -e
+      - /usr/src/code/app/executor.php
+      - -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
     stop_signal: SIGINT
+    ports:
+      - "8080:8080"
     build:
       context: .
       args: 

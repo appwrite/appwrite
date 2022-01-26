@@ -22,7 +22,7 @@ use Utopia\Logger\Log\User;
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
 $http->set([
-    'worker_num' => 1,
+    'worker_num' => 4,
     'reactor_num' => 6
 ]);
 
