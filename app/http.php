@@ -21,11 +21,6 @@ use Utopia\Logger\Log\User;
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
-$http->set([
-    'worker_num' => 4,
-    'reactor_num' => 6
-]);
-
 $payloadSize = max(4000000 /* 4mb */, App::getEnv('_APP_STORAGE_LIMIT', 10000000 /* 10mb */));
 
 $http
