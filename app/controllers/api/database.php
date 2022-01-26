@@ -166,8 +166,6 @@ App::post('/v1/database/collections')
         $collectionId = $collectionId == 'unique()' ? $dbForProject->getId() : $collectionId;
 
         try {
-            $dbForProject->createCollection('collection_' . $collectionId);
-
             $collection = $dbForProject->createDocument('collections', new Document([
                 '$id' => $collectionId,
                 '$read' => $read ?? [], // Collection permissions for collection documents (based on permission model)
@@ -179,8 +177,12 @@ App::post('/v1/database/collections')
                 'name' => $name,
                 'search' => implode(' ', [$collectionId, $name]),
             ]));
+
+            $dbForProject->createCollection('collection_' . $collectionId);
         } catch (DuplicateException $th) {
             throw new Exception('Collection already exists', 409);
+        } catch (LimitException $th) {
+            throw new Exception('Collection limit exceeded', 400);
         }
 
         $audits
