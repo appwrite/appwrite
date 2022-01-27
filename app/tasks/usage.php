@@ -448,23 +448,23 @@ $cli
 
                         $collections = [
                             'users' => [
-                                'namespace' => 'internal',
+                                'namespace' => '',
                             ],
                             'collections' => [
                                 'metricPrefix' => 'database',
-                                'namespace' => 'internal',
+                                'namespace' => '',
                                 'subCollections' => [ // Some collections, like collections and later buckets have child collections that need counting
                                     'documents' => [
-                                        'namespace' => 'external',
+                                        'namespace' => '',
                                     ],
                                 ],
                             ],
                             'buckets' => [
                                 'metricPrefix' => 'storage',
-                                'namespace' => 'internal',
+                                'namespace' => '',
                                 'subCollections' => [
                                     'files' => [
-                                        'namespace' => 'external',
+                                        'namespace' => '',
                                         'collectionPrefix' => 'bucket_',
                                         'sum' => [
                                             'field' => 'sizeOriginal'
@@ -543,7 +543,7 @@ $cli
 
                                     foreach ($parents as $parent) {
                                         foreach ($subCollections as $subCollection => $subOptions) { // Sub collection counts, like database.collections.collectionId.documents.count
-                                            $dbForProject->setNamespace("_project_{$projectId}_{$subOptions['namespace']}");
+                                            $dbForProject->setNamespace("_project_{$projectId}");
                                             $count = $dbForProject->count(($subOptions['collectionPrefix'] ?? '') . $parent->getId());
 
                                             $subCollectionCounts[$subCollection] = ($subCollectionCounts[$subCollection] ?? 0) + $count; // Project level counts for sub collections like database.documents.count
@@ -597,12 +597,12 @@ $cli
                                                 continue;
                                             }
 
-                                            $dbForProject->setNamespace("project_{$projectId}_{$subOptions['namespace']}");
+                                            $dbForProject->setNamespace("project_{$projectId}");
                                             $total = (int) $dbForProject->sum(($subOptions['collectionPrefix'] ?? '') . $parent->getId(), $sum['field']);
 
                                             $subCollectionTotals[$subCollection] = ($ssubCollectionTotals[$subCollection] ?? 0) + $total; // Project level sum for sub collections like storage.total
 
-                                            $dbForProject->setNamespace("project_{$projectId}_internal");
+                                            $dbForProject->setNamespace("project_{$projectId}");
 
                                             $metric = empty($metricPrefix) ? "{$collection}.{$parent->getId()}.{$subCollection}.total" : "{$metricPrefix}.{$collection}.{$parent->getId()}.{$subCollection}.total";
                                             $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
@@ -696,7 +696,7 @@ $cli
                                  * Inserting project level sums for sub collections like storage.total
                                  */
                                 foreach ($subCollectionTotals as $subCollection => $count) {
-                                    $dbForProject->setNamespace("project_{$projectId}_internal");
+                                    $dbForProject->setNamespace("project_{$projectId}");
 
                                     $metric = empty($metricPrefix) ? "{$subCollection}.total" : "{$metricPrefix}.{$subCollection}.total";
 
