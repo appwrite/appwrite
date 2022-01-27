@@ -597,12 +597,12 @@ $cli
                                                 continue;
                                             }
 
-                                            $dbForProject->setNamespace("project_{$projectId}");
+                                            $dbForProject->setNamespace("_project_{$projectId}");
                                             $total = (int) $dbForProject->sum(($subOptions['collectionPrefix'] ?? '') . $parent->getId(), $sum['field']);
 
                                             $subCollectionTotals[$subCollection] = ($ssubCollectionTotals[$subCollection] ?? 0) + $total; // Project level sum for sub collections like storage.total
 
-                                            $dbForProject->setNamespace("project_{$projectId}");
+                                            $dbForProject->setNamespace("_project_{$projectId}");
 
                                             $metric = empty($metricPrefix) ? "{$collection}.{$parent->getId()}.{$subCollection}.total" : "{$metricPrefix}.{$collection}.{$parent->getId()}.{$subCollection}.total";
                                             $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
@@ -696,7 +696,7 @@ $cli
                                  * Inserting project level sums for sub collections like storage.total
                                  */
                                 foreach ($subCollectionTotals as $subCollection => $count) {
-                                    $dbForProject->setNamespace("project_{$projectId}");
+                                    $dbForProject->setNamespace("_project_{$projectId}");
 
                                     $metric = empty($metricPrefix) ? "{$subCollection}.total" : "{$metricPrefix}.{$subCollection}.total";
 
