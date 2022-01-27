@@ -915,32 +915,24 @@ function runBuildStage(string $buildId, string $projectID): Document
 
 App::post('/v1/execute') // Define Route
     ->desc('Execute a function')
-    ->param('trigger', '', new Text(1024))
-    ->param('projectId', '', new Text(1024))
-    ->param('executionId', '', new Text(1024), '', true)
-    ->param('functionId', '', new Text(1024))
-    ->param('event', '', new Text(1024), '', true)
-    ->param('eventData', '', new Text(10240), '', true)
-    ->param('data', '', new Text(1024), '', true)
-    ->param('webhooks', [], new ArrayList(new JSON()), '', true)
-    ->param('userId', '', new Text(1024), '', true)
-    ->param('jwt', '', new Text(1024), '', true)
+    ->param('trigger', '', new Text(1024), 'What triggered this execution, can be http / schedule / event')
+    ->param('projectId', '', new Text(1024), 'The ProjectID this execution belongs to')
+    ->param('executionId', '', new Text(1024), 'An optional execution ID, If not specified a new execution document is created.', true)
+    ->param('functionId', '', new Text(1024), 'The FunctionID to execute')
+    ->param('event', '', new Text(1024), 'The event that triggered this execution', true)
+    ->param('eventData', '', new Text(0), 'Extra Data for the event', true)
+    ->param('data', '', new Text(1024), 'Data to be forwarded to the function, this is user specified.', true)
+    ->param('webhooks', [], new ArrayList(new JSON()), 'Any webhooks that need to be triggered after this execution', true)
+    ->param('userId', '', new Text(1024), 'The UserID of the user who triggered the execution if it was called from a client SDK', true)
+    ->param('jwt', '', new Text(1024), 'A JWT of the user who triggered the execution if it was called from a client SDK', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(
         function (string $trigger, string $projectId, string $executionId, string $functionId, string $event, string $eventData, string $data, array $webhooks, string $userId, string $jwt, Response $response, Database $dbForProject) {
-            try {
-                $data = execute($trigger, $projectId, $executionId, $functionId, $dbForProject, $event, $eventData, $data, $webhooks, $userId, $jwt);
-                $response->json($data);
-            } catch (Exception $e) {
-                logError($e, 'executeEndpoint');
+            $data = execute($trigger, $projectId, $executionId, $functionId, $dbForProject, $event, $eventData, $data, $webhooks, $userId, $jwt);
 
-                $response
-                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-                    ->addHeader('Expires', '0')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->json(['error' => $e->getMessage()]);
-            }
+            $response->setStatusCode(Response::STATUS_CODE_OK);
+            $response->json($data);
         }
     );
 
@@ -951,10 +943,9 @@ App::post('/v1/cleanup/function')
     ->inject('dbForProject')
     ->action(
         function (string $functionId, Response $response, Database $dbForProject) use ($orchestrationPool) {
+            /** @var Orchestration $orchestration */
+            $orchestration = $orchestrationPool->get();
             try {
-                /** @var Orchestration $orchestration */
-                $orchestration = $orchestrationPool->get();
-
                 // Get function document
                 $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -967,38 +958,35 @@ App::post('/v1/cleanup/function')
 
                 // If amount is 0 then we simply return true
                 if (count($results) === 0) {
+                    $response->setStatusCode(Response::STATUS_CODE_OK);
                     return $response->json(['success' => true]);
                 }
 
                 // Delete the containers of all deployments
                 foreach ($results as $deployment) {
-                    try {
-                        // Remove any ongoing builds
-                        if ($deployment->getAttribute('buildId')) {
-                            $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
+                    // Remove any ongoing builds
+                    if ($deployment->getAttribute('buildId')) {
+                        $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
 
-                            if ($build->getAttribute('status') === 'building') {
-                                // Remove the build
-                                $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
-                                Console::info('Removed build for deployment ' . $deployment['$id']);
-                            }
+                        if ($build->getAttribute('status') === 'building') {
+                            // Remove the build
+                            $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
+                            Console::info('Removed build for deployment ' . $deployment['$id']);
                         }
-
-                        $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
-                        Console::info('Removed container for deployment ' . $deployment['$id']);
-                    } catch (Exception $e) {
-                        // Do nothing, we don't care that much if it fails
                     }
+
+                    $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
+                    Console::info('Removed container for deployment ' . $deployment['$id']);
                 }
 
+                $response->setStatusCode(Response::STATUS_CODE_OK);
                 return $response->json(['success' => true]);
-            } catch (Exception $e) {
-                logError($e, "cleanupFunction");
+            } catch (Throwable $th) {
                 $orchestrationPool->put($orchestration);
-
-                return $response->json(['error' => $e->getMessage()]);
+                throw $th; 
+            } finally {
+                $orchestrationPool->put($orchestration);
             }
-            $orchestrationPool->put($orchestration);
         }
     );
 
@@ -1007,10 +995,9 @@ App::post('/v1/cleanup/deployment')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $deploymentId, Response $response, Database $dbForProject) use ($orchestrationPool) {
+        /** @var Orchestration $orchestration */
+        $orchestration = $orchestrationPool->get();
         try {
-            /** @var Orchestration $orchestration */
-            $orchestration = $orchestrationPool->get();
-
             // Get deployment document
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
@@ -1019,29 +1006,23 @@ App::post('/v1/cleanup/deployment')
                 throw new Exception('Deployment not found', 404);
             }
 
-            try {
-                // Remove any ongoing builds
-                if ($deployment->getAttribute('buildId')) {
-                    $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
+            // Remove any ongoing builds
+            if ($deployment->getAttribute('buildId')) {
+                $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
 
-                    if ($build->getAttribute('status') == 'building') {
-                        // Remove the build
-                        $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
-                        Console::info('Removed build for deployment ' . $deployment['$id']);
-                    }
+                if ($build->getAttribute('status') == 'building') {
+                    // Remove the build
+                    $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
+                    Console::info('Removed build for deployment ' . $deployment['$id']);
                 }
-
-                // Remove the container of the deployment
-                $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
-                Console::info('Removed container for deployment ' . $deployment['$id']);
-            } catch (Exception $e) {
-                // Do nothing, we don't care that much if it fails
             }
-        } catch (Exception $e) {
-            logError($e, "cleanupFunction");
-            $orchestrationPool->put($orchestration);
 
-            return $response->json(['error' => $e->getMessage()]);
+            // Remove the container of the deployment
+            $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
+            Console::info('Removed container for deployment ' . $deployment['$id']);
+        } catch (Throwable $th) {
+            $orchestrationPool->put($orchestration);
+            throw $th;
         }
         $orchestrationPool->put($orchestration);
 
@@ -1074,7 +1055,7 @@ App::post('/v1/deployment')
         $runtime = $runtimes[$function->getAttribute('runtime')] ?? null;
 
         if (\is_null($runtime)) {
-            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
+            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported', 404);
         }
 
         // Create a new build entry
@@ -1083,37 +1064,32 @@ App::post('/v1/deployment')
         if ($deployment->getAttribute('buildId')) {
             $buildId = $deployment->getAttribute('buildId');
         } else {
-            try {
-                $dbForProject->createDocument('builds', new Document([
-                    '$id' => $buildId,
-                    '$read' => (!empty($userId)) ? ['user:' . $userId] : [],
-                    '$write' => ['role:all'],
-                    'dateCreated' => time(),
-                    'status' => 'processing',
-                    'runtime' => $function->getAttribute('runtime'),
-                    'outputPath' => '',
-                    'source' => $deployment->getAttribute('path'),
-                    'sourceType' => Storage::DEVICE_LOCAL,
-                    'stdout' => '',
-                    'stderr' => '',
-                    'time' => 0,
-                    'vars' => [
-                        'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint'),
-                        'APPWRITE_FUNCTION_ID' => $function->getId(),
-                        'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-                        'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
-                        'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
-                        'APPWRITE_FUNCTION_PROJECT_ID' => $projectID,
-                    ]
-                ]));
+            $dbForProject->createDocument('builds', new Document([
+                '$id' => $buildId,
+                '$read' => (!empty($userId)) ? ['user:' . $userId] : [],
+                '$write' => ['role:all'],
+                'dateCreated' => time(),
+                'status' => 'processing',
+                'runtime' => $function->getAttribute('runtime'),
+                'outputPath' => '',
+                'source' => $deployment->getAttribute('path'),
+                'sourceType' => Storage::DEVICE_LOCAL,
+                'stdout' => '',
+                'stderr' => '',
+                'time' => 0,
+                'vars' => [
+                    'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint'),
+                    'APPWRITE_FUNCTION_ID' => $function->getId(),
+                    'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
+                    'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
+                    'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
+                    'APPWRITE_FUNCTION_PROJECT_ID' => $projectID,
+                ]
+            ]));
 
-                $deployment->setAttribute('buildId', $buildId);
+            $deployment->setAttribute('buildId', $buildId);
 
-                $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-            } catch (\Throwable $th) {
-                var_dump($deployment->getArrayCopy());
-                throw $th;
-            }
+            $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
         }
 
         // Build Code
@@ -1156,6 +1132,9 @@ App::post('/v1/deployment')
                 // Deploy Runtime Server
                 createRuntimeServer($functionId, $projectID, $deploymentId, $dbForProject);
             } catch (\Throwable $th) {
+                $register->get('dbPool')->put($db);
+                $register->get('redisPool')->put($redis);
+                throw $th;
             } finally {
                 $register->get('dbPool')->put($db);
                 $register->get('redisPool')->put($redis);
@@ -1188,41 +1167,31 @@ App::post('/v1/build/:buildId') // Start a Build
     ->inject('dbForProject')
     ->inject('projectID')
     ->action(function (string $buildId, Response $response, Database $dbForProject, string $projectID) {
-        try {
-            // Get build document
-            $build = $dbForProject->getDocument('builds', $buildId);
+        // Get build document
+        $build = $dbForProject->getDocument('builds', $buildId);
 
-            // Check if build exists
-            if ($build->isEmpty()) {
-                throw new Exception('Build not found', 404);
-            }
-
-            // Check if build is already running
-            if ($build->getAttribute('status') === 'running') {
-                throw new Exception('Build is already running', 409);
-            }
-
-            // Check if build is already finished
-            if ($build->getAttribute('status') === 'finished') {
-                throw new Exception('Build is already finished', 409);
-            }
-
-            go(function () use ($buildId, $dbForProject, $projectID) {
-                // Build Code
-                runBuildStage($buildId, $projectID, $dbForProject);
-            });
-
-            // return success
-            return $response->json(['success' => true]);
-        } catch (Exception $e) {
-            logError($e, "buildEndpoint");
-
-            $response
-                ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-                ->addHeader('Expires', '0')
-                ->addHeader('Pragma', 'no-cache')
-                ->json(['error' => $e->getMessage()]);
+        // Check if build exists
+        if ($build->isEmpty()) {
+            throw new Exception('Build not found', 404);
         }
+
+        // Check if build is already running
+        if ($build->getAttribute('status') === 'running') {
+            throw new Exception('Build is already running', 409);
+        }
+
+        // Check if build is already finished
+        if ($build->getAttribute('status') === 'finished') {
+            throw new Exception('Build is already finished', 409);
+        }
+
+        go(function () use ($buildId, $dbForProject, $projectID) {
+            // Build Code
+            runBuildStage($buildId, $projectID, $dbForProject);
+        });
+
+        // return success
+        return $response->json(['success' => true]);
     });
 
 App::setMode(App::MODE_TYPE_PRODUCTION); // Define Mode
