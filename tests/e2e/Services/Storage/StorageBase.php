@@ -506,7 +506,7 @@ trait StorageBase
         $imageAfter = new \Imagick();
         $imageAfter->readImageBlob($file3['body']);
 
-        $this->assertNotEquals($imageBefore, $imageAfter);
+        $this->assertNotEquals($imageBefore->getImageBlob(), $imageAfter->getImageBlob());
 
         return $data;
     }

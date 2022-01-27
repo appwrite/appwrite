@@ -1486,7 +1486,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             //delete related cache
             $cacheDir = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId() . DIRECTORY_SEPARATOR . $bucketId . DIRECTORY_SEPARATOR . $fileId;
             $deviceLocal = new Local($cacheDir);
-            $deviceLocal->delete($cacheDir);
+            $deviceLocal->delete($cacheDir, true);
 
             if ($bucket->getAttribute('permission') === 'bucket') {
                 $deleted = Authorization::skip(function () use ($dbForProject, $fileId, $bucketId) {
