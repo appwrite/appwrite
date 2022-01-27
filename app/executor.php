@@ -436,7 +436,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
             $database->updateDocument('deployments', $deployment->getId(), $deployment);
 
-            runBuildStage($buildId, $projectId);
+            runBuildStage($buildId, $deployment->getId(), $projectId);
         }
     } catch (Exception $e) {
         $execution
@@ -659,7 +659,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
     ];
 };
 
-function runBuildStage(string $buildId, string $projectID): Document
+function runBuildStage(string $buildId, string $deploymentId, string $projectID): Document
 {
     global $runtimes;
     global $orchestrationPool;
@@ -681,6 +681,7 @@ function runBuildStage(string $buildId, string $projectID): Document
 
     // Check if build has already been run
     $build = $database->getDocument('builds', $buildId);
+    $deployment = $database->getDocument('deployments', $deploymentId);
 
     try {
         // If we already have a built package ready there is no need to rebuild.
@@ -690,8 +691,9 @@ function runBuildStage(string $buildId, string $projectID): Document
 
         // Update deployment Status
         $build->setAttribute('status', 'building');
-
-        $database->updateDocument('builds', $build->getId(), $build);
+        $deployment->setAttribute('status', 'building');
+        $database->updateDocument('builds', $buildId, $build);
+        $database->updateDocument('deployments', $deploymentId, $deployment);
 
         // Check if runtime is active
         $runtime = $runtimes[$build->getAttribute('runtime', '')] ?? null;
@@ -702,14 +704,12 @@ function runBuildStage(string $buildId, string $projectID): Document
 
         // Grab Deployment Files
         $deploymentPath = $build->getAttribute('source', '');
-        $sourceType = $build->getAttribute('sourceType', '');
-
         $device = Storage::getDevice('builds');
 
-        $deploymentPathTarget = '/tmp/project-' . $projectID . '/' . $build->getId() . '/code.tar.gz';
+        $deploymentPathTarget = '/tmp/project-' . $projectID . '/' . $buildId . '/code.tar.gz';
         $deploymentPathTargetDir = \pathinfo($deploymentPathTarget, PATHINFO_DIRNAME);
 
-        $container = 'build-stage-' . $build->getId();
+        $container = 'build-stage-' . $buildId;
 
         // Perform various checks
         if (!\file_exists($deploymentPathTargetDir)) {
@@ -747,13 +747,13 @@ function runBuildStage(string $buildId, string $projectID): Document
             ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
 
         $vars = array_map(fn ($v) => strval($v), $vars);
-        $path = '/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode';
+        $path = '/tmp/project-' . $projectID . '/' . $buildId . '/builtCode';
 
         if (!\file_exists($path)) {
             if (@\mkdir($path, 0777, true)) {
                 \chmod($path, 0777);
             } else {
-                throw new Exception('Can\'t create directory /tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode');
+                throw new Exception('Can\'t create directory /tmp/project-' . $projectID . '/' . $buildId . '/builtCode');
             }
         }
 
@@ -768,7 +768,7 @@ function runBuildStage(string $buildId, string $projectID): Document
                 'appwrite-created' => strval($time),
                 'appwrite-runtime' => $build->getAttribute('runtime', ''),
                 'appwrite-project' => $projectID,
-                'appwrite-build' => $build->getId(),
+                'appwrite-build' => $buildId,
             ],
             command: [
                 'tail',
@@ -778,7 +778,7 @@ function runBuildStage(string $buildId, string $projectID): Document
             hostname: $container,
             mountFolder: $deploymentPathTargetDir,
             volumes: [
-                '/tmp/project-' . $projectID . '/' . $build->getId() . '/builtCode' . ':/usr/builtCode:rw'
+                '/tmp/project-' . $projectID . '/' . $buildId . '/builtCode' . ':/usr/builtCode:rw'
             ]
         );
 
@@ -884,6 +884,9 @@ function runBuildStage(string $buildId, string $projectID): Document
         // Update build with built code attribute
         $build = $database->updateDocument('builds', $buildId, $build);
 
+        $deployment->setAttribute('status', 'ready');
+        $database->updateDocument('deployments', $deploymentId, $deployment);
+
         $buildEnd = \microtime(true);
 
         Console::info('Build Stage Ran in ' . ($buildEnd - $buildStart) . ' seconds');
@@ -894,6 +897,9 @@ function runBuildStage(string $buildId, string $projectID): Document
             ->setAttribute('stderr', \utf8_encode(\mb_substr($e->getMessage(), -4096)));
 
         $build = $database->updateDocument('builds', $buildId, $build);
+
+        $deployment->setAttribute('status', 'failed');
+        $database->updateDocument('deployments', $deploymentId, $deployment);
 
         // also remove the container if it exists
         if (isset($id)) {
@@ -1099,18 +1105,18 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             throw new Exception('Build not found', 404);
         }
 
-        if ($build->getAttribute('status') === 'running') {
+        if ($build->getAttribute('status') === 'building') {
             throw new Exception('Build is already running', 409);
         }
 
         // Check if build is already finished
-        if ($build->getAttribute('status') === 'finished') {
+        if ($build->getAttribute('status') === 'ready') {
             throw new Exception('Build is already finished', 409);
         }
 
         go(function() use ($functionId, $deploymentId, $buildId, $projectId, $dbForProject, $function, $deployment) {
             Console::info('Starting build for deployment ' . $deployment['$id']);
-            runBuildStage($buildId, $projectId);
+            runBuildStage($buildId, $deploymentId, $projectId);
 
             // Update the schedule
             $schedule = $function->getAttribute('schedule', '');
