@@ -404,7 +404,7 @@ $cli
 
                         // Get total storage
                         $dbForProject->setNamespace('_project_' . $projectId);
-                        $storageTotal = $dbForProject->sum('files', 'sizeOriginal') + $dbForProject->sum('tags', 'size');
+                        $storageTotal = $dbForProject->sum('tags', 'size');
 
                         $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
                         $id = \md5($time . '_30m_storage.tags.total'); //Construct unique id for each metric using time, period and metric
@@ -427,7 +427,7 @@ $cli
                         }
 
                         $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
-                        $id = \md5($time . '_1d_storage.total'); //Construct unique id for each metric using time, period and metric
+                        $id = \md5($time . '_1d_storage.tags.total'); //Construct unique id for each metric using time, period and metric
                         $document = $dbForProject->getDocument('stats', $id);
                         if ($document->isEmpty()) {
                             $dbForProject->createDocument('stats', new Document([
