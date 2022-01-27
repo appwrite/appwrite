@@ -25,7 +25,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Logger\Log;
-use Utopia\Orchestration\Adapter\DockerAPI;
 use Utopia\Orchestration\Adapter\DockerCLI;
 use Utopia\Orchestration\Orchestration;
 use Utopia\Registry\Registry;
@@ -931,14 +930,15 @@ App::post('/v1/execute') // Define Route
         function (string $trigger, string $projectId, string $executionId, string $functionId, string $event, string $eventData, string $data, array $webhooks, string $userId, string $jwt, Response $response, Database $dbForProject) {
             $data = execute($trigger, $projectId, $executionId, $functionId, $dbForProject, $event, $eventData, $data, $webhooks, $userId, $jwt);
 
-            $response->setStatusCode(Response::STATUS_CODE_OK);
-            $response->json($data);
+            return $response
+                ->setStatusCode(Response::STATUS_CODE_OK)
+                ->json($data);
         }
     );
 
 // Cleanup Endpoints used internally by appwrite when a function or deployment gets deleted to also clean up their containers
 App::post('/v1/cleanup/function')
-    ->param('functionId', '', new UID())
+    ->param('functionId', '', new UID(), 'The FunctionID to cleanup')
     ->inject('response')
     ->inject('dbForProject')
     ->action(
@@ -958,8 +958,9 @@ App::post('/v1/cleanup/function')
 
                 // If amount is 0 then we simply return true
                 if (count($results) === 0) {
-                    $response->setStatusCode(Response::STATUS_CODE_OK);
-                    return $response->json(['success' => true]);
+                    return $response
+                        ->setStatusCode(Response::STATUS_CODE_OK)
+                        ->json(['success' => true]);
                 }
 
                 // Delete the containers of all deployments
@@ -979,8 +980,9 @@ App::post('/v1/cleanup/function')
                     Console::info('Removed container for deployment ' . $deployment['$id']);
                 }
 
-                $response->setStatusCode(Response::STATUS_CODE_OK);
-                return $response->json(['success' => true]);
+                return $response
+                    ->setStatusCode(Response::STATUS_CODE_OK)
+                    ->json(['success' => true]);
             } catch (Throwable $th) {
                 $orchestrationPool->put($orchestration);
                 throw $th; 
@@ -1026,8 +1028,9 @@ App::post('/v1/cleanup/deployment')
         }
         $orchestrationPool->put($orchestration);
 
-        $response->setStatusCode(Response::STATUS_CODE_OK);
-        return $response->json(['success' => true]);
+        return $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->json(['success' => true]);
     });
 
 App::post('/v1/deployment')
@@ -1149,17 +1152,6 @@ App::post('/v1/deployment')
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
-App::get('/v1/')
-    ->inject('response')
-    ->action(
-        function (Response $response) {
-            $response
-                ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-                ->addHeader('Expires', '0')
-                ->addHeader('Pragma', 'no-cache')
-                ->json(['status' => 'online']);
-        }
-    );
 
 // Build Endpoints
 App::post('/v1/build/:buildId') // Start a Build
@@ -1192,8 +1184,9 @@ App::post('/v1/build/:buildId') // Start a Build
         });
 
         // return success
-        $response->setStatusCode(Response::STATUS_CODE_OK);
-        return $response->json(['success' => true]);
+        return $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->json(['success' => true]);
     });
 
 App::setMode(App::MODE_TYPE_PRODUCTION); // Define Mode
