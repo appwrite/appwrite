@@ -483,6 +483,6 @@ class DeletesV1 extends Worker
                 break;
         }
         
-        $device->deletePath($device->getRoot() . DIRECTORY_SEPARATOR . $bucketId);
+        $device->deletePath($bucketId);
     }
 }
