@@ -1026,6 +1026,7 @@ App::post('/v1/cleanup/deployment')
         }
         $orchestrationPool->put($orchestration);
 
+        $response->setStatusCode(Response::STATUS_CODE_OK);
         return $response->json(['success' => true]);
     });
 
@@ -1191,6 +1192,7 @@ App::post('/v1/build/:buildId') // Start a Build
         });
 
         // return success
+        $response->setStatusCode(Response::STATUS_CODE_OK);
         return $response->json(['success' => true]);
     });
 
