@@ -160,6 +160,7 @@ class StorageCustomServerTest extends Scope
             'bucketId' => 'unique()',
             'name' => 'Test Bucket Updated',
             'enabled' => false,
+            'permission' => 'file',
         ]);
         $this->assertEquals(200, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
