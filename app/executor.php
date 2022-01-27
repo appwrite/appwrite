@@ -413,6 +413,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
                 '$id' => $buildId,
                 '$read' => ($userId !== '') ? ['user:' . $userId] : [],
                 '$write' => [],
+                'deploymentId' => $deployment->getId(),
                 'dateCreated' => time(),
                 'status' => 'processing',
                 'outputPath' => '',

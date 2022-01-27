@@ -50,6 +50,9 @@ class DeletesV1 extends Worker
                     case DELETE_TYPE_FUNCTIONS:
                         $this->deleteFunction($document, $projectId);
                         break;
+                    case DELETE_TYPE_DEPLOYMENTS:
+                        $this->deleteDeployment($document, $projectId);
+                        break;
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($document, $projectId);
                         break;
@@ -313,18 +316,34 @@ class DeletesV1 extends Worker
         $this->deleteByGroup('deployments', [
             new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
         ], $dbForProject, function (Document $document) use ($device) {
-
-            if ($device->delete($document->getAttribute('path', ''))) {
+            if ($device->delete($document->getAttribute('path', ''), true)) {
                 Console::success('Delete code deployment: ' . $document->getAttribute('path', ''));
             } else {
                 Console::error('Failed to delete code deployment: ' . $document->getAttribute('path', ''));
             }
         });
 
+        // Delete builds
+        $this->deleteByGroup('builds', [
+            new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
+        ], $dbForProject, function (Document $document) use ($device) {
+            if ($device->delete($document->getAttribute('path', ''), true)) {
+                Console::success('Delete code deployment: ' . $document->getAttribute('path', ''));
+            } else {
+                Console::error('Failed to delete code deployment: ' . $document->getAttribute('path', ''));
+            }
+        });
+
+        // Delete build files
+
         // Delete Executions
         $this->deleteByGroup('executions', [
             new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
         ], $dbForProject);
+
+
+        // Delete deployment files
+
     }
 
 

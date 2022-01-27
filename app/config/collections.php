@@ -2050,6 +2050,17 @@ $collections = [
         'name' => 'Builds',
         'attributes' => [
             [
+                '$id' => 'deploymentId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => 'dateCreated',
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
@@ -2173,9 +2184,9 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_status',
+                '$id' => '_key_deployment',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['status'],
+                'attributes' => ['deploymentId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],

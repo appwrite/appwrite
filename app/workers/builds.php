@@ -118,6 +118,7 @@ class BuildsV1 extends Worker
                     '$id' => $buildId,
                     '$read' => [],
                     '$write' => [],
+                    'deploymentId' => $deploymentId,
                     'dateCreated' => time(),
                     'status' => 'processing',
                     'runtime' => $function->getAttribute('runtime'),
