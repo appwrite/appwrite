@@ -16,6 +16,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -761,7 +762,11 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception('Team not found', 404);
         }
 
-        if (!$dbForProject->deleteDocument('memberships', $membership->getId())) {
+        try {
+            $dbForProject->deleteDocument('memberships', $membership->getId());
+        } catch (AuthorizationException $exception) {
+            throw new Exception('Unauthorized permissions', 401);
+        } catch (\Exception $exception) {
             throw new Exception('Failed to remove membership from DB', 500);
         }
 
@@ -782,7 +787,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
             $team->setAttribute('sum', \max($team->getAttribute('sum', 0) - 1, 0));
-            $team = $dbForProject->updateDocument('teams', $team->getId(), $team);
+            Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
         }
 
         $audits
