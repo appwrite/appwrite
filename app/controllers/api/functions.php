@@ -588,7 +588,7 @@ App::post('/v1/functions/:functionId/deployments')
         ]);
 
         $usage
-        ->setParam('storage', $deployment->getAttribute('size', 0))
+            ->setParam('storage', $deployment->getAttribute('size', 0))
         ;
 
 
