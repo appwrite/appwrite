@@ -310,15 +310,16 @@ class DeletesV1 extends Worker
     protected function deleteFunction(Document $document, string $projectId): void
     {
         $dbForProject = $this->getProjectDB($projectId);
-        $device = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+        $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+        $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
         $deploymentIds = [];
         
         // Delete Deployments
         $this->deleteByGroup('deployments', [
             new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
-        ], $dbForProject, function (Document $document) use ($device, &$deploymentIds) {
+        ], $dbForProject, function (Document $document) use ($storageFunctions, &$deploymentIds) {
             $deploymentIds[] = $document->getId();
-            if ($device->delete($document->getAttribute('path', ''), true)) {
+            if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
                 Console::success('Delete deployment files: ' . $document->getAttribute('path', ''));
             } else {
                 Console::error('Failed to delete deployment files: ' . $document->getAttribute('path', ''));
@@ -328,8 +329,8 @@ class DeletesV1 extends Worker
         // Delete builds
         $this->deleteByGroup('builds', [
             new Query('deploymentId', Query::TYPE_EQUAL, $deploymentIds)
-        ], $dbForProject, function (Document $document) use ($device) {
-            if ($device->delete($document->getAttribute('outputPath', ''), true)) {
+        ], $dbForProject, function (Document $document) use ($storageBuilds) {
+            if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
                 Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
             } else {
                 Console::error('Failed to delete build files: ' . $document->getAttribute('outputPath', ''));

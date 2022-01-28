@@ -66,6 +66,7 @@ services:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - appwrite-functions:/storage/functions:rw
+      - appwrite-builds:/storage/builds:rw
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./psalm.xml:/usr/src/code/psalm.xml
       - ./tests:/usr/src/code/tests
@@ -238,6 +239,7 @@ services:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-functions:/storage/functions:rw
+      - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
@@ -398,6 +400,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-functions:/storage/functions:rw
+      - appwrite-builds:/storage/builds:rw
       - /tmp:/tmp:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
@@ -697,6 +700,7 @@ volumes:
   appwrite-uploads:
   appwrite-certificates:
   appwrite-functions:
+  appwrite-builds:
   appwrite-influxdb:
   appwrite-config:
   appwrite-executor:
