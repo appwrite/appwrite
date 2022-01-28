@@ -686,8 +686,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('deletes')
-    ->inject('project')
-    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $usage, $deletes, $project) {
+    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $usage, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
