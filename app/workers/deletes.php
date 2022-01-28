@@ -422,24 +422,18 @@ class DeletesV1 extends Worker
          * Delete Deployments
          */
         $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
-        $deploymentIds = [];
-        $this->deleteByGroup('deployments', [
-            new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
-        ], $dbForProject, function (Document $document) use ($storageFunctions, &$deploymentIds) {
-            $deploymentIds[] = $document->getId();
-            if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
-                Console::success('Delete deployment files: ' . $document->getAttribute('path', ''));
-            } else {
-                Console::error('Failed to delete deployment files: ' . $document->getAttribute('path', ''));
-            }
-        });
+        if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
+            Console::success('Delete deployment files: ' . $document->getAttribute('path', ''));
+        } else {
+            Console::error('Failed to delete deployment files: ' . $document->getAttribute('path', ''));
+        }
 
         /**
          * Delete builds
          */
         $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
         $this->deleteByGroup('builds', [
-            new Query('deploymentId', Query::TYPE_EQUAL, $deploymentIds)
+            new Query('deploymentId', Query::TYPE_EQUAL, [$document->getId()])
         ], $dbForProject, function (Document $document) use ($storageBuilds) {
             if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
                 Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
@@ -447,11 +441,6 @@ class DeletesV1 extends Worker
                 Console::error('Failed to delete build files: ' . $document->getAttribute('outputPath', ''));
             }
         });
-
-        // Delete Executions
-        $this->deleteByGroup('executions', [
-            new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
-        ], $dbForProject);
 
     }
 
