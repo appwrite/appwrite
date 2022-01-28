@@ -993,7 +993,6 @@ App::delete('/v1/functions/:functionId')
                         $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
                         Console::info('Removed container for deployment ' . $deployment['$id']);
                     } catch (\Throwable $th) {
-                        // Do nothing, we don't care that much if it fails
                         Console::error($th->getMessage());
                     } finally {
                         $orchestrationPool->put($orchestration);
@@ -1084,7 +1083,6 @@ App::delete('/v1/deployments/:deploymentId')
                 $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
                 Console::info('Removed container for deployment ' . $deployment['$id']);
             } catch (\Throwable $th) {
-                // Do nothing, we don't care that much if it fails
                 Console::error($th->getMessage());
             } finally {
                 $orchestrationPool->put($orchestration);
