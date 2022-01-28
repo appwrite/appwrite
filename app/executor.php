@@ -947,58 +947,62 @@ App::post('/v1/functions/:functionId/executions')
 App::delete('/v1/functions/:functionId')
     ->desc('Delete a function')
     ->param('functionId', '', new UID())
+    ->inject('projectId')
     ->inject('response')
     ->inject('dbForProject')
     ->action(
-        function (string $functionId, Response $response, Database $dbForProject) use ($orchestrationPool) {
-            try {
-                /** @var Orchestration $orchestration */
-                $orchestration = $orchestrationPool->get();
+        function (string $functionId, string $projectId, Response $response, Database $dbForProject) use ($orchestrationPool) {
 
-                // Get function document
-                $function = $dbForProject->getDocument('functions', $functionId);
+            $results = $dbForProject->find('deployments', [new Query('functionId', Query::TYPE_EQUAL, [$functionId])], 999);
 
-                // Check if function exists
-                if ($function->isEmpty()) {
-                    throw new Exception('Function not found', 404);
-                }
+            // If amount is 0 then we simply return true
+            if (count($results) === 0) {
+                $response
+                    ->setStatusCode(Response::STATUS_CODE_OK)
+                    ->send();
+            }
 
-                $results = $dbForProject->find('deployments', [new Query('functionId', Query::TYPE_EQUAL, [$functionId])], 999);
+            Console::info("Deleting $results count");
 
-                // If amount is 0 then we simply return true
-                if (count($results) === 0) {
-                    return $response->json(['success' => true]);
-                }
-
-                // Delete the containers of all deployments
-                foreach ($results as $deployment) {
+            // Delete the containers of all deployments
+            // TODO : @christy Delete all build containers as well. Not just the latest one,
+            global $register;
+            foreach ($results as $deployment) {
+                go(function () use ($orchestrationPool, $deployment, $register, $projectId) {
                     try {
+                        $db = $register->get('dbPool')->get();
+                        $redis = $register->get('redisPool')->get();
+                        $cache = new Cache(new RedisCache($redis));
+                        $dbForProject = new Database(new MariaDB($db), $cache);
+                        $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+                        $dbForProject->setNamespace('_project_' . $projectId);
+
+                        $orchestration = $orchestrationPool->get();
                         // Remove any ongoing builds
                         if ($deployment->getAttribute('buildId')) {
                             $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
-
+    
                             if ($build->getAttribute('status') === 'building') {
                                 // Remove the build
                                 $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
                                 Console::info('Removed build for deployment ' . $deployment['$id']);
                             }
                         }
-
+    
                         $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
                         Console::info('Removed container for deployment ' . $deployment['$id']);
-                    } catch (Exception $e) {
+                    } catch (Throwable $th) {
                         // Do nothing, we don't care that much if it fails
+                        Console::error($th->getMessage());
+                    } finally {
+                        $orchestrationPool->put($orchestration);
                     }
-                }
-
-                return $response->json(['success' => true]);
-            } catch (Exception $e) {
-                logError($e, "cleanupFunction");
-                $orchestrationPool->put($orchestration);
-
-                return $response->json(['error' => $e->getMessage()]);
+                });
             }
-            $orchestrationPool->put($orchestration);
+
+            $response
+                ->setStatusCode(Response::STATUS_CODE_OK)
+                ->send();
         }
     );
 

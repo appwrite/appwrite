@@ -8,6 +8,7 @@ use Appwrite\Resque\Worker;
 use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Audit\Audit;
 
@@ -310,10 +311,41 @@ class DeletesV1 extends Worker
     protected function deleteFunction(Document $document, string $projectId): void
     {
         $dbForProject = $this->getProjectDB($projectId);
-        $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
-        $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
 
-        // Delete Deployments
+        /**
+         * Request executor to delete all deployment containers
+         */
+        try {
+            $ch = \curl_init();
+            \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+            \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/{$document->getId()}");
+            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'x-appwrite-project: '. $projectId,
+                'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
+            ]);
+
+            $executorResponse = \curl_exec($ch);
+            $error = \curl_error($ch);
+            if (!empty($error)) {
+                throw new Exception($error, 500);
+            }
+
+            $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            if ($statusCode >= 400) {
+                throw new Exception('Executor error: ' . $executorResponse, $statusCode);
+            }
+
+            \curl_close($ch);
+        } catch (Throwable $th) {
+            Console::error($th->getMessage());
+        }
+
+        /**
+         * Delete Deployments
+         */
+        $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
         $deploymentIds = [];
         $this->deleteByGroup('deployments', [
             new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
@@ -326,7 +358,10 @@ class DeletesV1 extends Worker
             }
         });
 
-        // Delete builds
+        /**
+         * Delete builds
+         */
+        $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
         $this->deleteByGroup('builds', [
             new Query('deploymentId', Query::TYPE_EQUAL, $deploymentIds)
         ], $dbForProject, function (Document $document) use ($storageBuilds) {
@@ -342,8 +377,6 @@ class DeletesV1 extends Worker
             new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
         ], $dbForProject);
 
-        // Send delete request to executor
-        
     }
 
 
