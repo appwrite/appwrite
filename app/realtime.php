@@ -91,13 +91,32 @@ $server->error($logError);
 
 function getDatabase(Registry &$register, string $namespace)
 {
-    $db = $register->get('dbPool')->get();
-    $redis = $register->get('redisPool')->get();
+    $attempts = 0;
 
-    $cache = new Cache(new RedisCache($redis));
-    $database = new Database(new MariaDB($db), $cache);
-    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace($namespace);
+    do {
+        try {
+            $attempts++;
+
+            $db = $register->get('dbPool')->get();
+            $redis = $register->get('redisPool')->get();
+
+            $cache = new Cache(new RedisCache($redis));
+            $database = new Database(new MariaDB($db), $cache);
+            $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $database->setNamespace($namespace);
+
+            if (!$database->exists($database->getDefaultDatabase(), 'realtime')) {
+                throw new Exception('Collection not ready');
+            }
+            break; // leave loop if successful
+        } catch(\Exception $e) {
+            Console::warning("Database not ready. Retrying connection ({$attempts})...");
+            if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
+                throw new \Exception('Failed to connect to database: '. $e->getMessage());
+            }
+            sleep(DATABASE_RECONNECT_SLEEP);
+        }
+    } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
 
     return [
         $database,
@@ -106,6 +125,7 @@ function getDatabase(Registry &$register, string $namespace)
             $register->get('redisPool')->put($redis);
         }
     ];
+
 };
 
 $server->onStart(function () use ($stats, $register, $containerId, &$statsDocument, $logError) {
