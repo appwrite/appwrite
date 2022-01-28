@@ -431,35 +431,6 @@ App::delete('/v1/functions/:functionId')
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
-        // // Request executor to delete deployment containers
-        // $ch = \curl_init();
-        // \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-        // \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/$functionId");
-        // \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        // \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
-        // \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        // \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        //     'Content-Type: application/json',
-        //     'x-appwrite-project: '.$project->getId(),
-        //     'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
-        // ]);
-
-        // $executorResponse = \curl_exec($ch);
-
-        // $error = \curl_error($ch);
-
-        // if (!empty($error)) {
-        //     throw new Exception('Executor Cleanup Error: ' . $error, 500);
-        // }
-
-        // // Check status code
-        // $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        // if (200 !== $statusCode) {
-        //     throw new Exception('Executor error: ' . $executorResponse, $statusCode);
-        // }
-
-        // \curl_close($ch);
-
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }

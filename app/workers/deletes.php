@@ -342,6 +342,8 @@ class DeletesV1 extends Worker
             new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
         ], $dbForProject);
 
+        // Send delete request to executor
+        
     }
 
 
