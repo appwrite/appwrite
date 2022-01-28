@@ -312,9 +312,9 @@ class DeletesV1 extends Worker
         $dbForProject = $this->getProjectDB($projectId);
         $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
         $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
-        $deploymentIds = [];
-        
+
         // Delete Deployments
+        $deploymentIds = [];
         $this->deleteByGroup('deployments', [
             new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
         ], $dbForProject, function (Document $document) use ($storageFunctions, &$deploymentIds) {
