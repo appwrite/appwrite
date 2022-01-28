@@ -311,38 +311,35 @@ class DeletesV1 extends Worker
     {
         $dbForProject = $this->getProjectDB($projectId);
         $device = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
-
+        $deploymentIds = [];
+        
         // Delete Deployments
         $this->deleteByGroup('deployments', [
             new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
-        ], $dbForProject, function (Document $document) use ($device) {
+        ], $dbForProject, function (Document $document) use ($device, &$deploymentIds) {
+            $deploymentIds[] = $document->getId();
             if ($device->delete($document->getAttribute('path', ''), true)) {
-                Console::success('Delete code deployment: ' . $document->getAttribute('path', ''));
+                Console::success('Delete deployment files: ' . $document->getAttribute('path', ''));
             } else {
-                Console::error('Failed to delete code deployment: ' . $document->getAttribute('path', ''));
+                Console::error('Failed to delete deployment files: ' . $document->getAttribute('path', ''));
             }
         });
 
         // Delete builds
         $this->deleteByGroup('builds', [
-            new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
+            new Query('deploymentId', Query::TYPE_EQUAL, $deploymentIds)
         ], $dbForProject, function (Document $document) use ($device) {
-            if ($device->delete($document->getAttribute('path', ''), true)) {
-                Console::success('Delete code deployment: ' . $document->getAttribute('path', ''));
+            if ($device->delete($document->getAttribute('outputPath', ''), true)) {
+                Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
             } else {
-                Console::error('Failed to delete code deployment: ' . $document->getAttribute('path', ''));
+                Console::error('Failed to delete build files: ' . $document->getAttribute('outputPath', ''));
             }
         });
-
-        // Delete build files
 
         // Delete Executions
         $this->deleteByGroup('executions', [
             new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
         ], $dbForProject);
-
-
-        // Delete deployment files
 
     }
 
@@ -388,9 +385,7 @@ class DeletesV1 extends Worker
         $executionStart = \microtime(true);
 
         while ($sum === $limit) {
-            Authorization::disable();
-            $projects = $this->getConsoleDB()->find('projects', [], $limit, ($chunk * $limit));
-            Authorization::reset();
+            $projects = Authorization::skip(fn() => $this->getConsoleDB()->find('projects', [], $limit, ($chunk * $limit)));
 
             $chunk++;
 
@@ -429,11 +424,7 @@ class DeletesV1 extends Worker
         while ($sum === $limit) {
             $chunk++;
 
-            Authorization::disable();
-
-            $results = $database->find($collection, $queries, $limit, 0);
-
-            Authorization::reset();
+            $results = Authorization::skip(fn() => $database->find($collection, $queries, $limit, 0));
 
             $sum = count($results);
 
