@@ -242,7 +242,7 @@ class FunctionsCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'async' => 1,
+            'async' => true,
         ]);
 
         $this->assertEquals(401, $execution['headers']['status-code']);
