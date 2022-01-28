@@ -66,7 +66,6 @@ services:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - appwrite-functions:/storage/functions:rw
-      - appwrite-builds:/storage/builds:rw
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./psalm.xml:/usr/src/code/psalm.xml
       - ./tests:/usr/src/code/tests
