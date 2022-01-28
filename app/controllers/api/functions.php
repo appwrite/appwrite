@@ -422,12 +422,10 @@ App::delete('/v1/functions/:functionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('deletes')
-    ->inject('project')
-    ->action(function ($functionId, $response, $dbForProject, $deletes, $project) {
+    ->action(function ($functionId, $response, $dbForProject, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $deletes */
-        /** @var Utopia\Database\Document $project */
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -690,7 +688,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
-        /** @var Utopia\Database\Document $project */
+        /** @var Appwrite\Event\Event $deletes */
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
