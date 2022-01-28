@@ -317,7 +317,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $depl
             Console::success('Runtime server is ready to run');
         }
     } catch (\Throwable $th) {
-        var_dump($th->getTraceAsString());
+        Console::error($th->getMessage());
         $orchestrationPool->put($orchestration ?? null);
         throw $th;
     }
