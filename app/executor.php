@@ -972,12 +972,13 @@ App::delete('/v1/functions/:functionId')
                     try {
                         $db = $register->get('dbPool')->get();
                         $redis = $register->get('redisPool')->get();
+                        $orchestration = $orchestrationPool->get();
+
                         $cache = new Cache(new RedisCache($redis));
                         $dbForProject = new Database(new MariaDB($db), $cache);
                         $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
                         $dbForProject->setNamespace('_project_' . $projectId);
 
-                        $orchestration = $orchestrationPool->get();
                         // Remove any ongoing builds
                         if ($deployment->getAttribute('buildId')) {
                             $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
@@ -996,6 +997,8 @@ App::delete('/v1/functions/:functionId')
                         Console::error($th->getMessage());
                     } finally {
                         $orchestrationPool->put($orchestration);
+                        $register->get('dbPool')->put($db);
+                        $register->get('redisPool')->put($redis);
                     }
                 });
             }
@@ -1059,12 +1062,13 @@ App::delete('/v1/deployments/:deploymentId')
             try {
                 $db = $register->get('dbPool')->get();
                 $redis = $register->get('redisPool')->get();
+                $orchestration = $orchestrationPool->get();
+
                 $cache = new Cache(new RedisCache($redis));
                 $dbForProject = new Database(new MariaDB($db), $cache);
                 $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
                 $dbForProject->setNamespace('_project_' . $projectId);
 
-                $orchestration = $orchestrationPool->get();
                 // Remove any ongoing builds
                 if ($deployment->getAttribute('buildId')) {
                     $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
@@ -1084,6 +1088,8 @@ App::delete('/v1/deployments/:deploymentId')
                 Console::error($th->getMessage());
             } finally {
                 $orchestrationPool->put($orchestration);
+                $register->get('dbPool')->put($db);
+                $register->get('redisPool')->put($redis);
             }
            
         });
