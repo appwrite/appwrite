@@ -16,6 +16,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -34,7 +35,7 @@ App::post('/v1/teams')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM)
-    ->param('teamId', '', new CustomId(), 'Team ID. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('teamId', '', new CustomId(), 'Team ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
     ->param('roles', ['owner'], new ArrayList(new Key()), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.', true)
     ->inject('response')
@@ -761,7 +762,11 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception('Team not found', 404);
         }
 
-        if (!$dbForProject->deleteDocument('memberships', $membership->getId())) {
+        try {
+            $dbForProject->deleteDocument('memberships', $membership->getId());
+        } catch (AuthorizationException $exception) {
+            throw new Exception('Unauthorized permissions', 401);
+        } catch (\Exception $exception) {
             throw new Exception('Failed to remove membership from DB', 500);
         }
 
@@ -782,7 +787,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
             $team->setAttribute('sum', \max($team->getAttribute('sum', 0) - 1, 0));
-            $team = $dbForProject->updateDocument('teams', $team->getId(), $team);
+            Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
         }
 
         $audits
