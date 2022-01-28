@@ -169,6 +169,21 @@ class DatabaseCustomServerTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
+
+        // This collection already exists
+        $response = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Test 1',
+            'collectionId' => 'first',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+            'permission' => 'document'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 409);
     }
 
     public function testDeleteAttribute(): array

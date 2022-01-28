@@ -1,6 +1,3 @@
-<p align="right">
-    <a href="#其他语言">🌍 其他语言</a>
-</p>
 <br />
 <p align="center">
     <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/appwrite.svg" alt="Appwrite Logo"></a>
@@ -18,6 +15,8 @@
 [![Twitter Account](https://img.shields.io/twitter/follow/appwrite?color=00acee&label=twitter&style=flat-square)](https://twitter.com/appwrite)
 [![翻译](https://img.shields.io/badge/translate-f02e65?style=flat-square)](docs/tutorials/add-translations.md)
 [![周边商店](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io)
+
+[English](README.md) | 简体中文
 
 Appwrite是一个基于dcoker的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，以及后端。Appwrite 通过视觉化界面极简了从零编写 API 的繁琐过程，在保证软件安全的前提下为开发者创造了一个高效的开发环境。
 
@@ -170,7 +169,3 @@ Appwrite API 界面层利用后台缓存和任务委派来提供极速的响应�
 ## 版权说明
 
 版权详情，访问 [BSD 3-Clause License](./LICENSE)。
-
-## 其他语言
-- [English](README.md)
-- [简体中文](README-CN.md)
