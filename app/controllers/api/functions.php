@@ -343,7 +343,7 @@ App::put('/v1/functions/:functionId')
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
-App::patch('/v1/functions/:functionId/deployment')
+App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Update Function Deployment')
     ->label('scope', 'functions.write')
@@ -356,17 +356,17 @@ App::patch('/v1/functions/:functionId/deployment')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('deployment', '', new UID(), 'Deployment ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->action(function ($functionId, $deployment, $response, $dbForProject, $project) {
+    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
 
         $function = $dbForProject->getDocument('functions', $functionId);
-        $deployment = $dbForProject->getDocument('deployments', $deployment);
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
         $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
 
         if ($function->isEmpty()) {
@@ -1045,28 +1045,41 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         $response->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
-App::get('/v1/builds')
-->groups(['api', 'functions'])
-->desc('List Builds')
-->label('scope', 'functions.read')
-->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-->label('sdk.namespace', 'functions')
-->label('sdk.method', 'builds')
-->label('sdk.description', '/docs/references/functions/list-builds.md')
-->label('sdk.response.code', Response::STATUS_CODE_OK)
-->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-->label('sdk.response.model', Response::MODEL_BUILD_LIST)
-->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-->param('limit', 25, new Range(0, 100), 'Maximum number of builds to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-->param('cursor', '', new UID(), 'ID of the function used as the starting point for the query, excluding the function itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
-->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
-->inject('response')
-->inject('dbForProject')
-->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject) {
+App::get('/v1/functions/:functionId/deployments/:deploymentId/builds')
+    ->groups(['api', 'functions'])
+    ->desc('List Builds')
+    ->label('scope', 'functions.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'listBuilds')
+    ->label('sdk.description', '/docs/references/functions/list-builds.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BUILD_LIST)
+    ->param('functionId', '', new UID(), 'Function ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of builds to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('cursor', '', new UID(), 'ID of the function used as the starting point for the query, excluding the function itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
+    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function ($functionId, $deploymentId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject) {
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Database $dbForProject */
+
+    $function = $dbForProject->getDocument('functions', $functionId);
+    $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+    if ($function->isEmpty()) {
+        throw new Exception('Function not found', 404);
+    }
+
+    if ($deployment->isEmpty()) {
+        throw new Exception('Deployment not found', 404);
+    }
 
     if (!empty($cursor)) {
         $cursorFunction = $dbForProject->getDocument('builds', $cursor);
@@ -1088,7 +1101,7 @@ App::get('/v1/builds')
     ]), Response::MODEL_BUILD_LIST);
 });
 
-App::get('/v1/builds/:buildId')
+App::get('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
     ->desc('Get Build')
     ->label('scope', 'execution.read')
@@ -1099,12 +1112,25 @@ App::get('/v1/builds/:buildId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_BUILD)
+    ->param('functionId', '', new UID(), 'Function ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->param('buildId', '', new UID(), 'Build unique ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($buildId, $response, $dbForProject) {
+    ->action(function ($functionId, $deploymentId, $buildId, $response, $dbForProject) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        if ($function->isEmpty()) {
+            throw new Exception('Function not found', 404);
+        }
+
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found', 404);
+        }
 
         $build = Authorization::skip(function () use ($dbForProject, $buildId) {
             return $dbForProject->getDocument('builds', $buildId);
@@ -1116,7 +1142,8 @@ App::get('/v1/builds/:buildId')
 
         $response->dynamic($build, Response::MODEL_BUILD);
     });
-App::post('/v1/builds/:buildId')
+
+App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
     ->desc('Retry Build')
     ->label('scope', 'functions.write')
@@ -1127,14 +1154,27 @@ App::post('/v1/builds/:buildId')
     ->label('sdk.description', '/docs/references/functions/retry-build.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('functionId', '', new UID(), 'Function ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->param('buildId', '', new UID(), 'Build unique ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->action(function ($buildId, $response, $dbForProject, $project) {
+    ->action(function ($functionId, $deploymentId, $buildId, $response, $dbForProject, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        if ($function->isEmpty()) {
+            throw new Exception('Function not found', 404);
+        }
+
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found', 404);
+        }
 
         $build = Authorization::skip(function () use ($dbForProject, $buildId) {
             return $dbForProject->getDocument('builds', $buildId);
