@@ -334,7 +334,7 @@ App::get('/console/storage/bucket')
         ;
         
         $layout
-            ->setParam('title', APP_NAME.' - Storage Bucket')
+            ->setParam('title', APP_NAME.' - Storage Buckets')
             ->setParam('body', $page)
         ;
 

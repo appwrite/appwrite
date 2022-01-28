@@ -479,7 +479,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
                 if ($limit !== 0) {
-                    $sum = $dbForProject->count('users', [ new Query('deleted', Query::TYPE_EQUAL, [false]),], APP_LIMIT_COUNT);
+                    $sum = $dbForProject->count('users', [ new Query('deleted', Query::TYPE_EQUAL, [false]),], APP_LIMIT_USERS);
 
                     if ($sum >= $limit) {
                         throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
@@ -652,7 +652,7 @@ App::post('/v1/account/sessions/magic-url')
             if ($limit !== 0) {
                 $sum = $dbForProject->count('users', [
                     new Query('deleted', Query::TYPE_EQUAL, [false]),
-                ], APP_LIMIT_COUNT);
+                ], APP_LIMIT_USERS);
 
                 if ($sum >= $limit) {
                     throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
@@ -924,7 +924,7 @@ App::post('/v1/account/sessions/anonymous')
         if ($limit !== 0) {
             $sum = $dbForProject->count('users', [
                 new Query('deleted', Query::TYPE_EQUAL, [false]),
-            ], APP_LIMIT_COUNT);
+            ], APP_LIMIT_USERS);
 
             if ($sum >= $limit) {
                 throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
