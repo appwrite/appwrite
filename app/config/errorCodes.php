@@ -29,8 +29,8 @@ return [
     ],
     Exception::TYPE_UNAUTHORIZED_SCOPE => [
         'name' => Exception::TYPE_UNAUTHORIZED_SCOPE,
-        'description' => 'Unauthorized scope',
-        'statusCode' => 403,
+        'description' => 'The current user is not authorized to access the requested resource.',
+        'statusCode' => 401,
     ],
     Exception::TYPE_PASSWORD_RESET_REQUIRED => [
         'name' => Exception::TYPE_PASSWORD_RESET_REQUIRED,
