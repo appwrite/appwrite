@@ -127,6 +127,7 @@ App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
  */
 Config::load('events', __DIR__.'/config/events.php');
 Config::load('auth', __DIR__.'/config/auth.php');
+Config::load('errorCodes', __DIR__.'/config/errorCodes.php');
 Config::load('providers', __DIR__.'/config/providers.php');
 Config::load('platforms', __DIR__.'/config/platforms.php');
 Config::load('collections', __DIR__.'/config/collections.php');
