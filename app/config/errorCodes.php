@@ -7,14 +7,9 @@
 use Appwrite\Extend\Exception;
 
 return [
-    Exception::TYPE_NONE => [
-        'name' => Exception::TYPE_NONE,
-        'description' => 'Generic error',
-        'statusCode' => 500,
-    ],
     Exception::TYPE_PROJECT_NOT_FOUND => [
         'name' => Exception::TYPE_PROJECT_NOT_FOUND,
-        'description' => 'Project not found',
+        'description' => 'The requested project could not be found. Please check the value of the `X-Appwrite-Project` header to ensure the correct project ID is being used.',
         'statusCode' => 404,
     ],
     Exception::TYPE_PROJECT_UNKNOWN => [
