@@ -9,13 +9,13 @@ use Appwrite\Extend\Exception;
 return [
     Exception::TYPE_PROJECT_NOT_FOUND => [
         'name' => Exception::TYPE_PROJECT_NOT_FOUND,
-        'description' => 'The requested project could not be found. Please check the value of the `X-Appwrite-Project` header to ensure the correct project ID is being used.',
+        'description' => 'The requested project could not be found. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
         'statusCode' => 404,
     ],
     Exception::TYPE_PROJECT_UNKNOWN => [
         'name' => Exception::TYPE_PROJECT_UNKNOWN,
-        'description' => 'Project unknown',
-        'statusCode' => 500,
+        'description' => 'The project ID is either missing or not valid. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
+        'statusCode' => 400,
     ],
     Exception::TYPE_INVALID_ORIGIN => [
         'name' => Exception::TYPE_INVALID_ORIGIN,
