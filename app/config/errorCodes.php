@@ -104,12 +104,12 @@ return [
     ],
     Exception::TYPE_USER_BLOCKED => [
         'name' => Exception::TYPE_USER_BLOCKED,
-        'description' => 'Session expired',
-        'statusCode' => 403,
+        'description' => 'The current user has been blocked. Please contact the administrator for more information.',
+        'statusCode' => 401,
     ],
     Exception::TYPE_USER_CREATION_FAILED => [
         'name' => Exception::TYPE_USER_CREATION_FAILED,
-        'description' => 'Session expired',
+        'description' => 'Failed to create user.',
         'statusCode' => 403,
     ],
     Exception::TYPE_USER_NOT_FOUND => [
