@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * List of server wide error codes and their respective messages. 
+ */
+
 use Appwrite\Extend\Exception\Exception;
 
 return [
