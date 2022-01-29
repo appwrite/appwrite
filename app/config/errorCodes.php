@@ -4,7 +4,7 @@
  * List of server wide error codes and their respective messages. 
  */
 
-use Appwrite\Extend\Exception\Exception;
+use Appwrite\Extend\Exception;
 
 return [
     Exception::TYPE_NONE => [
