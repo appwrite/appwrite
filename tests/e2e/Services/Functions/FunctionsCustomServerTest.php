@@ -660,7 +660,7 @@ class FunctionsCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $function = $this->client->call(Client::METHOD_DELETE, '/functions/'.$data['functionId'], array_merge([
+        $function = $this->client->call(Client::METHOD_DELETE, '/functions/'. $data['functionId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -760,6 +760,15 @@ class FunctionsCustomServerTest extends Scope
         $this->assertLessThan(3, $executions['body']['executions'][0]['time']);
         $this->assertEquals($executions['body']['executions'][0]['stdout'], '');
         $this->assertEquals($executions['body']['executions'][0]['stderr'], 'Execution timed out.');
+
+        // Cleanup : Delete function 
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 
     /**
@@ -861,6 +870,15 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
         $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['stdout']);
+
+        // Cleanup : Delete function 
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 
     public function testGetRuntimes()

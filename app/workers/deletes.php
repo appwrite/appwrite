@@ -419,7 +419,7 @@ class DeletesV1 extends Worker
         }
 
         /**
-         * Delete Deployments
+         * Delete deployment files
          */
         $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
         if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {

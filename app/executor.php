@@ -962,8 +962,6 @@ App::delete('/v1/functions/:functionId')
                     ->send();
             }
 
-            Console::info("Deleting " . count($results) . " deployments");
-
             // Delete the containers of all deployments
             // TODO : @christy Delete all build containers as well. Not just the latest one,
             global $register;
@@ -1049,15 +1047,10 @@ App::delete('/v1/deployments/:deploymentId')
     ->action(function (string $deploymentId, string $projectId, Response $response, Database $dbForProject) use ($orchestrationPool) {
 
         // Get deployment document
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-
-        // Check if deployment exists
-        if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found', 404);
-        }
+        // $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         global $register;
-        go(function () use ($projectId, $orchestrationPool, $register, $deployment) {
+        go(function () use ($projectId, $orchestrationPool, $register, $deploymentId) {
             try {
                 $db = $register->get('dbPool')->get();
                 $redis = $register->get('redisPool')->get();
@@ -1069,19 +1062,20 @@ App::delete('/v1/deployments/:deploymentId')
                 $dbForProject->setNamespace('_project_' . $projectId);
 
                 // Remove any ongoing builds
-                if ($deployment->getAttribute('buildId')) {
-                    $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
+                // TODO: Delete builds
+                // if ($deployment->getAttribute('buildId')) {
+                //     $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
     
-                    if ($build->getAttribute('status') == 'building') {
-                        // Remove the build
-                        $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
-                        Console::info('Removed build for deployment ' . $deployment['$id']);
-                    }
-                }
+                //     if ($build->getAttribute('status') == 'building') {
+                //         // Remove the build
+                //         $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
+                //         Console::info('Removed build for deployment ' . $deployment['$id']);
+                //     }
+                // }
     
                 // Remove the container of the deployment
-                $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
-                Console::info('Removed container for deployment ' . $deployment['$id']);
+                $orchestration->remove('appwrite-function-' . $deploymentId , true);
+                Console::info('Removed container for deployment ' . $deploymentId);
             } catch (\Throwable $th) {
                 Console::error($th->getMessage());
             } finally {

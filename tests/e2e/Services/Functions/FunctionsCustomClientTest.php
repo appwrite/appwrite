@@ -117,14 +117,14 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(201, $execution['headers']['status-code']);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/executions', array_merge([
+        // Cleanup : Delete function
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'.$function['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'async' => true,
-        ]);
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
 
-        $this->assertEquals(401, $execution['headers']['status-code']);
+        $this->assertEquals(204, $response['headers']['status-code']);
 
         return [];
     }
@@ -300,6 +300,16 @@ class FunctionsCustomClientTest extends Scope
             'cursor' => $base['body']['executions'][1]['$id'],
             'cursorDirection' => Database::CURSOR_BEFORE
         ]);
+
+        // Cleanup : Delete function
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
     }
 
     public function testSynchronousExecution():array
@@ -381,6 +391,15 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals($this->getUser()['$id'], $output['APPWRITE_FUNCTION_USER_ID']);
         $this->assertNotEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($projectId, $output['APPWRITE_FUNCTION_PROJECT_ID']);
+
+        // Cleanup : Delete function 
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
 
         return [];
     }
