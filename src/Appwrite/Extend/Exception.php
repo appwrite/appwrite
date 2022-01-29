@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Extend\Exception;
+namespace Appwrite\Extend;
 
 use Utopia\Config\Config;
 
