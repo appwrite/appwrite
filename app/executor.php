@@ -963,33 +963,32 @@ App::delete('/v1/functions/:functionId')
             }
 
             // Delete the containers of all deployments
-            // TODO : @christy Delete all build containers as well. Not just the latest one,
             global $register;
             foreach ($results as $deployment) {
                 go(function () use ($orchestrationPool, $deployment, $register, $projectId) {
                     try {
+                        $orchestration = $orchestrationPool->get();
+                        // Remove the container of the deployment
+                        $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
+                        Console::success('Removed container for deployment: ' . $deployment['$id']);
+
                         $db = $register->get('dbPool')->get();
                         $redis = $register->get('redisPool')->get();
-                        $orchestration = $orchestrationPool->get();
-
                         $cache = new Cache(new RedisCache($redis));
                         $dbForProject = new Database(new MariaDB($db), $cache);
                         $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
                         $dbForProject->setNamespace('_project_' . $projectId);
 
-                        // Remove any ongoing builds
-                        if ($deployment->getAttribute('buildId')) {
-                            $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
-    
-                            if ($build->getAttribute('status') === 'building') {
-                                // Remove the build
-                                $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
-                                Console::info('Removed build for deployment ' . $deployment['$id']);
-                            }
+                        $builds = $dbForProject->find('builds', [ 
+                            new Query('deploymentId', Query::TYPE_EQUAL, [$deployment['$id']]),
+                            new Query('status', Query::TYPE_EQUAL, ['building'])
+                        ], 999);
+        
+                        // Remove all the build containers
+                        foreach ($builds as $build) {
+                            $orchestration->remove('build-stage-' . $build['$id'], true);
+                            Console::success("Removed build contanier: $build for deployment: " . $deployment['$id']);
                         }
-    
-                        $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
-                        Console::info('Removed container for deployment ' . $deployment['$id']);
                     } catch (\Throwable $th) {
                         Console::error($th->getMessage());
                     } finally {
@@ -1043,39 +1042,33 @@ App::delete('/v1/deployments/:deploymentId')
     ->param('deploymentId', '', new UID(), 'Deployment unique ID.')
     ->inject('projectId')
     ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (string $deploymentId, string $projectId, Response $response, Database $dbForProject) use ($orchestrationPool) {
-
-        // Get deployment document
-        // $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+    ->action(function (string $deploymentId, string $projectId, Response $response) use ($orchestrationPool) {
 
         global $register;
         go(function () use ($projectId, $orchestrationPool, $register, $deploymentId) {
             try {
+                $orchestration = $orchestrationPool->get();
+                // Remove the container of the deployment
+                $orchestration->remove('appwrite-function-' . $deploymentId , true);
+                Console::success('Removed container for deployment: ' . $deploymentId);
+
                 $db = $register->get('dbPool')->get();
                 $redis = $register->get('redisPool')->get();
-                $orchestration = $orchestrationPool->get();
-
                 $cache = new Cache(new RedisCache($redis));
                 $dbForProject = new Database(new MariaDB($db), $cache);
                 $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
                 $dbForProject->setNamespace('_project_' . $projectId);
 
-                // Remove any ongoing builds
-                // TODO: Delete builds
-                // if ($deployment->getAttribute('buildId')) {
-                //     $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
-    
-                //     if ($build->getAttribute('status') == 'building') {
-                //         // Remove the build
-                //         $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
-                //         Console::info('Removed build for deployment ' . $deployment['$id']);
-                //     }
-                // }
-    
-                // Remove the container of the deployment
-                $orchestration->remove('appwrite-function-' . $deploymentId , true);
-                Console::info('Removed container for deployment ' . $deploymentId);
+                $builds = $dbForProject->find('builds', [ 
+                    new Query('deploymentId', Query::TYPE_EQUAL, [$deploymentId]),
+                    new Query('status', Query::TYPE_EQUAL, ['building'])
+                ], 999);
+
+                // Remove all the build containers
+                foreach ($builds as $build) {
+                    $orchestration->remove('build-stage-' . $build['$id'], true);
+                    Console::success("Removed build container: $build for deployment: " . $deploymentId);
+                }
             } catch (\Throwable $th) {
                 Console::error($th->getMessage());
             } finally {
@@ -1083,7 +1076,6 @@ App::delete('/v1/deployments/:deploymentId')
                 $register->get('dbPool')->put($db);
                 $register->get('redisPool')->put($redis);
             }
-           
         });
 
         $response

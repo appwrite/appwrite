@@ -361,16 +361,18 @@ class DeletesV1 extends Worker
         /**
          * Delete builds
          */
-        $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
-        $this->deleteByGroup('builds', [
-            new Query('deploymentId', Query::TYPE_EQUAL, $deploymentIds)
-        ], $dbForProject, function (Document $document) use ($storageBuilds) {
-            if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
-                Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
-            } else {
-                Console::error('Failed to delete build files: ' . $document->getAttribute('outputPath', ''));
-            }
-        });
+        if (!empty($deploymentIds)) {
+            $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
+            $this->deleteByGroup('builds', [
+                new Query('deploymentId', Query::TYPE_EQUAL, $deploymentIds)
+            ], $dbForProject, function (Document $document) use ($storageBuilds) {
+                if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
+                    Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
+                } else {
+                    Console::error('Failed to delete build files: ' . $document->getAttribute('outputPath', ''));
+                }
+            });
+        }
 
         // Delete Executions
         $this->deleteByGroup('executions', [
@@ -525,7 +527,11 @@ class DeletesV1 extends Worker
         while ($sum === $limit) {
             $chunk++;
 
-            $results = Authorization::skip(fn() => $database->find($collection, $queries, $limit, 0));
+            Authorization::disable();
+
+            $results = $database->find($collection, $queries, $limit, 0);
+
+            Authorization::reset();
 
             $sum = count($results);
 
