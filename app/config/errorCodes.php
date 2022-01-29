@@ -19,13 +19,13 @@ return [
     ],
     Exception::TYPE_INVALID_ORIGIN => [
         'name' => Exception::TYPE_INVALID_ORIGIN,
-        'description' => 'Invalid origin',
+        'description' => 'The request originated from a non-whitelisted origin. If you trust this origin, please add it as a platform in the Appwrite console.',
         'statusCode' => 403,
     ],
     Exception::TYPE_SERVICE_DISABLED => [
         'name' => Exception::TYPE_SERVICE_DISABLED,
-        'description' => 'Service disabled',
-        'statusCode' => 403,
+        'description' => 'The requested service is disabled. You can toggle the service from the Appwrite console or by contacting the project owner.',
+        'statusCode' => 503,
     ],
     Exception::TYPE_UNAUTHORIZED_SCOPE => [
         'name' => Exception::TYPE_UNAUTHORIZED_SCOPE,
