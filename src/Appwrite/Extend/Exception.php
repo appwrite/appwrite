@@ -51,19 +51,9 @@ class Exception extends \Exception
 
     private $errorCode = '';
 
-    static $codes = Config::getParam('errorCodes', []);
-
     public function __construct(string $message, int $code = 0, string $errorCode = Exception::TYPE_NONE, \Throwable $previous = null)
     {
-        if (!isset(self::$codes)) {
-            throw new \Exception('Error codes not found', 500);
-        }
-
         $this->errorCode = $errorCode;
-
-        if (isset(self::$codes[$errorCode])) {
-            $this->$message = self::$codes[$errorCode]['statusCode'];
-        }
 
         parent::__construct($message, $code, $previous);
     }
