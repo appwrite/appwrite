@@ -36,7 +36,7 @@ class Microsoft extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?'.\http_build_query([
+        return 'https://login.microsoftonline.com/'.$this->getTenantId().'/oauth2/v2.0/authorize?'.\http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'state'=> \json_encode($this->state),
@@ -57,12 +57,12 @@ class Microsoft extends OAuth2
 
         $accessToken = $this->request(
             'POST',
-            'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+            'https://login.microsoftonline.com/'.$this->getTenantId().'/oauth2/v2.0/token',
             $headers,
             \http_build_query([
                 'code' => $code,
                 'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
+                'client_secret' => $this->getClientSecret(),
                 'redirect_uri' => $this->callback,
                 'scope' => \implode(' ', $this->getScopes()),
                 'grant_type' => 'authorization_code'
@@ -140,5 +140,40 @@ class Microsoft extends OAuth2
         }
 
         return $this->user;
+    }
+
+    /**
+     * Extracts the Client Secret from the JSON stored in appSecret
+     * @return string
+     */
+    protected function getClientSecret(): string
+    {
+        $secret = $this->decodeJson();
+
+        return (isset($secret['clientSecret'])) ? $secret['clientSecret'] : ''; 
+    }
+
+    /**
+     * Decode the JSON stored in appSecret
+     * @return array
+     */
+    protected function decodeJson(): array
+    {    
+        try {
+            $secret = \json_decode($this->appSecret, true);
+        } catch (\Throwable $th) {
+            throw new Exception('Invalid secret');
+        }
+        return $secret;
+    }
+
+    /**
+     * Extracts the Tenant Id from the JSON stored in appSecret. Defaults to 'common' as a fallback
+     * @return string
+     */
+    protected function getTenantId(): string
+    {
+        $secret = $this->decodeJson();
+        return (isset($secret['tenantId'])) ? $secret['tenantId'] : 'common'; 
     }
 }

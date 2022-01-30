@@ -127,7 +127,7 @@ return [ // Ordered by ABC.
         'icon' => 'icon-windows',
         'enabled' => true,
         'sandbox' => false,
-        'form' => false,
+        'form' => 'microsoft.phtml',
         'beta' => false,
         'mock' => false,
     ],
