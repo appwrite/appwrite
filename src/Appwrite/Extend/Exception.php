@@ -42,12 +42,12 @@ class Exception extends \Exception
 
     /** OAuth **/
     const TYPE_PROVIDER_DISABLED          = 'provider_disabled';
-    const TYPE_PROVIDER_NOT_SUPPORTED     = 'provider_not_supported';
+    const TYPE_PROVIDER_UNSUPPORTED       = 'provider_unsupported';
     const TYPE_INVALID_LOGIN_STATE_PARAMS = 'invalid_login_state_params';
     const TYPE_INVALID_SUCCESS_URL        = 'invalid_success_url';
     const TYPE_INVALID_FAILURE_URL        = 'invalid_failure_url';
     const TYPE_OAUTH_ACCESS_TOKEN_FAILED  = 'oauth_access_token_failed';
-    const TYPE_MISSING_PROVIDER_ID        = 'missing_provider_id';
+    const TYPE_MISSING_USER_ID            = 'missing_user_id';
 
     private $errorCode = '';
 
