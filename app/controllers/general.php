@@ -120,8 +120,39 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);
     $port = \parse_url($request->getOrigin($referrer), PHP_URL_PORT);
 
-    $refDomain = (!empty($protocol) ? $protocol : $request->getProtocol()).'://'.((\in_array($origin, $clients))
-        ? $origin : 'localhost').(!empty($port) ? ':'.$port : '');
+    $valueHostname = $origin;
+    $refDomainOrigin = 'localhost';
+    // Checkout Host.php to see description of this block
+    foreach ($clients as $allowedHostname) {
+        if($valueHostname === $allowedHostname) {
+            return true;
+        }
+
+        if(\str_contains($allowedHostname, '*')) {
+            $allowedSections = \explode('.', $allowedHostname);
+            $valueSections = \explode('.', $valueHostname);
+
+            if(\count($allowedSections) === \count($valueSections)) {
+                $matchesAmount = 0;
+
+                for ($sectionIndex = 0; $sectionIndex < \count($allowedSections); $sectionIndex++) {
+                    $allowedSection = $allowedSections[$sectionIndex];
+
+                    if($allowedSection === '*' || $allowedSection === $valueSections[$sectionIndex]) {
+                        $matchesAmount++;
+                    } else {
+                        break;
+                    }
+                }
+
+                if($matchesAmount === \count($allowedSections)) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    $refDomain = (!empty($protocol) ? $protocol : $request->getProtocol()).'://'.$refDomainOrigin.(!empty($port) ? ':'.$port : '');
 
     $refDomain = (!$route->getLabel('origin', false))  // This route is publicly accessible
         ? $refDomain
