@@ -413,8 +413,9 @@
                 /**
                  * Update Account Preferences
                  *
-                 * Update currently logged in user account preferences. You can pass only the
-                 * specific settings you wish to update.
+                 * Update currently logged in user account preferences. The object you pass is
+                 * stored as is, and replaces any previous value. The maximum allowed prefs
+                 * size is 64kB and throws error if exceeded.
                  *
                  * @param {object} prefs
                  * @throws {AppwriteException}
@@ -1601,7 +1602,7 @@
                 /**
                  * Create String Attribute
                  *
-                 * Create a new string attribute.
+                 * Create a string attribute.
                  *
                  *
                  * @param {string} collectionId
@@ -2534,7 +2535,7 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createTag: (functionId, command, code) => __awaiter(this, void 0, void 0, function* () {
+                createTag: (functionId, command, code, onProgress = (progress) => { }) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -2553,9 +2554,38 @@
                         payload['code'] = code;
                     }
                     const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('post', uri, {
-                        'content-type': 'multipart/form-data',
-                    }, payload);
+                    const size = code.size;
+                    if (size <= Appwrite.CHUNK_SIZE) {
+                        return yield this.call('post', uri, {
+                            'content-type': 'multipart/form-data',
+                        }, payload);
+                    }
+                    else {
+                        let id = undefined;
+                        let response = undefined;
+                        const totalCounters = Math.ceil(size / Appwrite.CHUNK_SIZE);
+                        for (let counter = 0; counter < totalCounters; counter++) {
+                            const start = (counter * Appwrite.CHUNK_SIZE);
+                            const end = Math.min((((counter * Appwrite.CHUNK_SIZE) + Appwrite.CHUNK_SIZE) - 1), size);
+                            const headers = {
+                                'content-type': 'multipart/form-data',
+                                'content-range': 'bytes ' + start + '-' + end + '/' + size
+                            };
+                            if (id) {
+                                headers['x-appwrite-id'] = id;
+                            }
+                            const stream = code.slice(start, end + 1);
+                            payload['code'] = new File([stream], code.name);
+                            response = yield this.call('post', uri, headers, payload);
+                            if (!id) {
+                                id = response['$id'];
+                            }
+                            if (onProgress) {
+                                onProgress(Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100);
+                            }
+                        }
+                        return response;
+                    }
                 }),
                 /**
                  * Get Tag
@@ -3940,18 +3970,18 @@
                  * @param {string} bucketId
                  * @param {string} name
                  * @param {string} permission
-                 * @param {string} read
-                 * @param {string} write
+                 * @param {string[]} read
+                 * @param {string[]} write
                  * @param {number} maximumFileSize
                  * @param {string[]} allowedFileExtensions
                  * @param {boolean} enabled
                  * @param {string} adapter
                  * @param {boolean} encryption
-                 * @param {boolean} antiVirus
+                 * @param {boolean} antivirus
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createBucket: (bucketId, name, permission, read, write, maximumFileSize, allowedFileExtensions, enabled, adapter, encryption, antiVirus) => __awaiter(this, void 0, void 0, function* () {
+                createBucket: (bucketId, name, permission, read, write, maximumFileSize, allowedFileExtensions, enabled, adapter, encryption, antivirus) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof bucketId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "bucketId"');
                     }
@@ -3993,8 +4023,8 @@
                     if (typeof encryption !== 'undefined') {
                         payload['encryption'] = encryption;
                     }
-                    if (typeof antiVirus !== 'undefined') {
-                        payload['antiVirus'] = antiVirus;
+                    if (typeof antivirus !== 'undefined') {
+                        payload['antivirus'] = antivirus;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
@@ -4029,27 +4059,34 @@
                  *
                  * @param {string} bucketId
                  * @param {string} name
-                 * @param {string} read
-                 * @param {string} write
+                 * @param {string} permission
+                 * @param {string[]} read
+                 * @param {string[]} write
                  * @param {number} maximumFileSize
                  * @param {string[]} allowedFileExtensions
                  * @param {boolean} enabled
                  * @param {boolean} encryption
-                 * @param {boolean} antiVirus
+                 * @param {boolean} antivirus
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateBucket: (bucketId, name, read, write, maximumFileSize, allowedFileExtensions, enabled, encryption, antiVirus) => __awaiter(this, void 0, void 0, function* () {
+                updateBucket: (bucketId, name, permission, read, write, maximumFileSize, allowedFileExtensions, enabled, encryption, antivirus) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof bucketId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "bucketId"');
                     }
                     if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
+                    if (typeof permission === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "permission"');
+                    }
                     let path = '/storage/buckets/{bucketId}'.replace('{bucketId}', bucketId);
                     let payload = {};
                     if (typeof name !== 'undefined') {
                         payload['name'] = name;
+                    }
+                    if (typeof permission !== 'undefined') {
+                        payload['permission'] = permission;
                     }
                     if (typeof read !== 'undefined') {
                         payload['read'] = read;
@@ -4069,8 +4106,8 @@
                     if (typeof encryption !== 'undefined') {
                         payload['encryption'] = encryption;
                     }
-                    if (typeof antiVirus !== 'undefined') {
-                        payload['antiVirus'] = antiVirus;
+                    if (typeof antivirus !== 'undefined') {
+                        payload['antivirus'] = antivirus;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('put', uri, {
@@ -4146,19 +4183,34 @@
                 /**
                  * Create File
                  *
-                 * Create a new file. The user who creates the file will automatically be
-                 * assigned to read and write access unless he has passed custom values for
-                 * read and write arguments.
+                 * Create a new file. Before using this route, you should create a new bucket
+                 * resource using either a [server
+                 * integration](/docs/server/database#storageCreateBucket) API or directly
+                 * from your Appwrite console.
+                 *
+                 * Larger files should be uploaded using multiple requests with the
+                 * [content-range](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range)
+                 * header to send a partial request with a maximum supported chunk of `5MB`.
+                 * The `content-range` header values should always be in bytes.
+                 *
+                 * When the first request is sent, the server will return the **File** object,
+                 * and the subsequent part request must include the file's **id** in
+                 * `x-appwrite-id` header to allow the server to know that the partial upload
+                 * is for the existing file and not for a new one.
+                 *
+                 * If you're creating a new file using one of the Appwrite SDKs, all the
+                 * chunking logic will be managed by the SDK internally.
+                 *
                  *
                  * @param {string} bucketId
                  * @param {string} fileId
                  * @param {File} file
-                 * @param {string} read
-                 * @param {string} write
+                 * @param {string[]} read
+                 * @param {string[]} write
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createFile: (bucketId, fileId, file, read, write) => __awaiter(this, void 0, void 0, function* () {
+                createFile: (bucketId, fileId, file, read, write, onProgress = (progress) => { }) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof bucketId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "bucketId"');
                     }
@@ -4183,9 +4235,38 @@
                         payload['write'] = write;
                     }
                     const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('post', uri, {
-                        'content-type': 'multipart/form-data',
-                    }, payload);
+                    const size = file.size;
+                    if (size <= Appwrite.CHUNK_SIZE) {
+                        return yield this.call('post', uri, {
+                            'content-type': 'multipart/form-data',
+                        }, payload);
+                    }
+                    else {
+                        let id = undefined;
+                        let response = undefined;
+                        const totalCounters = Math.ceil(size / Appwrite.CHUNK_SIZE);
+                        for (let counter = 0; counter < totalCounters; counter++) {
+                            const start = (counter * Appwrite.CHUNK_SIZE);
+                            const end = Math.min((((counter * Appwrite.CHUNK_SIZE) + Appwrite.CHUNK_SIZE) - 1), size);
+                            const headers = {
+                                'content-type': 'multipart/form-data',
+                                'content-range': 'bytes ' + start + '-' + end + '/' + size
+                            };
+                            if (id) {
+                                headers['x-appwrite-id'] = id;
+                            }
+                            const stream = file.slice(start, end + 1);
+                            payload['file'] = new File([stream], file.name);
+                            response = yield this.call('post', uri, headers, payload);
+                            if (!id) {
+                                id = response['$id'];
+                            }
+                            if (onProgress) {
+                                onProgress(Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100);
+                            }
+                        }
+                        return response;
+                    }
                 }),
                 /**
                  * Get File
@@ -4220,8 +4301,8 @@
                  *
                  * @param {string} bucketId
                  * @param {string} fileId
-                 * @param {string} read
-                 * @param {string} write
+                 * @param {string[]} read
+                 * @param {string[]} write
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
@@ -4231,12 +4312,6 @@
                     }
                     if (typeof fileId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "fileId"');
-                    }
-                    if (typeof read === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "read"');
-                    }
-                    if (typeof write === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "write"');
                     }
                     let path = '/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
                     let payload = {};
@@ -4326,9 +4401,9 @@
                  * @param {string} background
                  * @param {string} output
                  * @throws {AppwriteException}
-                 * @returns {URL}
+                 * @returns {Promise}
                  */
-                getFilePreview: (bucketId, fileId, width, height, gravity, quality, borderWidth, borderColor, borderRadius, opacity, rotation, background, output) => {
+                getFilePreview: (bucketId, fileId, width, height, gravity, quality, borderWidth, borderColor, borderRadius, opacity, rotation, background, output) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof bucketId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "bucketId"');
                     }
@@ -4371,12 +4446,10 @@
                         payload['output'] = output;
                     }
                     const uri = new URL(this.config.endpoint + path);
-                    payload['project'] = this.config.project;
-                    for (const [key, value] of Object.entries(this.flatten(payload))) {
-                        uri.searchParams.append(key, value);
-                    }
-                    return uri;
-                },
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
                 /**
                  * Get File for View
                  *
@@ -4793,6 +4866,10 @@
                  * after being redirected back to your app from the invitation email received
                  * by the user.
                  *
+                 * If the request is successful, a session for the user is automatically
+                 * created.
+                 *
+                 *
                  * @param {string} teamId
                  * @param {string} membershipId
                  * @param {string} userId
@@ -5105,8 +5182,9 @@
                 /**
                  * Update User Preferences
                  *
-                 * Update the user preferences by its unique ID. You can pass only the
-                 * specific settings you wish to update.
+                 * Update the user preferences by its unique ID. The object you pass is stored
+                 * as is, and replaces any previous value. The maximum allowed prefs size is
+                 * 64kB and throws error if exceeded.
                  *
                  * @param {string} userId
                  * @param {object} prefs
@@ -5465,8 +5543,27 @@
             return output;
         }
     }
+    Appwrite.CHUNK_SIZE = 5 * 1024 * 1024;
+    class Query {
+    }
+    Query.equal = (attribute, value) => Query.addQuery(attribute, "equal", value);
+    Query.notEqual = (attribute, value) => Query.addQuery(attribute, "notEqual", value);
+    Query.lesser = (attribute, value) => Query.addQuery(attribute, "lesser", value);
+    Query.lesserEqual = (attribute, value) => Query.addQuery(attribute, "lesserEqual", value);
+    Query.greater = (attribute, value) => Query.addQuery(attribute, "greater", value);
+    Query.greaterEqual = (attribute, value) => Query.addQuery(attribute, "greaterEqual", value);
+    Query.search = (attribute, value) => Query.addQuery(attribute, "search", value);
+    Query.addQuery = (attribute, oper, value) => value instanceof Array
+        ? `${attribute}.${oper}(${value
+        .map((v) => Query.parseValues(v))
+        .join(",")})`
+        : `${attribute}.${oper}(${Query.parseValues(value)})`;
+    Query.parseValues = (value) => typeof value === "string" || value instanceof String
+        ? `"${value}"`
+        : `${value}`;
 
     exports.Appwrite = Appwrite;
+    exports.Query = Query;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 

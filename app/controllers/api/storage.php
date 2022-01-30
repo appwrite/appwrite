@@ -1,38 +1,39 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Utopia\App;
-use Utopia\Cache\Adapter\Filesystem;
 use Appwrite\ClamAV\Network;
-use Utopia\Database\Validator\Authorization;
 use Appwrite\Database\Validator\CustomId;
-use Utopia\Database\Document;
-use Utopia\Database\Query;
-use Utopia\Exception;
-use Utopia\Database\Validator\UID;
-use Utopia\Storage\Storage;
-use Utopia\Storage\Validator\File;
-use Utopia\Storage\Validator\FileSize;
-use Utopia\Storage\Validator\Upload;
-use Utopia\Storage\Compression\Algorithms\GZIP;
-use Utopia\Image\Image;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
+use Utopia\App;
+use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Permissions;
+use Utopia\Database\Validator\UID;
+use Utopia\Exception;
+use Utopia\Image\Image;
+use Utopia\Storage\Compression\Algorithms\GZIP;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Storage;
+use Utopia\Storage\Validator\File;
+use Utopia\Storage\Validator\FileExt;
+use Utopia\Storage\Validator\FileSize;
+use Utopia\Storage\Validator\Upload;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
 use Utopia\Validator\Integer;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\Validator\Range;
-use Utopia\Database\Validator\Permissions;
-use Utopia\Storage\Validator\FileExt;
-use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Exception\Structure as StructureException;
 
 App::post('/v1/storage/buckets')
     ->desc('Create storage bucket')
@@ -51,17 +52,17 @@ App::post('/v1/storage/buckets')
     ->param('permission', null, new WhiteList(['file', 'bucket']), 'Permissions type model to use for reading files in this bucket. You can use bucket-level permission set once on the bucket using the `read` and `write` params, or you can set file-level permission where each file read and write params will decide who has access to read and write to each file individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0) , new Integer(), 'Maximum file size allowed in bytes. Maximum allowed value is ' . App::getEnv('_APP_STORAGE_LIMIT', 0) . '. For self-hosted setups you can change the max limit by changing the `_APP_STORAGE_LIMIT` environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
+    ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0), new Integer(), 'Maximum file size allowed in bytes. Maximum allowed value is ' . App::getEnv('_APP_STORAGE_LIMIT', 0) . '. For self-hosted setups you can change the max limit by changing the `_APP_STORAGE_LIMIT` environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64)), 'Allowed file extensions', true)
     ->param('enabled', true, new Boolean(), 'Is bucket enabled?', true)
     ->param('adapter', 'local', new WhiteList(['local']), 'Storage adapter.', true)
     ->param('encryption', true, new Boolean(), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER) . ' encryption is skipped even if it\'s enabled', true)
-    ->param('antiVirus', true, new Boolean(), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
+    ->param('antivirus', true, new Boolean(), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($bucketId, $name, $permission, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antiVirus, $response, $dbForProject, $audits, $usage) {
+    ->action(function ($bucketId, $name, $permission, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antivirus, $response, $dbForProject, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
@@ -69,211 +70,37 @@ App::post('/v1/storage/buckets')
 
         $bucketId = $bucketId === 'unique()' ? $dbForProject->getId() : $bucketId;
         try {
-            $dbForProject->createCollection('bucket_' . $bucketId, [
-                new Document([
-                    '$id' => 'dateCreated',
-                    'type' => Database::VAR_INTEGER,
-                    'format' => '',
-                    'size' => 0,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    'array' => false,
-                    '$id' => 'bucketId',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => Database::LENGTH_KEY,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'name',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 2048,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'path',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 2048,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'signature',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 2048,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'mimeType',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 127, // https://tools.ietf.org/html/rfc4288#section-4.2
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'sizeOriginal',
-                    'type' => Database::VAR_INTEGER,
-                    'format' => '',
-                    'size' => 0,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'sizeActual',
-                    'type' => Database::VAR_INTEGER,
-                    'format' => '',
-                    'size' => 0,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'algorithm',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 255,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'comment',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 2048,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'openSSLVersion',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 64,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'openSSLCipher',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 64,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'openSSLTag',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 2048,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'openSSLIV',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 2048,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'chunksTotal',
-                    'type' => Database::VAR_INTEGER,
-                    'format' => '',
-                    'size' => 0,
-                    'signed' => false,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'chunksUploaded',
-                    'type' => Database::VAR_INTEGER,
-                    'format' => '',
-                    'size' => 0,
-                    'signed' => false,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-                new Document([
-                    '$id' => 'search',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 16384,
-                    'signed' => true,
-                    'required' => false,
-                    'default' => null,
-                    'array' => false,
-                    'filters' => [],
-                ]),
-            ], [
-                new Document([
-                    '$id' => '_key_search',
-                    'type' => Database::INDEX_FULLTEXT,
-                    'attributes' => ['search'],
-                    'lengths' => [2048],
-                    'orders' => [Database::ORDER_ASC],
-                ]),
-                new Document([
-                    '$id' => '_key_bucket',
-                    'type' => Database::INDEX_KEY,
-                    'attributes' => ['bucketId'],
-                    'lengths' => [Database::LENGTH_KEY],
-                    'orders' => [Database::ORDER_ASC],
-                ]),
-            ]);
+            $files = Config::getParam('collections', [])['files'] ?? [];
+            if (empty($files)) {
+                throw new Exception('Files collection is not configured.');
+            }
+
+            $attributes = [];
+            $indexes = [];
+
+            foreach ($files['attributes'] as $attribute) {
+                $attributes[] = new Document([
+                    '$id' => $attribute['$id'],
+                    'type' => $attribute['type'],
+                    'size' => $attribute['size'],
+                    'required' => $attribute['required'],
+                    'signed' => $attribute['signed'],
+                    'array' => $attribute['array'],
+                    'filters' => $attribute['filters'],
+                ]);
+            }
+
+            foreach ($files['indexes'] as $index) {
+                $indexes[] = new Document([
+                    '$id' => $index['$id'],
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]);
+            }
+
+            $dbForProject->createCollection('bucket_' . $bucketId, $attributes, $indexes);
 
             $bucket = $dbForProject->createDocument('buckets', new Document([
                 '$id' => $bucketId,
@@ -287,7 +114,7 @@ App::post('/v1/storage/buckets')
                 'enabled' => $enabled,
                 'adapter' => $adapter,
                 'encryption' => $encryption,
-                'antiVirus' => $antiVirus,
+                'antivirus' => $antivirus,
                 '$read' => $read ?? [],
                 '$write' => $write ?? [],
                 'search' => implode(' ', [$bucketId, $name]),
@@ -334,7 +161,7 @@ App::get('/v1/storage/buckets')
         /** @var Appwrite\Stats\Stats $usage */
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, $search)] : [];
-        
+
         if (!empty($cursor)) {
             $cursorBucket = $dbForProject->getDocument('buckets', $cursor);
 
@@ -396,18 +223,19 @@ App::put('/v1/storage/buckets/:bucketId')
     ->label('sdk.response.model', Response::MODEL_BUCKET)
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->param('name', null, new Text(128), 'Bucket name', false)
+    ->param('permission', null, new WhiteList(['file', 'bucket']), 'Permissions type model to use for reading files in this bucket. You can use bucket-level permission set once on the bucket using the `read` and `write` params, or you can set file-level permission where each file read and write params will decide who has access to read and write to each file individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('maximumFileSize', null, new Integer(), 'Maximum file size allowed in bytes. Maximum allowed value is ' . App::getEnv('_APP_STORAGE_LIMIT', 0) . '. For self hosted version you can change the limit by changing _APP_STORAGE_LIMIT environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64)), 'Allowed file extensions', true)
     ->param('enabled', true, new Boolean(), 'Is bucket enabled?', true)
     ->param('encryption', true, new Boolean(), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER) . ' encryption is skipped even if it\'s enabled', true)
-    ->param('antiVirus', true, new Boolean(), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
+    ->param('antivirus', true, new Boolean(), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($bucketId, $name, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $encryption, $antiVirus, $response, $dbForProject, $audits, $usage) {
+    ->action(function ($bucketId, $name, $permission, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $encryption, $antivirus, $response, $dbForProject, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
@@ -419,23 +247,24 @@ App::put('/v1/storage/buckets/:bucketId')
             throw new Exception('Bucket not found', 404);
         }
 
-        $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
-        $write ??= $bucket->getAttribute('$write', []); // By default inherit write permissions
-        $maximumFileSize ??= $bucket->getAttribute('maximumFileSize', (int)App::getEnv('_APP_STORAGE_LIMIT', 0));
-        $allowedFileExtensions ??= $bucket->getAttribute('allowedFileExtensions', []);
-        $enabled ??= $bucket->getAttribute('enabled', true);
-        $encryption ??= $bucket->getAttribute('encryption', true);
-        $antiVirus ??= $bucket->getAttribute('antiVirus', true);
+        $read??=$bucket->getAttribute('$read', []); // By default inherit read permissions
+        $write??=$bucket->getAttribute('$write', []); // By default inherit write permissions
+        $maximumFileSize??=$bucket->getAttribute('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0));
+        $allowedFileExtensions??=$bucket->getAttribute('allowedFileExtensions', []);
+        $enabled??=$bucket->getAttribute('enabled', true);
+        $encryption??=$bucket->getAttribute('encryption', true);
+        $antivirus??=$bucket->getAttribute('antivirus', true);
 
         $bucket = $dbForProject->updateDocument('buckets', $bucket->getId(), $bucket
-                ->setAttribute('name',$name)
-                ->setAttribute('$read',$read)
-                ->setAttribute('$write',$write)
-                ->setAttribute('maximumFileSize',$maximumFileSize)
-                ->setAttribute('allowedFileExtensions',$allowedFileExtensions)
-                ->setAttribute('enabled',$enabled)
-                ->setAttribute('encryption',$encryption)
-                ->setAttribute('antiVirus',$antiVirus)
+                ->setAttribute('name', $name)
+                ->setAttribute('$read', $read)
+                ->setAttribute('$write', $write)
+                ->setAttribute('maximumFileSize', $maximumFileSize)
+                ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
+                ->setAttribute('enabled', $enabled)
+                ->setAttribute('encryption', $encryption)
+                ->setAttribute('permission', $permission)
+                ->setAttribute('antivirus', $antivirus)
         );
 
         $audits
@@ -481,10 +310,10 @@ App::delete('/v1/storage/buckets/:bucketId')
             throw new Exception('Bucket not found', 404);
         }
 
-        if(!$dbForProject->deleteDocument('buckets', $bucketId)) {
+        if (!$dbForProject->deleteDocument('buckets', $bucketId)) {
             throw new Exception('Failed to remove project from DB', 500);
         }
-        
+
         $deletes
             ->setParam('type', DELETE_TYPE_DOCUMENT)
             ->setParam('document', $bucket)
@@ -521,7 +350,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE)
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
-    ->param('fileId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('fileId', '', new CustomId(), 'File ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('file', [], new File(), 'Binary file.', false)
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
@@ -532,19 +361,23 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('audits')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($bucketId, $fileId, $file, $read, $write, $request, $response, $dbForProject, $user, $audits, $usage, $mode) {
+    ->inject('deviceFiles')
+    ->inject('deviceLocal')
+    ->action(function ($bucketId, $fileId, $file, $read, $write, $request, $response, $dbForProject, $user, $audits, $usage, $mode, $deviceFiles, $deviceLocal) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Utopia\Storage\Device $deviceFiles */
+        /** @var Utopia\Storage\Device $deviceLocal */
         /** @var string $mode */
 
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
-        if ($bucket->isEmpty() 
-            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
+        if ($bucket->isEmpty()
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -557,8 +390,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
         }
 
-        $read = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; // By default set read permissions for user
-        $write = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; 
+        $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; // By default set read permissions for user
+        $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
 
         // Users can only add their roles to files, API keys and Admin users can add any
         $roles = Authorization::getRoles();
@@ -566,12 +399,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach ($read as $role) {
                 if (!Authorization::isRole($role)) {
-                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                    throw new Exception('Read permissions must be one of: (' . \implode(', ', $roles) . ')', 400);
                 }
             }
             foreach ($write as $role) {
                 if (!Authorization::isRole($role)) {
-                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                    throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400);
                 }
             }
         }
@@ -579,8 +412,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $file = $request->getFiles('file');
 
         /**
-         * Validators
-         */
+     * Validators
+     */
         $allowedFileExtensions = $bucket->getAttribute('allowedFileExtensions', []);
         $fileExt = new FileExt($allowedFileExtensions);
 
@@ -589,9 +422,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             throw new Exception('Error bucket maximum file size is larger than _APP_STORAGE_LIMIT', 500);
         }
 
-        $fileSize = new FileSize($maximumFileSize);
-        $upload = new Upload();
-
+        $file = $request->getFiles('file');
         if (empty($file)) {
             throw new Exception('No file sent', 400);
         }
@@ -599,7 +430,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         // Make sure we handle a single file and multiple files the same way
         $fileName = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
         $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
-        $size = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+        $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         $contentRange = $request->getHeader('content-range');
         $fileId = $fileId === 'unique()' ? $dbForProject->getId() : $fileId;
@@ -609,52 +440,66 @@ App::post('/v1/storage/buckets/:bucketId/files')
         if (!empty($contentRange)) {
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
-            $size = $request->getContentRangeSize();
+            $fileSize = $request->getContentRangeSize();
             $fileId = $request->getHeader('x-appwrite-id', $fileId);
-            if (is_null($start) || is_null($end) || is_null($size)) {
+            if (is_null($start) || is_null($end) || is_null($fileSize)) {
                 throw new Exception('Invalid content-range header', 400);
             }
 
-            if ($end === $size) {
-                //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
+            if ($end === $fileSize) {
+                //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to -1 notify it's last chunk
                 $chunks = $chunk = -1;
             } else {
                 // Calculate total number of chunks based on the chunk size i.e ($rangeEnd - $rangeStart)
-                $chunks = (int) ceil($size / ($end + 1 - $start));
+                $chunks = (int) ceil($fileSize / ($end + 1 - $start));
                 $chunk = (int) ($start / ($end + 1 - $start)) + 1;
             }
         }
 
-        // Check if file type is allowed (feature for project settings?)
+        /**
+     * Validators
+     */
+        // Check if file type is allowed
+        $allowedFileExtensions = $bucket->getAttribute('allowedFileExtensions', []);
+        $fileExt = new FileExt($allowedFileExtensions);
         if (!empty($allowedFileExtensions) && !$fileExt->isValid($fileName)) {
             throw new Exception('File extension not allowed', 400);
         }
 
-        if (!$fileSize->isValid($size)) { // Check if file size is exceeding allowed limit
+        // Check if file size is exceeding allowed limit
+        $fileSizeValidator = new FileSize($maximumFileSize);
+        if (!$fileSizeValidator->isValid($fileSize)) {
             throw new Exception('File size not allowed', 400);
         }
 
-        $device = Storage::getDevice('files');
-
+        $upload = new Upload();
         if (!$upload->isValid($fileTmpName)) {
             throw new Exception('Invalid file', 403);
         }
 
         // Save to storage
-        $size ??= $device->getFileSize($fileTmpName);
-        $path = $device->getPath($fileId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
-        $path = str_ireplace($device->getRoot(), $device->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
+        $fileSize??=$deviceLocal->getFileSize($fileTmpName);
+        $path = $deviceFiles->getPath($fileId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
+        $path = str_ireplace($deviceFiles->getRoot(), $deviceFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
 
-        $file = $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
+        if ($permissionBucket) {
+            $file = Authorization::skip(function () use ($dbForProject, $bucketId, $fileId) {
+                return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
+            });
+        } else {
+            $file = $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
+        }
 
+        $metadata = ['content_type' => $deviceLocal->getFileMimeType($fileTmpName)];
         if (!$file->isEmpty()) {
             $chunks = $file->getAttribute('chunksTotal', 1);
+            $metadata = $file->getAttribute('metadata', []);
             if ($chunk === -1) {
                 $chunk = $chunks;
             }
         }
 
-        $chunksUploaded = $device->upload($fileTmpName, $path, $chunk, $chunks);
+        $chunksUploaded = $deviceFiles->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
         if (empty($chunksUploaded)) {
             throw new Exception('Failed uploading file', 500);
         }
@@ -662,28 +507,28 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? [];
         $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
         if ($chunksUploaded === $chunks) {
-            if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antiVirus', true) && $size <= APP_LIMIT_ANTIVIRUS) {
-                $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-                (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
-                
-                if (!$antiVirus->fileScan($path)) {
-                    $device->delete($path);
-                    throw new Exception('Invalid file', 403);
+            if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
+                $antivirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+                    (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
+
+                if (!$antivirus->fileScan($path)) {
+                    $deviceFiles->delete($path);
+                    throw new Exception('Invalid file', 400);
                 }
             }
 
-            $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
+            $mimeType = $deviceFiles->getFileMimeType($path); // Get mime-type before compression and encryption
             $data = '';
             // Compression
-            if ($size <= APP_STORAGE_READ_BUFFER) {
-                $data = $device->read($path);
+            if ($fileSize <= APP_STORAGE_READ_BUFFER) {
+                $data = $deviceFiles->read($path);
                 $compressor = new GZIP();
                 $data = $compressor->compress($data);
             }
 
-            if ($bucket->getAttribute('encryption', true) && $size <= APP_STORAGE_READ_BUFFER) {
+            if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
                 if (empty($data)) {
-                    $data = $device->read($path);
+                    $data = $deviceFiles->read($path);
                 }
                 $key = App::getEnv('_APP_OPENSSL_KEY_V1');
                 $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
@@ -691,17 +536,17 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             if (!empty($data)) {
-                if (!$device->write($path, $data, $mimeType)) {
+                if (!$deviceFiles->write($path, $data, $mimeType)) {
                     throw new Exception('Failed to save file', 500);
                 }
             }
 
-            $sizeActual = $device->getFileSize($path);
+            $sizeActual = $deviceFiles->getFileSize($path);
 
             $algorithm = empty($compressor) ? '' : $compressor->getName();
-            $fileHash = $device->getFileHash($path);
+            $fileHash = $deviceFiles->getFileHash($path);
 
-            if ($bucket->getAttribute('encryption', true) && $size <= APP_STORAGE_READ_BUFFER) {
+            if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
                 $openSSLVersion = '1';
                 $openSSLCipher = OpenSSL::CIPHER_AES_128_GCM;
                 $openSSLTag = \bin2hex($tag);
@@ -720,7 +565,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'path' => $path,
                         'signature' => $fileHash,
                         'mimeType' => $mimeType,
-                        'sizeOriginal' => $size,
+                        'sizeOriginal' => $fileSize,
                         'sizeActual' => $sizeActual,
                         'algorithm' => $algorithm,
                         'comment' => '',
@@ -730,10 +575,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'openSSLCipher' => $openSSLCipher,
                         'openSSLTag' => $openSSLTag,
                         'openSSLIV' => $openSSLIV,
-                        'search' => implode(' ', [$fileId, $fileName,]),
+                        'search' => implode(' ', [$fileId, $fileName]),
+                        'metadata' => $metadata,
                     ]);
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function() use ($dbForProject, $bucketId, $doc) {
+                        $file = Authorization::skip(function () use ($dbForProject, $bucketId, $doc) {
                             return $dbForProject->createDocument('bucket_' . $bucketId, $doc);
                         });
                     } else {
@@ -751,22 +597,21 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('openSSLCipher', $openSSLCipher)
                         ->setAttribute('openSSLTag', $openSSLTag)
                         ->setAttribute('openSSLIV', $openSSLIV)
+                        ->setAttribute('metadata', $metadata)
                         ->setAttribute('chunksUploaded', $chunksUploaded);
 
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function() use ($dbForProject, $bucketId, $fileId, $file) {
+                        $file = Authorization::skip(function () use ($dbForProject, $bucketId, $fileId, $file) {
                             return $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file);
                         });
                     } else {
                         $file = $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file);
                     }
-                            
+
                 }
-            }
-            catch (StructureException $exception) {
+            } catch (StructureException $exception) {
                 throw new Exception($exception->getMessage(), 400);
-            }
-            catch (DuplicateException $exception) {
+            } catch (DuplicateException $exception) {
                 throw new Exception('Document already exists', 409);
             }
         } else {
@@ -782,16 +627,17 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'path' => $path,
                         'signature' => '',
                         'mimeType' => '',
-                        'sizeOriginal' => $size,
+                        'sizeOriginal' => $fileSize,
                         'sizeActual' => 0,
                         'algorithm' => '',
                         'comment' => '',
                         'chunksTotal' => $chunks,
                         'chunksUploaded' => $chunksUploaded,
-                        'search' => implode(' ', [$fileId, $fileName,]),
+                        'search' => implode(' ', [$fileId, $fileName]),
+                        'metadata' => $metadata,
                     ]);
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function() use ($dbForProject, $bucketId, $doc) {
+                        $file = Authorization::skip(function () use ($dbForProject, $bucketId, $doc) {
                             return $dbForProject->createDocument('bucket_' . $bucketId, $doc);
                         });
                     } else {
@@ -799,24 +645,25 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     }
                 } else {
                     $file = $file
-                        ->setAttribute('chunksUploaded', $chunksUploaded);
+                        ->setAttribute('chunksUploaded', $chunksUploaded)
+                        ->setAttribute('metadata', $metadata);
 
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function() use ($dbForProject, $bucketId, $fileId, $file) {
+                        $file = Authorization::skip(function () use ($dbForProject, $bucketId, $fileId, $file) {
                             return $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file);
                         });
                     } else {
                         $file = $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file);
                     }
                 }
-            }
-            catch (StructureException $exception) {
+            } catch (StructureException $exception) {
                 throw new Exception($exception->getMessage(), 400);
-            }
-            catch (DuplicateException $exception) {
+            } catch (DuplicateException $exception) {
                 throw new Exception('Document already exists', 409);
             }
         }
+
+        $metadata = null; // was causing leaks as it was passed by reference
 
         $audits
             ->setParam('event', 'storage.files.create')
@@ -865,8 +712,8 @@ App::get('/v1/storage/buckets/:bucketId/files')
 
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
-        if ($bucket->isEmpty() 
-            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
+        if ($bucket->isEmpty()
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -885,8 +732,8 @@ App::get('/v1/storage/buckets/:bucketId/files')
         }
 
         if (!empty($cursor)) {
-            if ($bucket->getAttribute('permission') ==='bucket') {
-                $cursorFile = Authorization::skip(function() use ($dbForProject, $bucket, $cursor) {
+            if ($bucket->getAttribute('permission') === 'bucket') {
+                $cursorFile = Authorization::skip(function () use ($dbForProject, $bucket, $cursor) {
                     return $dbForProject->getDocument('bucket_' . $bucket->getId(), $cursor);
                 });
             } else {
@@ -904,8 +751,8 @@ App::get('/v1/storage/buckets/:bucketId/files')
             $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
-        if($bucket->getAttribute('permission') === 'bucket') {
-            $files = Authorization::skip(function() use ($dbForProject, $bucketId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderType) {
+        if ($bucket->getAttribute('permission') === 'bucket') {
+            $files = Authorization::skip(function () use ($dbForProject, $bucketId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderType) {
                 return $dbForProject->find('bucket_' . $bucketId, $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection);
             });
         } else {
@@ -949,8 +796,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
-        if ($bucket->isEmpty() 
-            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
+        if ($bucket->isEmpty()
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -962,15 +809,15 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
             }
         }
 
-        if($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function() use ($dbForProject, $bucketId, $fileId) {
+        if ($bucket->getAttribute('permission') === 'bucket') {
+            $file = Authorization::skip(function () use ($dbForProject, $bucketId, $fileId) {
                 return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
             });
         } else {
             $file = $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
         }
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId)  {
+        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
             throw new Exception('File not found', 404);
         }
         $usage
@@ -991,7 +838,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->label('sdk.description', '/docs/references/storage/get-file-preview.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE)
-    ->label('sdk.methodType', 'location')
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID')
     ->param('width', 0, new Range(0, 4000), 'Resize preview image width, Pass an integer between 0 to 4000.', true)
@@ -1001,8 +847,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->param('borderWidth', 0, new Range(0, 100), 'Preview image border in pixels. Pass an integer between 0 to 100. Defaults to 0.', true)
     ->param('borderColor', '', new HexColor(), 'Preview image border color. Use a valid HEX color, no # is needed for prefix.', true)
     ->param('borderRadius', 0, new Range(0, 4000), 'Preview image border radius in pixels. Pass an integer between 0 to 4000.', true)
-    ->param('opacity', 1, new Range(0,1, Range::TYPE_FLOAT), 'Preview image opacity. Only works with images having an alpha channel (like png). Pass a number between 0 to 1.', true)
-    ->param('rotation', 0, new Range(-360,360), 'Preview image rotation in degrees. Pass an integer between -360 and 360.', true)
+    ->param('opacity', 1, new Range(0, 1, Range::TYPE_FLOAT), 'Preview image opacity. Only works with images having an alpha channel (like png). Pass a number between 0 to 1.', true)
+    ->param('rotation', 0, new Range(-360, 360), 'Preview image rotation in degrees. Pass an integer between -360 and 360.', true)
     ->param('background', '', new HexColor(), 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->inject('request')
@@ -1011,27 +857,24 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($bucketId, $fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForProject, $usage, $mode) {
+    ->inject('deviceFiles')
+    ->action(function ($bucketId, $fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForProject, $usage, $mode, $deviceFiles) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Utopia\Storage\Device $deviceFiles */
         /** @var string $mode */
-
-        $storage = 'files';
 
         if (!\extension_loaded('imagick')) {
             throw new Exception('Imagick extension is missing', 500);
         }
 
-        if (!Storage::exists($storage)) {
-            throw new Exception('No such storage device', 400);
-        }
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
-        if ($bucket->isEmpty() 
-            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
+        if ($bucket->isEmpty()
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -1051,10 +894,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $outputs = Config::getParam('storage-outputs');
         $fileLogos = Config::getParam('storage-logos');
 
-        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
-        $key = \md5($fileId.$width.$height.$gravity.$quality.$borderWidth.$borderColor.$borderRadius.$opacity.$rotation.$background.$storage.$output);
+        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
+        $key = \md5($fileId . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
 
-        if ($bucket->getAttribute('permission')==='bucket') {
+        if ($bucket->getAttribute('permission') === 'bucket') {
             // skip authorization
             $file = Authorization::skip(function () use ($dbForProject, $bucketId, $fileId) {
                 return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
@@ -1079,17 +922,16 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             $cipher = null;
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
-            $key = \md5($path.$width.$height.$gravity.$quality.$borderWidth.$borderColor.$borderRadius.$opacity.$rotation.$background.$storage.$output);
+            $key = \md5($path . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
         }
 
         $compressor = new GZIP();
-        $device = Storage::getDevice('files');
 
-        if (!\file_exists($path)) {
+        if (!$deviceFiles->exists($path)) {
             throw new Exception('File not found', 404);
         }
 
-        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-' . $project->getId())); // Limit file number or size
+        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId() . DIRECTORY_SEPARATOR . $bucketId . DIRECTORY_SEPARATOR . $fileId)); // Limit file number or size
         $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
 
         if ($data) {
@@ -1103,7 +945,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             ;
         }
 
-        $source = $device->read($path);
+        $source = $deviceFiles->read($path);
 
         if (!empty($cipher)) { // Decrypt
             $source = OpenSSL::decrypt(
@@ -1123,8 +965,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $image = new Image($source);
 
         $image->crop((int) $width, (int) $height, $gravity);
-        
-        if (!empty($opacity) || $opacity===0) {
+
+        if (!empty($opacity) || $opacity === 0) {
             $image->setOpacity($opacity);
         }
 
@@ -1184,17 +1026,19 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($bucketId, $fileId, $request, $response, $dbForProject, $usage, $mode) {
+    ->inject('deviceFiles')
+    ->action(function ($bucketId, $fileId, $request, $response, $dbForProject, $usage, $mode, $deviceFiles) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Utopia\Storage\Device $deviceFiles */
         /** @var string $mode */
 
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
-        if ($bucket->isEmpty() 
-            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
+        if ($bucket->isEmpty()
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -1206,8 +1050,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             }
         }
 
-        if($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function() use ($dbForProject, $fileId, $bucketId) {
+        if ($bucket->getAttribute('permission') === 'bucket') {
+            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucketId) {
                 return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
             });
         } else {
@@ -1220,9 +1064,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
 
         $path = $file->getAttribute('path', '');
 
-        $device = Storage::getDevice('files');
-        
-        if (!$device->exists($path)) {
+        if (!$deviceFiles->exists($path)) {
             throw new Exception('File not found in ' . $path, 404);
         }
 
@@ -1241,13 +1083,13 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         $size = $file->getAttribute('sizeOriginal', 0);
 
         $rangeHeader = $request->getHeader('range');
-        if (!empty($rangeHeader)) { 
+        if (!empty($rangeHeader)) {
             $start = $request->getRangeStart();
             $end = $request->getRangeEnd();
             $unit = $request->getRangeUnit();
 
             if ($end === null) {
-                $end =  min(($start + MAX_OUTPUT_CHUNK_SIZE-1), ($size - 1));
+                $end = min(($start + MAX_OUTPUT_CHUNK_SIZE - 1), ($size - 1));
             }
 
             if ($unit !== 'bytes' || $start >= $end || $end >= $size) {
@@ -1263,7 +1105,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
 
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
-            $source = $device->read($path);
+            $source = $deviceFiles->read($path);
             $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
@@ -1276,7 +1118,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
 
         if (!empty($file->getAttribute('algorithm', ''))) {
             if (empty($source)) {
-                $source = $device->read($path);
+                $source = $deviceFiles->read($path);
             }
             $compressor = new GZIP();
             $source = $compressor->decompress($source);
@@ -1290,14 +1132,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         }
 
         if (!empty($rangeHeader)) {
-            $response->send($device->read($path, $start, ($end - $start + 1)));
+            $response->send($deviceFiles->read($path, $start, ($end - $start + 1)));
         }
 
-        if ($size > APP_STORAGE_READ_BUFFER) {          
-            $response->addHeader('Content-Length', $device->getFileSize($path));
-            for ($i=0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
+        if ($size > APP_STORAGE_READ_BUFFER) {
+            $response->addHeader('Content-Length', $deviceFiles->getFileSize($path));
+            for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    $device->read(
+                    $deviceFiles->read(
                         $path,
                         ($i * MAX_OUTPUT_CHUNK_SIZE),
                         min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
@@ -1306,7 +1148,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
                 );
             }
         } else {
-            $response->send($device->read($path));
+            $response->send($deviceFiles->read($path));
         }
     });
 
@@ -1329,17 +1171,19 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($bucketId, $fileId, $response, $request, $dbForProject, $usage, $mode) {
+    ->inject('deviceFiles')
+    ->action(function ($bucketId, $fileId, $response, $request, $dbForProject, $usage, $mode, $deviceFiles) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Swoole\Request $request */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Utopia\Storage\Device $deviceFiles */
         /** @var string $mode */
 
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
-        if ($bucket->isEmpty() 
-            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
+        if ($bucket->isEmpty()
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -1351,8 +1195,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             }
         }
 
-        if($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function() use ($dbForProject, $fileId, $bucketId) {
+        if ($bucket->getAttribute('permission') === 'bucket') {
+            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucketId) {
                 return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
             });
         } else {
@@ -1367,12 +1211,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
 
         $path = $file->getAttribute('path', '');
 
-        if (!\file_exists($path)) {
+        if (!$deviceFiles->exists($path)) {
             throw new Exception('File not found in ' . $path, 404);
         }
 
         $compressor = new GZIP();
-        $device = Storage::getDevice('files');
 
         $contentType = 'text/plain';
 
@@ -1392,13 +1235,13 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         $size = $file->getAttribute('sizeOriginal', 0);
 
         $rangeHeader = $request->getHeader('range');
-        if (!empty($rangeHeader)) { 
+        if (!empty($rangeHeader)) {
             $start = $request->getRangeStart();
             $end = $request->getRangeEnd();
             $unit = $request->getRangeUnit();
 
             if ($end === null) {
-                $end =  min(($start + 2000000-1), ($size - 1));
+                $end = min(($start + 2000000 - 1), ($size - 1));
             }
 
             if ($unit != 'bytes' || $start >= $end || $end >= $size) {
@@ -1414,7 +1257,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
 
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
-            $source = $device->read($path);
+            $source = $deviceFiles->read($path);
             $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
@@ -1427,7 +1270,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
 
         if (!empty($file->getAttribute('algorithm', ''))) {
             if (empty($source)) {
-                $source = $device->read($path);
+                $source = $deviceFiles->read($path);
             }
             $compressor = new GZIP();
             $source = $compressor->decompress($source);
@@ -1446,15 +1289,15 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         }
 
         if (!empty($rangeHeader)) {
-            $response->send($device->read($path, $start, ($end - $start + 1)));
+            $response->send($deviceFiles->read($path, $start, ($end - $start + 1)));
         }
 
-        $size = $device->getFileSize($path);
-        if ($size > APP_STORAGE_READ_BUFFER) {          
-            $response->addHeader('Content-Length', $device->getFileSize($path));
-            for ($i=0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
+        $size = $deviceFiles->getFileSize($path);
+        if ($size > APP_STORAGE_READ_BUFFER) {
+            $response->addHeader('Content-Length', $deviceFiles->getFileSize($path));
+            for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    $device->read(
+                    $deviceFiles->read(
                         $path,
                         ($i * MAX_OUTPUT_CHUNK_SIZE),
                         min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
@@ -1463,7 +1306,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
                 );
             }
         } else {
-            $response->send($device->read($path));
+            $response->send($deviceFiles->read($path));
         }
     });
 
@@ -1499,8 +1342,8 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         /** @var string $mode */
 
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
-        $read = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; // By default set read permissions for user
-        $write = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; 
+        $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; // By default set read permissions for user
+        $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
 
         // Users can only add their roles to files, API keys and Admin users can add any
         $roles = Authorization::getRoles();
@@ -1508,18 +1351,18 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach ($read as $role) {
                 if (!Authorization::isRole($role)) {
-                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                    throw new Exception('Read permissions must be one of: (' . \implode(', ', $roles) . ')', 400);
                 }
             }
             foreach ($write as $role) {
                 if (!Authorization::isRole($role)) {
-                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                    throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400);
                 }
             }
         }
 
-        if ($bucket->isEmpty() 
-            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
+        if ($bucket->isEmpty()
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -1531,8 +1374,8 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             }
         }
 
-        if($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function() use ($dbForProject, $fileId, $bucketId) {
+        if ($bucket->getAttribute('permission') === 'bucket') {
+            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucketId) {
                 return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
             });
         } else {
@@ -1543,23 +1386,23 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception('File not found', 404);
         }
 
-        if($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function() use ($dbForProject, $fileId, $bucketId, $file, $read, $write) {
+        if ($bucket->getAttribute('permission') === 'bucket') {
+            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucketId, $file, $read, $write) {
                 return $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file
-                    ->setAttribute('$read', $read)
-                    ->setAttribute('$write', $write)
+                        ->setAttribute('$read', $read)
+                        ->setAttribute('$write', $write)
                 );
             });
         } else {
             $file = $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file
-                ->setAttribute('$read', $read)
-                ->setAttribute('$write', $write)
+                    ->setAttribute('$read', $read)
+                    ->setAttribute('$write', $write)
             );
         }
 
         $audits
             ->setParam('event', 'storage.files.update')
-            ->setParam('resource', 'file/'.$file->getId())
+            ->setParam('resource', 'file/' . $file->getId())
         ;
 
         $usage
@@ -1590,19 +1433,22 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('audits')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($bucketId, $fileId, $response, $dbForProject, $events, $audits, $usage, $mode) {
+    ->inject('deviceFiles')
+    ->inject('project')
+    ->action(function ($bucketId, $fileId, $response, $dbForProject, $events, $audits, $usage, $mode, $deviceFiles, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Utopia\Storage\Device $deviceFiles */
         /** @var string $mode */
-        
+
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
-        if ($bucket->isEmpty() 
-            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN )) {
+        if ($bucket->isEmpty()
+            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -1614,8 +1460,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             }
         }
 
-        if($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function() use ($dbForProject, $fileId, $bucketId) {
+        if ($bucket->getAttribute('permission') === 'bucket') {
+            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucketId) {
                 return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
             });
         } else {
@@ -1626,18 +1472,24 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception('File not found', 404);
         }
 
-        $device = Storage::getDevice('files');
-
         $deviceDeleted = false;
-        if($file->getAttribute('chunksTotal') !== $file->getAttribute('chunksUploaded')) {
-            $deviceDeleted = $device->abort($file->getAttribute('path'));
+        if ($file->getAttribute('chunksTotal') !== $file->getAttribute('chunksUploaded')) {
+            $deviceDeleted = $deviceFiles->abort(
+                $file->getAttribute('path'),
+                ($file->getAttribute('metadata', [])['uploadId'] ?? '')
+            );
         } else {
-            $deviceDeleted = $device->delete($file->getAttribute('path'));
+            $deviceDeleted = $deviceFiles->delete($file->getAttribute('path'));
         }
 
         if ($deviceDeleted) {
+            //delete related cache
+            $cacheDir = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId() . DIRECTORY_SEPARATOR . $bucketId . DIRECTORY_SEPARATOR . $fileId;
+            $deviceLocal = new Local($cacheDir);
+            $deviceLocal->delete($cacheDir, true);
+
             if ($bucket->getAttribute('permission') === 'bucket') {
-                $deleted = Authorization::skip(function() use ($dbForProject, $fileId, $bucketId) {
+                $deleted = Authorization::skip(function () use ($dbForProject, $fileId, $bucketId) {
                     return $dbForProject->deleteDocument('bucket_' . $bucketId, $fileId);
                 });
             } else {
@@ -1652,7 +1504,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $audits
             ->setParam('event', 'storage.files.delete')
-            ->setParam('resource', 'file/'.$file->getId())
+            ->setParam('resource', 'file/' . $file->getId())
         ;
 
         $usage
@@ -1723,7 +1575,7 @@ App::get('/v1/storage/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
+            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
@@ -1732,7 +1584,7 @@ App::get('/v1/storage/usage')
                         new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
                     ], $limit, 0, ['time'], [Database::ORDER_DESC]);
-    
+
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
                         $stats[$metric][] = [
@@ -1742,7 +1594,7 @@ App::get('/v1/storage/usage')
                     }
 
                     // backfill metrics with empty values for graphs
-                    $backfill = $limit - \count($requestDocs);
+                    $backfill = $limit-\count($requestDocs);
                     while ($backfill > 0) {
                         $last = $limit - $backfill - 1; // array index of last added metric
                         $diff = match($period) { // convert period to seconds for unix timestamp math
@@ -1801,8 +1653,8 @@ App::get('/v1/storage/:bucketId/usage')
 
         if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404);
-        } 
-        
+        }
+
         $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
             $periods = [
@@ -1830,12 +1682,12 @@ App::get('/v1/storage/:bucketId/usage')
                 "storage.buckets.$bucketId.files.create",
                 "storage.buckets.$bucketId.files.read",
                 "storage.buckets.$bucketId.files.update",
-                "storage.buckets.$bucketId.files.delete"
+                "storage.buckets.$bucketId.files.delete",
             ];
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
+            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
@@ -1843,7 +1695,7 @@ App::get('/v1/storage/:bucketId/usage')
                         new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
                     ], $limit, 0, ['time'], [Database::ORDER_DESC]);
-    
+
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
                         $stats[$metric][] = [
@@ -1853,7 +1705,7 @@ App::get('/v1/storage/:bucketId/usage')
                     }
 
                     // backfill metrics with empty values for graphs
-                    $backfill = $limit - \count($requestDocs);
+                    $backfill = $limit-\count($requestDocs);
                     while ($backfill > 0) {
                         $last = $limit - $backfill - 1; // array index of last added metric
                         $diff = match($period) { // convert period to seconds for unix timestamp math
@@ -1877,7 +1729,7 @@ App::get('/v1/storage/:bucketId/usage')
                 'filesCreate' => $stats["storage.buckets.$bucketId.files.create"],
                 'filesRead' => $stats["storage.buckets.$bucketId.files.read"],
                 'filesUpdate' => $stats["storage.buckets.$bucketId.files.update"],
-                'filesDelete' => $stats["storage.buckets.$bucketId.files.delete"]
+                'filesDelete' => $stats["storage.buckets.$bucketId.files.delete"],
             ]);
         }
 

@@ -452,11 +452,15 @@ App::post('/v1/functions/:functionId/tags')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($functionId, $command, $file, $request, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Request $request */
+    ->inject('deviceFunctions')
+    ->inject('deviceLocal')
+    ->action(function ($functionId, $command, $file, $request, $response, $dbForProject, $usage, $deviceFunctions, $deviceLocal) {
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
+        /** @var Utopia\Storage\Device $deviceFunctions */
+        /** @var Utopia\Storage\Device $deviceLocal */
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -465,9 +469,8 @@ App::post('/v1/functions/:functionId/tags')
         }
 
         $file = $request->getFiles('code');
-        $device = Storage::getDevice('functions');
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSize = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
+        $fileSizeValidator = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
         $upload = new Upload();
 
         if (empty($file)) {
@@ -477,7 +480,7 @@ App::post('/v1/functions/:functionId/tags')
         // Make sure we handle a single file and multiple files the same way
         $fileName = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
         $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
-        $size = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+        $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         if (!$fileExt->isValid($file['name'])) { // Check if file type is allowed
             throw new Exception('File type not allowed', 400);
@@ -491,23 +494,23 @@ App::post('/v1/functions/:functionId/tags')
         if (!empty($contentRange)) {
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
-            $size = $request->getContentRangeSize();
+            $fileSize = $request->getContentRangeSize();
             $tagId = $request->getHeader('x-appwrite-id', $tagId);
-            if(is_null($start) || is_null($end) || is_null($size)) {
+            if(is_null($start) || is_null($end) || is_null($fileSize)) {
                 throw new Exception('Invalid content-range header', 400);
             }
 
-            if ($end == $size) {
+            if ($end === $fileSize) {
                 //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
                 $chunks = $chunk = -1;
             } else {
                 // Calculate total number of chunks based on the chunk size i.e ($rangeEnd - $rangeStart)
-                $chunks = (int) ceil($size / ($end + 1 - $start));
+                $chunks = (int) ceil($fileSize / ($end + 1 - $start));
                 $chunk = (int) ($start / ($end + 1 - $start)) + 1;
             }
         }
 
-        if (!$fileSize->isValid($size)) { // Check if file size is exceeding allowed limit
+        if (!$fileSizeValidator->isValid($fileSize)) { // Check if file size is exceeding allowed limit
             throw new Exception('File size not allowed', 400);
         }
 
@@ -516,8 +519,8 @@ App::post('/v1/functions/:functionId/tags')
         }
 
         // Save to storage
-        $size ??= $device->getFileSize($fileTmpName);
-        $path = $device->getPath($tagId.'.'.\pathinfo($fileName, PATHINFO_EXTENSION));
+        $fileSize ??= $deviceLocal->getFileSize($fileTmpName);
+        $path = $deviceFunctions->getPath($tagId.'.'.\pathinfo($fileName, PATHINFO_EXTENSION));
         
         $tag = $dbForProject->getDocument('tags', $tagId);
 
@@ -528,14 +531,14 @@ App::post('/v1/functions/:functionId/tags')
             }
         }
 
-        $chunksUploaded = $device->upload($fileTmpName, $path, $chunk, $chunks);
+        $chunksUploaded = $deviceFunctions->upload($fileTmpName, $path, $chunk, $chunks);
 
         if (empty($chunksUploaded)) {
             throw new Exception('Failed moving file', 500);
         }
         
-        if($chunksUploaded == $chunks) {
-            $size = $device->getFileSize($path);
+        if($chunksUploaded === $chunks) {
+            $fileSize = $deviceFunctions->getFileSize($path);
 
             if ($tag->isEmpty()) {
                 $tag = $dbForProject->createDocument('tags', new Document([
@@ -546,11 +549,11 @@ App::post('/v1/functions/:functionId/tags')
                     'dateCreated' => time(),
                     'command' => $command,
                     'path' => $path,
-                    'size' => $size,
+                    'size' => $fileSize,
                     'search' => implode(' ', [$tagId, $command]),
                 ]));
             } else {
-                $tag = $dbForProject->updateDocument('tags', $tagId, $tag->setAttribute('size', $size));
+                $tag = $dbForProject->updateDocument('tags', $tagId, $tag->setAttribute('size', $fileSize));
             }
         } else {
             if($tag->isEmpty()) {
@@ -689,10 +692,12 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($functionId, $tagId, $response, $dbForProject, $usage) {
+    ->inject('deviceFunctions')
+    ->action(function ($functionId, $tagId, $response, $dbForProject, $usage, $deviceFunctions) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
+        /** @var Utopia\Storage\Device $deviceFunctions */
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -710,9 +715,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
             throw new Exception('Tag not found', 404);
         }
 
-        $device = Storage::getDevice('functions');
-
-        if ($device->delete($tag->getAttribute('path', ''))) {
+        if ($deviceFunctions->delete($tag->getAttribute('path', ''))) {
             if (!$dbForProject->deleteDocument('tags', $tag->getId())) {
                 throw new Exception('Failed to remove tag from DB', 500);
             }

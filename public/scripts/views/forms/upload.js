@@ -108,7 +108,7 @@
           expression.parse(element.dataset["write"] || "[]")
         );
 
-        sdk.storage.createFile('unique()', files[0], read, write, 1).then(
+        sdk.storage.createFile('default', 'unique()', files[0], read, write, 1).then(
           function(response) {
             onComplete(message);
 

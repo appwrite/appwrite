@@ -92,7 +92,7 @@ class Bucket extends Model
             'default' => true,
             'example' => false,
         ])
-        ->addRule('antiVirus', [
+        ->addRule('antivirus', [
             'type' => self::TYPE_BOOLEAN,
             'description' => 'Virus scanning is enabled.',
             'default' => true,
