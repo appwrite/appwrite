@@ -158,7 +158,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                             <input type="hidden" name="fileId" data-ls-bind="{{file.$id}}" />
                                                         </form>
                                                     </div>
-                                                    <div class="col span-4 text-size-small">
+                                                    <div data-ls-if="{{file.chunksTotal}} == {{file.chunksUploaded}}" class="col span-4 text-size-small">
                                                         <div class="margin-bottom-small">File Preview</div>
 
                                                         <div class="margin-bottom-small">
@@ -188,7 +188,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 
                                                 <footer>
                                                     <button class="link pull-end text-danger" data-ls-ui-trigger="file-delete-{{file.$id}},modal-close">Delete File</button>
-                                                    <button type="button" data-ls-ui-trigger="file-update-{{file.$id}},modal-close">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse desktops-only-inline tablets-only-inline">Cancel</button>
+                                                    <button type="button" data-ls-if="{{file.chunksTotal}} == {{file.chunksUploaded}}" data-ls-ui-trigger="file-update-{{file.$id}},modal-close">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse desktops-only-inline tablets-only-inline">Cancel</button>
                                                 </footer>
                                             </div>
                                         </td>
@@ -196,8 +196,11 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                             <span class="text-fade text-size-small" data-ls-bind="{{file.mimeType}}"></span>
                                         </td>
                                         <td data-title="Size: ">
-                                            <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
-                                            <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileUnit}}"></span>
+                                            <div data-ls-if="{{file.chunksTotal}} == {{file.chunksUploaded}}" >
+                                                <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
+                                                <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileUnit}}"></span>
+                                            </div>
+                                            <span class="text-fade text-size-small" data-ls-if="{{file.chunksTotal}} != {{file.chunksUploaded}}">incomplete</span>
                                         </td>
                                         <td data-title="Created: ">
                                             <span class="text-fade text-size-small" data-ls-bind="{{file.dateCreated|dateText}}"></span>
