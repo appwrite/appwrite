@@ -146,7 +146,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
                 }
 
                 if($matchesAmount === \count($allowedSections)) {
-                    return true;
+                    $refDomainOrigin = $valueHostname;
                 }
             }
         }
