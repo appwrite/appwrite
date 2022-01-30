@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d9d66a3e700bc3936fe9a09f3c1b38f9",
+    "content-hash": "0f076a2eb86382f0f854c7dd1a506bd4",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2640,7 +2640,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage",
-                "reference": "15a787e3c8c084e8d2cb08c2ece3ba20df76d6c9"
+                "reference": "ec3606d95a827bd47eae258506b6f90e43844a4b"
             },
             "require": {
                 "php": ">=8.0",
@@ -2678,7 +2678,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2022-01-16T07:43:42+00:00"
+            "time": "2022-01-28T10:04:22+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -3077,17 +3077,11 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.17.1",
+            "version": "dev-feat-preps-for-0.13",
             "source": {
                 "type": "git",
-                "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "3542c6ed0f808b6a9f6735a8aad7ccda961bea29"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/3542c6ed0f808b6a9f6735a8aad7ccda961bea29",
-                "reference": "3542c6ed0f808b6a9f6735a8aad7ccda961bea29",
-                "shasum": ""
+                "url": "https://github.com/appwrite/sdk-generator",
+                "reference": "96735eef25d5a98d0582bb4925b42db593c974f8"
             },
             "require": {
                 "ext-curl": "*",
@@ -3107,7 +3101,6 @@
                     "Appwrite\\Spec\\": "src/Spec"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -3118,11 +3111,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "support": {
-                "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.17.1"
-            },
-            "time": "2022-01-07T12:55:37+00:00"
+            "time": "2022-01-30T07:29:08+00:00"
         },
         {
             "name": "composer/pcre",
@@ -3696,9 +3685,6 @@
             },
             "require": {
                 "php": "^7.1 || ^8.0"
-            },
-            "replace": {
-                "myclabs/deep-copy": "self.version"
             },
             "require-dev": {
                 "doctrine/collections": "^1.0",
@@ -5718,16 +5704,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v6.0.2",
+            "version": "v6.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "dd434fa8d69325e5d210f63070014d889511fcb3"
+                "reference": "22e8efd019c3270c4f79376234a3f8752cd25490"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/dd434fa8d69325e5d210f63070014d889511fcb3",
-                "reference": "dd434fa8d69325e5d210f63070014d889511fcb3",
+                "url": "https://api.github.com/repos/symfony/console/zipball/22e8efd019c3270c4f79376234a3f8752cd25490",
+                "reference": "22e8efd019c3270c4f79376234a3f8752cd25490",
                 "shasum": ""
             },
             "require": {
@@ -5793,7 +5779,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v6.0.2"
+                "source": "https://github.com/symfony/console/tree/v6.0.3"
             },
             "funding": [
                 {
@@ -5809,7 +5795,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-12-27T21:05:08+00:00"
+            "time": "2022-01-26T17:23:29+00:00"
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
@@ -6219,16 +6205,16 @@
         },
         {
             "name": "symfony/string",
-            "version": "v6.0.2",
+            "version": "v6.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/string.git",
-                "reference": "bae261d0c3ac38a1f802b4dfed42094296100631"
+                "reference": "522144f0c4c004c80d56fa47e40e17028e2eefc2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/string/zipball/bae261d0c3ac38a1f802b4dfed42094296100631",
-                "reference": "bae261d0c3ac38a1f802b4dfed42094296100631",
+                "url": "https://api.github.com/repos/symfony/string/zipball/522144f0c4c004c80d56fa47e40e17028e2eefc2",
+                "reference": "522144f0c4c004c80d56fa47e40e17028e2eefc2",
                 "shasum": ""
             },
             "require": {
@@ -6284,7 +6270,7 @@
                 "utf8"
             ],
             "support": {
-                "source": "https://github.com/symfony/string/tree/v6.0.2"
+                "source": "https://github.com/symfony/string/tree/v6.0.3"
             },
             "funding": [
                 {
@@ -6300,7 +6286,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-12-16T22:13:01+00:00"
+            "time": "2022-01-02T09:55:41+00:00"
         },
         {
             "name": "textalk/websocket",
@@ -6642,7 +6628,8 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/storage": 20
+        "utopia-php/storage": 20,
+        "appwrite/sdk-generator": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
@@ -6665,5 +6652,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.2.0"
 }
