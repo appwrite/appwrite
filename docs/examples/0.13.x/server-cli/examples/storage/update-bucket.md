@@ -1,0 +1,11 @@
+appwrite storage updateBucket \
+        --bucketId="[BUCKET_ID]" \
+        --name="[NAME]" \
+        --permission="file" \
+        --read="[&quot;role:all&quot;]" \
+        --write="[&quot;role:all&quot;]" \
+        --maximumFileSize="" \
+        --allowedFileExtensions="" \
+        --enabled="" \
+        --encryption="" \
+        --antivirus=""
