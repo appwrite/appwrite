@@ -769,7 +769,8 @@
                  *
                  * Use this endpoint to log out the currently logged in user from all their
                  * account sessions across all of their different devices. When using the
-                 * option id argument, only the session unique ID provider will be deleted.
+                 * Session ID argument, only the unique session ID provided is deleted.
+                 *
                  *
                  * @param {string} sessionId
                  * @throws {AppwriteException}
@@ -2535,7 +2536,7 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createTag: (functionId, command, code, onProgress = (progress) => { }) => __awaiter(this, void 0, void 0, function* () {
+                createTag: (functionId, command, code) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -2554,38 +2555,9 @@
                         payload['code'] = code;
                     }
                     const uri = new URL(this.config.endpoint + path);
-                    const size = code.size;
-                    if (size <= Appwrite.CHUNK_SIZE) {
-                        return yield this.call('post', uri, {
-                            'content-type': 'multipart/form-data',
-                        }, payload);
-                    }
-                    else {
-                        let id = undefined;
-                        let response = undefined;
-                        const totalCounters = Math.ceil(size / Appwrite.CHUNK_SIZE);
-                        for (let counter = 0; counter < totalCounters; counter++) {
-                            const start = (counter * Appwrite.CHUNK_SIZE);
-                            const end = Math.min((((counter * Appwrite.CHUNK_SIZE) + Appwrite.CHUNK_SIZE) - 1), size);
-                            const headers = {
-                                'content-type': 'multipart/form-data',
-                                'content-range': 'bytes ' + start + '-' + end + '/' + size
-                            };
-                            if (id) {
-                                headers['x-appwrite-id'] = id;
-                            }
-                            const stream = code.slice(start, end + 1);
-                            payload['code'] = new File([stream], code.name);
-                            response = yield this.call('post', uri, headers, payload);
-                            if (!id) {
-                                id = response['$id'];
-                            }
-                            if (onProgress) {
-                                onProgress(Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100);
-                            }
-                        }
-                        return response;
-                    }
+                    return yield this.call('post', uri, {
+                        'content-type': 'multipart/form-data',
+                    }, payload);
                 }),
                 /**
                  * Get Tag
@@ -4210,7 +4182,7 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createFile: (bucketId, fileId, file, read, write, onProgress = (progress) => { }) => __awaiter(this, void 0, void 0, function* () {
+                createFile: (bucketId, fileId, file, read, write) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof bucketId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "bucketId"');
                     }
@@ -4235,38 +4207,9 @@
                         payload['write'] = write;
                     }
                     const uri = new URL(this.config.endpoint + path);
-                    const size = file.size;
-                    if (size <= Appwrite.CHUNK_SIZE) {
-                        return yield this.call('post', uri, {
-                            'content-type': 'multipart/form-data',
-                        }, payload);
-                    }
-                    else {
-                        let id = undefined;
-                        let response = undefined;
-                        const totalCounters = Math.ceil(size / Appwrite.CHUNK_SIZE);
-                        for (let counter = 0; counter < totalCounters; counter++) {
-                            const start = (counter * Appwrite.CHUNK_SIZE);
-                            const end = Math.min((((counter * Appwrite.CHUNK_SIZE) + Appwrite.CHUNK_SIZE) - 1), size);
-                            const headers = {
-                                'content-type': 'multipart/form-data',
-                                'content-range': 'bytes ' + start + '-' + end + '/' + size
-                            };
-                            if (id) {
-                                headers['x-appwrite-id'] = id;
-                            }
-                            const stream = file.slice(start, end + 1);
-                            payload['file'] = new File([stream], file.name);
-                            response = yield this.call('post', uri, headers, payload);
-                            if (!id) {
-                                id = response['$id'];
-                            }
-                            if (onProgress) {
-                                onProgress(Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100);
-                            }
-                        }
-                        return response;
-                    }
+                    return yield this.call('post', uri, {
+                        'content-type': 'multipart/form-data',
+                    }, payload);
                 }),
                 /**
                  * Get File
@@ -5543,7 +5486,6 @@
             return output;
         }
     }
-    Appwrite.CHUNK_SIZE = 5 * 1024 * 1024;
     class Query {
     }
     Query.equal = (attribute, value) => Query.addQuery(attribute, "equal", value);
