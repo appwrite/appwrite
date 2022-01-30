@@ -1,1 +1,1 @@
-Get a list of all the current user function execution logs. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project's executions. [Learn more about different API modes](/docs/admin).
+Get a list of all the current user function execution logs. You can use the query params to filter your results. If accessed using a server SDK or an API key with the relevant scopes, this endpoint will return a list of all of the project's executions regardless of the permissions that have been set for the function.

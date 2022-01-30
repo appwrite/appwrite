@@ -1,1 +1,1 @@
-Get a list of all the user files. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project's files. [Learn more about different API modes](/docs/admin).
+Get a list of all the user files. You can use the query params to filter your results. If accessed using a server SDK or an API key with the relevant scopes, this endpoint will return a list of all of the project's files regardless of the file-level permissions that have been set in the bucket.
