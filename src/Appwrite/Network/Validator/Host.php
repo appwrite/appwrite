@@ -51,8 +51,12 @@ class Host extends Validator
             return false;
         }
 
-        if (\in_array(\parse_url($value, PHP_URL_HOST), $this->whitelist)) {
-            return true;
+        $valueHostname = \parse_url($value, PHP_URL_HOST);
+
+        foreach ($this->whitelist as $allowedHostname) {
+            if($valueHostname == $allowedHostname) {
+                return true;
+            }
         }
 
         return false;
