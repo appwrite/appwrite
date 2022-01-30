@@ -3,7 +3,6 @@
 namespace Appwrite\Network\Validator;
 
 use Utopia\Validator;
-use function PHPUnit\Framework\containsEqual;
 
 /**
  * Host
