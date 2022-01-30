@@ -125,7 +125,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     // Checkout Host.php to see description of this block
     foreach ($clients as $allowedHostname) {
         if($valueHostname === $allowedHostname) {
-            return true;
+            $refDomainOrigin = $valueHostname;
+            break;
         }
 
         if(\str_contains($allowedHostname, '*')) {
@@ -147,6 +148,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
 
                 if($matchesAmount === \count($allowedSections)) {
                     $refDomainOrigin = $valueHostname;
+                    break;
                 }
             }
         }
