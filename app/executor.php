@@ -962,7 +962,7 @@ App::delete('/v1/functions/:functionId')
     ->action(
         function (string $functionId, string $projectId, Response $response, Database $dbForProject) use ($orchestrationPool) {
 
-            $results = $dbForProject->find('deployments', [new Query('functionId', Query::TYPE_EQUAL, [$functionId])], 999);
+            $results = $dbForProject->find('deployments', [new Query('resourceId', Query::TYPE_EQUAL, [$functionId])], 999);
 
             // If amount is 0 then we simply return true
             if (count($results) === 0) {
@@ -975,18 +975,18 @@ App::delete('/v1/functions/:functionId')
             global $register;
             foreach ($results as $deployment) {
                 go(function () use ($orchestrationPool, $deployment, $register, $projectId) {
+                    $db = $register->get('dbPool')->get();
+                    $redis = $register->get('redisPool')->get();
+                    $cache = new Cache(new RedisCache($redis));
+                    $dbForProject = new Database(new MariaDB($db), $cache);
+                    $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+                    $dbForProject->setNamespace('_project_' . $projectId);
+                    
                     try {
                         $orchestration = $orchestrationPool->get();
                         // Remove the container of the deployment
                         $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
                         Console::success('Removed container for deployment: ' . $deployment['$id']);
-
-                        $db = $register->get('dbPool')->get();
-                        $redis = $register->get('redisPool')->get();
-                        $cache = new Cache(new RedisCache($redis));
-                        $dbForProject = new Database(new MariaDB($db), $cache);
-                        $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-                        $dbForProject->setNamespace('_project_' . $projectId);
 
                         $builds = $dbForProject->find('builds', [ 
                             new Query('deploymentId', Query::TYPE_EQUAL, [$deployment['$id']]),

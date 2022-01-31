@@ -348,7 +348,7 @@ class DeletesV1 extends Worker
         $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
         $deploymentIds = [];
         $this->deleteByGroup('deployments', [
-            new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
+            new Query('resourceId', Query::TYPE_EQUAL, [$document->getId()])
         ], $dbForProject, function (Document $document) use ($storageFunctions, &$deploymentIds) {
             $deploymentIds[] = $document->getId();
             if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
