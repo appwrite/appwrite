@@ -3,6 +3,7 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Validator\CustomId;
+use Appwrite\Event\Event;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
@@ -580,7 +581,7 @@ App::post('/v1/functions/:functionId/deployments')
         ]));
 
         // Enqueue a message to start the build
-        Resque::enqueue('v1-builds', 'BuildsV1', [
+        Resque::enqueue(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, [
             'projectId' => $project->getId(),
             'functionId' => $function->getId(),
             'deploymentId' => $deploymentId,
@@ -1121,7 +1122,7 @@ App::post('/v1/builds/:buildId')
         }
 
         // Enqueue a message to start the build
-        Resque::enqueue('v1-builds', 'BuildsV1', [
+        Resque::enqueue(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, [
             'projectId' => $project->getId(),
             'buildId' => $buildId,
             'type' => BUILD_TYPE_RETRY
