@@ -4,8 +4,8 @@ appwrite storage updateBucket \
         --permission="file" \
         --read="[&quot;role:all&quot;]" \
         --write="[&quot;role:all&quot;]" \
+        --enabled="" \
         --maximumFileSize="" \
         --allowedFileExtensions="" \
-        --enabled="" \
         --encryption="" \
         --antivirus=""
