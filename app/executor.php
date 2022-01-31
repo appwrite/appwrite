@@ -936,7 +936,6 @@ App::post('/v1/functions/:functionId/executions')
     ->action(
         function (string $trigger, string $projectId, string $executionId, string $functionId, string $event, string $eventData, string $data, array $webhooks, string $userId, string $jwt, Response $response, Database $dbForProject) {
             $data = execute($trigger, $projectId, $executionId, $functionId, $dbForProject, $event, $eventData, $data, $webhooks, $userId, $jwt);
-
             $response
                 ->setStatusCode(Response::STATUS_CODE_OK)
                 ->json($data);
@@ -950,9 +949,10 @@ App::delete('/v1/functions/:functionId')
     ->inject('dbForProject')
     ->action(
         function (string $functionId, Response $response, Database $dbForProject) use ($orchestrationPool) {
-            /** @var Orchestration $orchestration */
-            $orchestration = $orchestrationPool->get();
             try {
+                /** @var Orchestration $orchestration */
+                $orchestration = $orchestrationPool->get();
+                
                 // Get function document
                 $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1037,9 +1037,10 @@ App::delete('/v1/deployments/:deploymentId')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $deploymentId, Response $response, Database $dbForProject) use ($orchestrationPool) {
-        /** @var Orchestration $orchestration */
-        $orchestration = $orchestrationPool->get();
         try {
+            /** @var Orchestration $orchestration */
+            $orchestration = $orchestrationPool->get();
+            
             // Get deployment document
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
