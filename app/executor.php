@@ -965,9 +965,9 @@ App::delete('/v1/functions/:functionId')
 
                 // If amount is 0 then we simply return true
                 if (count($results) === 0) {
-                    return $response
+                    $response
                         ->setStatusCode(Response::STATUS_CODE_OK)
-                        ->json(['success' => true]);
+                        ->send();
                 }
 
                 // Delete the containers of all deployments
