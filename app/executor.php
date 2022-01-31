@@ -25,7 +25,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Logger\Log;
-use Utopia\Orchestration\Adapter\DockerAPI;
 use Utopia\Orchestration\Adapter\DockerCLI;
 use Utopia\Orchestration\Orchestration;
 use Utopia\Registry\Registry;
@@ -184,7 +183,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $depl
         // Check if runtime is active
         $runtime = $runtimes[$function->getAttribute('runtime', '')] ?? null;
 
-        if ($deployment->getAttribute('functionId') !== $function->getId()) {
+        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception('deployment not found', 404);
         }
 
@@ -194,6 +193,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $depl
 
         // Process environment variables
         $vars = \array_merge($function->getAttribute('vars', []), [
+            'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint', ''),
             'APPWRITE_FUNCTION_ID' => $function->getId(),
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
@@ -202,8 +202,6 @@ function createRuntimeServer(string $functionId, string $projectId, string $depl
             'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
             'INTERNAL_RUNTIME_KEY' => $secret
         ]);
-
-        $vars = \array_merge($vars, $build->getAttribute('vars', [])); // for gettng endpoint.
 
         $container = 'appwrite-function-' . $deployment->getId();
 
@@ -301,7 +299,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $depl
             }
 
             // Add to network
-            $orchestration->networkConnect($container, 'appwrite_runtimes');
+            $orchestration->networkConnect($container, App::getEnv('_APP_EXECUTOR_RUNTIME_NETWORK', 'appwrite_runtimes'));
 
             $executionEnd = \microtime(true);
 
@@ -317,7 +315,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $depl
             Console::success('Runtime server is ready to run');
         }
     } catch (\Throwable $th) {
-        var_dump($th->getTraceAsString());
+        Console::error($th->getMessage());
         $orchestrationPool->put($orchestration ?? null);
         throw $th;
     }
@@ -336,7 +334,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
     $deployment = $database->getDocument('deployments', $function->getAttribute('deployment', ''));
     $build = $database->getDocument('builds', $deployment->getAttribute('buildId', ''));
 
-    if ($deployment->getAttribute('functionId') !== $function->getId()) {
+    if ($deployment->getAttribute('resourceId') !== $function->getId()) {
         throw new Exception('Deployment not found', 404);
     }
 
@@ -365,7 +363,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
     }
 
 
-    if ($build->getAttribute('status') == 'building') {
+    if ($build->getAttribute('status') === 'building') {
 
         $execution
             ->setAttribute('status', 'failed')
@@ -387,6 +385,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     // Process environment variables
     $vars = \array_merge($function->getAttribute('vars', []), [
+        'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint', ''),
         'APPWRITE_FUNCTION_ID' => $function->getId(),
         'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
         'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
@@ -401,8 +400,6 @@ function execute(string $trigger, string $projectId, string $executionId, string
         'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
     ]);
 
-    $vars = \array_merge($vars, $build->getAttribute('vars', []));
-
     $container = 'appwrite-function-' . $deployment->getId();
 
     try {
@@ -413,8 +410,8 @@ function execute(string $trigger, string $projectId, string $executionId, string
                 '$id' => $buildId,
                 '$read' => ($userId !== '') ? ['user:' . $userId] : [],
                 '$write' => [],
+                'startTime' => time(),
                 'deploymentId' => $deployment->getId(),
-                'dateCreated' => time(),
                 'status' => 'processing',
                 'outputPath' => '',
                 'runtime' => $function->getAttribute('runtime', ''),
@@ -422,15 +419,8 @@ function execute(string $trigger, string $projectId, string $executionId, string
                 'sourceType' => Storage::DEVICE_LOCAL,
                 'stdout' => '',
                 'stderr' => '',
-                'time' => 0,
-                'vars' => [
-                    'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint'),
-                    'APPWRITE_FUNCTION_ID' => $function->getId(),
-                    'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-                    'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
-                    'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
-                    'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
-                ]
+                'endTime' => 0,
+                'duration' => 0
             ]));
 
             $deployment->setAttribute('buildId', $buildId);
@@ -484,6 +474,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     // Process environment variables
     $vars = \array_merge($function->getAttribute('vars', []), [
+        'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint', ''),
         'APPWRITE_FUNCTION_ID' => $function->getId(),
         'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
         'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
@@ -497,8 +488,6 @@ function execute(string $trigger, string $projectId, string $executionId, string
         'APPWRITE_FUNCTION_JWT' => $jwt,
         'APPWRITE_FUNCTION_PROJECT_ID' => $projectId
     ]);
-
-    $vars = \array_merge($vars, $build->getAttribute('vars', []));
 
     $stdout = '';
     $stderr = '';
@@ -520,7 +509,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
         $body = \json_encode([
             'path' => '/usr/code',
-            'file' => $build->getAttribute('vars', [])['ENTRYPOINT_NAME'],
+            'file' => $vars['ENTRYPOINT_NAME'],
             'env' => $vars,
             'payload' => $data,
             'timeout' => $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900))
@@ -635,7 +624,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
         roles: $target['roles']
     );
 
-    if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+    if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
         $statsd = $register->get('statsd');
 
         $usage = new Stats($statsd);
@@ -683,6 +672,10 @@ function runBuildStage(string $buildId, string $deploymentId, string $projectID)
     // Check if build has already been run
     $build = $database->getDocument('builds', $buildId);
     $deployment = $database->getDocument('deployments', $deploymentId);
+
+
+    // Start tracking time
+    $buildStart = \time();
 
     try {
         // If we already have a built package ready there is no need to rebuild.
@@ -736,11 +729,25 @@ function runBuildStage(string $buildId, string $deploymentId, string $projectID)
             throw new Exception('Code is not readable: ' . $build->getAttribute('source', ''));
         }
 
-        $vars = $build->getAttribute('vars', []);
+        $deployment = $database->getDocument('deployments', $build->getAttribute('deploymentId', ''));
+        $resourceId = $deployment->getAttribute('resourceId', '');
+        $resourceType = $deployment->getAttribute('resourceType', '');
 
-        // Start tracking time
-        $buildStart = \microtime(true);
-        $time = \time();
+        if (empty($resourceId)) {
+            throw new Exception('Invalid resource ID on build ' . $build->getId());
+        }
+
+        if (empty($resourceType)) {
+            throw new Exception('Invalid resource type on build' . $build->getId());
+        }
+
+        $resource = $database->getDocument($resourceType, $resourceId);
+
+        if ($resource->isEmpty()) {
+            throw new Exception('Resource not found on build ' . $build->getId());
+        }
+
+        $vars = $resource->getAttribute('vars', []);
 
         $orchestration
             ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
@@ -766,7 +773,7 @@ function runBuildStage(string $buildId, string $deploymentId, string $projectID)
             workdir: '/usr/code',
             labels: [
                 'appwrite-type' => 'function',
-                'appwrite-created' => strval($time),
+                'appwrite-created' => strval($buildStart),
                 'appwrite-runtime' => $build->getAttribute('runtime', ''),
                 'appwrite-project' => $projectID,
                 'appwrite-build' => $buildId,
@@ -871,7 +878,7 @@ function runBuildStage(string $buildId, string $deploymentId, string $projectID)
             }
         }
 
-        if ($buildStdout == '') {
+        if ($buildStdout === '') {
             $buildStdout = 'Build Successful!';
         }
 
@@ -880,22 +887,24 @@ function runBuildStage(string $buildId, string $deploymentId, string $projectID)
             ->setAttribute('status', 'ready')
             ->setAttribute('stdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
             ->setAttribute('stderr', \utf8_encode(\mb_substr($buildStderr, -4096)))
-            ->setAttribute('time', $time);
+            ->setAttribute('startTime', $buildStart)
+            ->setAttribute('endTime', \time())
+            ->setAttribute('duration', \time() - $buildStart);
 
         // Update build with built code attribute
         $build = $database->updateDocument('builds', $buildId, $build);
 
-        $deployment->setAttribute('status', 'ready');
-        $database->updateDocument('deployments', $deploymentId, $deployment);
-
-        $buildEnd = \microtime(true);
+        $buildEnd = \time();
 
         Console::info('Build Stage Ran in ' . ($buildEnd - $buildStart) . ' seconds');
     } catch (Exception $e) {
         $build
             ->setAttribute('status', 'failed')
             ->setAttribute('stdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
-            ->setAttribute('stderr', \utf8_encode(\mb_substr($e->getMessage(), -4096)));
+            ->setAttribute('stderr', \utf8_encode(\mb_substr($e->getMessage(), -4096)))
+            ->setAttribute('startTime', $buildStart)
+            ->setAttribute('endTime', \microtime(true))
+            ->setAttribute('duration', \microtime(true) - $buildStart);
 
         $build = $database->updateDocument('builds', $buildId, $build);
 
@@ -923,16 +932,16 @@ function runBuildStage(string $buildId, string $deploymentId, string $projectID)
 
 App::post('/v1/functions/:functionId/executions')
     ->desc('Execute a function')
-    ->param('trigger', '', new Text(1024))
-    ->param('projectId', '', new Text(1024))
-    ->param('executionId', '', new Text(1024), '', true)
-    ->param('functionId', '', new Text(1024))
-    ->param('event', '', new Text(1024), '', true)
-    ->param('eventData', '', new Text(10240), '', true)
-    ->param('data', '', new Text(1024), '', true)
-    ->param('webhooks', [], new ArrayList(new JSON()), '', true)
-    ->param('userId', '', new Text(1024), '', true)
-    ->param('jwt', '', new Text(1024), '', true)
+    ->param('trigger', '', new Text(1024), 'What triggered this execution, can be http / schedule / event')
+    ->param('projectId', '', new Text(1024), 'The ProjectID this execution belongs to')
+    ->param('executionId', '', new Text(1024), 'An optional execution ID, If not specified a new execution document is created.', true)
+    ->param('functionId', '', new Text(1024), 'The FunctionID to execute')
+    ->param('event', '', new Text(1024), 'The event that triggered this execution', true)
+    ->param('eventData', '', new Text(0), 'Extra Data for the event', true)
+    ->param('data', '', new Text(1024), 'Data to be forwarded to the function, this is user specified.', true)
+    ->param('webhooks', [], new ArrayList(new JSON()), 'Any webhooks that need to be triggered after this execution', true)
+    ->param('userId', '', new Text(1024), 'The UserID of the user who triggered the execution if it was called from a client SDK', true)
+    ->param('jwt', '', new Text(1024), 'A JWT of the user who triggered the execution if it was called from a client SDK', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(

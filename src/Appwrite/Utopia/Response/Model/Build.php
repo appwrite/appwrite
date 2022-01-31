@@ -16,11 +16,17 @@ class Build extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('dateCreated', [
+            ->addRule('startTime', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'The deployment creation date in Unix timestamp.',
                 'default' => 0,
                 'example' => 1592981250,
+            ])
+            ->addRule('deploymentId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The deployment that created this build',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
             ])
             // Build Status
             // Failed - The deployment build has failed. More details can usually be found in buildStderr
@@ -45,7 +51,13 @@ class Build extends Model
                 'default' => '',
                 'example' => '',
             ])
-            ->addRule('time', [
+            ->addRule('endTime', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'The time the build was finished in Unix timestamp.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('duration', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'The build time in seconds.',
                 'default' => 0,
