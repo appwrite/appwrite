@@ -987,9 +987,9 @@ App::delete('/v1/functions/:functionId')
                     Console::info('Removed container for deployment ' . $deployment['$id']);
                 }
 
-                return $response
+                $response
                     ->setStatusCode(Response::STATUS_CODE_OK)
-                    ->json(['success' => true]);
+                    ->send();
             } catch (Throwable $th) {
                 $orchestrationPool->put($orchestration);
                 throw $th; 
