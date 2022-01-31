@@ -171,7 +171,6 @@ class StorageCustomServerTest extends Scope
         $this->assertEquals(false, $bucket['body']['enabled']);
         $this->assertEquals(true, $bucket['body']['encryption']);
         $this->assertEquals(true, $bucket['body']['antivirus']);
-        $this->assertEquals('local', $bucket['body']['adapter']);
         $bucketId = $bucket['body']['$id'];
         /**
          * Test for FAILURE
