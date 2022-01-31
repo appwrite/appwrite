@@ -301,7 +301,7 @@ function createRuntimeServer(string $functionId, string $projectId, string $depl
             }
 
             // Add to network
-            $orchestration->networkConnect($container, 'appwrite_runtimes');
+            $orchestration->networkConnect($container, App::getEnv('_APP_EXECUTOR_RUNTIME_NETWORK', 'appwrite_runtimes'));
 
             $executionEnd = \microtime(true);
 
