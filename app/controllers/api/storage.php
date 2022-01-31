@@ -233,7 +233,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($bucketId, $name, $permission, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $encryption, $antivirus, $response, $dbForProject, $audits, $usage) {
+    ->action(function ($bucketId, $name, $permission, $read, $write, $enabled, $maximumFileSize, $allowedFileExtensions, $encryption, $antivirus, $response, $dbForProject, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
