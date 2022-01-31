@@ -1069,9 +1069,9 @@ App::delete('/v1/deployments/:deploymentId')
         }
         $orchestrationPool->put($orchestration);
 
-        return $response
+        $response
             ->setStatusCode(Response::STATUS_CODE_OK)
-            ->json(['success' => true]);
+            ->send();
     });
 
 App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
