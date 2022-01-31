@@ -408,7 +408,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
             $buildId = $database->getId();
             $database->createDocument('builds', new Document([
                 '$id' => $buildId,
-                '$read' => ($userId !== '') ? ['user:' . $userId] : [],
+                '$read' => [],
                 '$write' => [],
                 'startTime' => time(),
                 'deploymentId' => $deployment->getId(),
@@ -685,9 +685,7 @@ function runBuildStage(string $buildId, string $deploymentId, string $projectID)
 
         // Update deployment Status
         $build->setAttribute('status', 'building');
-        $deployment->setAttribute('status', 'building');
         $database->updateDocument('builds', $buildId, $build);
-        $database->updateDocument('deployments', $deploymentId, $deployment);
 
         // Check if runtime is active
         $runtime = $runtimes[$build->getAttribute('runtime', '')] ?? null;
@@ -903,13 +901,10 @@ function runBuildStage(string $buildId, string $deploymentId, string $projectID)
             ->setAttribute('stdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
             ->setAttribute('stderr', \utf8_encode(\mb_substr($e->getMessage(), -4096)))
             ->setAttribute('startTime', $buildStart)
-            ->setAttribute('endTime', \microtime(true))
-            ->setAttribute('duration', \microtime(true) - $buildStart);
+            ->setAttribute('endTime', \time())
+            ->setAttribute('duration', \time() - $buildStart);
 
         $build = $database->updateDocument('builds', $buildId, $build);
-
-        $deployment->setAttribute('status', 'failed');
-        $database->updateDocument('deployments', $deploymentId, $deployment);
 
         // also remove the container if it exists
         if (isset($id)) {
@@ -971,6 +966,7 @@ App::delete('/v1/functions/:functionId')
                     ->send();
             }
 
+            Console::info('Deleting function: ' . $functionId);
             // Delete the containers of all deployments
             global $register;
             foreach ($results as $deployment) {
@@ -1052,7 +1048,7 @@ App::delete('/v1/deployments/:deploymentId')
     ->inject('projectId')
     ->inject('response')
     ->action(function (string $deploymentId, string $projectId, Response $response) use ($orchestrationPool) {
-
+        Console::info('Deleting deployment: ' . $deploymentId);
         global $register;
         go(function () use ($projectId, $orchestrationPool, $register, $deploymentId) {
             try {
@@ -1154,12 +1150,10 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
             // Deploy Runtime Server
             try {
-                Console::info("[ INFO ] Creating runtime server");
+                Console::info("Creating runtime server");
                 createRuntimeServer($functionId, $projectId, $deploymentId, $dbForProject);
             } catch (\Throwable $th) {
                 Console::error($th->getMessage());
-                $deployment->setAttribute('status', 'failed');
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
                 throw $th;
             }
         });

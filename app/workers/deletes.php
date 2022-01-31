@@ -352,7 +352,7 @@ class DeletesV1 extends Worker
         ], $dbForProject, function (Document $document) use ($storageFunctions, &$deploymentIds) {
             $deploymentIds[] = $document->getId();
             if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
-                Console::success('Delete deployment files: ' . $document->getAttribute('path', ''));
+                Console::success('Deleted deployment files: ' . $document->getAttribute('path', ''));
             } else {
                 Console::error('Failed to delete deployment files: ' . $document->getAttribute('path', ''));
             }
@@ -425,7 +425,7 @@ class DeletesV1 extends Worker
          */
         $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
         if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
-            Console::success('Delete deployment files: ' . $document->getAttribute('path', ''));
+            Console::success('Deleted deployment files: ' . $document->getAttribute('path', ''));
         } else {
             Console::error('Failed to delete deployment files: ' . $document->getAttribute('path', ''));
         }

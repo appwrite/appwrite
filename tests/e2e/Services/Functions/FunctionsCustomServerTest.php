@@ -291,10 +291,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($deployment['body']['$id']);
         $this->assertIsInt($deployment['body']['dateCreated']);
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
-        // $this->assertGreaterThan(10000, $deployment['body']['size']);
 
         // Wait for deployment to build.
-        sleep(5);
+        sleep(15);
        
         /**
          * Test for FAILURE
@@ -450,7 +449,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('', $execution['body']['stderr']);
         $this->assertEquals(0, $execution['body']['time']);
 
-        sleep(15);
+        sleep(5);
 
         $execution = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions/'.$executionId, array_merge([
             'content-type' => 'application/json',
@@ -686,7 +685,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(5);
+        sleep(10);
 
         $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployment', array_merge([
             'content-type' => 'application/json',
@@ -778,7 +777,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(5);
+        sleep(10);
 
         $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployment', array_merge([
             'content-type' => 'application/json',

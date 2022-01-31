@@ -87,7 +87,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(201, $deployment['headers']['status-code']);
 
         // Wait for deployment to be built.
-        sleep(5);
+        sleep(10);
 
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$function['body']['$id'].'/deployment', [
             'content-type' => 'application/json',
@@ -96,6 +96,8 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'deployment' => $deploymentId,
         ]);
+
+        // var_dump($function);
 
         $this->assertEquals(200, $function['headers']['status-code']);
 
@@ -356,7 +358,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(201, $deployment['headers']['status-code']);
 
         // Wait for deployment to be built.
-        sleep(5);
+        sleep(10);
 
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployment', [
             'content-type' => 'application/json',

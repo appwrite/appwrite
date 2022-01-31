@@ -37,7 +37,7 @@ class BuildsV1 extends Worker
             case BUILD_TYPE_DEPLOYMENT:
                 $functionId = $this->args['functionId'] ?? '';
                 $deploymentId = $this->args['deploymentId'] ?? '';
-                Console::info("[ INFO ] Creating build for deployment: $deploymentId");
+                Console::info("Creating build for deployment: $deploymentId");
                 $this->buildDeployment($projectId, $functionId, $deploymentId);
                 break;
 
@@ -45,7 +45,7 @@ class BuildsV1 extends Worker
                 $buildId = $this->args['buildId'] ?? '';
                 $functionId = $this->args['functionId'] ?? '';
                 $deploymentId = $this->args['deploymentId'] ?? '';
-                Console::info("[ INFO ] Retrying build for id: $buildId");
+                Console::info("Retrying build for id: $buildId");
                 $this->createBuild($projectId, $functionId, $deploymentId, $buildId);
                 break;
 
@@ -113,29 +113,21 @@ class BuildsV1 extends Worker
         if (empty($buildId)) {
             try {
                 $buildId = $dbForProject->getId();
-                // TODO : There is no way to associate a build with a deployment. So we need to add a deploymentId attribute to the build document
                 $dbForProject->createDocument('builds', new Document([
                     '$id' => $buildId,
                     '$read' => [],
                     '$write' => [],
+                    'startTime' => time(),
                     'deploymentId' => $deploymentId,
-                    'dateCreated' => time(),
                     'status' => 'processing',
-                    'runtime' => $function->getAttribute('runtime'),
                     'outputPath' => '',
+                    'runtime' => $function->getAttribute('runtime'),
                     'source' => $deployment->getAttribute('path'),
                     'sourceType' => Storage::DEVICE_LOCAL,
                     'stdout' => '',
                     'stderr' => '',
-                    'time' => 0,
-                    'vars' => [
-                        'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint'),
-                        'APPWRITE_FUNCTION_ID' => $function->getId(),
-                        'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-                        'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
-                        'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
-                        'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
-                    ]
+                    'endTime' => 0,
+                    'duration' => 0
                 ]));
             } catch (\Throwable $th) {
                 $deployment->setAttribute('buildId', '');
@@ -155,7 +147,7 @@ class BuildsV1 extends Worker
             throw $th;
         }
 
-        Console::success("[ SUCCESS ] Build id: $buildId started");
+        Console::success("Build id: $buildId started");
     }
 
     public function shutdown(): void {}
