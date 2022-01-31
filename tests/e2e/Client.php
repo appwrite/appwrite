@@ -3,10 +3,6 @@
 namespace Tests\E2E;
 
 use Exception;
-use function curl_setopt;
-use function http_build_query;
-use const CURLOPT_PATH_AS_IS;
-use const CURLOPT_TIMEOUT;
 
 class Client
 {

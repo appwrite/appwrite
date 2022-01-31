@@ -2,7 +2,6 @@
 
 require_once __DIR__.'/../init.php';
 
-use Appwrite\Storage\Validator\Path;
 use Utopia\App;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
@@ -14,6 +13,7 @@ use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Storage\Validator\Path;
 use Appwrite\Utopia\Response\Filters\V06;
 use Appwrite\Utopia\Response\Filters\V07;
 use Appwrite\Utopia\Response\Filters\V08;
