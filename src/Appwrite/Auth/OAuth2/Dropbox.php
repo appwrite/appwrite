@@ -48,29 +48,25 @@ class Dropbox extends OAuth2
      */
     public function getTokens(string $code): array
     {
-//        $headers = ['Content-Type: application/x-www-form-urlencoded'];
-//        $accessToken = $this->request(
-//            'POST',
-//            'https://api.dropboxapi.com/oauth2/token',
-//            $headers,
-//            \http_build_query([
-//                'code' => $code,
-//                'client_id' => $this->appID,
-//                'client_secret' => $this->appSecret,
-//                'redirect_uri' => $this->callback,
-//                'grant_type' => 'authorization_code'
-//            ])
-//        );
-//
-//        $accessToken = \json_decode($accessToken, true);
-//
-//        if (isset($accessToken['access_token'])) {
-//            return $accessToken['access_token'];
-//        }
+        $headers = ['Content-Type: application/x-www-form-urlencoded'];
+        $result = $this->request(
+            'POST',
+            'https://api.dropboxapi.com/oauth2/token',
+            $headers,
+            \http_build_query([
+                'code' => $code,
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'redirect_uri' => $this->callback,
+                'grant_type' => 'authorization_code'
+            ])
+        );
+
+        $result = \json_decode($result, true);
 
         return [
-            'access' => '',
-            'refresh' => ''
+            'access' => $result['access_token'],
+            'refresh' => $result['refresh_token']
         ];
     }
 

@@ -61,35 +61,31 @@ class Vk extends OAuth2
      */
     public function getTokens(string $code): array
     {
-//        $headers = ['Content-Type: application/x-www-form-urlencoded;charset=UTF-8'];
-//        $accessToken = $this->request(
-//            'POST',
-//            'https://oauth.vk.com/access_token?',
-//            $headers,
-//            \http_build_query([
-//                'code' => $code,
-//                'client_id' => $this->appID,
-//                'client_secret' => $this->appSecret,
-//                'redirect_uri' => $this->callback
-//            ])
-//        );
-//        $accessToken = \json_decode($accessToken, true);
-//
-//        if (isset($accessToken['email'])) {
-//            $this->user['email'] = $accessToken['email'];
-//        }
-//
-//        if (isset($accessToken['user_id'])) {
-//            $this->user['user_id'] = $accessToken['user_id'];
-//        }
-//
-//        if (isset($accessToken['access_token'])) {
-//            return $accessToken['access_token'];
-//        }
+        $headers = ['Content-Type: application/x-www-form-urlencoded;charset=UTF-8'];
+        $result = $this->request(
+            'POST',
+            'https://oauth.vk.com/access_token?',
+            $headers,
+            \http_build_query([
+                'code' => $code,
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'redirect_uri' => $this->callback
+            ])
+        );
+        $result = \json_decode($result, true);
+
+        if (isset($result['email'])) {
+            $this->user['email'] = $result['email'];
+        }
+
+        if (isset($result['user_id'])) {
+            $this->user['user_id'] = $result['user_id'];
+        }
 
         return [
-            'access' => '',
-            'refresh' => ''
+            'access' => $result['access_token'],
+            'refresh' => $result['refresh_token']
         ];
     }
 

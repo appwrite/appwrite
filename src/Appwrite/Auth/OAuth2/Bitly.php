@@ -58,29 +58,24 @@ class Bitly extends OAuth2
      */
     public function getTokens(string $code): array
     {
-//        $response = $this->request(
-//            'POST',
-//            $this->resourceEndpoint . 'oauth/access_token',
-//            ["Content-Type: application/x-www-form-urlencoded"],
-//            \http_build_query([
-//                "client_id" => $this->appID,
-//                "client_secret" => $this->appSecret,
-//                "code" => $code,
-//                "redirect_uri" => $this->callback,
-//                "state" => \json_encode($this->state)
-//            ])
-//        );
-//
-//        $result = null;
-//
-//        if ($response) {
-//            \parse_str($response, $result);
-//            return $result['access_token'];
-//        }
+        $result = $this->request(
+            'POST',
+            $this->resourceEndpoint . 'oauth/access_token',
+            ["Content-Type: application/x-www-form-urlencoded"],
+            \http_build_query([
+                "client_id" => $this->appID,
+                "client_secret" => $this->appSecret,
+                "code" => $code,
+                "redirect_uri" => $this->callback,
+                "state" => \json_encode($this->state)
+            ])
+        );
+
+        $result = \json_decode($result, true);
 
         return [
-            'access' => '',
-            'refresh' => ''
+            'access' => $result['access_token'],
+            'refresh' => $result['refresh_token']
         ];
     }
 

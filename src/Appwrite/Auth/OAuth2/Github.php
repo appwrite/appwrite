@@ -46,29 +46,23 @@ class Github extends OAuth2
      */
     public function getTokens(string $code): array
     {
-//        $accessToken = $this->request(
-//            'POST',
-//            'https://github.com/login/oauth/access_token',
-//            [],
-//            \http_build_query([
-//                'client_id' => $this->appID,
-//                'redirect_uri' => $this->callback,
-//                'client_secret' => $this->appSecret,
-//                'code' => $code
-//            ])
-//        );
-//
-//        $output = [];
-//
-//        \parse_str($accessToken, $output);
-//
-//        if (isset($output['access_token'])) {
-//            return $output['access_token'];
-//        }
+        $result = $this->request(
+            'POST',
+            'https://github.com/login/oauth/access_token',
+            [],
+            \http_build_query([
+                'client_id' => $this->appID,
+                'redirect_uri' => $this->callback,
+                'client_secret' => $this->appSecret,
+                'code' => $code
+            ])
+        );
+
+        $result = \json_decode($result, true);
 
         return [
-            'access' => '',
-            'refresh' => ''
+            'access' => $result['access_token'],
+            'refresh' => $result['refresh_token']
         ];
     }
 

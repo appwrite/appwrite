@@ -73,22 +73,21 @@ class Tradeshift extends OAuth2
      */
     public function getTokens(string $code): array
     {
-//        $response = $this->request(
-//            'POST',
-//            $this->endpoint[$this->environment] . 'auth/token',
-//            ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)],
-//            \http_build_query([
-//                'grant_type' => 'authorization_code',
-//                'code' => $code,
-//            ])
-//        );
-//
-//        $accessToken = \json_decode($response, true);
-//        return $accessToken['access_token'] ?? '';
+        $result = $this->request(
+            'POST',
+            $this->endpoint[$this->environment] . 'auth/token',
+            ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)],
+            \http_build_query([
+                'grant_type' => 'authorization_code',
+                'code' => $code,
+            ])
+        );
+
+        $result = \json_decode($result, true);
 
         return [
-            'access' => '',
-            'refresh' => ''
+            'access' => $result['access_token'],
+            'refresh' => $result['refresh_token']
         ];
     }
 

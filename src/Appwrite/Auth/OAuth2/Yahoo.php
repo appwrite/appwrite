@@ -74,29 +74,25 @@ class Yahoo extends OAuth2
      */
     public function getTokens(string $code): array
     {
-//        $header = [
-//            "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret),
-//            "Content-Type: application/x-www-form-urlencoded",
-//        ];
-//
-//        $result = \json_decode($this->request(
-//            'POST',
-//            $this->endpoint . 'get_token',
-//            $header,
-//            \http_build_query([
-//                "code" => $code,
-//                "grant_type" => "authorization_code",
-//                "redirect_uri" => $this->callback
-//            ])
-//        ), true);
-//
-//        if (isset($result['access_token'])) {
-//            return $result['access_token'];
-//        }
+        $header = [
+            "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret),
+            "Content-Type: application/x-www-form-urlencoded",
+        ];
+
+        $result = \json_decode($this->request(
+            'POST',
+            $this->endpoint . 'get_token',
+            $header,
+            \http_build_query([
+                "code" => $code,
+                "grant_type" => "authorization_code",
+                "redirect_uri" => $this->callback
+            ])
+        ), true);
 
         return [
-            'access' => '',
-            'refresh' => ''
+            'access' => $result['access_token'],
+            'refresh' => $result['refresh_token']
         ];
     }
 

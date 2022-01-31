@@ -51,26 +51,22 @@ class Mock extends OAuth2
      */
     public function getTokens(string $code): array
     {
-//        $accessToken = $this->request(
-//            'GET',
-//            'http://localhost/'.$this->version.'/mock/tests/general/oauth2/token?'.
-//            \http_build_query([
-//                'client_id' => $this->appID,
-//                'redirect_uri' => $this->callback,
-//                'client_secret' => $this->appSecret,
-//                'code' => $code
-//            ])
-//        );
-//
-//        $accessToken = \json_decode($accessToken, true); //
-//
-//        if (isset($accessToken['access_token'])) {
-//            return $accessToken['access_token'];
-//        }
+        $result = $this->request(
+            'GET',
+            'http://localhost/'.$this->version.'/mock/tests/general/oauth2/token?'.
+            \http_build_query([
+                'client_id' => $this->appID,
+                'redirect_uri' => $this->callback,
+                'client_secret' => $this->appSecret,
+                'code' => $code
+            ])
+        );
+
+        $result = \json_decode($result, true);
 
         return [
-            'access' => '',
-            'refresh' => ''
+            'access' => $result['access_token'],
+            'refresh' => $result['refresh_token']
         ];
     }
 

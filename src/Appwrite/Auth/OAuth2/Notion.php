@@ -55,30 +55,26 @@ class Notion extends OAuth2
      */
     public function getTokens(string $code): array
     {
-//        $headers = [
-//            "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret),
-//        ];
-//
-//        $response = $this->request(
-//            'POST',
-//            $this->endpoint . '/oauth/token',
-//            $headers,
-//            \http_build_query([
-//                'grant_type' => 'authorization_code',
-//                'redirect_uri' => $this->callback,
-//                'code' => $code
-//            ])
-//        );
-//
-//        $response = \json_decode($response, true);
-//
-//        if (isset($response['access_token'])) {
-//            return $response['access_token'];
-//        }
+        $headers = [
+            "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret),
+        ];
+
+        $result = $this->request(
+            'POST',
+            $this->endpoint . '/oauth/token',
+            $headers,
+            \http_build_query([
+                'grant_type' => 'authorization_code',
+                'redirect_uri' => $this->callback,
+                'code' => $code
+            ])
+        );
+
+        $result = \json_decode($result, true);
 
         return [
-            'access' => '',
-            'refresh' => ''
+            'access' => $result['access_token'],
+            'refresh' => $result['refresh_token']
         ];
     }
 
