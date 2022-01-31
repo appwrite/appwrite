@@ -224,13 +224,12 @@ class FunctionsV1 extends Worker
     public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $eventData = '', string $data = '', array $webhooks = [], string $userId = '', string $jwt = ''): void
     {
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/execute");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/{$function->getId()}/executions");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             'trigger' => $trigger,
             'projectId' => $projectId,
             'executionId' => $executionId,
-            'functionId' => $function->getId(),
             'event' => $event,
             'eventData' => $eventData,
             'data' => $data,

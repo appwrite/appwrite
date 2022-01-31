@@ -3,6 +3,7 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Validator\CustomId;
+use Appwrite\Event\Event;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
@@ -367,7 +368,7 @@ App::patch('/v1/functions/:functionId/deployment')
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deployment);
-        $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
+        $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
@@ -433,11 +434,8 @@ App::delete('/v1/functions/:functionId')
 
         // Request executor to delete deployment containers
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/cleanup/function");
-        \curl_setopt($ch, CURLOPT_POST, true);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-            'functionId' => $functionId
-        ]));
+        \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/$functionId");
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
         \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
@@ -582,45 +580,18 @@ App::post('/v1/functions/:functionId/deployments')
             'deploy' => ($deploy === 'true'),
         ]));
 
+        // Enqueue a message to start the build
+        Resque::enqueue(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, [
+            'projectId' => $project->getId(),
+            'functionId' => $function->getId(),
+            'deploymentId' => $deploymentId,
+            'type' => BUILD_TYPE_DEPLOYMENT
+        ]);
+
         $usage
             ->setParam('storage', $deployment->getAttribute('size', 0))
         ;
 
-        // Send start build reqeust to executor using /v1/deployment
-        $function = $dbForProject->getDocument('functions', $functionId);
-
-        $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/deployment");
-        \curl_setopt($ch, CURLOPT_POST, true);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-            'functionId' => $function->getId(),
-            'deploymentId' => $deployment->getId(),
-            'userId' => $user->getId(),
-        ]));
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
-        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'x-appwrite-project: '.$project->getId(),
-            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
-        ]);
-
-        $executorResponse = \curl_exec($ch);
-
-        $error = \curl_error($ch);
-
-        if (!empty($error)) {
-            throw new Exception('Executor Communication Error: ' . $error, 500);
-        }
-
-        // Check status code
-        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        if (200 !== $statusCode) {
-            throw new Exception('Executor error: ' . $executorResponse, $statusCode);
-        }
-
-        \curl_close($ch);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
@@ -769,11 +740,8 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
 
         // Request executor to delete deployment containers
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/cleanup/deployment");
-        \curl_setopt($ch, CURLOPT_POST, true);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-            'deploymentId' => $deploymentId
-        ]));
+        \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/deployments/$deploymentId");
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
         \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
@@ -927,13 +895,12 @@ App::post('/v1/functions/:functionId/executions')
 
         // Directly execute function.
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/execute");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/{$function->getId()}/executions");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             'trigger' => 'http',
             'projectId' => $project->getId(),
             'executionId' => $execution->getId(),
-            'functionId' => $function->getId(),
             'data' => $data,
             'webhooks' => $project->getAttribute('webhooks', []),
             'userId' => $user->getId(),
@@ -958,8 +925,8 @@ App::post('/v1/functions/:functionId/executions')
         \curl_close($ch);
 
         $response
-        ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ->dynamic(new Document(json_decode($responseExecute, true)), Response::MODEL_SYNC_EXECUTION);
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document(json_decode($responseExecute, true)), Response::MODEL_SYNC_EXECUTION);
     });
 
 App::get('/v1/functions/:functionId/executions')
@@ -1115,9 +1082,7 @@ App::get('/v1/builds/:buildId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
 
-        $build = Authorization::skip(function () use ($dbForProject, $buildId) {
-            return $dbForProject->getDocument('builds', $buildId);
-        });
+        $build = Authorization::skip(fn() => $dbForProject->getDocument('builds', $buildId));
 
         if ($build->isEmpty()) {
             throw new Exception('Build not found', 404);
@@ -1125,6 +1090,7 @@ App::get('/v1/builds/:buildId')
 
         $response->dynamic($build, Response::MODEL_BUILD);
     });
+    
 App::post('/v1/builds/:buildId')
     ->groups(['api', 'functions'])
     ->desc('Retry Build')
@@ -1145,9 +1111,7 @@ App::post('/v1/builds/:buildId')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
 
-        $build = Authorization::skip(function () use ($dbForProject, $buildId) {
-            return $dbForProject->getDocument('builds', $buildId);
-        });
+        $build = Authorization::skip(fn() => $dbForProject->getDocument('builds', $buildId));
 
         if ($build->isEmpty()) {
             throw new Exception('Build not found', 404);
@@ -1157,34 +1121,12 @@ App::post('/v1/builds/:buildId')
             throw new Exception('Build not failed', 400);
         }
 
-        // Retry build
-        $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/build/{$buildId}");
-        \curl_setopt($ch, CURLOPT_POST, true);
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
-        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'x-appwrite-project: '.$project->getId(),
-            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
+        // Enqueue a message to start the build
+        Resque::enqueue(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, [
+            'projectId' => $project->getId(),
+            'buildId' => $buildId,
+            'type' => BUILD_TYPE_RETRY
         ]);
-    
-        $executorResponse = \curl_exec($ch);
-    
-        $error = \curl_error($ch);
-    
-        if (!empty($error)) {
-            throw new Exception('Executor Communication Error: ' . $error, 500);
-        }
-    
-        // Check status code
-        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        if (200 !== $statusCode) {
-            throw new Exception('Executor error: ' . $executorResponse, $statusCode);
-        }
-    
-        \curl_close($ch);
 
         $response->noContent();
     });
