@@ -554,7 +554,8 @@ App::post('/v1/functions/:functionId/deployments')
             // Remove deploy for all other deployments.
             $deployments = $dbForProject->find('deployments', [
                 new Query('deploy', Query::TYPE_EQUAL, [true]),
-                new Query('functionId', Query::TYPE_EQUAL, [$functionId])
+                new Query('resourceId', Query::TYPE_EQUAL, [$functionId]),
+                new Query('resourceType', Query::TYPE_EQUAL, ['functions'])
             ]);
 
             foreach ($deployments as $deployment) {
@@ -568,15 +569,13 @@ App::post('/v1/functions/:functionId/deployments')
             '$id' => $deploymentId,
             '$read' => ['role:all'],
             '$write' => ['role:all'],
-            'functionId' => $function->getId(),
+            'resourceId' => $function->getId(),
+            'resourceType' => 'functions',
             'dateCreated' => time(),
             'entrypoint' => $entrypoint,
             'path' => $path,
             'size' => $size,
             'search' => implode(' ', [$deploymentId, $entrypoint]),
-            'status' => 'processing',
-            'buildStdout' => '',
-            'buildStderr' => '',
             'deploy' => ($deploy === 'true'),
         ]));
 
@@ -641,18 +640,17 @@ App::get('/v1/functions/:functionId/deployments')
             $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
-        $queries[] = new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]);
+        $queries[] = new Query('resourceId', Query::TYPE_EQUAL, [$function->getId()]);
+        $queries[] = new Query('resourceType', Query::TYPE_EQUAL, ['functions']);
 
         $results = $dbForProject->find('deployments', $queries, $limit, $offset, [], [$orderType], $cursorDeployment ?? null, $cursorDirection);
         $sum = $dbForProject->count('deployments', $queries, APP_LIMIT_COUNT);
 
-        // Get Current Build Data
-        foreach ($results as &$deployment) {
-            $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
-
-            $deployment['status'] = $build->getAttribute('status', 'processing');
-            $deployment['buildStdout'] = $build->getAttribute('stdout', '');
-            $deployment['buildStderr'] = $build->getAttribute('stderr', '');
+        foreach ($results as $result) {
+            $build = $dbForProject->getDocument('builds', $result->getAttribute('buildId'));
+            $result->setAttribute('status', $build->getAttribute('status', 'pending'));
+            $result->setAttribute('buildStderr', $build->getAttribute('stderr', ''));
+            $result->setAttribute('buildStdout', $build->getAttribute('stdout', ''));
         }
 
         $response->dynamic(new Document([
@@ -688,7 +686,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
 
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        if ($deployment->getAttribute('functionId') !== $function->getId()) {
+        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception('Deployment not found', 404);
         }
 
@@ -730,7 +728,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        if ($deployment->getAttribute('functionId') !== $function->getId()) {
+        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception('Deployment not found', 404);
         }
 
@@ -823,7 +821,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $deployment = Authorization::skip(fn() => $dbForProject->getDocument('deployments', $function->getAttribute('deployment')));
 
-        if ($deployment->getAttribute('functionId') !== $function->getId()) {
+        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404);
         }
 
@@ -1021,76 +1019,6 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         $response->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
-App::get('/v1/builds')
-->groups(['api', 'functions'])
-->desc('List Builds')
-->label('scope', 'functions.read')
-->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-->label('sdk.namespace', 'functions')
-->label('sdk.method', 'builds')
-->label('sdk.description', '/docs/references/functions/list-builds.md')
-->label('sdk.response.code', Response::STATUS_CODE_OK)
-->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-->label('sdk.response.model', Response::MODEL_BUILD_LIST)
-->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-->param('limit', 25, new Range(0, 100), 'Maximum number of builds to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-->param('cursor', '', new UID(), 'ID of the function used as the starting point for the query, excluding the function itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
-->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
-->inject('response')
-->inject('dbForProject')
-->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject) {
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\Database\Database $dbForProject */
-
-    if (!empty($cursor)) {
-        $cursorFunction = $dbForProject->getDocument('builds', $cursor);
-
-        if ($cursorFunction->isEmpty()) {
-            throw new Exception("Build '{$cursor}' for the 'cursor' value not found.", 400);
-        }
-    }
-
-    $queries = [];
-
-    if (!empty($search)) {
-        $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
-    }
-
-    $response->dynamic(new Document([
-        'builds' => $dbForProject->find('builds', $queries, $limit, $offset, [], [$orderType], $cursorFunction ?? null, $cursorDirection),
-        'sum' => $dbForProject->count('builds', $queries, APP_LIMIT_COUNT),
-    ]), Response::MODEL_BUILD_LIST);
-});
-
-App::get('/v1/builds/:buildId')
-    ->groups(['api', 'functions'])
-    ->desc('Get Build')
-    ->label('scope', 'execution.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getBuild')
-    ->label('sdk.description', '/docs/references/functions/get-build.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_BUILD)
-    ->param('buildId', '', new UID(), 'Build unique ID.')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->action(function ($buildId, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-
-        $build = Authorization::skip(fn() => $dbForProject->getDocument('builds', $buildId));
-
-        if ($build->isEmpty()) {
-            throw new Exception('Build not found', 404);
-        }
-
-        $response->dynamic($build, Response::MODEL_BUILD);
-    });
-    
 App::post('/v1/builds/:buildId')
     ->groups(['api', 'functions'])
     ->desc('Retry Build')

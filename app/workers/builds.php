@@ -137,7 +137,6 @@ class BuildsV1 extends Worker
                     ]
                 ]));
             } catch (\Throwable $th) {
-                $deployment->setAttribute('status', 'failed');
                 $deployment->setAttribute('buildId', '');
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
                 Console::error($th->getMessage());
@@ -151,8 +150,6 @@ class BuildsV1 extends Worker
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
             $this->createBuild($projectId, $functionId, $deploymentId, $buildId);
         } catch (\Throwable $th) {
-            $deployment->setAttribute('status', 'failed');
-            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
             Console::error($th->getMessage());
             throw $th;
         }

@@ -16,11 +16,17 @@ class Deployment extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('functionId', [
+            ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function ID.',
+                'description' => 'Resource ID.',
                 'default' => '',
                 'example' => '5e5ea6g16897e',
+            ])
+            ->addRule('resourceType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Resource type.',
+                'default' => '',
+                'example' => 'functions',
             ])
             ->addRule('dateCreated', [
                 'type' => self::TYPE_INTEGER,
@@ -30,7 +36,7 @@ class Deployment extends Model
             ])
             ->addRule('entrypoint', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The entrypoint file to use to execute the delpoyment code.',
+                'description' => 'The entrypoint file to use to execute the deployment code.',
                 'default' => '',
                 'example' => 'enabled',
             ])
@@ -40,40 +46,35 @@ class Deployment extends Model
                 'default' => 0,
                 'example' => 128,
             ])
-            // Build Status
-            // Failed - The deployment build has failed. More details can usually be found in buildStderr
-            // Ready - The deployment build was successful and the deployment is ready to be deployed
-            // Processing - The deployment is currently waiting to have a build triggered
-            // Building - The deployment is currently being built
-            ->addRule('status', [
-                'type' => self::TYPE_STRING,
-                'description' => 'The deployment\'s current built status',
-                'default' => '',
-                'example' => 'ready',
-            ])
             ->addRule('buildId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The current build ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('buildStdout', [
-                'type' => self::TYPE_STRING,
-                'description' => 'The stdout of the build.',
-                'default' => '',
-                'example' => '',
-            ])
-            ->addRule('buildStderr', [
-                'type' => self::TYPE_STRING,
-                'description' => 'The stderr of the build.',
-                'default' => '',
-                'example' => '',
-            ])
             ->addRule('deploy', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether the deployment should be automatically deployed.',
                 'default' => false,
                 'example' => true,
+            ])
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The deployment status.',
+                'default' => '',
+                'example' => 'enabled',
+            ])
+            ->addRule('buildStdout', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The build stdout.',
+                'default' => '',
+                'example' => 'enabled',
+            ])
+            ->addRule('buildStderr', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The build stderr.',
+                'default' => '',
+                'example' => 'enabled',
             ])
         ;
     }
