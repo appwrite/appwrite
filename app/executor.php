@@ -653,7 +653,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     return [
         'status' => $functionStatus,
-        'response' => ($functionStatus !=== 'completed') ? $stderr : $stdout,
+        'response' => ($functionStatus !== 'completed') ? $stderr : $stdout,
         'time' => $executionTime
     ];
 };
