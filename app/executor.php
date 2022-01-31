@@ -1136,7 +1136,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
                 throw new Exception('Build failed', 500);
             }
 
-            if ($deployment->getAttribute('deploy') === true) {
+            if ($deployment->getAttribute('activate') === true) {
                 // Update the function document setting the deployment as the active one
                 $function
                     ->setAttribute('deployment', $deployment->getId())

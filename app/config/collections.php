@@ -1993,7 +1993,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'deploy',
+                '$id' => 'activate',
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
                 'size' => 0,

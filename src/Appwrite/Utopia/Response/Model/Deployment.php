@@ -52,9 +52,9 @@ class Deployment extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('deploy', [
+            ->addRule('activate', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether the deployment should be automatically deployed.',
+                'description' => 'Whether the deployment should be automatically activated.',
                 'default' => false,
                 'example' => true,
             ])
