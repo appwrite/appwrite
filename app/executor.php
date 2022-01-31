@@ -135,7 +135,6 @@ try {
             $orchestrationPool->put($orchestration);
         }
 
-
         foreach ($residueList as $value) {
             go(fn () => $activeFunctions->set($value->getName(), [
                 'id' => $value->getId(),
@@ -149,7 +148,7 @@ try {
         Console::info(count($activeFunctions) . ' functions listed in ' . ($executionEnd - $executionStart) . ' seconds');
     });
 } catch (\Throwable $error) {
-    call_user_func($logError, $error, "startupError");
+    logError($error, 'startupError');
 }
 
 function createRuntimeServer(string $functionId, string $projectId, string $deploymentId, Database $database): void
