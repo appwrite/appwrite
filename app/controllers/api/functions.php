@@ -675,6 +675,13 @@ App::get('/v1/functions/:functionId/deployments')
         $results = $dbForProject->find('deployments', $queries, $limit, $offset, [], [$orderType], $cursorDeployment ?? null, $cursorDirection);
         $sum = $dbForProject->count('deployments', $queries, APP_LIMIT_COUNT);
 
+        foreach ($results as $result) {
+            $build = $dbForProject->getDocument('builds', $result->getAttribute('buildId'));
+            $result->setAttribute('status', $build->getAttribute('status', 'pending'));
+            $result->setAttribute('buildStderr', $build->getAttribute('stderr', ''));
+            $result->setAttribute('buildStdout', $build->getAttribute('stdout', ''));
+        }
+
         $response->dynamic(new Document([
             'deployments' => $results,
             'sum' => $sum,

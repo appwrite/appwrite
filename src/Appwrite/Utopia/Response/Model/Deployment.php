@@ -58,6 +58,24 @@ class Deployment extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The deployment status.',
+                'default' => '',
+                'example' => 'enabled',
+            ])
+            ->addRule('buildStdout', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The build stdout.',
+                'default' => '',
+                'example' => 'enabled',
+            ])
+            ->addRule('buildStderr', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The build stderr.',
+                'default' => '',
+                'example' => 'enabled',
+            ])
         ;
     }
 
