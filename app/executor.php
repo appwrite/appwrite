@@ -363,7 +363,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
     }
 
 
-    if ($build->getAttribute('status') == 'building') {
+    if ($build->getAttribute('status') === 'building') {
 
         $execution
             ->setAttribute('status', 'failed')
@@ -632,7 +632,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
         roles: $target['roles']
     );
 
-    if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+    if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
         $statsd = $register->get('statsd');
 
         $usage = new Stats($statsd);
@@ -652,7 +652,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     return [
         'status' => $functionStatus,
-        'response' => ($functionStatus !== 'completed') ? $stderr : $stdout,
+        'response' => ($functionStatus !=== 'completed') ? $stderr : $stdout,
         'time' => $executionTime
     ];
 };
@@ -868,7 +868,7 @@ function runBuildStage(string $buildId, string $projectID): Document
             }
         }
 
-        if ($buildStdout == '') {
+        if ($buildStdout === '') {
             $buildStdout = 'Build Successful!';
         }
 
@@ -1012,7 +1012,7 @@ App::post('/v1/cleanup/deployment')
             if ($deployment->getAttribute('buildId')) {
                 $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
 
-                if ($build->getAttribute('status') == 'building') {
+                if ($build->getAttribute('status') === 'building') {
                     // Remove the build
                     $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
                     Console::info('Removed build for deployment ' . $deployment['$id']);
