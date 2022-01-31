@@ -158,7 +158,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 'maximumFileSize' => (int) App::getEnv('_APP_STORAGE_LIMIT', 0), // 10MB
                 'allowedFileExtensions' => [],
                 'enabled' => true,
-                'adapter' => '',
                 'encryption' => true,
                 'antivirus' => true,
                 '$read' => ['role:all'],

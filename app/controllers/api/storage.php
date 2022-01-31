@@ -61,7 +61,7 @@ App::post('/v1/storage/buckets')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($bucketId, $name, $permission, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antivirus, $response, $dbForProject, $audits, $usage) {
+    ->action(function ($bucketId, $name, $permission, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $encryption, $antivirus, $response, $dbForProject, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
@@ -111,7 +111,6 @@ App::post('/v1/storage/buckets')
                 'maximumFileSize' => $maximumFileSize,
                 'allowedFileExtensions' => $allowedFileExtensions,
                 'enabled' => $enabled,
-                'adapter' => $adapter,
                 'encryption' => $encryption,
                 'antivirus' => $antivirus,
                 '$read' => $read ?? [],
