@@ -2107,27 +2107,6 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'adapter',
-                'type' => Database::VAR_STRING,
-                'signed' => true,
-                'size' => 64,
-                'format' => '',
-                'filters' => [],
-                'required' => true,
-                'array' => false,
-            ],
-            [
-                
-                '$id' => 'adapterCredentials',
-                'type' => Database::VAR_STRING,
-                'signed' => true,
-                'size' => 16384,
-                'format' => '',
-                'required' => false,
-                'array' => false,
-                'filters' => ['json']
-            ],
-            [
                 '$id' => 'maximumFileSize',
                 'type' => Database::VAR_INTEGER,
                 'signed' => false,
