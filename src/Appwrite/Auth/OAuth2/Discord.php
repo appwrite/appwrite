@@ -55,31 +55,34 @@ class Discord extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code): string
+    public function getTokens(string $code): array
     {
-        $accessToken = $this->request(
-            'POST',
-            $this->endpoint . '/oauth2/token',
-            ['Content-Type: application/x-www-form-urlencoded'],
-            \http_build_query([
-                'grant_type' => 'authorization_code',
-                'code' => $code,
-                'redirect_uri' => $this->callback,
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
-                'scope' => \implode(' ', $this->getScopes())
-            ])
-        );
+//        $accessToken = $this->request(
+//            'POST',
+//            $this->endpoint . '/oauth2/token',
+//            ['Content-Type: application/x-www-form-urlencoded'],
+//            \http_build_query([
+//                'grant_type' => 'authorization_code',
+//                'code' => $code,
+//                'redirect_uri' => $this->callback,
+//                'client_id' => $this->appID,
+//                'client_secret' => $this->appSecret,
+//                'scope' => \implode(' ', $this->getScopes())
+//            ])
+//        );
+//
+//        $accessToken = \json_decode($accessToken, true);
+//
+//        if (isset($accessToken['access_token'])) {
+//            return $accessToken['access_token'];
+//        }
 
-        $accessToken = \json_decode($accessToken, true);
-
-        if (isset($accessToken['access_token'])) {
-            return $accessToken['access_token'];
-        }
-
-        return '';
+        return [
+            'access' => '',
+            'refresh' => ''
+        ];
     }
 
     /**

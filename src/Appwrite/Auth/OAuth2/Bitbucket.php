@@ -43,32 +43,35 @@ class Bitbucket extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code): string
+    public function getTokens(string $code): array
     {
-        // Required as per Bitbucket Spec.
-        $headers = ['Content-Type: application/x-www-form-urlencoded'];
-        
-        $accessToken = $this->request(
-            'POST',
-            'https://bitbucket.org/site/oauth2/access_token',
-            $headers,
-            \http_build_query([
-                'code' => $code,
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
-                'grant_type' => 'authorization_code'
-            ])
-        );
+//        // Required as per Bitbucket Spec.
+//        $headers = ['Content-Type: application/x-www-form-urlencoded'];
+//        
+//        $accessToken = $this->request(
+//            'POST',
+//            'https://bitbucket.org/site/oauth2/access_token',
+//            $headers,
+//            \http_build_query([
+//                'code' => $code,
+//                'client_id' => $this->appID,
+//                'client_secret' => $this->appSecret,
+//                'grant_type' => 'authorization_code'
+//            ])
+//        );
+//
+//        $accessToken = \json_decode($accessToken, true);
+//
+//        if (isset($accessToken['access_token'])) {
+//            return $accessToken['access_token'];
+//        }
 
-        $accessToken = \json_decode($accessToken, true);
-
-        if (isset($accessToken['access_token'])) {
-            return $accessToken['access_token'];
-        }
-
-        return '';
+        return [
+            'access' => '',
+            'refresh' => ''
+        ];
     }
 
     /**

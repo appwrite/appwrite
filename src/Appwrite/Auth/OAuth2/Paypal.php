@@ -74,29 +74,32 @@ class Paypal extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code): string
+    public function getTokens(string $code): array
     {
-        $accessToken = $this->request(
-            'POST',
-            $this->resourceEndpoint[$this->environment] . 'oauth2/token',
-            ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)],
-            \http_build_query([
-                'code' => $code,
-                'grant_type' => 'authorization_code',
-            ])
-        );
+//        $accessToken = $this->request(
+//            'POST',
+//            $this->resourceEndpoint[$this->environment] . 'oauth2/token',
+//            ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)],
+//            \http_build_query([
+//                'code' => $code,
+//                'grant_type' => 'authorization_code',
+//            ])
+//        );
+//
+//
+//        $accessToken = \json_decode($accessToken, true);
+//
+//
+//        if (isset($accessToken['access_token'])) {
+//            return $accessToken['access_token'];
+//        }
 
-
-        $accessToken = \json_decode($accessToken, true);
-
-
-        if (isset($accessToken['access_token'])) {
-            return $accessToken['access_token'];
-        }
-
-        return '';
+        return [
+            'access' => '',
+            'refresh' => ''
+        ];
     }
 
     /**

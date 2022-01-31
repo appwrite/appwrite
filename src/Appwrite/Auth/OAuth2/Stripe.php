@@ -57,31 +57,34 @@ class Stripe extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code):string
+    public function getTokens(string $code): array
     {
-        $response = $this->request(
-            'POST',
-            'https://connect.stripe.com/oauth/token',
-            [],
-            \http_build_query([
-                'grant_type' => $this->grantType['authorize'],                
-                'code' => $code
-            ])
-        );
+//        $response = $this->request(
+//            'POST',
+//            'https://connect.stripe.com/oauth/token',
+//            [],
+//            \http_build_query([
+//                'grant_type' => $this->grantType['authorize'],
+//                'code' => $code
+//            ])
+//        );
+//
+//        $response = \json_decode($response, true);
+//
+//        if (isset($response['stripe_user_id'])) {
+//          $this->stripeAccountId = $response['stripe_user_id'];
+//        }
+//
+//        if (isset($response['access_token'])) {
+//            return $response['access_token'];
+//        }
 
-        $response = \json_decode($response, true);
-        
-        if (isset($response['stripe_user_id'])) {
-          $this->stripeAccountId = $response['stripe_user_id'];
-        }
-
-        if (isset($response['access_token'])) {
-            return $response['access_token'];
-        }
-
-        return '';
+        return [
+            'access' => '',
+            'refresh' => ''
+        ];
     }
 
     /**

@@ -57,36 +57,40 @@ class Vk extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code): string
+    public function getTokens(string $code): array
     {
-        $headers = ['Content-Type: application/x-www-form-urlencoded;charset=UTF-8'];
-        $accessToken = $this->request(
-            'POST',
-            'https://oauth.vk.com/access_token?',
-            $headers,
-            \http_build_query([
-                'code' => $code,
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
-                'redirect_uri' => $this->callback
-            ])
-        );
-        $accessToken = \json_decode($accessToken, true);
+//        $headers = ['Content-Type: application/x-www-form-urlencoded;charset=UTF-8'];
+//        $accessToken = $this->request(
+//            'POST',
+//            'https://oauth.vk.com/access_token?',
+//            $headers,
+//            \http_build_query([
+//                'code' => $code,
+//                'client_id' => $this->appID,
+//                'client_secret' => $this->appSecret,
+//                'redirect_uri' => $this->callback
+//            ])
+//        );
+//        $accessToken = \json_decode($accessToken, true);
+//
+//        if (isset($accessToken['email'])) {
+//            $this->user['email'] = $accessToken['email'];
+//        }
+//
+//        if (isset($accessToken['user_id'])) {
+//            $this->user['user_id'] = $accessToken['user_id'];
+//        }
+//
+//        if (isset($accessToken['access_token'])) {
+//            return $accessToken['access_token'];
+//        }
 
-        if (isset($accessToken['email'])) {
-            $this->user['email'] = $accessToken['email'];
-        }
-
-        if (isset($accessToken['user_id'])) {
-            $this->user['user_id'] = $accessToken['user_id'];
-        }
-
-        if (isset($accessToken['access_token'])) {
-            return $accessToken['access_token'];
-        }
-        return '';
+        return [
+            'access' => '',
+            'refresh' => ''
+        ];
     }
 
     /**

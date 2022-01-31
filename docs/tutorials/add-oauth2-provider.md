@@ -101,9 +101,9 @@ class [PROVIDER NAME] extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code): string
+    public function getTokens(string $code): array
     {
         // TODO: Fire request to oauth API to generate access_token
         $accessToken = "[FETCHED ACCESS TOKEN]";

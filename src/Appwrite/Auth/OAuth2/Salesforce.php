@@ -59,32 +59,35 @@ class Salesforce extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code): string
+    public function getTokens(string $code): array
     {
-        $headers = [
-            "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret),
-            "Content-Type: application/x-www-form-urlencoded",
+//        $headers = [
+//            "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret),
+//            "Content-Type: application/x-www-form-urlencoded",
+//        ];
+//
+//        $accessToken = $this->request(
+//            'POST',
+//            'https://login.salesforce.com/services/oauth2/token',
+//            $headers,
+//            \http_build_query([
+//                'code' => $code,
+//                'redirect_uri' => $this->callback ,
+//                'grant_type' => 'authorization_code'
+//            ])
+//        );
+//        $accessToken = \json_decode($accessToken, true);
+//
+//        if (isset($accessToken['access_token'])) {
+//            return $accessToken['access_token'];
+//        }
+
+        return [
+            'access' => '',
+            'refresh' => ''
         ];
-
-        $accessToken = $this->request(
-            'POST',
-            'https://login.salesforce.com/services/oauth2/token',
-            $headers,
-            \http_build_query([
-                'code' => $code,
-                'redirect_uri' => $this->callback ,
-                'grant_type' => 'authorization_code'
-            ])
-        );
-        $accessToken = \json_decode($accessToken, true);
-
-        if (isset($accessToken['access_token'])) {
-            return $accessToken['access_token'];
-        }
-
-        return '';
     }
 
     /**

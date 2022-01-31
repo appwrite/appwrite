@@ -54,34 +54,37 @@ class Apple extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code): string
+    public function getTokens(string $code): array
     {
-        $headers = ['Content-Type: application/x-www-form-urlencoded'];
-        $accessToken = $this->request(
-            'POST',
-            'https://appleid.apple.com/auth/token',
-            $headers,
-            \http_build_query([
-                'grant_type' => 'authorization_code',
-                'code' => $code,
-                'client_id' => $this->appID,
-                'client_secret' => $this->getAppSecret(),
-                'redirect_uri' => $this->callback,
-            ])
-        );
+//        $headers = ['Content-Type: application/x-www-form-urlencoded'];
+//        $accessToken = $this->request(
+//            'POST',
+//            'https://appleid.apple.com/auth/token',
+//            $headers,
+//            \http_build_query([
+//                'grant_type' => 'authorization_code',
+//                'code' => $code,
+//                'client_id' => $this->appID,
+//                'client_secret' => $this->getAppSecret(),
+//                'redirect_uri' => $this->callback,
+//            ])
+//        );
+//
+//        $accessToken    = \json_decode($accessToken, true);
+//
+//        $this->claims   = (isset($accessToken['id_token'])) ? \explode('.', $accessToken['id_token']) : [0 => '', 1 => ''];
+//        $this->claims   = (isset($this->claims[1])) ? \json_decode(\base64_decode($this->claims[1]), true) : [];
+//
+//        if (isset($accessToken['access_token'])) {
+//            return $accessToken['access_token'];
+//        }
 
-        $accessToken    = \json_decode($accessToken, true);
-
-        $this->claims   = (isset($accessToken['id_token'])) ? \explode('.', $accessToken['id_token']) : [0 => '', 1 => ''];
-        $this->claims   = (isset($this->claims[1])) ? \json_decode(\base64_decode($this->claims[1]), true) : [];
-
-        if (isset($accessToken['access_token'])) {
-            return $accessToken['access_token'];
-        }
-
-        return '';
+        return [
+            'access' => '',
+            'refresh' => ''
+        ];
     }
 
     /**

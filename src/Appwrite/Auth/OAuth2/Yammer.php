@@ -44,31 +44,34 @@ class Yammer extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code): string
+    public function getTokens(string $code): array
     {
-        $headers = ['Content-Type: application/x-www-form-urlencoded'];
+//        $headers = ['Content-Type: application/x-www-form-urlencoded'];
+//
+//        $accessToken = $this->request(
+//            'POST',
+//            $this->endpoint . 'access_token?',
+//            $headers,
+//            \http_build_query([
+//                'client_id' => $this->appID,
+//                'client_secret' => $this->appSecret,
+//                'code' => $code,
+//                'grant_type' => 'authorization_code'
+//            ])
+//        );
+//
+//        $accessToken = \json_decode($accessToken, true);
+//
+//        if (isset($accessToken['access_token']['token'])) {
+//            return $accessToken['access_token']['token'];
+//        }
 
-        $accessToken = $this->request(
-            'POST',
-            $this->endpoint . 'access_token?',
-            $headers,
-            \http_build_query([
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
-                'code' => $code,
-                'grant_type' => 'authorization_code'
-            ])
-        );
-
-        $accessToken = \json_decode($accessToken, true);
-
-        if (isset($accessToken['access_token']['token'])) {
-            return $accessToken['access_token']['token'];
-        }
-
-        return '';
+        return [
+            'access' => '',
+            'refresh' => ''
+        ];
     }
 
     /**

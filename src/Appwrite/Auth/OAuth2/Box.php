@@ -59,32 +59,35 @@ class Box extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code): string
+    public function getTokens(string $code): array
     {
-        $header = "Content-Type: application/x-www-form-urlencoded";
-        $accessToken = $this->request(
-            'POST',
-            $this->endpoint . 'token',
-            [$header],
-            \http_build_query([
-                "client_id" => $this->appID,
-                "client_secret" => $this->appSecret,
-                "code" => $code,
-                "grant_type" => "authorization_code",
-                "scope" =>  \implode(',', $this->getScopes()),
-                "redirect_uri" => $this->callback
-            ])
-        );
+//        $header = "Content-Type: application/x-www-form-urlencoded";
+//        $accessToken = $this->request(
+//            'POST',
+//            $this->endpoint . 'token',
+//            [$header],
+//            \http_build_query([
+//                "client_id" => $this->appID,
+//                "client_secret" => $this->appSecret,
+//                "code" => $code,
+//                "grant_type" => "authorization_code",
+//                "scope" =>  \implode(',', $this->getScopes()),
+//                "redirect_uri" => $this->callback
+//            ])
+//        );
+//
+//        $accessToken = \json_decode($accessToken, true);
+//
+//        if (array_key_exists('access_token', $accessToken)) {
+//            return $accessToken['access_token'];
+//        }
 
-        $accessToken = \json_decode($accessToken, true);
-
-        if (array_key_exists('access_token', $accessToken)) {
-            return $accessToken['access_token'];
-        }
-
-        return '';
+        return [
+            'access' => '',
+            'refresh' => ''
+        ];
     }
 
     /**
