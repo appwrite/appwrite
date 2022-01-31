@@ -420,8 +420,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
                 'stdout' => '',
                 'stderr' => '',
                 'endTime' => 0,
-                'duration' => 0,
-                'search' => implode(' ', [$deployment->getId(), $buildId]),
+                'duration' => 0
             ]));
 
             $deployment->setAttribute('buildId', $buildId);
@@ -1113,8 +1112,7 @@ App::post('/v1/deployment')
                     'stdout' => '',
                     'stderr' => '',
                     'endTime' => 0,
-                    'duration' => 0,
-                    'search' => implode(' ', [$deployment->getId(), $buildId])
+                    'duration' => 0
                 ]));
 
                 $deployment->setAttribute('buildId', $buildId);

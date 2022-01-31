@@ -2013,6 +2013,13 @@ $collections = [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
+                '$id' => '_key_resource_type',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['resourceType'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
                 '$id' => '_key_search',
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
@@ -2147,18 +2154,7 @@ $collections = [
                 'default' => '',
                 'array' => false,
                 'filters' => [],
-            ],
-            [
-                '$id' => 'search',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 16384,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
+            ]
         ],
         'indexes' => [
             [
