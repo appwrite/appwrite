@@ -2011,14 +2011,18 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $roles = Authorization::getRoles();
 
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
-            foreach ($data['$read'] as $read) {
-                if (!Authorization::isRole($read)) {
-                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+            if(!is_null($read)) {
+                foreach ($data['$read'] as $read) {
+                    if (!Authorization::isRole($read)) {
+                        throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                    }
                 }
             }
-            foreach ($data['$write'] as $write) {
-                if (!Authorization::isRole($write)) {
-                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
+            if(!is_null($write)) {
+                foreach ($data['$write'] as $write) {
+                    if (!Authorization::isRole($write)) {
+                        throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400);
+                    }
                 }
             }
         }

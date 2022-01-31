@@ -175,4 +175,34 @@ If everything goes well, raise a pull request and be ready to respond to any fee
 First of all, commit the changes with the message `Added XXX OAuth2 Provider` and push it. This will publish a new branch to your forked version of Appwrite. If you visit it at `github.com/YOUR_USERNAME/appwrite`, you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
 
 ## 🤕 Stuck ?
+
 If you need any help with the contribution, feel free to head over to [our discord channel](https://appwrite.io/discord) and we'll be happy to help you out.
+
+## 😉 Need more freedom
+
+If your OAuth provider requires special configuration apart from `clientId` and `clientSecret` you can create a custom form. Currently this is being realized through putting all custom fields as JSON into the `clientSecret` field to keep the project API stable. You can implement your custom form following these steps:
+
+1. Add your custom form in `app/views/console/users/oauth/[PROVIDER].phtml`. Below is a template you can use. Add the filename to `app/config/providers.php`.
+
+```php
+<?php
+$provider = $this->getParam('provider', '');
+?>
+<label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid">Application (Client) ID<span class="tooltip" data-tooltip="Provided by AzureAD"><i class="icon-info-circled"></i></span></label>
+<input name="appId" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Appid}}" placeholder="Application ID" />
+<?php /*Hidden input for the final secret. Gets filled with a JSON via JS. */ ?>
+<input name="secret" data-forms-oauth-custom="<?php echo $this->escape(ucfirst($provider)); ?>" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret" type="hidden" autocomplete="off" data-ls-bind="{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Secret}}" />
+<!-- [Your custom form inputs go here] -->
+```
+
+2. Add the config for creating the JSON in `public/scripts/views/forms/oauth-custom.js` using this template
+```js
+{
+    "[Provider]":{
+        "[JSON property name 1]":"[html element Id 1]",
+        "[JSON property name 2]":"[html element Id 2]"
+    }
+}
+```
+
+3. In your provider class `src/Appwrite/Auth/OAuth2/[Provider].php` add logic to decode the JSON using the same property names.
