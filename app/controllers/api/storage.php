@@ -612,6 +612,18 @@ App::post('/v1/storage/buckets/:bucketId/files')
             } catch (DuplicateException $exception) {
                 throw new Exception('Document already exists', 409);
             }
+
+            $audits
+                ->setParam('event', 'storage.files.create')
+                ->setParam('resource', 'storage/files/' . $file->getId())
+            ;
+
+            $usage
+                ->setParam('storage', $sizeActual ?? 0)
+                ->setParam('storage.files.create', 1)
+                ->setParam('bucketId', $bucketId)
+            ;
+
         } else {
             try {
                 if ($file->isEmpty()) {
@@ -662,17 +674,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         $metadata = null; // was causing leaks as it was passed by reference
-
-        $audits
-            ->setParam('event', 'storage.files.create')
-            ->setParam('resource', 'storage/files/' . $file->getId())
-        ;
-
-        $usage
-            ->setParam('storage', $sizeActual ?? 0)
-            ->setParam('storage.files.create', 1)
-            ->setParam('bucketId', $bucketId)
-        ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($file, Response::MODEL_FILE);
