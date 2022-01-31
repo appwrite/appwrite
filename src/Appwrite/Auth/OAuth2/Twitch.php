@@ -61,7 +61,7 @@ class Twitch extends OAuth2
      *
      * @return string
      */
-    public function getAccessToken(string $code):string
+    public function getTokens(string $code):string
     {
         $result = \json_decode($this->request(
             'POST',
@@ -74,11 +74,10 @@ class Twitch extends OAuth2
             ])
         ), true);
 
-        if (isset($result['access_token'])) {
-            return $result['access_token'];
-        }
-
-        return '';
+        return [
+            'access' => $result['access_token'],
+            'refresh' => $result['refresh_token']
+        ];
     }
 
     /**

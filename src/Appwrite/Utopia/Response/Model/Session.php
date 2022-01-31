@@ -40,9 +40,15 @@ class Session extends Model
                 'default' => '',
                 'example' => 'user@example.com',
             ])
-            ->addRule('providerToken', [
+            ->addRule('providerAccessToken', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Session Provider Token.',
+                'description' => 'Session Provider AccessToken.',
+                'default' => '',
+                'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
+            ])
+            ->addRule('providerRefreshToken', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Session Provider Refresh Token.',
                 'default' => '',
                 'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
             ])

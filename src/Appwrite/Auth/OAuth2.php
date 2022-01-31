@@ -62,9 +62,9 @@ abstract class OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return mixed
      */
-    abstract public function getAccessToken(string $code):string;
+    abstract public function getTokens(string $code):mixed;
 
     /**
      * @param $accessToken
