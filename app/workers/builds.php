@@ -118,7 +118,7 @@ class BuildsV1 extends Worker
                     '$id' => $buildId,
                     '$read' => [],
                     '$write' => [],
-                    'startTime' => \time(),
+                    'startTime' => time(),
                     'endTime' => 0,
                     'duration' => 0,
                     'status' => 'processing',
@@ -157,6 +157,8 @@ class BuildsV1 extends Worker
             Console::error($th->getMessage());
             throw $th;
         }
+
+        // TODO: Update build's endTime and duration
 
         Console::success("[ SUCCESS ] Build id: $buildId started");
     }
