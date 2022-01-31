@@ -218,6 +218,32 @@ class FunctionsCustomClientTest extends Scope
         ];
     }
 
+    public function testCreateExecutionUnauthorized():array
+    {
+        $function = $this->client->call(Client::METHOD_POST, '/functions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'functionId' => 'unique()',
+            'name' => 'Test',
+            'execute' => [],
+            'runtime' => 'php-8.0',
+            'timeout' => 10,
+        ]);
+
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/executions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'async' => 1,
+        ]);
+
+        $this->assertEquals(401, $execution['headers']['status-code']);
+
+        return [];
+    }
+
     /**
      * @depends testCreateCustomExecution
      */

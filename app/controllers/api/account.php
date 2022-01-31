@@ -44,7 +44,7 @@ App::post('/v1/account')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->label('abuse-limit', 10)
-    ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
@@ -315,7 +315,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->label('docs', false)
     ->param('projectId', '', new Text(1024), 'Project ID.')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
-    ->param('code', '', new Text(1024), 'OAuth2 code.')
+    ->param('code', '', new Text(2048), 'OAuth2 code.')
     ->param('state', '', new Text(2048), 'Login state params.', true)
     ->inject('request')
     ->inject('response')
@@ -342,7 +342,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->label('docs', false)
     ->param('projectId', '', new Text(1024), 'Project ID.')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
-    ->param('code', '', new Text(1024), 'OAuth2 code.')
+    ->param('code', '', new Text(2048), 'OAuth2 code.')
     ->param('state', '', new Text(2048), 'Login state params.', true)
     ->inject('request')
     ->inject('response')
@@ -370,7 +370,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->label('abuse-key', 'ip:{ip}')
     ->label('docs', false)
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
-    ->param('code', '', new Text(1024), 'OAuth2 code.')
+    ->param('code', '', new Text(2048), 'OAuth2 code.')
     ->param('state', '', new Text(2048), 'OAuth2 state params.', true)
     ->inject('request')
     ->inject('response')
@@ -479,7 +479,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
                 if ($limit !== 0) {
-                    $sum = $dbForProject->count('users', [ new Query('deleted', Query::TYPE_EQUAL, [false]),], APP_LIMIT_COUNT);
+                    $sum = $dbForProject->count('users', [ new Query('deleted', Query::TYPE_EQUAL, [false]),], APP_LIMIT_USERS);
 
                     if ($sum >= $limit) {
                         throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
@@ -615,7 +615,7 @@ App::post('/v1/account/sessions/magic-url')
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
-    ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->inject('request')
@@ -652,7 +652,7 @@ App::post('/v1/account/sessions/magic-url')
             if ($limit !== 0) {
                 $sum = $dbForProject->count('users', [
                     new Query('deleted', Query::TYPE_EQUAL, [false]),
-                ], APP_LIMIT_COUNT);
+                ], APP_LIMIT_USERS);
 
                 if ($sum >= $limit) {
                     throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
@@ -924,7 +924,7 @@ App::post('/v1/account/sessions/anonymous')
         if ($limit !== 0) {
             $sum = $dbForProject->count('users', [
                 new Query('deleted', Query::TYPE_EQUAL, [false]),
-            ], APP_LIMIT_COUNT);
+            ], APP_LIMIT_USERS);
 
             if ($sum >= $limit) {
                 throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
