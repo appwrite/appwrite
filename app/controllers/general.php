@@ -2,6 +2,7 @@
 
 require_once __DIR__.'/../init.php';
 
+use Appwrite\Storage\Validator\Path;
 use Utopia\App;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
@@ -525,8 +526,15 @@ App::get('/.well-known/acme-challenge')
     ->inject('request')
     ->inject('response')
     ->action(function ($request, $response) {
+        $filePath = $request->getURI();
+
+        $validator = new Path();
+        if (!$validator->isValid($filePath)) {
+            throw new Exception('Invalid file path. Please use relative path without \'../\'', 400);
+        }
+
         $base = \realpath(APP_STORAGE_CERTIFICATES);
-        $path = \str_replace('/.well-known/acme-challenge/', '', $request->getURI());
+        $path = \str_replace('/.well-known/acme-challenge/', '', $filePath);
         $absolute = \realpath($base.'/.well-known/acme-challenge/'.$path);
 
         if (!$base) {

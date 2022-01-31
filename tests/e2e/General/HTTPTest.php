@@ -94,6 +94,23 @@ class HTTPTest extends Scope
         $this->assertStringContainsString('# robotstxt.org/', $response['body']);
     }
 
+    public function testAcmeChallenge()
+    {
+        $previousEndpoint = $this->client->getEndpoint();
+        $this->client->setEndpoint("http://localhost");
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/.well-known/acme-challenge/../../../../../../../etc/passwd', \array_merge([
+            'origin' => 'http://localhost',
+        ]), []);
+
+        $this->client->setEndpoint($previousEndpoint);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
     // public function testSpecSwagger2()
     // {
     //     $response = $this->client->call(Client::METHOD_GET, '/specs/swagger2?platform=client', [
