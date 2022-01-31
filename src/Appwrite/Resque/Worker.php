@@ -45,7 +45,7 @@ abstract class Worker
      * @throws \Exception|\Throwable
      */
     public function init() {
-        throw new Exception("Please implement getName method in worker");
+        throw new Exception("Please implement init method in worker");
     }
 
     /**
@@ -56,7 +56,7 @@ abstract class Worker
      * @throws \Exception|\Throwable
      */
     public function run() {
-        throw new Exception("Please implement getName method in worker");
+        throw new Exception("Please implement run method in worker");
     }
 
     /**
@@ -67,7 +67,7 @@ abstract class Worker
      * @throws \Exception|\Throwable
      */
     public function shutdown() {
-        throw new Exception("Please implement getName method in worker");
+        throw new Exception("Please implement shutdown method in worker");
     }
 
     const MAX_ATTEMPTS = 10;
