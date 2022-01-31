@@ -25,7 +25,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Logger\Log;
-use Utopia\Orchestration\Adapter\DockerAPI;
 use Utopia\Orchestration\Adapter\DockerCLI;
 use Utopia\Orchestration\Orchestration;
 use Utopia\Registry\Registry;
@@ -365,7 +364,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
     }
 
 
-    if ($build->getAttribute('status') == 'building') {
+    if ($build->getAttribute('status') === 'building') {
 
         $execution
             ->setAttribute('status', 'failed')
@@ -634,7 +633,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
         roles: $target['roles']
     );
 
-    if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+    if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
         $statsd = $register->get('statsd');
 
         $usage = new Stats($statsd);
@@ -654,7 +653,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     return [
         'status' => $functionStatus,
-        'response' => ($functionStatus !== 'completed') ? $stderr : $stdout,
+        'response' => ($functionStatus !=== 'completed') ? $stderr : $stdout,
         'time' => $executionTime
     ];
 };
@@ -870,7 +869,7 @@ function runBuildStage(string $buildId, string $deploymentId, string $projectID)
             }
         }
 
-        if ($buildStdout == '') {
+        if ($buildStdout === '') {
             $buildStdout = 'Build Successful!';
         }
 
@@ -922,16 +921,16 @@ function runBuildStage(string $buildId, string $deploymentId, string $projectID)
 
 App::post('/v1/functions/:functionId/executions')
     ->desc('Execute a function')
-    ->param('trigger', '', new Text(1024))
-    ->param('projectId', '', new Text(1024))
-    ->param('executionId', '', new Text(1024), '', true)
-    ->param('functionId', '', new Text(1024))
-    ->param('event', '', new Text(1024), '', true)
-    ->param('eventData', '', new Text(10240), '', true)
-    ->param('data', '', new Text(1024), '', true)
-    ->param('webhooks', [], new ArrayList(new JSON()), '', true)
-    ->param('userId', '', new Text(1024), '', true)
-    ->param('jwt', '', new Text(1024), '', true)
+    ->param('trigger', '', new Text(1024), 'What triggered this execution, can be http / schedule / event')
+    ->param('projectId', '', new Text(1024), 'The ProjectID this execution belongs to')
+    ->param('executionId', '', new Text(1024), 'An optional execution ID, If not specified a new execution document is created.', true)
+    ->param('functionId', '', new Text(1024), 'The FunctionID to execute')
+    ->param('event', '', new Text(1024), 'The event that triggered this execution', true)
+    ->param('eventData', '', new Text(0), 'Extra Data for the event', true)
+    ->param('data', '', new Text(1024), 'Data to be forwarded to the function, this is user specified.', true)
+    ->param('webhooks', [], new ArrayList(new JSON()), 'Any webhooks that need to be triggered after this execution', true)
+    ->param('userId', '', new Text(1024), 'The UserID of the user who triggered the execution if it was called from a client SDK', true)
+    ->param('jwt', '', new Text(1024), 'A JWT of the user who triggered the execution if it was called from a client SDK', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(
@@ -945,7 +944,7 @@ App::post('/v1/functions/:functionId/executions')
 
 App::delete('/v1/functions/:functionId')
     ->desc('Delete a function')
-    ->param('functionId', '', new UID())
+    ->param('functionId', '', new UID(), 'The FunctionID to delete')
     ->inject('response')
     ->inject('dbForProject')
     ->action(
@@ -953,7 +952,7 @@ App::delete('/v1/functions/:functionId')
             try {
                 /** @var Orchestration $orchestration */
                 $orchestration = $orchestrationPool->get();
-
+                
                 // Get function document
                 $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -966,38 +965,37 @@ App::delete('/v1/functions/:functionId')
 
                 // If amount is 0 then we simply return true
                 if (count($results) === 0) {
-                    return $response->json(['success' => true]);
+                    $response
+                        ->setStatusCode(Response::STATUS_CODE_OK)
+                        ->send();
                 }
 
                 // Delete the containers of all deployments
                 foreach ($results as $deployment) {
-                    try {
-                        // Remove any ongoing builds
-                        if ($deployment->getAttribute('buildId')) {
-                            $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
+                    // Remove any ongoing builds
+                    if ($deployment->getAttribute('buildId')) {
+                        $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
 
-                            if ($build->getAttribute('status') === 'building') {
-                                // Remove the build
-                                $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
-                                Console::info('Removed build for deployment ' . $deployment['$id']);
-                            }
+                        if ($build->getAttribute('status') === 'building') {
+                            // Remove the build
+                            $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
+                            Console::info('Removed build for deployment ' . $deployment['$id']);
                         }
-
-                        $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
-                        Console::info('Removed container for deployment ' . $deployment['$id']);
-                    } catch (Exception $e) {
-                        // Do nothing, we don't care that much if it fails
                     }
+
+                    $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
+                    Console::info('Removed container for deployment ' . $deployment['$id']);
                 }
 
-                return $response->json(['success' => true]);
-            } catch (Exception $e) {
-                logError($e, "cleanupFunction");
+                $response
+                    ->setStatusCode(Response::STATUS_CODE_OK)
+                    ->send();
+            } catch (Throwable $th) {
                 $orchestrationPool->put($orchestration);
-
-                return $response->json(['error' => $e->getMessage()]);
+                throw $th; 
+            } finally {
+                $orchestrationPool->put($orchestration);
             }
-            $orchestrationPool->put($orchestration);
         }
     );
 
@@ -1042,7 +1040,7 @@ App::delete('/v1/deployments/:deploymentId')
         try {
             /** @var Orchestration $orchestration */
             $orchestration = $orchestrationPool->get();
-
+            
             // Get deployment document
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
@@ -1051,33 +1049,29 @@ App::delete('/v1/deployments/:deploymentId')
                 throw new Exception('Deployment not found', 404);
             }
 
-            try {
-                // Remove any ongoing builds
-                if ($deployment->getAttribute('buildId')) {
-                    $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
+            // Remove any ongoing builds
+            if ($deployment->getAttribute('buildId')) {
+                $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
 
-                    if ($build->getAttribute('status') == 'building') {
-                        // Remove the build
-                        $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
-                        Console::info('Removed build for deployment ' . $deployment['$id']);
-                    }
+                if ($build->getAttribute('status') === 'building') {
+                    // Remove the build
+                    $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
+                    Console::info('Removed build for deployment ' . $deployment['$id']);
                 }
-
-                // Remove the container of the deployment
-                $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
-                Console::info('Removed container for deployment ' . $deployment['$id']);
-            } catch (Exception $e) {
-                // Do nothing, we don't care that much if it fails
             }
-        } catch (Exception $e) {
-            logError($e, "cleanupFunction");
-            $orchestrationPool->put($orchestration);
 
-            return $response->json(['error' => $e->getMessage()]);
+            // Remove the container of the deployment
+            $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
+            Console::info('Removed container for deployment ' . $deployment['$id']);
+        } catch (Throwable $th) {
+            $orchestrationPool->put($orchestration);
+            throw $th;
         }
         $orchestrationPool->put($orchestration);
 
-        return $response->json(['success' => true]);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->send();
     });
 
 App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
