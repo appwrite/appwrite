@@ -684,9 +684,7 @@ function runBuildStage(string $buildId, string $deploymentId, string $projectID)
 
         // Update deployment Status
         $build->setAttribute('status', 'building');
-        $deployment->setAttribute('status', 'building');
         $database->updateDocument('builds', $buildId, $build);
-        $database->updateDocument('deployments', $deploymentId, $deployment);
 
         // Check if runtime is active
         $runtime = $runtimes[$build->getAttribute('runtime', '')] ?? null;
@@ -881,14 +879,16 @@ function runBuildStage(string $buildId, string $deploymentId, string $projectID)
             $buildStdout = 'Build Successful!';
         }
 
+        $endTime = \time();
+
         $build
             ->setAttribute('outputPath', $path)
             ->setAttribute('status', 'ready')
             ->setAttribute('stdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
             ->setAttribute('stderr', \utf8_encode(\mb_substr($buildStderr, -4096)))
             ->setAttribute('startTime', $buildStart)
-            ->setAttribute('endTime', \time())
-            ->setAttribute('duration', \time() - $buildStart);
+            ->setAttribute('endTime', $endTime)
+            ->setAttribute('duration', $endTime - $buildStart);
 
         // Update build with built code attribute
         $build = $database->updateDocument('builds', $buildId, $build);
@@ -897,18 +897,18 @@ function runBuildStage(string $buildId, string $deploymentId, string $projectID)
 
         Console::info('Build Stage Ran in ' . ($buildEnd - $buildStart) . ' seconds');
     } catch (Exception $e) {
+        \var_dump($e->getTraceAsString());
+        $endTime = \time();
+
         $build
             ->setAttribute('status', 'failed')
             ->setAttribute('stdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
             ->setAttribute('stderr', \utf8_encode(\mb_substr($e->getMessage(), -4096)))
             ->setAttribute('startTime', $buildStart)
-            ->setAttribute('endTime', \microtime(true))
-            ->setAttribute('duration', \microtime(true) - $buildStart);
+            ->setAttribute('endTime', $endTime)
+            ->setAttribute('duration', $endTime - $buildStart);
 
         $build = $database->updateDocument('builds', $buildId, $build);
-
-        $deployment->setAttribute('status', 'failed');
-        $database->updateDocument('deployments', $deploymentId, $deployment);
 
         // also remove the container if it exists
         if (isset($id)) {
@@ -1150,8 +1150,8 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
                 createRuntimeServer($functionId, $projectId, $deploymentId, $dbForProject);
             } catch (\Throwable $th) {
                 Console::error($th->getMessage());
-                $deployment->setAttribute('status', 'failed');
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
+                $build->setAttribute('status', 'failed');
+                $build = $dbForProject->updateDocument('builds', $buildId, $build);
                 throw $th;
             }
         });

@@ -1948,7 +1948,6 @@ $collections = [
                 'filters' => [],
             ],
             [
-                'array' => false,
                 '$id' => 'entrypoint',
                 'type' => Database::VAR_STRING,
                 'format' => '',
