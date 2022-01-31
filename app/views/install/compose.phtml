@@ -228,9 +228,6 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
-    volumes: 
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
