@@ -154,6 +154,8 @@ class BuildsV1 extends Worker
             throw $th;
         }
 
+        // TODO: We should activate tag after successful build
+
         Console::success("[ SUCCESS ] Build id: $buildId started");
     }
 
