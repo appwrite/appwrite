@@ -92,7 +92,21 @@ class Apple extends OAuth2
      */
     public function refreshTokens(string $refreshToken):array
     {
-        // TODO: Implement (Twitch as example)
+        $headers = ['Content-Type: application/x-www-form-urlencoded'];
+        $this->tokens = \json_decode($this->request(
+            'POST',
+            'https://appleid.apple.com/auth/token',
+            $headers,
+            \http_build_query([
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken,
+                'client_id' => $this->appID,
+                'client_secret' => $this->getAppSecret(),
+            ])
+        ), true);
+
+        $this->claims = (isset($this->tokens['id_token'])) ? \explode('.', $this->tokens['id_token']) : [0 => '', 1 => ''];
+        $this->claims = (isset($this->claims[1])) ? \json_decode(\base64_decode($this->claims[1]), true) : [];
 
         return $this->tokens;
     }

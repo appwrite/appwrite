@@ -3,6 +3,7 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
+use Utopia\Exception;
 
 class Stripe extends OAuth2
 {
@@ -34,7 +35,7 @@ class Stripe extends OAuth2
 
     protected $grantType = [
       'authorize' => 'authorization_code',
-      'refresh' => 'refresh_token'
+      'refresh' => 'refresh_token',
     ];
 
     /**
@@ -90,8 +91,17 @@ class Stripe extends OAuth2
      */
     public function refreshTokens(string $refreshToken):array
     {
-        // TODO: Implement (Twitch as example)
+        $this->tokens = \json_decode($this->request(
+            'POST',
+            'https://connect.stripe.com/oauth/token',
+            [],
+            \http_build_query([
+                'grant_type' => $this->grantType['refresh'],
+                'refresh_token' => $refreshToken,
+            ])
+        ), true);
 
+        $this->stripeAccountId = $this->tokens['stripe_user_id'];
         return $this->tokens;
     }
 

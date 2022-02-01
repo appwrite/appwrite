@@ -90,7 +90,17 @@ class Discord extends OAuth2
      */
     public function refreshTokens(string $refreshToken):array
     {
-        // TODO: Implement (Twitch as example)
+        $this->tokens = \json_decode($this->request(
+            'POST',
+            $this->endpoint . '/oauth2/token',
+            ['Content-Type: application/x-www-form-urlencoded'],
+            \http_build_query([
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken,
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+            ])
+        ), true);
 
         return $this->tokens;
     }

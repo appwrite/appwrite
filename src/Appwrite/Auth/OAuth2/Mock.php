@@ -3,6 +3,7 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
+use Utopia\Exception;
 
 class Mock extends OAuth2
 {
@@ -79,7 +80,16 @@ class Mock extends OAuth2
      */
     public function refreshTokens(string $refreshToken):array
     {
-        // TODO: Implement (Twitch as example)
+        $this->tokens = \json_decode($this->request(
+            'GET',
+            'http://localhost/' . $this->version . '/mock/tests/general/oauth2/token?' .
+            \http_build_query([
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'refresh_token' => $refreshToken,
+                'grant_type' => 'refresh_token'
+            ])
+        ), true);
 
         return $this->tokens;
     }

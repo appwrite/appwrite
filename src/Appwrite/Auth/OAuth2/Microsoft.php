@@ -85,7 +85,18 @@ class Microsoft extends OAuth2
      */
     public function refreshTokens(string $refreshToken):array
     {
-        // TODO: Implement (Twitch as example)
+        $headers = ['Content-Type: application/x-www-form-urlencoded'];
+        $this->tokens = \json_decode($this->request(
+            'POST',
+            'https://login.microsoftonline.com/' . $this->getTenantId() . '/oauth2/v2.0/token',
+            $headers,
+            \http_build_query([
+                'refresh_token' => $refreshToken,
+                'client_id' => $this->appID,
+                'client_secret' => $this->getClientSecret(),
+                'grant_type' => 'refresh_token'
+            ])
+        ), true);
 
         return $this->tokens;
     }

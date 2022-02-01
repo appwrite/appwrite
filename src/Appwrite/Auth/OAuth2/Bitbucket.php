@@ -78,7 +78,18 @@ class Bitbucket extends OAuth2
      */
     public function refreshTokens(string $refreshToken):array
     {
-        // TODO: Implement (Twitch as example)
+        $headers = ['Content-Type: application/x-www-form-urlencoded'];
+        $this->tokens = \json_decode($this->request(
+            'POST',
+            'https://bitbucket.org/site/oauth2/access_token',
+            $headers,
+            \http_build_query([
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken
+            ])
+        ), true);
 
         return $this->tokens;
     }

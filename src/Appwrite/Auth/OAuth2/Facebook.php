@@ -3,6 +3,7 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
+use Utopia\Exception;
 
 class Facebook extends OAuth2
 {
@@ -78,7 +79,16 @@ class Facebook extends OAuth2
      */
     public function refreshTokens(string $refreshToken):array
     {
-        // TODO: Implement (Twitch as example)
+        $this->tokens = \json_decode($this->request(
+            'GET',
+            'https://graph.facebook.com/' . $this->version . '/oauth/access_token?' . \http_build_query([
+                'client_id' => $this->appID,
+                'redirect_uri' => $this->callback,
+                'client_secret' => $this->appSecret,
+                'refresh_token' => $refreshToken,
+                'grant_type' => 'refresh_token'
+            ])
+        ), true);
 
         return $this->tokens;
     }

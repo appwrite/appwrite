@@ -3,6 +3,7 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
+use Utopia\Exception;
 
 // Reference Material
 // https://vk.com/dev/first_guide
@@ -94,7 +95,21 @@ class Vk extends OAuth2
      */
     public function refreshTokens(string $refreshToken):array
     {
-        // TODO: Implement (Twitch as example)
+        $headers = ['Content-Type: application/x-www-form-urlencoded;charset=UTF-8'];
+        $this->tokens = \json_decode($this->request(
+            'POST',
+            'https://oauth.vk.com/access_token?',
+            $headers,
+            \http_build_query([
+                'refresh_token' => $refreshToken,
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'grant_type' => 'refresh_token'
+            ])
+        ), true);
+
+        $this->user['email'] = $this->tokens['email'];
+        $this->user['user_id'] = $this->tokens['user_id'];
 
         return $this->tokens;
     }

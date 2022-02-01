@@ -80,7 +80,17 @@ class WordPress extends OAuth2
      */
     public function refreshTokens(string $refreshToken):array
     {
-        // TODO: Implement (Twitch as example)
+        $this->tokens = \json_decode($this->request(
+            'POST',
+            'https://public-api.wordpress.com/oauth2/token',
+            [],
+            \http_build_query([
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken
+            ])
+        ), true);
 
         return $this->tokens;
     }

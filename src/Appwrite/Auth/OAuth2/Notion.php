@@ -84,7 +84,16 @@ class Notion extends OAuth2
      */
     public function refreshTokens(string $refreshToken):array
     {
-        // TODO: Implement (Twitch as example)
+        $headers = ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)];
+        $this->tokens = \json_decode($this->request(
+            'POST',
+            $this->endpoint . '/oauth/token',
+            $headers,
+            \http_build_query([
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken,
+            ])
+        ), true);
 
         return $this->tokens;
     }

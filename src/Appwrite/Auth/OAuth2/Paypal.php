@@ -105,7 +105,15 @@ class Paypal extends OAuth2
      */
     public function refreshTokens(string $refreshToken):array
     {
-        // TODO: Implement (Twitch as example)
+        $this->tokens = \json_decode($this->request(
+            'POST',
+            $this->resourceEndpoint[$this->environment] . 'oauth2/token',
+            ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)],
+            \http_build_query([
+                'refresh_token' => $refreshToken,
+                'grant_type' => 'refresh_token',
+            ])
+        ), true);
 
         return $this->tokens;
     }

@@ -107,7 +107,20 @@ class Yahoo extends OAuth2
      */
     public function refreshTokens(string $refreshToken):array
     {
-        // TODO: Implement (Twitch as example)
+        $headers = [
+            'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
+            'Content-Type: application/x-www-form-urlencoded',
+        ];
+
+        $this->tokens = \json_decode($this->request(
+            'POST',
+            $this->endpoint . 'get_token',
+            $headers,
+            \http_build_query([
+                "refresh_token" => $refreshToken,
+                "grant_type" => "refresh_token",
+            ])
+        ), true);
 
         return $this->tokens;
     }
