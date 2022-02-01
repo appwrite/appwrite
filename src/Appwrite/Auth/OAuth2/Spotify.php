@@ -33,6 +33,11 @@ class Spotify extends OAuth2
     protected $user = [];
 
     /**
+     * @var array
+     */
+    protected $tokens = [];
+
+    /**
      * @return string
      */
     public function getName():string
@@ -62,22 +67,54 @@ class Spotify extends OAuth2
      */
     public function getTokens(string $code): array
     {
-        $header = "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret);
-        $result = \json_decode($this->request(
-            'POST',
-            $this->endpoint . 'api/token',
-            [$header],
-            \http_build_query([
-                "code" => $code,
-                "grant_type" => "authorization_code",
-                "redirect_uri" => $this->callback
-            ])
-        ), true);
+        if(empty($this->tokens)) {
+            $header = "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret);
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                $this->endpoint . 'api/token',
+                [$header],
+                \http_build_query([
+                    "code" => $code,
+                    "grant_type" => "authorization_code",
+                    "redirect_uri" => $this->callback
+                ])
+            ), true);
+        }
 
-        return [
-            'access' => $result['access_token'],
-            'refresh' => $result['refresh_token']
-        ];
+        return $this->tokens;
+    }
+
+    /**
+     * @param string $code
+     *
+     * @return string
+     */
+    public function getAccessToken(string $code):string
+    {
+        $tokens = $this->getTokens($code);
+        return $tokens['access_token'];
+    }
+
+    /**
+     * @param string $code
+     *
+     * @return string
+     */
+    public function getRefreshToken(string $code):string
+    {
+        $tokens = $this->getTokens($code);
+        return $tokens['refresh_token'];
+    }
+
+    /**
+     * @param string $code
+     *
+     * @return string
+     */
+    public function getTokenExpiry(string $code):string
+    {
+        $tokens = $this->getTokens($code);
+        return $tokens['expires_in'];
     }
 
     /**
