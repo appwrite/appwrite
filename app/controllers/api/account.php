@@ -534,7 +534,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'providerUid' => $oauth2ID,
             'providerAccessToken' => $accessToken,
             'providerRefreshToken' => $refreshToken,
-            'providerAccessTokenExpiry' => \time() + $accessTokenExpiry - 5, // 5 seconds time-sync and networking gap, to be safe
+            'providerAccessTokenExpiry' => \time() + $accessTokenExpiry,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -1668,7 +1668,7 @@ App::patch('/v1/account/sessions/:sessionId/oauth2-tokens')
     ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 10)
     ->param('sessionId', null, new UID(), 'Session ID. Use the string \'current\' to update the current device session.')
-    ->param('force', true, new Boolean(), 'Should generate new token even if current one is still valid?', true)
+    ->param('force', false, new Boolean(), 'Should generate new token even if current one is still valid?', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1698,6 +1698,11 @@ App::patch('/v1/account/sessions/:sessionId/oauth2-tokens')
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
             if ($sessionId == $session->getId()) {
+                $expireAt = (int) $session->getAttribute('providerAccessTokenExpiry');
+                if(\time() < $expireAt - 5 && !$force) { // 5 seconds time-sync and networking gap, to be safe
+                    return $response->noContent();
+                }
+
                 $provider = $session->getAttribute('provider');
                 $refreshToken = $session->getAttribute('providerRefreshToken');
 
@@ -1712,7 +1717,7 @@ App::patch('/v1/account/sessions/:sessionId/oauth2-tokens')
                 $session
                     ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
                     ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
-                    ->setAttribute('providerAccessTokenExpiry', \time() + $oauth2->getAccessTokenExpiry('') - 5)  // 5 seconds time-sync and networking gap, to be safe
+                    ->setAttribute('providerAccessTokenExpiry', \time() + $oauth2->getAccessTokenExpiry(''))
                     ;
 
                 $dbForProject->updateDocument('sessions', $sessionId, $session);
@@ -1735,9 +1740,7 @@ App::patch('/v1/account/sessions/:sessionId/oauth2-tokens')
                     ->setParam('users.update', 1)
                 ;
 
-                $response->dynamic($session, Response::MODEL_SESSION);
-
-                return;
+                return $response->dynamic($session, Response::MODEL_SESSION);
             }
         }
 
