@@ -74,6 +74,18 @@ class WordPress extends OAuth2
     }
 
     /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshTokens(string $refreshToken):array
+    {
+        // TODO: Implement (Twitch as example)
+
+        return $this->tokens;
+    }
+
+    /**
      * @param $accessToken
      *
      * @return string

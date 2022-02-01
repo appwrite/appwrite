@@ -85,6 +85,26 @@ class Twitch extends OAuth2
     }
 
     /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshTokens(string $refreshToken):array
+    {
+        $this->tokens = \json_decode($this->request(
+            'POST',
+            $this->endpoint . 'token?' . \http_build_query([
+                "client_id" => $this->appID,
+                "client_secret" => $this->appSecret,
+                "refresh_token" => $refreshToken,
+                "grant_type" => "refresh_token",
+            ])
+        ), true);
+
+        return $this->tokens;
+    }
+
+    /**
      * @param $accessToken
      *
      * @return string

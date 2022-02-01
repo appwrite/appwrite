@@ -67,6 +67,13 @@ abstract class OAuth2
     abstract public function getTokens(string $code):array;
 
     /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    abstract public function refreshTokens(string $refreshToken):array;
+
+    /**
      * @param $accessToken
      *
      * @return string
