@@ -1709,16 +1709,16 @@ App::patch('/v1/account/sessions/:sessionId/oauth2-tokens')
 
                 $oauth2->refreshTokens($refreshToken);
 
-                \var_dump($oauth2->getAccessToken(''));
-                \var_dump($oauth2->getRefreshToken(''));
-
                 $session
                     ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
                     ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
                     ->setAttribute('providerAccessTokenExpiry', \time() + $oauth2->getAccessTokenExpiry('') - 5)  // 5 seconds time-sync and networking gap, to be safe
                     ;
 
-                $session = $dbForProject->updateDocument('sessions', $sessionId, $session);
+                $dbForProject->updateDocument('sessions', $sessionId, $session);
+
+                $user->setAttribute("sessions", $sessions);
+                $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
                 $audits
                     ->setParam('userId', $user->getId())
@@ -1736,6 +1736,8 @@ App::patch('/v1/account/sessions/:sessionId/oauth2-tokens')
                 ;
 
                 $response->dynamic($session, Response::MODEL_SESSION);
+
+                return;
             }
         }
 
