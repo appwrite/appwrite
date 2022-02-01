@@ -66,7 +66,7 @@ class Box extends OAuth2
      *
      * @return array
      */
-    public function getTokens(string $code): array
+    protected function getTokens(string $code): array
     {
         if(empty($this->tokens)) {
             $headers = ['Content-Type: application/x-www-form-urlencoded'];

@@ -53,7 +53,7 @@ class Slack extends OAuth2
      *
      * @return array
      */
-    public function getTokens(string $code): array
+    protected function getTokens(string $code): array
     {
         if(empty($this->tokens)) {
             // https://api.slack.com/docs/oauth#step_3_-_exchanging_a_verification_code_for_an_access_token

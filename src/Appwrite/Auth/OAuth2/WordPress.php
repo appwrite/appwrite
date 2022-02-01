@@ -53,7 +53,7 @@ class WordPress extends OAuth2
      *
      * @return array
      */
-    public function getTokens(string $code): array
+    protected function getTokens(string $code): array
     {
         if(empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
