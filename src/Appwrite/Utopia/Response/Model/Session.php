@@ -42,13 +42,13 @@ class Session extends Model
             ])
             ->addRule('providerAccessToken', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Session Provider AccessToken.',
+                'description' => 'Session Provider Access Token.',
                 'default' => '',
                 'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
             ])
             ->addRule('providerAccessTokenExpiry', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Date, the user has accepted the invitation to join the team in Unix timestamp.',
+                'description' => 'Date, the Unix timestamp of when the access token expires',
                 'default' => 0,
                 'example' => 1592981250,
             ])
