@@ -430,10 +430,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $state['failure'] = null;
-        $tokens = $oauth2->getTokens($code);
 
-        $accessToken = $tokens['access'];
-        $refreshToken = $tokens['refresh'];
+        $accessToken = $oauth2->getAccessToken($code);
+        $refreshToken =$oauth2->getRefreshToken($code);
+        $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
 
         if (empty($accessToken)) {
             if (!empty($state['failure'])) {
@@ -533,6 +533,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'providerUid' => $oauth2ID,
             'providerAccessToken' => $accessToken,
             'providerRefreshToken' => $refreshToken,
+            'providerAccessTokenExpiry' => $accessTokenExpiry,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),

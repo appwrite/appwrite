@@ -109,6 +109,38 @@ abstract class OAuth2
         return $this->scopes;
     }
 
+    /**
+     * @param string $code
+     *
+     * @return string
+     */
+    public function getAccessToken(string $code):string
+    {
+        $tokens = $this->getTokens($code);
+        return $tokens['access_token'];
+    }
+
+    /**
+     * @param string $code
+     *
+     * @return string
+     */
+    public function getRefreshToken(string $code):string
+    {
+        $tokens = $this->getTokens($code);
+        return $tokens['refresh_token'];
+    }
+
+    /**
+     * @param string $code
+     *
+     * @return string
+     */
+    public function getAccessTokenExpiry(string $code):string
+    {
+        $tokens = $this->getTokens($code);
+        return $tokens['expires_in'];
+    }
 
     // The parseState function was designed specifically for Amazon OAuth2 Adapter to override.
     // The response from Amazon is html encoded and hence it needs to be html_decoded before

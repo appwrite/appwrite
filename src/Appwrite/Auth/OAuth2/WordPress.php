@@ -13,6 +13,11 @@ class WordPress extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @var array
@@ -50,25 +55,22 @@ class WordPress extends OAuth2
      */
     public function getTokens(string $code): array
     {
-        $result = $this->request(
-            'POST',
-            'https://public-api.wordpress.com/oauth2/token',
-            [],
-            \http_build_query([
-                'client_id' => $this->appID,
-                'redirect_uri' => $this->callback,
-                'client_secret' => $this->appSecret,
-                'grant_type' => 'authorization_code',
-                'code' => $code
-            ])
-        );
+        if(empty($this->tokens)) {
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                'https://public-api.wordpress.com/oauth2/token',
+                [],
+                \http_build_query([
+                    'client_id' => $this->appID,
+                    'redirect_uri' => $this->callback,
+                    'client_secret' => $this->appSecret,
+                    'grant_type' => 'authorization_code',
+                    'code' => $code
+                ])
+            ), true);
+        }
 
-        $result = \json_decode($result, true);
-
-        return [
-            'access' => $result['access_token'],
-            'refresh' => $result['refresh_token']
-        ];
+        return $this->tokens;
     }
 
     /**

@@ -10,6 +10,11 @@ class Stripe extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @var string
@@ -61,26 +66,21 @@ class Stripe extends OAuth2
      */
     public function getTokens(string $code): array
     {
-        $result = $this->request(
-            'POST',
-            'https://connect.stripe.com/oauth/token',
-            [],
-            \http_build_query([
-                'grant_type' => $this->grantType['authorize'],
-                'code' => $code
-            ])
-        );
+        if(empty($this->tokens)) {
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                'https://connect.stripe.com/oauth/token',
+                [],
+                \http_build_query([
+                    'grant_type' => $this->grantType['authorize'],
+                    'code' => $code
+                ])
+            ), true);
 
-        $result = \json_decode($result, true);
-
-        if (isset($result['stripe_user_id'])) {
-          $this->stripeAccountId = $result['stripe_user_id'];
+            $this->stripeAccountId = $this->tokens['stripe_user_id'];
         }
 
-        return [
-            'access' => $result['access_token'],
-            'refresh' => $result['refresh_token']
-        ];
+        return $this->tokens;
     }
 
     /**

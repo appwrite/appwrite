@@ -13,6 +13,11 @@ class Gitlab extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @var array
@@ -50,23 +55,20 @@ class Gitlab extends OAuth2
      */
     public function getTokens(string $code): array
     {
-        $result = $this->request(
-            'POST',
-            'https://gitlab.com/oauth/token?'.\http_build_query([
-                'code' => $code,
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
-                'redirect_uri' => $this->callback,
-                'grant_type' => 'authorization_code'
-            ])
-        );
+        if(empty($this->tokens)) {
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                'https://gitlab.com/oauth/token?' . \http_build_query([
+                    'code' => $code,
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
+                    'redirect_uri' => $this->callback,
+                    'grant_type' => 'authorization_code'
+                ])
+            ), true);
+        }
 
-        $result = \json_decode($result, true);
-
-        return [
-            'access' => $result['access_token'],
-            'refresh' => $result['refresh_token']
-        ];
+        return $this->tokens;
     }
 
     /**

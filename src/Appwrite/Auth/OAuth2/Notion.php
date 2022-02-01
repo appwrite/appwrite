@@ -20,6 +20,11 @@ class Notion extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @var array
@@ -55,27 +60,21 @@ class Notion extends OAuth2
      */
     public function getTokens(string $code): array
     {
-        $headers = [
-            "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret),
-        ];
+        if(empty($this->tokens)) {
+            $headers = ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)];
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                $this->endpoint . '/oauth/token',
+                $headers,
+                \http_build_query([
+                    'grant_type' => 'authorization_code',
+                    'redirect_uri' => $this->callback,
+                    'code' => $code
+                ])
+            ), true);
+        }
 
-        $result = $this->request(
-            'POST',
-            $this->endpoint . '/oauth/token',
-            $headers,
-            \http_build_query([
-                'grant_type' => 'authorization_code',
-                'redirect_uri' => $this->callback,
-                'code' => $code
-            ])
-        );
-
-        $result = \json_decode($result, true);
-
-        return [
-            'access' => $result['access_token'],
-            'refresh' => $result['refresh_token']
-        ];
+        return $this->tokens;
     }
 
     /**

@@ -32,6 +32,11 @@ class Yahoo extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @return string
@@ -74,26 +79,25 @@ class Yahoo extends OAuth2
      */
     public function getTokens(string $code): array
     {
-        $header = [
-            "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret),
-            "Content-Type: application/x-www-form-urlencoded",
-        ];
+        if(empty($this->tokens)) {
+            $headers = [
+                'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
+                'Content-Type: application/x-www-form-urlencoded',
+            ];
 
-        $result = \json_decode($this->request(
-            'POST',
-            $this->endpoint . 'get_token',
-            $header,
-            \http_build_query([
-                "code" => $code,
-                "grant_type" => "authorization_code",
-                "redirect_uri" => $this->callback
-            ])
-        ), true);
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                $this->endpoint . 'get_token',
+                $headers,
+                \http_build_query([
+                    "code" => $code,
+                    "grant_type" => "authorization_code",
+                    "redirect_uri" => $this->callback
+                ])
+            ), true);
+        }
 
-        return [
-            'access' => $result['access_token'],
-            'refresh' => $result['refresh_token']
-        ];
+        return $this->tokens;
     }
 
     /**

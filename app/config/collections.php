@@ -1169,6 +1169,17 @@ $collections = [
                 'filters' => ['encrypt'],
             ],
             [
+                '$id' => 'providerAccessTokenExpiry',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => 'providerRefreshToken',
                 'type' => Database::VAR_STRING,
                 'format' => '',

@@ -10,6 +10,11 @@ class Slack extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @var array
@@ -50,23 +55,20 @@ class Slack extends OAuth2
      */
     public function getTokens(string $code): array
     {
-        // https://api.slack.com/docs/oauth#step_3_-_exchanging_a_verification_code_for_an_access_token
-        $result = $this->request(
-            'GET',
-            'https://slack.com/api/oauth.access?'.\http_build_query([
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
-                'code' => $code,
-                'redirect_uri' => $this->callback
-            ])
-        );
+        if(empty($this->tokens)) {
+            // https://api.slack.com/docs/oauth#step_3_-_exchanging_a_verification_code_for_an_access_token
+            $this->tokens = \json_decode($this->request(
+                'GET',
+                'https://slack.com/api/oauth.access?' . \http_build_query([
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
+                    'code' => $code,
+                    'redirect_uri' => $this->callback
+                ])
+            ), true);
+        }
 
-        $result = \json_decode($result, true);
-
-        return [
-            'access' => $result['access_token'],
-            'refresh' => $result['refresh_token']
-        ];
+        return $this->tokens;
     }
 
     /**

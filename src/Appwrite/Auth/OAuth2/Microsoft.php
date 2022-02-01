@@ -14,6 +14,11 @@ class Microsoft extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @var array
@@ -53,28 +58,24 @@ class Microsoft extends OAuth2
      */
     public function getTokens(string $code): array
     {
-        $headers = ['Content-Type: application/x-www-form-urlencoded'];
+        if(empty($this->tokens)) {
+            $headers = ['Content-Type: application/x-www-form-urlencoded'];
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                'https://login.microsoftonline.com/' . $this->getTenantId() . '/oauth2/v2.0/token',
+                $headers,
+                \http_build_query([
+                    'code' => $code,
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->getClientSecret(),
+                    'redirect_uri' => $this->callback,
+                    'scope' => \implode(' ', $this->getScopes()),
+                    'grant_type' => 'authorization_code'
+                ])
+            ), true);
+        }
 
-        $result = $this->request(
-            'POST',
-            'https://login.microsoftonline.com/'.$this->getTenantId().'/oauth2/v2.0/token',
-            $headers,
-            \http_build_query([
-                'code' => $code,
-                'client_id' => $this->appID,
-                'client_secret' => $this->getClientSecret(),
-                'redirect_uri' => $this->callback,
-                'scope' => \implode(' ', $this->getScopes()),
-                'grant_type' => 'authorization_code'
-            ])
-        );
-
-        $result = \json_decode($result, true);
-
-        return [
-            'access' => $result['access_token'],
-            'refresh' => $result['refresh_token']
-        ];
+        return $this->tokens;
     }
 
     /**

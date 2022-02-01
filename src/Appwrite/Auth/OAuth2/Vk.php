@@ -16,6 +16,11 @@ class Vk extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @var array
@@ -61,32 +66,25 @@ class Vk extends OAuth2
      */
     public function getTokens(string $code): array
     {
-        $headers = ['Content-Type: application/x-www-form-urlencoded;charset=UTF-8'];
-        $result = $this->request(
-            'POST',
-            'https://oauth.vk.com/access_token?',
-            $headers,
-            \http_build_query([
-                'code' => $code,
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
-                'redirect_uri' => $this->callback
-            ])
-        );
-        $result = \json_decode($result, true);
+        if(empty($this->tokens)) {
+            $headers = ['Content-Type: application/x-www-form-urlencoded;charset=UTF-8'];
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                'https://oauth.vk.com/access_token?',
+                $headers,
+                \http_build_query([
+                    'code' => $code,
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
+                    'redirect_uri' => $this->callback
+                ])
+            ), true);
 
-        if (isset($result['email'])) {
-            $this->user['email'] = $result['email'];
+            $this->user['email'] = $this->tokens['email'];
+            $this->user['user_id'] = $this->tokens['user_id'];
         }
 
-        if (isset($result['user_id'])) {
-            $this->user['user_id'] = $result['user_id'];
-        }
-
-        return [
-            'access' => $result['access_token'],
-            'refresh' => $result['refresh_token']
-        ];
+        return $this->tokens;
     }
 
     /**

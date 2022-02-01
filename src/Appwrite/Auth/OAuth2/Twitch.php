@@ -31,6 +31,11 @@ class Twitch extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @return string
@@ -63,21 +68,20 @@ class Twitch extends OAuth2
      */
     public function getTokens(string $code): array
     {
-        $result = \json_decode($this->request(
-            'POST',
-            $this->endpoint . 'token?'. \http_build_query([
-                "client_id" => $this->appID,
-                "client_secret" => $this->appSecret,
-                "code" => $code,
-                "grant_type" => "authorization_code",
-                "redirect_uri" => $this->callback
-            ])
-        ), true);
+        if(empty($this->tokens)) {
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                $this->endpoint . 'token?' . \http_build_query([
+                    "client_id" => $this->appID,
+                    "client_secret" => $this->appSecret,
+                    "code" => $code,
+                    "grant_type" => "authorization_code",
+                    "redirect_uri" => $this->callback
+                ])
+            ), true);
+        }
 
-        return [
-            'access' => $result['access_token'],
-            'refresh' => $result['refresh_token']
-        ];
+        return $this->tokens;
     }
 
     /**

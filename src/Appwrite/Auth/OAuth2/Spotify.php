@@ -31,7 +31,7 @@ class Spotify extends OAuth2
      * @var array
      */
     protected $user = [];
-
+    
     /**
      * @var array
      */
@@ -68,11 +68,11 @@ class Spotify extends OAuth2
     public function getTokens(string $code): array
     {
         if(empty($this->tokens)) {
-            $header = "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret);
+            $headers = ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)];
             $this->tokens = \json_decode($this->request(
                 'POST',
                 $this->endpoint . 'api/token',
-                [$header],
+                $headers,
                 \http_build_query([
                     "code" => $code,
                     "grant_type" => "authorization_code",
@@ -82,39 +82,6 @@ class Spotify extends OAuth2
         }
 
         return $this->tokens;
-    }
-
-    /**
-     * @param string $code
-     *
-     * @return string
-     */
-    public function getAccessToken(string $code):string
-    {
-        $tokens = $this->getTokens($code);
-        return $tokens['access_token'];
-    }
-
-    /**
-     * @param string $code
-     *
-     * @return string
-     */
-    public function getRefreshToken(string $code):string
-    {
-        $tokens = $this->getTokens($code);
-        return $tokens['refresh_token'];
-    }
-
-    /**
-     * @param string $code
-     *
-     * @return string
-     */
-    public function getTokenExpiry(string $code):string
-    {
-        $tokens = $this->getTokens($code);
-        return $tokens['expires_in'];
     }
 
     /**

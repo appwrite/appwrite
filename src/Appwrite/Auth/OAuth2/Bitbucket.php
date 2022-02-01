@@ -13,6 +13,11 @@ class Bitbucket extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @var array
@@ -47,27 +52,23 @@ class Bitbucket extends OAuth2
      */
     public function getTokens(string $code): array
     {
-        // Required as per Bitbucket Spec.
-        $headers = ['Content-Type: application/x-www-form-urlencoded'];
+        if(empty($this->tokens)) {
+            // Required as per Bitbucket Spec.
+            $headers = ['Content-Type: application/x-www-form-urlencoded'];
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                'https://bitbucket.org/site/oauth2/access_token',
+                $headers,
+                \http_build_query([
+                    'code' => $code,
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
+                    'grant_type' => 'authorization_code'
+                ])
+            ), true);
+        }
 
-        $result = $this->request(
-            'POST',
-            'https://bitbucket.org/site/oauth2/access_token',
-            $headers,
-            \http_build_query([
-                'code' => $code,
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
-                'grant_type' => 'authorization_code'
-            ])
-        );
-
-        $result = \json_decode($result, true);
-
-        return [
-            'access' => $result['access_token'],
-            'refresh' => $result['refresh_token']
-        ];
+        return $this->tokens;
     }
 
     /**

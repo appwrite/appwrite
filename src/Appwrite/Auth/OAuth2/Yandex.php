@@ -15,6 +15,11 @@ class Yandex extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @var array
@@ -60,27 +65,23 @@ class Yandex extends OAuth2
      */
     public function getTokens(string $code): array
     {
-        $headers = [
-            "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret),
-            "Content-Type: application/x-www-form-urlencoded",
-        ];
+        if(empty($this->tokens)) {
+            $headers = [
+                'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
+                'Content-Type: application/x-www-form-urlencoded',
+            ];
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                'https://oauth.yandex.com/token',
+                $headers,
+                \http_build_query([
+                    'code' => $code,
+                    'grant_type' => 'authorization_code'
+                ])
+            ), true);
+        }
 
-        $result = $this->request(
-            'POST',
-            'https://oauth.yandex.com/token',
-            $headers,
-            \http_build_query([
-                'code' => $code,
-                'grant_type' => 'authorization_code'
-            ])
-        );
-
-        $result = \json_decode($result, true);
-
-        return [
-            'access' => $result['access_token'],
-            'refresh' => $result['refresh_token']
-        ];
+        return $this->tokens;
     }
 
     /**

@@ -29,6 +29,11 @@ class Bitly extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @return string
@@ -58,25 +63,22 @@ class Bitly extends OAuth2
      */
     public function getTokens(string $code): array
     {
-        $result = $this->request(
-            'POST',
-            $this->resourceEndpoint . 'oauth/access_token',
-            ["Content-Type: application/x-www-form-urlencoded"],
-            \http_build_query([
-                "client_id" => $this->appID,
-                "client_secret" => $this->appSecret,
-                "code" => $code,
-                "redirect_uri" => $this->callback,
-                "state" => \json_encode($this->state)
-            ])
-        );
+        if(empty($this->tokens)) {
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                $this->resourceEndpoint . 'oauth/access_token',
+                ["Content-Type: application/x-www-form-urlencoded"],
+                \http_build_query([
+                    "client_id" => $this->appID,
+                    "client_secret" => $this->appSecret,
+                    "code" => $code,
+                    "redirect_uri" => $this->callback,
+                    "state" => \json_encode($this->state)
+                ])
+            ), true);
+        }
 
-        $result = \json_decode($result, true);
-
-        return [
-            'access' => $result['access_token'],
-            'refresh' => $result['refresh_token']
-        ];
+        return $this->tokens;
     }
 
     /**

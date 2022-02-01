@@ -23,6 +23,11 @@ class Box extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @var array
@@ -63,27 +68,24 @@ class Box extends OAuth2
      */
     public function getTokens(string $code): array
     {
-        $header = "Content-Type: application/x-www-form-urlencoded";
-        $result = $this->request(
-            'POST',
-            $this->endpoint . 'token',
-            [$header],
-            \http_build_query([
-                "client_id" => $this->appID,
-                "client_secret" => $this->appSecret,
-                "code" => $code,
-                "grant_type" => "authorization_code",
-                "scope" =>  \implode(',', $this->getScopes()),
-                "redirect_uri" => $this->callback
-            ])
-        );
+        if(empty($this->tokens)) {
+            $headers = ['Content-Type: application/x-www-form-urlencoded'];
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                $this->endpoint . 'token',
+                $headers,
+                \http_build_query([
+                    "client_id" => $this->appID,
+                    "client_secret" => $this->appSecret,
+                    "code" => $code,
+                    "grant_type" => "authorization_code",
+                    "scope" => \implode(',', $this->getScopes()),
+                    "redirect_uri" => $this->callback
+                ])
+            ), true);
+        }
 
-        $result = \json_decode($result, true);
-
-        return [
-            'access' => $result['access_token'],
-            'refresh' => $result['refresh_token']
-        ];
+        return $this->tokens;
     }
 
     /**
