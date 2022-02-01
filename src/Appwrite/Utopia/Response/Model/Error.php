@@ -22,6 +22,12 @@ class Error extends Model
                 'default' => '',
                 'example' => '404',
             ])
+            ->addRule('type', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Error type.',
+                'default' => '',
+                'example' => 'not_found',
+            ])
             ->addRule('version', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Server version number.',

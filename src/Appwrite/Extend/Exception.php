@@ -25,20 +25,11 @@ class Exception extends \Exception
     /** Users **/
     const TYPE_EMAIL_NOT_WHITELISTED   = 'email_not_whitelisted';
     const TYPE_IP_NOT_WHITELISTED      = 'ip_not_whitelisted';
-    const TYPE_INVALID_CREDENTIALS     = 'invalid_credentials';
     const TYPE_INVALID_TOKEN           = 'invalid_token';
     const TYPE_JWT_VERIFICATION_FAILED = 'jwt_verification_failed';
     const TYPE_ANONYMOUS_CONSOLE_USER  = 'anonymous_console_user';
     const TYPE_SESSION_NOT_FOUND       = 'session_not_found';
     const TYPE_SESSION_ALREADY_EXISTS  = 'session_already_exists';
-    const TYPE_USER_LIMIT_EXCEEDED     = 'user_limit_exceeded';
-    const TYPE_USER_ALREADY_EXISTS     = 'user_already_exists';
-    const TYPE_USER_BLOCKED            = 'user_blocked';
-    const TYPE_USER_CREATION_FAILED    = 'user_creation_failed';
-    const TYPE_USER_NOT_FOUND          = 'user_not_found';
-    const TYPE_EMAIL_ALREADY_EXISTS    = 'email_already_exists';
-    const TYPE_PASSWORD_MISMATCH       = 'password_mismatch';
-    const TYPE_AUTH_METHOD_UNSUPPORTED = 'auth_method_unsupported';
 
     /** OAuth **/
     const TYPE_PROVIDER_DISABLED          = 'provider_disabled';
@@ -48,6 +39,33 @@ class Exception extends \Exception
     const TYPE_INVALID_FAILURE_URL        = 'invalid_failure_url';
     const TYPE_OAUTH_ACCESS_TOKEN_FAILED  = 'oauth_access_token_failed';
     const TYPE_MISSING_USER_ID            = 'missing_user_id';
+
+
+    /** 
+     * Naming the error types based on the following convention 
+     * <ENTITY>_<ERROR_TYPE>
+     * Appwrite has the follwing entities:
+     * - Users
+     * - Projects
+     * - Sessions
+     * - Teams
+     * - Memberships
+     * - Files
+     * - Functions
+     * - Deployments
+     * - Executions
+     */
+
+    /** Users */
+    const USER_COUNT_EXCEEDED          = 'user_count_exceeded';
+    const USER_ALREADY_EXISTS          = 'user_already_exists';
+    const USER_BLOCKED                 = 'user_blocked';
+    const USER_CREATION_FAILED         = 'user_creation_failed';
+    const USER_NOT_FOUND               = 'user_not_found';
+    const USER_INVALID_CREDENTIALS     = 'user_invalid_credentials';
+    const USER_EMAIL_ALREADY_EXISTS    = 'user_email_already_exists';
+    const USER_PASSWORD_MISMATCH       = 'user_password_mismatch';
+    const USER_AUTH_METHOD_UNSUPPORTED = 'user_auth_method_unsupported';
 
     private $errorCode = '';
 
