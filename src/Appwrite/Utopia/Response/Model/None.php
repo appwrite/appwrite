@@ -14,7 +14,7 @@ class None extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -23,8 +23,8 @@ class None extends Model
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
     public function getType():string

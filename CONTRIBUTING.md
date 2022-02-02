@@ -4,7 +4,7 @@ We would ❤️ for you to contribute to Appwrite and help make it better! We wa
 
 ## How to Start?
 
-If you are worried or don’t know where to start, check out our next section explaining what kind of help we could use and where can you get involved. You can reach out with questions to [Eldad Fux (@eldadfux)](https://twitter.com/eldadfux) or [@appwrite_io](https://twitter.com/appwrite_io) on Twitter, and anyone from the [Appwrite team on Discord](https://discord.gg/GSeTUeA). You can also submit an issue, and a maintainer can guide you!
+If you are worried or don’t know where to start, check out our next section explaining what kind of help we could use and where can you get involved. You can reach out with questions to [Eldad Fux (@eldadfux)](https://twitter.com/eldadfux) or [@appwrite](https://twitter.com/appwrite) on Twitter, and anyone from the [Appwrite team on Discord](https://discord.gg/GSeTUeA). You can also submit an issue, and a maintainer can guide you!
 
 ## Code of Conduct
 
@@ -284,6 +284,27 @@ docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7
 
 The Runtimes for all supported cloud functions (multicore builds) can be found at the [appwrite/php-runtimes](https://github.com/appwrite/php-runtimes) repository.
 
+## Generate SDK
+
+For generating a new console SDK follow the next steps:
+
+1. Update the console spec file located at `app/config/specs/swagger2-0.12.x.console.json` from the dynamic version located at `https://localhost/specs/swagger2?platform=console`
+2. Generate a new SDK using the command `php app/cli.php sdks`
+3. Change your working dir using `cd app/sdks/console-web`
+4. Build the new SDK `npm run build`
+5. Copy `iife/sdk.js` to `appwrite.js`
+6. Go back to the root of the project `run npm run build`
+
+## Checklist for Releasing SDKs
+
+Things to remember when releasing SDKs
+
+* Update the Changelogs in **docs/sdks** (right now only Dart and Flutter are using these)
+* Update **GETTING_STARTED.md** in **docs/sdks** for each SDKs if any changes in the related APIs in there
+* Update SDK versions as required on **app/config/platforms.php**
+* Generate SDKs using the command `php app/cli.php sdks` and follow the instructions
+* Release new tags on GitHub repository for each SDKs
+
 ## Debug
 
 Appwrite uses [yasd](https://github.com/swoole/yasd) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension or if you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection.
@@ -395,7 +416,7 @@ Pull requests are great, but there are many other areas where you can help Appwr
 
 ### Blogging & Speaking
 
-Blogging, speaking about, or creating tutorials about one of Appwrite’s many features. Mention [@appwrite_io](https://twitter.com/appwrite_io) on Twitter and/or email team [at] appwrite [dot] io so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) repo on GitHub.
+Blogging, speaking about, or creating tutorials about one of Appwrite’s many features. Mention [@appwrite](https://twitter.com/appwrite) on Twitter and/or [email team@appwrite.io](mailto:team@appwrite.io) so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) repo on GitHub.
 
 ### Presenting at Meetups
 

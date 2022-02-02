@@ -28,7 +28,7 @@ class Box extends OAuth2
      * @var array
      */
     protected $scopes = [
-        'manage_app_users',    
+        'manage_app_users',
     ];
 
     /**
@@ -45,10 +45,10 @@ class Box extends OAuth2
     public function getLoginURL(): string
     {
         $url = $this->endpoint . 'authorize?'.
-            \http_build_query([                
+            \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
-                'scope' => \implode(',', $this->getScopes()),                
+                'scope' => \implode(',', $this->getScopes()),
                 'redirect_uri' => $this->callback,
                 'state' => \json_encode($this->state),
             ]);

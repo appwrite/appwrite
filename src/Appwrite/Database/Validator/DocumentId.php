@@ -42,7 +42,7 @@ class DocumentId extends Validator
      *
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return $this->message;
     }
@@ -56,7 +56,7 @@ class DocumentId extends Validator
      *
      * @return bool
      */
-    public function isValid($id)
+    public function isValid($id): bool
     {
         $document = $this->database->getDocument($id);
         

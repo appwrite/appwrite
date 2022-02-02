@@ -57,7 +57,7 @@ class Currency extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -66,8 +66,8 @@ class Currency extends Model
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
     public function getType():string

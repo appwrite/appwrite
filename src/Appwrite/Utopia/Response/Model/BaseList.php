@@ -49,7 +49,7 @@ class BaseList extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
     public function getName():string
@@ -58,8 +58,8 @@ class BaseList extends Model
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
     public function getType():string

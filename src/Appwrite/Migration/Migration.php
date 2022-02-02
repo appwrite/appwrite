@@ -2,9 +2,10 @@
 
 namespace Appwrite\Migration;
 
-use Appwrite\Database\Document;
-use Appwrite\Database\Database;
+use Appwrite\Database\Document as OldDocument;
+use Appwrite\Database\Database as OldDatabase;
 use PDO;
+use Redis;
 use Swoole\Runtime;
 use Utopia\CLI\Console;
 use Utopia\Exception;
@@ -12,24 +13,39 @@ use Utopia\Exception;
 abstract class Migration
 {
     /**
+     * @var array
+     */
+    protected array $options;
+
+    /**
      * @var PDO
      */
-    protected $db;
+    protected PDO $db;
+
+    /**
+     * @var Redis
+     */
+    protected Redis $cache;
 
     /**
      * @var int
      */
-    protected $limit = 50;
+    protected int $limit = 500;
 
     /**
-     * @var Document
+     * @var OldDocument
      */
-    protected $project;
+    protected OldDocument $project;
 
     /**
-     * @var Database
+     * @var OldDatabase
      */
-    protected $projectDB;
+    protected OldDatabase $oldProjectDB;
+
+    /**
+     * @var OldDatabase
+     */
+    protected OldDatabase $oldConsoleDB;
 
     /**
      * @var array
@@ -48,37 +64,52 @@ abstract class Migration
         '0.10.2' => 'V09',
         '0.10.3' => 'V09',
         '0.10.4' => 'V09',
+        '0.11.0' => 'V10',
+        '0.12.0' => 'V11',
+        '0.12.1' => 'V11',
     ];
 
     /**
      * Migration constructor.
-     * 
-     * @param PDO $pdo
+     *
+     * @param PDO $db
+     * @param Redis|null $cache
+     * @param array $options
+     * @return void 
      */
-    public function __construct(PDO $db)
+    public function __construct(PDO $db, Redis $cache = null, array $options = [])
     {
+        $this->options = $options;
         $this->db = $db;
+        if (!is_null($cache)) {
+            $this->cache = $cache;
+        }
     }
 
     /**
      * Set project for migration.
-     * 
-     * @param Document $project
-     * @param Database $projectDB
-     * 
-     * @return Migration 
+     *
+     * @param OldDocument $project
+     * @param OldDatabase $projectDB
+     * @param OldDatabase $oldConsoleDB
+     *
+     * @return self
      */
-    public function setProject(Document $project, Database $projectDB): Migration
+    public function setProject(OldDocument $project, OldDatabase $projectDB, OldDatabase $oldConsoleDB): self
     {
         $this->project = $project;
-        $this->projectDB = $projectDB;
-        $this->projectDB->setNamespace('app_' . $project->getId());
+
+        $this->oldProjectDB = $projectDB;
+        $this->oldProjectDB->setNamespace('app_' . $project->getId());
+
+        $this->oldConsoleDB = $oldConsoleDB;
+
         return $this;
     }
 
     /**
      * Iterates through every document.
-     * 
+     *
      * @param callable $callback
      */
     public function forEachDocument(callable $callback): void
@@ -98,11 +129,12 @@ abstract class Migration
 
             Console::log('Migrating: ' . $offset . ' / ' . $this->projectDB->getSum());
             \Co\run(function () use ($all, $callback) {
-
                 foreach ($all as $document) {
                     go(function () use ($document, $callback) {
                         if (empty($document->getId()) || empty($document->getCollection())) {
-                            Console::warning('Skipped Document due to missing ID or Collection.');
+                            if ($document->getCollection() !== 0) {
+                                Console::warning('Skipped Document due to missing ID or Collection.');
+                            }
                             return;
                         }
 
@@ -114,7 +146,7 @@ abstract class Migration
                         }
 
                         try {
-                            $new = $this->projectDB->overwriteDocument($document->getArrayCopy());
+                            $new = $this->projectDB->overwriteDocument($new->getArrayCopy());
                         } catch (\Throwable $th) {
                             Console::error('Failed to update document: ' . $th->getMessage());
                             return;
@@ -131,30 +163,36 @@ abstract class Migration
         }
     }
 
-    public function check_diff_multi($array1, $array2){
+    /**
+     * Checks 2 arrays for differences.
+     * 
+     * @param array $array1 
+     * @param array $array2 
+     * @return array 
+     */
+    public function check_diff_multi(array $array1, array $array2): array
+    {
         $result = array();
-    
-        foreach($array1 as $key => $val) {
-            if(is_array($val) && isset($array2[$key])) {
+
+        foreach ($array1 as $key => $val) {
+            if (is_array($val) && isset($array2[$key])) {
                 $tmp = $this->check_diff_multi($val, $array2[$key]);
-                if($tmp) {
+                if ($tmp) {
                     $result[$key] = $tmp;
                 }
-            }
-            elseif(!isset($array2[$key])) {
+            } elseif (!isset($array2[$key])) {
                 $result[$key] = null;
-            }
-            elseif($val !== $array2[$key]) {
+            } elseif ($val !== $array2[$key]) {
                 $result[$key] = $array2[$key];
             }
-    
-            if(isset($array2[$key])) {
+
+            if (isset($array2[$key])) {
                 unset($array2[$key]);
             }
         }
-    
+
         $result = array_merge($result, $array2);
-    
+
         return $result;
     }
 

@@ -72,7 +72,7 @@ return [
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_ROOT',
-                'description' => 'This option allows you to disable the creation of new users on the Appwrite console. When enabled only 1 user will be able to use the registration form. New users can be added by invting them to your project. By default this option is enabled.',
+                'description' => 'This option allows you to disable the creation of new users on the Appwrite console. When enabled only 1 user will be able to use the registration form. New users can be added by inviting them to your project. By default this option is enabled.',
                 'introduction' => '0.8.0',
                 'default' => 'enabled',
                 'required' => false,
@@ -151,9 +151,36 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_LOGGING_PROVIDER',
+                'description' => 'This variable allows you to enable logging errors to 3rd party providers. This value is empty by default, to enable the logger set the value to one of \'sentry\', \'raygun\', \'appsignal\'',
+                'introduction' => '0.12.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LOGGING_CONFIG',
+                'description' => 'This variable configures authentication to 3rd party error logging providers. If using Sentry, this should be \'SENTRY_API_KEY;SENTRY_APP_ID\'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key.',
+                'introduction' => '0.12.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_USAGE_AGGREGATION_INTERVAL',
+                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to mariadb from InfluxDB. The default value is 30 seconds.',
+                'introduction' => '0.10.0',
+                'default' => '30',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_AUTH_MIN_DURATION',
                 'description' => 'This variable allows you configure the minimum session duration with server-side validation. This value is set to 60 minutes by default. You can override this by providing the duration in seconds.',
-                'introduction' => '0.11.0',
+                'introduction' => '0.13.0',
                 'default' => 3600,
                 'required' => false,
                 'question' => '',
@@ -162,7 +189,7 @@ return [
             [
                 'name' => '_APP_AUTH_MAX_DURATION',
                 'description' => 'This variable allows you configure the maximum session duration with server-side validation. This value is set to 365 days by default. You can override this by providing the duration in seconds.',
-                'introduction' => '0.11.0',
+                'introduction' => '0.13.0',
                 'default' => 31536000,
                 'required' => false,
                 'question' => '',
@@ -171,7 +198,7 @@ return [
             [
                 'name' => '_APP_AUTH_DEFAULT_DURATION',
                 'description' => 'This variable allows you configure the default session duration. The default value is used if the developer does not provide any duration when creating a session. This value is set to 365 days by default. You can override this by providing the duration in seconds.',
-                'introduction' => '0.11.0',
+                'introduction' => '0.13.0',
                 'default' => 31536000,
                 'required' => false,
                 'question' => '',
@@ -386,7 +413,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_STORAGE_LIMIT',
-                'description' => 'Maximun file size allowed for file upload. The default value is 10MB limitation. You should pass your size limit value in bytes.',
+                'description' => 'Maximum file size allowed for file upload. The default value is 10MB limitation. You should pass your size limit value in bytes.',
                 'introduction' => '0.7.0',
                 'default' => '10000000',
                 'required' => false,
@@ -482,7 +509,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_ENVS',
-                'description' => 'Deprectated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead!',
+                'description' => 'Deprecated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead!',
                 'introduction' => '0.7.0',
                 'default' => 'node-16.0,php-7.4,python-3.9,ruby-3.0,java-16.0',
                 'required' => false,

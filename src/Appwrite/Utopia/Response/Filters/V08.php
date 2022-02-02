@@ -6,18 +6,18 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
 use Exception;
 
-
-class V08 extends Filter {
+class V08 extends Filter
+{
     
     // Convert 0.9 Data format to 0.8 format
-    public function parse(array $content, string $model): array {
-        
+    public function parse(array $content, string $model): array
+    {
         $parsedResponse = [];
 
-        switch($model) {
+        switch ($model) {
 
-            case Response::MODEL_DOCUMENT_LIST: 
-            case Response::MODEL_DOCUMENT: 
+            case Response::MODEL_DOCUMENT_LIST:
+            case Response::MODEL_DOCUMENT:
             case Response::MODEL_USER_LIST:
             case Response::MODEL_USER:
             case Response::MODEL_COLLECTION_LIST:
@@ -68,7 +68,7 @@ class V08 extends Filter {
             case Response::MODEL_NONE:
             case Response::MODEL_ERROR:
             case Response::MODEL_ERROR_DEV:
-                $parsedResponse = $content; 
+                $parsedResponse = $content;
                 break;
             case Response::MODEL_FUNCTION_LIST: /** Function property env was renamed to runtime in 0.9.x  */
                 $parsedResponse = $this->parseFunctionList($content);
@@ -83,16 +83,18 @@ class V08 extends Filter {
         return $parsedResponse;
     }
 
-    protected function parseFunction(array $content) {
+    protected function parseFunction(array $content)
+    {
         $content['env'] = $content['runtime'];
         unset($content['runtime']);
         return $content;
     }
 
-    protected function parseFunctionList(array $content){
+    protected function parseFunctionList(array $content)
+    {
         $functions = $content['functions'];
         $parsedResponse = [];
-        foreach($functions as $function) {
+        foreach ($functions as $function) {
             $parsedResponse[] = $this->parseFunction($function);
         }
         $content['functions'] = $parsedResponse;

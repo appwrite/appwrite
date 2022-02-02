@@ -54,7 +54,7 @@ class Env
 
     /**
      * Get All Vars
-     * 
+     *
      * @return array
      */
     public function list(): array
