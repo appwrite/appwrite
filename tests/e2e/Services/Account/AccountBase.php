@@ -369,8 +369,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']['logs']);
         $this->assertNotEmpty($response['body']['logs']);
-        // TODO: Was 3 instead of 2 before merging with master
-        $this->assertCount(2, $response['body']['logs']);
+        $this->assertCount(3, $response['body']['logs']);
         $this->assertIsNumeric($response['body']['sum']);
 
         $this->assertContains($response['body']['logs'][0]['event'], ['account.create', 'account.sessions.create']);
@@ -1382,6 +1381,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             // 'url' => 'http://localhost/magiclogin',
             'duration' => 1 // 1 second
@@ -1395,6 +1395,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             // 'url' => 'http://localhost/magiclogin',
             'duration' => 500000000 // Way over limit ...
