@@ -1654,21 +1654,20 @@ App::delete('/v1/account/sessions/:sessionId')
         throw new Exception('Session not found', 404);
     });
 
-App::patch('/v1/account/sessions/:sessionId/oauth2-tokens')
-    ->desc('Update OAUth2 Tokens')
+App::patch('/v1/account/sessions/:sessionId')
+    ->desc('Update session - refresh OAuth2 access token')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'account.sessions.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'updateOAuth2Tokens')
-    ->label('sdk.description', '/docs/references/account/update-oauth2-tokens.md')
+    ->label('sdk.method', 'updateSession')
+    ->label('sdk.description', '/docs/references/account/update-session.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 10)
     ->param('sessionId', null, new UID(), 'Session ID. Use the string \'current\' to update the current device session.')
-    ->param('force', false, new Boolean(), 'Should generate new token even if current one is still valid?', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1678,7 +1677,7 @@ App::patch('/v1/account/sessions/:sessionId/oauth2-tokens')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($sessionId, $force, $request, $response, $user, $dbForProject, $project, $locale, $audits, $events, $usage) {
+    ->action(function ($sessionId, $request, $response, $user, $dbForProject, $project, $locale, $audits, $events, $usage) {
         /** @var Appwrite\Utopia\Request $request */
         /** @var boolean $force */
         /** @var Appwrite\Utopia\Response $response */
@@ -1698,10 +1697,15 @@ App::patch('/v1/account/sessions/:sessionId/oauth2-tokens')
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
             if ($sessionId == $session->getId()) {
-                $expireAt = (int) $session->getAttribute('providerAccessTokenExpiry');
-                if(\time() < $expireAt - 5 && !$force) { // 5 seconds time-sync and networking gap, to be safe
-                    return $response->noContent();
-                }
+
+                // Comment below would skip re-generation if token is still valid
+                // We decided to not include this because developer can get expiration date from the session
+                // I kept code in comment because it might become relevant in the future
+
+                // $expireAt = (int) $session->getAttribute('providerAccessTokenExpiry');
+                // if(\time() < $expireAt - 5) { // 5 seconds time-sync and networking gap, to be safe
+                //     return $response->noContent();
+                // }
 
                 $provider = $session->getAttribute('provider');
                 $refreshToken = $session->getAttribute('providerRefreshToken');
