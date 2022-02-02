@@ -301,7 +301,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
             $failure = $protocol . '://' . $request->getHostname() . $oauthDefaultFailure;
         }
 
-        $oauth2 = new $classname($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure, 'duration' => $duration], $scopes);
+        $oauth2 = new $className($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure, 'duration' => $duration], $scopes);
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -801,7 +801,8 @@ App::put('/v1/account/sessions/magic-url')
             throw new Exception('User not found', 404);
         }
 
-        $token = Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_MAGIC_URL, $secret);
+        $tokens = $user->getAttribute('tokens', []);
+        $token = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_MAGIC_URL, $secret);
 
         if (!$token) {
             throw new Exception('Invalid login token', 401);
