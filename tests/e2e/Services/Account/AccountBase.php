@@ -445,7 +445,7 @@ trait AccountBase
         $this->assertEquals($responseOffset['headers']['status-code'], 200);
         $this->assertIsArray($responseOffset['body']['logs']);
         $this->assertNotEmpty($responseOffset['body']['logs']);
-        $this->assertCount(1, $responseOffset['body']['logs']);
+        $this->assertCount(2, $responseOffset['body']['logs']);
         $this->assertIsNumeric($responseOffset['body']['sum']);
 
         $this->assertEquals($response['body']['logs'][1], $responseOffset['body']['logs'][0]);
