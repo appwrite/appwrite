@@ -926,44 +926,33 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/runtime')
 
 App::delete('/v1/deployments/:deploymentId')
     ->desc('Delete a deployment')
-    ->param('deploymentId', '', new UID(), 'Deployment unique ID.')
-    ->inject('projectId')
+    ->param('deploymentId', '', new UID(), 'Deployment unique ID.', false)
+    ->param('buildIds', [], new ArrayList(new Text(0), 100), 'List of build IDs to delete.', false)
     ->inject('response')
-    ->action(function (string $deploymentId, string $projectId, Response $response) use ($orchestrationPool) {
+    ->action(function (string $deploymentId, array $buildIds, Response $response) use ($orchestrationPool) {
+
         Console::info('Deleting deployment: ' . $deploymentId);
-        global $register;
-        go(function () use ($projectId, $orchestrationPool, $register, $deploymentId) {
-            try {
-                $orchestration = $orchestrationPool->get();
-                // Remove the container of the deployment
-                $orchestration->remove('appwrite-function-' . $deploymentId , true);
-                Console::success('Removed container for deployment: ' . $deploymentId);
+        $orchestration = $orchestrationPool->get();
 
-                $db = $register->get('dbPool')->get();
-                $redis = $register->get('redisPool')->get();
-                $cache = new Cache(new RedisCache($redis));
-                $dbForProject = new Database(new MariaDB($db), $cache);
-                $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-                $dbForProject->setNamespace('_project_' . $projectId);
+        // Remove the container of the deployment
+        $status = $orchestration->remove('appwrite-function-' . $deploymentId , true);
+        if ($status) {
+            Console::success('Removed container for deployment: ' . $deploymentId);
+        } else {
+            Console::error('Failed to remove container for deployment: ' . $deploymentId);
+        }
 
-                $builds = $dbForProject->find('builds', [ 
-                    new Query('deploymentId', Query::TYPE_EQUAL, [$deploymentId]),
-                    new Query('status', Query::TYPE_EQUAL, ['building'])
-                ], 999);
-
-                // Remove all the build containers
-                foreach ($builds as $build) {
-                    $orchestration->remove('build-stage-' . $build['$id'], true);
-                    Console::success("Removed build container: $build for deployment: " . $deploymentId);
-                }
-            } catch (\Throwable $th) {
-                Console::error($th->getMessage());
-            } finally {
-                $orchestrationPool->put($orchestration);
-                $register->get('dbPool')->put($db);
-                $register->get('redisPool')->put($redis);
+        // Remove all the build containers
+        foreach ($buildIds as $buildId) {
+            $status = $orchestration->remove('build-stage-' . $buildId, true);
+            if ($status) {
+                Console::success("Removed build container: $buildId for deployment: " . $deploymentId);
+            } else {
+                Console::error("Failed to remove build container: $buildId for deployment: " . $deploymentId);
             }
-        });
+        }
+       
+        $orchestrationPool->put($orchestration);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
