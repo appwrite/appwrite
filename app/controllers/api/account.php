@@ -1655,7 +1655,7 @@ App::delete('/v1/account/sessions/:sessionId')
     });
 
 App::patch('/v1/account/sessions/:sessionId')
-    ->desc('Update session - refresh OAuth2 access token')
+    ->desc('Update Session (Refresh Tokens)')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'account.sessions.update')
