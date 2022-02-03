@@ -1714,6 +1714,11 @@ App::patch('/v1/account/sessions/:sessionId')
                 $appSecret = $project->getAttribute('providers', [])[$provider.'Secret'] ?? '{}';
 
                 $className = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
+             
+                if (!\class_exists($className)) {
+                    throw new Exception('Provider is not supported', 501);
+                }
+
                 $oauth2 = new $className($appId, $appSecret, '', [], []);
 
                 $oauth2->refreshTokens($refreshToken);
