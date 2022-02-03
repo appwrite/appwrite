@@ -6,8 +6,6 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Stats\Stats;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Execution;
-use Cron\CronExpression;
-use LanguageServerProtocol\Range;
 use Swoole\ConnectionPool;
 use Swoole\Coroutine as Co;
 use Swoole\Http\Request as SwooleRequest;
@@ -16,19 +14,13 @@ use Swoole\Http\Server;
 use Swoole\Process;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Logger\Log;
 use Utopia\Orchestration\Adapter\DockerCLI;
 use Utopia\Orchestration\Orchestration;
-use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\Swoole\Request;
@@ -760,83 +752,81 @@ App::setMode(App::MODE_TYPE_PRODUCTION); // Define Mode
 
 $http = new Server("0.0.0.0", 80);
 
-function handleShutdown()
-{
-    global $orchestrationPool;
-    global $register;
+// function handleShutdown()
+// {
+//     global $orchestrationPool;
+//     global $register;
 
-    try {
-        Console::info('Cleaning up containers before shutdown...');
+//     try {
+//         Console::info('Cleaning up containers before shutdown...');
 
-        // Remove all containers.
+//         // Remove all containers.
 
-        /** @var Orchestration $orchestration */
-        $orchestration = $orchestrationPool->get();
+//         /** @var Orchestration $orchestration */
+//         $orchestration = $orchestrationPool->get();
 
-        $functionsToRemove = $orchestration->list(['label' => 'appwrite-type=function']);
+//         $functionsToRemove = $orchestration->list(['label' => 'appwrite-type=function']);
 
-        foreach ($functionsToRemove as $container) {
-            go(fn () => $orchestration->remove($container->getId(), true));
+//         foreach ($functionsToRemove as $container) {
+//             go(fn () => $orchestration->remove($container->getId(), true));
 
-            // Get a database instance
-            $db = $register->get('dbPool')->get();
-            $cache = $register->get('redisPool')->get();
+//             // Get a database instance
+//             $db = $register->get('dbPool')->get();
+//             $cache = $register->get('redisPool')->get();
 
-            $cache = new Cache(new RedisCache($cache));
-            $database = new Database(new MariaDB($db), $cache);
-            $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-            $database->setNamespace('_project_' . $container->getLabels()["appwrite-project"]);
+//             $cache = new Cache(new RedisCache($cache));
+//             $database = new Database(new MariaDB($db), $cache);
+//             $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+//             $database->setNamespace('_project_' . $container->getLabels()["appwrite-project"]);
 
-            // Get list of all processing executions
-            $executions = $database->find('executions', [
-                new Query('deploymentId', Query::TYPE_EQUAL, [$container->getLabels()["appwrite-deployment"]]),
-                new Query('status', Query::TYPE_EQUAL, ['waiting'])
-            ]);
+//             // Get list of all processing executions
+//             $executions = $database->find('executions', [
+//                 new Query('deploymentId', Query::TYPE_EQUAL, [$container->getLabels()["appwrite-deployment"]]),
+//                 new Query('status', Query::TYPE_EQUAL, ['waiting'])
+//             ]);
 
-            // Mark all processing executions as failed
-            foreach ($executions as $execution) {
-                $execution
-                    ->setAttribute('status', 'failed')
-                    ->setAttribute('statusCode', 1)
-                    ->setAttribute('stderr', 'Appwrite was shutdown during execution');
+//             // Mark all processing executions as failed
+//             foreach ($executions as $execution) {
+//                 $execution
+//                     ->setAttribute('status', 'failed')
+//                     ->setAttribute('statusCode', 1)
+//                     ->setAttribute('stderr', 'Appwrite was shutdown during execution');
 
-                $database->updateDocument('executions', $execution->getId(), $execution);
-            }
+//                 $database->updateDocument('executions', $execution->getId(), $execution);
+//             }
 
-            Console::info('Removed container ' . $container->getName());
-        }
-    } catch (\Throwable $error) {
-        logError($error, 'shutdownError');
-    } finally {
-        $orchestrationPool->put($orchestration);
-    }
-};
+//             Console::info('Removed container ' . $container->getName());
+//         }
+//     } catch (\Throwable $error) {
+//         logError($error, 'shutdownError');
+//     } finally {
+//         $orchestrationPool->put($orchestration);
+//     }
+// };
 
 $http->on('start', function ($http) {
     @Process::signal(SIGINT, function () use ($http) {
-        handleShutdown();
+        // handleShutdown();
         $http->shutdown();
     });
 
     @Process::signal(SIGQUIT, function () use ($http) {
-        handleShutdown();
+        // handleShutdown();
         $http->shutdown();
     });
 
     @Process::signal(SIGKILL, function () use ($http) {
-        handleShutdown();
+        // handleShutdown();
         $http->shutdown();
     });
 
     @Process::signal(SIGTERM, function () use ($http) {
-        handleShutdown();
+        // handleShutdown();
         $http->shutdown();
     });
 });
 
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) {
-    global $register;
-
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
     $app = new App('UTC');
@@ -911,7 +901,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     } catch (Exception $e) {
         logError($e, "serverError");
         $swooleResponse->end('500: Server Error');
-    } finally {
     }
 });
 
