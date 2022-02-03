@@ -101,6 +101,10 @@ class Stripe extends OAuth2
             ])
         ), true);
 
+        if(empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
+        }
+
         $this->stripeAccountId = $this->tokens['stripe_user_id'];
         return $this->tokens;
     }

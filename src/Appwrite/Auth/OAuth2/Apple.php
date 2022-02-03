@@ -105,6 +105,10 @@ class Apple extends OAuth2
             ])
         ), true);
 
+        if(empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
+        }
+
         $this->claims = (isset($this->tokens['id_token'])) ? \explode('.', $this->tokens['id_token']) : [0 => '', 1 => ''];
         $this->claims = (isset($this->claims[1])) ? \json_decode(\base64_decode($this->claims[1]), true) : [];
 

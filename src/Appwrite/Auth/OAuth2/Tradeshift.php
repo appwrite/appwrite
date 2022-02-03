@@ -109,6 +109,10 @@ class Tradeshift extends OAuth2
                 'refresh_token' => $refreshToken,
             ])
         ), true);
+        
+        if(empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
+        }
 
         return $this->tokens;
     }

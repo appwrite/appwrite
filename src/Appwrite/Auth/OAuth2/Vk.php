@@ -108,6 +108,10 @@ class Vk extends OAuth2
             ])
         ), true);
 
+        if(empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
+        }
+
         $this->user['email'] = $this->tokens['email'];
         $this->user['user_id'] = $this->tokens['user_id'];
 

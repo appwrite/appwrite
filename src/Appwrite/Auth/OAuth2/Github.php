@@ -88,6 +88,10 @@ class Github extends OAuth2
             ])
         ), true);
 
+        if(empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
+        }
+
         return $this->tokens;
     }
 
