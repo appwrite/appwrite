@@ -769,6 +769,16 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404);
         }
 
+        /** Check if build has completed */
+        $build = Authorization::skip(fn() => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+        if ($build->isEmpty()) {
+            throw new Exception('Build not found', 404);
+        }
+
+        if ($build->getAttribute('status') !== 'ready') {
+            throw new Exception('Build not completed', 400);
+        }
+
         $validator = new Authorization('execute');
 
         if (!$validator->isValid($function->getAttribute('execute'))) { // Check if user has write access to execute function
@@ -817,13 +827,20 @@ App::post('/v1/functions/:functionId/executions')
         if ($async) {
             Resque::enqueue('v1-functions', 'FunctionsV1', [
                 'projectId' => $project->getId(),
+                'deploymentId' => $deployment->getId(),
+                'buildId' => $deployment->getAttribute('buildId', ''),
+                'path' => $build->getAttribute('outputPath', ''),
+                'vars' => $function->getAttribute('vars', []), 
+                'data' => $data,
+                'runtime' => $function->getAttribute('runtime', ''),
+                'timeout' => $function->getAttribute('timeout', 0),
+                'baseImage' => '',
                 'webhooks' => $project->getAttribute('webhooks', []),
+                'userId' => $user->getId(),
                 'functionId' => $function->getId(),
                 'executionId' => $execution->getId(),
                 'trigger' => 'http',
-                'data' => $data,
-                'userId' => $user->getId(),
-                'jwt' => $jwt
+                'jwt' => $jwt,
             ]);
 
             $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -831,18 +848,38 @@ App::post('/v1/functions/:functionId/executions')
             return $response;
         }
 
+        /** Send variables */
+        // $vars = \array_merge($function->getAttribute('vars', []), [
+        //     'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint', ''),
+        //     'APPWRITE_FUNCTION_ID' => $function->getId(),
+        //     'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
+        //     'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
+        //     'APPWRITE_FUNCTION_TRIGGER' => 'http',
+        //     'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
+        //     'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
+        //     'APPWRITE_FUNCTION_EVENT' => $event,
+        //     'APPWRITE_FUNCTION_EVENT_DATA' => $eventData,
+        //     'APPWRITE_FUNCTION_DATA' => $data,
+        //     'APPWRITE_FUNCTION_USER_ID' => $userId,
+        //     'APPWRITE_FUNCTION_JWT' => $jwt,
+        //     'APPWRITE_FUNCTION_PROJECT_ID' => $projectId
+        // ]);
+
         // Directly execute function.
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/{$function->getId()}/executions");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-            'trigger' => 'http',
-            'projectId' => $project->getId(),
-            'executionId' => $execution->getId(),
+            'deploymentId' => $deployment->getId(),
+            'buildId' => $deployment->getAttribute('buildId', ''),
+            'path' => $build->getAttribute('outputPath', ''),
+            'vars' => $function->getAttribute('vars', []), 
             'data' => $data,
+            'runtime' => $function->getAttribute('runtime', ''),
+            'timeout' => $function->getAttribute('timeout', 0),
+            'baseImage' => '',
             'webhooks' => $project->getAttribute('webhooks', []),
             'userId' => $user->getId(),
-            'jwt' => $jwt,
         ]));
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900) + 200); // + 200 for safety margin

@@ -189,10 +189,18 @@ class FunctionsV1 extends Worker
                     throw new Exception('Function not found ('.$functionId.')');
                 }
 
+                $deployment = Authorization::skip(fn() => $database->getDocument('deployments', $function->getAttribute('deployment')));
+
+                $build = Authorization::skip(fn() => $database->getDocument('builds', $deployment->getAttribute('build')));
+                $path = $build->getAttribute('path', '');
+
                 $this->execute(
                     trigger: $trigger,
                     projectId: $projectId,
                     executionId: $executionId,
+                    path: $path,
+                    buildId: $deployment->getAttribute('buildId', ''),
+                    deploymentId: $deployment->getId(),
                     database: $database,
                     function: $function,
                     data: $data,
@@ -221,21 +229,22 @@ class FunctionsV1 extends Worker
      * 
      * @return void
      */
-    public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $eventData = '', string $data = '', array $webhooks = [], string $userId = '', string $jwt = ''): void
+    public function execute(string $trigger, string $path, string $projectId, string $deploymentId, string $buildId, string $executionId, Database $database, Document $function, string $event = '', string $eventData = '', string $data = '', array $webhooks = [], string $userId = '', string $jwt = ''): void
     {
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/{$function->getId()}/executions");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-            'trigger' => $trigger,
-            'projectId' => $projectId,
-            'executionId' => $executionId,
-            'event' => $event,
-            'eventData' => $eventData,
+            'deploymentId' => $deploymentId,
+            'buildId' => $buildId,
+            'path' => $path,
+            'vars' => $function->getAttribute('vars', []), 
             'data' => $data,
+            'runtime' => $function->getAttribute('runtime', ''),
+            'timeout' => $function->getAttribute('timeout', 0),
+            'baseImage' => '',
             'webhooks' => $webhooks,
             'userId' => $userId,
-            'jwt' => $jwt,
         ]));
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900) + 200); // + 200 for safety margin
