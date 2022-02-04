@@ -64,6 +64,7 @@ App::post('/v1/users')
                 'emailVerification' => false,
                 'status' => true,
                 'password' => $import ? $password : Auth::passwordHash($password, $hash),
+                'hash' => $hash,
                 'passwordUpdate' => \time(),
                 'registration' => \time(),
                 'reset' => false,

@@ -507,6 +507,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'emailVerification' => true,
                         'status' => true, // Email should already be authenticated by OAuth2 provider
                         'password' => Auth::passwordHash(Auth::passwordGenerator(), 'bcrypt'),
+                        'hash' => 'bcrypt',
                         'passwordUpdate' => 0,
                         'registration' => \time(),
                         'reset' => false,
@@ -682,6 +683,7 @@ App::post('/v1/account/sessions/magic-url')
                 'emailVerification' => false,
                 'status' => true,
                 'password' => null,
+                'hash' => 'bcrypt',
                 'passwordUpdate' => \time(),
                 'registration' => \time(),
                 'reset' => false,
@@ -953,6 +955,7 @@ App::post('/v1/account/sessions/anonymous')
             'emailVerification' => false,
             'status' => true,
             'password' => null,
+            'hash' => 'bcrypt',
             'passwordUpdate' => \time(),
             'registration' => \time(),
             'reset' => false,
@@ -1451,6 +1454,7 @@ App::patch('/v1/account/email')
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user
                 ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password, $hash) : $user->getAttribute('password', ''))
+                ->setAttribute('hash', $isAnonymousUser ? $hash : $user->getAttribute('hash', ''))
                 ->setAttribute('email', $email)
                 ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
                 ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name'), $user->getAttribute('email')]))
