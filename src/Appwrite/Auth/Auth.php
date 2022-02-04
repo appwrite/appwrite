@@ -130,26 +130,47 @@ class Auth
      *
      * One way string hashing for user passwords
      *
-     * @param $string
+     * @param string $string
+     * @param string $algo hashing algorithm to use
      *
      * @return bool|string|null
      */
-    public static function passwordHash($string)
+    public static function passwordHash(string $string, string $algo)
     {
-        return \password_hash($string, PASSWORD_BCRYPT, array('cost' => 8));
+        switch ($algo) {
+            case 'bcrypt':
+                return \password_hash($string, PASSWORD_BCRYPT, array('cost' => 8));
+            case 'scrypt':
+                return \scrypt($string, "", 8, 1, 1, 64);
+                throw new Error('Hashing algorithm scrypt not supported yet.');
+            case 'md5':
+                return \md5($string);
+        }
+
+        return null;
     }
 
     /**
      * Password verify.
      *
-     * @param $plain
-     * @param $hash
+     * @param string $plain
+     * @param string $hash
+     * @param string $algo hashing algorithm used to hash
      *
      * @return bool
      */
-    public static function passwordVerify($plain, $hash)
+    public static function passwordVerify(string $plain, string $hash, string $algo)
     {
-        return \password_verify($plain, $hash);
+        switch ($algo) {
+            case 'bcrypt':
+                return \password_verify($plain, $hash);
+            case 'scrypt':
+                return \scrypt($plain, "", 8, 1, 1, 64) === $hash;
+            case 'md5':
+                return \md5($plain) === $hash;
+        }
+
+        return false;
     }
 
     /**

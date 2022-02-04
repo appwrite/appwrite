@@ -981,6 +981,17 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
+                'filters' => ['encrypt'],
+            ],
+            [
+                '$id' => 'hash', // Hashing algorithm used to hash the password
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 256,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
                 'filters' => [],
             ],
             [

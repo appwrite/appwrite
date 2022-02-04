@@ -94,6 +94,15 @@ RUN \
   ./configure && \
   make && make install
 
+## Scrypt Extension
+FROM compile AS scrypt
+RUN \
+  git clone --depth 1 --branch master https://github.com/DomBlack/php-scrypt.git && \
+  cd php-scrypt && \
+  phpize && \
+  ./configure --enable-scrypt && \
+  make && make install
+
 ## YAML Extension
 FROM compile AS yaml
 RUN \
@@ -227,6 +236,7 @@ COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imag
 COPY --from=yaml /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=maxmind /usr/local/lib/php/extensions/no-debug-non-zts-20200930/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=mongodb /usr/local/lib/php/extensions/no-debug-non-zts-20200930/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=scrypt /usr/local/lib/php/extensions/no-debug-non-zts-20200930/scrypt.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 
 # Add Source Code
 COPY ./app /usr/src/code/app
@@ -276,6 +286,7 @@ RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
 # Enable Extensions
 RUN echo extension=swoole.so >> /usr/local/etc/php/conf.d/swoole.ini
+RUN echo extension=scrypt.so >> /usr/local/etc/php/conf.d/scrypt.ini
 RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 RUN echo extension=imagick.so >> /usr/local/etc/php/conf.d/imagick.ini
 RUN echo extension=yaml.so >> /usr/local/etc/php/conf.d/yaml.ini

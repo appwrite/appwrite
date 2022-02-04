@@ -49,19 +49,25 @@ App::post('/v1/account')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->param('hash', 'bcrypt', new WhiteList(['bcrypt', 'scrypt', 'md5']), 'Hashing algorithm for password. The default value is bcrypt.', true)
+    ->param('import', false, new Boolean(), 'Are you importing hashed password?', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($userId, $email, $password, $name, $request, $response, $project, $dbForProject, $audits, $usage) {
+    ->action(function ($userId, $email, $password, $name, $hash, $import, $request, $response, $project, $dbForProject, $audits, $usage) {
         /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+
+        if(!$import && $hash === 'md5') {
+            throw new Exception('For security reasons, MD5 hashing is only allowed for importing accounts. Please use bcrypt instead.');
+        }
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -98,7 +104,8 @@ App::post('/v1/account')
                 'email' => $email,
                 'emailVerification' => false,
                 'status' => true,
-                'password' => Auth::passwordHash($password),
+                'password' => $import ? $password : Auth::passwordHash($password, $hash),
+                'hash' => $hash,
                 'passwordUpdate' => \time(),
                 'registration' => \time(),
                 'reset' => false,
@@ -169,7 +176,7 @@ App::post('/v1/account/sessions')
 
         $profile = $dbForProject->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
-        if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
+        if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'), $profile->getAttribute('hash'))) {
             $audits
                 //->setParam('userId', $profile->getId())
                 ->setParam('event', 'account.sessions.failed')
