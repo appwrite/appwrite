@@ -115,7 +115,7 @@ $logs = $this->getParam('logs', null);
                                                                     :name="attr.key"
                                                                     :required="attr.required"
                                                                     x-model="doc[attr.key]"
-                                                                    data-cast-to="integer" />
+                                                                    data-cast-to="float" />
                                                             </template>
                                                             <template x-if="attr.type === 'boolean'">
                                                                 <input
@@ -169,8 +169,11 @@ $logs = $this->getParam('logs', null);
                                                             </template>
                                                             <template x-if="attr.format === 'enum'">
                                                                 <select
+                                                                    :required="attr.required"
                                                                     :name="attr.key"
                                                                     data-cast-to="string">
+                                                                    <option :disabled="attr.required" selected label=" "></option>
+
                                                                     <template x-for="element in attr.elements">
                                                                         <option
                                                                             :value="element"
@@ -205,7 +208,7 @@ $logs = $this->getParam('logs', null);
                                                                                 :name="attr.key"
                                                                                 :required="attr.required"
                                                                                 x-model="doc[attr.key][index]"
-                                                                                data-cast-to="integer" />
+                                                                                data-cast-to="float" />
                                                                         </template>
                                                                         <template x-if="attr.type === 'boolean'">
                                                                             <input
@@ -261,9 +264,12 @@ $logs = $this->getParam('logs', null);
                                                                         </template>
                                                                         <template x-if="attr.format === 'enum'">
                                                                             <select
+                                                                                :required="attr.required"
                                                                                 :name="attr.key"
                                                                                 data-cast-to="string">
                                                                                 <template x-for="element in attr.elements">
+                                                                                    <option :disabled="attr.required" selected label=" "></option>
+
                                                                                     <option
                                                                                         :value="element"
                                                                                         x-text="element"

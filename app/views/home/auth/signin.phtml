@@ -37,7 +37,7 @@ $root = ($this->getParam('root') !== 'disabled');
 
             <input name="email" type="email" class="full-width" autocomplete="email" placeholder="Email" required>
 
-            <input name="password" type="password" class="full-width" autocomplete="off" placeholder="Password" required pattern=".{6,}" title="Six or more characters">
+            <input name="password" type="password" class="full-width" autocomplete="off" placeholder="Password" required minlength="8" title="Eight or more characters">
 
             <button>Sign In</button>
         </form>

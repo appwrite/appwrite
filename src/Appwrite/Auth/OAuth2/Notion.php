@@ -3,10 +3,19 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
-use Utopia\Exception;
 
-class Github extends OAuth2
+class Notion extends OAuth2
 {
+    /**
+     * @var string
+     */
+    private $endpoint = 'https://api.notion.com/v1';
+
+    /**
+     * @var string
+     */
+    private $version = '2021-08-16';
+
     /**
      * @var array
      */
@@ -20,16 +29,14 @@ class Github extends OAuth2
     /**
      * @var array
      */
-    protected $scopes = [
-        'user:email',
-    ];
+    protected $scopes = [];
 
     /**
      * @return string
      */
     public function getName():string
     {
-        return 'github';
+        return 'notion';
     }
 
     /**
@@ -37,11 +44,12 @@ class Github extends OAuth2
      */
     public function getLoginURL():string
     {
-        return 'https://github.com/login/oauth/authorize?'. \http_build_query([
+        return $this->endpoint . '/oauth/authorize?'. \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
-            'scope' => \implode(' ', $this->getScopes()),
-            'state' => \json_encode($this->state)
+            'response_type' => 'code',
+            'state' => \json_encode($this->state),
+            'owner' => 'user'
         ]);
     }
 
@@ -53,14 +61,14 @@ class Github extends OAuth2
     protected function getTokens(string $code): array
     {
         if(empty($this->tokens)) {
+            $headers = ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)];
             $this->tokens = \json_decode($this->request(
                 'POST',
-                'https://github.com/login/oauth/access_token',
-                [],
+                $this->endpoint . '/oauth/token',
+                $headers,
                 \http_build_query([
-                    'client_id' => $this->appID,
+                    'grant_type' => 'authorization_code',
                     'redirect_uri' => $this->callback,
-                    'client_secret' => $this->appSecret,
                     'code' => $code
                 ])
             ), true);
@@ -76,15 +84,14 @@ class Github extends OAuth2
      */
     public function refreshTokens(string $refreshToken):array
     {
+        $headers = ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)];
         $this->tokens = \json_decode($this->request(
             'POST',
-            'https://github.com/login/oauth/access_token',
-            [],
+            $this->endpoint . '/oauth/token',
+            $headers,
             \http_build_query([
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
                 'grant_type' => 'refresh_token',
-                'refresh_token' => $refreshToken
+                'refresh_token' => $refreshToken,
             ])
         ), true);
 
@@ -102,10 +109,10 @@ class Github extends OAuth2
      */
     public function getUserID(string $accessToken):string
     {
-        $user = $this->getUser($accessToken);
+        $response = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
+        if (isset($response['bot']['owner']['user']['id'])) {
+            return $response['bot']['owner']['user']['id'];
         }
 
         return '';
@@ -118,12 +125,10 @@ class Github extends OAuth2
      */
     public function getUserEmail(string $accessToken):string
     {
-        $emails = \json_decode($this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token '.\urlencode($accessToken)]), true);
+        $response = $this->getUser($accessToken);
 
-        foreach ($emails as $email) {
-            if ($email['primary'] && $email['verified']) {
-                return $email['email'];
-            }
+        if(isset($response['bot']['owner']['user']['person']['email'])){
+            return $response['bot']['owner']['user']['person']['email'];
         }
 
         return '';
@@ -136,10 +141,10 @@ class Github extends OAuth2
      */
     public function getUserName(string $accessToken):string
     {
-        $user = $this->getUser($accessToken);
+        $response = $this->getUser($accessToken);
 
-        if (isset($user['name'])) {
-            return $user['name'];
+        if (isset($response['bot']['owner']['user']['name'])) {
+            return $response['bot']['owner']['user']['name'];
         }
 
         return '';
@@ -152,8 +157,13 @@ class Github extends OAuth2
      */
     protected function getUser(string $accessToken)
     {
+        $headers = [
+            'Notion-Version: ' . $this->version,
+            'Authorization: Bearer '.\urlencode($accessToken)
+        ];
+
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: token '.\urlencode($accessToken)]), true);
+            $this->user = \json_decode($this->request('GET', $this->endpoint . '/users/me', $headers), true);
         }
 
         return $this->user;

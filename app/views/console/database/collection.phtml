@@ -528,15 +528,6 @@ $logs = $this->getParam('logs', null);
                                 <hr class="margin-top-small" />
 
                                 <div class="row">
-                                    <div class="col span-1"><input name="permission" value="document" type="radio" class="margin-top-no" data-ls-bind="{{project-collection.permission}}" /></div>
-                                    <div class="col span-11">
-                                        <b>Document Level</b>
-                                        <p class="text-fade margin-top-tiny">With Document Level permissions, you have granular access control over every document. Users will only be able to access documents for which they have explicit permissions.</p>
-                                        <p class="text-fade margin-top-tiny">In this permission level, document permissions take precedence and collection permissions are ignored.</p>
-                                    </div>
-                                </div>
-
-                                <div class="row">
                                     <div class="col span-1"><input name="permission" value="collection" type="radio" class="margin-top-tiny" data-ls-bind="{{project-collection.permission}}" /></div>
                                     <div class="col span-11">
                                         <b>Collection Level</b>
@@ -551,6 +542,15 @@ $logs = $this->getParam('logs', null);
                                             <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$write}}" placeholder="User ID, Team ID or Role" />
                                             <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col span-1"><input name="permission" value="document" type="radio" class="margin-top-no" data-ls-bind="{{project-collection.permission}}" /></div>
+                                    <div class="col span-11">
+                                        <b>Document Level</b>
+                                        <p class="text-fade margin-top-tiny">With Document Level permissions, you have granular access control over every document. Users will only be able to access documents for which they have explicit permissions.</p>
+                                        <p class="text-fade margin-top-tiny">In this permission level, document permissions take precedence and collection permissions are ignored.</p>
                                     </div>
                                 </div>
 
@@ -620,6 +620,7 @@ $logs = $this->getParam('logs', null);
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
+        @reset="array = required = false"
         x-data="{ array: false, required: false }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
@@ -675,6 +676,7 @@ $logs = $this->getParam('logs', null);
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
+        @reset="array = required = false"
         x-data="{ array: false, required: false }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
@@ -706,10 +708,10 @@ $logs = $this->getParam('logs', null);
         <label for="integer-default">Default Value</label>
 
         <template x-if="!(array || required)">
-            <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off">
+            <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off" data-cast-to="integer">
         </template>
         <template x-if="(array || required)">
-            <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off" disabled value="">
+            <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off" data-cast-to="integer" disabled>
         </template>
 
         <footer>
@@ -739,6 +741,7 @@ $logs = $this->getParam('logs', null);
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
+        @reset="array = required = false"
         x-data="{ array: false, required: false }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
@@ -770,10 +773,10 @@ $logs = $this->getParam('logs', null);
         <label for="float-default">Default Value</label>
 
         <template x-if="!(array || required)">
-            <input name="xdefault" type="number" step="0.01" class="margin-bottom-large" autocomplete="off">
+            <input name="xdefault" type="number" step="0.01" class="margin-bottom-large" autocomplete="off" data-cast-to="float">
         </template>
         <template x-if="(array || required)">
-            <input name="xdefault" type="number" step="0.01" class="margin-bottom-large" autocomplete="off" disabled value="">
+            <input name="xdefault" type="number" step="0.01" class="margin-bottom-large" autocomplete="off" data-cast-to="float" disabled>
         </template>
 
         <footer>
@@ -803,6 +806,7 @@ $logs = $this->getParam('logs', null);
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
+        @reset="array = required = false"
         x-data="{ array: false, required: false }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
@@ -855,6 +859,7 @@ $logs = $this->getParam('logs', null);
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
+        @reset="array = required = false"
         x-data="{ array: false, required: false }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
@@ -875,10 +880,10 @@ $logs = $this->getParam('logs', null);
 
         <div class="margin-bottom-large">
             <template x-if="!(array || required)">
-                <input name="xdefault" class="button switch" type="checkbox" /> 
+                <input name="xdefault" class="button switch" type="checkbox" />
             </template>
             <template x-if="(array || required)">
-                <input name="xdefault" class="button switch" type="checkbox" disabled /> 
+                <input name="" class="button switch" type="checkbox" disabled />
             </template>
             &nbsp; Default Value <span class="tooltip" data-tooltip="Whether this attribute is set to true or false on creation"><i class="icon-info-circled"></i></span>
         </div>
@@ -911,6 +916,7 @@ $logs = $this->getParam('logs', null);
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
+        @reset="array = required = false"
         x-data="{ array: false, required: false }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
@@ -963,6 +969,7 @@ $logs = $this->getParam('logs', null);
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
+        @reset="array = required = false"
         x-data="{ array: false, required: false }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
@@ -1015,6 +1022,7 @@ $logs = $this->getParam('logs', null);
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
+        @reset="array = required = false"
         x-data="{ array: false, required: false }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />

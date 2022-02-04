@@ -3,30 +3,10 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
+use Utopia\Exception;
 
-// Reference Material
-// https://dev.twitch.tv/docs/authentication
-
-class Twitch extends OAuth2
+class Stripe extends OAuth2
 {
-
-    /**
-     * @var string
-     */
-    private $endpoint = 'https://id.twitch.tv/oauth2/';
-
-    /**
-     * @var string
-     */
-    private $resourceEndpoint = 'https://api.twitch.tv/helix/users';
-
-    /**
-     * @var array
-     */
-    protected $scopes = [
-        'user:read:email',
-    ];
-
     /**
      * @var array
      */
@@ -38,11 +18,32 @@ class Twitch extends OAuth2
     protected $tokens = [];
 
     /**
+     * @var string
+     */
+    protected $stripeAccountId = '';
+
+    /**
+     * @var array
+     */
+    protected $scopes = [
+        'read_write',
+    ];
+
+    /** 
+     * @return string
+     */
+
+    protected $grantType = [
+      'authorize' => 'authorization_code',
+      'refresh' => 'refresh_token',
+    ];
+
+    /**
      * @return string
      */
     public function getName():string
     {
-        return 'twitch';
+        return 'stripe';
     }
 
     /**
@@ -50,15 +51,13 @@ class Twitch extends OAuth2
      */
     public function getLoginURL():string
     {
-        return $this->endpoint . 'authorize?'.
-            \http_build_query([
-                'response_type' => 'code',
-                'client_id' => $this->appID,
-                'scope' => \implode(' ', $this->getScopes()),
-                'redirect_uri' => $this->callback,
-                'force_verify' => true,
-                'state' => \json_encode($this->state)
-            ]);
+        return 'https://connect.stripe.com/oauth/authorize?'. \http_build_query([
+            'response_type' => 'code', // The only option at the moment is "code."
+            'client_id' => $this->appID,
+            'redirect_uri' => $this->callback,
+            'scope' => \implode(' ', $this->getScopes()),
+            'state' => \json_encode($this->state)
+        ]);
     }
 
     /**
@@ -71,14 +70,15 @@ class Twitch extends OAuth2
         if(empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->endpoint . 'token?' . \http_build_query([
-                    "client_id" => $this->appID,
-                    "client_secret" => $this->appSecret,
-                    "code" => $code,
-                    "grant_type" => "authorization_code",
-                    "redirect_uri" => $this->callback
+                'https://connect.stripe.com/oauth/token',
+                [],
+                \http_build_query([
+                    'grant_type' => $this->grantType['authorize'],
+                    'code' => $code
                 ])
             ), true);
+
+            $this->stripeAccountId = $this->tokens['stripe_user_id'];
         }
 
         return $this->tokens;
@@ -93,11 +93,11 @@ class Twitch extends OAuth2
     {
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->endpoint . 'token?' . \http_build_query([
-                "client_id" => $this->appID,
-                "client_secret" => $this->appSecret,
-                "refresh_token" => $refreshToken,
-                "grant_type" => "refresh_token",
+            'https://connect.stripe.com/oauth/token',
+            [],
+            \http_build_query([
+                'grant_type' => $this->grantType['refresh'],
+                'refresh_token' => $refreshToken,
             ])
         ), true);
 
@@ -105,6 +105,7 @@ class Twitch extends OAuth2
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
+        $this->stripeAccountId = $this->tokens['stripe_user_id'];
         return $this->tokens;
     }
 
@@ -132,12 +133,12 @@ class Twitch extends OAuth2
     public function getUserEmail(string $accessToken):string
     {
         $user = $this->getUser($accessToken);
-
-        if (isset($user['email'])) {
-            return $user['email'];
+        
+        if(empty($user)) {
+          return '';
         }
 
-        return '';
+        return $user['email'] ?? '';
     }
 
     /**
@@ -149,8 +150,8 @@ class Twitch extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['display_name'])) {
-            return $user['display_name'];
+        if (isset($user['name'])) {
+            return $user['name'];
         }
 
         return '';
@@ -163,17 +164,17 @@ class Twitch extends OAuth2
      */
     protected function getUser(string $accessToken)
     {
-        if (empty($this->user)) {
-            $response = \json_decode($this->request(
-                'GET',
-                $this->resourceEndpoint,
-                [
-                    'Authorization: Bearer '.\urlencode($accessToken),
-                    'Client-Id: '. \urlencode($this->appID)
-                ]
-            ), true);
+        if (empty($this->user) && !empty($this->stripeAccountId)) {
+            $this->user = \json_decode(
+              $this->request(
+                'GET', 
+                'https://api.stripe.com/v1/accounts/' . $this->stripeAccountId, 
+                ['Authorization: Bearer '.\urlencode($accessToken)]
+              ), 
+              true
+            );
 
-            $this->user = $response['data']['0'] ?? [];
+            
         }
 
         return $this->user;

@@ -148,7 +148,7 @@ App::post('/v1/database/collections')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
-    ->param('collectionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('collectionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
     ->param('permission', null, new WhiteList(['document', 'collection']), 'Permissions type model to use for reading documents in this collection. You can use collection-level permission set once on the collection using the `read` and `write` params, or you can set document-level permission where each document read and write params will decide who has access to read and write to each document individually. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
@@ -166,8 +166,6 @@ App::post('/v1/database/collections')
         $collectionId = $collectionId == 'unique()' ? $dbForProject->getId() : $collectionId;
 
         try {
-            $dbForProject->createCollection('collection_' . $collectionId);
-
             $collection = $dbForProject->createDocument('collections', new Document([
                 '$id' => $collectionId,
                 '$read' => $read ?? [], // Collection permissions for collection documents (based on permission model)
@@ -179,8 +177,12 @@ App::post('/v1/database/collections')
                 'name' => $name,
                 'search' => implode(' ', [$collectionId, $name]),
             ]));
+
+            $dbForProject->createCollection('collection_' . $collectionId);
         } catch (DuplicateException $th) {
             throw new Exception('Collection already exists', 409);
+        } catch (LimitException $th) {
+            throw new Exception('Collection limit exceeded', 400);
         }
 
         $audits
@@ -230,7 +232,7 @@ App::get('/v1/database/collections')
         $queries = [];
 
         if (!empty($search)) {
-            $queries[] = new Query('name', Query::TYPE_SEARCH, [$search]);
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
         $usage->setParam('database.collections.read', 1);
@@ -1563,7 +1565,7 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
-    ->param('documentId', '', new CustomId(), 'Document ID. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('documentId', '', new CustomId(), 'Document ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection). Make sure to define attributes before creating documents.')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
@@ -1832,7 +1834,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
         $usage
             ->setParam('database.documents.read', 1)
             ->setParam('collectionId', $collectionId)
-            ;
+        ;
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -2009,14 +2011,18 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $roles = Authorization::getRoles();
 
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
-            foreach ($data['$read'] as $read) {
-                if (!Authorization::isRole($read)) {
-                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+            if(!is_null($read)) {
+                foreach ($data['$read'] as $read) {
+                    if (!Authorization::isRole($read)) {
+                        throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                    }
                 }
             }
-            foreach ($data['$write'] as $write) {
-                if (!Authorization::isRole($write)) {
-                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
+            if(!is_null($write)) {
+                foreach ($data['$write'] as $write) {
+                    if (!Authorization::isRole($write)) {
+                        throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400);
+                    }
                 }
             }
         }
