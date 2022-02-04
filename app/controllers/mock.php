@@ -480,17 +480,13 @@ App::get('/v1/mock/tests/general/oauth2/token')
     ->label('sdk.mock', true)
     ->param('client_id', '', new Text(100), 'OAuth2 Client ID.')
     ->param('client_secret', '', new Text(100), 'OAuth2 scope list.')
-    ->param('grant_type', '', new WhiteList(['refresh_token', 'authorization_code']), 'OAuth2 Grant Type.', true)
+    ->param('grant_type', 'authorization_code', new WhiteList(['refresh_token', 'authorization_code']), 'OAuth2 Grant Type.', true)
     ->param('redirect_uri', '', new Host(['localhost']), 'OAuth2 Redirect URI.', true)
     ->param('code', '', new Text(100), 'OAuth2 state.', true)
     ->param('refresh_token', '', new Text(100), 'OAuth2 refresh token.', true)
     ->inject('response')
     ->action(function ($client_id, $client_secret, $grantType, $redirectURI, $code, $refreshToken, $response) {
         /** @var Appwrite\Utopia\Response $response */
-
-        if(empty($grantType)) {
-            $grantType = 'authorization_code';
-        }
 
         if ($client_id != '1') {
             throw new Exception('Invalid client ID');
