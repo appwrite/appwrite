@@ -82,7 +82,7 @@ return [
         'model' => Response::MODEL_SESSION,
         'note' => '',
     ],
-    'account.sessions.udpdate' => [
+    'account.sessions.update' => [
         'description' => 'This event triggers when the account session is updated.',
         'model' => Response::MODEL_SESSION,
         'note' => '',
