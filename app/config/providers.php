@@ -49,7 +49,7 @@ return [ // Ordered by ABC.
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
     ],
     'discord' => [
         'name' => 'Discord',
@@ -127,7 +127,7 @@ return [ // Ordered by ABC.
         'icon' => 'icon-windows',
         'enabled' => true,
         'sandbox' => false,
-        'form' => false,
+        'form' => 'microsoft.phtml',
         'beta' => false,
         'mock' => false,
     ],
@@ -149,7 +149,7 @@ return [ // Ordered by ABC.
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
     ],
     'paypalSandbox' => [
         'name' => 'PayPal',
@@ -159,7 +159,7 @@ return [ // Ordered by ABC.
         'sandbox' => true,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
     ],
     'salesforce' => [
         'name' => 'Salesforce',
@@ -285,7 +285,7 @@ return [ // Ordered by ABC.
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
     ],
     'wso2' => [
         'name' => 'Wso2',
@@ -294,6 +294,14 @@ return [ // Ordered by ABC.
         'enabled' => true,
         'sandbox' => false,
         'form' => 'wso2.phtml',
+    ],
+    'stripe' => [
+        'name' => 'Stripe',
+        'developers' => 'https://stripe.com/docs/api',
+        'icon' => 'icon-stripe',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
         'beta' => false,
         'mock' => false
     ],

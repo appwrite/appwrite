@@ -1017,6 +1017,7 @@ return result;}
 function readStyle(options){return{backgroundColor:options.backgroundColor,borderCapStyle:options.borderCapStyle,borderDash:options.borderDash,borderDashOffset:options.borderDashOffset,borderJoinStyle:options.borderJoinStyle,borderWidth:options.borderWidth,borderColor:options.borderColor};}
 function styleChanged(style,prevStyle){return prevStyle&&JSON.stringify(style)!==JSON.stringify(prevStyle);}
 var helpers=Object.freeze({__proto__:null,easingEffects:effects,color:color,getHoverColor:getHoverColor,noop:noop,uid:uid,isNullOrUndef:isNullOrUndef,isArray:isArray,isObject:isObject,isFinite:isNumberFinite,finiteOrDefault:finiteOrDefault,valueOrDefault:valueOrDefault,toPercentage:toPercentage,toDimension:toDimension,callback:callback,each:each,_elementsEqual:_elementsEqual,clone:clone,_merger:_merger,merge:merge,mergeIf:mergeIf,_mergerIf:_mergerIf,_deprecated:_deprecated,resolveObjectKey:resolveObjectKey,_capitalize:_capitalize,defined:defined,isFunction:isFunction,setsEqual:setsEqual,_isClickEvent:_isClickEvent,toFontString:toFontString,_measureText:_measureText,_longestText:_longestText,_alignPixel:_alignPixel,clearCanvas:clearCanvas,drawPoint:drawPoint,_isPointInArea:_isPointInArea,clipArea:clipArea,unclipArea:unclipArea,_steppedLineTo:_steppedLineTo,_bezierCurveTo:_bezierCurveTo,renderText:renderText,addRoundedRectPath:addRoundedRectPath,_lookup:_lookup,_lookupByKey:_lookupByKey,_rlookupByKey:_rlookupByKey,_filterBetween:_filterBetween,listenArrayEvents:listenArrayEvents,unlistenArrayEvents:unlistenArrayEvents,_arrayUnique:_arrayUnique,_createResolver:_createResolver,_attachContext:_attachContext,_descriptors:_descriptors,splineCurve:splineCurve,splineCurveMonotone:splineCurveMonotone,_updateBezierControlPoints:_updateBezierControlPoints,_isDomSupported:_isDomSupported,_getParentNode:_getParentNode,getStyle:getStyle,getRelativePosition:getRelativePosition$1,getMaximumSize:getMaximumSize,retinaScale:retinaScale,supportsEventListenerOptions:supportsEventListenerOptions,readUsedSize:readUsedSize,fontString:fontString,requestAnimFrame:requestAnimFrame,throttled:throttled,debounce:debounce,_toLeftRightCenter:_toLeftRightCenter,_alignStartEnd:_alignStartEnd,_textX:_textX,_pointInLine:_pointInLine,_steppedInterpolation:_steppedInterpolation,_bezierInterpolation:_bezierInterpolation,formatNumber:formatNumber,toLineHeight:toLineHeight,_readValueToProps:_readValueToProps,toTRBL:toTRBL,toTRBLCorners:toTRBLCorners,toPadding:toPadding,toFont:toFont,resolve:resolve,_addGrace:_addGrace,createContext:createContext,PI:PI,TAU:TAU,PITAU:PITAU,INFINITY:INFINITY,RAD_PER_DEG:RAD_PER_DEG,HALF_PI:HALF_PI,QUARTER_PI:QUARTER_PI,TWO_THIRDS_PI:TWO_THIRDS_PI,log10:log10,sign:sign,niceNum:niceNum,_factorize:_factorize,isNumber:isNumber,almostEquals:almostEquals,almostWhole:almostWhole,_setMinAndMaxByKey:_setMinAndMaxByKey,toRadians:toRadians,toDegrees:toDegrees,_decimalPlaces:_decimalPlaces,getAngleFromPoint:getAngleFromPoint,distanceBetweenPoints:distanceBetweenPoints,_angleDiff:_angleDiff,_normalizeAngle:_normalizeAngle,_angleBetween:_angleBetween,_limitValue:_limitValue,_int16Range:_int16Range,_isBetween:_isBetween,getRtlAdapter:getRtlAdapter,overrideTextDirection:overrideTextDirection,restoreTextDirection:restoreTextDirection,_boundSegment:_boundSegment,_boundSegments:_boundSegments,_computeSegments:_computeSegments});class BasePlatform{acquireContext(canvas,aspectRatio){}
+
 releaseContext(context){return false;}
 addEventListener(chart,type,listener){}
 removeEventListener(chart,type,listener){}
@@ -1166,6 +1167,7 @@ getLabelAndValue(index){const meta=this._cachedMeta;const iScale=meta.iScale;con
 _update(mode){const meta=this._cachedMeta;this.update(mode||'default');meta._clip=toClip(valueOrDefault(this.options.clip,defaultClip(meta.xScale,meta.yScale,this.getMaxOverflow())));}
 update(mode){}
 draw(){const ctx=this._ctx;const chart=this.chart;const meta=this._cachedMeta;const elements=meta.data||[];const area=chart.chartArea;const active=[];const start=this._drawStart||0;const count=this._drawCount||(elements.length-start);const drawActiveElementsOnTop=this.options.drawActiveElementsOnTop;let i;if(meta.dataset){meta.dataset.draw(ctx,area,start,count);}
+
 for(i=start;i<start+count;++i){const element=elements[i];if(element.hidden){continue;}
 if(element.active&&drawActiveElementsOnTop){active.push(element);}else{element.draw(ctx,area);}}
 for(i=0;i<active.length;++i){active[i].draw(ctx,area);}}
@@ -1419,6 +1421,7 @@ return item;}}
 var registry=new Registry();class PluginService{constructor(){this._init=[];}
 notify(chart,hook,args,filter){if(hook==='beforeInit'){this._init=this._createDescriptors(chart,true);this._notify(this._init,chart,'install');}
 const descriptors=filter?this._descriptors(chart).filter(filter):this._descriptors(chart);const result=this._notify(descriptors,chart,hook,args);if(hook==='afterDestroy'){this._notify(descriptors,chart,'stop');this._notify(this._init,chart,'uninstall');}
+
 return result;}
 _notify(descriptors,chart,hook,args){args=args||{};for(const descriptor of descriptors){const plugin=descriptor.plugin;const method=plugin[hook];const params=[chart,args,descriptor.options];if(callback(method,params,plugin)===false&&args.cancelable){return false;}}
 return true;}
@@ -1486,6 +1489,7 @@ return cached;}
 const hasFunction=value=>isObject(value)&&Object.getOwnPropertyNames(value).reduce((acc,key)=>acc||isFunction(value[key]),false);function needContext(proxy,names){const{isScriptable,isIndexable}=_descriptors(proxy);for(const prop of names){const scriptable=isScriptable(prop);const indexable=isIndexable(prop);const value=(indexable||scriptable)&&proxy[prop];if((scriptable&&(isFunction(value)||hasFunction(value)))||(indexable&&isArray(value))){return true;}}
 return false;}
 var version="3.7.0";const KNOWN_POSITIONS=['top','bottom','left','right','chartArea'];function positionIsHorizontal(position,axis){return position==='top'||position==='bottom'||(KNOWN_POSITIONS.indexOf(position)===-1&&axis==='x');}
+
 function compare2Level(l1,l2){return function(a,b){return a[l1]===b[l1]?a[l2]-b[l2]:a[l1]-b[l1];};}
 function onAnimationsComplete(context){const chart=context.chart;const animationOptions=chart.options.animation;chart.notifyPlugins('afterRender');callback(animationOptions&&animationOptions.onComplete,[context],chart);}
 function onAnimationProgress(context){const chart=context.chart;const animationOptions=chart.options.animation;callback(animationOptions&&animationOptions.onProgress,[context],chart);}
@@ -1496,6 +1500,7 @@ const instances={};const getChart=(key)=>{const canvas=getCanvas(key);return Obj
 function determineLastEvent(e,lastEvent,inChartArea,isClick){if(!inChartArea||e.type==='mouseout'){return null;}
 if(isClick){return lastEvent;}
 return e;}
+
 class Chart{constructor(item,userConfig){const config=this.config=new Config(userConfig);const initialCanvas=getCanvas(item);const existingChart=getChart(initialCanvas);if(existingChart){throw new Error('Canvas is already in use. Chart with ID \''+existingChart.id+'\''+' must be destroyed before the canvas can be reused.');}
 const options=config.createResolver(config.chartOptionScopes(),this.getContext());this.platform=new(config.platform||_detectPlatform(initialCanvas))();this.platform.updateConfig(config);const context=this.platform.acquireContext(initialCanvas,options.aspectRatio);const canvas=context&&context.canvas;const height=canvas&&canvas.height;const width=canvas&&canvas.width;this.id=uid();this.ctx=context;this.canvas=canvas;this.width=width;this.height=height;this._options=options;this._aspectRatio=this.aspectRatio;this._layers=[];this._metasets=[];this._stacks=undefined;this.boxes=[];this.currentDevicePixelRatio=undefined;this.chartArea=undefined;this._active=[];this._lastEvent=undefined;this._listeners={};this._responsiveListeners=undefined;this._sortedMetasets=[];this.scales={};this._plugins=new PluginService();this.$proxies={};this._hiddenIndices={};this.attached=false;this._animationsDisabled=undefined;this.$context=undefined;this._doResize=debounce(mode=>this.update(mode),options.resizeDelay||0);this._dataChanges=[];instances[this.id]=this;if(!context||!canvas){console.error("Failed to create chart: can't acquire context from the given item");return;}
 animator.listen(this,'complete',onAnimationsComplete);animator.listen(this,'progress',onAnimationProgress);this._initialize();if(this.attached){this.update();}}
@@ -1532,6 +1537,7 @@ update(mode){const config=this.config;config.update();const options=this._option
 const newControllers=this.buildOrUpdateControllers();this.notifyPlugins('beforeElementsUpdate');let minPadding=0;for(let i=0,ilen=this.data.datasets.length;i<ilen;i++){const{controller}=this.getDatasetMeta(i);const reset=!animsDisabled&&newControllers.indexOf(controller)===-1;controller.buildOrUpdateElements(reset);minPadding=Math.max(+controller.getMaxOverflow(),minPadding);}
 minPadding=this._minPadding=options.layout.autoPadding?minPadding:0;this._updateLayout(minPadding);if(!animsDisabled){each(newControllers,(controller)=>{controller.reset();});}
 this._updateDatasets(mode);this.notifyPlugins('afterUpdate',{mode});this._layers.sort(compare2Level('z','_idx'));const{_active,_lastEvent}=this;if(_lastEvent){this._eventHandler(_lastEvent,true);}else if(_active.length){this._updateHoverStyles(_active,_active,true);}
+
 this.render();}
 _updateScales(){each(this.scales,(scale)=>{layouts.removeBox(this,scale);});this.ensureScalesHaveIDs();this.buildOrUpdateScales();}
 _checkEventBindings(){const options=this.options;const existingEvents=new Set(Object.keys(this._listeners));const newEvents=new Set(options.events);if(!setsEqual(existingEvents,newEvents)||!!this._responsiveListeners!==options.responsive){this.unbindEvents();this.bindEvents();}}
@@ -1586,6 +1592,7 @@ delete this._metasets[datasetIndex];}
 _stop(){let i,ilen;this.stop();animator.remove(this);for(i=0,ilen=this.data.datasets.length;i<ilen;++i){this._destroyDatasetMeta(i);}}
 destroy(){this.notifyPlugins('beforeDestroy');const{canvas,ctx}=this;this._stop();this.config.clearCache();if(canvas){this.unbindEvents();clearCanvas(canvas,ctx);this.platform.releaseContext(ctx);this.canvas=null;this.ctx=null;}
 this.notifyPlugins('destroy');delete instances[this.id];this.notifyPlugins('afterDestroy');}
+
 toBase64Image(...args){return this.canvas.toDataURL(...args);}
 bindEvents(){this.bindUserEvents();if(this.options.responsive){this.bindResponsiveEvents();}else{this.attached=true;}}
 bindUserEvents(){const listeners=this._listeners;const platform=this.platform;const _add=(type,listener)=>{platform.addEventListener(this,type,listener);listeners[type]=listener;};const listener=(e,x,y)=>{e.offsetX=x;e.offsetY=y;this._eventHandler(e);};each(this.options.events,(type)=>_add(type,listener));}
@@ -1596,6 +1603,7 @@ updateHoverStyle(items,mode,enabled){const prefix=enabled?'set':'remove';let met
 for(i=0,ilen=items.length;i<ilen;++i){item=items[i];const controller=item&&this.getDatasetMeta(item.datasetIndex).controller;if(controller){controller[prefix+'HoverStyle'](item.element,item.datasetIndex,item.index);}}}
 getActiveElements(){return this._active||[];}
 setActiveElements(activeElements){const lastActive=this._active||[];const active=activeElements.map(({datasetIndex,index})=>{const meta=this.getDatasetMeta(datasetIndex);if(!meta){throw new Error('No dataset found at index '+datasetIndex);}
+
 return{datasetIndex,element:meta.data[index],index,};});const changed=!_elementsEqual(active,lastActive);if(changed){this._active=active;this._lastEvent=null;this._updateHoverStyles(active,lastActive);}}
 notifyPlugins(hook,args,filter){return this._plugins.notify(this,hook,args,filter);}
 _updateHoverStyles(active,lastActive,replay){const hoverOptions=this.options.hover;const diff=(a,b)=>a.filter(x=>!b.some(y=>x.datasetIndex===y.datasetIndex&&x.index===y.index));const deactivated=diff(lastActive,active);const activated=replay?active:diff(active,lastActive);if(deactivated.length){this.updateHoverStyle(deactivated,hoverOptions.mode,false);}
@@ -1798,7 +1806,9 @@ tooltipPosition(useFinalPosition){return this.getCenterPoint(useFinalPosition);}
 draw(ctx){const{options,circumference}=this;const offset=(options.offset||0)/2;const spacing=(options.spacing||0)/2;this.pixelMargin=(options.borderAlign==='inner')?0.33:0;this.fullCircles=circumference>TAU?Math.floor(circumference/TAU):0;if(circumference===0||this.innerRadius<0||this.outerRadius<0){return;}
 ctx.save();let radiusOffset=0;if(offset){radiusOffset=offset/2;const halfAngle=(this.startAngle+this.endAngle)/2;ctx.translate(Math.cos(halfAngle)*radiusOffset,Math.sin(halfAngle)*radiusOffset);if(this.circumference>=PI){radiusOffset=offset;}}
 ctx.fillStyle=options.backgroundColor;ctx.strokeStyle=options.borderColor;const endAngle=drawArc(ctx,this,radiusOffset,spacing);drawBorder(ctx,this,radiusOffset,spacing,endAngle);ctx.restore();}}
+
 ArcElement.id='arc';ArcElement.defaults={borderAlign:'center',borderColor:'#fff',borderJoinStyle:undefined,borderRadius:0,borderWidth:2,offset:0,spacing:0,angle:undefined,};ArcElement.defaultRoutes={backgroundColor:'backgroundColor'};function setStyle(ctx,options,style=options){ctx.lineCap=valueOrDefault(style.borderCapStyle,options.borderCapStyle);ctx.setLineDash(valueOrDefault(style.borderDash,options.borderDash));ctx.lineDashOffset=valueOrDefault(style.borderDashOffset,options.borderDashOffset);ctx.lineJoin=valueOrDefault(style.borderJoinStyle,options.borderJoinStyle);ctx.lineWidth=valueOrDefault(style.borderWidth,options.borderWidth);ctx.strokeStyle=valueOrDefault(style.borderColor,options.borderColor);}
+
 function lineTo(ctx,previous,target){ctx.lineTo(target.x,target.y);}
 function getLineMethod(options){if(options.stepped){return _steppedLineTo;}
 if(options.tension||options.cubicInterpolationMode==='monotone'){return _bezierCurveTo;}
@@ -2054,14 +2064,17 @@ function overrideCallbacks(callbacks,context){const override=context&&context.da
 class Tooltip extends Element{constructor(config){super();this.opacity=0;this._active=[];this._eventPosition=undefined;this._size=undefined;this._cachedAnimations=undefined;this._tooltipItems=[];this.$animations=undefined;this.$context=undefined;this.chart=config.chart||config._chart;this._chart=this.chart;this.options=config.options;this.dataPoints=undefined;this.title=undefined;this.beforeBody=undefined;this.body=undefined;this.afterBody=undefined;this.footer=undefined;this.xAlign=undefined;this.yAlign=undefined;this.x=undefined;this.y=undefined;this.height=undefined;this.width=undefined;this.caretX=undefined;this.caretY=undefined;this.labelColors=undefined;this.labelPointStyles=undefined;this.labelTextColors=undefined;}
 initialize(options){this.options=options;this._cachedAnimations=undefined;this.$context=undefined;}
 _resolveAnimations(){const cached=this._cachedAnimations;if(cached){return cached;}
+
 const chart=this.chart;const options=this.options.setContext(this.getContext());const opts=options.enabled&&chart.options.animation&&options.animations;const animations=new Animations(this.chart,opts);if(opts._cacheable){this._cachedAnimations=Object.freeze(animations);}
 return animations;}
 getContext(){return this.$context||(this.$context=createTooltipContext(this.chart.getContext(),this,this._tooltipItems));}
+
 getTitle(context,options){const{callbacks}=options;const beforeTitle=callbacks.beforeTitle.apply(this,[context]);const title=callbacks.title.apply(this,[context]);const afterTitle=callbacks.afterTitle.apply(this,[context]);let lines=[];lines=pushOrConcat(lines,splitNewlines(beforeTitle));lines=pushOrConcat(lines,splitNewlines(title));lines=pushOrConcat(lines,splitNewlines(afterTitle));return lines;}
 getBeforeBody(tooltipItems,options){return getBeforeAfterBodyLines(options.callbacks.beforeBody.apply(this,[tooltipItems]));}
 getBody(tooltipItems,options){const{callbacks}=options;const bodyItems=[];each(tooltipItems,(context)=>{const bodyItem={before:[],lines:[],after:[]};const scoped=overrideCallbacks(callbacks,context);pushOrConcat(bodyItem.before,splitNewlines(scoped.beforeLabel.call(this,context)));pushOrConcat(bodyItem.lines,scoped.label.call(this,context));pushOrConcat(bodyItem.after,splitNewlines(scoped.afterLabel.call(this,context)));bodyItems.push(bodyItem);});return bodyItems;}
 getAfterBody(tooltipItems,options){return getBeforeAfterBodyLines(options.callbacks.afterBody.apply(this,[tooltipItems]));}
 getFooter(tooltipItems,options){const{callbacks}=options;const beforeFooter=callbacks.beforeFooter.apply(this,[tooltipItems]);const footer=callbacks.footer.apply(this,[tooltipItems]);const afterFooter=callbacks.afterFooter.apply(this,[tooltipItems]);let lines=[];lines=pushOrConcat(lines,splitNewlines(beforeFooter));lines=pushOrConcat(lines,splitNewlines(footer));lines=pushOrConcat(lines,splitNewlines(afterFooter));return lines;}
+
 _createItems(options){const active=this._active;const data=this.chart.data;const labelColors=[];const labelPointStyles=[];const labelTextColors=[];let tooltipItems=[];let i,len;for(i=0,len=active.length;i<len;++i){tooltipItems.push(createTooltipItem(this.chart,active[i]));}
 if(options.filter){tooltipItems=tooltipItems.filter((element,index,array)=>options.filter(element,index,array,data));}
 if(options.itemSort){tooltipItems=tooltipItems.sort((a,b)=>options.itemSort(a,b,data));}
@@ -2069,6 +2082,7 @@ each(tooltipItems,(context)=>{const scoped=overrideCallbacks(options.callbacks,c
 update(changed,replay){const options=this.options.setContext(this.getContext());const active=this._active;let properties;let tooltipItems=[];if(!active.length){if(this.opacity!==0){properties={opacity:0};}}else{const position=positioners[options.position].call(this,active,this._eventPosition);tooltipItems=this._createItems(options);this.title=this.getTitle(tooltipItems,options);this.beforeBody=this.getBeforeBody(tooltipItems,options);this.body=this.getBody(tooltipItems,options);this.afterBody=this.getAfterBody(tooltipItems,options);this.footer=this.getFooter(tooltipItems,options);const size=this._size=getTooltipSize(this,options);const positionAndSize=Object.assign({},position,size);const alignment=determineAlignment(this.chart,options,positionAndSize);const backgroundPoint=getBackgroundPoint(options,positionAndSize,alignment,this.chart);this.xAlign=alignment.xAlign;this.yAlign=alignment.yAlign;properties={opacity:1,x:backgroundPoint.x,y:backgroundPoint.y,width:size.width,height:size.height,caretX:position.x,caretY:position.y};}
 this._tooltipItems=tooltipItems;this.$context=undefined;if(properties){this._resolveAnimations().update(this,properties);}
 if(changed&&options.external){options.external.call(this,{chart:this.chart,tooltip:this,replay});}}
+
 drawCaret(tooltipPoint,ctx,size,options){const caretPosition=this.getCaretPosition(tooltipPoint,size,options);ctx.lineTo(caretPosition.x1,caretPosition.y1);ctx.lineTo(caretPosition.x2,caretPosition.y2);ctx.lineTo(caretPosition.x3,caretPosition.y3);}
 getCaretPosition(tooltipPoint,size,options){const{xAlign,yAlign}=this;const{caretSize,cornerRadius}=options;const{topLeft,topRight,bottomLeft,bottomRight}=toTRBLCorners(cornerRadius);const{x:ptX,y:ptY}=tooltipPoint;const{width,height}=size;let x1,x2,x3,y1,y2,y3;if(yAlign==='center'){y2=ptY+(height/2);if(xAlign==='left'){x1=ptX;x2=x1-caretSize;y1=y2+caretSize;y3=y2-caretSize;}else{x1=ptX+width;x2=x1+caretSize;y1=y2-caretSize;y3=y2+caretSize;}
 x3=x1;}else{if(xAlign==='left'){x2=ptX+Math.max(topLeft,bottomLeft)+(caretSize);}else if(xAlign==='right'){x2=ptX+width-Math.max(topRight,bottomRight)-caretSize;}else{x2=this.caretX;}
@@ -2088,7 +2102,9 @@ ctx.lineTo(x+width-topRight,y);ctx.quadraticCurveTo(x+width,y,x+width,y+topRight
 ctx.lineTo(x+width,y+height-bottomRight);ctx.quadraticCurveTo(x+width,y+height,x+width-bottomRight,y+height);if(yAlign==='bottom'){this.drawCaret(pt,ctx,tooltipSize,options);}
 ctx.lineTo(x+bottomLeft,y+height);ctx.quadraticCurveTo(x,y+height,x,y+height-bottomLeft);if(yAlign==='center'&&xAlign==='left'){this.drawCaret(pt,ctx,tooltipSize,options);}
 ctx.lineTo(x,y+topLeft);ctx.quadraticCurveTo(x,y,x+topLeft,y);ctx.closePath();ctx.fill();if(options.borderWidth>0){ctx.stroke();}}
+
 _updateAnimationTarget(options){const chart=this.chart;const anims=this.$animations;const animX=anims&&anims.x;const animY=anims&&anims.y;if(animX||animY){const position=positioners[options.position].call(this,this._active,this._eventPosition);if(!position){return;}
+
 const size=this._size=getTooltipSize(this,options);const positionAndSize=Object.assign({},position,this._size);const alignment=determineAlignment(chart,options,positionAndSize);const point=getBackgroundPoint(options,positionAndSize,alignment,chart);if(animX._to!==point.x||animY._to!==point.y){this.xAlign=alignment.xAlign;this.yAlign=alignment.yAlign;this.width=size.width;this.height=size.height;this.caretX=position.x;this.caretY=position.y;this._resolveAnimations().update(this,point);}}}
 draw(ctx){const options=this.options.setContext(this.getContext());let opacity=this.opacity;if(!opacity){return;}
 this._updateAnimationTarget(options);const tooltipSize={width:this.width,height:this.height};const pt={x:this.x,y:this.y};opacity=Math.abs(opacity)<1e-3?0:opacity;const padding=toPadding(options.padding);const hasTooltipContent=this.title.length||this.beforeBody.length||this.body.length||this.afterBody.length||this.footer.length;if(options.enabled&&hasTooltipContent){ctx.save();ctx.globalAlpha=opacity;this.drawBackground(pt,ctx,tooltipSize,options);overrideTextDirection(ctx,options.textDirection);pt.y+=padding.top;this.drawTitle(pt,ctx,options);this.drawBody(pt,ctx,options);this.drawFooter(pt,ctx,options);restoreTextDirection(ctx,options.textDirection);ctx.restore();}}
@@ -2097,6 +2113,7 @@ setActiveElements(activeElements,eventPosition){const lastActive=this._active;co
 return{datasetIndex,element:meta.data[index],index,};});const changed=!_elementsEqual(lastActive,active);const positionChanged=this._positionChanged(active,eventPosition);if(changed||positionChanged){this._active=active;this._eventPosition=eventPosition;this._ignoreReplayEvents=true;this.update(true);}}
 handleEvent(e,replay,inChartArea=true){if(replay&&this._ignoreReplayEvents){return false;}
 this._ignoreReplayEvents=false;const options=this.options;const lastActive=this._active||[];const active=this._getActiveElements(e,lastActive,replay,inChartArea);const positionChanged=this._positionChanged(active,e);const changed=replay||!_elementsEqual(active,lastActive)||positionChanged;if(changed){this._active=active;if(options.enabled||options.external){this._eventPosition={x:e.x,y:e.y};this.update(true,replay);}}
+
 return changed;}
 _getActiveElements(e,lastActive,replay,inChartArea){const options=this.options;if(e.type==='mouseout'){return[];}
 if(!inChartArea){return lastActive;}
@@ -2106,6 +2123,7 @@ _positionChanged(active,e){const{caretX,caretY,options}=this;const position=posi
 Tooltip.positioners=positioners;var plugin_tooltip={id:'tooltip',_element:Tooltip,positioners,afterInit(chart,_args,options){if(options){chart.tooltip=new Tooltip({chart,options});}},beforeUpdate(chart,_args,options){if(chart.tooltip){chart.tooltip.initialize(options);}},reset(chart,_args,options){if(chart.tooltip){chart.tooltip.initialize(options);}},afterDraw(chart){const tooltip=chart.tooltip;const args={tooltip};if(chart.notifyPlugins('beforeTooltipDraw',args)===false){return;}
 if(tooltip){tooltip.draw(chart.ctx);}
 chart.notifyPlugins('afterTooltipDraw',args);},afterEvent(chart,args){if(chart.tooltip){const useFinalPosition=args.replay;if(chart.tooltip.handleEvent(args.event,useFinalPosition,args.inChartArea)){args.changed=true;}}},defaults:{enabled:true,external:null,position:'average',backgroundColor:'rgba(0,0,0,0.8)',titleColor:'#fff',titleFont:{weight:'bold',},titleSpacing:2,titleMarginBottom:6,titleAlign:'left',bodyColor:'#fff',bodySpacing:2,bodyFont:{},bodyAlign:'left',footerColor:'#fff',footerSpacing:2,footerMarginTop:6,footerFont:{weight:'bold',},footerAlign:'left',padding:6,caretPadding:2,caretSize:5,cornerRadius:6,boxHeight:(ctx,opts)=>opts.bodyFont.size,boxWidth:(ctx,opts)=>opts.bodyFont.size,multiKeyBackground:'#fff',displayColors:true,boxPadding:0,borderColor:'rgba(0,0,0,0)',borderWidth:0,animation:{duration:400,easing:'easeOutQuart',},animations:{numbers:{type:'number',properties:['x','y','width','height','caretX','caretY'],},opacity:{easing:'linear',duration:200}},callbacks:{beforeTitle:noop,title(tooltipItems){if(tooltipItems.length>0){const item=tooltipItems[0];const labels=item.chart.data.labels;const labelCount=labels?labels.length:0;if(this&&this.options&&this.options.mode==='dataset'){return item.dataset.label||'';}else if(item.label){return item.label;}else if(labelCount>0&&item.dataIndex<labelCount){return labels[item.dataIndex];}}
+
 return'';},afterTitle:noop,beforeBody:noop,beforeLabel:noop,label(tooltipItem){if(this&&this.options&&this.options.mode==='dataset'){return tooltipItem.label+': '+tooltipItem.formattedValue||tooltipItem.formattedValue;}
 let label=tooltipItem.dataset.label||'';if(label){label+=': ';}
 const value=tooltipItem.formattedValue;if(!isNullOrUndef(value)){label+=value;}
@@ -2218,6 +2236,7 @@ generateTickLabels(ticks){LinearScaleBase.prototype.generateTickLabels.call(this
 fit(){const opts=this.options;if(opts.display&&opts.pointLabels.display){fitWithPointLabels(this);}else{this.setCenterPoint(0,0,0,0);}}
 setCenterPoint(leftMovement,rightMovement,topMovement,bottomMovement){this.xCenter+=Math.floor((leftMovement-rightMovement)/2);this.yCenter+=Math.floor((topMovement-bottomMovement)/2);this.drawingArea-=Math.min(this.drawingArea/2,Math.max(leftMovement,rightMovement,topMovement,bottomMovement));}
 getIndexAngle(index){const angleMultiplier=TAU/(this._pointLabels.length||1);const startAngle=this.options.startAngle||0;return _normalizeAngle(index*angleMultiplier+toRadians(startAngle));}
+
 getDistanceFromCenterForValue(value){if(isNullOrUndef(value)){return NaN;}
 const scalingFactor=this.drawingArea/(this.max-this.min);if(this.options.reverse){return(this.max-value)*scalingFactor;}
 return(value-this.min)*scalingFactor;}
@@ -2232,6 +2251,7 @@ drawBackground(){const{backgroundColor,grid:{circular}}=this.options;if(backgrou
 drawGrid(){const ctx=this.ctx;const opts=this.options;const{angleLines,grid}=opts;const labelCount=this._pointLabels.length;let i,offset,position;if(opts.pointLabels.display){drawPointLabels(this,labelCount);}
 if(grid.display){this.ticks.forEach((tick,index)=>{if(index!==0){offset=this.getDistanceFromCenterForValue(tick.value);const optsAtIndex=grid.setContext(this.getContext(index-1));drawRadiusLine(this,optsAtIndex,offset,labelCount);}});}
 if(angleLines.display){ctx.save();for(i=labelCount-1;i>=0;i--){const optsAtIndex=angleLines.setContext(this.getPointLabelContext(i));const{color,lineWidth}=optsAtIndex;if(!lineWidth||!color){continue;}
+
 ctx.lineWidth=lineWidth;ctx.strokeStyle=color;ctx.setLineDash(optsAtIndex.borderDash);ctx.lineDashOffset=optsAtIndex.borderDashOffset;offset=this.getDistanceFromCenterForValue(opts.ticks.reverse?this.min:this.max);position=this.getPointPosition(i,offset);ctx.beginPath();ctx.moveTo(this.xCenter,this.yCenter);ctx.lineTo(position.x,position.y);ctx.stroke();}
 ctx.restore();}}
 drawBorder(){}
