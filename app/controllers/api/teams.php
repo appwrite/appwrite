@@ -324,7 +324,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'email' => $email,
                     'emailVerification' => false,
                     'status' => true,
-                    'password' => Auth::passwordHash(Auth::passwordGenerator()),
+                    'password' => Auth::passwordHash(Auth::passwordGenerator(), 'bcrypt'),
                     /** 
                      * Set the password update time to 0 for users created using 
                      * team invite and OAuth to allow password updates without an 

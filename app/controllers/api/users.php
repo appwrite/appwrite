@@ -38,13 +38,19 @@ App::post('/v1/users')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->param('hash', 'bcrypt', new WhiteList(['bcrypt', 'scrypt', 'md5']), 'Hashing algorithm for password. The default value is bcrypt.', true)
+    ->param('import', false, new Boolean(), 'Are you importing hashed password?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($userId, $email, $password, $name, $response, $dbForProject, $usage) {
+    ->action(function ($userId, $email, $password, $name, $hash, $import, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
+
+        if(!$import && $hash === 'md5') {
+            throw new Exception('For security reasons, MD5 hashing is only allowed for importing accounts. Please use bcrypt instead.');
+        }
 
         $email = \strtolower($email);
 
@@ -57,7 +63,7 @@ App::post('/v1/users')
                 'email' => $email,
                 'emailVerification' => false,
                 'status' => true,
-                'password' => Auth::passwordHash($password),
+                'password' => $import ? $password : Auth::passwordHash($password, $hash),
                 'passwordUpdate' => \time(),
                 'registration' => \time(),
                 'reset' => false,
@@ -478,10 +484,11 @@ App::patch('/v1/users/:userId/password')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
+    ->param('hash', 'bcrypt', new WhiteList(['bcrypt', 'scrypt']), 'Hashing algorithm for password. The default value is bcrypt.', true) // We don't allow md5 here on purpose.
     ->inject('response')
     ->inject('dbForProject')
     ->inject('audits')
-    ->action(function ($userId, $password, $response, $dbForProject, $audits) {
+    ->action(function ($userId, $password, $hash, $response, $dbForProject, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
@@ -493,7 +500,7 @@ App::patch('/v1/users/:userId/password')
         }
 
         $user
-            ->setAttribute('password', Auth::passwordHash($password))
+            ->setAttribute('password', Auth::passwordHash($password, $hash))
             ->setAttribute('passwordUpdate', \time());
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);

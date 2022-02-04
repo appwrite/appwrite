@@ -49,11 +49,24 @@ class AuthTest extends TestCase
     public function testPassword()
     {
         $secret = 'secret';
+
+        // bcrypt
         $static = '$2y$08$PDbMtV18J1KOBI9tIYabBuyUwBrtXPGhLxCy9pWP6xkldVOKLrLKy';
-        $dynamic = Auth::passwordHash($secret);
-        
-        $this->assertEquals(Auth::passwordVerify($secret, $dynamic), true);
-        $this->assertEquals(Auth::passwordVerify($secret, $static), true);
+        $dynamic = Auth::passwordHash($secret, 'bcrypt');
+        $this->assertEquals(true, Auth::passwordVerify($secret, $static, 'bcrypt'));
+        $this->assertEquals(true, Auth::passwordVerify($secret, $dynamic, 'bcrypt'));
+
+        // md5
+        $static = '5ebe2294ecd0e0f08eab7690d2a6ee69';
+        $dynamic = Auth::passwordHash($secret, 'md5');
+        $this->assertEquals(true, Auth::passwordVerify($secret, $static, 'md5'));
+        $this->assertEquals(true, Auth::passwordVerify($secret, $dynamic, 'md5'));
+
+        // scrypt
+        $static = 'baaf807babd0a518e50edef84ce792e8b0520b3f1c3563504db3562778145c1fd2955f4f5aff398b8d3501f8bfcbdefc8cb51fa58d64cc3c41a6dc3319d83222';
+        $dynamic = Auth::passwordHash($secret, 'scrypt');
+        $this->assertEquals(true, Auth::passwordVerify($secret, $static, 'scrypt'));
+        $this->assertEquals(true, Auth::passwordVerify($secret, $dynamic, 'scrypt'));
     }
     
     public function testPasswordGenerator()

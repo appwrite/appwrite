@@ -506,7 +506,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'email' => $email,
                         'emailVerification' => true,
                         'status' => true, // Email should already be authenticated by OAuth2 provider
-                        'password' => Auth::passwordHash(Auth::passwordGenerator()),
+                        'password' => Auth::passwordHash(Auth::passwordGenerator(), 'bcrypt'),
                         'passwordUpdate' => 0,
                         'registration' => \time(),
                         'reset' => false,
@@ -1370,12 +1370,13 @@ App::patch('/v1/account/password')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
     ->param('oldPassword', '', new Password(), 'Current user password. Must be at least 8 chars.', true)
+    ->param('hash', 'bcrypt', new WhiteList(['bcrypt', 'scrypt']), 'Hashing algorithm for password. The default value is bcrypt.', true) // We don't allow md5 here on purpose.
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($password, $oldPassword, $response, $user, $dbForProject, $audits, $usage) {
+    ->action(function ($password, $oldPassword, $hash, $response, $user, $dbForProject, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
@@ -1383,12 +1384,12 @@ App::patch('/v1/account/password')
         /** @var Appwrite\Stats\Stats $usage */
 
         // Check old password only if its an existing user.
-        if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
+        if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'))) { // Double check user password
             throw new Exception('Invalid credentials', 401);
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user
-                ->setAttribute('password', Auth::passwordHash($password))
+                ->setAttribute('password', Auth::passwordHash($password, $hash))
                 ->setAttribute('passwordUpdate', \time())
         );
 
@@ -1418,12 +1419,13 @@ App::patch('/v1/account/email')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->param('hash', 'bcrypt', new WhiteList(['bcrypt', 'scrypt']), 'Hashing algorithm for password. The default value is bcrypt.', true) // We don't allow md5 here on purpose.
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($email, $password, $response, $user, $dbForProject, $audits, $usage) {
+    ->action(function ($email, $password, $hash, $response, $user, $dbForProject, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
@@ -1434,7 +1436,7 @@ App::patch('/v1/account/email')
 
         if (
             !$isAnonymousUser &&
-            !Auth::passwordVerify($password, $user->getAttribute('password'))
+            !Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'))
         ) { // Double check user password
             throw new Exception('Invalid credentials', 401);
         }
@@ -1448,7 +1450,7 @@ App::patch('/v1/account/email')
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user
-                ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password) : $user->getAttribute('password', ''))
+                ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password, $hash) : $user->getAttribute('password', ''))
                 ->setAttribute('email', $email)
                 ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
                 ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name'), $user->getAttribute('email')]))
@@ -1975,11 +1977,12 @@ App::put('/v1/account/recovery')
     ->param('secret', '', new Text(256), 'Valid reset token.')
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
     ->param('passwordAgain', '', new Password(), 'Repeat new user password. Must be at least 8 chars.')
+    ->param('hash', 'bcrypt', new WhiteList(['bcrypt', 'scrypt']), 'Hashing algorithm for password. The default value is bcrypt.', true) // We don't allow md5 here on purpose.
     ->inject('response')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($userId, $secret, $password, $passwordAgain, $response, $dbForProject, $audits, $usage) {
+    ->action(function ($userId, $secret, $password, $passwordAgain, $hash, $response, $dbForProject, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
@@ -2005,7 +2008,7 @@ App::put('/v1/account/recovery')
         Authorization::setRole('user:' . $profile->getId());
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
-                ->setAttribute('password', Auth::passwordHash($password))
+                ->setAttribute('password', Auth::passwordHash($password, $hash))
                 ->setAttribute('passwordUpdate', \time())
                 ->setAttribute('emailVerification', true)
         );
