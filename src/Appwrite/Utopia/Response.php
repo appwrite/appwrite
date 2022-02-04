@@ -26,6 +26,7 @@ use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
 use Appwrite\Utopia\Response\Model\Currency;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
+use Appwrite\Utopia\Response\Model\DocumentList;
 use Appwrite\Utopia\Response\Model\Domain;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
@@ -205,9 +206,9 @@ class Response extends SwooleResponse
             ->setModel(new Error())
             ->setModel(new ErrorDev())
             // Lists
+            ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
             ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
             ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
-            ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
             ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
             ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
             ->setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG))
@@ -370,12 +371,12 @@ class Response extends SwooleResponse
         $model      = $this->getModel($model);
         $output     = [];
 
+        $document = $model->filter($document);
+
         if ($model->isAny()) {
             $this->payload = $document->getArrayCopy();
             return $this->payload;
         }
-
-        $document = $model->filter($document);
 
         foreach ($model->getRules() as $key => $rule) {
             if (!$document->isSet($key) && $rule['require']) { // do not set attribute in response if not required

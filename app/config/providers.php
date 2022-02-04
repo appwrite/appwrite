@@ -127,6 +127,16 @@ return [ // Ordered by ABC.
         'icon' => 'icon-windows',
         'enabled' => true,
         'sandbox' => false,
+        'form' => 'microsoft.phtml',
+        'beta' => false,
+        'mock' => false,
+    ],
+    'notion' => [
+        'name' => 'Notion',
+        'developers' => 'https://developers.notion.com/docs',
+        'icon' => 'icon-notion',
+        'enabled' => true,
+        'sandbox' => false,
         'form' => false,
         'beta' => false,
         'mock' => false,
@@ -277,10 +287,10 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false
     ],
-    'oidc' => [
-        'name' => 'OpenID Connect',
-        'developers' => 'https://openid.net/developers/specs/',
-        'icon' => 'icon-oidc',
+    'stripe' => [
+        'name' => 'Stripe',
+        'developers' => 'https://stripe.com/docs/api',
+        'icon' => 'icon-stripe',
         'enabled' => true,
         'sandbox' => false,
         'form' => false,
