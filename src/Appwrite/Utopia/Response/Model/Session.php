@@ -40,9 +40,21 @@ class Session extends Model
                 'default' => '',
                 'example' => 'user@example.com',
             ])
-            ->addRule('providerToken', [
+            ->addRule('providerAccessToken', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Session Provider Token.',
+                'description' => 'Session Provider Access Token.',
+                'default' => '',
+                'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
+            ])
+            ->addRule('providerAccessTokenExpiry', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Date, the Unix timestamp of when the access token expires.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('providerRefreshToken', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Session Provider Refresh Token.',
                 'default' => '',
                 'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
             ])

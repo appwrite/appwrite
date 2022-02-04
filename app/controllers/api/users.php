@@ -289,6 +289,7 @@ App::get('/v1/users/:userId/logs')
             'account.update.password',
             'account.update.prefs',
             'account.sessions.create',
+            'account.sessions.update',
             'account.sessions.delete',
             'account.recovery.create',
             'account.recovery.update',
