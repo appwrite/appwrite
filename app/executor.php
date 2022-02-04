@@ -276,23 +276,6 @@ function execute(string $projectId, string $functionId, string $deploymentId, ar
 
     $key = $activeFunctions->get('appwrite-function-' . $deploymentId, 'key');
 
-    // Process environment variables
-    // $vars = \array_merge($function->getAttribute('vars', []), [
-    //     'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint', ''),
-    //     'APPWRITE_FUNCTION_ID' => $function->getId(),
-    //     'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-    //     'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
-    //     'APPWRITE_FUNCTION_TRIGGER' => $trigger,
-    //     'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
-    //     'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
-    //     'APPWRITE_FUNCTION_EVENT' => $event,
-    //     'APPWRITE_FUNCTION_EVENT_DATA' => $eventData,
-    //     'APPWRITE_FUNCTION_DATA' => $data,
-    //     'APPWRITE_FUNCTION_USER_ID' => $userId,
-    //     'APPWRITE_FUNCTION_JWT' => $jwt,
-    //     'APPWRITE_FUNCTION_PROJECT_ID' => $projectId
-    // ]);
-
     $stdout = '';
     $stderr = '';
 
@@ -365,6 +348,8 @@ function execute(string $projectId, string $functionId, string $deploymentId, ar
         throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 500);
     }
 
+    var_dump($executorResponse);
+    
     $executionData = [];
 
     if (!empty($executorResponse)) {

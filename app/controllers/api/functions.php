@@ -759,6 +759,13 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception('Function not found', 404);
         }
 
+        $runtimes = Config::getParam('runtimes', []);
+        $key = $function->getAttribute('runtime', '');
+        $runtime = isset($runtimes[$key]) ? $runtimes[$key] : null;
+        if (\is_null($runtime)) {
+            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported', 400);
+        }
+
         $deployment = Authorization::skip(fn() => $dbForProject->getDocument('deployments', $function->getAttribute('deployment')));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
@@ -834,7 +841,7 @@ App::post('/v1/functions/:functionId/executions')
                 'data' => $data,
                 'runtime' => $function->getAttribute('runtime', ''),
                 'timeout' => $function->getAttribute('timeout', 0),
-                'baseImage' => '',
+                'baseImage' => $runtime['image'],
                 'webhooks' => $project->getAttribute('webhooks', []),
                 'userId' => $user->getId(),
                 'functionId' => $function->getId(),
@@ -849,21 +856,19 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         /** Send variables */
-        // $vars = \array_merge($function->getAttribute('vars', []), [
-        //     'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint', ''),
-        //     'APPWRITE_FUNCTION_ID' => $function->getId(),
-        //     'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-        //     'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
-        //     'APPWRITE_FUNCTION_TRIGGER' => 'http',
-        //     'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
-        //     'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
-        //     'APPWRITE_FUNCTION_EVENT' => $event,
-        //     'APPWRITE_FUNCTION_EVENT_DATA' => $eventData,
-        //     'APPWRITE_FUNCTION_DATA' => $data,
-        //     'APPWRITE_FUNCTION_USER_ID' => $userId,
-        //     'APPWRITE_FUNCTION_JWT' => $jwt,
-        //     'APPWRITE_FUNCTION_PROJECT_ID' => $projectId
-        // ]);
+        $vars = \array_merge($function->getAttribute('vars', []), [
+            'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint', ''),
+            'APPWRITE_FUNCTION_ID' => $function->getId(),
+            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
+            'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
+            'APPWRITE_FUNCTION_TRIGGER' => 'http',
+            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
+            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
+            'APPWRITE_FUNCTION_DATA' => $data,
+            'APPWRITE_FUNCTION_USER_ID' => $user->getId(),
+            'APPWRITE_FUNCTION_JWT' => $jwt,
+            'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId()
+        ]);
 
         // Directly execute function.
         $ch = \curl_init();
@@ -873,11 +878,11 @@ App::post('/v1/functions/:functionId/executions')
             'deploymentId' => $deployment->getId(),
             'buildId' => $deployment->getAttribute('buildId', ''),
             'path' => $build->getAttribute('outputPath', ''),
-            'vars' => $function->getAttribute('vars', []), 
+            'vars' => $vars, 
             'data' => $data,
             'runtime' => $function->getAttribute('runtime', ''),
             'timeout' => $function->getAttribute('timeout', 0),
-            'baseImage' => '',
+            'baseImage' => $runtime['image'],
             'webhooks' => $project->getAttribute('webhooks', []),
             'userId' => $user->getId(),
         ]));
@@ -896,12 +901,21 @@ App::post('/v1/functions/:functionId/executions')
         if (!empty($error)) {
             Console::error('Curl error: '.$error);
         }
-    
         \curl_close($ch);
+
+        $responseExecute = json_decode($responseExecute, true);
+        $execution->setAttribute('status', $responseExecute['status']);
+        $execution->setAttribute('statusCode', $responseExecute['statusCode']);
+        $execution->setAttribute('stdout', $responseExecute['stdout']);
+        $execution->setAttribute('stderr', $responseExecute['stderr']);
+        $execution->setAttribute('time', $responseExecute['time']);
+        Authorization::skip(fn() => $dbForProject->updateDocument('executions', $executionId, $execution));
+
+        $responseExecute['response'] = ($responseExecute['status'] !== 'completed') ? $responseExecute['stderr'] : $responseExecute['stdout'];
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic(new Document(json_decode($responseExecute, true)), Response::MODEL_SYNC_EXECUTION);
+            ->dynamic(new Document($responseExecute), Response::MODEL_SYNC_EXECUTION);
     });
 
 App::get('/v1/functions/:functionId/executions')
