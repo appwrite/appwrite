@@ -23,6 +23,12 @@ class User extends Model
                 'default' => '',
                 'example' => 'John Doe',
             ])
+            ->addRule('hash', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Password hashing algorithm.',
+                'default' => '',
+                'example' => 'bcrypt',
+            ])
             ->addRule('registration', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'User registration date in Unix timestamp.',
