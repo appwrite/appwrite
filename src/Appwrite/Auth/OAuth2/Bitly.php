@@ -78,10 +78,10 @@ class Bitly extends OAuth2
                 ])
             );
 
-        $output = [];
-        \parse_str($response, $output);
-        $this->tokens = $output;
-    }
+            $output = [];
+            \parse_str($response, $output);
+            $this->tokens = $output;
+        }
 
         return $this->tokens;
     }
