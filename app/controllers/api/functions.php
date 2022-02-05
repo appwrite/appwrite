@@ -332,7 +332,7 @@ App::put('/v1/functions/:functionId')
         ])));
 
         if ($next && $schedule !== $original) {
-            ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
+            ResqueScheduler::enqueueAt($next, Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME, [
                 'projectId' => $project->getId(),
                 'webhooks' => $project->getAttribute('webhooks', []),
                 'functionId' => $function->getId(),
@@ -761,13 +761,14 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         $runtimes = Config::getParam('runtimes', []);
-        $key = $function->getAttribute('runtime', '');
-        $runtime = isset($runtimes[$key]) ? $runtimes[$key] : null;
+
+        $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
+
         if (\is_null($runtime)) {
             throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported', 400);
         }
 
-        $deployment = Authorization::skip(fn() => $dbForProject->getDocument('deployments', $function->getAttribute('deployment')));
+        $deployment = Authorization::skip(fn() => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404);
@@ -784,7 +785,7 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         if ($build->getAttribute('status') !== 'ready') {
-            throw new Exception('Build not completed', 400);
+            throw new Exception('Build not ready', 400);
         }
 
         $validator = new Authorization('execute');
@@ -798,7 +799,7 @@ App::post('/v1/functions/:functionId/executions')
         $execution = Authorization::skip(fn() => $dbForProject->createDocument('executions', new Document([
             '$id' => $executionId,
             '$read' => (!$user->isEmpty()) ? ['user:' . $user->getId()] : [],
-            '$write' => ['role:all'],
+            '$write' => [],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
             'deploymentId' => $deployment->getId(),
@@ -833,32 +834,23 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         if ($async) {
-            Resque::enqueue('v1-functions', 'FunctionsV1', [
+            Resque::enqueue(Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME, [
                 'projectId' => $project->getId(),
-                'deploymentId' => $deployment->getId(),
-                'buildId' => $deployment->getAttribute('buildId', ''),
-                'path' => $build->getAttribute('outputPath', ''),
-                'vars' => $function->getAttribute('vars', []), 
-                'data' => $data,
-                'runtime' => $function->getAttribute('runtime', ''),
-                'timeout' => $function->getAttribute('timeout', 0),
-                'baseImage' => $runtime['image'],
-                'webhooks' => $project->getAttribute('webhooks', []),
-                'userId' => $user->getId(),
                 'functionId' => $function->getId(),
+                'webhooks' => $project->getAttribute('webhooks', []),
                 'executionId' => $execution->getId(),
                 'trigger' => 'http',
+                'data' => $data,
+                'userId' => $user->getId(),
                 'jwt' => $jwt,
             ]);
 
             $response->setStatusCode(Response::STATUS_CODE_CREATED);
             $response->dynamic($execution, Response::MODEL_EXECUTION);
-            return $response;
         }
 
         /** Send variables */
         $vars = \array_merge($function->getAttribute('vars', []), [
-            'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint', ''),
             'APPWRITE_FUNCTION_ID' => $function->getId(),
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
@@ -871,9 +863,8 @@ App::post('/v1/functions/:functionId/executions')
             'APPWRITE_FUNCTION_JWT' => $jwt,
         ]);
 
-        // Directly execute function.
+        /** Execute function */
         $executor = new Executor();
-        
         $responseExecute = $executor->createExecution(
             projectId: $project->getId(),
             functionId: $function->getId(),
@@ -882,6 +873,7 @@ App::post('/v1/functions/:functionId/executions')
             path: $build->getAttribute('outputPath', ''),
             vars: $vars,
             data: $data,
+            entrypoint: $deployment->getAttribute('entrypoint', ''),
             runtime: $function->getAttribute('runtime', ''),
             timeout: $function->getAttribute('timeout', 0),
             baseImage: $runtime['image'],
@@ -889,6 +881,7 @@ App::post('/v1/functions/:functionId/executions')
             userId: $user->getId(),
         );
 
+        /** Update execution status */
         $execution->setAttribute('status', $responseExecute['status']);
         $execution->setAttribute('statusCode', $responseExecute['statusCode']);
         $execution->setAttribute('stdout', $responseExecute['stdout']);

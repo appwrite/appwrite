@@ -92,6 +92,7 @@ class Executor
         string $buildId, 
         string $path,
         array $vars,
+        string $entrypoint,
         string $data,
         string $runtime,
         string $baseImage,
@@ -117,6 +118,7 @@ class Executor
             'baseImage' => $baseImage,
             'webhooks' => $webhooks,
             'userId' => $userId,
+            'entrypoint' => $entrypoint
         ];
 
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);

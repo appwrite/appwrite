@@ -1,7 +1,12 @@
 <?php
 
+use Appwrite\Event\Event;
+use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
+use Appwrite\Stats\Stats;
+use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
+use Executor\Executor;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -33,6 +38,11 @@ Console::success('Finished warmup in ' . $warmupTime . ' seconds');
 
 class FunctionsV1 extends Worker
 {
+    /**
+     * @var Executor
+     */
+    private $executor = null;
+
     public array $args = [];
 
     public array $allowed = [];
@@ -43,6 +53,7 @@ class FunctionsV1 extends Worker
 
     public function init(): void
     {
+        $this->executor = new Executor();
     }
 
     public function run(): void
@@ -70,13 +81,7 @@ class FunctionsV1 extends Worker
                 /** @var Document[] $functions */
 
                 while ($sum >= $limit) {
-
-                    Authorization::disable();
-
-                    $functions = $database->find('functions', [], $limit, $offset, ['name'], [Database::ORDER_ASC]);
-
-                    Authorization::reset();
-
+                    $functions = Authorization::skip(fn() => $database->find('functions', [], $limit, $offset, ['name'], [Database::ORDER_ASC]));
                     $sum = \count($functions);
                     $offset = $offset + $limit;
 
@@ -84,31 +89,31 @@ class FunctionsV1 extends Worker
 
                     foreach ($functions as $function) {
                         $events =  $function->getAttribute('events', []);
-                        $deployment =  $function->getAttribute('deployment', []);
 
-                        Console::success('Itterating function: ' . $function->getAttribute('name'));
-
-                        if (!\in_array($event, $events) || empty($deployment)) {
+                        if (!\in_array($event, $events)) {
                             continue;
                         }
 
-                        Console::success('Triggered function: ' . $event);
+                        Console::success('Iterating function: ' . $function->getAttribute('name'));
 
                         $this->execute(
-                            trigger: 'event',
                             projectId: $projectId,
-                            executionId: '',
-                            database: $database,
                             function: $function,
+                            dbForProject: $database,
+                            executionId: $executionId,
+                            webhooks: $webhooks,
+                            trigger: $trigger,
                             event: $event,
                             eventData: $eventData,
                             data: $data,
-                            webhooks: $webhooks,
                             userId: $userId,
                             jwt: $jwt
                         );
+
+                        Console::success('Triggered function: ' . $event);
                     }
                 }
+
                 break;
 
             case 'schedule':
@@ -126,9 +131,7 @@ class FunctionsV1 extends Worker
                  */
 
                 // Reschedule
-                Authorization::disable();
-                $function = $database->getDocument('functions', $functionId);
-                Authorization::reset();
+                $function = Authorization::skip(fn() => $database->getDocument('functions', $functionId));
 
                 if (empty($function->getId())) {
                     throw new Exception('Function not found ('.$functionId.')');
@@ -145,19 +148,18 @@ class FunctionsV1 extends Worker
                     ->setAttribute('scheduleNext', $next)
                     ->setAttribute('schedulePrevious', \time());
 
-                Authorization::disable();
+                $function = Authorization::skip(function()  use ($database, $function, $next, $functionId) {
+                    $function = $database->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
+                        'scheduleNext' => (int)$next,
+                    ])));
+    
+                    if ($function === false) {
+                        throw new Exception('Function update failed (' . $functionId . ')');
+                    }
+                    return $function;
+                });
 
-                $function = $database->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
-                    'scheduleNext' => (int)$next,
-                ])));
-
-                if ($function === false) {
-                    throw new Exception('Function update failed (' . $functionId . ')');
-                }
-
-                Authorization::reset();
-
-                ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
+                ResqueScheduler::enqueueAt($next, Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME, [
                     'projectId' => $projectId,
                     'webhooks' => $webhooks,
                     'functionId' => $function->getId(),
@@ -168,101 +170,200 @@ class FunctionsV1 extends Worker
                 ]);  // Async task reschedule
 
                 $this->execute(
-                    trigger: $trigger,
                     projectId: $projectId,
-                    executionId: $executionId,
-                    database: $database,
                     function: $function,
-                    data: $data,
+                    dbForProject: $database,
+                    executionId: $executionId,
                     webhooks: $webhooks,
+                    trigger: $trigger,
+                    event: $event,
+                    eventData: $eventData,
+                    data: $data,
                     userId: $userId,
                     jwt: $jwt
                 );
                 break;
 
             case 'http':
-                Authorization::disable();
-                $function = $database->getDocument('functions', $functionId);
-                Authorization::reset();
+                $function = Authorization::skip(fn() => $database->getDocument('functions', $functionId));
 
                 if (empty($function->getId())) {
                     throw new Exception('Function not found ('.$functionId.')');
                 }
 
-                $deployment = Authorization::skip(fn() => $database->getDocument('deployments', $function->getAttribute('deployment')));
-
-                $build = Authorization::skip(fn() => $database->getDocument('builds', $deployment->getAttribute('build')));
-                $path = $build->getAttribute('path', '');
-
                 $this->execute(
-                    trigger: $trigger,
                     projectId: $projectId,
-                    executionId: $executionId,
-                    path: $path,
-                    buildId: $deployment->getAttribute('buildId', ''),
-                    deploymentId: $deployment->getId(),
-                    database: $database,
                     function: $function,
-                    data: $data,
+                    dbForProject: $database,
+                    executionId: $executionId,
                     webhooks: $webhooks,
+                    trigger: $trigger,
+                    event: $event,
+                    eventData: $eventData,
+                    data: $data,
                     userId: $userId,
                     jwt: $jwt
                 );
+
                 break;
         }
     }
 
-    /**
-     * Execute function deployment
-     * 
-     * @param string $trigger
-     * @param string $projectId
-     * @param string $executionId
-     * @param Database $database
-     * @param Document $function
-     * @param string $event
-     * @param string $eventData
-     * @param string $data
-     * @param array $webhooks
-     * @param string $userId
-     * @param string $jwt
-     * 
-     * @return void
-     */
-    public function execute(string $trigger, string $path, string $projectId, string $deploymentId, string $buildId, string $executionId, Database $database, Document $function, string $event = '', string $eventData = '', string $data = '', array $webhooks = [], string $userId = '', string $jwt = ''): void
-    {
-        $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/{$function->getId()}/executions");
-        \curl_setopt($ch, CURLOPT_POST, true);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-            'deploymentId' => $deploymentId,
-            'buildId' => $buildId,
-            'path' => $path,
-            'vars' => $function->getAttribute('vars', []), 
-            'data' => $data,
-            'runtime' => $function->getAttribute('runtime', ''),
-            'timeout' => $function->getAttribute('timeout', 0),
-            'baseImage' => '',
-            'webhooks' => $webhooks,
-            'userId' => $userId,
-        ]));
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, CURLOPT_TIMEOUT, App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900) + 200); // + 200 for safety margin
-        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'x-appwrite-project: '.$projectId,
-            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
-        ]);
+    private function execute(
+        string $projectId,
+        Document $function,
+        Database $dbForProject,
+        string $executionId,
+        array $webhooks,
+        string $trigger,
+        string $event, 
+        string $eventData,
+        string $data,
+        string $userId,
+        string $jwt
+    ) {
 
-        \curl_exec($ch);
+        $functionId = $function->getId();
+        $deploymentId = $function->getAttribute('deployment', '');
 
-        $error = \curl_error($ch);
-        if (!empty($error)) {
-            Console::error('Curl error: '.$error);
+        /** Check if deployment exists */
+        $deployment = Authorization::skip(fn() => $dbForProject->getDocument('deployments', $deploymentId));
+
+        if ($deployment->getAttribute('resourceId') !== $functionId) {
+            throw new Exception('Deployment not found. Create deployment before trying to execute a function', 404);
         }
 
-        \curl_close($ch);
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found. Create deployment before trying to execute a function', 404);
+        }
+
+        /** Check if build has exists */
+        $build = Authorization::skip(fn() => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+        if ($build->isEmpty()) {
+            throw new Exception('Build not found', 404);
+        }
+
+        if ($build->getAttribute('status') !== 'ready') {
+            throw new Exception('Build not ready', 400);
+        }
+
+        /** Check if  runtime is supported */
+        $runtimes = Config::getParam('runtimes', []);
+        $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
+
+        if (\is_null($runtime)) {
+            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported', 400);
+        }
+
+        /** Create execution or update execution status */
+        $execution = Authorization::skip(function() use ($dbForProject, &$executionId, $functionId, $deploymentId, $trigger, $userId) {
+            $execution = $dbForProject->getDocument('executions', $executionId);
+            if ($execution->isEmpty()) {
+                $executionId = $dbForProject->getId();
+                $execution = $dbForProject->createDocument('executions', new Document([
+                    '$id' => $executionId,
+                    '$read' => $userId ? ['user:' . $userId] : [],
+                    '$write' => [],
+                    'dateCreated' => time(),
+                    'functionId' => $functionId,
+                    'deploymentId' => $deploymentId,
+                    'trigger' => $trigger,
+                    'status' => 'waiting',
+                    'statusCode' => 0,
+                    'stdout' => '',
+                    'stderr' => '',
+                    'time' => 0.0,
+                    'search' => implode(' ', [$functionId, $executionId]),
+                ]));
+                
+                if ($execution->isEmpty()) {
+                    throw new Exception('Failed to create or read execution');
+                }
+            }
+            $execution->setAttribute('status', 'processing');
+            $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+            return $execution;
+        });
+
+        /** Collect environment variables */
+        $vars = [
+            'APPWRITE_FUNCTION_ID' => $functionId,
+            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
+            'APPWRITE_FUNCTION_DEPLOYMENT' => $deploymentId,
+            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
+            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
+            'APPWRITE_FUNCTION_TRIGGER' => $trigger,
+            'APPWRITE_FUNCTION_EVENT' => $event,
+            'APPWRITE_FUNCTION_EVENT_DATA' => $eventData,
+            'APPWRITE_FUNCTION_DATA' => $data,
+            'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
+            'APPWRITE_FUNCTION_USER_ID' => $userId,
+            'APPWRITE_FUNCTION_JWT' => $jwt,
+        ];
+        $vars = \array_merge($function->getAttribute('vars', []), $vars);
+
+        /** Execute function */
+        $executionResponse = $this->executor->createExecution(
+            projectId: $projectId,
+            functionId: $functionId,
+            deploymentId: $deploymentId,
+            buildId: $deployment->getAttribute('buildId', ''),
+            path: $build->getAttribute('outputPath', ''),
+            vars: $vars,
+            entrypoint: $deployment->getAttribute('entrypoint', ''),
+            data: $vars['APPWRITE_FUNCTION_DATA'],
+            runtime: $function->getAttribute('runtime', ''),
+            timeout: $function->getAttribute('timeout', 0),
+            baseImage: $runtime['image'],
+            webhooks: $webhooks,
+            userId: $userId,
+        );
+
+        /** Update execution status */
+        $execution->setAttribute('status', $executionResponse['status']);
+        $execution->setAttribute('statusCode', $executionResponse['statusCode']);
+        $execution->setAttribute('stdout', $executionResponse['stdout']);
+        $execution->setAttribute('stderr', $executionResponse['stderr']);
+        $execution->setAttribute('time', $executionResponse['time']);
+        $execution = Authorization::skip(fn() => $dbForProject->updateDocument('executions', $executionId, $execution));
+
+        /** Trigger Webhook */
+        $executionModel = new Execution();
+        $executionUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
+        $executionUpdate
+            ->setParam('projectId', $projectId)
+            ->setParam('userId', $userId)
+            ->setParam('webhooks', $webhooks)
+            ->setParam('event', 'functions.executions.update')
+            ->setParam('eventData', $execution->getArrayCopy(array_keys($executionModel->getRules())));
+        $executionUpdate->trigger();
+
+        /** Trigger realtime event */
+        $target = Realtime::fromPayload('functions.executions.update', $execution);
+        Realtime::send(
+            projectId: $projectId,
+            payload: $execution->getArrayCopy(),
+            event: 'functions.executions.update',
+            channels: $target['channels'],
+            roles: $target['roles']
+        );
+
+        /** Update usage stats */
+        global $register;
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
+            $statsd = $register->get('statsd');
+            $usage = new Stats($statsd);
+            $usage
+                ->setParam('projectId', $projectId)
+                ->setParam('functionId', $function->getId())
+                ->setParam('functionExecution', 1)
+                ->setParam('functionStatus', $execution->getAttribute('status', ''))
+                ->setParam('functionExecutionTime', $execution->getAttribute('time') * 1000) // ms
+                ->setParam('networkRequestSize', 0)
+                ->setParam('networkResponseSize', 0)
+                ->submit();
+            $usage->submit();
+        }
     }
 
     public function shutdown(): void

@@ -1,11 +1,7 @@
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Appwrite\Event\Event;
-use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Stats\Stats;
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model\Execution;
 use Swoole\ConnectionPool;
 use Swoole\Coroutine as Co;
 use Swoole\Http\Request as SwooleRequest;
@@ -260,7 +256,7 @@ function createRuntimeServer(string $projectId, string $deploymentId, array $bui
     }
 };
 
-function execute(string $projectId, string $functionId, string $deploymentId, array $build, array $vars, string $data, string $userId, string $baseImage, string $runtime, int $timeout, array $webhooks = []): array
+function execute(string $projectId, string $functionId, string $deploymentId, array $build, array $vars, string $data, string $userId, string $baseImage, string $runtime, string $entrypoint, int $timeout, array $webhooks = []): array
 {
 
     Console::info('Executing function: ' . $functionId);
@@ -296,7 +292,7 @@ function execute(string $projectId, string $functionId, string $deploymentId, ar
 
         $body = \json_encode([
             'path' => '/usr/code',
-            'file' => $vars['ENTRYPOINT_NAME'],
+            'file' => $entrypoint,
             'env' => $vars,
             'payload' => $data,
             'timeout' => $timeout ?? (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)
@@ -348,8 +344,6 @@ function execute(string $projectId, string $functionId, string $deploymentId, ar
         throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 500);
     }
 
-    var_dump($executorResponse);
-
     $executionData = [];
 
     if (!empty($executorResponse)) {
@@ -390,44 +384,7 @@ function execute(string $projectId, string $functionId, string $deploymentId, ar
         'time' => $executionTime,
     ];
 
-    /** Trigger event */
-    $executionModel = new Execution();
-    $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
-    $executionUpdate
-        ->setParam('projectId', $projectId)
-        ->setParam('userId', $userId)
-        ->setParam('webhooks', $webhooks)
-        ->setParam('event', 'functions.executions.update')
-        ->setParam('eventData', (new Document($execution))->getArrayCopy(array_keys($executionModel->getRules())));
-    $executionUpdate->trigger();
-
-    /** Trigger realtime event */
-    $target = Realtime::fromPayload('functions.executions.update', new Document($execution));
-    Realtime::send(
-        projectId: $projectId,
-        payload: $execution,
-        event: 'functions.executions.update',
-        channels: $target['channels'],
-        roles: $target['roles']
-    );
-
-    if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-        $statsd = $register->get('statsd');
-        $usage = new Stats($statsd);
-        $usage
-            ->setParam('projectId', $projectId)
-            ->setParam('functionId', $functionId)
-            ->setParam('functionExecution', 1)
-            ->setParam('functionStatus', $functionStatus)
-            ->setParam('functionExecutionTime', $executionTime * 1000) // ms
-            ->setParam('networkRequestSize', 0)
-            ->setParam('networkResponseSize', 0)
-            ->submit();
-        $usage->submit();
-    }
-
     return $execution;
-
 };
 
 function runBuildStage(string $buildId, string $projectID, string $path, array $vars, string $baseImage, string $runtime): array
@@ -651,6 +608,7 @@ App::post('/v1/functions/:functionId/executions')
     ->param('vars', '', new Assoc(), 'Environment Variables required for the build', false)
     ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
     ->param('runtime', '', new Text(128), 'Runtime for the cloud function', false)
+    ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file')
     ->param('timeout', 15, new ValidatorRange(1, 900), 'Function maximum execution time in seconds.', true)
     ->param('baseImage', '', new Text(128), 'Base image name of the runtime', false)
     ->param('webhooks', [], new ArrayList(new JSON()), 'Any webhooks that need to be triggered after this execution', true)
@@ -658,7 +616,7 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('projectId')
     ->inject('response')
     ->action(
-        function (string $functionId, string $deploymentId, string $buildId, string $path, array $vars, string $data, string $runtime, $timeout, string $baseImage, array $webhooks, string $userId, string $projectId, Response $response) {
+        function (string $functionId, string $deploymentId, string $buildId, string $path, array $vars, string $data, string $runtime, string $entrypoint, $timeout, string $baseImage, array $webhooks, string $userId, string $projectId, Response $response) {
 
             $build = [
                 '$id' => $buildId,
@@ -666,7 +624,7 @@ App::post('/v1/functions/:functionId/executions')
             ];
 
             // Send both data and vars from the caller 
-            $execution = execute($projectId, $functionId, $deploymentId, $build, $vars, $data, $userId, $baseImage, $runtime, $timeout, $webhooks);
+            $execution = execute($projectId, $functionId, $deploymentId, $build, $vars, $data, $userId, $baseImage, $runtime, $entrypoint, $timeout, $webhooks);
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_OK)
