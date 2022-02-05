@@ -349,7 +349,7 @@ function execute(string $projectId, string $functionId, string $deploymentId, ar
     }
 
     var_dump($executorResponse);
-    
+
     $executionData = [];
 
     if (!empty($executorResponse)) {

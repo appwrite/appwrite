@@ -25,6 +25,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Config\Config;
 use Cron\CronExpression;
+use Executor\Executor;
 use Utopia\CLI\Console;
 use Utopia\Validator\Boolean;
 
@@ -865,45 +866,29 @@ App::post('/v1/functions/:functionId/executions')
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
             'APPWRITE_FUNCTION_DATA' => $data,
+            'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_USER_ID' => $user->getId(),
             'APPWRITE_FUNCTION_JWT' => $jwt,
-            'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId()
         ]);
 
         // Directly execute function.
-        $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/{$function->getId()}/executions");
-        \curl_setopt($ch, CURLOPT_POST, true);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-            'deploymentId' => $deployment->getId(),
-            'buildId' => $deployment->getAttribute('buildId', ''),
-            'path' => $build->getAttribute('outputPath', ''),
-            'vars' => $vars, 
-            'data' => $data,
-            'runtime' => $function->getAttribute('runtime', ''),
-            'timeout' => $function->getAttribute('timeout', 0),
-            'baseImage' => $runtime['image'],
-            'webhooks' => $project->getAttribute('webhooks', []),
-            'userId' => $user->getId(),
-        ]));
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, CURLOPT_TIMEOUT, App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900) + 200); // + 200 for safety margin
-        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'x-appwrite-project: '.$project->getId(),
-            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
-        ]);
-    
-        $responseExecute = \curl_exec($ch);
-    
-        $error = \curl_error($ch);
-        if (!empty($error)) {
-            Console::error('Curl error: '.$error);
-        }
-        \curl_close($ch);
+        $executor = new Executor();
+        
+        $responseExecute = $executor->createExecution(
+            projectId: $project->getId(),
+            functionId: $function->getId(),
+            deploymentId: $deployment->getId(),
+            buildId: $deployment->getAttribute('buildId', ''),
+            path: $build->getAttribute('outputPath', ''),
+            vars: $vars,
+            data: $data,
+            runtime: $function->getAttribute('runtime', ''),
+            timeout: $function->getAttribute('timeout', 0),
+            baseImage: $runtime['image'],
+            webhooks: $project->getAttribute('webhooks', []),
+            userId: $user->getId(),
+        );
 
-        $responseExecute = json_decode($responseExecute, true);
         $execution->setAttribute('status', $responseExecute['status']);
         $execution->setAttribute('statusCode', $responseExecute['statusCode']);
         $execution->setAttribute('stdout', $responseExecute['stdout']);

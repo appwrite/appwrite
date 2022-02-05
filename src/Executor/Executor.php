@@ -67,7 +67,7 @@ class Executor
     {
         $route = "/deployments/$deploymentId";
         $headers = [
-            'content-Type' =>  'application/json',
+            'content-type' =>  'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
         ];
@@ -102,7 +102,7 @@ class Executor
     {
         $route = "/functions/$functionId/executions";
         $headers = [
-            'content-Type' =>  'application/json',
+            'content-type' =>  'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
         ];
