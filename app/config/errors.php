@@ -196,6 +196,11 @@ return [
         'description' => 'The requested image could not be parsed.',
         'statusCode' => 500,
     ],
+    Exception::AVATAR_REMOTE_URL_FAILED => [
+        'name' => Exception::AVATAR_REMOTE_URL_FAILED,
+        'description' => 'The remote URL could not be fetched.',
+        'statusCode' => 404,
+    ],
 
 
     /** Files */
