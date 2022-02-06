@@ -431,10 +431,12 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         'line' => $error->getLine(),
         'trace' => $error->getTrace(),
         'version' => $version,
+        'type' => $error->getType(),
     ] : [
         'message' => $message,
         'code' => $code,
         'version' => $version,
+        'type' => $error->getType(),
     ];
 
     $response

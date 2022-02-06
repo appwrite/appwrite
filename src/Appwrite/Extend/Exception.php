@@ -2,8 +2,6 @@
 
 namespace Appwrite\Extend;
 
-use Utopia\Config\Config;
-
 class Exception extends \Exception
 {
     /**
@@ -156,11 +154,11 @@ class Exception extends \Exception
     const GENERAL_SERVER_ERROR              = 'general_server_error';
 
 
-    private $errorCode = '';
+    private $type = '';
 
-    public function __construct(string $message, int $code = 0, string $errorCode = Exception::GENERAL_DEFAULT, \Throwable $previous = null)
+    public function __construct(string $message, int $code = 0, string $type = Exception::GENERAL_DEFAULT, \Throwable $previous = null)
     {
-        $this->errorCode = $errorCode;
+        $this->type = $type;
 
         parent::__construct($message, $code, $previous);
     }
@@ -168,8 +166,8 @@ class Exception extends \Exception
     /**
      * @return string
      */ 
-    public function getErrorCode(): string
+    public function getType(): string
     {
-        return $this->errorCode;
+        return $this->type;
     }
 }

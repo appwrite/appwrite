@@ -8,6 +8,16 @@ use Appwrite\Extend\Exception;
 
 return [
     /** General Errors */
+    Exception::GENERAL_DEFAULT => [
+        'name' => Exception::GENERAL_DEFAULT,
+        'description' => 'Default error',
+        'code' => 500, 
+    ],
+    Exception::GENERAL_ACCESS_FORBIDDEN => [
+        'name' => Exception::GENERAL_ACCESS_FORBIDDEN,
+        'description' => 'Access forbidden',
+        'code' => 403, 
+    ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
         'description' => 'The request originated from a non-whitelisted origin. If you trust this origin, please add it as a platform in the Appwrite console.',
@@ -30,8 +40,13 @@ return [
     ],
     Exception::GENERAL_SMTP_DISABLED => [
         'name' => Exception::GENERAL_SMTP_DISABLED,
-        'description' => 'SMTP is disabled on your Appwrite instance. Please contact your project ',
+        'description' => 'SMTP is disabled on your Appwrite instance. Please contact your project.',
         'code' => 503,
+    ],
+    Exception::GENERAL_SERVER_ERROR => [
+        'name' => Exception::GENERAL_SERVER_ERROR,
+        'description' => 'Internal server error.',
+        'code' => 500,
     ],
 
     /** Project Errors */
