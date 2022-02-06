@@ -26,6 +26,7 @@ class Exception extends \Exception
 
     /** Users */
     const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
+    const USER_JWT_INVALID                  = 'user_jwt_invalid';
     const USER_ALREADY_EXISTS               = 'user_already_exists';
     const USER_BLOCKED                      = 'user_blocked';
     const USER_INVALID_TOKEN                = 'user_invalid_token';
@@ -135,24 +136,21 @@ class Exception extends \Exception
     const DOMAIN_VERIFICATION_FAILED = 'domain_verification_failed';
 
     /** General */
-    const DEFAULT                   = 'default';
-    const ACCESS_FORBIDDEN          = 'access_forbidden';
-    const UNKNOWN_ORIGIN            = 'unknown_origin';
-    const SERVICE_DISABLED          = 'service_disabled';
-    const INVALID_READ_PERMISSIONS  = 'invalid_read_permissions';
-    const INVALID_WRITE_PERMISSIONS = 'invalid_write_permissions';
-    const UNAUTHORIZED_SCOPE        = 'unauthorized_scope';
-    const RATE_LIMIT_EXCEEDED       = 'rate_limit_exceeded';
-    const SMTP_DISABLED             = 'smtp_disabled';
-
-    /** Server Errors */
-    const GENERAL_SERVER_ERROR       = 'general_server_error';
-
+    const GENERAL_DEFAULT                   = 'general_default';
+    const GENERAL_ACCESS_FORBIDDEN          = 'general_access_forbidden';
+    const GENERAL_UNKNOWN_ORIGIN            = 'general_unknown_origin';
+    const GENERAL_SERVICE_DISABLED          = 'general_service_disabled';
+    const INVALID_READ_PERMISSIONS          = 'invalid_read_permissions';
+    const INVALID_WRITE_PERMISSIONS         = 'invalid_write_permissions';
+    const GENERAL_UNAUTHORIZED_SCOPE        = 'general_unauthorized_scope';
+    const GENERAL_RATE_LIMIT_EXCEEDED       = 'general_rate_limit_exceeded';
+    const GENERAL_SMTP_DISABLED             = 'general_smtp_disabled';
+    const GENERAL_SERVER_ERROR              = 'general_server_error';
 
 
     private $errorCode = '';
 
-    public function __construct(string $message, int $code = 0, string $errorCode = Exception::DEFAULT, \Throwable $previous = null)
+    public function __construct(string $message, int $code = 0, string $errorCode = Exception::GENERAL_DEFAULT, \Throwable $previous = null)
     {
         $this->errorCode = $errorCode;
 

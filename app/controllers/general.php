@@ -214,7 +214,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
         && $route->getLabel('origin', false) !== '*'
         && empty($request->getHeader('x-appwrite-key', ''))) {
-        throw new Exception($originValidator->getDescription(), 403, Exception::UNKNOWN_ORIGIN);
+        throw new Exception($originValidator->getDescription(), 403, Exception::GENERAL_UNKNOWN_ORIGIN);
     }
 
     /*
@@ -283,7 +283,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         if(array_key_exists($service, $project->getAttribute('services',[]))
             && !$project->getAttribute('services',[])[$service]
             && !Auth::isPrivilegedUser(Authorization::getRoles())) {
-            throw new Exception('Service is disabled', 503, Exception::SERVICE_DISABLED);
+            throw new Exception('Service is disabled', 503, Exception::GENERAL_SERVICE_DISABLED);
         }
     }
 
@@ -292,7 +292,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
             throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
-        throw new Exception($user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401, Exception::UNAUTHORIZED_SCOPE);
+        throw new Exception($user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401, Exception::GENERAL_UNAUTHORIZED_SCOPE);
     }
 
     if (false === $user->getAttribute('status')) { // Account is blocked
@@ -530,7 +530,7 @@ App::get('/.well-known/acme-challenge')
         $absolute = \realpath($base.'/.well-known/acme-challenge/'.$path);
 
         if (!$base) {
-            throw new Exception('Storage error', 500);
+            throw new Exception('Storage error', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         if (!$absolute) {
@@ -548,7 +548,7 @@ App::get('/.well-known/acme-challenge')
         $content = @\file_get_contents($absolute);
 
         if (!$content) {
-            throw new Exception('Failed to get contents', 500);
+            throw new Exception('Failed to get contents', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $response->text($content);

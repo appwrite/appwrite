@@ -29,7 +29,7 @@ App::init(function ($project) {
     /** @var Utopia\Database\Document $project */
 
     if ($project->getId() !== 'console') {
-        throw new Exception('Access to this API is forbidden.', 401, Exception::ACCESS_FORBIDDEN);
+        throw new Exception('Access to this API is forbidden.', 401, Exception::GENERAL_ACCESS_FORBIDDEN);
     }
 }, ['project'], 'projects');
 

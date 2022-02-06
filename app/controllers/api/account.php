@@ -637,7 +637,7 @@ App::post('/v1/account/sessions/magic-url')
         /** @var Appwrite\Event\Event $mails */
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503, Exception::SMTP_DISABLED);
+            throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
         }
 
         $roles = Authorization::getRoles();
@@ -1764,7 +1764,7 @@ App::post('/v1/account/recovery')
         /** @var Appwrite\Stats\Stats $usage */
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503, Exception::SMTP_DISABLED);
+            throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
         }
 
         $roles = Authorization::getRoles();
@@ -1957,7 +1957,7 @@ App::post('/v1/account/verification')
         /** @var Appwrite\Stats\Stats $usage */
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503, Exception::SMTP_DISABLED);
+            throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
         }
 
         $roles = Authorization::getRoles();

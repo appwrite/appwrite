@@ -81,7 +81,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
         && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not disabled
         && (!$isAppUser && !$isPrivilegedUser)) // User is not an admin or API key
         {
-            throw new Exception('Too many requests', 429, Exception::RATE_LIMIT_EXCEEDED);
+            throw new Exception('Too many requests', 429, Exception::GENERAL_RATE_LIMIT_EXCEEDED);
         }
     }
 

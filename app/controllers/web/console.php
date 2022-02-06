@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Extend\Exception;
 use Appwrite\Utopia\View;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -419,9 +420,9 @@ App::get('/console/version')
             if ($version && isset($version['version'])) {
                 return $response->json(['version' => $version['version']]);
             } else {
-                throw new Exception('Failed to check for a newer version', 500);
+                throw new Exception('Failed to check for a newer version', 500, Exception::GENERAL_SERVER_ERROR);
             }
         } catch (\Throwable $th) {
-            throw new Exception('Failed to check for a newer version', 500);
+            throw new Exception('Failed to check for a newer version', 500, Exception::GENERAL_SERVER_ERROR);
         }
     });

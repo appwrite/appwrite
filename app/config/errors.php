@@ -8,13 +8,13 @@ use Appwrite\Extend\Exception;
 
 return [
     /** General Errors */
-    Exception::UNKNOWN_ORIGIN => [
-        'name' => Exception::UNKNOWN_ORIGIN,
+    Exception::GENERAL_UNKNOWN_ORIGIN => [
+        'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
         'description' => 'The request originated from a non-whitelisted origin. If you trust this origin, please add it as a platform in the Appwrite console.',
         'code' => 403,
     ],
-    Exception::SERVICE_DISABLED => [
-        'name' => Exception::SERVICE_DISABLED,
+    Exception::GENERAL_SERVICE_DISABLED => [
+        'name' => Exception::GENERAL_SERVICE_DISABLED,
         'description' => 'The requested service is disabled. You can enable/disable a service from the Appwrite console or by contacting the project owner.',
         'code' => 503,
     ],
@@ -28,8 +28,8 @@ return [
         'description' => 'Invalid format for write permissions. Please check the documentation.',
         'code' => 400,
     ],
-    Exception::UNAUTHORIZED_SCOPE => [
-        'name' => Exception::UNAUTHORIZED_SCOPE,
+    Exception::GENERAL_UNAUTHORIZED_SCOPE => [
+        'name' => Exception::GENERAL_UNAUTHORIZED_SCOPE,
         'description' => 'The current user or API key does not have the required scopes to access the requested resource.',
         'code' => 401,
     ],
@@ -38,13 +38,13 @@ return [
         'description' => 'Storage error',
         'code' => 500,
     ],
-    Exception::RATE_LIMIT_EXCEEDED => [
-        'name' => Exception::RATE_LIMIT_EXCEEDED,
+    Exception::GENERAL_RATE_LIMIT_EXCEEDED => [
+        'name' => Exception::GENERAL_RATE_LIMIT_EXCEEDED,
         'description' => 'Rate limit for the current endpoint has been exceeded. Please try again after some time.',
         'code' => 429,
     ],
-    Exception::SMTP_DISABLED => [
-        'name' => Exception::SMTP_DISABLED,
+    Exception::GENERAL_SMTP_DISABLED => [
+        'name' => Exception::GENERAL_SMTP_DISABLED,
         'description' => 'SMTP is disabled on your Appwrite instance. Please contact your project ',
         'code' => 503,
     ],
@@ -105,6 +105,11 @@ return [
     Exception::USER_EMAIL_NOT_WHITELISTED => [
         'name' => Exception::USER_EMAIL_NOT_WHITELISTED,
         'description' => 'The user\'s email is not part of the whitelist. Please check the _APP_CONSOLE_WHITELIST_EMAILS environment variable of your Appwrite server.',
+        'code' => 401,
+    ],
+    Exception::USER_JWT_INVALID => [
+        'name' => Exception::USER_JWT_INVALID,
+        'description' => 'The JWT token is invalid. Please check the value of the X-Appwrite-JWT header to ensure the correct token is being used.',
         'code' => 401,
     ],
     Exception::USER_PASSWORD_RESET_REQUIRED => [
