@@ -116,7 +116,7 @@ App::post('/v1/storage/files')
         $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
 
         if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
-            throw new Exception('Failed moving file', 500);
+            throw new Exception('Failed moving file', 500, Exception::STORAGE_FAILED_TO_MOVE_FILE);
         }
 
         $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
@@ -127,7 +127,7 @@ App::post('/v1/storage/files')
 
             if (!$antivirus->fileScan($path)) {
                 $device->delete($path);
-                throw new Exception('Invalid file', 403);
+                throw new Exception('Invalid file', 403, Exception::STORAGE_INVALID_FILE);
             }
         }
 

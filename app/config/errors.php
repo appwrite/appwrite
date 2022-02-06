@@ -239,4 +239,9 @@ return [
         'description' => 'The uploaded file is invalid. Please check the file and try again.',
         'statusCode' => 403,
     ],
+    Exception::STORAGE_FAILED_TO_MOVE_FILE => [
+        'name' => Exception::STORAGE_FAILED_TO_MOVE_FILE,
+        'description' => 'Failed to copy the uploaded file.',
+        'statusCode' => 500,
+    ],
 ];
