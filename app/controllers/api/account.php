@@ -406,7 +406,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
         if (!\class_exists($className)) {
-            throw new Exception('Provider is not supported', 501, Exception::TYPE_PROVIDER_UNSUPPORTED);
+            throw new Exception('Provider is not supported', 501, Exception::OAUTH_PROVIDER_UNSUPPORTED);
         }
 
         $oauth2 = new $className($appId, $appSecret, $callback);
@@ -415,7 +415,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             try {
                 $state = \array_merge($defaultState, $oauth2->parseState($state));
             } catch (\Exception$exception) {
-                throw new Exception('Failed to parse login state params as passed from OAuth2 provider', 500, Exception::TYPE_INVALID_LOGIN_STATE_PARAMS);
+                throw new Exception('Failed to parse login state params as passed from OAuth2 provider', 500, Exception::OAUTH_INVALID_LOGIN_STATE_PARAMS);
             }
         } else {
             $state = $defaultState;
