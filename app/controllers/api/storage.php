@@ -2,7 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Utopia\App;
-use Appwrite\Extend\Exception
+use Appwrite\Extend\Exception;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
