@@ -65,9 +65,7 @@ class Exception extends \Exception
     /** Avatars */
     const AVATAR_SET_NOT_FOUND             = 'avatar_set_not_found';
     const AVATAR_NOT_FOUND                 = 'avatar_not_found';
-    const IMAGIC_EXTENSION_MISSING         = 'imagic_extension_missing';
     const AVATAR_IMAGE_NOT_FOUND           = 'avatar_image_not_found';
-    const AVATAR_CANNOT_PARSE_IMAGE        = 'avatar_cannot_parse_image';
     const AVATAR_REMOTE_URL_FAILED         = 'avatar_remote_url_failed';
     const AVATAR_ICON_NOT_FOUND            = 'avatar_icon_not_found';
 
@@ -76,7 +74,6 @@ class Exception extends \Exception
     const STORAGE_FILE_NOT_FOUND            = 'storage_file_not_found';
     const STORAGE_DEVICE_NOT_FOUND          = 'storage_device_not_found';
     const STORAGE_FILE_DELETION_FAILED      = 'storage_file_deletion_failed';
-    const STORAGE_FILE_NOT_READABLE         = 'storage_file_not_readable';
     const STORAGE_FILE_EMPTY                = 'storage_file_empty';
     const STORAGE_FILE_TYPE_UNSUPPORTED     = 'storage_file_type_unsupported';
     const STORAGE_INVALID_FILE_SIZE         = 'storage_invalid_file_size';

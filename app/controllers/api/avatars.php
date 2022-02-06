@@ -33,7 +33,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality, $response) 
     }
 
     if (!\extension_loaded('imagick')) {
-        throw new Exception('Imagick extension is missing', 500, Exception::IMAGIC_EXTENSION_MISSING);
+        throw new Exception('Imagick extension is missing', 500, Exception::GENERAL_SERVER_ERROR);
     }
 
     $output = 'png';
@@ -43,7 +43,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality, $response) 
     $type = 'png';
 
     if (!\is_readable($path)) {
-        throw new Exception('File not readable in ' . $path, 500, Exception::STORAGE_FILE_NOT_READABLE);
+        throw new Exception('File not readable in ' . $path, 500, Exception::GENERAL_SERVER_ERROR);
     }
 
     $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size
@@ -169,7 +169,7 @@ App::get('/v1/avatars/image')
         }
 
         if (!\extension_loaded('imagick')) {
-            throw new Exception('Imagick extension is missing', 500, Exception::IMAGIC_EXTENSION_MISSING);
+            throw new Exception('Imagick extension is missing', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $fetch = @\file_get_contents($url, false);
@@ -181,7 +181,7 @@ App::get('/v1/avatars/image')
         try {
             $image = new Image($fetch);
         } catch (\Exception$exception) {
-            throw new Exception('Unable to parse image', 500, Exception::AVATAR_CANNOT_PARSE_IMAGE);
+            throw new Exception('Unable to parse image', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $image->crop((int) $width, (int) $height);
@@ -238,7 +238,7 @@ App::get('/v1/avatars/favicon')
         }
 
         if (!\extension_loaded('imagick')) {
-            throw new Exception('Imagick extension is missing', 500, Exception::IMAGIC_EXTENSION_MISSING);
+            throw new Exception('Imagick extension is missing', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $curl = \curl_init();

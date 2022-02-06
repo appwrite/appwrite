@@ -297,20 +297,10 @@ return [
         'description' => 'The request avatar could not be found.',
         'statusCode' => 404,
     ],
-    Exception::IMAGIC_EXTENSION_MISSING => [
-        'name' => Exception::IMAGIC_EXTENSION_MISSING,
-        'description' => 'The Imagic extension could not be found.',
-        'statusCode' => 500,
-    ],
     Exception::AVATAR_IMAGE_NOT_FOUND => [
         'name' => Exception::AVATAR_IMAGE_NOT_FOUND,
         'description' => 'The requested image was not found.',
         'statusCode' => 404,
-    ],
-    Exception::AVATAR_CANNOT_PARSE_IMAGE => [
-        'name' => Exception::AVATAR_CANNOT_PARSE_IMAGE,
-        'description' => 'The requested image could not be parsed.',
-        'statusCode' => 500,
     ],
     Exception::AVATAR_REMOTE_URL_FAILED => [
         'name' => Exception::AVATAR_REMOTE_URL_FAILED,
@@ -348,11 +338,6 @@ return [
         'name' => Exception::STORAGE_FILE_TYPE_UNSUPPORTED,
         'description' => 'The file type is not supported.',
         'statusCode' => 400,
-    ],
-    Exception::STORAGE_FILE_NOT_READABLE => [
-        'name' => Exception::STORAGE_FILE_NOT_READABLE,
-        'description' => 'There was an error reading the file from disk.',
-        'statusCode' => 500,
     ],
     Exception::STORAGE_INVALID_FILE_SIZE => [
         'name' => Exception::STORAGE_INVALID_FILE_SIZE,
