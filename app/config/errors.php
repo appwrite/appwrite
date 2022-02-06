@@ -170,6 +170,21 @@ return [
         'statusCode' => 400,
     ],
 
+    /** Teams */
+    Exception::TEAM_NOT_FOUND => [
+        'name' => Exception::TEAM_NOT_FOUND,
+        'description' => 'Team with the requested ID could not be found.',
+        'statusCode' => 404,
+    ],
+
+    
+    /** Membership */
+    Exception::MEMBERSHIP_NOT_FOUND => [
+        'name' => Exception::MEMBERSHIP_NOT_FOUND,
+        'description' => 'Membership with the requested ID could not be found.',
+        'statusCode' => 404,
+    ],
+
     /** Avatars */
     Exception::AVATAR_SET_NOT_FOUND => [
         'name' => Exception::AVATAR_SET_NOT_FOUND,
@@ -206,7 +221,6 @@ return [
         'description' => 'The requested favicon could not be found.',
         'statusCode' => 404,
     ],
-
 
     /** Storage */
     Exception::STORAGE_FILE_NOT_FOUND => [

@@ -51,6 +51,12 @@ class Exception extends \Exception
     const OAUTH_ACCESS_TOKEN_FAILED        = 'oauth_access_token_failed';
     const OAUTH_MISSING_USER_ID            = 'oauth_missing_user_id';
 
+    /** Teams */
+    const TEAM_NOT_FOUND = 'team_not_found';
+
+    /** Membership */
+    const MEMBERSHIP_NOT_FOUND = 'membership_not_found';
+
     /** Avatars */
     const AVATAR_SET_NOT_FOUND             = 'avatar_set_not_found';
     const AVATAR_NOT_FOUND                 = 'avatar_not_found';
