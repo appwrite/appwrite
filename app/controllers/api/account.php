@@ -68,11 +68,11 @@ App::post('/v1/account')
             $whitelistIPs = $project->getAttribute('authWhitelistIPs');
 
             if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails)) {
-                throw new Exception('Console registration is restricted to specific emails. Contact your administrator for more information.', 401, Exception::TYPE_EMAIL_NOT_WHITELISTED);
+                throw new Exception('Console registration is restricted to specific emails. Contact your administrator for more information.', 401, Exception::USER_EMAIL_NOT_WHITELISTED);
             }
 
             if (!empty($whitelistIPs) && !\in_array($request->getIP(), $whitelistIPs)) {
-                throw new Exception('Console registration is restricted to specific IPs. Contact your administrator for more information.', 401, Exception::TYPE_IP_NOT_WHITELISTED);
+                throw new Exception('Console registration is restricted to specific IPs. Contact your administrator for more information.', 401, Exception::USER_IP_NOT_WHITELISTED);
             }
         }
 
@@ -84,7 +84,7 @@ App::post('/v1/account')
             ], APP_LIMIT_USERS);
 
             if ($sum >= $limit) {
-                throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::TYPE_USER_LIMIT_EXCEEDED);
+                throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
             }
         }
 
@@ -110,7 +110,7 @@ App::post('/v1/account')
                 'deleted' => false
             ])));
         } catch (Duplicate $th) {
-            throw new Exception('Account already exists', 409, Exception::TYPE_USER_ALREADY_EXISTS);
+            throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
         }
 
         Authorization::unsetRole('role:' . Auth::USER_ROLE_GUEST);
@@ -175,11 +175,11 @@ App::post('/v1/account/sessions')
                 ->setParam('resource', 'user/'.($profile ? $profile->getId() : ''))
             ;
 
-            throw new Exception('Invalid credentials', 401, Exception::TYPE_INVALID_CREDENTIALS); // Wrong password or username
+            throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS); // Wrong password or username
         }
 
         if (false === $profile->getAttribute('status')) { // Account is blocked
-            throw new Exception('Invalid credentials. User is blocked', 401, Exception::TYPE_USER_BLOCKED); // User is in status blocked
+            throw new Exception('Invalid credentials. User is blocked', 401, Exception::USER_BLOCKED); // User is in status blocked
         }
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -282,7 +282,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
         }
 
         if (empty($appId) || empty($appSecret)) {
-            throw new Exception('This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.', 412, Exception::TYPE_PROVIDER_DISABLED);
+            throw new Exception('This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.', 412, Exception::OAUTH_PROVIDER_DISABLED);
         }
 
         $className = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
