@@ -420,7 +420,7 @@ App::delete('/v1/functions/:functionId')
         }
 
         if (!$dbForProject->deleteDocument('functions', $function->getId())) {
-            throw new Exception('Failed to remove function from DB', 500, Exception::FUNCTION_DELETION_FAILED);
+            throw new Exception('Failed to remove function from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $deletes
@@ -496,7 +496,7 @@ App::post('/v1/functions/:functionId/tags')
         $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
         
         if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
-            throw new Exception('Failed moving file', 500, Exception::STORAGE_FAILED_TO_MOVE_FILE);
+            throw new Exception('Failed moving file', 500, Exception::GENERAL_SERVER_ERROR);
         }
         
         $tagId = $dbForProject->getId();
@@ -654,7 +654,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
 
         if ($device->delete($tag->getAttribute('path', ''))) {
             if (!$dbForProject->deleteDocument('tags', $tag->getId())) {
-                throw new Exception('Failed to remove tag from DB', 500, Exception::DEPLOYMENT_DELETION_FAILED);
+                throw new Exception('Failed to remove tag from DB', 500, Exception::GENERAL_SERVER_ERROR);
             }
         }
 

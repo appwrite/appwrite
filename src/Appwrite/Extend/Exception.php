@@ -78,16 +78,13 @@ class Exception extends \Exception
     const STORAGE_FILE_TYPE_UNSUPPORTED     = 'storage_file_type_unsupported';
     const STORAGE_INVALID_FILE_SIZE         = 'storage_invalid_file_size';
     const STORAGE_INVALID_FILE              = 'storage_invalid_file';
-    const STORAGE_FAILED_TO_MOVE_FILE       = 'storage_failed_to_move_file';
     const STORAGE_FAILED_TO_WRITE_FILE      = 'storage_failed_to_write_file';
 
     /** Functions */
     const FUNCTION_NOT_FOUND       = 'function_not_found';
-    const FUNCTION_DELETION_FAILED = 'function_deletion_failed';
 
     /** Deployments */
     const DEPLOYMENT_NOT_FOUND       = 'deployment_not_found';
-    const DEPLOYMENT_DELETION_FAILED = 'deployment_deletion_failed';
 
     /** Execution */
     const EXECUTION_NOT_FOUND       = 'execution_not_found';

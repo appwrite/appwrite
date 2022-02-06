@@ -349,11 +349,6 @@ return [
         'description' => 'The uploaded file is invalid. Please check the file and try again.',
         'statusCode' => 403,
     ],
-    Exception::STORAGE_FAILED_TO_MOVE_FILE => [
-        'name' => Exception::STORAGE_FAILED_TO_MOVE_FILE,
-        'description' => 'Failed to move the uploaded file.',
-        'statusCode' => 500,
-    ],
     Exception::STORAGE_FAILED_TO_WRITE_FILE => [
         'name' => Exception::STORAGE_FAILED_TO_WRITE_FILE,
         'description' => 'Failed to save the uploaded file.',
@@ -366,22 +361,12 @@ return [
         'description' => 'The requested function could not be found.',
         'statusCode' => 404,
     ],
-    Exception::FUNCTION_DELETION_FAILED => [
-        'name' => Exception::FUNCTION_DELETION_FAILED,
-        'description' => 'Failed to delete the function from the database.',
-        'statusCode' => 500,
-    ],
 
     /** Deployments */
     Exception::DEPLOYMENT_NOT_FOUND => [
         'name' => Exception::DEPLOYMENT_NOT_FOUND,
         'description' => 'The requested deployment could not be found.',
         'statusCode' => 404,
-    ],
-    Exception::DEPLOYMENT_DELETION_FAILED => [
-        'name' => Exception::DEPLOYMENT_DELETION_FAILED,
-        'description' => 'Failed to delete the deployment from the database.',
-        'statusCode' => 500,
     ],
 
     /** Executions */
