@@ -849,7 +849,7 @@ App::post('/v1/functions/:functionId/executions')
             $response->dynamic($execution, Response::MODEL_EXECUTION);
         }
 
-        /** Send variables */
+        /** Environment variables */
         $vars = \array_merge($function->getAttribute('vars', []), [
             'APPWRITE_FUNCTION_ID' => $function->getId(),
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
