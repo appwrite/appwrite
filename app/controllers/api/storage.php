@@ -141,7 +141,7 @@ App::post('/v1/storage/files')
         $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
 
         if (!$device->write($path, $data, $mimeType)) {
-            throw new Exception('Failed to save file', 500);
+            throw new Exception('Failed to save file', 500, Exception::STORAGE_FAILED_TO_WRITE_FILE);
         }
 
         $sizeActual = $device->getFileSize($path);

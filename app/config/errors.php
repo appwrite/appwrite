@@ -241,7 +241,12 @@ return [
     ],
     Exception::STORAGE_FAILED_TO_MOVE_FILE => [
         'name' => Exception::STORAGE_FAILED_TO_MOVE_FILE,
-        'description' => 'Failed to copy the uploaded file.',
+        'description' => 'Failed to move the uploaded file.',
+        'statusCode' => 500,
+    ],
+    Exception::STORAGE_FAILED_TO_WRITE_FILE => [
+        'name' => Exception::STORAGE_FAILED_TO_WRITE_FILE,
+        'description' => 'Failed to save the uploaded file.',
         'statusCode' => 500,
     ],
 ];

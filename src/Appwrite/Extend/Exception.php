@@ -68,6 +68,7 @@ class Exception extends \Exception
     const STORAGE_INVALID_FILE_SIZE         = 'storage_invalid_file_size';
     const STORAGE_INVALID_FILE              = 'storage_invalid_file';
     const STORAGE_FAILED_TO_MOVE_FILE       = 'storage_failed_to_move_file';
+    const STORAGE_FAILED_TO_WRITE_FILE      = 'storage_failed_to_write_file';
 
     /** Projects */
     const PROJECT_NOT_FOUND       = 'project_not_found';
