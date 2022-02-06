@@ -171,7 +171,32 @@ return [
     ],
 
     /** Avatars */
+    Exception::AVATAR_SET_NOT_FOUND => [
+        'name' => Exception::AVATAR_SET_NOT_FOUND,
+        'description' => 'The requested avatar set could not be found.',
+        'statusCode' => 404
+    ],
+    Exception::AVATAR_NOT_FOUND => [
+        'name' => Exception::AVATAR_NOT_FOUND,
+        'description' => 'The request avatar could not be found.',
+        'statusCode' => 404,
+    ],
+    Exception::IMAGIC_EXTENSION_MISSING => [
+        'name' => Exception::IMAGIC_EXTENSION_MISSING,
+        'description' => 'The Imagic extension could not be found.',
+        'statusCode' => 500,
+    ],
 
 
     /** Files */
+    Exception::FILE_NOT_FOUND => [
+        'name' => Exception::FILE_NOT_FOUND,
+        'description' => 'The requested file could not be found.',
+        'statusCode' => 404,
+    ],
+    Exception::FILE_NOT_READABLE => [
+        'name' => Exception::FILE_NOT_READABLE,
+        'description' => 'There was an error reading the file from disk.',
+        'statusCode' => 500,
+    ],
 ];
