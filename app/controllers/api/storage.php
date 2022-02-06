@@ -116,7 +116,7 @@ App::post('/v1/storage/files')
         $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
 
         if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
-            throw new Exception('Failed moving file', 500, Exception::STORAGE_FAILED_TO_MOVE_FILE);
+            throw new Exception('Failed moving file', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
@@ -141,7 +141,7 @@ App::post('/v1/storage/files')
         $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
 
         if (!$device->write($path, $data, $mimeType)) {
-            throw new Exception('Failed to save file', 500, Exception::STORAGE_FAILED_TO_WRITE_FILE);
+            throw new Exception('Failed to save file', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $sizeActual = $device->getFileSize($path);
@@ -304,7 +304,7 @@ App::get('/v1/storage/files/:fileId/preview')
         $storage = 'files';
 
         if (!\extension_loaded('imagick')) {
-            throw new Exception('Imagick extension is missing', 500, Exception::IMAGIC_EXTENSION_MISSING);
+            throw new Exception('Imagick extension is missing', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         if (!Storage::exists($storage)) {
@@ -671,7 +671,7 @@ App::delete('/v1/storage/files/:fileId')
 
         if ($device->delete($file->getAttribute('path', ''))) {
             if (!$dbForProject->deleteDocument('files', $fileId)) {
-                throw new Exception('Failed to remove file from DB', 500, Exception::STORAGE_FILE_DELETION_FAILED);
+                throw new Exception('Failed to remove file from DB', 500, Exception::GENERAL_SERVER_ERROR);
             }
         }
         

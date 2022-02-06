@@ -293,11 +293,6 @@ return [
         'description' => 'The requested storage device could not be found.',
         'code' => 400,
     ],
-    Exception::STORAGE_FILE_DELETION_FAILED => [
-        'name' => Exception::STORAGE_FILE_DELETION_FAILED,
-        'description' => 'There was an issue deleting the file from the database.',
-        'code' => 500,
-    ],
     Exception::STORAGE_FILE_EMPTY => [
         'name' => Exception::STORAGE_FILE_EMPTY,
         'description' => 'Empty file passed to the endpoint.',
@@ -317,11 +312,6 @@ return [
         'name' => Exception::STORAGE_INVALID_FILE,
         'description' => 'The uploaded file is invalid. Please check the file and try again.',
         'code' => 403,
-    ],
-    Exception::STORAGE_FAILED_TO_WRITE_FILE => [
-        'name' => Exception::STORAGE_FAILED_TO_WRITE_FILE,
-        'description' => 'Failed to save the uploaded file.',
-        'code' => 500,
     ],
 
     /** Functions  */
