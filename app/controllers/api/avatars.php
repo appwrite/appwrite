@@ -43,7 +43,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality, $response) 
     $type = 'png';
 
     if (!\is_readable($path)) {
-        throw new Exception('File not readable in ' . $path, 500, Exception::FILE_NOT_READABLE);
+        throw new Exception('File not readable in ' . $path, 500, Exception::STORAGE_FILE_NOT_READABLE);
     }
 
     $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size

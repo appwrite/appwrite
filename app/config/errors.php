@@ -208,15 +208,30 @@ return [
     ],
 
 
-    /** Files */
-    Exception::FILE_NOT_FOUND => [
-        'name' => Exception::FILE_NOT_FOUND,
+    /** Storage */
+    Exception::STORAGE_FILE_NOT_FOUND => [
+        'name' => Exception::STORAGE_FILE_NOT_FOUND,
         'description' => 'The requested file could not be found.',
         'statusCode' => 404,
     ],
-    Exception::FILE_NOT_READABLE => [
-        'name' => Exception::FILE_NOT_READABLE,
+    Exception::STORAGE_FILE_NOT_READABLE => [
+        'name' => Exception::STORAGE_FILE_NOT_READABLE,
         'description' => 'There was an error reading the file from disk.',
         'statusCode' => 500,
+    ],
+    Exception::STORAGE_INVALID_READ_PERMISSIONS => [
+        'name' => Exception::STORAGE_INVALID_READ_PERMISSIONS,
+        'description' => 'Invalid format for read permissions. Please check the documentation.',
+        'statusCode' => 400,
+    ],
+    Exception::STORAGE_INVALID_WRITE_PERMISSIONS => [
+        'name' => Exception::STORAGE_INVALID_WRITE_PERMISSIONS,
+        'description' => 'Invalid format for write permissions. Please check the documentation.',
+        'statusCode' => 400,
+    ],
+    Exception::STORAGE_INVALID_FILE_SIZE => [
+        'name' => Exception::STORAGE_INVALID_FILE_SIZE,
+        'description' => 'The file size is either not valid or exceeds the maximum allowed size.',
+        'statusCode' => 400,
     ],
 ];

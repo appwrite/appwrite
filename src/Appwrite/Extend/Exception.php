@@ -60,9 +60,12 @@ class Exception extends \Exception
     const AVATAR_REMOTE_URL_FAILED         = 'avatar_remote_url_failed';
     const AVATAR_ICON_NOT_FOUND            = 'avatar_icon_not_found';
 
-    /** Files */
-    const FILE_NOT_FOUND                   = 'file_not_found';
-    const FILE_NOT_READABLE                = 'file_not_readable';
+    /** Storage */
+    const STORAGE_FILE_NOT_FOUND            = 'storage_file_not_found';
+    const STORAGE_FILE_NOT_READABLE         = 'storage_file_not_readable';
+    const STORAGE_INVALID_READ_PERMISSIONS  = 'storage_invalid_read_permissions';
+    const STORAGE_INVALID_WRITE_PERMISSIONS = 'storage_invalid_write_permissions';
+    const STORAGE_INVALID_FILE_SIZE         = 'storage_invalid_file_size';
 
     /** Projects */
     const PROJECT_NOT_FOUND       = 'project_not_found';

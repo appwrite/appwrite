@@ -2,7 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Utopia\App;
-use Utopia\Exception;
+use Appwrite\Extend\Exception
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
@@ -68,12 +68,12 @@ App::post('/v1/storage/files')
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach ($read as $role) {
                 if (!Authorization::isRole($role)) {
-                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::STORAGE_INVALID_READ_PERMISSIONS);
                 }
             }
             foreach ($write as $role) {
                 if (!Authorization::isRole($role)) {
-                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::STORAGE_INVALID_WRITE_PERMISSIONS);
                 }
             }
         }
@@ -102,13 +102,13 @@ App::post('/v1/storage/files')
         //}
 
         if (!$fileSize->isValid($file['size'])) { // Check if file size is exceeding allowed limit
-            throw new Exception('File size not allowed', 400);
+            throw new Exception('File size not allowed', 400, Exception::STORAGE_INVALID_FILE_SIZE);
         }
 
         $device = Storage::getDevice('files');
 
         if (!$upload->isValid($file['tmp_name'])) {
-            throw new Exception('Invalid file', 403);
+            throw new Exception('Invalid file', 403, );
         }
 
         // Save to storage
