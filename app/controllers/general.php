@@ -387,6 +387,13 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         throw $error;
     }
 
+    /** Wrap all exceptions inside Appwrite\Extend\Exception */
+    if ($error instanceof Utopia\Exception && $error->getCode() === 400) {
+        $error = new Exception($error->getMessage(), $error->getCode(), Exception::GENERAL_ARGUMENT_INVALID, $error);
+    } else {
+        $error = new Exception($error->getMessage(), $error->getCode(), Exception::GENERAL_DEFAULT, $error);
+    }
+
     $template = ($route) ? $route->getLabel('error', null) : null;
 
     if (php_sapi_name() === 'cli') {

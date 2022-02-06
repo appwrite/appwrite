@@ -151,6 +151,7 @@ class Exception extends \Exception
     const GENERAL_UNAUTHORIZED_SCOPE        = 'general_unauthorized_scope';
     const GENERAL_RATE_LIMIT_EXCEEDED       = 'general_rate_limit_exceeded';
     const GENERAL_SMTP_DISABLED             = 'general_smtp_disabled';
+    const GENERAL_ARGUMENT_INVALID          = 'general_argument_invalid';
     const GENERAL_SERVER_ERROR              = 'general_server_error';
 
 
