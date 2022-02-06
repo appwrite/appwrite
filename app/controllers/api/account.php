@@ -288,7 +288,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
         $className = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
 
         if (!\class_exists($className)) {
-            throw new Exception('Provider is not supported', 501, Exception::TYPE_PROVIDER_UNSUPPORTED);
+            throw new Exception('Provider is not supported', 501, Exception::OAUTH_PROVIDER_UNSUPPORTED);
         }
 
         if(empty($success)) {
