@@ -96,7 +96,6 @@ class Exception extends \Exception
     const COLLECTION_NOT_FOUND       = 'collection_not_found';
     const COLLECTION_ALREADY_EXISTS  = 'collection_already_exists';
     const COLLECTION_LIMIT_EXCEEDED  = 'collection_limit_exceeded';
-    const COLLECTION_DELETION_FAILED = 'collection_deletion_failed';
     
     /** Documents */
     const DOCUMENT_NOT_FOUND         = 'document_not_found';

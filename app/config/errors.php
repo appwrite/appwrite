@@ -407,11 +407,6 @@ return [
         'description' => 'The maximum number of collections has been reached.',
         'statusCode' => 400,
     ],
-    Exception::COLLECTION_DELETION_FAILED => [
-        'name' => Exception::COLLECTION_DELETION_FAILED,
-        'description' => 'Failed to delete the collection from the database.',
-        'statusCode' => 500,
-    ],
 
     /** Documents */
     Exception::DOCUMENT_NOT_FOUND => [

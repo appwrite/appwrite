@@ -673,7 +673,7 @@ App::delete('/v1/database/collections/:collectionId')
         }
 
         if (!$dbForProject->deleteDocument('collections', $collectionId)) {
-            throw new Exception('Failed to remove collection from DB', 500, Exception::COLLECTION_DELETION_FAILED);
+            throw new Exception('Failed to remove collection from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $dbForProject->deleteCachedCollection('collection_' . $collectionId);
