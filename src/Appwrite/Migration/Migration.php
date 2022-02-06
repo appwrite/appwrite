@@ -8,7 +8,7 @@ use PDO;
 use Redis;
 use Swoole\Runtime;
 use Utopia\CLI\Console;
-use Utopia\Exception;
+use Exception;
 
 abstract class Migration
 {
