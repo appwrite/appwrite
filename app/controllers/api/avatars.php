@@ -181,7 +181,7 @@ App::get('/v1/avatars/image')
         try {
             $image = new Image($fetch);
         } catch (\Exception$exception) {
-            throw new Exception('Unable to parse image', 500);
+            throw new Exception('Unable to parse image', 500, Exception::AVATAR_CANNOT_PARSE_IMAGE);
         }
 
         $image->crop((int) $width, (int) $height);

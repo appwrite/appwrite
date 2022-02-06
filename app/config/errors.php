@@ -191,6 +191,11 @@ return [
         'description' => 'The requested image was not found.',
         'statusCode' => 404,
     ],
+    Exception::AVATAR_CANNOT_PARSE_IMAGE => [
+        'name' => Exception::AVATAR_CANNOT_PARSE_IMAGE,
+        'description' => 'The requested image could not be parsed.',
+        'statusCode' => 500,
+    ],
 
 
     /** Files */
