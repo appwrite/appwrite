@@ -148,12 +148,6 @@ class Exception extends \Exception
     const UNAUTHORIZED_SCOPE        = 'unauthorized_scope';
     const RATE_LIMIT_EXCEEDED       = 'rate_limit_exceeded';
     const SMTP_DISABLED             = 'smtp_disabled';
-    const DATABASE_NOT_AVAILABLE    = 'database_not_available';
-    const CACHE_NOT_AVAILABLE       = 'cache_not_available';
-    const TIME_GAPS_DETECTED        = 'time_gaps_detected';
-    const STORAGE_NOT_READABLE      = 'storage_not_readable';
-    const STORAGE_NOT_WRITABLE      = 'storage_not_writable';
-    const ANTIVIRUS_NOT_AVAILABLE   = 'antivirus_not_available';
 
     /** Server Errors */
     const GENERAL_SERVER_ERROR       = 'general_server_error';

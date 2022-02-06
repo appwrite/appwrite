@@ -75,7 +75,7 @@ App::get('/v1/health/db')
     
             $statement->execute();
         } catch (Exception $_e) {
-            throw new Exception('Database is not available', 500, Exception::DATABASE_NOT_AVAILABLE);
+            throw new Exception('Database is not available', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $output = [
@@ -109,7 +109,7 @@ App::get('/v1/health/cache')
         $redis = $utopia->getResource('cache');
 
         if (!$redis->ping(true)) {
-            throw new Exception('Cache is not available', 500, Exception::CACHE_NOT_AVAILABLE);
+            throw new Exception('Cache is not available', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $output = [
@@ -166,7 +166,7 @@ App::get('/v1/health/time')
         $diff = ($timestamp - \time());
 
         if ($diff > $gap || $diff < ($gap * -1)) {
-            throw new Exception('Server time gaps detected', 500, Exception::TIME_GAPS_DETECTED);
+            throw new Exception('Server time gaps detected', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $output = [
@@ -294,11 +294,11 @@ App::get('/v1/health/storage/local')
             $device = new Local($volume);
 
             if (!\is_readable($device->getRoot())) {
-                throw new Exception('Device '.$key.' dir is not readable', 500, Exception::STORAGE_NOT_READABLE);
+                throw new Exception('Device '.$key.' dir is not readable', 500, Exception::GENERAL_SERVER_ERROR);
             }
 
             if (!\is_writable($device->getRoot())) {
-                throw new Exception('Device '.$key.' dir is not writable', 500, Exception::STORAGE_NOT_WRITABLE);
+                throw new Exception('Device '.$key.' dir is not writable', 500, Exception::GENERAL_SERVER_ERROR);
             }
         }
 
@@ -341,7 +341,7 @@ App::get('/v1/health/anti-virus')
                 $output['version'] = @$antivirus->version();
                 $output['status'] = (@$antivirus->ping()) ? 'pass' : 'fail';
             } catch( \Exception $e) {
-                throw new Exception('Antivirus is not available', 500, Exception::ANTIVIRUS_NOT_AVAILABLE);
+                throw new Exception('Antivirus is not available', 500, Exception::GENERAL_SERVER_ERROR);
             }
         }
 
