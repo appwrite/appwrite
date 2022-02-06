@@ -23,11 +23,6 @@ return [
         'description' => 'The current user or API key does not have the required scopes to access the requested resource.',
         'code' => 401,
     ],
-    Exception::STORAGE_ERROR => [
-        'name' => Exception::STORAGE_ERROR,
-        'description' => 'Storage error',
-        'code' => 500,
-    ],
     Exception::GENERAL_RATE_LIMIT_EXCEEDED => [
         'name' => Exception::GENERAL_RATE_LIMIT_EXCEEDED,
         'description' => 'Rate limit for the current endpoint has been exceeded. Please try again after some time.',
