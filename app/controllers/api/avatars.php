@@ -169,13 +169,13 @@ App::get('/v1/avatars/image')
         }
 
         if (!\extension_loaded('imagick')) {
-            throw new Exception('Imagick extension is missing', 500);
+            throw new Exception('Imagick extension is missing', 500, Exception::IMAGIC_EXTENSION_MISSING);
         }
 
         $fetch = @\file_get_contents($url, false);
 
         if (!$fetch) {
-            throw new Exception('Image not found', 404);
+            throw new Exception('Image not found', 404, Exception::AVATAR_IMAGE_NOT_FOUND);
         }
 
         try {

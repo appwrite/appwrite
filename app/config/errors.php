@@ -186,6 +186,11 @@ return [
         'description' => 'The Imagic extension could not be found.',
         'statusCode' => 500,
     ],
+    Exception::AVATAR_IMAGE_NOT_FOUND => [
+        'name' => Exception::AVATAR_IMAGE_NOT_FOUND,
+        'description' => 'The requested image was not found.',
+        'statusCode' => 404,
+    ],
 
 
     /** Files */
