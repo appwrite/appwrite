@@ -557,11 +557,11 @@ App::delete('/v1/projects/:projectId')
         ;
 
         if (!$dbForConsole->deleteDocument('teams', $project->getAttribute('teamId', null))) {
-            throw new Exception('Failed to remove project team from DB', 500, Exception::COLLECTION_DELETION_FAILED);
+            throw new Exception('Failed to remove project team from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         if (!$dbForConsole->deleteDocument('projects', $projectId)) {
-            throw new Exception('Failed to remove project from DB', 500, Exception::COLLECTION_DELETION_FAILED);
+            throw new Exception('Failed to remove project from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $response->noContent();
