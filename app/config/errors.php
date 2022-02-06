@@ -122,6 +122,11 @@ return [
         'description' => 'Passwords do not match. Please recheck.',
         'statusCode' => 400,
     ],
+    Exception::USER_SESSION_NOT_FOUND => [
+        'name' => Exception::USER_SESSION_NOT_FOUND,
+        'description' => 'The current user session could not be found.',
+        'statusCode' => 404,
+    ],
     Exception::USER_AUTH_METHOD_UNSUPPORTED => [
         'name' => Exception::USER_AUTH_METHOD_UNSUPPORTED,
         'description' => 'The requested authentication method is either disabled or unsupported.',

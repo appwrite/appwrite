@@ -39,6 +39,7 @@ class Exception extends \Exception
     const USER_EMAIL_NOT_WHITELISTED        = 'user_email_not_whitelisted';
     const USER_IP_NOT_WHITELISTED           = 'user_ip_not_whitelisted';
     const USER_SESSION_ALREADY_EXISTS       = 'user_session_already_exists';
+    const USER_SESSION_NOT_FOUND            = 'user_session_not_found';
     const USER_ANONYMOUS_CONSOLE_PROHIBITED = 'user_anonymous_console_prohibited';
 
     /** OAuth **/

@@ -927,7 +927,7 @@ App::post('/v1/account/sessions/anonymous')
             ], APP_LIMIT_USERS);
 
             if ($sum >= $limit) {
-                throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::TYPE_USER_LIMIT_EXCEEDED);
+                throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
             }
         }
 
@@ -1051,7 +1051,7 @@ App::post('/v1/account/jwt')
         }
 
         if ($current->isEmpty()) {
-            throw new Exception('No valid session found', 401, Exception::TYPE_SESSION_NOT_FOUND);
+            throw new Exception('No valid session found', 404, Exception::USER_SESSION_NOT_FOUND);
         }
 
         $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
@@ -1296,7 +1296,7 @@ App::get('/v1/account/sessions/:sessionId')
             }
         }
 
-        throw new Exception('Session not found', 404, Exception::TYPE_SESSION_NOT_FOUND);
+        throw new Exception('Session not found', 404, Exception::USER_SESSION_NOT_FOUND);
     });
 
 App::patch('/v1/account/name')
@@ -1370,7 +1370,7 @@ App::patch('/v1/account/password')
 
         // Check old password only if its an existing user.
         if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
-            throw new Exception('Invalid credentials', 401, Exception::TYPE_INVALID_CREDENTIALS);
+            throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS);
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user
@@ -1422,14 +1422,14 @@ App::patch('/v1/account/email')
             !$isAnonymousUser &&
             !Auth::passwordVerify($password, $user->getAttribute('password'))
         ) { // Double check user password
-            throw new Exception('Invalid credentials', 401, Exception::TYPE_INVALID_CREDENTIALS);
+            throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS);
         }
 
         $email = \strtolower($email);
         $profile = $dbForProject->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
         if ($profile) {
-            throw new Exception('User already registered', 409, Exception::TYPE_USER_ALREADY_EXISTS);
+            throw new Exception('User already registered', 409, Exception::USER_ALREADY_EXISTS);
         }
 
         try {
@@ -1440,7 +1440,7 @@ App::patch('/v1/account/email')
                 ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name'), $user->getAttribute('email')]))
             );
         } catch(Duplicate $th) {
-            throw new Exception('Email already exists', 409, Exception::TYPE_EMAIL_ALREADY_EXISTS);
+            throw new Exception('Email already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
         $audits
@@ -1644,7 +1644,7 @@ App::delete('/v1/account/sessions/:sessionId')
             }
         }
 
-        throw new Exception('Session not found', 404, Exception::TYPE_SESSION_NOT_FOUND);
+        throw new Exception('Session not found', 404, Exception::USER_SESSION_NOT_FOUND);
     });
 
 App::delete('/v1/account/sessions')
@@ -1764,7 +1764,7 @@ App::post('/v1/account/recovery')
         /** @var Appwrite\Stats\Stats $usage */
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503, Exception::TYPE_SMTP_DISABLED);
+            throw new Exception('SMTP Disabled', 503, Exception::SMTP_DISABLED);
         }
 
         $roles = Authorization::getRoles();
@@ -1775,11 +1775,11 @@ App::post('/v1/account/recovery')
         $profile = $dbForProject->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
         if (!$profile) {
-            throw new Exception('User not found', 404, Exception::TYPE_USER_NOT_FOUND);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         if (false === $profile->getAttribute('status')) { // Account is blocked
-            throw new Exception('Invalid credentials. User is blocked', 401, Exception::TYPE_USER_BLOCKED);
+            throw new Exception('Invalid credentials. User is blocked', 401, Exception::USER_BLOCKED);
         }
 
         $expire = \time() + Auth::TOKEN_EXPIRATION_RECOVERY;
