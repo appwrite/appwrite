@@ -1628,12 +1628,12 @@ App::post('/v1/database/collections/:collectionId/documents')
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach ($data['$read'] as $read) {
                 if (!Authorization::isRole($read)) {
-                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::INVALID_READ_PERMISSIONS);
+                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::USER_UNAUTHORIZED);
                 }
             }
             foreach ($data['$write'] as $write) {
                 if (!Authorization::isRole($write)) {
-                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::INVALID_WRITE_PERMISSIONS);
+                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::USER_UNAUTHORIZED);
                 }
             }
         }
@@ -2013,12 +2013,12 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach ($data['$read'] as $read) {
                 if (!Authorization::isRole($read)) {
-                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::INVALID_READ_PERMISSIONS);
+                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::USER_UNAUTHORIZED);
                 }
             }
             foreach ($data['$write'] as $write) {
                 if (!Authorization::isRole($write)) {
-                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::INVALID_WRITE_PERMISSIONS);
+                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::USER_UNAUTHORIZED);
                 }
             }
         }

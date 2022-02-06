@@ -92,10 +92,10 @@ class Exception extends \Exception
     const COLLECTION_LIMIT_EXCEEDED  = 'collection_limit_exceeded';
     
     /** Documents */
-    const DOCUMENT_NOT_FOUND         = 'document_not_found';
-    const DOCUMENT_INVALID_STRUCTURE = 'document_invalid_structure';
-    const DOCUMENT_MISSING_PAYLOAD   = 'document_missing_payload';
-    const DOCUMENT_ALREADY_EXISTS    = 'document_already_exists';
+    const DOCUMENT_NOT_FOUND                 = 'document_not_found';
+    const DOCUMENT_INVALID_STRUCTURE         = 'document_invalid_structure';
+    const DOCUMENT_MISSING_PAYLOAD           = 'document_missing_payload';
+    const DOCUMENT_ALREADY_EXISTS            = 'document_already_exists';
 
     /** Attribute */
     const ATTRIBUTE_NOT_FOUND           = 'attribute_not_found';
@@ -140,8 +140,6 @@ class Exception extends \Exception
     const GENERAL_ACCESS_FORBIDDEN          = 'general_access_forbidden';
     const GENERAL_UNKNOWN_ORIGIN            = 'general_unknown_origin';
     const GENERAL_SERVICE_DISABLED          = 'general_service_disabled';
-    const INVALID_READ_PERMISSIONS          = 'invalid_read_permissions';
-    const INVALID_WRITE_PERMISSIONS         = 'invalid_write_permissions';
     const GENERAL_UNAUTHORIZED_SCOPE        = 'general_unauthorized_scope';
     const GENERAL_RATE_LIMIT_EXCEEDED       = 'general_rate_limit_exceeded';
     const GENERAL_SMTP_DISABLED             = 'general_smtp_disabled';

@@ -18,16 +18,6 @@ return [
         'description' => 'The requested service is disabled. You can enable/disable a service from the Appwrite console or by contacting the project owner.',
         'code' => 503,
     ],
-    Exception::INVALID_READ_PERMISSIONS => [
-        'name' => Exception::INVALID_READ_PERMISSIONS,
-        'description' => 'Invalid format for read permissions. Please check the documentation.',
-        'code' => 400,
-    ],
-    Exception::INVALID_WRITE_PERMISSIONS => [
-        'name' => Exception::INVALID_WRITE_PERMISSIONS,
-        'description' => 'Invalid format for write permissions. Please check the documentation.',
-        'code' => 400,
-    ],
     Exception::GENERAL_UNAUTHORIZED_SCOPE => [
         'name' => Exception::GENERAL_UNAUTHORIZED_SCOPE,
         'description' => 'The current user or API key does not have the required scopes to access the requested resource.',
