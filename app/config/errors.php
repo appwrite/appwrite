@@ -211,11 +211,6 @@ return [
         'description' => 'Team with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::TEAM_DELETION_FAILED => [
-        'name' => Exception::TEAM_DELETION_FAILED,
-        'description' => 'Failed to delete team from the database.',
-        'code' => 500,
-    ],
     Exception::TEAM_INVITE_ALREADY_EXISTS => [
         'name' => Exception::TEAM_INVITE_ALREADY_EXISTS,
         'description' => 'The current user already has an invitation to this team.',
@@ -248,11 +243,6 @@ return [
         'name' => Exception::MEMBERSHIP_NOT_FOUND,
         'description' => 'Membership with the requested ID could not be found.',
         'code' => 404,
-    ],
-    Exception::MEMBERSHIP_DELETION_FAILED => [
-        'name' => Exception::MEMBERSHIP_DELETION_FAILED,
-        'description' => 'Failed to delete membership from the database.',
-        'code' => 500,
     ],
 
     /** Avatars */

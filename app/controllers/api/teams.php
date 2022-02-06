@@ -232,12 +232,12 @@ App::delete('/v1/teams/:teamId')
         // TODO delete all members individually from the user object
         foreach ($memberships as $membership) {
             if (!$dbForProject->deleteDocument('memberships', $membership->getId())) {
-                throw new Exception('Failed to remove membership for team from DB', 500, Exception::MEMBERSHIP_DELETION_FAILED);
+                throw new Exception('Failed to remove membership for team from DB', 500, Exception::GENERAL_SERVER_ERROR);
             }
         }
 
         if (!$dbForProject->deleteDocument('teams', $teamId)) {
-            throw new Exception('Failed to remove team from DB', 500, Exception::TEAM_DELETION_FAILED);
+            throw new Exception('Failed to remove team from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $deletes
@@ -767,7 +767,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         } catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         } catch (\Exception $exception) {
-            throw new Exception('Failed to remove membership from DB', 500, Exception::MEMBERSHIP_DELETION_FAILED);
+            throw new Exception('Failed to remove membership from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $memberships = $user->getAttribute('memberships', []);
