@@ -132,8 +132,24 @@ class Exception extends \Exception
     const PROJECT_NOT_FOUND       = 'project_not_found';
     const PROJECT_UNKNOWN         = 'project_unknown';
 
-    /** API */
+    /** Webhooks */
+    const WEBHOOK_NOT_FOUND       = 'webhook_not_found';
+
+    /** Keys */
+    const KEY_NOT_FOUND       = 'key_not_found';
+
+    /** Platform */
+    const PLATFORM_NOT_FOUND       = 'platform_not_found';
+
+    /** Domain */
+    const DOMAIN_NOT_FOUND           = 'domain_not_found';
+    const DOMAIN_ALREADY_EXISTS      = 'domain_already_exists';
+    const DOMAIN_UNREACHABLE         = 'domain_unreachable';
+    const DOMAIN_VERIFICATION_FAILED = 'domain_verification_failed';
+
+    /** General */
     const DEFAULT                   = 'default';
+    const ACCESS_FORBIDDEN          = 'access_forbidden';
     const UNKNOWN_ORIGIN            = 'unknown_origin';
     const SERVICE_DISABLED          = 'service_disabled';
     const INVALID_READ_PERMISSIONS  = 'invalid_read_permissions';
