@@ -262,11 +262,11 @@ function execute(string $projectId, string $functionId, string $deploymentId, ar
     Console::info('Executing function: ' . $functionId);
 
     global $activeFunctions;
-    global $register;
     $container = 'appwrite-function-' . $deploymentId;
 
     /** Create a new runtime server if there's none running */
     if (!$activeFunctions->exists($container)) {
+        Console::info("Runtime server for $deploymentId not running. Creating new one...");
         createRuntimeServer($projectId, $deploymentId, $build, $vars, $baseImage, $runtime);
     }
 
