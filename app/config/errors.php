@@ -127,6 +127,11 @@ return [
         'description' => 'The current user session could not be found.',
         'statusCode' => 404,
     ],
+    Exception::USER_UNAUTHORIZED => [
+        'name' => Exception::USER_UNAUTHORIZED,
+        'description' => 'The current user is not authorized to perform the requested action.',
+        'statusCode' => 401,
+    ],
     Exception::USER_AUTH_METHOD_UNSUPPORTED => [
         'name' => Exception::USER_AUTH_METHOD_UNSUPPORTED,
         'description' => 'The requested authentication method is either disabled or unsupported.',
@@ -176,13 +181,33 @@ return [
         'description' => 'Team with the requested ID could not be found.',
         'statusCode' => 404,
     ],
+    Exception::TEAM_DELETION_FAILED => [
+        'name' => Exception::TEAM_DELETION_FAILED,
+        'description' => 'Failed to delete team from the database.',
+        'statusCode' => 500,
+    ],
+    Exception::TEAM_INVITATION_ALREADY_EXISTS => [
+        'name' => Exception::TEAM_INVITATION_ALREADY_EXISTS,
+        'description' => 'The current user already has an invitation to this team.',
+        'statusCode' => 409,
+    ],
+    Exception::TEAM_INVITE_NOT_FOUND => [
+        'name' => Exception::TEAM_INVITE_NOT_FOUND,
+        'description' => 'The requested invitation could not be found.',
+        'statusCode' => 409,
+    ],
 
-    
+
     /** Membership */
     Exception::MEMBERSHIP_NOT_FOUND => [
         'name' => Exception::MEMBERSHIP_NOT_FOUND,
         'description' => 'Membership with the requested ID could not be found.',
         'statusCode' => 404,
+    ],
+    Exception::MEMBERSHIP_DELETION_FAILED => [
+        'name' => Exception::MEMBERSHIP_DELETION_FAILED,
+        'description' => 'Failed to delete membership from the database.',
+        'statusCode' => 500,
     ],
 
     /** Avatars */

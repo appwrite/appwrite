@@ -40,6 +40,7 @@ class Exception extends \Exception
     const USER_IP_NOT_WHITELISTED           = 'user_ip_not_whitelisted';
     const USER_SESSION_ALREADY_EXISTS       = 'user_session_already_exists';
     const USER_SESSION_NOT_FOUND            = 'user_session_not_found';
+    const USER_UNAUTHORIZED                 = 'user_unauthorized';
     const USER_ANONYMOUS_CONSOLE_PROHIBITED = 'user_anonymous_console_prohibited';
 
     /** OAuth **/
@@ -52,10 +53,14 @@ class Exception extends \Exception
     const OAUTH_MISSING_USER_ID            = 'oauth_missing_user_id';
 
     /** Teams */
-    const TEAM_NOT_FOUND = 'team_not_found';
+    const TEAM_NOT_FOUND                 = 'team_not_found';
+    const TEAM_DELETION_FAILED           = 'team_deletion_failed';
+    const TEAM_INVITATION_ALREADY_EXISTS = 'team_invitation_already_exists';
+    const TEAM_INVITE_NOT_FOUND          = 'team_invite_not_found';
 
     /** Membership */
-    const MEMBERSHIP_NOT_FOUND = 'membership_not_found';
+    const MEMBERSHIP_NOT_FOUND       = 'membership_not_found';
+    const MEMBERSHIP_DELETION_FAILED = 'membership_deletion_failed';
 
     /** Avatars */
     const AVATAR_SET_NOT_FOUND             = 'avatar_set_not_found';

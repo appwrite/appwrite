@@ -232,12 +232,12 @@ App::delete('/v1/teams/:teamId')
         // TODO delete all members individually from the user object
         foreach ($memberships as $membership) {
             if (!$dbForProject->deleteDocument('memberships', $membership->getId())) {
-                throw new Exception('Failed to remove membership for team from DB', 500);
+                throw new Exception('Failed to remove membership for team from DB', 500, Exception::MEMBERSHIP_DELETION_FAILED);
             }
         }
 
         if (!$dbForProject->deleteDocument('teams', $teamId)) {
-            throw new Exception('Failed to remove team from DB', 500);
+            throw new Exception('Failed to remove team from DB', 500, Exception::TEAM_DELETION_FAILED);
         }
 
         $deletes
@@ -348,7 +348,7 @@ App::post('/v1/teams/:teamId/memberships')
         $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
-            throw new Exception('User is not allowed to send invitations for this team', 401);
+            throw new Exception('User is not allowed to send invitations for this team', 401, Exception::USER_UNAUTHORIZED);
         }
 
         $secret = Auth::tokenGenerator();
@@ -370,7 +370,7 @@ App::post('/v1/teams/:teamId/memberships')
             try {
                 $membership = Authorization::skip(fn() => $dbForProject->createDocument('memberships', $membership));
             } catch (Duplicate $th) {
-                throw new Exception('User has already been invited or is already a member of this team', 409);
+                throw new Exception('User has already been invited or is already a member of this team', 409, Exception::TEAM_INVITATION_ALREADY_EXISTS);
             }
             $team->setAttribute('sum', $team->getAttribute('sum', 0) + 1);
             $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
@@ -383,7 +383,7 @@ App::post('/v1/teams/:teamId/memberships')
             try {
                 $membership = $dbForProject->createDocument('memberships', $membership);
             } catch (Duplicate $th) {
-                throw new Exception('User has already been invited or is already a member of this team', 409);
+                throw new Exception('User has already been invited or is already a member of this team', 409, Exception::TEAM_INVITATION_ALREADY_EXISTS);
             }
         }
 
@@ -568,7 +568,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
-            throw new Exception('User is not allowed to modify roles', 401);
+            throw new Exception('User is not allowed to modify roles', 401, Exception::USER_UNAUTHORIZED);
         }
 
         // Update the roles
@@ -743,7 +743,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
         if ($membership->isEmpty()) {
-            throw new Exception('Invite not found', 404);
+            throw new Exception('Invite not found', 404, Exception::TEAM_INVITE_NOT_FOUND);
         }
 
         if ($membership->getAttribute('teamId') !== $teamId) {
@@ -753,7 +753,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $team = $dbForProject->getDocument('teams', $teamId);
@@ -765,7 +765,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         try {
             $dbForProject->deleteDocument('memberships', $membership->getId());
         } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized permissions', 401, Exception::UNAUTHORIZED_SCOPE);
+            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         } catch (\Exception $exception) {
             throw new Exception('Failed to remove membership from DB', 500);
         }
