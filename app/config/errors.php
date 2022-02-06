@@ -18,6 +18,16 @@ return [
         'description' => 'The requested service is disabled. You can enable/disable a service from the Appwrite console or by contacting the project owner.',
         'statusCode' => 503,
     ],
+    Exception::INVALID_READ_PERMISSIONS => [
+        'name' => Exception::INVALID_READ_PERMISSIONS,
+        'description' => 'Invalid format for read permissions. Please check the documentation.',
+        'statusCode' => 400,
+    ],
+    Exception::INVALID_WRITE_PERMISSIONS => [
+        'name' => Exception::INVALID_WRITE_PERMISSIONS,
+        'description' => 'Invalid format for write permissions. Please check the documentation.',
+        'statusCode' => 400,
+    ],
     Exception::UNAUTHORIZED_SCOPE => [
         'name' => Exception::UNAUTHORIZED_SCOPE,
         'description' => 'The current user or API key does not have the required scopes to access the requested resource.',
@@ -292,16 +302,6 @@ return [
         'name' => Exception::STORAGE_FILE_NOT_READABLE,
         'description' => 'There was an error reading the file from disk.',
         'statusCode' => 500,
-    ],
-    Exception::STORAGE_INVALID_READ_PERMISSIONS => [
-        'name' => Exception::STORAGE_INVALID_READ_PERMISSIONS,
-        'description' => 'Invalid format for read permissions. Please check the documentation.',
-        'statusCode' => 400,
-    ],
-    Exception::STORAGE_INVALID_WRITE_PERMISSIONS => [
-        'name' => Exception::STORAGE_INVALID_WRITE_PERMISSIONS,
-        'description' => 'Invalid format for write permissions. Please check the documentation.',
-        'statusCode' => 400,
     ],
     Exception::STORAGE_INVALID_FILE_SIZE => [
         'name' => Exception::STORAGE_INVALID_FILE_SIZE,

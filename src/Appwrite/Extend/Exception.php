@@ -81,8 +81,6 @@ class Exception extends \Exception
     const STORAGE_FILE_NOT_READABLE         = 'storage_file_not_readable';
     const STORAGE_FILE_EMPTY                = 'storage_file_empty';
     const STORAGE_FILE_TYPE_UNSUPPORTED     = 'storage_file_type_unsupported';
-    const STORAGE_INVALID_READ_PERMISSIONS  = 'storage_invalid_read_permissions';
-    const STORAGE_INVALID_WRITE_PERMISSIONS = 'storage_invalid_write_permissions';
     const STORAGE_INVALID_FILE_SIZE         = 'storage_invalid_file_size';
     const STORAGE_INVALID_FILE              = 'storage_invalid_file';
     const STORAGE_FAILED_TO_MOVE_FILE       = 'storage_failed_to_move_file';
@@ -99,23 +97,56 @@ class Exception extends \Exception
     /** Execution */
     const EXECUTION_NOT_FOUND       = 'execution_not_found';
 
+    /** Collections */
+    const COLLECTION_NOT_FOUND       = 'collection_not_found';
+    const COLLECTION_ALREADY_EXISTS  = 'collection_already_exists';
+    const COLLECTION_LIMIT_EXCEEDED  = 'collection_limit_exceeded';
+    const COLLECTION_DELETION_FAILED = 'collection_deletion_failed';
+    
+    /** Documents */
+    const DOCUMENT_NOT_FOUND         = 'document_not_found';
+    const DOCUMENT_INVALID_STRUCTURE = 'document_invalid_structure';
+    const DOCUMENT_MISSING_PAYLOAD   = 'document_missing_payload';
+    const DOCUMENT_ALREADY_EXISTS    = 'document_already_exists';
+
+    /** Attribute */
+    const ATTRIBUTE_NOT_FOUND           = 'attribute_not_found';
+    const ATTRIBUTE_UNKNOWN             = 'attribute_unknown';
+    const ATTRIBUTE_NOT_AVAILABLE       = 'attribute_not_available';
+    const ATTRIBUTE_FORMAT_UNSUPPORTED  = 'attribute_format_unsupported';
+    const ATTRIBUTE_DEFAULT_UNSUPPORTED = 'attribute_default_unsupported';
+    const ATTRIBUTE_ALREADY_EXISTS      = 'attribute_already_exists';
+    const ATTRIBUTE_LIMIT_EXCEEDED      = 'attribute_limit_exceeded';
+    const ATTRIBUTE_VALUE_INVALID       = 'attribute_value_invalid';
+
+    /** Indexes */
+    const INDEX_NOT_FOUND       = 'index_not_found';
+    const INDEX_LIMIT_EXCEEDED  = 'index_limit_exceeded';
+    const INDEX_ALREADY_EXISTS  = 'index_already_exists';
+
+    /** Query limit exceeded */
+    const QUERY_LIMIT_EXCEEDED = 'query_limit_exceeded';
+    const QUERY_INVALID        = 'query_invalid';
+
     /** Projects */
     const PROJECT_NOT_FOUND       = 'project_not_found';
     const PROJECT_UNKNOWN         = 'project_unknown';
 
     /** API */
-    const UNKNOWN                 = 'unknown';
-    const UNKNOWN_ORIGIN          = 'unknown_origin';
-    const SERVICE_DISABLED        = 'service_disabled';
-    const UNAUTHORIZED_SCOPE      = 'unauthorized_scope';
-    const STORAGE_ERROR           = 'storage_error';
-    const RATE_LIMIT_EXCEEDED     = 'rate_limit_exceeded';
-    const SMTP_DISABLED           = 'smtp_disabled';
+    const DEFAULT                   = 'default';
+    const UNKNOWN_ORIGIN            = 'unknown_origin';
+    const SERVICE_DISABLED          = 'service_disabled';
+    const INVALID_READ_PERMISSIONS  = 'invalid_read_permissions';
+    const INVALID_WRITE_PERMISSIONS = 'invalid_write_permissions';
+    const UNAUTHORIZED_SCOPE        = 'unauthorized_scope';
+    const STORAGE_ERROR             = 'storage_error';
+    const RATE_LIMIT_EXCEEDED       = 'rate_limit_exceeded';
+    const SMTP_DISABLED             = 'smtp_disabled';
 
 
     private $errorCode = '';
 
-    public function __construct(string $message, int $code = 0, string $errorCode = Exception::UNKNOWN, \Throwable $previous = null)
+    public function __construct(string $message, int $code = 0, string $errorCode = Exception::DEFAULT, \Throwable $previous = null)
     {
         $this->errorCode = $errorCode;
 
