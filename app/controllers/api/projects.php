@@ -728,7 +728,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
-            throw new Exception('Webhook not found', 404), Exception::WEBHOOK_NOT_FOUND;
+            throw new Exception('Webhook not found', 404, Exception::WEBHOOK_NOT_FOUND);
         }
 
         $webhook
