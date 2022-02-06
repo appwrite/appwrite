@@ -51,6 +51,15 @@ class Exception extends \Exception
     const OAUTH_ACCESS_TOKEN_FAILED        = 'oauth_access_token_failed';
     const OAUTH_MISSING_USER_ID            = 'oauth_missing_user_id';
 
+    /** Avatars */
+    const AVATAR_SET_NOT_FOUND             = 'avatar_set_not_found';
+    const AVATAR_NOT_FOUND                 = 'avatar_not_found';
+    const IMAGIC_EXTENSION_MISSING         = 'imagic_extension_missing';
+
+    /** Files */
+    const FILE_NOT_FOUND                   = 'file_not_found';
+    const FILE_NOT_READABLE                = 'file_not_readable';
+
     /** Projects */
     const PROJECT_NOT_FOUND       = 'project_not_found';
     const PROJECT_UNKNOWN         = 'project_unknown';

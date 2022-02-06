@@ -8,7 +8,7 @@ use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Exception;
+use Appwrite\Extend\Exception;
 use Utopia\Image\Image;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
@@ -25,15 +25,15 @@ $avatarCallback = function ($type, $code, $width, $height, $quality, $response) 
     $set = Config::getParam('avatar-' . $type, []);
 
     if (empty($set)) {
-        throw new Exception('Avatar set not found', 404);
+        throw new Exception('Avatar set not found', 404, Exception::AVATAR_SET_NOT_FOUND);
     }
 
     if (!\array_key_exists($code, $set)) {
-        throw new Exception('Avatar not found', 404);
+        throw new Exception('Avatar not found', 404, Exception::AVATAR_NOT_FOUND);
     }
 
     if (!\extension_loaded('imagick')) {
-        throw new Exception('Imagick extension is missing', 500);
+        throw new Exception('Imagick extension is missing', 500, Exception::IMAGIC_EXTENSION_MISSING);
     }
 
     $output = 'png';
@@ -43,7 +43,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality, $response) 
     $type = 'png';
 
     if (!\is_readable($path)) {
-        throw new Exception('File not readable in ' . $path, 500);
+        throw new Exception('File not readable in ' . $path, 500, Exception::FILE_NOT_READABLE);
     }
 
     $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size

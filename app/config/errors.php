@@ -168,5 +168,10 @@ return [
         'name' => Exception::OAUTH_MISSING_USER_ID,
         'description' => 'Failed to obtain user id from the OAuth provider.',
         'statusCode' => 400,
-    ]
+    ],
+
+    /** Avatars */
+
+
+    /** Files */
 ];
