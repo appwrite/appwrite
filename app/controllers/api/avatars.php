@@ -238,7 +238,7 @@ App::get('/v1/avatars/favicon')
         }
 
         if (!\extension_loaded('imagick')) {
-            throw new Exception('Imagick extension is missing', 500);
+            throw new Exception('Imagick extension is missing', 500, Exception::IMAGIC_EXTENSION_MISSING);
         }
 
         $curl = \curl_init();
