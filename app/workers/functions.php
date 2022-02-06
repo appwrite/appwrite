@@ -334,16 +334,16 @@ class FunctionsV1 extends Worker
             ->setParam('projectId', $projectId)
             ->setParam('userId', $userId)
             ->setParam('webhooks', $webhooks)
-            ->setParam('event', 'functions.executions.update')
+            ->setParam('event', $event)
             ->setParam('eventData', $execution->getArrayCopy(array_keys($executionModel->getRules())));
         $executionUpdate->trigger();
 
         /** Trigger realtime event */
-        $target = Realtime::fromPayload('functions.executions.update', $execution);
+        $target = Realtime::fromPayload($event, $execution);
         Realtime::send(
             projectId: $projectId,
             payload: $execution->getArrayCopy(),
-            event: 'functions.executions.update',
+            event: $event,
             channels: $target['channels'],
             roles: $target['roles']
         );
