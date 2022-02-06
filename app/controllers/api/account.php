@@ -508,13 +508,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'deleted' => false
                     ])));
                 } catch (Duplicate $th) {
-                    throw new Exception('Account already exists', 409, Exception::TYPE_USER_ALREADY_EXISTS);
+                    throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
                 }
             }
         }
 
         if (false === $user->getAttribute('status')) { // Account is blocked
-            throw new Exception('Invalid credentials. User is blocked', 401, Exception::TYPE_USER_BLOCKED); // User is in status blocked
+            throw new Exception('Invalid credentials. User is blocked', 401, Exception::USER_BLOCKED); // User is in status blocked
         }
 
         // Create session token, verify user account and update OAuth2 ID and Access Token
@@ -637,7 +637,7 @@ App::post('/v1/account/sessions/magic-url')
         /** @var Appwrite\Event\Event $mails */
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503, Exception::TYPE_SMTP_DISABLED);
+            throw new Exception('SMTP Disabled', 503, Exception::SMTP_DISABLED);
         }
 
         $roles = Authorization::getRoles();
@@ -655,7 +655,7 @@ App::post('/v1/account/sessions/magic-url')
                 ], APP_LIMIT_USERS);
 
                 if ($sum >= $limit) {
-                    throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::TYPE_USER_LIMIT_EXCEEDED);
+                    throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
                 }
             }
 
