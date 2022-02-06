@@ -671,7 +671,7 @@ App::delete('/v1/storage/files/:fileId')
 
         if ($device->delete($file->getAttribute('path', ''))) {
             if (!$dbForProject->deleteDocument('files', $fileId)) {
-                throw new Exception('Failed to remove file from DB', 500, Exception::STORAGE_FAILED_TO_DELETE_FILE);
+                throw new Exception('Failed to remove file from DB', 500, Exception::STORAGE_FILE_DELETION_FAILED);
             }
         }
         

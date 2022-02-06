@@ -273,10 +273,20 @@ return [
         'description' => 'The requested storage device could not be found.',
         'statusCode' => 400,
     ],
-    Exception::STORAGE_FAILED_TO_DELETE_FILE => [
-        'name' => Exception::STORAGE_FAILED_TO_DELETE_FILE,
-        'description' => 'There was an issue deleting the file from the database',
+    Exception::STORAGE_FILE_DELETION_FAILED => [
+        'name' => Exception::STORAGE_FILE_DELETION_FAILED,
+        'description' => 'There was an issue deleting the file from the database.',
         'statusCode' => 500,
+    ],
+    Exception::STORAGE_FILE_EMPTY => [
+        'name' => Exception::STORAGE_FILE_EMPTY,
+        'description' => 'Empty file passed to the endpoint.',
+        'statusCode' => 400,
+    ],
+    Exception::STORAGE_FILE_TYPE_UNSUPPORTED => [
+        'name' => Exception::STORAGE_FILE_TYPE_UNSUPPORTED,
+        'description' => 'The file type is not supported.',
+        'statusCode' => 400,
     ],
     Exception::STORAGE_FILE_NOT_READABLE => [
         'name' => Exception::STORAGE_FILE_NOT_READABLE,
@@ -312,5 +322,36 @@ return [
         'name' => Exception::STORAGE_FAILED_TO_WRITE_FILE,
         'description' => 'Failed to save the uploaded file.',
         'statusCode' => 500,
+    ],
+
+    /** Functions  */
+    Exception::FUNCTION_NOT_FOUND => [
+        'name' => Exception::FUNCTION_NOT_FOUND,
+        'description' => 'The requested function could not be found.',
+        'statusCode' => 404,
+    ],
+    Exception::FUNCTION_DELETION_FAILED => [
+        'name' => Exception::FUNCTION_DELETION_FAILED,
+        'description' => 'Failed to delete the function from the database.',
+        'statusCode' => 500,
+    ],
+
+    /** Deployments */
+    Exception::DEPLOYMENT_NOT_FOUND => [
+        'name' => Exception::DEPLOYMENT_NOT_FOUND,
+        'description' => 'The requested deployment could not be found.',
+        'statusCode' => 404,
+    ],
+    Exception::DEPLOYMENT_DELETION_FAILED => [
+        'name' => Exception::DEPLOYMENT_DELETION_FAILED,
+        'description' => 'Failed to delete the deployment from the database.',
+        'statusCode' => 500,
+    ],
+
+    /** Executions */
+    Exception::EXECUTION_NOT_FOUND => [
+        'name' => Exception::EXECUTION_NOT_FOUND,
+        'description' => 'The requested execution could not be found.',
+        'statusCode' => 404,
     ],
 ];
