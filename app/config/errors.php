@@ -5,6 +5,7 @@
  */
 
 use Appwrite\Extend\Exception;
+use PhpParser\Node\Expr;
 
 return [
     /** General Errors */
@@ -353,5 +354,120 @@ return [
         'name' => Exception::EXECUTION_NOT_FOUND,
         'description' => 'The requested execution could not be found.',
         'statusCode' => 404,
+    ],
+
+    /** Collections */
+    Exception::COLLECTION_NOT_FOUND => [
+        'name' => Exception::COLLECTION_NOT_FOUND,
+        'description' => 'The requested collection could not be found.',
+        'statusCode' => 404,
+    ],
+    Exception::COLLECTION_ALREADY_EXISTS => [
+        'name' => Exception::COLLECTION_ALREADY_EXISTS,
+        'description' => 'The collection already exists.',
+        'statusCode' => 400,
+    ],
+    Exception::COLLECTION_LIMIT_EXCEEDED => [
+        'name' => Exception::COLLECTION_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of collections has been reached.',
+        'statusCode' => 400,
+    ],
+    Exception::COLLECTION_DELETION_FAILED => [
+        'name' => Exception::COLLECTION_DELETION_FAILED,
+        'description' => 'Failed to delete the collection from the database.',
+        'statusCode' => 500,
+    ],
+
+    /** Documents */
+    Exception::DOCUMENT_NOT_FOUND => [
+        'name' => Exception::DOCUMENT_NOT_FOUND,
+        'description' => 'The requested document could not be found.',
+        'statusCode' => 404,
+    ],
+    Exception::DOCUMENT_INVALID_STRUCTURE => [
+        'name' => Exception::DOCUMENT_INVALID_STRUCTURE,
+        'description' => 'The document structure is invalid.',
+        'statusCode' => 400,
+    ],
+    Exception::DOCUMENT_MISSING_PAYLOAD => [
+        'name' => Exception::DOCUMENT_MISSING_PAYLOAD,
+        'description' => 'The document payload is missing.',
+        'statusCode' => 400,
+    ],
+    Exception::DOCUMENT_ALREADY_EXISTS => [
+        'name' => Exception::DOCUMENT_ALREADY_EXISTS,
+        'description' => 'The document already exists.',
+        'statusCode' => 400,
+    ],
+
+    /** Attributes */
+    Exception::ATTRIBUTE_NOT_FOUND => [
+        'name' => Exception::ATTRIBUTE_NOT_FOUND,
+        'description' => 'The requested attribute could not be found.',
+        'statusCode' => 404,
+    ],
+    Exception::ATTRIBUTE_UNKNOWN => [
+        'name' => Exception::ATTRIBUTE_UNKNOWN,
+        'description' => 'The requested attribute could not be found.',
+        'statusCode' => 404,
+    ],
+    Exception::ATTRIBUTE_NOT_AVAILABLE => [
+        'name' => Exception::ATTRIBUTE_NOT_AVAILABLE,
+        'description' => 'The requested attribute is not available.',
+        'statusCode' => 404,
+    ],
+    Exception::ATTRIBUTE_FORMAT_UNSUPPORTED => [
+        'name' => Exception::ATTRIBUTE_FORMAT_UNSUPPORTED,
+        'description' => 'The requested attribute format is not supported.',
+        'statusCode' => 400,
+    ],
+    Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED => [
+        'name' => Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED,
+        'description' => 'The requested attribute default value is not supported.',
+        'statusCode' => 400,
+    ],
+    Exception::ATTRIBUTE_ALREADY_EXISTS => [
+        'name' => Exception::ATTRIBUTE_ALREADY_EXISTS,
+        'description' => 'The attribute already exists.',
+        'statusCode' => 400,
+    ],
+    Exception::ATTRIBUTE_LIMIT_EXCEEDED => [
+        'name' => Exception::ATTRIBUTE_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of attributes has been reached.',
+        'statusCode' => 400,
+    ],
+    Exception::ATTRIBUTE_VALUE_INVALID => [
+        'name' => Exception::ATTRIBUTE_VALUE_INVALID,
+        'description' => 'The attribute value is invalid.',
+        'statusCode' => 400,
+    ],
+
+    /** Indexes */
+    Exception::INDEX_NOT_FOUND => [
+        'name' => Exception::INDEX_NOT_FOUND,
+        'description' => 'The requested index could not be found.',
+        'statusCode' => 404,
+    ],
+    Exception::INDEX_LIMIT_EXCEEDED => [
+        'name' => Exception::INDEX_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of indexes has been reached.',
+        'statusCode' => 400,
+    ],
+    Exception::INDEX_ALREADY_EXISTS => [
+        'name' => Exception::INDEX_ALREADY_EXISTS,
+        'description' => 'The index already exists.',
+        'statusCode' => 400,
+    ],
+
+    /** Query */
+    Exception::QUERY_LIMIT_EXCEEDED => [
+        'name' => Exception::QUERY_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of results has been reached.',
+        'statusCode' => 400,
+    ],
+    Exception::QUERY_INVALID => [
+        'name' => Exception::QUERY_INVALID,
+        'description' => 'The query is invalid.',
+        'statusCode' => 400,
     ],
 ];
