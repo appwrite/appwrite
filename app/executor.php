@@ -600,7 +600,7 @@ function runBuildStage(string $buildId, string $projectID, string $path, array $
 }
 
 App::post('/v1/execution')
-    ->desc('Execute a function')
+    ->desc('Create a function execution')
     ->param('functionId', '', new Text(1024), 'The FunctionID to execute')
     ->param('deploymentId', '', new Text(1024), 'The deployment ID to execute')
     ->param('buildId', '', new Text(1024), 'The build ID of the function')
