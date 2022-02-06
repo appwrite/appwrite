@@ -206,6 +206,11 @@ return [
         'description' => 'The membership ID does not belong to the team ID.',
         'statusCode' => 404,
     ],
+    Exception::TEAM_INVITE_MISMATCH => [
+        'name' => Exception::TEAM_INVITE_MISMATCH,
+        'description' => 'The invite does not belong to the current user.',
+        'statusCode' => 401,
+    ],
 
 
     /** Membership */

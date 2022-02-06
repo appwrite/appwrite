@@ -59,6 +59,7 @@ class Exception extends \Exception
     const TEAM_INVITE_NOT_FOUND          = 'team_invite_not_found';
     const TEAM_INVALID_SECRET            = 'team_invalid_secret';
     const TEAM_MEMBERSHIP_MISMATCH       = 'team_membership_mismatch';
+    const TEAM_INVITE_MISMATCH           = 'team_invite_mismatch'; 
 
     /** Membership */
     const MEMBERSHIP_NOT_FOUND       = 'membership_not_found';
