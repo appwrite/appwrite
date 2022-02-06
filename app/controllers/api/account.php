@@ -422,11 +422,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         if (!$validateURL->isValid($state['success'])) {
-            throw new Exception('Invalid redirect URL for success login', 400, Exception::TYPE_INVALID_SUCCESS_URL);
+            throw new Exception('Invalid redirect URL for success login', 400, Exception::OAUTH_INVALID_SUCCESS_URL);
         }
 
         if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
-            throw new Exception('Invalid redirect URL for failure login', 400, Exception::TYPE_INVALID_FAILURE_URL);
+            throw new Exception('Invalid redirect URL for failure login', 400, Exception::OAUTH_INVALID_FAILURE_URL);
         }
 
         $state['failure'] = null;
