@@ -49,6 +49,36 @@ return [
         'description' => 'SMTP is disabled on your Appwrite instance. Please contact your project ',
         'statusCode' => 503,
     ],
+    Exception::DATABASE_NOT_AVAILABLE => [
+        'name' => Exception::DATABASE_NOT_AVAILABLE,
+        'description' => 'Database is not available. Please contact your project owner.',
+        'statusCode' => 503,
+    ],
+    Exception::CACHE_NOT_AVAILABLE => [
+        'name' => Exception::CACHE_NOT_AVAILABLE,
+        'description' => 'Cache is not available. Please contact your project owner.',
+        'statusCode' => 503,
+    ],
+    Exception::TIME_GAPS_DETECTED => [
+        'name' => Exception::TIME_GAPS_DETECTED,
+        'description' => 'Time gaps detected. Please contact your project owner.',
+        'statusCode' => 503,
+    ],
+    Exception::STORAGE_NOT_READABLE => [
+        'name' => Exception::STORAGE_NOT_READABLE,
+        'description' => 'Storage is not readable. Please contact your project owner.',
+        'statusCode' => 503,
+    ],
+    Exception::STORAGE_NOT_WRITABLE => [
+        'name' => Exception::STORAGE_NOT_WRITABLE,
+        'description' => 'Storage is not writable. Please contact your project owner.',
+        'statusCode' => 503,
+    ],
+    Exception::ANTIVIRUS_NOT_AVAILABLE => [
+        'name' => Exception::ANTIVIRUS_NOT_AVAILABLE,
+        'description' => 'Antivirus is not available. Please contact your project owner.',
+        'statusCode' => 503,
+    ],
 
     /** Project Errors */
     Exception::PROJECT_NOT_FOUND => [
