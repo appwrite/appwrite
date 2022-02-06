@@ -214,6 +214,16 @@ return [
         'description' => 'The requested file could not be found.',
         'statusCode' => 404,
     ],
+    Exception::STORAGE_DEVICE_NOT_FOUND => [
+        'name' => Exception::STORAGE_DEVICE_NOT_FOUND,
+        'description' => 'The requested storage device could not be found.',
+        'statusCode' => 400,
+    ],
+    Exception::STORAGE_FAILED_TO_DELETE_FILE => [
+        'name' => Exception::STORAGE_FAILED_TO_DELETE_FILE,
+        'description' => 'There was an issue deleting the file from the database',
+        'statusCode' => 500,
+    ],
     Exception::STORAGE_FILE_NOT_READABLE => [
         'name' => Exception::STORAGE_FILE_NOT_READABLE,
         'description' => 'There was an error reading the file from disk.',

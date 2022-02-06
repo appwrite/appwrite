@@ -62,6 +62,8 @@ class Exception extends \Exception
 
     /** Storage */
     const STORAGE_FILE_NOT_FOUND            = 'storage_file_not_found';
+    const STORAGE_DEVICE_NOT_FOUND          = 'storage_device_not_found';
+    const STORAGE_FAILED_TO_DELETE_FILE     = 'storage_failed_to_delete_file';
     const STORAGE_FILE_NOT_READABLE         = 'storage_file_not_readable';
     const STORAGE_INVALID_READ_PERMISSIONS  = 'storage_invalid_read_permissions';
     const STORAGE_INVALID_WRITE_PERMISSIONS = 'storage_invalid_write_permissions';

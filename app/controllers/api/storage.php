@@ -213,7 +213,7 @@ App::get('/v1/storage/files')
             $cursorFile = $dbForProject->getDocument('files', $cursor);
 
             if ($cursorFile->isEmpty()) {
-                throw new Exception("File '{$cursor}' for the 'cursor' value not found.", 400);
+                throw new Exception("File '{$cursor}' for the 'cursor' value not found.", 400, Exception::STORAGE_FILE_NOT_FOUND);
             }
         }
 
@@ -257,7 +257,7 @@ App::get('/v1/storage/files/:fileId')
         $file = $dbForProject->getDocument('files', $fileId);
 
         if (empty($file->getId())) {
-            throw new Exception('File not found', 404);
+            throw new Exception('File not found', 404, Exception::STORAGE_FILE_NOT_FOUND);
         }
         $usage
             ->setParam('storage.files.read', 1)
@@ -304,11 +304,11 @@ App::get('/v1/storage/files/:fileId/preview')
         $storage = 'files';
 
         if (!\extension_loaded('imagick')) {
-            throw new Exception('Imagick extension is missing', 500);
+            throw new Exception('Imagick extension is missing', 500, Exception::IMAGIC_EXTENSION_MISSING);
         }
 
         if (!Storage::exists($storage)) {
-            throw new Exception('No such storage device', 400);
+            throw new Exception('No such storage device', 400, Exception::STORAGE_DEVICE_NOT_FOUND);
         }
 
         if ((\strpos($request->getAccept(), 'image/webp') === false) && ('webp' == $output)) { // Fallback webp to jpeg when no browser support
@@ -325,7 +325,7 @@ App::get('/v1/storage/files/:fileId/preview')
         $file = $dbForProject->getDocument('files', $fileId);
 
         if (empty($file->getId())) {
-            throw new Exception('File not found', 404);
+            throw new Exception('File not found', 404, Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         $path = $file->getAttribute('path');
@@ -347,7 +347,7 @@ App::get('/v1/storage/files/:fileId/preview')
         $device = Storage::getDevice('files');
 
         if (!\file_exists($path)) {
-            throw new Exception('File not found', 404);
+            throw new Exception('File not found', 404, Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-'.$project->getId())); // Limit file number or size
@@ -450,13 +450,13 @@ App::get('/v1/storage/files/:fileId/download')
         $file = $dbForProject->getDocument('files', $fileId);
 
         if (empty($file->getId())) {
-            throw new Exception('File not found', 404);
+            throw new Exception('File not found', 404, Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         $path = $file->getAttribute('path', '');
 
         if (!\file_exists($path)) {
-            throw new Exception('File not found in '.$path, 404);
+            throw new Exception('File not found in '.$path, 404, Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         $compressor = new GZIP();
@@ -516,13 +516,13 @@ App::get('/v1/storage/files/:fileId/view')
         $mimes = Config::getParam('storage-mimes');
 
         if (empty($file->getId())) {
-            throw new Exception('File not found', 404);
+            throw new Exception('File not found', 404, Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         $path = $file->getAttribute('path', '');
 
         if (!\file_exists($path)) {
-            throw new Exception('File not found in '.$path, 404);
+            throw new Exception('File not found in '.$path, 404, Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         $compressor = new GZIP();
@@ -602,12 +602,12 @@ App::put('/v1/storage/files/:fileId')
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach ($read as $role) {
                 if (!Authorization::isRole($role)) {
-                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::STORAGE_INVALID_READ_PERMISSIONS);
                 }
             }
             foreach ($write as $role) {
                 if (!Authorization::isRole($role)) {
-                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::STORAGE_INVALID_WRITE_PERMISSIONS);
                 }
             }
         }
@@ -615,7 +615,7 @@ App::put('/v1/storage/files/:fileId')
         $file = $dbForProject->getDocument('files', $fileId);
 
         if (empty($file->getId())) {
-            throw new Exception('File not found', 404);
+            throw new Exception('File not found', 404, Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         $file = $dbForProject->updateDocument('files', $fileId, new Document(\array_merge($file->getArrayCopy(), [
@@ -664,14 +664,14 @@ App::delete('/v1/storage/files/:fileId')
         $file = $dbForProject->getDocument('files', $fileId);
 
         if (empty($file->getId())) {
-            throw new Exception('File not found', 404);
+            throw new Exception('File not found', 404, Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         $device = Storage::getDevice('files');
 
         if ($device->delete($file->getAttribute('path', ''))) {
             if (!$dbForProject->deleteDocument('files', $fileId)) {
-                throw new Exception('Failed to remove file from DB', 500);
+                throw new Exception('Failed to remove file from DB', 500, Exception::STORAGE_FAILED_TO_DELETE_FILE);
             }
         }
         
