@@ -415,7 +415,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             try {
                 $state = \array_merge($defaultState, $oauth2->parseState($state));
             } catch (\Exception$exception) {
-                throw new Exception('Failed to parse login state params as passed from OAuth2 provider', 500, Exception::OAUTH_INVALID_LOGIN_STATE_PARAMS);
+                throw new Exception('Failed to parse login state params as passed from OAuth2 provider', 500, Exception::GENERAL_SERVER_ERROR);
             }
         } else {
             $state = $defaultState;
@@ -437,7 +437,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $response->redirect($state['failure'], 301, 0);
             }
 
-            throw new Exception('Failed to obtain access token', 500, Exception::OAUTH_ACCESS_TOKEN_FAILED);
+            throw new Exception('Failed to obtain access token', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $oauth2ID = $oauth2->getUserID($accessToken);
@@ -705,7 +705,7 @@ App::post('/v1/account/sessions/magic-url')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         if (false === $user) {
-            throw new Exception('Failed to save user to DB', 500, Exception::USER_CREATION_FAILED);
+            throw new Exception('Failed to save user to DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         if(empty($url)) {
@@ -839,7 +839,7 @@ App::put('/v1/account/sessions/magic-url')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500, Exception::USER_CREATION_FAILED);
+            throw new Exception('Failed saving user to DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $audits

@@ -28,7 +28,6 @@ class Exception extends \Exception
     const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
     const USER_ALREADY_EXISTS               = 'user_already_exists';
     const USER_BLOCKED                      = 'user_blocked';
-    const USER_CREATION_FAILED              = 'user_creation_failed';
     const USER_INVALID_TOKEN                = 'user_invalid_token';
     const USER_NOT_FOUND                    = 'user_not_found';
     const USER_INVALID_CREDENTIALS          = 'user_invalid_credentials';
@@ -46,10 +45,8 @@ class Exception extends \Exception
     /** OAuth **/
     const OAUTH_PROVIDER_DISABLED          = 'oauth_provider_disabled';
     const OAUTH_PROVIDER_UNSUPPORTED       = 'oauth_provider_unsupported';
-    const OAUTH_INVALID_LOGIN_STATE_PARAMS = 'oauth_invalid_login_state_params';
     const OAUTH_INVALID_SUCCESS_URL        = 'oauth_invalid_success_url';
     const OAUTH_INVALID_FAILURE_URL        = 'oauth_invalid_failure_url';
-    const OAUTH_ACCESS_TOKEN_FAILED        = 'oauth_access_token_failed';
     const OAUTH_MISSING_USER_ID            = 'oauth_missing_user_id';
 
     /** Teams */
@@ -164,6 +161,9 @@ class Exception extends \Exception
     const STORAGE_NOT_READABLE      = 'storage_not_readable';
     const STORAGE_NOT_WRITABLE      = 'storage_not_writable';
     const ANTIVIRUS_NOT_AVAILABLE   = 'antivirus_not_available';
+
+    /** Server Errors */
+    const GENERAL_SERVER_ERROR       = 'general_server_error';
 
 
 

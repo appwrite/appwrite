@@ -178,11 +178,6 @@ return [
         'description' => 'Cannot create anonymous user when a session is active.',
         'statusCode' => 401,
     ],
-    Exception::USER_CREATION_FAILED => [
-        'name' => Exception::USER_CREATION_FAILED,
-        'description' => 'There was an internal server error while creating the user.',
-        'statusCode' => 500,
-    ],
     Exception::USER_NOT_FOUND => [
         'name' => Exception::USER_NOT_FOUND,
         'description' => 'User with the requested ID could not be found.',
@@ -225,11 +220,6 @@ return [
         'description' => 'The chosen OAuth provider is unsupported.',
         'statusCode' => 501,
     ],
-    Exception::OAUTH_INVALID_LOGIN_STATE_PARAMS => [
-        'name' => Exception::OAUTH_INVALID_LOGIN_STATE_PARAMS,
-        'description' => 'Failed to parse the login state params from the OAuth provider.',
-        'statusCode' => 500,
-    ],
     Exception::OAUTH_INVALID_SUCCESS_URL => [
         'name' => Exception::OAUTH_INVALID_SUCCESS_URL,
         'description' => 'Invalid URL received for OAuth success redirect.',
@@ -239,11 +229,6 @@ return [
         'name' => Exception::OAUTH_INVALID_FAILURE_URL,
         'description' => 'Invalid URL received for OAuth failure redirect.',
         'statusCode' => 400,
-    ],
-    Exception::OAUTH_ACCESS_TOKEN_FAILED => [
-        'name' => Exception::OAUTH_ACCESS_TOKEN_FAILED,
-        'description' => 'Failed to obtain access token from the OAuth provider.',
-        'statusCode' => 500,
     ],
     Exception::OAUTH_MISSING_USER_ID => [
         'name' => Exception::OAUTH_MISSING_USER_ID,
