@@ -437,7 +437,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $response->redirect($state['failure'], 301, 0);
             }
 
-            throw new Exception('Failed to obtain access token', 500, Exception::TYPE_OAUTH_ACCESS_TOKEN_FAILED);
+            throw new Exception('Failed to obtain access token', 500, Exception::OAUTH_ACCESS_TOKEN_FAILED);
         }
 
         $oauth2ID = $oauth2->getUserID($accessToken);
@@ -447,7 +447,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $response->redirect($state['failure'], 301, 0);
             }
 
-            throw new Exception('Missing ID from OAuth2 provider', 400, Exception::TYPE_MISSING_USER_ID);
+            throw new Exception('Missing ID from OAuth2 provider', 400, Exception::OAUTH_MISSING_USER_ID);
         }
 
         $sessions = $user->getAttribute('sessions', []);
@@ -482,7 +482,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $sum = $dbForProject->count('users', [ new Query('deleted', Query::TYPE_EQUAL, [false]),], APP_LIMIT_USERS);
 
                     if ($sum >= $limit) {
-                        throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::TYPE_USER_LIMIT_EXCEEDED);
+                        throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
                     }
                 }
 
