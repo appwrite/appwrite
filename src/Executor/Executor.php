@@ -101,13 +101,14 @@ class Executor
         string $userId
     )
     {
-        $route = "/functions/$functionId/executions";
+        $route = "/execution";
         $headers = [
             'content-type' =>  'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
         ];
         $params = [
+            'functionId' => $functionId,
             'deploymentId' => $deploymentId,
             'buildId' => $buildId,
             'path' => $path,
