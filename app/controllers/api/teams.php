@@ -370,7 +370,7 @@ App::post('/v1/teams/:teamId/memberships')
             try {
                 $membership = Authorization::skip(fn() => $dbForProject->createDocument('memberships', $membership));
             } catch (Duplicate $th) {
-                throw new Exception('User has already been invited or is already a member of this team', 409, Exception::TEAM_INVITATION_ALREADY_EXISTS);
+                throw new Exception('User has already been invited or is already a member of this team', 409, Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
             $team->setAttribute('sum', $team->getAttribute('sum', 0) + 1);
             $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
@@ -383,7 +383,7 @@ App::post('/v1/teams/:teamId/memberships')
             try {
                 $membership = $dbForProject->createDocument('memberships', $membership);
             } catch (Duplicate $th) {
-                throw new Exception('User has already been invited or is already a member of this team', 409, Exception::TEAM_INVITATION_ALREADY_EXISTS);
+                throw new Exception('User has already been invited or is already a member of this team', 409, Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
         }
 
@@ -625,7 +625,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception('Team IDs don\'t match', 404);
+            throw new Exception('Team IDs don\'t match', 404, Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
         $team = Authorization::skip(fn() => $dbForProject->getDocument('teams', $teamId));
@@ -635,7 +635,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         if (Auth::hash($secret) !== $membership->getAttribute('secret')) {
-            throw new Exception('Secret key not valid', 401);
+            throw new Exception('Secret key not valid', 401, Exception::TEAM_INVALID_SECRET);
         }
 
         if ($userId != $membership->getAttribute('userId')) {
@@ -767,7 +767,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         } catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         } catch (\Exception $exception) {
-            throw new Exception('Failed to remove membership from DB', 500);
+            throw new Exception('Failed to remove membership from DB', 500, Exception::MEMBERSHIP_DELETION_FAILED);
         }
 
         $memberships = $user->getAttribute('memberships', []);

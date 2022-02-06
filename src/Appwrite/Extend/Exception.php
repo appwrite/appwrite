@@ -55,8 +55,10 @@ class Exception extends \Exception
     /** Teams */
     const TEAM_NOT_FOUND                 = 'team_not_found';
     const TEAM_DELETION_FAILED           = 'team_deletion_failed';
-    const TEAM_INVITATION_ALREADY_EXISTS = 'team_invitation_already_exists';
+    const TEAM_INVITE_ALREADY_EXISTS     = 'team_invite_already_exists';
     const TEAM_INVITE_NOT_FOUND          = 'team_invite_not_found';
+    const TEAM_INVALID_SECRET            = 'team_invalid_secret';
+    const TEAM_MEMBERSHIP_MISMATCH       = 'team_membership_mismatch';
 
     /** Membership */
     const MEMBERSHIP_NOT_FOUND       = 'membership_not_found';

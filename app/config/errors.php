@@ -186,8 +186,8 @@ return [
         'description' => 'Failed to delete team from the database.',
         'statusCode' => 500,
     ],
-    Exception::TEAM_INVITATION_ALREADY_EXISTS => [
-        'name' => Exception::TEAM_INVITATION_ALREADY_EXISTS,
+    Exception::TEAM_INVITE_ALREADY_EXISTS => [
+        'name' => Exception::TEAM_INVITE_ALREADY_EXISTS,
         'description' => 'The current user already has an invitation to this team.',
         'statusCode' => 409,
     ],
@@ -195,6 +195,16 @@ return [
         'name' => Exception::TEAM_INVITE_NOT_FOUND,
         'description' => 'The requested invitation could not be found.',
         'statusCode' => 409,
+    ],
+    Exception::TEAM_INVALID_SECRET => [
+        'name' => Exception::TEAM_INVALID_SECRET,
+        'description' => 'The team invitation secret is invalid.',
+        'statusCode' => 401,
+    ],
+    Exception::TEAM_MEMBERSHIP_MISMATCH => [
+        'name' => Exception::TEAM_MEMBERSHIP_MISMATCH,
+        'description' => 'The membership ID does not belong to the team ID.',
+        'statusCode' => 404,
     ],
 
 
