@@ -29,6 +29,7 @@ class Exception extends \Exception
     const USER_ALREADY_EXISTS          = 'user_already_exists';
     const USER_BLOCKED                 = 'user_blocked';
     const USER_CREATION_FAILED         = 'user_creation_failed';
+    const USER_INVALID_TOKEN           = 'user_invalid_token';
     const USER_NOT_FOUND               = 'user_not_found';
     const USER_INVALID_CREDENTIALS     = 'user_invalid_credentials';
     const USER_EMAIL_ALREADY_EXISTS    = 'user_email_already_exists';

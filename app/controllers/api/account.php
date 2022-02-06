@@ -705,7 +705,7 @@ App::post('/v1/account/sessions/magic-url')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         if (false === $user) {
-            throw new Exception('Failed to save user to DB', 500, Exception::TYPE_USER_CREATION_FAILED);
+            throw new Exception('Failed to save user to DB', 500, Exception::USER_CREATION_FAILED);
         }
 
         if(empty($url)) {
@@ -783,13 +783,13 @@ App::put('/v1/account/sessions/magic-url')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
-            throw new Exception('User not found', 404, Exception::TYPE_USER_NOT_FOUND);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $token = Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_MAGIC_URL, $secret);
 
         if (!$token) {
-            throw new Exception('Invalid login token', 401, Exception::TYPE_INVALID_TOKEN);
+            throw new Exception('Invalid login token', 401, Exception::USER_INVALID_TOKEN);
         }
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -839,7 +839,7 @@ App::put('/v1/account/sessions/magic-url')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500, Exception::TYPE_USER_CREATION_FAILED);
+            throw new Exception('Failed saving user to DB', 500, Exception::USER_CREATION_FAILED);
         }
 
         $audits
@@ -912,7 +912,7 @@ App::post('/v1/account/sessions/anonymous')
         $protocol = $request->getProtocol();
 
         if ('console' === $project->getId()) {
-            throw new Exception('Failed to create anonymous user.', 401, Exception::TYPE_ANONYMOUS_CONSOLE_USER);
+            throw new Exception('Failed to create anonymous user.', 401);
         }
 
         if (!$user->isEmpty()) {

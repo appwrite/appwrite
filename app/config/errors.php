@@ -82,6 +82,11 @@ return [
         'description' => 'A user with the same email ID already exists in your project.',
         'statusCode' => 409,
     ],
+    Exception::USER_INVALID_TOKEN => [
+        'name' => Exception::USER_INVALID_TOKEN,
+        'description' => 'Invalid token.',
+        'statusCode' => 401,
+    ],
     Exception::USER_BLOCKED => [
         'name' => Exception::USER_BLOCKED,
         'description' => 'The current user has been blocked. Please contact the project administrator for more information.',
