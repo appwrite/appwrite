@@ -75,6 +75,7 @@ class Exception extends \Exception
     const AVATAR_ICON_NOT_FOUND            = 'avatar_icon_not_found';
 
     /** Storage */
+    const STORAGE_ERROR                     = 'storage_error';
     const STORAGE_FILE_NOT_FOUND            = 'storage_file_not_found';
     const STORAGE_DEVICE_NOT_FOUND          = 'storage_device_not_found';
     const STORAGE_FILE_DELETION_FAILED      = 'storage_file_deletion_failed';
@@ -155,9 +156,15 @@ class Exception extends \Exception
     const INVALID_READ_PERMISSIONS  = 'invalid_read_permissions';
     const INVALID_WRITE_PERMISSIONS = 'invalid_write_permissions';
     const UNAUTHORIZED_SCOPE        = 'unauthorized_scope';
-    const STORAGE_ERROR             = 'storage_error';
     const RATE_LIMIT_EXCEEDED       = 'rate_limit_exceeded';
     const SMTP_DISABLED             = 'smtp_disabled';
+    const DATABASE_NOT_AVAILABLE    = 'database_not_available';
+    const CACHE_NOT_AVAILABLE       = 'cache_not_available';
+    const TIME_GAPS_DETECTED        = 'time_gaps_detected';
+    const STORAGE_NOT_READABLE      = 'storage_not_readable';
+    const STORAGE_NOT_WRITABLE      = 'storage_not_writable';
+    const ANTIVIRUS_NOT_AVAILABLE   = 'antivirus_not_available';
+
 
 
     private $errorCode = '';
