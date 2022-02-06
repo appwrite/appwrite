@@ -108,7 +108,7 @@ App::post('/v1/storage/files')
         $device = Storage::getDevice('files');
 
         if (!$upload->isValid($file['tmp_name'])) {
-            throw new Exception('Invalid file', 403, );
+            throw new Exception('Invalid file', 403, Exception::STORAGE_INVALID_FILE);
         }
 
         // Save to storage

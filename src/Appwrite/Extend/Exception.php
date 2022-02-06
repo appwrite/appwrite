@@ -66,6 +66,7 @@ class Exception extends \Exception
     const STORAGE_INVALID_READ_PERMISSIONS  = 'storage_invalid_read_permissions';
     const STORAGE_INVALID_WRITE_PERMISSIONS = 'storage_invalid_write_permissions';
     const STORAGE_INVALID_FILE_SIZE         = 'storage_invalid_file_size';
+    const STORAGE_INVALID_FILE              = 'storage_invalid_file';
 
     /** Projects */
     const PROJECT_NOT_FOUND       = 'project_not_found';

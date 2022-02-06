@@ -234,4 +234,9 @@ return [
         'description' => 'The file size is either not valid or exceeds the maximum allowed size.',
         'statusCode' => 400,
     ],
+    Exception::STORAGE_INVALID_FILE => [
+        'name' => Exception::STORAGE_INVALID_FILE,
+        'description' => 'The uploaded file is invalid. Please check the file and try again.',
+        'statusCode' => 403,
+    ],
 ];
