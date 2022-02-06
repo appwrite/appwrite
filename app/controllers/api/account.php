@@ -912,11 +912,11 @@ App::post('/v1/account/sessions/anonymous')
         $protocol = $request->getProtocol();
 
         if ('console' === $project->getId()) {
-            throw new Exception('Failed to create anonymous user.', 401);
+            throw new Exception('Failed to create anonymous user.', 401, Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED);
         }
 
         if (!$user->isEmpty()) {
-            throw new Exception('Cannot create an anonymous user when logged in.', 401, Exception::TYPE_SESSION_ALREADY_EXISTS);
+            throw new Exception('Cannot create an anonymous user when logged in.', 401, Exception::USER_SESSION_ALREADY_EXISTS);
         }
 
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;

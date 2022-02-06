@@ -92,6 +92,16 @@ return [
         'description' => 'The current user has been blocked. Please contact the project administrator for more information.',
         'statusCode' => 401,
     ],
+    Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED => [
+        'name' => Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED,
+        'description' => 'Anonymous users cannot be created for console project.',
+        'statusCode' => 401,
+    ],
+    Exception::USER_SESSION_ALREADY_EXISTS => [
+        'name' => Exception::USER_SESSION_ALREADY_EXISTS,
+        'description' => 'Cannot create anonymous user when a session is active.',
+        'statusCode' => 401,
+    ],
     Exception::USER_CREATION_FAILED => [
         'name' => Exception::USER_CREATION_FAILED,
         'description' => 'There was an internal server error while creating the user.',
