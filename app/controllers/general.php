@@ -8,7 +8,7 @@ use Utopia\Logger\Log\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
-use Utopia\Exception;
+use Appwrite\Extend\Exception;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
@@ -108,11 +108,11 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     }
 
     if ($project->isEmpty()) {
-        throw new Exception('Project not found', 404);
+        throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
     }
 
     if (!empty($route->getLabel('sdk.auth', [])) && $project->isEmpty() && ($route->getLabel('scope', '') !== 'public')) {
-        throw new Exception('Missing or unknown project ID', 400);
+        throw new Exception('Missing or unknown project ID', 400, Exception::PROJECT_UNKNOWN);
     }
 
     $referrer = $request->getReferer();
@@ -214,7 +214,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
         && $route->getLabel('origin', false) !== '*'
         && empty($request->getHeader('x-appwrite-key', ''))) {
-        throw new Exception($originValidator->getDescription(), 403);
+        throw new Exception($originValidator->getDescription(), 403, Exception::UNKNOWN_ORIGIN);
     }
 
     /*
@@ -283,24 +283,24 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         if(array_key_exists($service, $project->getAttribute('services',[]))
             && !$project->getAttribute('services',[])[$service]
             && !Auth::isPrivilegedUser(Authorization::getRoles())) {
-            throw new Exception('Service is disabled', 503);
+            throw new Exception('Service is disabled', 503, Exception::SERVICE_DISABLED);
         }
     }
 
     if (!\in_array($scope, $scopes)) {
         if ($project->isEmpty()) { // Check if permission is denied because project is missing
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
-        throw new Exception($user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401);
+        throw new Exception($user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401, Exception::UNAUTHORIZED_SCOPE);
     }
 
     if (false === $user->getAttribute('status')) { // Account is blocked
-        throw new Exception('Invalid credentials. User is blocked', 401);
+        throw new Exception('Invalid credentials. User is blocked', 401, Exception::USER_BLOCKED);
     }
 
     if ($user->getAttribute('reset')) {
-        throw new Exception('Password reset is required', 412);
+        throw new Exception('Password reset is required', 412, Exception::USER_PASSWORD_RESET_REQUIRED);
     }
 
 }, ['utopia', 'request', 'response', 'console', 'project', 'dbForConsole', 'user', 'locale', 'clients']);

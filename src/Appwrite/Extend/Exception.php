@@ -8,42 +8,10 @@ class Exception extends \Exception
 {
     /**
      * Error Codes
-     */
-    const TYPE_NONE = '';
-
-    /** API */
-    const TYPE_PROJECT_NOT_FOUND       = 'project_not_found';
-    const TYPE_PROJECT_UNKNOWN         = 'project_unknown';
-    const TYPE_INVALID_ORIGIN          = 'invalid_origin';
-    const TYPE_SERVICE_DISABLED        = 'service_disabled';
-    const TYPE_UNAUTHORIZED_SCOPE      = 'unauthorized_scope';
-    const TYPE_PASSWORD_RESET_REQUIRED = 'password_reset_required';
-    const TYPE_STORAGE_ERROR           = 'storage_error';
-    const TYPE_RATE_LIMIT_EXCEEDED     = 'rate_limit_exceeded';
-    const TYPE_SMTP_DISABLED           = 'smtp_disabled';
-
-    /** Users **/
-    const TYPE_EMAIL_NOT_WHITELISTED   = 'email_not_whitelisted';
-    const TYPE_IP_NOT_WHITELISTED      = 'ip_not_whitelisted';
-    const TYPE_INVALID_TOKEN           = 'invalid_token';
-    const TYPE_JWT_VERIFICATION_FAILED = 'jwt_verification_failed';
-    const TYPE_ANONYMOUS_CONSOLE_USER  = 'anonymous_console_user';
-    const TYPE_SESSION_NOT_FOUND       = 'session_not_found';
-    const TYPE_SESSION_ALREADY_EXISTS  = 'session_already_exists';
-
-    /** OAuth **/
-    const TYPE_PROVIDER_DISABLED          = 'provider_disabled';
-    const TYPE_PROVIDER_UNSUPPORTED       = 'provider_unsupported';
-    const TYPE_INVALID_LOGIN_STATE_PARAMS = 'invalid_login_state_params';
-    const TYPE_INVALID_SUCCESS_URL        = 'invalid_success_url';
-    const TYPE_INVALID_FAILURE_URL        = 'invalid_failure_url';
-    const TYPE_OAUTH_ACCESS_TOKEN_FAILED  = 'oauth_access_token_failed';
-    const TYPE_MISSING_USER_ID            = 'missing_user_id';
-
-
-    /** 
+     *  
      * Naming the error types based on the following convention 
      * <ENTITY>_<ERROR_TYPE>
+     * 
      * Appwrite has the follwing entities:
      * - Users
      * - Projects
@@ -66,10 +34,36 @@ class Exception extends \Exception
     const USER_EMAIL_ALREADY_EXISTS    = 'user_email_already_exists';
     const USER_PASSWORD_MISMATCH       = 'user_password_mismatch';
     const USER_AUTH_METHOD_UNSUPPORTED = 'user_auth_method_unsupported';
+    const USER_PASSWORD_RESET_REQUIRED = 'user_password_reset_required';
+    const USER_EMAIL_NOT_WHITELISTED   = 'user_email_not_whitelisted';
+    const USER_IP_NOT_WHITELISTED      = 'user_ip_not_whitelisted';
+
+    /** OAuth **/
+    const OAUTH_PROVIDER_DISABLED          = 'oauth_provider_disabled';
+    const OAUTH_PROVIDER_UNSUPPORTED       = 'oauth_provider_unsupported';
+    const OAUTH_INVALID_LOGIN_STATE_PARAMS = 'oauth_invalid_login_state_params';
+    const OAUTH_INVALID_SUCCESS_URL        = 'oauth_invalid_success_url';
+    const OAUTH_INVALID_FAILURE_URL        = 'oauth_invalid_failure_url';
+    const OAUTH_ACCESS_TOKEN_FAILED        = 'oauth_access_token_failed';
+    const OAUTH_MISSING_USER_ID            = 'oauth_missing_user_id';
+
+    /** Projects */
+    const PROJECT_NOT_FOUND       = 'project_not_found';
+    const PROJECT_UNKNOWN         = 'project_unknown';
+
+    /** API */
+    const UNKNOWN                 = 'unknown';
+    const UNKNOWN_ORIGIN          = 'unknown_origin';
+    const SERVICE_DISABLED        = 'service_disabled';
+    const UNAUTHORIZED_SCOPE      = 'unauthorized_scope';
+    const STORAGE_ERROR           = 'storage_error';
+    const RATE_LIMIT_EXCEEDED     = 'rate_limit_exceeded';
+    const SMTP_DISABLED           = 'smtp_disabled';
+
 
     private $errorCode = '';
 
-    public function __construct(string $message, int $code = 0, string $errorCode = Exception::TYPE_NONE, \Throwable $previous = null)
+    public function __construct(string $message, int $code = 0, string $errorCode = Exception::UNKNOWN, \Throwable $previous = null)
     {
         $this->errorCode = $errorCode;
 
