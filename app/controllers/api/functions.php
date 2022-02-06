@@ -12,7 +12,7 @@ use Utopia\Storage\Validator\Upload;
 use Appwrite\Utopia\Response;
 use Appwrite\Task\Validator\Cron;
 use Utopia\App;
-use Appwrite\Extend\Exception
+use Appwrite\Extend\Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
