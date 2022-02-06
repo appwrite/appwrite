@@ -63,7 +63,7 @@ class Executor
         return $response['body'];
     }
 
-    public function deleteRuntime(string $deploymentId, string $projectId)
+    public function deleteRuntime(string $deploymentId, array $buildIds, string $projectId)
     {
         $route = "/deployments/$deploymentId";
         $headers = [
@@ -72,14 +72,14 @@ class Executor
             'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
         ];
         $params = [
-            'buildIds' => $buildIds[$deploymentId] ?? [],
+            'buildIds' => $buildIds,
         ];
 
         $response = $this->call(self::METHOD_DELETE, $route, $headers, $params, true, 30);
         
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
-            throw new \Exception('Error deleting deplyoment: ' . $deploymentId , $status);
+            throw new \Exception('Error deleting deployment: ' . $deploymentId , $status);
         }
 
         return $response['body'];

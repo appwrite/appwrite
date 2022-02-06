@@ -652,14 +652,14 @@ App::delete('/v1/deployments/:deploymentId')
 
         // Remove all the build containers
         foreach ($buildIds as $buildId) {
-            $status = $orchestration->remove('build-stage-' . $buildId, true);
-            if ($status) {
-                Console::success("Removed build container: $buildId for deployment: " . $deploymentId);
-            } else {
-                Console::error("Failed to remove build container: $buildId for deployment: " . $deploymentId);
+            try {
+                Console::info('Deleting build container : ' . $buildId);
+                $status = $orchestration->remove('build-stage-' . $buildId, true);
+            } catch (Throwable $th) {
+                Console::error($th->getMessage());
             }
         }
-       
+
         $orchestrationPool->put($orchestration);
 
         $response

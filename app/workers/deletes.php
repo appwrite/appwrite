@@ -358,7 +358,7 @@ class DeletesV1 extends Worker
         $executor = new Executor();
         foreach ($deploymentIds as $deploymentId) {
             try {
-                $executor->deleteRuntime($deploymentId, $projectId);
+                $executor->deleteRuntime($deploymentId, $buildIds[$deploymentId], $projectId);
             } catch (Throwable $th) {
                 Console::error($th->getMessage());
             }
@@ -373,6 +373,7 @@ class DeletesV1 extends Worker
     protected function deleteDeployment(Document $document, string $projectId): void
     {
         $dbForProject = $this->getProjectDB($projectId);
+        $deploymentId = $document->getId();
 
         /**
          * Delete deployment files
@@ -390,8 +391,8 @@ class DeletesV1 extends Worker
         $buildIds = [];
         $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
         $this->deleteByGroup('builds', [
-            new Query('deploymentId', Query::TYPE_EQUAL, [$document->getId()])
-        ], $dbForProject, function (Document $document) use ($storageBuilds) {
+            new Query('deploymentId', Query::TYPE_EQUAL, [$deploymentId])
+        ], $dbForProject, function (Document $document) use ($storageBuilds, &$buildIds) {
             $buildIds[] = $document->getId();
             if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
                 Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
@@ -405,7 +406,7 @@ class DeletesV1 extends Worker
          */
         try {
             $executor = new Executor();
-            $executor->deleteRuntime($document->getId(), $projectId);
+            $executor->deleteRuntime($deploymentId, $buildIds, $projectId);
         } catch (Throwable $th) {
             Console::error($th->getMessage());
         }
