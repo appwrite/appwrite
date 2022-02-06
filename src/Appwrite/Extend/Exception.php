@@ -14,14 +14,25 @@ class Exception extends \Exception
      * 
      * Appwrite has the follwing entities:
      * - Users
-     * - Projects
-     * - Sessions
+     * - OAuth
      * - Teams
      * - Memberships
-     * - Files
+     * - Avatars
+     * - Storage
      * - Functions
      * - Deployments
      * - Executions
+     * - Collections
+     * - Documents
+     * - Attributes
+     * - Indexes
+     * - Queries
+     * - Projects
+     * - Webhooks
+     * - Keys
+     * - Platform
+     * - Domain
+     * - General
      */
 
     /** Users */
@@ -89,8 +100,8 @@ class Exception extends \Exception
     const COLLECTION_NOT_FOUND              = 'collection_not_found';
     const COLLECTION_ALREADY_EXISTS         = 'collection_already_exists';
     const COLLECTION_LIMIT_EXCEEDED         = 'collection_limit_exceeded';
-    /** Documents */
     
+    /** Documents */
     const DOCUMENT_NOT_FOUND                = 'document_not_found';
     const DOCUMENT_INVALID_STRUCTURE        = 'document_invalid_structure';
     const DOCUMENT_MISSING_PAYLOAD          = 'document_missing_payload';
