@@ -1870,20 +1870,20 @@ App::put('/v1/account/recovery')
         /** @var Appwrite\Stats\Stats $usage */
 
         if ($password !== $passwordAgain) {
-            throw new Exception('Passwords must match', 400, Exception::TYPE_PASSWORD_MISMATCH);
+            throw new Exception('Passwords must match', 400, Exception::USER_PASSWORD_MISMATCH);
         }
 
         $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty() || $profile->getAttribute('deleted')) {
-            throw new Exception('User not found', 404, Exception::TYPE_USER_NOT_FOUND);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $tokens = $profile->getAttribute('tokens', []);
         $recovery = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_RECOVERY, $secret);
 
         if (!$recovery) {
-            throw new Exception('Invalid recovery token', 401, Exception::TYPE_INVALID_TOKEN);
+            throw new Exception('Invalid recovery token', 401, Exception::USER_INVALID_TOKEN);
         }
 
         Authorization::setRole('user:' . $profile->getId());
@@ -1957,7 +1957,7 @@ App::post('/v1/account/verification')
         /** @var Appwrite\Stats\Stats $usage */
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503, Exception::TYPE_SMTP_DISABLED);
+            throw new Exception('SMTP Disabled', 503, Exception::SMTP_DISABLED);
         }
 
         $roles = Authorization::getRoles();
@@ -2055,14 +2055,14 @@ App::put('/v1/account/verification')
         $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::TYPE_USER_NOT_FOUND);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $tokens = $profile->getAttribute('tokens', []);
         $verification = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_VERIFICATION, $secret);
 
         if (!$verification) {
-            throw new Exception('Invalid verification token', 401, Exception::TYPE_INVALID_TOKEN);
+            throw new Exception('Invalid verification token', 401, Exception::USER_INVALID_TOKEN);
         }
 
         Authorization::setRole('user:' . $profile->getId());
