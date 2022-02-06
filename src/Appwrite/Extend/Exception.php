@@ -58,6 +58,7 @@ class Exception extends \Exception
     const AVATAR_IMAGE_NOT_FOUND           = 'avatar_image_not_found';
     const AVATAR_CANNOT_PARSE_IMAGE        = 'avatar_cannot_parse_image';
     const AVATAR_REMOTE_URL_FAILED         = 'avatar_remote_url_failed';
+    const AVATAR_ICON_NOT_FOUND            = 'avatar_icon_not_found';
 
     /** Files */
     const FILE_NOT_FOUND                   = 'file_not_found';

@@ -317,7 +317,7 @@ App::get('/v1/avatars/favicon')
             $data = @\file_get_contents($outputHref, false);
 
             if (empty($data) || (\mb_substr($data, 0, 5) === '<html') || \mb_substr($data, 0, 5) === '<!doc') {
-                throw new Exception('Favicon not found', 404);
+                throw new Exception('Favicon not found', 404, Exception::AVATAR_ICON_NOT_FOUND);
             }
 
             $cache->save($key, $data);
@@ -333,7 +333,7 @@ App::get('/v1/avatars/favicon')
         $fetch = @\file_get_contents($outputHref, false);
 
         if (!$fetch) {
-            throw new Exception('Icon not found', 404);
+            throw new Exception('Icon not found', 404, Exception::AVATAR_ICON_NOT_FOUND);
         }
 
         $image = new Image($fetch);

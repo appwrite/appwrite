@@ -201,6 +201,11 @@ return [
         'description' => 'The remote URL could not be fetched.',
         'statusCode' => 404,
     ],
+    Exception::AVATAR_ICON_NOT_FOUND => [
+        'name' => Exception::AVATAR_ICON_NOT_FOUND,
+        'description' => 'The requested favicon could not be found.',
+        'statusCode' => 404,
+    ],
 
 
     /** Files */
