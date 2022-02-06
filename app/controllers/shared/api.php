@@ -179,7 +179,7 @@ App::init(function ($utopia, $request, $project) {
             break;
 
         default:
-            throw new Exception('Unsupported authentication route', Exception::USER_AUTH_METHOD_UNSUPPORTED);
+            throw new Exception('Unsupported authentication route', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
             break;
     }
 
