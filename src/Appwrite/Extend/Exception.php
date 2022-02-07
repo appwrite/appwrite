@@ -151,7 +151,6 @@ class Exception extends \Exception
     /** Domain */
     const DOMAIN_NOT_FOUND                  = 'domain_not_found';
     const DOMAIN_ALREADY_EXISTS             = 'domain_already_exists';
-    const DOMAIN_UNREACHABLE                = 'domain_unreachable';
     const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
 
 

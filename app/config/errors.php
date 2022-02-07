@@ -401,7 +401,7 @@ return [
     /** Project Errors */
     Exception::PROJECT_NOT_FOUND => [
         'name' => Exception::PROJECT_NOT_FOUND,
-        'description' => 'The requested project could not be found. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
+        'description' => 'Project with the requested ID could not be found. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
         'code' => 404,
     ],
     Exception::PROJECT_UNKNOWN => [
@@ -411,37 +411,32 @@ return [
     ],
     Exception::WEBHOOK_NOT_FOUND => [
         'name' => Exception::WEBHOOK_NOT_FOUND,
-        'description' => 'The requested webhook could not be found.',
+        'description' => 'Webhook with the requested ID could not be found.',
         'code' => 404,
     ],
     Exception::KEY_NOT_FOUND => [
         'name' => Exception::KEY_NOT_FOUND,
-        'description' => 'The requested key could not be found.',
+        'description' => 'Key with the requested ID could not be found.',
         'code' => 404,
     ],
     Exception::PLATFORM_NOT_FOUND => [
         'name' => Exception::PLATFORM_NOT_FOUND,
-        'description' => 'The requested platform could not be found.',
+        'description' => 'Platform with the requested ID could not be found.',
         'code' => 404,
     ],
     Exception::DOMAIN_NOT_FOUND => [
         'name' => Exception::DOMAIN_NOT_FOUND,
-        'description' => 'The requested domain could not be found.',
+        'description' => 'Domain with the requested ID could not be found.',
         'code' => 404,
     ],
     Exception::DOMAIN_ALREADY_EXISTS => [
         'name' => Exception::DOMAIN_ALREADY_EXISTS,
-        'description' => 'The requested domain already exists.',
+        'description' => 'A Domain with the requested ID already exists.',
         'code' => 409,
-    ],
-    Exception::DOMAIN_UNREACHABLE => [
-        'name' => Exception::DOMAIN_UNREACHABLE,
-        'description' => 'The requested domain is not reachable.',
-        'code' => 503,
     ],
     Exception::DOMAIN_VERIFICATION_FAILED => [
         'name' => Exception::DOMAIN_VERIFICATION_FAILED,
-        'description' => 'The requested domain verification failed.',
-        'code' => 503,
+        'description' => 'Domain verification for the requested domain has failed.',
+        'code' => 401,
     ]
 ];

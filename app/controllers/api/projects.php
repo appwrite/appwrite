@@ -1236,7 +1236,7 @@ App::post('/v1/projects/:projectId/domains')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.', 500, Exception::DOMAIN_UNREACHABLE);
+            throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $domain = new Domain($domain);
@@ -1367,7 +1367,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.', 500, Exception::DOMAIN_UNREACHABLE);
+            throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         if ($domain->getAttribute('verification') === true) {
@@ -1377,6 +1377,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $validator = new CNAME($target->get()); // Verify Domain with DNS records
 
         if (!$validator->isValid($domain->getAttribute('domain', ''))) {
+            // TODO: Isn't 401 Unauthorized ? Should we return a 400 Bad Request ?
             throw new Exception('Failed to verify domain', 401, Exception::DOMAIN_VERIFICATION_FAILED);
         }
 
