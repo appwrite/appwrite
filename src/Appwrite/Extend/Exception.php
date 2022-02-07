@@ -50,18 +50,18 @@ class Exception extends \Exception
     const USER_ALREADY_EXISTS               = 'user_already_exists';
     const USER_BLOCKED                      = 'user_blocked';
     const USER_INVALID_TOKEN                = 'user_invalid_token';
-    const USER_NOT_FOUND                    = 'user_not_found';
-    const USER_INVALID_CREDENTIALS          = 'user_invalid_credentials';
-    const USER_EMAIL_ALREADY_EXISTS         = 'user_email_already_exists';
-    const USER_PASSWORD_MISMATCH            = 'user_password_mismatch';
-    const USER_AUTH_METHOD_UNSUPPORTED      = 'user_auth_method_unsupported';
     const USER_PASSWORD_RESET_REQUIRED      = 'user_password_reset_required';
     const USER_EMAIL_NOT_WHITELISTED        = 'user_email_not_whitelisted';
     const USER_IP_NOT_WHITELISTED           = 'user_ip_not_whitelisted';
+    const USER_INVALID_CREDENTIALS          = 'user_invalid_credentials';
+    const USER_ANONYMOUS_CONSOLE_PROHIBITED = 'user_anonymous_console_prohibited';
     const USER_SESSION_ALREADY_EXISTS       = 'user_session_already_exists';
+    const USER_NOT_FOUND                    = 'user_not_found';
+    const USER_EMAIL_ALREADY_EXISTS         = 'user_email_already_exists';
+    const USER_PASSWORD_MISMATCH            = 'user_password_mismatch';
     const USER_SESSION_NOT_FOUND            = 'user_session_not_found';
     const USER_UNAUTHORIZED                 = 'user_unauthorized';
-    const USER_ANONYMOUS_CONSOLE_PROHIBITED = 'user_anonymous_console_prohibited';
+    const USER_AUTH_METHOD_UNSUPPORTED      = 'user_auth_method_unsupported';
 
     /** OAuth **/
     const OAUTH_PROVIDER_DISABLED           = 'oauth_provider_disabled';
