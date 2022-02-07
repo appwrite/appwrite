@@ -11,6 +11,7 @@ class Exception extends \Exception
      * <ENTITY>_<ERROR_TYPE>
      * 
      * Appwrite has the follwing entities:
+     * - General
      * - Users
      * - OAuth
      * - Teams
@@ -30,8 +31,18 @@ class Exception extends \Exception
      * - Keys
      * - Platform
      * - Domain
-     * - General
      */
+
+    /** General */
+    const GENERAL_DEFAULT                   = 'general_default';
+    const GENERAL_ACCESS_FORBIDDEN          = 'general_access_forbidden';
+    const GENERAL_UNKNOWN_ORIGIN            = 'general_unknown_origin';
+    const GENERAL_SERVICE_DISABLED          = 'general_service_disabled';
+    const GENERAL_UNAUTHORIZED_SCOPE        = 'general_unauthorized_scope';
+    const GENERAL_RATE_LIMIT_EXCEEDED       = 'general_rate_limit_exceeded';
+    const GENERAL_SMTP_DISABLED             = 'general_smtp_disabled';
+    const GENERAL_ARGUMENT_INVALID          = 'general_argument_invalid';
+    const GENERAL_SERVER_ERROR              = 'general_server_error';
 
     /** Users */
     const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
@@ -120,7 +131,7 @@ class Exception extends \Exception
     const INDEX_LIMIT_EXCEEDED              = 'index_limit_exceeded';
     const INDEX_ALREADY_EXISTS              = 'index_already_exists';
 
-    /** Query limit exceeded */
+    /** Query */
     const QUERY_LIMIT_EXCEEDED              = 'query_limit_exceeded';
     const QUERY_INVALID                     = 'query_invalid';
 
@@ -142,17 +153,6 @@ class Exception extends \Exception
     const DOMAIN_ALREADY_EXISTS             = 'domain_already_exists';
     const DOMAIN_UNREACHABLE                = 'domain_unreachable';
     const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
-
-    /** General */
-    const GENERAL_DEFAULT                   = 'general_default';
-    const GENERAL_ACCESS_FORBIDDEN          = 'general_access_forbidden';
-    const GENERAL_UNKNOWN_ORIGIN            = 'general_unknown_origin';
-    const GENERAL_SERVICE_DISABLED          = 'general_service_disabled';
-    const GENERAL_UNAUTHORIZED_SCOPE        = 'general_unauthorized_scope';
-    const GENERAL_RATE_LIMIT_EXCEEDED       = 'general_rate_limit_exceeded';
-    const GENERAL_SMTP_DISABLED             = 'general_smtp_disabled';
-    const GENERAL_ARGUMENT_INVALID          = 'general_argument_invalid';
-    const GENERAL_SERVER_ERROR              = 'general_server_error';
 
 
     private $type = '';

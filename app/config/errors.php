@@ -49,53 +49,6 @@ return [
         'code' => 500,
     ],
 
-    /** Project Errors */
-    Exception::PROJECT_NOT_FOUND => [
-        'name' => Exception::PROJECT_NOT_FOUND,
-        'description' => 'The requested project could not be found. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
-        'code' => 404,
-    ],
-    Exception::PROJECT_UNKNOWN => [
-        'name' => Exception::PROJECT_UNKNOWN,
-        'description' => 'The project ID is either missing or not valid. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
-        'code' => 400,
-    ],
-    Exception::WEBHOOK_NOT_FOUND => [
-        'name' => Exception::WEBHOOK_NOT_FOUND,
-        'description' => 'The requested webhook could not be found.',
-        'code' => 404,
-    ],
-    Exception::KEY_NOT_FOUND => [
-        'name' => Exception::KEY_NOT_FOUND,
-        'description' => 'The requested key could not be found.',
-        'code' => 404,
-    ],
-    Exception::PLATFORM_NOT_FOUND => [
-        'name' => Exception::PLATFORM_NOT_FOUND,
-        'description' => 'The requested platform could not be found.',
-        'code' => 404,
-    ],
-    Exception::DOMAIN_NOT_FOUND => [
-        'name' => Exception::DOMAIN_NOT_FOUND,
-        'description' => 'The requested domain could not be found.',
-        'code' => 404,
-    ],
-    Exception::DOMAIN_ALREADY_EXISTS => [
-        'name' => Exception::DOMAIN_ALREADY_EXISTS,
-        'description' => 'The requested domain already exists.',
-        'code' => 409,
-    ],
-    Exception::DOMAIN_UNREACHABLE => [
-        'name' => Exception::DOMAIN_UNREACHABLE,
-        'description' => 'The requested domain is not reachable.',
-        'code' => 503,
-    ],
-    Exception::DOMAIN_VERIFICATION_FAILED => [
-        'name' => Exception::DOMAIN_VERIFICATION_FAILED,
-        'description' => 'The requested domain verification failed.',
-        'code' => 503,
-    ],
-
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
         'name' => Exception::USER_COUNT_EXCEEDED,
@@ -439,4 +392,51 @@ return [
         'description' => 'The query is invalid.',
         'code' => 400,
     ],
+
+    /** Project Errors */
+    Exception::PROJECT_NOT_FOUND => [
+        'name' => Exception::PROJECT_NOT_FOUND,
+        'description' => 'The requested project could not be found. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
+        'code' => 404,
+    ],
+    Exception::PROJECT_UNKNOWN => [
+        'name' => Exception::PROJECT_UNKNOWN,
+        'description' => 'The project ID is either missing or not valid. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
+        'code' => 400,
+    ],
+    Exception::WEBHOOK_NOT_FOUND => [
+        'name' => Exception::WEBHOOK_NOT_FOUND,
+        'description' => 'The requested webhook could not be found.',
+        'code' => 404,
+    ],
+    Exception::KEY_NOT_FOUND => [
+        'name' => Exception::KEY_NOT_FOUND,
+        'description' => 'The requested key could not be found.',
+        'code' => 404,
+    ],
+    Exception::PLATFORM_NOT_FOUND => [
+        'name' => Exception::PLATFORM_NOT_FOUND,
+        'description' => 'The requested platform could not be found.',
+        'code' => 404,
+    ],
+    Exception::DOMAIN_NOT_FOUND => [
+        'name' => Exception::DOMAIN_NOT_FOUND,
+        'description' => 'The requested domain could not be found.',
+        'code' => 404,
+    ],
+    Exception::DOMAIN_ALREADY_EXISTS => [
+        'name' => Exception::DOMAIN_ALREADY_EXISTS,
+        'description' => 'The requested domain already exists.',
+        'code' => 409,
+    ],
+    Exception::DOMAIN_UNREACHABLE => [
+        'name' => Exception::DOMAIN_UNREACHABLE,
+        'description' => 'The requested domain is not reachable.',
+        'code' => 503,
+    ],
+    Exception::DOMAIN_VERIFICATION_FAILED => [
+        'name' => Exception::DOMAIN_VERIFICATION_FAILED,
+        'description' => 'The requested domain verification failed.',
+        'code' => 503,
+    ]
 ];
