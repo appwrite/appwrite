@@ -8,8 +8,8 @@ use Appwrite\Extend\Exception;
 
 return [
     /** General Errors */
-    Exception::GENERAL_DEFAULT => [
-        'name' => Exception::GENERAL_DEFAULT,
+    Exception::GENERAL_UNKNOWN => [
+        'name' => Exception::GENERAL_UNKNOWN,
         'description' => 'Default error',
         'code' => 500, 
     ],

@@ -391,7 +391,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
     if ($error instanceof Utopia\Exception && $error->getCode() === 400) {
         $error = new Exception($error->getMessage(), $error->getCode(), Exception::GENERAL_ARGUMENT_INVALID, $error);
     } else {
-        $error = new Exception($error->getMessage(), $error->getCode(), Exception::GENERAL_DEFAULT, $error);
+        $error = new Exception($error->getMessage(), $error->getCode(), Exception::GENERAL_UNKNOWN, $error);
     }
 
     $template = ($route) ? $route->getLabel('error', null) : null;

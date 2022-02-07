@@ -34,7 +34,7 @@ class Exception extends \Exception
      */
 
     /** General */
-    const GENERAL_DEFAULT                   = 'default';
+    const GENERAL_UNKNOWN                   = 'unknown';
     const GENERAL_ACCESS_FORBIDDEN          = 'access_forbidden';
     const GENERAL_UNKNOWN_ORIGIN            = 'unknown_origin';
     const GENERAL_SERVICE_DISABLED          = 'service_disabled';
@@ -157,7 +157,7 @@ class Exception extends \Exception
 
     private $type = '';
 
-    public function __construct(string $message, int $code = 0, string $type = Exception::GENERAL_DEFAULT, \Throwable $previous = null)
+    public function __construct(string $message, int $code = 0, string $type = Exception::GENERAL_UNKNOWN, \Throwable $previous = null)
     {
         $this->type = $type;
 
