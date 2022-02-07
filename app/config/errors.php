@@ -10,17 +10,17 @@ return [
     /** General Errors */
     Exception::GENERAL_UNKNOWN => [
         'name' => Exception::GENERAL_UNKNOWN,
-        'description' => 'Default error',
+        'description' => 'An unknown error has occured. Please check the logs for more information.',
         'code' => 500, 
     ],
     Exception::GENERAL_ACCESS_FORBIDDEN => [
         'name' => Exception::GENERAL_ACCESS_FORBIDDEN,
-        'description' => 'Access forbidden',
-        'code' => 403, 
+        'description' => 'Access to this API is forbidden.',
+        'code' => 401, 
     ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
-        'description' => 'The request originated from a non-whitelisted origin. If you trust this origin, please add it as a platform in the Appwrite console.',
+        'description' => 'The request originated from an unknown origin. If you trust this domain, please list it as a trusted platform in the Appwrite console.',
         'code' => 403,
     ],
     Exception::GENERAL_SERVICE_DISABLED => [
@@ -40,17 +40,17 @@ return [
     ],
     Exception::GENERAL_SMTP_DISABLED => [
         'name' => Exception::GENERAL_SMTP_DISABLED,
-        'description' => 'SMTP is disabled on your Appwrite instance. Please contact your project.',
+        'description' => 'SMTP is disabled on your Appwrite instance. Please contact the project owner.',
         'code' => 503,
     ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
-        'description' => 'Invalid argument',
+        'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
         'code' => 400,
     ],
     Exception::GENERAL_SERVER_ERROR => [
         'name' => Exception::GENERAL_SERVER_ERROR,
-        'description' => 'Internal server error.',
+        'description' => 'An internal server error occurred.',
         'code' => 500,
     ],
 
