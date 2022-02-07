@@ -221,12 +221,12 @@ return [
     ],
     Exception::AVATAR_IMAGE_NOT_FOUND => [
         'name' => Exception::AVATAR_IMAGE_NOT_FOUND,
-        'description' => 'The requested image was not found.',
+        'description' => 'The requested image was not found at the URL.',
         'code' => 404,
     ],
     Exception::AVATAR_REMOTE_URL_FAILED => [
         'name' => Exception::AVATAR_REMOTE_URL_FAILED,
-        'description' => 'The remote URL could not be fetched.',
+        'description' => 'Failed to fetch favicon from the requested URL.',
         'code' => 404,
     ],
     Exception::AVATAR_ICON_NOT_FOUND => [
