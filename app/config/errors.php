@@ -291,13 +291,13 @@ return [
     /** Collections */
     Exception::COLLECTION_NOT_FOUND => [
         'name' => Exception::COLLECTION_NOT_FOUND,
-        'description' => 'The requested collection could not be found.',
+        'description' => 'Collection with the requested ID could not be found.',
         'code' => 404,
     ],
     Exception::COLLECTION_ALREADY_EXISTS => [
         'name' => Exception::COLLECTION_ALREADY_EXISTS,
-        'description' => 'The collection already exists.',
-        'code' => 400,
+        'description' => 'A collection with the requested ID already exists.',
+        'code' => 409,
     ],
     Exception::COLLECTION_LIMIT_EXCEEDED => [
         'name' => Exception::COLLECTION_LIMIT_EXCEEDED,
@@ -308,12 +308,12 @@ return [
     /** Documents */
     Exception::DOCUMENT_NOT_FOUND => [
         'name' => Exception::DOCUMENT_NOT_FOUND,
-        'description' => 'The requested document could not be found.',
+        'description' => 'Document with the requested ID could not be found.',
         'code' => 404,
     ],
     Exception::DOCUMENT_INVALID_STRUCTURE => [
         'name' => Exception::DOCUMENT_INVALID_STRUCTURE,
-        'description' => 'The document structure is invalid.',
+        'description' => 'The document structure is invalid. Please ensure the attributes match the collection definition.',
         'code' => 400,
     ],
     Exception::DOCUMENT_MISSING_PAYLOAD => [
@@ -323,25 +323,25 @@ return [
     ],
     Exception::DOCUMENT_ALREADY_EXISTS => [
         'name' => Exception::DOCUMENT_ALREADY_EXISTS,
-        'description' => 'The document already exists.',
-        'code' => 400,
+        'description' => 'Document with the requested ID already exists.',
+        'code' => 409,
     ],
 
     /** Attributes */
     Exception::ATTRIBUTE_NOT_FOUND => [
         'name' => Exception::ATTRIBUTE_NOT_FOUND,
-        'description' => 'The requested attribute could not be found.',
+        'description' => 'Attribute with the requested ID could not be found.',
         'code' => 404,
     ],
     Exception::ATTRIBUTE_UNKNOWN => [
         'name' => Exception::ATTRIBUTE_UNKNOWN,
-        'description' => 'The requested attribute could not be found.',
-        'code' => 404,
+        'description' => 'The attribute required for the index could not be found. Please confirm all your attributes are in the <span class="tag">available</span> state.',
+        'code' => 400,
     ],
     Exception::ATTRIBUTE_NOT_AVAILABLE => [
         'name' => Exception::ATTRIBUTE_NOT_AVAILABLE,
-        'description' => 'The requested attribute is not available.',
-        'code' => 404,
+        'description' => 'The requested attribute is not yet <span class="tag">available</span>. Please try again later.',
+        'code' => 400,
     ],
     Exception::ATTRIBUTE_FORMAT_UNSUPPORTED => [
         'name' => Exception::ATTRIBUTE_FORMAT_UNSUPPORTED,
@@ -350,13 +350,13 @@ return [
     ],
     Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED => [
         'name' => Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED,
-        'description' => 'The requested attribute default value is not supported.',
+        'description' => 'Default values cannot be set for <span class="tag">array</span> and <span class="tag">required</span> attributes.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_ALREADY_EXISTS => [
         'name' => Exception::ATTRIBUTE_ALREADY_EXISTS,
-        'description' => 'The attribute already exists.',
-        'code' => 400,
+        'description' => 'Attribute with the requested ID already exists.',
+        'code' => 409,
     ],
     Exception::ATTRIBUTE_LIMIT_EXCEEDED => [
         'name' => Exception::ATTRIBUTE_LIMIT_EXCEEDED,
@@ -365,14 +365,14 @@ return [
     ],
     Exception::ATTRIBUTE_VALUE_INVALID => [
         'name' => Exception::ATTRIBUTE_VALUE_INVALID,
-        'description' => 'The attribute value is invalid.',
+        'description' => 'The attribute value is invalid. Please check the type, range and value of the attribute.',
         'code' => 400,
     ],
 
     /** Indexes */
     Exception::INDEX_NOT_FOUND => [
         'name' => Exception::INDEX_NOT_FOUND,
-        'description' => 'The requested index could not be found.',
+        'description' => 'Index with the requested could not be found.',
         'code' => 404,
     ],
     Exception::INDEX_LIMIT_EXCEEDED => [
@@ -382,19 +382,19 @@ return [
     ],
     Exception::INDEX_ALREADY_EXISTS => [
         'name' => Exception::INDEX_ALREADY_EXISTS,
-        'description' => 'The index already exists.',
-        'code' => 400,
+        'description' => 'Index with the requested ID already exists.',
+        'code' => 409,
     ],
 
     /** Query */
     Exception::QUERY_LIMIT_EXCEEDED => [
         'name' => Exception::QUERY_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of results has been reached.',
+        'description' => 'Query limit exceeded for the current attribute. Usage of more than 100 query values on a single attribute is prohibited.',
         'code' => 400,
     ],
     Exception::QUERY_INVALID => [
         'name' => Exception::QUERY_INVALID,
-        'description' => 'The query is invalid.',
+        'description' => 'Your query syntax is invalid. Please check your query and try again.',
         'code' => 400,
     ],
 
