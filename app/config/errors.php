@@ -72,12 +72,12 @@ return [
     ],
     Exception::USER_BLOCKED => [
         'name' => Exception::USER_BLOCKED,
-        'description' => 'The current user has been blocked. Please contact the project administrator for more information.',
+        'description' => 'The current user has been blocked. Please contact the project owner for more information.',
         'code' => 401,
     ],
     Exception::USER_INVALID_TOKEN => [
         'name' => Exception::USER_INVALID_TOKEN,
-        'description' => 'Invalid token.',
+        'description' => 'Invalid token passed in the request.',
         'code' => 401,
     ],
     Exception::USER_PASSWORD_RESET_REQUIRED => [
@@ -102,12 +102,12 @@ return [
     ],
     Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED => [
         'name' => Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED,
-        'description' => 'Anonymous users cannot be created for console project.',
+        'description' => 'Anonymous users cannot be created for the console project.',
         'code' => 401,
     ],
     Exception::USER_SESSION_ALREADY_EXISTS => [
         'name' => Exception::USER_SESSION_ALREADY_EXISTS,
-        'description' => 'Cannot create anonymous user when a session is active.',
+        'description' => 'Creation of anonymous users is prohibited when a session is active.',
         'code' => 401,
     ],
     Exception::USER_NOT_FOUND => [
@@ -122,7 +122,7 @@ return [
     ],
     Exception::USER_PASSWORD_MISMATCH => [
         'name' => Exception::USER_PASSWORD_MISMATCH,
-        'description' => 'Passwords do not match. Please recheck.',
+        'description' => 'Passwords do not match. Please check the password and confirm password.',
         'code' => 400,
     ],
     Exception::USER_SESSION_NOT_FOUND => [
@@ -137,7 +137,7 @@ return [
     ],
     Exception::USER_AUTH_METHOD_UNSUPPORTED => [
         'name' => Exception::USER_AUTH_METHOD_UNSUPPORTED,
-        'description' => 'The requested authentication method is either disabled or unsupported.',
+        'description' => 'The requested authentication method is either disabled or unsupported. Please check the supported authentication methods in the Appwrite console.',
         'code' => 501,
     ],
 
