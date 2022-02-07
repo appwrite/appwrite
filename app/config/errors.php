@@ -149,7 +149,7 @@ return [
     ],
     Exception::OAUTH_PROVIDER_UNSUPPORTED => [
         'name' => Exception::OAUTH_PROVIDER_UNSUPPORTED,
-        'description' => 'The chosen OAuth provider is unsupported.',
+        'description' => 'The chosen OAuth provider is unsupported. Please check <a href="/docs/client/account?sdk=web-default#accountCreateOAuth2Session"> the docs</a> for the complete list of supported OAuth providers.',
         'code' => 501,
     ],
     Exception::OAUTH_INVALID_SUCCESS_URL => [
