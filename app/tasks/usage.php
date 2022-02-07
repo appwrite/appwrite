@@ -199,9 +199,6 @@ $cli
 
         // TODO Maybe move this to the setResource method, and reuse in the http.php file
         $attempts = 0;
-        $max = 10;
-        $sleep = 1;
-
         do { // connect to db
             try {
                 $attempts++;
@@ -210,12 +207,12 @@ $cli
                 break; // leave the do-while if successful
             } catch (\Exception $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= $max) {
+                if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
                     throw new \Exception('Failed to connect to database: ' . $e->getMessage());
                 }
-                sleep($sleep);
+                sleep(DATABASE_RECONNECT_SLEEP);
             }
-        } while ($attempts < $max);
+        } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
 
         // TODO use inject
         $cacheAdapter = new Cache(new Redis($redis));
@@ -243,8 +240,6 @@ $cli
             $client = $register->get('influxdb');
             if ($client) {
                 $attempts = 0;
-                $max = 10;
-                $sleep = 1;
 
                 do { // check if telegraf database is ready
                     try {
@@ -255,12 +250,12 @@ $cli
                         }
                     } catch (\Throwable $th) {
                         Console::warning("InfluxDB not ready. Retrying connection ({$attempts})...");
-                        if ($attempts >= $max) {
+                        if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
                             throw new \Exception('InfluxDB database not ready yet');
                         }
-                        sleep($sleep);
+                        sleep(DATABASE_RECONNECT_SLEEP);
                     }
-                } while ($attempts < $max);
+                } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
 
                 // sync data
                 foreach ($globalMetrics as $metric => $options) { //for each metrics
@@ -342,8 +337,6 @@ $cli
 
                 do { // Loop over all the projects
                     $attempts = 0;
-                    $max = 10;
-                    $sleep = 1;
 
                     do { // list projects
                         try {
@@ -352,12 +345,12 @@ $cli
                             break; // leave the do-while if successful
                         } catch (\Exception $e) {
                             Console::warning("Console DB not ready yet. Retrying ({$attempts})...");
-                            if ($attempts >= $max) {
+                            if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
                                 throw new \Exception('Failed access console db: ' . $e->getMessage());
                             }
-                            sleep($sleep);
+                            sleep(DATABASE_RECONNECT_SLEEP);
                         }
-                    } while ($attempts < $max);
+                    } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
 
                     if (empty($projects)) {
                         continue;
