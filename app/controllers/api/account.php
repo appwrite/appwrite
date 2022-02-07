@@ -23,6 +23,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Exception;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -430,7 +431,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $state['failure'] = null;
+
         $accessToken = $oauth2->getAccessToken($code);
+        $refreshToken =$oauth2->getRefreshToken($code);
+        $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
 
         if (empty($accessToken)) {
             if (!empty($state['failure'])) {
@@ -528,7 +532,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'userId' => $user->getId(),
             'provider' => $provider,
             'providerUid' => $oauth2ID,
-            'providerToken' => $accessToken,
+            'providerAccessToken' => $accessToken,
+            'providerRefreshToken' => $refreshToken,
+            'providerAccessTokenExpiry' => \time() + (int) $accessTokenExpiry,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -1198,6 +1204,7 @@ App::get('/v1/account/logs')
             'account.update.password',
             'account.update.prefs',
             'account.sessions.create',
+            'account.sessions.update',
             'account.sessions.delete',
             'account.recovery.create',
             'account.recovery.update',
@@ -1593,8 +1600,8 @@ App::delete('/v1/account/sessions/:sessionId')
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
-        ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
-        : $sessionId;
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+            : $sessionId;
 
         $sessions = $user->getAttribute('sessions', []);
 
@@ -1641,6 +1648,108 @@ App::delete('/v1/account/sessions/:sessionId')
                     ->setParam('users.update', 1)
                 ;
                 return $response->noContent();
+            }
+        }
+
+        throw new Exception('Session not found', 404);
+    });
+
+App::patch('/v1/account/sessions/:sessionId')
+    ->desc('Update Session (Refresh Tokens)')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('event', 'account.sessions.update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updateSession')
+    ->label('sdk.description', '/docs/references/account/update-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->label('abuse-limit', 10)
+    ->param('sessionId', null, new UID(), 'Session ID. Use the string \'current\' to update the current device session.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('locale')
+    ->inject('audits')
+    ->inject('events')
+    ->inject('usage')
+    ->action(function ($sessionId, $request, $response, $user, $dbForProject, $project, $locale, $audits, $events, $usage) {
+        /** @var Appwrite\Utopia\Request $request */
+        /** @var boolean $force */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var Utopia\Database\Document $project */
+        /** @var Utopia\Locale\Locale $locale */
+        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $events */
+        /** @var Appwrite\Stats\Stats $usage */
+
+        $sessionId = ($sessionId === 'current')
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+            : $sessionId;
+
+        $sessions = $user->getAttribute('sessions', []);
+
+        foreach ($sessions as $key => $session) {/** @var Document $session */
+            if ($sessionId == $session->getId()) {
+
+                // Comment below would skip re-generation if token is still valid
+                // We decided to not include this because developer can get expiration date from the session
+                // I kept code in comment because it might become relevant in the future
+
+                // $expireAt = (int) $session->getAttribute('providerAccessTokenExpiry');
+                // if(\time() < $expireAt - 5) { // 5 seconds time-sync and networking gap, to be safe
+                //     return $response->noContent();
+                // }
+
+                $provider = $session->getAttribute('provider');
+                $refreshToken = $session->getAttribute('providerRefreshToken');
+
+                $appId = $project->getAttribute('providers', [])[$provider.'Appid'] ?? '';
+                $appSecret = $project->getAttribute('providers', [])[$provider.'Secret'] ?? '{}';
+
+                $className = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
+             
+                if (!\class_exists($className)) {
+                    throw new Exception('Provider is not supported', 501);
+                }
+
+                $oauth2 = new $className($appId, $appSecret, '', [], []);
+
+                $oauth2->refreshTokens($refreshToken);
+
+                $session
+                    ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
+                    ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
+                    ->setAttribute('providerAccessTokenExpiry', \time() + (int) $oauth2->getAccessTokenExpiry(''))
+                    ;
+
+                $dbForProject->updateDocument('sessions', $sessionId, $session);
+
+                $user->setAttribute("sessions", $sessions);
+                $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+
+                $audits
+                    ->setParam('userId', $user->getId())
+                    ->setParam('event', 'account.sessions.update')
+                    ->setParam('resource', 'user/' . $user->getId())
+                ;
+
+                $events
+                    ->setParam('eventData', $response->output($session, Response::MODEL_SESSION))
+                ;
+
+                $usage
+                    ->setParam('users.sessions.update', 1)
+                    ->setParam('users.update', 1)
+                ;
+
+                return $response->dynamic($session, Response::MODEL_SESSION);
             }
         }
 

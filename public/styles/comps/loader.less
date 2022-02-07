@@ -1,32 +1,31 @@
-// .loader {
-//   height: 0;
-//   direction: ltr;
-//   position: fixed;
-//   top: 0;
-//   width: 0;
-//   margin: 0 auto;
-//   .func-start(0);
-//   opacity: 0;
-//   z-index: 4;
-// }
+.loader {
+  height: 0;
+  direction: ltr;
+  position: fixed;
+  top: 0;
+  width: 0;
+  margin: 0 auto;
+  .func-start(0);
+  opacity: 0;
+  z-index: 4;
+}
 
-// .load-start ~ .loader {
-//   width: 100%;
-//   background: var(--config-color-focus);
-//   height: 3px;
-//   opacity: 1;
-//   transition: width .3s ease-out, opacity .5s ease-out;
-//   -moz-transition: width .3s ease-out, opacity .5s ease-out;
-//   -webkit-transition: width .3s ease-out, opacity .5s ease-out;
-//   -o-transition: width .3s ease-out, opacity .5s ease-out;
-// }
+.load-start ~ .loader {
+  width: 100%;
+  background: var(--config-color-focus);
+  height: 3px;
+  opacity: 1;
+  transition: width .3s ease-out, opacity .5s ease-out;
+  -moz-transition: width .3s ease-out, opacity .5s ease-out;
+  -webkit-transition: width .3s ease-out, opacity .5s ease-out;
+  -o-transition: width .3s ease-out, opacity .5s ease-out;
+}
 
-// .www .load-start ~ .loader {
-//   background: #fff;
-// }
+.www .load-start ~ .loader {
+  background: #fff;
+}
 
 
-/*
 .load-start > * {
   opacity: 0;
 }
@@ -37,7 +36,7 @@
   -moz-transition: opacity .3s ease-out;
   -webkit-transition: opacity .3s ease-out;
   -o-transition: opacity .3s ease-out;
-}*/
+}
 
 [data-ls-if] {
   display: none;
