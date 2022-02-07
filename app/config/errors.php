@@ -164,7 +164,7 @@ return [
     ],
     Exception::OAUTH_MISSING_USER_ID => [
         'name' => Exception::OAUTH_MISSING_USER_ID,
-        'description' => 'Failed to obtain user id from the OAuth provider.',
+        'description' => 'Failed to obtain user ID from the OAuth provider.',
         'code' => 400,
     ],
 
@@ -176,13 +176,13 @@ return [
     ],
     Exception::TEAM_INVITE_ALREADY_EXISTS => [
         'name' => Exception::TEAM_INVITE_ALREADY_EXISTS,
-        'description' => 'The current user already has an invitation to this team.',
+        'description' => 'The current user has already received an invitation to join the team.',
         'code' => 409,
     ],
     Exception::TEAM_INVITE_NOT_FOUND => [
         'name' => Exception::TEAM_INVITE_NOT_FOUND,
-        'description' => 'The requested invitation could not be found.',
-        'code' => 409,
+        'description' => 'The requested team invitation could not be found.',
+        'code' => 404,
     ],
     Exception::TEAM_INVALID_SECRET => [
         'name' => Exception::TEAM_INVALID_SECRET,
