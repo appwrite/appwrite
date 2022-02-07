@@ -270,21 +270,21 @@ return [
     /** Functions  */
     Exception::FUNCTION_NOT_FOUND => [
         'name' => Exception::FUNCTION_NOT_FOUND,
-        'description' => 'The requested function could not be found.',
+        'description' => 'Function with the requested ID could not be found.',
         'code' => 404,
     ],
 
     /** Deployments */
     Exception::DEPLOYMENT_NOT_FOUND => [
         'name' => Exception::DEPLOYMENT_NOT_FOUND,
-        'description' => 'The requested deployment could not be found.',
+        'description' => 'Deployment with the requested ID could not be found.',
         'code' => 404,
     ],
 
     /** Executions */
     Exception::EXECUTION_NOT_FOUND => [
         'name' => Exception::EXECUTION_NOT_FOUND,
-        'description' => 'The requested execution could not be found.',
+        'description' => 'Execution with the requested ID could not be found.',
         'code' => 404,
     ],
 
