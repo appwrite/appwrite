@@ -60,20 +60,35 @@ return [
         'description' => 'The current project has exceeded the maximum number of users. Please check your user limit in the Appwrite console.',
         'code' => 501,
     ],
-    Exception::USER_EMAIL_NOT_WHITELISTED => [
-        'name' => Exception::USER_EMAIL_NOT_WHITELISTED,
-        'description' => 'The user\'s email is not part of the whitelist. Please check the _APP_CONSOLE_WHITELIST_EMAILS environment variable of your Appwrite server.',
-        'code' => 401,
-    ],
     Exception::USER_JWT_INVALID => [
         'name' => Exception::USER_JWT_INVALID,
         'description' => 'The JWT token is invalid. Please check the value of the X-Appwrite-JWT header to ensure the correct token is being used.',
+        'code' => 401,
+    ],
+    Exception::USER_ALREADY_EXISTS => [
+        'name' => Exception::USER_ALREADY_EXISTS,
+        'description' => 'A user with the same email ID already exists in your project.',
+        'code' => 409,
+    ],
+    Exception::USER_BLOCKED => [
+        'name' => Exception::USER_BLOCKED,
+        'description' => 'The current user has been blocked. Please contact the project administrator for more information.',
+        'code' => 401,
+    ],
+    Exception::USER_INVALID_TOKEN => [
+        'name' => Exception::USER_INVALID_TOKEN,
+        'description' => 'Invalid token.',
         'code' => 401,
     ],
     Exception::USER_PASSWORD_RESET_REQUIRED => [
         'name' => Exception::USER_PASSWORD_RESET_REQUIRED,
         'description' => 'The current user requires a password reset.',
         'code' => 412,
+    ],
+    Exception::USER_EMAIL_NOT_WHITELISTED => [
+        'name' => Exception::USER_EMAIL_NOT_WHITELISTED,
+        'description' => 'The user\'s email is not part of the whitelist. Please check the _APP_CONSOLE_WHITELIST_EMAILS environment variable of your Appwrite server.',
+        'code' => 401,
     ],
     Exception::USER_IP_NOT_WHITELISTED => [
         'name' => Exception::USER_IP_NOT_WHITELISTED,
@@ -83,21 +98,6 @@ return [
     Exception::USER_INVALID_CREDENTIALS => [
         'name' => Exception::USER_INVALID_CREDENTIALS,
         'description' => 'Invalid credentials. Please check the email and password.',
-        'code' => 401,
-    ],
-    Exception::USER_ALREADY_EXISTS => [
-        'name' => Exception::USER_ALREADY_EXISTS,
-        'description' => 'A user with the same email ID already exists in your project.',
-        'code' => 409,
-    ],
-    Exception::USER_INVALID_TOKEN => [
-        'name' => Exception::USER_INVALID_TOKEN,
-        'description' => 'Invalid token.',
-        'code' => 401,
-    ],
-    Exception::USER_BLOCKED => [
-        'name' => Exception::USER_BLOCKED,
-        'description' => 'The current user has been blocked. Please contact the project administrator for more information.',
         'code' => 401,
     ],
     Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED => [
