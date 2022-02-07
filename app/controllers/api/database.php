@@ -150,7 +150,7 @@ App::post('/v1/database/collections')
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('collectionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
-    ->param('permission', null, new WhiteList(['document', 'collection']), 'Permissions type model to use for reading documents in this collection. You can use collection-level permission set once on the collection using the `read` and `write` params, or you can set document-level permission where each document read and write params will decide who has access to read and write to each document individually. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
+    ->param('permission', null, new WhiteList(['document', 'document-unrestricted', 'collection']), 'Permissions type model to use for reading documents in this collection. You can use collection-level permission set once on the collection using the `read` and `write` params, or you can set document-level permission where each document read and write params will decide who has access to read and write to each document individually. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->inject('response')
@@ -588,7 +588,7 @@ App::put('/v1/database/collections/:collectionId')
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
-    ->param('permission', null, new WhiteList(['document', 'collection']), 'Permissions type model to use for reading documents in this collection. You can use collection-level permission set once on the collection using the `read` and `write` params, or you can set document-level permission where each document read and write params will decide who has access to read and write to each document individually. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
+    ->param('permission', null, new WhiteList(['document', 'document-unrestricted', 'collection']), 'Permissions type model to use for reading documents in this collection. You can use collection-level permission set once on the collection using the `read` and `write` params, or you can set document-level permission where each document read and write params will decide who has access to read and write to each document individually. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->param('enabled', true, new Boolean(), 'Is collection enabled?', true)
@@ -1625,7 +1625,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         // Users can only add their roles to documents, API keys and Admin users can add any
         $roles = Authorization::getRoles();
 
-        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && $collection->getAttribute('permission') !== 'document-unrestricted') {
             foreach ($data['$read'] as $read) {
                 if (!Authorization::isRole($read)) {
                     throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
@@ -1639,7 +1639,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         }
 
         try {
-            if ($collection->getAttribute('permission') === 'collection') {
+            if ($collection->getAttribute('permission') === 'collection' || $collection->getAttribute('permission') === 'document-unrestricted') {
                 /** @var Document $document */
                 $document = Authorization::skip(fn() => $dbForProject->createDocument('collection_' . $collectionId, new Document($data)));
             } else {
@@ -2010,7 +2010,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         // Users can only add their roles to documents, API keys and Admin users can add any
         $roles = Authorization::getRoles();
 
-        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && $collection->getAttribute('permission') !== 'document-unrestricted') {
             if(!is_null($read)) {
                 foreach ($data['$read'] as $read) {
                     if (!Authorization::isRole($read)) {
@@ -2028,7 +2028,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         }
 
         try {
-            if ($collection->getAttribute('permission') === 'collection') {
+            if ($collection->getAttribute('permission') === 'collection' || $collection->getAttribute('permission') === 'document-unrestricted') {
                 /** @var Document $document */
                 $document = Authorization::skip(fn() => $dbForProject->updateDocument('collection_' . $collection->getId(), $document->getId(), new Document($data)));
             } else {

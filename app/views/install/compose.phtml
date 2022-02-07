@@ -114,6 +114,9 @@ services:
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_FEATURE_DOCUMENTS_UNRESTRICTED
+      - _APP_FEATURE_STORAGE_UNRESTRICTED_PREFIX
+
 
   appwrite-realtime:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>

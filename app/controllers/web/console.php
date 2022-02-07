@@ -226,7 +226,10 @@ App::get('/console/database/collection')
 
         $page = new View(__DIR__.'/../../views/console/database/collection.phtml');
         
-        $page->setParam('logs', $logs);
+        $page
+            ->setParam('logs', $logs)
+            ->setParam('unrestrictedFeature', App::getEnv('_APP_FEATURE_DOCUMENTS_UNRESTRICTED','disabled'))
+        ;
         
         $layout
             ->setParam('title', APP_NAME.' - Database Collection')

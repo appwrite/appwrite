@@ -516,6 +516,24 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_FEATURE_DOCUMENTS_UNRESTRICTED',
+                'description' => 'This will enable the Documents (unrestricted mode) feature.',
+                'introduction' => '0.12.1',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FEATURE_STORAGE_UNRESTRICTED_PREFIX',
+                'description' => 'This will enable the Storage (unrestricted mode) feature. It should match this prefix to trigger the feature.',
+                'introduction' => '0.12.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ]
         ],
         [
             'category' => 'Maintenance',

@@ -88,6 +88,8 @@ services:
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_FEATURE_DOCUMENTS_UNRESTRICTED
+      - _APP_FEATURE_STORAGE_UNRESTRICTED_PREFIX
 
   appwrite-worker-usage:
     entrypoint: worker-usage
