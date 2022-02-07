@@ -43,6 +43,11 @@ return [
         'description' => 'SMTP is disabled on your Appwrite instance. Please contact your project.',
         'code' => 503,
     ],
+    Exception::GENERAL_ARGUMENT_INVALID => [
+        'name' => Exception::GENERAL_ARGUMENT_INVALID,
+        'description' => 'Invalid argument',
+        'code' => 400,
+    ],
     Exception::GENERAL_SERVER_ERROR => [
         'name' => Exception::GENERAL_SERVER_ERROR,
         'description' => 'Internal server error.',
