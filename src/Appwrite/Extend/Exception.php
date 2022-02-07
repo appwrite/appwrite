@@ -34,15 +34,15 @@ class Exception extends \Exception
      */
 
     /** General */
-    const GENERAL_DEFAULT                   = 'general_default';
-    const GENERAL_ACCESS_FORBIDDEN          = 'general_access_forbidden';
-    const GENERAL_UNKNOWN_ORIGIN            = 'general_unknown_origin';
-    const GENERAL_SERVICE_DISABLED          = 'general_service_disabled';
-    const GENERAL_UNAUTHORIZED_SCOPE        = 'general_unauthorized_scope';
-    const GENERAL_RATE_LIMIT_EXCEEDED       = 'general_rate_limit_exceeded';
-    const GENERAL_SMTP_DISABLED             = 'general_smtp_disabled';
-    const GENERAL_ARGUMENT_INVALID          = 'general_argument_invalid';
-    const GENERAL_SERVER_ERROR              = 'general_server_error';
+    const GENERAL_DEFAULT                   = 'default';
+    const GENERAL_ACCESS_FORBIDDEN          = 'access_forbidden';
+    const GENERAL_UNKNOWN_ORIGIN            = 'unknown_origin';
+    const GENERAL_SERVICE_DISABLED          = 'service_disabled';
+    const GENERAL_UNAUTHORIZED_SCOPE        = 'unauthorized_scope';
+    const GENERAL_RATE_LIMIT_EXCEEDED       = 'rate_limit_exceeded';
+    const GENERAL_SMTP_DISABLED             = 'smtp_disabled';
+    const GENERAL_ARGUMENT_INVALID          = 'argument_invalid';
+    const GENERAL_SERVER_ERROR              = 'server_error';
 
     /** Users */
     const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
