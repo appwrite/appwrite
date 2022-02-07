@@ -258,7 +258,7 @@ return [
     ],
     Exception::STORAGE_INVALID_FILE_SIZE => [
         'name' => Exception::STORAGE_INVALID_FILE_SIZE,
-        'description' => 'The file size is either not valid or exceeds the maximum allowed size.',
+        'description' => 'The file size is either not valid or exceeds the maximum allowed size. Please check the file or the value of the _APP_STORAGE_LIMIT environment variable.',
         'code' => 400,
     ],
     Exception::STORAGE_INVALID_FILE => [
