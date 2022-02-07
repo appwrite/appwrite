@@ -83,10 +83,12 @@ $cli
         $periods = [
             [
                 'key' => '30m',
+                'seconds' => 1800,
                 'startTime' => '-24 hours',
             ],
             [
                 'key' => '1d',
+                'seconds' => 86400,
                 'startTime' => '-90 days',
             ],
         ];
@@ -197,7 +199,6 @@ $cli
             ],
         ];
 
-        // TODO Maybe move this to the setResource method, and reuse in the http.php file
         $attempts = 0;
         do { // connect to db
             try {
@@ -300,23 +301,16 @@ $cli
                                 $value = (!empty($point['value'])) ? $point['value'] : 0;
 
                                 try {
-                                    $document = $dbForProject->getDocument('stats', $id);
-                                    if ($document->isEmpty()) {
-                                        $dbForProject->createDocument('stats', new Document([
-                                            '$id' => $id,
-                                            'period' => $period['key'],
-                                            'time' => $time,
-                                            'metric' => $metricUpdated,
-                                            'value' => $value,
-                                            'type' => 0,
-                                        ]));
-                                    } else {
-                                        $dbForProject->updateDocument(
-                                            'stats',
-                                            $document->getId(),
-                                            $document->setAttribute('value', $value)
-                                        );
-                                    }
+                                    createOrUpdateMetric(database: $dbForProject,
+                                        collection: 'stats',
+                                        id: $id,
+                                        period: $period['key'],
+                                        metric: $metricUpdated,
+                                        value: $value,
+                                        time: $time,
+                                        type: 0
+                                    );
+
                                     $latestTime[$metric][$period['key']] = $time;
                                 } catch (\Exception $e) { // if projects are deleted this might fail
                                     Console::warning("Failed to save data for project {$projectId} and metric {$metricUpdated}: {$e->getMessage()}");
@@ -365,45 +359,7 @@ $cli
                         $dbForProject->setNamespace('_project_' . $projectId);
                         $storageTotal = $dbForProject->sum('files', 'sizeOriginal') + $dbForProject->sum('tags', 'size');
 
-                        $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
-                        $id = \md5($time . '_30m_storage.total'); //Construct unique id for each metric using time, period and metric
-                        $document = $dbForProject->getDocument('stats', $id);
-                        if ($document->isEmpty()) {
-                            $dbForProject->createDocument('stats', new Document([
-                                '$id' => $id,
-                                'period' => '30m',
-                                'time' => $time,
-                                'metric' => 'storage.total',
-                                'value' => $storageTotal,
-                                'type' => 1,
-                            ]));
-                        } else {
-                            $dbForProject->updateDocument(
-                                'stats',
-                                $document->getId(),
-                                $document->setAttribute('value', $storageTotal)
-                            );
-                        }
-
-                        $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
-                        $id = \md5($time . '_1d_storage.total'); //Construct unique id for each metric using time, period and metric
-                        $document = $dbForProject->getDocument('stats', $id);
-                        if ($document->isEmpty()) {
-                            $dbForProject->createDocument('stats', new Document([
-                                '$id' => $id,
-                                'period' => '1d',
-                                'time' => $time,
-                                'metric' => 'storage.total',
-                                'value' => $storageTotal,
-                                'type' => 1,
-                            ]));
-                        } else {
-                            $dbForProject->updateDocument(
-                                'stats',
-                                $document->getId(),
-                                $document->setAttribute('value', $storageTotal)
-                            );
-                        }
+                        createOrUpdateMetrics(database: $dbForProject, metric: 'storage.total', value: $storageTotal);
 
                         $collections = [
                             'users' => [
@@ -431,45 +387,7 @@ $cli
                                 $metricPrefix = $options['metricPrefix'] ?? '';
                                 $metric = empty($metricPrefix) ? "{$collection}.count" : "{$metricPrefix}.{$collection}.count";
 
-                                $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
-                                $id = \md5($time . '_30m_' . $metric); //Construct unique id for each metric using time, period and metric
-                                $document = $dbForProject->getDocument('stats', $id);
-                                if ($document->isEmpty()) {
-                                    $dbForProject->createDocument('stats', new Document([
-                                        '$id' => $id,
-                                        'time' => $time,
-                                        'period' => '30m',
-                                        'metric' => $metric,
-                                        'value' => $count,
-                                        'type' => 1,
-                                    ]));
-                                } else {
-                                    $dbForProject->updateDocument(
-                                        'stats',
-                                        $document->getId(),
-                                        $document->setAttribute('value', $count)
-                                    );
-                                }
-
-                                $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
-                                $id = \md5($time . '_1d_' . $metric); //Construct unique id for each metric using time, period and metric
-                                $document = $dbForProject->getDocument('stats', $id);
-                                if ($document->isEmpty()) {
-                                    $dbForProject->createDocument('stats', new Document([
-                                        '$id' => $id,
-                                        'time' => $time,
-                                        'period' => '1d',
-                                        'metric' => $metric,
-                                        'value' => $count,
-                                        'type' => 1,
-                                    ]));
-                                } else {
-                                    $dbForProject->updateDocument(
-                                        'stats',
-                                        $document->getId(),
-                                        $document->setAttribute('value', $count)
-                                    );
-                                }
+                                createOrUpdateMetrics(database: $dbForProject, metric: $metric, value: $count);
 
                                 $subCollections = $options['subCollections'] ?? [];
 
@@ -500,45 +418,8 @@ $cli
                                             $dbForProject->setNamespace("_project_{$projectId}");
 
                                             $metric = empty($metricPrefix) ? "{$collection}.{$parent->getId()}.{$subCollection}.count" : "{$metricPrefix}.{$collection}.{$parent->getId()}.{$subCollection}.count";
-                                            $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
-                                            $id = \md5($time . '_30m_' . $metric); //Construct unique id for each metric using time, period and metric
-                                            $document = $dbForProject->getDocument('stats', $id);
-                                            if ($document->isEmpty()) {
-                                                $dbForProject->createDocument('stats', new Document([
-                                                    '$id' => $id,
-                                                    'time' => $time,
-                                                    'period' => '30m',
-                                                    'metric' => $metric,
-                                                    'value' => $count,
-                                                    'type' => 1,
-                                                ]));
-                                            } else {
-                                                $dbForProject->updateDocument(
-                                                    'stats',
-                                                    $document->getId(),
-                                                    $document->setAttribute('value', $count)
-                                                );
-                                            }
 
-                                            $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
-                                            $id = \md5($time . '_1d_' . $metric); //Construct unique id for each metric using time, period and metric
-                                            $document = $dbForProject->getDocument('stats', $id);
-                                            if ($document->isEmpty()) {
-                                                $dbForProject->createDocument('stats', new Document([
-                                                    '$id' => $id,
-                                                    'time' => $time,
-                                                    'period' => '1d',
-                                                    'metric' => $metric,
-                                                    'value' => $count,
-                                                    'type' => 1,
-                                                ]));
-                                            } else {
-                                                $dbForProject->updateDocument(
-                                                    'stats',
-                                                    $document->getId(),
-                                                    $document->setAttribute('value', $count)
-                                                );
-                                            }
+                                            createOrUpdateMetrics(database: $dbForProject, metric: $metric, value: $count);
                                         }
                                     }
                                 } while (!empty($parents));
@@ -551,45 +432,7 @@ $cli
 
                                     $metric = empty($metricPrefix) ? "{$subCollection}.count" : "{$metricPrefix}.{$subCollection}.count";
 
-                                    $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
-                                    $id = \md5($time . '_30m_' . $metric); //Construct unique id for each metric using time, period and metric
-                                    $document = $dbForProject->getDocument('stats', $id);
-                                    if ($document->isEmpty()) {
-                                        $dbForProject->createDocument('stats', new Document([
-                                            '$id' => $id,
-                                            'time' => $time,
-                                            'period' => '30m',
-                                            'metric' => $metric,
-                                            'value' => $count,
-                                            'type' => 1,
-                                        ]));
-                                    } else {
-                                        $dbForProject->updateDocument(
-                                            'stats',
-                                            $document->getId(),
-                                            $document->setAttribute('value', $count)
-                                        );
-                                    }
-
-                                    $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
-                                    $id = \md5($time . '_1d_' . $metric); //Construct unique id for each metric using time, period and metric
-                                    $document = $dbForProject->getDocument('stats', $id);
-                                    if ($document->isEmpty()) {
-                                        $dbForProject->createDocument('stats', new Document([
-                                            '$id' => $id,
-                                            'time' => $time,
-                                            'period' => '1d',
-                                            'metric' => $metric,
-                                            'value' => $count,
-                                            'type' => 1,
-                                        ]));
-                                    } else {
-                                        $dbForProject->updateDocument(
-                                            'stats',
-                                            $document->getId(),
-                                            $document->setAttribute('value', $count)
-                                        );
-                                    }
+                                    createOrUpdateMetrics(database: $dbForProject, metric: $metric, value: $count);
                                 }
                             } catch (\Exception $e) {
                                 Console::warning("Failed to save database counters data for project {$collection}: {$e->getMessage()}");
@@ -606,3 +449,39 @@ $cli
             Console::info("[{$now}] Aggregation took {$loopTook} seconds");
         }, $interval);
     });
+
+function createOrUpdateMetrics(Database $database, string $metric, int $value)
+{
+    $periods = [
+        '30m' => 1800,
+        '1d' => 86400,
+    ];
+
+    foreach ($periods as $period => $seconds) {
+        $time = (int) (floor(time() / $seconds) * $seconds); // Time rounded to nearest period
+        $id = \md5("{$time}_{$period}_{$metric}"); //Construct unique id for each metric using time, period and metric
+
+        createOrUpdateMetric(database: $database, collection: 'stats', id: $id, time: $time, period: $period, metric: $metric, value: $value, type: 1);
+    }
+}
+
+function createOrUpdateMetric(Database $database, string $collection, string $id, int $time, string $period, string $metric, int $value, int $type)
+{
+    $document = $database->getDocument($collection, $id);
+    if ($document->isEmpty()) {
+        $database->createDocument($collection, new Document([
+            '$id' => $id,
+            'time' => $time,
+            'period' => $period,
+            'metric' => $metric,
+            'value' => $value,
+            'type' => $type,
+        ]));
+    } else {
+        $database->updateDocument(
+            $collection,
+            $document->getId(),
+            $document->setAttribute('value', $value)
+        );
+    }
+}
