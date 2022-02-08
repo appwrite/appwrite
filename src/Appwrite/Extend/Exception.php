@@ -13,7 +13,6 @@ class Exception extends \Exception
      * Appwrite has the follwing entities:
      * - General
      * - Users
-     * - OAuth
      * - Teams
      * - Memberships
      * - Avatars
