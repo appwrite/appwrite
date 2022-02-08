@@ -65,7 +65,7 @@ App::post('/v1/storage/files')
         // Users can only add their roles to files, API keys and Admin users can add any
         $roles = Authorization::getRoles();
 
-        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && !(App::getEnv('__APP_FEATURE_STORAGE_UNRESTRICTED_PREFIX', '') != '' && str_starts_with($fileId, App::getEnv('__APP_FEATURE_STORAGE_UNRESTRICTED_PREFIX', '')))) {
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && !(App::getEnv('_APP_FEATURE_STORAGE_UNRESTRICTED_PREFIX', '') != '' && str_starts_with($fileId, App::getEnv('_APP_FEATURE_STORAGE_UNRESTRICTED_PREFIX', '')))) {
             foreach ($read as $role) {
                 if (!Authorization::isRole($role)) {
                     throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
@@ -599,7 +599,7 @@ App::put('/v1/storage/files/:fileId')
         // Users can only add their roles to files, API keys and Admin users can add any
         $roles = Authorization::getRoles();
 
-        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && !(App::getEnv('__APP_FEATURE_STORAGE_UNRESTRICTED_PREFIX', '') != '' && str_starts_with($fileId, App::getEnv('__APP_FEATURE_STORAGE_UNRESTRICTED_PREFIX', '')))) {
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && !(App::getEnv('_APP_FEATURE_STORAGE_UNRESTRICTED_PREFIX', '') != '' && str_starts_with($fileId, App::getEnv('_APP_FEATURE_STORAGE_UNRESTRICTED_PREFIX', '')))) {
             foreach ($read as $role) {
                 if (!Authorization::isRole($role)) {
                     throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
