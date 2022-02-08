@@ -25,7 +25,7 @@ return [
     ],
     Exception::GENERAL_SERVICE_DISABLED => [
         'name' => Exception::GENERAL_SERVICE_DISABLED,
-        'description' => 'The requested service is disabled. You can enable/disable a service from the Appwrite console or by contacting the project owner.',
+        'description' => 'The requested service is disabled. You can enable/disable a service from the Appwrite console or by contacting the project administrator.',
         'code' => 503,
     ],
     Exception::GENERAL_UNAUTHORIZED_SCOPE => [
@@ -40,7 +40,7 @@ return [
     ],
     Exception::GENERAL_SMTP_DISABLED => [
         'name' => Exception::GENERAL_SMTP_DISABLED,
-        'description' => 'SMTP is disabled on your Appwrite instance. Please contact the project owner.',
+        'description' => 'SMTP is disabled on your Appwrite instance. Please contact the project administrator.',
         'code' => 503,
     ],
     Exception::GENERAL_ARGUMENT_INVALID => [
@@ -82,7 +82,7 @@ return [
     ],
     Exception::USER_BLOCKED => [
         'name' => Exception::USER_BLOCKED,
-        'description' => 'The current user has been blocked. Please contact the project owner for more information.',
+        'description' => 'The current user has been blocked. Please contact the project administrator for more information.',
         'code' => 401,
     ],
     Exception::USER_INVALID_TOKEN => [
@@ -355,7 +355,7 @@ return [
     /** Indexes */
     Exception::INDEX_NOT_FOUND => [
         'name' => Exception::INDEX_NOT_FOUND,
-        'description' => 'Index with the requested could not be found.',
+        'description' => 'Index with the requested ID could not be found.',
         'code' => 404,
     ],
     Exception::INDEX_LIMIT_EXCEEDED => [
