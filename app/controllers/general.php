@@ -376,10 +376,12 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
     }
 
     /** Wrap all exceptions inside Appwrite\Extend\Exception */
-    if ($error instanceof Utopia\Exception && $error->getCode() === 400) {
-        $error = new Exception($error->getMessage(), $error->getCode(), Exception::GENERAL_ARGUMENT_INVALID, $error);
-    } else {
+    if (!($error instanceof Exception)) {
         $error = new Exception($error->getMessage(), $error->getCode(), Exception::GENERAL_UNKNOWN, $error);
+    }
+    
+    if ($error instanceof Utopia\Exception && $error->getCode() === 400) {
+        $error->setType(Exception::GENERAL_ARGUMENT_INVALID);
     }
 
     $template = ($route) ? $route->getLabel('error', null) : null;

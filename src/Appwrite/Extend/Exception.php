@@ -159,10 +159,25 @@ class Exception extends \Exception
     }
 
     /**
+     * Get the type of the exception.
+     * 
      * @return string
      */ 
     public function getType(): string
     {
         return $this->type;
     }
+
+    /**
+     * Set the type of the exception.
+     * 
+     * @param string $type
+     * 
+     * @return void
+     */
+    public function setType(string $type): void
+    {
+        $this->type = $type;
+    }
+
 }
