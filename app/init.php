@@ -53,7 +53,7 @@ use Utopia\Database\Query;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
-use Utopia\Storage\Device\DoSpaces;
+use Utopia\Storage\Device\DOSpaces;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -852,7 +852,7 @@ App::setResource('deviceFiles', function($project) {
             $doSpacesRegion = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_REGION', '');
             $doSpacesBucket = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_BUCKET', '');
             $doSpacesAcl = 'private';
-            return new DoSpaces(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+            return new DOSpaces(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
     }
 }, ['project']);
 
@@ -873,7 +873,7 @@ App::setResource('deviceFunctions', function($project) {
             $doSpacesRegion = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_REGION', '');
             $doSpacesBucket = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_BUCKET', '');
             $doSpacesAcl = 'private';
-            return new DoSpaces(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+            return new DOSpaces(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
     }
 }, ['project']);
 

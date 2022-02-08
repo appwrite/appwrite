@@ -8,7 +8,7 @@ use Utopia\Database\Validator\Authorization;
 use Appwrite\Resque\Worker;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
-use Utopia\Storage\Device\DoSpaces;
+use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Storage;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -479,7 +479,7 @@ class DeletesV1 extends Worker
                 $doSpacesRegion = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_REGION', '');
                 $doSpacesBucket = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_BUCKET', '');
                 $doSpacesAcl = 'private';
-                $device = new DoSpaces(APP_STORAGE_UPLOADS . '/app-' . $projectId, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+                $device = new DOSpaces(APP_STORAGE_UPLOADS . '/app-' . $projectId, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
                 break;
         }
         
