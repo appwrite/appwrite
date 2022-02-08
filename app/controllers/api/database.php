@@ -1726,7 +1726,7 @@ App::get('/v1/database/collections/:collectionId/documents')
             $query = Query::parse($query);
 
             if (\count($query->getValues()) > 100) {
-                throw new Exception("You cannot use more than 100 query values on attribute '{$query->getAttribute()}'", 400, Exception::QUERY_LIMIT_EXCEEDED);
+                throw new Exception("You cannot use more than 100 query values on attribute '{$query->getAttribute()}'", 400, Exception::GENERAL_QUERY_LIMIT_EXCEEDED);
             }
 
             return $query;
@@ -1735,7 +1735,7 @@ App::get('/v1/database/collections/:collectionId/documents')
         if (!empty($queries)) {
             $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []), true);
             if (!$validator->isValid($queries)) {
-                throw new Exception($validator->getDescription(), 400, Exception::QUERY_INVALID);
+                throw new Exception($validator->getDescription(), 400, Exception::GENERAL_QUERY_INVALID);
             }
         }
 

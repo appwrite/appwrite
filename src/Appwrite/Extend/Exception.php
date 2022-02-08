@@ -24,7 +24,6 @@ class Exception extends \Exception
      * - Documents
      * - Attributes
      * - Indexes
-     * - Queries
      * - Projects
      * - Webhooks
      * - Keys
@@ -41,6 +40,8 @@ class Exception extends \Exception
     const GENERAL_RATE_LIMIT_EXCEEDED       = 'general_rate_limit_exceeded';
     const GENERAL_SMTP_DISABLED             = 'general_smtp_disabled';
     const GENERAL_ARGUMENT_INVALID          = 'general_argument_invalid';
+    const GENERAL_QUERY_LIMIT_EXCEEDED      = 'general_query_limit_exceeded';
+    const GENERAL_QUERY_INVALID             = 'general_query_invalid';
     const GENERAL_SERVER_ERROR              = 'general_server_error';
 
     /** Users */
@@ -122,10 +123,6 @@ class Exception extends \Exception
     const INDEX_NOT_FOUND                   = 'index_not_found';
     const INDEX_LIMIT_EXCEEDED              = 'index_limit_exceeded';
     const INDEX_ALREADY_EXISTS              = 'index_already_exists';
-
-    /** Query */
-    const QUERY_LIMIT_EXCEEDED              = 'query_limit_exceeded';
-    const QUERY_INVALID                     = 'query_invalid';
 
     /** Projects */
     const PROJECT_NOT_FOUND                 = 'project_not_found';

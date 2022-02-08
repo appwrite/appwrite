@@ -48,6 +48,16 @@ return [
         'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
         'code' => 400,
     ],
+    Exception::GENERAL_QUERY_LIMIT_EXCEEDED => [
+        'name' => Exception::GENERAL_QUERY_LIMIT_EXCEEDED,
+        'description' => 'Query limit exceeded for the current attribute. Usage of more than 100 query values on a single attribute is prohibited.',
+        'code' => 400,
+    ],
+    Exception::GENERAL_QUERY_INVALID => [
+        'name' => Exception::GENERAL_QUERY_INVALID,
+        'description' => 'The query\'s syntax is invalid. Please check the query and try again.',
+        'code' => 400,
+    ],
     Exception::GENERAL_SERVER_ERROR => [
         'name' => Exception::GENERAL_SERVER_ERROR,
         'description' => 'An internal server error occurred.',
@@ -357,18 +367,6 @@ return [
         'name' => Exception::INDEX_ALREADY_EXISTS,
         'description' => 'Index with the requested ID already exists.',
         'code' => 409,
-    ],
-
-    /** Query */
-    Exception::QUERY_LIMIT_EXCEEDED => [
-        'name' => Exception::QUERY_LIMIT_EXCEEDED,
-        'description' => 'Query limit exceeded for the current attribute. Usage of more than 100 query values on a single attribute is prohibited.',
-        'code' => 400,
-    ],
-    Exception::QUERY_INVALID => [
-        'name' => Exception::QUERY_INVALID,
-        'description' => 'Your query syntax is invalid. Please check your query and try again.',
-        'code' => 400,
     ],
 
     /** Project Errors */
