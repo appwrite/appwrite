@@ -3,7 +3,6 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
-use Appwrite\Database\Validator\CustomId;
 use Appwrite\Detector\Detector;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Host;
@@ -12,6 +11,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Template\Template;
 use Appwrite\URL\URL as URLParser;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
