@@ -141,33 +141,6 @@ return [
         'code' => 501,
     ],
 
-    /** OAuth Errors */
-    Exception::OAUTH_PROVIDER_DISABLED => [
-        'name' => Exception::OAUTH_PROVIDER_DISABLED,
-        'description' => 'The chosen OAuth provider is disabled. Please contact your project administrator for more information.',
-        'code' => 412,
-    ],
-    Exception::OAUTH_PROVIDER_UNSUPPORTED => [
-        'name' => Exception::OAUTH_PROVIDER_UNSUPPORTED,
-        'description' => 'The chosen OAuth provider is unsupported. Please check <a href="/docs/client/account?sdk=web-default#accountCreateOAuth2Session"> the docs</a> for the complete list of supported OAuth providers.',
-        'code' => 501,
-    ],
-    Exception::OAUTH_INVALID_SUCCESS_URL => [
-        'name' => Exception::OAUTH_INVALID_SUCCESS_URL,
-        'description' => 'Invalid URL received for OAuth success redirect.',
-        'code' => 400,
-    ],
-    Exception::OAUTH_INVALID_FAILURE_URL => [
-        'name' => Exception::OAUTH_INVALID_FAILURE_URL,
-        'description' => 'Invalid URL received for OAuth failure redirect.',
-        'code' => 400,
-    ],
-    Exception::OAUTH_MISSING_USER_ID => [
-        'name' => Exception::OAUTH_MISSING_USER_ID,
-        'description' => 'Failed to obtain user ID from the OAuth provider.',
-        'code' => 400,
-    ],
-
     /** Teams */
     Exception::TEAM_NOT_FOUND => [
         'name' => Exception::TEAM_NOT_FOUND,
@@ -407,6 +380,31 @@ return [
     Exception::PROJECT_UNKNOWN => [
         'name' => Exception::PROJECT_UNKNOWN,
         'description' => 'The project ID is either missing or not valid. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
+        'code' => 400,
+    ],
+    Exception::PROJECT_PROVIDER_DISABLED => [
+        'name' => Exception::PROJECT_PROVIDER_DISABLED,
+        'description' => 'The chosen OAuth provider is disabled. Please contact your project administrator for more information.',
+        'code' => 412,
+    ],
+    Exception::PROJECT_PROVIDER_UNSUPPORTED => [
+        'name' => Exception::PROJECT_PROVIDER_UNSUPPORTED,
+        'description' => 'The chosen OAuth provider is unsupported. Please check <a href="/docs/client/account?sdk=web-default#accountCreateOAuth2Session"> the docs</a> for the complete list of supported OAuth providers.',
+        'code' => 501,
+    ],
+    Exception::PROJECT_INVALID_SUCCESS_URL => [
+        'name' => Exception::PROJECT_INVALID_SUCCESS_URL,
+        'description' => 'Invalid URL received for OAuth success redirect.',
+        'code' => 400,
+    ],
+    Exception::PROJECT_INVALID_FAILURE_URL => [
+        'name' => Exception::PROJECT_INVALID_FAILURE_URL,
+        'description' => 'Invalid URL received for OAuth failure redirect.',
+        'code' => 400,
+    ],
+    Exception::PROJECT_MISSING_USER_ID => [
+        'name' => Exception::PROJECT_MISSING_USER_ID,
+        'description' => 'Failed to obtain user ID from the OAuth provider.',
         'code' => 400,
     ],
     Exception::WEBHOOK_NOT_FOUND => [

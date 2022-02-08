@@ -34,15 +34,15 @@ class Exception extends \Exception
      */
 
     /** General */
-    const GENERAL_UNKNOWN                   = 'unknown';
-    const GENERAL_ACCESS_FORBIDDEN          = 'access_forbidden';
-    const GENERAL_UNKNOWN_ORIGIN            = 'unknown_origin';
-    const GENERAL_SERVICE_DISABLED          = 'service_disabled';
-    const GENERAL_UNAUTHORIZED_SCOPE        = 'unauthorized_scope';
-    const GENERAL_RATE_LIMIT_EXCEEDED       = 'rate_limit_exceeded';
-    const GENERAL_SMTP_DISABLED             = 'smtp_disabled';
-    const GENERAL_ARGUMENT_INVALID          = 'argument_invalid';
-    const GENERAL_SERVER_ERROR              = 'server_error';
+    const GENERAL_UNKNOWN                   = 'general_unknown';
+    const GENERAL_ACCESS_FORBIDDEN          = 'general_access_forbidden';
+    const GENERAL_UNKNOWN_ORIGIN            = 'general_unknown_origin';
+    const GENERAL_SERVICE_DISABLED          = 'general_service_disabled';
+    const GENERAL_UNAUTHORIZED_SCOPE        = 'general_unauthorized_scope';
+    const GENERAL_RATE_LIMIT_EXCEEDED       = 'general_rate_limit_exceeded';
+    const GENERAL_SMTP_DISABLED             = 'general_smtp_disabled';
+    const GENERAL_ARGUMENT_INVALID          = 'general_argument_invalid';
+    const GENERAL_SERVER_ERROR              = 'general_server_error';
 
     /** Users */
     const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
@@ -62,13 +62,6 @@ class Exception extends \Exception
     const USER_SESSION_NOT_FOUND            = 'user_session_not_found';
     const USER_UNAUTHORIZED                 = 'user_unauthorized';
     const USER_AUTH_METHOD_UNSUPPORTED      = 'user_auth_method_unsupported';
-
-    /** OAuth **/
-    const OAUTH_PROVIDER_DISABLED           = 'oauth_provider_disabled';
-    const OAUTH_PROVIDER_UNSUPPORTED        = 'oauth_provider_unsupported';
-    const OAUTH_INVALID_SUCCESS_URL         = 'oauth_invalid_success_url';
-    const OAUTH_INVALID_FAILURE_URL         = 'oauth_invalid_failure_url';
-    const OAUTH_MISSING_USER_ID             = 'oauth_missing_user_id';
 
     /** Teams */
     const TEAM_NOT_FOUND                    = 'team_not_found';
@@ -138,6 +131,11 @@ class Exception extends \Exception
     /** Projects */
     const PROJECT_NOT_FOUND                 = 'project_not_found';
     const PROJECT_UNKNOWN                   = 'project_unknown';
+    const PROJECT_PROVIDER_DISABLED         = 'project_provider_disabled';
+    const PROJECT_PROVIDER_UNSUPPORTED      = 'project_provider_unsupported';
+    const PROJECT_INVALID_SUCCESS_URL       = 'project_invalid_success_url';
+    const PROJECT_INVALID_FAILURE_URL       = 'project_invalid_failure_url';
+    const PROJECT_MISSING_USER_ID           = 'project_missing_user_id';
 
     /** Webhooks */
     const WEBHOOK_NOT_FOUND                 = 'webhook_not_found';
