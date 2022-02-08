@@ -81,7 +81,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                         <div class="margin-bottom-small text-align-end text-size-small text-fade"><span data-ls-bind="{{project-files.sum}}"></span> files found</div>
 
                         <div class="box margin-bottom">
-                            <table class="vertical">
+                            <table class="vertical" style="overflow: visible">
                                 <thead>
                                     <tr>
                                         <th width="40"></th>
@@ -89,6 +89,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                         <th width="140">Type</th>
                                         <th width="100">Size</th>
                                         <th width="120">Created</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody data-ls-loop="project-files.files" data-ls-as="file">
@@ -158,7 +159,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                             <input type="hidden" name="fileId" data-ls-bind="{{file.$id}}" />
                                                         </form>
                                                     </div>
-                                                    <div data-ls-if="{{file.chunksTotal}} == {{file.chunksUploaded}}" class="col span-4 text-size-small">
+                                                    <div class="col span-4 text-size-small">
                                                         <div class="margin-bottom-small">File Preview</div>
 
                                                         <div class="margin-bottom-small">
@@ -191,26 +192,36 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                     <button type="button" data-ls-if="{{file.chunksTotal}} == {{file.chunksUploaded}}" data-ls-ui-trigger="file-update-{{file.$id}},modal-close">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse desktops-only-inline tablets-only-inline">Cancel</button>
                                                 </footer>
                                             </div>
+                                            <span data-ls-if="{{file.chunksTotal}} != {{file.chunksUploaded}}">pending</span>
                                         </td>
                                         <td data-title="Type: ">
                                             <span class="text-fade text-size-small" data-ls-bind="{{file.mimeType}}"></span>
                                         </td>
                                         <td data-title="Size: ">
-                                            <div data-ls-if="{{file.chunksTotal}} == {{file.chunksUploaded}}" >
-                                                <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
-                                                <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileUnit}}"></span>
-                                            </div>
-                                            <span class="text-fade text-size-small" data-ls-if="{{file.chunksTotal}} != {{file.chunksUploaded}}">incomplete</span>
+                                            <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
+                                            <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileUnit}}"></span>
                                         </td>
                                         <td data-title="Created: ">
                                             <span class="text-fade text-size-small" data-ls-bind="{{file.dateCreated|dateText}}"></span>
+                                        </td>
+                                        <td data-title="" style="overflow: visible">
+                                           <div class="drop-list pull-end" data-ls-ui-open="" data-button-aria="File Options" data-button-class="icon-dot-3" data-blur="1">
+                                                <ul class="arrow-center">
+                                                    <li>
+                                                        <a href="">Update</a>
+                                                    </li>
+                                                    <li>
+                                                        <!-- <button class="link pull-end text-danger" data-ls-ui-trigger="file-delete-{{file.$id}},modal-close">Delete File</button> -->
+                                                        <a href="javascript:void(0)" data-ls-ui-trigger="file-delete-{{file.$id}}">Delete</a>
+                                                    </li>
+                                                </ul>
+                                            </div> 
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
-
                     <div class="pull-end text-align-center paging">
                         <form
                             data-service="storage.listFiles"
