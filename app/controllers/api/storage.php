@@ -213,7 +213,7 @@ App::get('/v1/storage/files')
             $cursorFile = $dbForProject->getDocument('files', $cursor);
 
             if ($cursorFile->isEmpty()) {
-                throw new Exception("File '{$cursor}' for the 'cursor' value not found.", 400, Exception::STORAGE_FILE_NOT_FOUND);
+                throw new Exception("File '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
 

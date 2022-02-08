@@ -58,6 +58,11 @@ return [
         'description' => 'The query\'s syntax is invalid. Please check the query and try again.',
         'code' => 400,
     ],
+    Exception::GENERAL_CURSOR_NOT_FOUND => [
+        'name' => Exception::GENERAL_CURSOR_NOT_FOUND,
+        'description' => 'The cursor is invalid. This can happen if the item represented by the cursor has been deleted.',
+        'code' => 400,
+    ],
     Exception::GENERAL_SERVER_ERROR => [
         'name' => Exception::GENERAL_SERVER_ERROR,
         'description' => 'An internal server error occurred.',

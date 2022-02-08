@@ -225,7 +225,7 @@ App::get('/v1/database/collections')
             $cursorCollection = $dbForProject->getDocument('collections', $cursor);
 
             if ($cursorCollection->isEmpty()) {
-                throw new Exception("Collection '{$cursor}' for the 'cursor' value not found.", 400, Exception::COLLECTION_NOT_FOUND);
+                throw new Exception("Collection '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
 
@@ -1746,7 +1746,7 @@ App::get('/v1/database/collections/:collectionId/documents')
                 : $dbForProject->getDocument('collection_' . $collectionId, $cursor);
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400, Exception::DOCUMENT_NOT_FOUND);
+                throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
 

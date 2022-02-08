@@ -117,7 +117,7 @@ App::get('/v1/teams')
             $cursorTeam = $dbForProject->getDocument('teams', $cursor);
 
             if ($cursorTeam->isEmpty()) {
-                throw new Exception("Team '{$cursor}' for the 'cursor' value not found.", 400, Exception::TEAM_NOT_FOUND);
+                throw new Exception("Team '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
 
@@ -454,7 +454,7 @@ App::get('/v1/teams/:teamId/memberships')
             $cursorMembership = $dbForProject->getDocument('memberships', $cursor);
 
             if ($cursorMembership->isEmpty()) {
-                throw new Exception("Membership '{$cursor}' for the 'cursor' value not found.", 400, Exception::MEMBERSHIP_NOT_FOUND);
+                throw new Exception("Membership '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
 

@@ -103,7 +103,7 @@ App::get('/v1/functions')
             $cursorFunction = $dbForProject->getDocument('functions', $cursor);
 
             if ($cursorFunction->isEmpty()) {
-                throw new Exception("Function '{$cursor}' for the 'cursor' value not found.", 400, Exception::FUNCTION_NOT_FOUND);
+                throw new Exception("Function '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
 
@@ -555,7 +555,7 @@ App::get('/v1/functions/:functionId/tags')
 
             if ($cursorTag->isEmpty()) {
                 // TODO: Shouldn't this be a 404 error ? 
-                throw new Exception("Tag '{$cursor}' for the 'cursor' value not found.", 400, Exception::DEPLOYMENT_NOT_FOUND);
+                throw new Exception("Tag '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
 
@@ -808,9 +808,7 @@ App::get('/v1/functions/:functionId/executions')
             $cursorExecution = $dbForProject->getDocument('executions', $cursor);
 
             if ($cursorExecution->isEmpty()) {
-                // TODO: Shouldn't this be a 404 error ? 
-                // Or do we define a new error type GENERAL_CURSOR_NOT_FOUND for these types ?
-                throw new Exception("Execution '{$cursor}' for the 'cursor' value not found.", 400, Exception::EXECUTION_NOT_FOUND);
+                throw new Exception("Execution '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
 
