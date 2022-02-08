@@ -509,7 +509,18 @@ $register->set('db', function () { // This is usually for our workers or CLI com
 });
 $register->set('cache', function () { // This is usually for our workers or CLI commands scope
     $redis = new Redis();
-    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
+    $host = App::getEnv('_APP_REDIS_HOST', '');
+    $port = App::getEnv('_APP_REDIS_PORT', '');
+    $user = App::getEnv('_APP_REDIS_USER','');
+    $pass = App::getEnv('_APP_REDIS_PASS','');
+    $scheme = (App::getEnv('_APP_REDIS_TLS', '') === 'enabled') ? 'tls' : 'redis';
+
+    $redis->pconnect($scheme.'://'.$host, $port);
+    if ($pass) {
+        $auth = ($user) ? [$user, $pass] : $pass;
+        $redis->auth($auth);
+    }
+
     $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
     return $redis;
