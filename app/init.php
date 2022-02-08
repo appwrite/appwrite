@@ -22,7 +22,6 @@ use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Database as DatabaseOld;
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
@@ -63,7 +62,7 @@ const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
 const APP_CACHE_BUSTER = 201;
-const APP_VERSION_STABLE = '0.12.1';
+const APP_VERSION_STABLE = '0.13.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -159,43 +158,6 @@ if(!empty($user) || !empty($pass)) {
 } else {
     Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
 }
-
-/**
- * Old DB Filters
- */
-DatabaseOld::addFilter('json',
-    function($value) {
-        if(!is_array($value)) {
-            return $value;
-        }
-        return json_encode($value);
-    },
-    function($value) {
-        return json_decode($value, true);
-    }
-);
-
-DatabaseOld::addFilter('encrypt',
-    function($value) {
-        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
-        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-        $tag = null;
-
-        return json_encode([
-            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-            'method' => OpenSSL::CIPHER_AES_128_GCM,
-            'iv' => bin2hex($iv),
-            'tag' => bin2hex($tag),
-            'version' => '1',
-        ]);
-    },
-    function($value) {
-        $value = json_decode($value, true);
-        $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
-
-        return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
-    }
-);
 
 /**
  * New DB Filters
@@ -493,11 +455,12 @@ $register->set('geodb', function () {
 });
 $register->set('db', function () { // This is usually for our workers or CLI commands scope
     $dbHost = App::getEnv('_APP_DB_HOST', '');
+    $dbPort = App::getEnv('_APP_DB_PORT', '');
     $dbUser = App::getEnv('_APP_DB_USER', '');
     $dbPass = App::getEnv('_APP_DB_PASS', '');
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
-    $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
+    $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
         PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
         PDO::ATTR_TIMEOUT => 3, // Seconds
         PDO::ATTR_PERSISTENT => true,

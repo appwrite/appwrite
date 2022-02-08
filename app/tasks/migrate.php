@@ -1,17 +1,16 @@
 <?php
 
-global $cli, $register, $projectDB, $console;
+global $cli, $register;
 
-use Utopia\Config\Config;
 use Utopia\CLI\Console;
-use Appwrite\Database\Database;
-use Appwrite\Database\Validator\Authorization;
-use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
-use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Migration\Migration;
+use Utopia\App;
+use Utopia\Cache\Cache;
+use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Text;
-
-Config::load('collections.old', __DIR__ . '/../config/collections.old.php');
 
 $cli
     ->task('migrate')
@@ -23,86 +22,36 @@ $cli
             Console::exit(1);
             return;
         }
-        $options = [];
-        if (str_starts_with($version, '0.12.')) {
-            Console::error('--------------------');
-            Console::error('WARNING');
-            Console::error('--------------------');
-            Console::warning('Migrating to Version 0.12.x introduces a major breaking change within the Database Service!');
-            Console::warning('Before migrating, please read about the breaking changes here:');
-            Console::info('https://dev.to/appwrite/appwrite-012-migration-post-3cha');
-            $confirm = Console::confirm("If you want to proceed, type 'yes':");
-            if ($confirm != 'yes') {
-                Console::exit(1);
-                return;
-            }
 
-            Console::log('');
-            Console::log('Collections');
-            Console::log('--------------------');
-            Console::warning('Be aware that following actions will happen during the migration:');
-            Console::warning('- Nested Document rules will be migrated to String attributes');
-            Console::warning('- Numeric rules will be migrated to float attributes');
-            Console::warning('- Wildcard and Markdown rules will be converted to string attributes');
-            Console::info("Do you want to migrate your Database Collections?");
-            $options['migrateCollections'] = Console::confirm("Type 'yes' or 'no':");
-
-            if ($options['migrateCollections'] === 'yes') {
-                Console::log('');
-                Console::log('Documents');
-                Console::log('------------------');
-                Console::warning('Be aware that following actions will happen during the migration:');
-                Console::warning('- Nested Documents will be stored as JSON values');
-                Console::warning('- All Numeric values will be converted to float');
-                Console::warning('- All Wildcard and Markdown values will be converted to string');
-                Console::info("Do you want to migrate your Database Documents?");
-                $options['migrateDocuments'] = Console::confirm("Type 'yes' or 'no':");
-            } else {
-                $options['migrateDocuments'] = 'no';
-            }
-
-
-            if (
-                !in_array($options['migrateDocuments'], ['yes', 'no'])
-                || !in_array($options['migrateCollections'], ['yes', 'no'])
-            ) {
-                Console::error("You must reply with 'yes' or 'no'!");
-                Console::exit(1);
-                return;
-            }
-        }
-
-        Config::load('collectionsold', __DIR__ . '/../config/collections.old.php');
+        $app = new App('UTC');
 
         Console::success('Starting Data Migration to version ' . $version);
 
         $db = $register->get('db', true);
         $cache = $register->get('cache', true);
-        $cache->flushAll();
 
-        $consoleDB = new Database();
-        $consoleDB
-            ->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache))
-            ->setNamespace('app_console') // Main DB
-            ->setMocks(Config::getParam('collectionsold', []));
+        $cache = new Cache(new RedisCache($cache));
 
-        $projectDB = new Database();
-        $projectDB
-            ->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache))
-            ->setMocks(Config::getParam('collectionsold', []));
+        $projectDB = new Database(new MariaDB($db), $cache);
+        $projectDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
 
-        $console = $consoleDB->getDocument('console');
+        $consoleDB = new Database(new MariaDB($db), $cache);
+        $consoleDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $consoleDB->setNamespace('_project_console');
+
+        $console = $app->getResource('console');
 
         $limit = 30;
         $sum = 30;
         $offset = 0;
         $projects = [$console];
         $count = 0;
+        $totalProjects = $consoleDB->count('projects') + 1;
 
         $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
-        $migration = new $class($register->get('db'), $register->get('cache'), $options);
+        $migration = new $class();
 
-        while ($sum > 0) {
+        while (!empty($projects)) {
             foreach ($projects as $project) {
                 try {
                     $migration
@@ -114,23 +63,14 @@ $cli
                 }
             }
 
-            $projects = $consoleDB->getCollection([
-                'limit' => $limit,
-                'offset' => $offset,
-                'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_PROJECTS,
-                ],
-            ]);
-
             $sum = \count($projects);
+            $projects = $consoleDB->find('projects', limit: $limit, offset: $offset);
+
             $offset = $offset + $limit;
             $count = $count + $sum;
 
-            if ($sum > 0) {
-                Console::log('Fetched ' . $count . '/' . $consoleDB->getSum() . ' projects...');
-            }
+            Console::log('Migrated ' . $count . '/' . $totalProjects . ' projects...');
         }
-        $cache->flushAll();
 
         Swoole\Event::wait(); // Wait for Coroutines to finish
         Console::success('Data Migration Completed');
