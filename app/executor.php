@@ -746,6 +746,7 @@ function runBuildStage(string $buildId, string $deploymentId, string $projectID)
         }
 
         $vars = $resource->getAttribute('vars', []);
+        $vars['ENTRYPOINT_NAME'] = $resource->getAttribute('entrypoint', '');
 
         $orchestration
             ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
