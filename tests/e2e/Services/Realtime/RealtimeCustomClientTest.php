@@ -1049,6 +1049,15 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($responseUpdate['data']['payload']);
 
         $client->close();
+
+        // Cleanup : Delete function 
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 
     public function testChannelTeams(): array
