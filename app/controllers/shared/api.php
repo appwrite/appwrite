@@ -8,7 +8,7 @@ use Utopia\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Database\Document;
-use Utopia\Storage\Device\DoSpaces;
+use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Storage;
@@ -49,8 +49,8 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
             $doSpacesRegion = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_REGION', '');
             $doSpacesBucket = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_BUCKET', '');
             $doSpacesAcl = 'private';
-            Storage::setDevice('files', new DoSpaces(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl));
-            Storage::setDevice('functions', new DoSpaces(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl));
+            Storage::setDevice('files', new DOSpaces(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl));
+            Storage::setDevice('functions', new DOSpaces(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl));
             break;
     }
 

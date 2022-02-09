@@ -422,7 +422,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DEVICE',
-                'description' => 'Select default storage device. The default value is \'Local\'. List of supported adapters are \'Local\', \'S3\' and \'DoSpaces\'.',
+                'description' => 'Select default storage device. The default value is \'Local\'. List of supported adapters are \'Local\', \'S3\' and \'DOSpaces\'.',
                 'introduction' => '0.13.0',
                 'default' => 'Local',
                 'required' => false,
@@ -462,7 +462,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DEVICE_DO_SPACES_ACCESS_KEY',
-                'description' => 'DigitalOcean spaces access key. Required when the storage adapter is set to DoSpaces. You can get your access key from your DigitalOcean console.',
+                'description' => 'DigitalOcean spaces access key. Required when the storage adapter is set to DOSpaces. You can get your access key from your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -470,7 +470,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DEVICE_DO_SPACES_SECRET',
-                'description' => 'DigitalOcean spaces secret key. Required when the storage adapter is set to DoSpaces. You can get your secret key from your DigitalOcean console.',
+                'description' => 'DigitalOcean spaces secret key. Required when the storage adapter is set to DOSpaces. You can get your secret key from your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -478,7 +478,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DEVICE_DO_SPACES_REGION',
-                'description' => 'DigitalOcean spaces region. Required when storage adapter is set to DoSpaces. You can find your region info for your space from DigitalOcean console.',
+                'description' => 'DigitalOcean spaces region. Required when storage adapter is set to DOSpaces. You can find your region info for your space from DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => 'us-eas-1',
                 'required' => false,
@@ -486,7 +486,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DEVICE_DO_SPACES_BUCKET',
-                'description' => 'DigitalOcean spaces bucket. Required when storage adapter is set to DoSpaces. You can create spaces in your DigitalOcean console.',
+                'description' => 'DigitalOcean spaces bucket. Required when storage adapter is set to DOSpaces. You can create spaces in your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
