@@ -176,6 +176,24 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_TOKEN_EXPIRATION_RECOVERY_DURATION',
+                'description' => 'Value containing the duration in seconds of the expiration of the password recovery token sent by email. The default value is 1 hour.',
+                'introduction' => '0.13.0',
+                'default' => '3600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_TOKEN_EXPIRATION_CONFIRM_DURATION',
+                'description' => 'Value containing the duration in seconds of the expiration of the email verification token sent by email. The default value is 7 days.',
+                'introduction' => '0.13.0',
+                'default' => '604800',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],

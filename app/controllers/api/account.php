@@ -692,7 +692,7 @@ App::post('/v1/account/sessions/magic-url')
 
         $loginSecret = Auth::tokenGenerator();
 
-        $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
+        $expire = \time() + App::getEnv('_APP_TOKEN_EXPIRATION_CONFIRM_DURATION', Auth::TOKEN_EXPIRATION_CONFIRM);
 
         $token = new Document([
             '$id' => $dbForProject->getId(),
@@ -1891,7 +1891,7 @@ App::post('/v1/account/recovery')
             throw new Exception('Invalid credentials. User is blocked', 401);
         }
 
-        $expire = \time() + Auth::TOKEN_EXPIRATION_RECOVERY;
+        $expire = \time() + App::getEnv('_APP_TOKEN_EXPIRATION_RECOVERY_DURATION', Auth::TOKEN_EXPIRATION_RECOVERY);
 
         $secret = Auth::tokenGenerator();
         $recovery = new Document([
@@ -2075,7 +2075,7 @@ App::post('/v1/account/verification')
 
         $verificationSecret = Auth::tokenGenerator();
 
-        $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
+        $expire = \time() + App::getEnv('_APP_TOKEN_EXPIRATION_CONFIRM_DURATION', Auth::TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([
             '$id' => $dbForProject->getId(),
