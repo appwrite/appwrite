@@ -26,6 +26,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_OPTIONS_ANALYTICS',
+                'description' => 'Allows you to disable sending analytics data from the Appwrite console. By default, set to \'enabled\'. To disallow sending analytics data, set to \'disabled\'.',
+                'introduction' => '',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_OPTIONS_ABUSE',
                 'description' => 'Allows you to disable abuse checks and API rate limiting. By default, set to \'enabled\'. To cancel the abuse checking, set to \'disabled\'. It is not recommended to disable this check-in a production environment.',
                 'introduction' => '',

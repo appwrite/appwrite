@@ -96,6 +96,7 @@ services:
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_SYSTEM_RESPONSE_FORMAT
+      - _APP_OPTIONS_ANALYTICS
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
@@ -574,7 +575,7 @@ services:
   #     - RELAY_FROM_HOSTS=192.168.0.0/16 ; *.yourdomain.com
   #     - SMARTHOST_HOST=smtp
   #     - SMARTHOST_PORT=587
-  
+      
   redis:
     image: redis:6.2-alpine
     container_name: appwrite-redis
@@ -592,7 +593,7 @@ services:
   #     - appwrite
   #   volumes:
   #     - appwrite-uploads:/storage/uploads
-      
+
   influxdb:
     image: appwrite/influxdb:1.4.0
     container_name: appwrite-influxdb
