@@ -81,6 +81,23 @@ class [PROVIDER NAME] extends OAuth2
      */
     private $endpoint = '[ENDPOINT API URL]';
     
+     /**
+     * @var array
+     */
+    protected $scopes = [
+        // [ARRAY_OF_REQUIRED_SCOPES]
+    ];
+    
+    /**
+     * @var array
+     */
+    protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
+    
     /**
      * @return string
      */
@@ -101,14 +118,31 @@ class [PROVIDER NAME] extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code): string
+    protected function getTokens(string $code): array
     {
-        // TODO: Fire request to oauth API to generate access_token
-        $accessToken = "[FETCHED ACCESS TOKEN]";
-        
-        return $accessToken;
+        if(empty($this->tokens)) {
+            // TODO: Fire request to oauth API to generate access_token
+            // Make sure to use '$this->getScopes()' to include all scopes properly
+            $this->tokens = "[FETCH TOKEN RESPONSE]";
+        }
+
+        return $this->tokens;
+    }
+    
+    
+    /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshTokens(string $refreshToken):array
+    {
+        // TODO: Fire request to oauth API to generate access_token using refresh token
+        $this->tokens = "[FETCH TOKEN RESPONSE]";
+
+        return $this->tokens;
     }
 
     /**
@@ -118,8 +152,10 @@ class [PROVIDER NAME] extends OAuth2
      */
     public function getUserID(string $accessToken): string
     {
-        // TODO: Fetch user from oauth API and select the user ID
-        $userId = "[FETCHED USER ID]";
+        $user = $this->getUser($accessToken);
+        
+        // TODO: Pick user ID from $user response 
+        $userId = "[USER ID]";
         
         return $userId;
     }
@@ -131,8 +167,10 @@ class [PROVIDER NAME] extends OAuth2
      */
     public function getUserEmail(string $accessToken): string
     {
-        // TODO: Fetch user from oauth API and select the user's email
-        $userEmail = "[FETCHED USER EMAIL]";
+        $user = $this->getUser($accessToken);
+        
+        // TODO: Pick user email from $user response 
+        $userEmail = "[USER EMAIL]";
         
         return $userEmail;
     }
@@ -144,15 +182,34 @@ class [PROVIDER NAME] extends OAuth2
      */
     public function getUserName(string $accessToken): string
     {
-        // TODO: Fetch user from oauth API and select the username
-        $username = "[FETCHED USERNAME]";
+        $user = $this->getUser($accessToken);
+        
+        // TODO: Pick username from $user response 
+        $username = "[USERNAME]";
         
         return $username;
+    }
+    
+     /**
+     * @param string $accessToken
+     *
+     * @return array
+     */
+    protected function getUser(string $accessToken)
+    {
+        if (empty($this->user)) {
+            // TODO: Fire request to oauth API to get information about users
+            $this->user = "[FETCH USER RESPONSE]";
+        }
+
+        return $this->user;
     }
 }
 ```
 
 > If you copy this template, make sure to replace all placeholders wrapped like `[THIS]` and to implement everything marked as `TODO:`.
+
+> If your OAuth2 provider has different endpoints for getting username/email/id, you can fire specific requests from specific get-method, and stop using `getUser` method.
 
 Please mention in your documentation what resources or API docs you used to implement the provider's OAuth2 protocol.
 

@@ -2,7 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;

@@ -13,9 +13,6 @@ use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Utopia\Response\Filters\V06;
-use Appwrite\Utopia\Response\Filters\V07;
-use Appwrite\Utopia\Response\Filters\V08;
 use Appwrite\Utopia\Response\Filters\V11;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
@@ -159,15 +156,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
     if ($responseFormat) {
         switch($responseFormat) {
-            case version_compare ($responseFormat , '0.6.2', '<=') :
-                Response::setFilter(new V06());
-                break;
-            case version_compare ($responseFormat , '0.7.2', '<=') :
-                Response::setFilter(new V07());
-                break;
-            case version_compare ($responseFormat , '0.8.0', '<=') :
-                Response::setFilter(new V08());
-                break;
             case version_compare ($responseFormat , '0.11.0', '<=') :
                 Response::setFilter(new V11());
                 break;
@@ -337,8 +325,8 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
     if($logger) {
         if($error->getCode() >= 500 || $error->getCode() === 0) {
             try {
+                /** @var Utopia\Database\Document $user */
                 $user = $utopia->getResource('user');
-                /** @var Appwrite\Database\Document $user */
             } catch(\Throwable $th) {
                 // All good, user is optional information for logger
             }

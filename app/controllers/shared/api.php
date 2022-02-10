@@ -1,14 +1,14 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Messaging\Adapter\Realtime;
 use Utopia\App;
-use Utopia\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Database\Document;
 use Utopia\Storage\Device\DOSpaces;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Exception;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Storage;

@@ -1,5 +1,5 @@
 <?php
-namespace Appwrite\Database\Validator;
+namespace Appwrite\Utopia\Database\Validator;
 
 use Utopia\Database\Validator\Key;
 

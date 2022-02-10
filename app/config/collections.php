@@ -1167,7 +1167,29 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'providerToken',
+                '$id' => 'providerAccessToken',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['encrypt'],
+            ],
+            [
+                '$id' => 'providerAccessTokenExpiry',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'providerRefreshToken',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -2261,7 +2283,7 @@ $collections = [
             ],
         ],
     ],
-    
+
     'realtime' => [
         '$collection' => Database::METADATA,
         '$id' => 'realtime',
