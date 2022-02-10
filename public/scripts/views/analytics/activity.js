@@ -7,8 +7,9 @@
       let action = element.getAttribute("data-analytics-event") || "click";
       let activity = element.getAttribute("data-analytics-label") || "None";
       let doNotTrack = window.navigator.doNotTrack;
+      let analyticsOption = APP_ENV.ANALYTICS_OPTION;
 
-      if(doNotTrack == '1') {
+      if(doNotTrack == '1' || analyticsOption === 'disabled') {
         return;
       }
       

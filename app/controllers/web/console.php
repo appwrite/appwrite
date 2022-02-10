@@ -14,6 +14,7 @@ App::init(function ($layout) {
     $layout
         ->setParam('description', 'Appwrite Console allows you to easily manage, monitor, and control your entire backend API and tools.')
         ->setParam('analytics', 'UA-26264668-5')
+        ->setParam('analytics-option', App::getEnv('_APP_OPTIONS_ANALYTICS', 'enabled'))
     ;
 }, ['layout'], 'console');
 

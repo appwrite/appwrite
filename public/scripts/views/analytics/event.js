@@ -6,8 +6,9 @@
     controller: function(element) {
       let action = element.getAttribute("data-analytics-event") || "click";
       let doNotTrack = window.navigator.doNotTrack;
+      let analyticsOption = APP_ENV.ANALYTICS_OPTION;
 
-      if(doNotTrack == '1') {
+      if(doNotTrack == '1' || analyticsOption === 'disabled') {
         return;
       }
 
@@ -16,7 +17,7 @@
           element.getAttribute("data-analytics-category") || "undefined";
         let label = element.getAttribute("data-analytics-label") || "undefined";
 
-        if (!ga) {
+        if (typeof ga === 'undefined') {
           console.error("Google Analytics ga object is not available");
         }
 
