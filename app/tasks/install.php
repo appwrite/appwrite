@@ -6,6 +6,7 @@ use Appwrite\Auth\Auth;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Appwrite\Utopia\View;
+use Utopia\App;
 use Utopia\Analytics\GoogleAnalytics;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -47,6 +48,11 @@ $cli
          * This allows us to collect information without invading the privacy of our users.
          */
         $analytics = new GoogleAnalytics('UA-26264668-9', uniqid('server.', true));
+        
+        $analyticsOption = App::getEnv('_APP_OPTIONS_ANALYTICS', 'enabled');
+        if($analyticsOption === 'disabled') {
+            $analytics->disable();
+        }
 
         foreach($config as $category) {
             foreach($category['variables'] ?? [] as $var) {
