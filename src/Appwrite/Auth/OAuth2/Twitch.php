@@ -31,6 +31,11 @@ class Twitch extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @return string
@@ -59,26 +64,48 @@ class Twitch extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code):string
+    protected function getTokens(string $code): array
     {
-        $result = \json_decode($this->request(
+        if(empty($this->tokens)) {
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                $this->endpoint . 'token?' . \http_build_query([
+                    "client_id" => $this->appID,
+                    "client_secret" => $this->appSecret,
+                    "code" => $code,
+                    "grant_type" => "authorization_code",
+                    "redirect_uri" => $this->callback
+                ])
+            ), true);
+        }
+
+        return $this->tokens;
+    }
+
+    /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshTokens(string $refreshToken):array
+    {
+        $this->tokens = \json_decode($this->request(
             'POST',
-            $this->endpoint . 'token?'. \http_build_query([
+            $this->endpoint . 'token?' . \http_build_query([
                 "client_id" => $this->appID,
                 "client_secret" => $this->appSecret,
-                "code" => $code,
-                "grant_type" => "authorization_code",
-                "redirect_uri" => $this->callback
+                "refresh_token" => $refreshToken,
+                "grant_type" => "refresh_token",
             ])
         ), true);
 
-        if (isset($result['access_token'])) {
-            return $result['access_token'];
+        if(empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
         }
 
-        return '';
+        return $this->tokens;
     }
 
     /**

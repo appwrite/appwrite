@@ -263,7 +263,7 @@ class Swagger2 extends Format
                         $node['x-example'] = false;
                         break;
                     case 'Utopia\Database\Validator\UID':
-                    case 'Appwrite\Database\Validator\CustomId':
+                    case 'Appwrite\Utopia\Database\Validator\CustomId':
                         $node['type'] = $validator->getType();
                         $node['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
@@ -318,6 +318,10 @@ class Swagger2 extends Format
                     case 'Utopia\Validator\Integer':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'int32';
+                        break;
+                    case 'Utopia\Validator\FloatValidator':
+                        $node['type'] = 'number';
+                        $node['format'] = 'float';
                         break;
                     case 'Utopia\Validator\Length':
                         $node['type'] = $validator->getType();

@@ -10,6 +10,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
 use Utopia\Storage\Validator\File;
+use Utopia\Validator\WhiteList;
 
 App::get('/v1/mock/tests/foo')
     ->desc('Get Foo')
@@ -478,11 +479,13 @@ App::get('/v1/mock/tests/general/oauth2/token')
     ->label('docs', false)
     ->label('sdk.mock', true)
     ->param('client_id', '', new Text(100), 'OAuth2 Client ID.')
-    ->param('redirect_uri', '', new Host(['localhost']), 'OAuth2 Redirect URI.')
     ->param('client_secret', '', new Text(100), 'OAuth2 scope list.')
-    ->param('code', '', new Text(100), 'OAuth2 state.')
+    ->param('grant_type', 'authorization_code', new WhiteList(['refresh_token', 'authorization_code']), 'OAuth2 Grant Type.', true)
+    ->param('redirect_uri', '', new Host(['localhost']), 'OAuth2 Redirect URI.', true)
+    ->param('code', '', new Text(100), 'OAuth2 state.', true)
+    ->param('refresh_token', '', new Text(100), 'OAuth2 refresh token.', true)
     ->inject('response')
-    ->action(function ($client_id, $redirectURI, $client_secret, $code, $response) {
+    ->action(function ($client_id, $client_secret, $grantType, $redirectURI, $code, $refreshToken, $response) {
         /** @var Appwrite\Utopia\Response $response */
 
         if ($client_id != '1') {
@@ -493,11 +496,27 @@ App::get('/v1/mock/tests/general/oauth2/token')
             throw new Exception('Invalid client secret');
         }
 
-        if ($code != 'abcdef') {
-            throw new Exception('Invalid token');
-        }
+        $responseJson = [
+            'access_token' => '123456',
+            'refresh_token' => 'tuvwxyz',
+            'expires_in' => 14400
+        ];
 
-        $response->json(['access_token' => '123456']);
+        if($grantType === 'authorization_code') {
+            if ($code !== 'abcdef') {
+                throw new Exception('Invalid token');
+            }
+
+            $response->json($responseJson);
+        } else if($grantType === 'refresh_token') {
+            if ($refreshToken !== 'tuvwxyz') {
+                throw new Exception('Invalid refresh token');
+            }
+
+            $response->json($responseJson);
+        } else {
+            throw new Exception('Invalid grant type');
+        }
     });
 
 App::get('/v1/mock/tests/general/oauth2/user')
@@ -517,7 +536,7 @@ App::get('/v1/mock/tests/general/oauth2/user')
         $response->json([
             'id' => 1,
             'name' => 'User Name',
-            'email' => 'user@localhost.test',
+            'email' => 'useroauth@localhost.test',
         ]);
     });
 

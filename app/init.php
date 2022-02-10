@@ -21,7 +21,6 @@ use Appwrite\Extend\PDO;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Database as DatabaseOld;
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
@@ -53,7 +52,7 @@ use Utopia\Database\Query;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
-use Utopia\Storage\Device\DoSpaces;
+use Utopia\Storage\Device\DOSpaces;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -168,43 +167,6 @@ if(!empty($user) || !empty($pass)) {
 } else {
     Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
 }
-
-/**
- * Old DB Filters
- */
-DatabaseOld::addFilter('json',
-    function($value) {
-        if(!is_array($value)) {
-            return $value;
-        }
-        return json_encode($value);
-    },
-    function($value) {
-        return json_decode($value, true);
-    }
-);
-
-DatabaseOld::addFilter('encrypt',
-    function($value) {
-        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
-        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-        $tag = null;
-
-        return json_encode([
-            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-            'method' => OpenSSL::CIPHER_AES_128_GCM,
-            'iv' => bin2hex($iv),
-            'tag' => bin2hex($tag),
-            'version' => '1',
-        ]);
-    },
-    function($value) {
-        $value = json_decode($value, true);
-        $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
-
-        return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
-    }
-);
 
 /**
  * New DB Filters
@@ -852,7 +814,7 @@ App::setResource('deviceFiles', function($project) {
             $doSpacesRegion = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_REGION', '');
             $doSpacesBucket = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_BUCKET', '');
             $doSpacesAcl = 'private';
-            return new DoSpaces(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+            return new DOSpaces(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
     }
 }, ['project']);
 
@@ -873,7 +835,7 @@ App::setResource('deviceFunctions', function($project) {
             $doSpacesRegion = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_REGION', '');
             $doSpacesBucket = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_BUCKET', '');
             $doSpacesAcl = 'private';
-            return new DoSpaces(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+            return new DOSpaces(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
     }
 }, ['project']);
 

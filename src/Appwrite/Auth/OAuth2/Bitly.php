@@ -3,6 +3,7 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
+use Utopia\Exception;
 
 // Reference Material
 // https://dev.bitly.com/v4_documentation.html
@@ -29,6 +30,11 @@ class Bitly extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @return string
@@ -54,31 +60,52 @@ class Bitly extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code):string
+    protected function getTokens(string $code): array
     {
-        $response = $this->request(
+        if(empty($this->tokens)) {
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                $this->resourceEndpoint . 'oauth/access_token',
+                ["Content-Type: application/x-www-form-urlencoded"],
+                \http_build_query([
+                    "client_id" => $this->appID,
+                    "client_secret" => $this->appSecret,
+                    "code" => $code,
+                    "redirect_uri" => $this->callback,
+                    "state" => \json_encode($this->state)
+                ])
+            ), true);
+        }
+
+        return $this->tokens;
+    }
+
+    /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshTokens(string $refreshToken):array
+    {
+        $this->tokens = \json_decode($this->request(
             'POST',
             $this->resourceEndpoint . 'oauth/access_token',
             ["Content-Type: application/x-www-form-urlencoded"],
             \http_build_query([
                 "client_id" => $this->appID,
                 "client_secret" => $this->appSecret,
-                "code" => $code,
-                "redirect_uri" => $this->callback,
-                "state" => \json_encode($this->state)
+                "refresh_token" => $refreshToken,
+                'grant_type' => 'refresh_token'
             ])
-        );
+        ), true);
 
-        $result = null;
-
-        if ($response) {
-            \parse_str($response, $result);
-            return $result['access_token'];
+        if(empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
         }
 
-        return '';
+        return $this->tokens;
     }
 
     /**

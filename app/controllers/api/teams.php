@@ -1,19 +1,14 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Validator\CustomId;
 use Appwrite\Detector\Detector;
-use Appwrite\Template\Template;
-use Appwrite\Utopia\Response;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Host;
+use Appwrite\Template\Template;
+use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Response;
 use Utopia\App;
-use Utopia\Exception;
 use Utopia\Config\Config;
-use Utopia\Validator\Text;
-use Utopia\Validator\Range;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\WhiteList;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
@@ -22,6 +17,11 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
+use Utopia\Exception;
+use Utopia\Validator\Text;
+use Utopia\Validator\Range;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\WhiteList;
 
 App::post('/v1/teams')
     ->desc('Create Team')

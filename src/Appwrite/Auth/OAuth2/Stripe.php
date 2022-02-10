@@ -3,6 +3,7 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
+use Utopia\Exception;
 
 class Stripe extends OAuth2
 {
@@ -10,6 +11,11 @@ class Stripe extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @var string
@@ -29,7 +35,7 @@ class Stripe extends OAuth2
 
     protected $grantType = [
       'authorize' => 'authorization_code',
-      'refresh' => 'refresh_token'
+      'refresh' => 'refresh_token',
     ];
 
     /**
@@ -57,31 +63,50 @@ class Stripe extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code):string
+    protected function getTokens(string $code): array
     {
-        $response = $this->request(
+        if(empty($this->tokens)) {
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                'https://connect.stripe.com/oauth/token',
+                [],
+                \http_build_query([
+                    'grant_type' => $this->grantType['authorize'],
+                    'code' => $code
+                ])
+            ), true);
+
+            $this->stripeAccountId = $this->tokens['stripe_user_id'];
+        }
+
+        return $this->tokens;
+    }
+
+    /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshTokens(string $refreshToken):array
+    {
+        $this->tokens = \json_decode($this->request(
             'POST',
             'https://connect.stripe.com/oauth/token',
             [],
             \http_build_query([
-                'grant_type' => $this->grantType['authorize'],                
-                'code' => $code
+                'grant_type' => $this->grantType['refresh'],
+                'refresh_token' => $refreshToken,
             ])
-        );
+        ), true);
 
-        $response = \json_decode($response, true);
-        
-        if (isset($response['stripe_user_id'])) {
-          $this->stripeAccountId = $response['stripe_user_id'];
+        if(empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
         }
 
-        if (isset($response['access_token'])) {
-            return $response['access_token'];
-        }
-
-        return '';
+        $this->stripeAccountId = $this->tokens['stripe_user_id'];
+        return $this->tokens;
     }
 
     /**
