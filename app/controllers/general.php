@@ -5,6 +5,7 @@ require_once __DIR__.'/../init.php';
 use Utopia\App;
 use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
+use Utopia\Validator\Text;
 use Utopia\View;
 use Utopia\Exception;
 use Utopia\Config\Config;
@@ -440,8 +441,25 @@ App::get('/.well-known/acme-challenge')
     ->inject('request')
     ->inject('response')
     ->action(function ($request, $response) {
+        $uriChunks = \explode('/', $request->getURI());
+        $token = $uriChunks[\count($uriChunks) - 1];
+
+        $validator = new Text(100, [
+            ...Text::NUMBERS,
+            ...Text::ALPHABET_LOWER,
+            ...Text::ALPHABET_UPPER,
+            '-',
+            '_'
+        ]);
+
+        if (!$validator->isValid($token) || \count($uriChunks) !== 4) {
+            throw new Exception('Invalid challenge token.', 400);
+        }
+
+        $filePath = '/.well-known/acme-challenge' . $token;
+
         $base = \realpath(APP_STORAGE_CERTIFICATES);
-        $path = \str_replace('/.well-known/acme-challenge/', '', $request->getURI());
+        $path = \str_replace('/.well-known/acme-challenge/', '', $filePath);
         $absolute = \realpath($base.'/.well-known/acme-challenge/'.$path);
 
         if (!$base) {
