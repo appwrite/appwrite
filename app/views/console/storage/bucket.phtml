@@ -261,16 +261,9 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Create Storage File"
-                            data-service="storage.createFile"
-                            data-event="submit"
-                            data-scope="sdk"
-                            data-loading="Uploading File..."
-                            data-success="alert,trigger,reset"
-                            data-success-param-alert-text="File uploaded successfully"
-                            data-success-param-trigger-events="storage.createFile"
-                            data-failure="alert"
-                            data-failure-param-alert-text="Failed to upload file"
-                            data-failure-param-alert-classname="error">
+                            x-data
+                            @submit="$store.uploader.uploadFile"
+                            >
                             <input type="hidden" name="bucketId" id="files-bucketId" data-ls-bind="{{router.params.id}}">
 
                             <label for="fileId">File ID</label>

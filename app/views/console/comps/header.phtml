@@ -58,7 +58,7 @@
                                 <i class="icon-sun-inv force-light"></i>
                                 <i class="icon-moon-inv force-dark"></i>
                             </button>
-                        </div>    
+                        </div>
                     </span>
                 </li>
             </ul>
@@ -222,3 +222,34 @@
         </footer>
     </form>
 </div>
+<div
+ id="upload-modal" style="position: absolute; right:0; top: 20; background: white;z-index: 9999;">
+    <button x-data @click="$store.uploader.addFile('file-x')">add</button>
+    <template x-data x-if="$store.uploader.files.length > 0">
+        <template x-data x-for="file in $store.uploader.files">
+            <p x-text="file"></p>
+        </template>
+    </template>
+</div>
+<script>
+    document.addEventListener('alpine:init', () => {
+            Alpine.store('uploader', {
+                files: [],
+                addFile(file) {
+                    this.files.push(file);
+                    console.log(this.files);
+                },
+                async uploadFile(event) {
+                    event.preventDefault();
+                    /* console.dir(event.target); */
+                    const formData = new FormData(event.target);
+                    console.dir(formData.get('file'));
+                    const sdk = window.ls.container.get('sdk');
+                    console.log(formData.get('read'));
+                    const file = await sdk.storage.createFile(formData.get('bucketId'), formData.get('fileId'), formData.get('file'), formData.get('read') ?? [], formData.get('write') ?? []);
+                    console(file);
+                }
+
+            });
+        })
+</script>

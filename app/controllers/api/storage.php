@@ -2,7 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\ClamAV\Network;
-use Appwrite\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Utopia\App;
