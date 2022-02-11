@@ -122,7 +122,7 @@ class Client
      * @param string $endpoint
      * @return self $this
      */
-    public function setEndpoint($endpoint): self
+    public function setEndpoint(string $endpoint): self
     {
         $this->endpoint = $endpoint;
 
