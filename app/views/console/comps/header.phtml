@@ -225,8 +225,11 @@
 <div
  id="upload-modal" style="position: absolute; right:0; bottom: 0; background: white;z-index: 9999;">
     <template x-data x-if="$store.uploader.files.length > 0">
-        <template x-data x-for="file in $store.uploader.files">
-            <p x-text="file.name"></p>
+        <template x-data x-for="file in $store.uploader.files" :key="file.id">
+            <p>
+                <span x-text="file.progress"></span>
+                <span x-text="file.name"></span>
+            </p>
         </template>
     </template>
 </div>
@@ -234,44 +237,55 @@
     document.addEventListener('alpine:init', () => {
             Alpine.store('uploader', {
                 files: [],
-                addFile(file){
+                addFile(file) {
                     this.files.push(file);
-                    console.log(this.files);
+                },
+                updateFile(id, file) {
+                    const files = this.files.map((oldFile) => file.id == oldFile.id ? file : oldFile);
+                    this.files = [
+                        ...files
+                    ]
                 },
                 async uploadFile(target) {
                     const formData = new FormData(target);
                     const sdk = window.ls.container.get('sdk');
                     const file = formData.get('file');
-                    this.files.push({
+                    const fileId = formData.get('fileId');
+                    const id = fileId === 'unique()' ? new Date().getTime().toString() : fileId;
+                    let read = formData.get('read');
+                    if(read) {
+                        read = JSON.parse(read);
+                    }
+                    let write = formData.get('write');
+                    if(write) {
+                        write = JSON.parse(wirte);
+                    }
+
+                    this.addFile({
                         name: file.name,
                         progress: 0,
                         completed: false,
                         failed: false,
                     });
-                    let read = formData.get('read');
-                    if(read) {
-                        read = JSON.parse(read);
-                    }
-
-                    let write = formData.get('write');
-                    if(write) {
-                        write = JSON.parse(wirte);
-                    }
+                    
                     const response = await sdk.storage.createFile(
                         formData.get('bucketId'),
-                        formData.get('fileId'),
-                        formData.get('file'),
+                        fileId,
+                        file,
                         read,
                         write,
                         (progress) => {
-                            this.files.push({
+                            console.log("progress", progress);
+                            this.updateFile(id, {
+                                id: id,
                                 name: file.name,
                                 progress: progress,
                                 completed: false,
                                 failed: false
                             });
                         });
-                    this.files.push({
+                    this.updateFile(id,{
+                        id: response.$id,
                         name: response.name,
                         progress: 100,
                         completed: true,
