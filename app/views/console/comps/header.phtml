@@ -223,12 +223,13 @@
     </form>
 </div>
 <div
- id="upload-modal" style="position: absolute; right:0; bottom: 0; background: white;z-index: 9999;">
+ id="upload-modal" style="position: fixed; right:0; bottom: 0; background: white;z-index: 9999;">
     <template x-data x-if="$store.uploader.files.length > 0">
         <template x-data x-for="file in $store.uploader.files" :key="file.id">
             <p>
                 <span x-text="file.progress"></span>
                 <span x-text="file.name"></span>
+                <button @click="$store.uploader.removeFile(file.id)">X</button>
             </p>
         </template>
     </template>
@@ -241,10 +242,10 @@
                     this.files.push(file);
                 },
                 updateFile(id, file) {
-                    const files = this.files.map((oldFile) => file.id == oldFile.id ? file : oldFile);
-                    this.files = [
-                        ...files
-                    ]
+                    this.files = this.files.map((oldFile) => id == oldFile.id ? {...oldFile, ...file} : oldFile);
+                },
+                removeFile(id) {
+                    this.files = this.files.filter((file) => file.id !== id);
                 },
                 async uploadFile(target) {
                     const formData = new FormData(target);
@@ -262,35 +263,44 @@
                     }
 
                     this.addFile({
+                        id: id,
                         name: file.name,
                         progress: 0,
                         completed: false,
                         failed: false,
                     });
                     
-                    const response = await sdk.storage.createFile(
-                        formData.get('bucketId'),
-                        fileId,
-                        file,
-                        read,
-                        write,
-                        (progress) => {
-                            console.log("progress", progress);
-                            this.updateFile(id, {
-                                id: id,
-                                name: file.name,
-                                progress: progress,
-                                completed: false,
-                                failed: false
+                    try {
+                        const response = await sdk.storage.createFile(
+                            formData.get('bucketId'),
+                            fileId,
+                            file,
+                            read,
+                            write,
+                            (progress) => {
+                                console.log("progress", progress);
+                                this.updateFile(id, {
+                                    id: id,
+                                    name: file.name,
+                                    progress: Math.round(progress),
+                                    completed: false,
+                                    failed: false
+                                });
                             });
+                        this.updateFile(id,{
+                            id: response.$id,
+                            name: response.name,
+                            progress: 100,
+                            completed: true,
+                            failed: false,
                         });
-                    this.updateFile(id,{
-                        id: response.$id,
-                        name: response.name,
-                        progress: 100,
-                        completed: true,
-                        failed: false,
-                    });
+                        target.reset();
+                    } catch(error) {
+                        this.updateFile(id, {
+                            id: id,
+                            failed: true,
+                        });
+                    }
                 }
 
             });
