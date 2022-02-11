@@ -1198,7 +1198,7 @@ App::get('/v1/account/logs')
         $audit = new Audit($dbForProject);
         $auditEvents = [
             'account.create',
-            'account.delete',
+            'account.patch',
             'account.update.name',
             'account.update.email',
             'account.update.password',
@@ -1500,15 +1500,15 @@ App::patch('/v1/account/prefs')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::delete('/v1/account')
-    ->desc('Delete Account')
+App::patch('/v1/account')
+    ->desc('Block Account')
     ->groups(['api', 'account'])
-    ->label('event', 'account.delete')
+    ->label('event', 'account.patch')
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'delete')
-    ->label('sdk.description', '/docs/references/account/delete.md')
+    ->label('sdk.method', 'patch')
+    ->label('sdk.description', '/docs/references/account/patch.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->inject('request')
@@ -1530,19 +1530,9 @@ App::delete('/v1/account')
         $protocol = $request->getProtocol();
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', false));
 
-        // TODO Seems to be related to users.php/App::delete('/v1/users/:userId'). Can we share code between these two? Do todos below apply to users.php?
-
-        // TODO delete all tokens or only current session?
-        // TODO delete all user data according to GDPR. Make sure everything is backed up and backups are deleted later
-        /*
-     * Data to delete
-     * * Tokens
-     * * Memberships
-     */
-
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'account.delete')
+            ->setParam('event', 'account.patch')
             ->setParam('resource', 'user/' . $user->getId())
             ->setParam('data', $user->getArrayCopy())
         ;

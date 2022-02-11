@@ -283,7 +283,7 @@ App::get('/v1/users/:userId/logs')
         $audit = new Audit($dbForProject);
         $auditEvents = [
             'account.create',
-            'account.delete',
+            'account.patch',
             'account.update.name',
             'account.update.email',
             'account.update.password',
