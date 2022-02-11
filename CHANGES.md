@@ -1,3 +1,16 @@
+# Version 0.11.1
+
+## Bugs
+- Fix security vulnerabilites in the console
+
+## Upgrades
+
+- Upgraded `redis` extenstion to version 5.3.6
+- Upgraded `swoole` extenstion to version 4.8.6
+- Upgraded `imagick` extenstion to version 3.7.0
+- Upgraded `yaml` extenstion to version 2.2.2
+- Upgraded `maxminddb` extenstion to version 1.11.0
+
 # Version 0.11.0
 
 ## Features
