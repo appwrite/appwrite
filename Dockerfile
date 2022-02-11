@@ -24,15 +24,15 @@ COPY public /usr/local/src/public
 RUN npm ci
 RUN npm run build
 
-FROM php:8.0-cli-alpine as compile
+FROM php:8.0.14-cli-alpine as compile
 
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
 
-ENV PHP_REDIS_VERSION=5.3.5 \
+ENV PHP_REDIS_VERSION=5.3.6 \
     PHP_MONGODB_VERSION=1.9.1 \
-    PHP_SWOOLE_VERSION=v4.8.5 \
-    PHP_IMAGICK_VERSION=3.5.1 \
+    PHP_SWOOLE_VERSION=v4.8.6 \
+    PHP_IMAGICK_VERSION=3.7.0 \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0
 
@@ -123,7 +123,7 @@ RUN \
   ./configure && \
   make && make install
 
-FROM php:8.0-cli-alpine as final
+FROM php:8.0.14-cli-alpine as final
 
 LABEL maintainer="team@appwrite.io"
 

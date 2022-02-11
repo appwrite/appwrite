@@ -484,7 +484,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-12.mmdb');
+    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2022-02.mmdb');
 });
 $register->set('db', function () { // This is usually for our workers or CLI commands scope
     $dbHost = App::getEnv('_APP_DB_HOST', '');
