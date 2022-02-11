@@ -262,7 +262,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                             data-analytics-category="console"
                             data-analytics-label="Create Storage File"
                             x-data
-                            @submit="$store.uploader.uploadFile"
+                            @submit.prevent="$store.uploader.uploadFile($event.target)"
                             >
                             <input type="hidden" name="bucketId" id="files-bucketId" data-ls-bind="{{router.params.id}}">
 

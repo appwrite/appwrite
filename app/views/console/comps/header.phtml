@@ -223,8 +223,7 @@
     </form>
 </div>
 <div
- id="upload-modal" style="position: absolute; right:0; top: 20; background: white;z-index: 9999;">
-    <button x-data @click="$store.uploader.addFile('file-x')">add</button>
+ id="upload-modal" style="position: absolute; right:0; bottom: 20; background: white;z-index: 9999;">
     <template x-data x-if="$store.uploader.files.length > 0">
         <template x-data x-for="file in $store.uploader.files">
             <p x-text="file"></p>
@@ -235,19 +234,32 @@
     document.addEventListener('alpine:init', () => {
             Alpine.store('uploader', {
                 files: [],
-                addFile(file) {
+                addFile(file){
                     this.files.push(file);
                     console.log(this.files);
                 },
-                async uploadFile(event) {
-                    event.preventDefault();
+                async uploadFile(target) {
                     /* console.dir(event.target); */
-                    const formData = new FormData(event.target);
+                    const formData = new FormData(target);
                     console.dir(formData.get('file'));
                     const sdk = window.ls.container.get('sdk');
-                    console.log(formData.get('read'));
-                    const file = await sdk.storage.createFile(formData.get('bucketId'), formData.get('fileId'), formData.get('file'), formData.get('read') ?? [], formData.get('write') ?? []);
-                    console(file);
+                    console.log(JSON.parse(formData.get('read')));
+                    let read = formData.get('read');
+                    if(read) {
+                        read = JSON.parse(read);
+                    }
+
+                    let write = formData.get('write');
+                    if(write) {
+                        write = JSON.parse(wirte);
+                    }
+                    const file = await sdk.storage.createFile(
+                        formData.get('bucketId'),
+                        formData.get('fileId'),
+                        formData.get('file'),
+                        read,
+                        write);
+                    this.files.push(file.name);
                 }
 
             });
