@@ -20,6 +20,11 @@ class Notion extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @var array
@@ -51,32 +56,50 @@ class Notion extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code):string
+    protected function getTokens(string $code): array
     {
-        $headers = [
-            "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret),
-        ];
+        if(empty($this->tokens)) {
+            $headers = ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)];
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                $this->endpoint . '/oauth/token',
+                $headers,
+                \http_build_query([
+                    'grant_type' => 'authorization_code',
+                    'redirect_uri' => $this->callback,
+                    'code' => $code
+                ])
+            ), true);
+        }
 
-        $response = $this->request(
+        return $this->tokens;
+    }
+
+    /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshTokens(string $refreshToken):array
+    {
+        $headers = ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)];
+        $this->tokens = \json_decode($this->request(
             'POST',
             $this->endpoint . '/oauth/token',
             $headers,
             \http_build_query([
-                'grant_type' => 'authorization_code',
-                'redirect_uri' => $this->callback,
-                'code' => $code
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken,
             ])
-        );
+        ), true);
 
-        $response = \json_decode($response, true);
-
-        if (isset($response['access_token'])) {
-            return $response['access_token'];
+        if(empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
         }
 
-        return '';
+        return $this->tokens;
     }
 
     /**
