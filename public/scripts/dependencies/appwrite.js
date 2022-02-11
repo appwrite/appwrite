@@ -2536,7 +2536,7 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createTag: (functionId, command, code) => __awaiter(this, void 0, void 0, function* () {
+                createTag: (functionId, command, code, onProgress = (progress) => { }) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -2555,9 +2555,38 @@
                         payload['code'] = code;
                     }
                     const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('post', uri, {
-                        'content-type': 'multipart/form-data',
-                    }, payload);
+                    const size = code.size;
+                    if (size <= Appwrite.CHUNK_SIZE) {
+                        return yield this.call('post', uri, {
+                            'content-type': 'multipart/form-data',
+                        }, payload);
+                    }
+                    else {
+                        let id = undefined;
+                        let response = undefined;
+                        const totalCounters = Math.ceil(size / Appwrite.CHUNK_SIZE);
+                        for (let counter = 0; counter < totalCounters; counter++) {
+                            const start = (counter * Appwrite.CHUNK_SIZE);
+                            const end = Math.min((((counter * Appwrite.CHUNK_SIZE) + Appwrite.CHUNK_SIZE) - 1), size);
+                            const headers = {
+                                'content-type': 'multipart/form-data',
+                                'content-range': 'bytes ' + start + '-' + end + '/' + size
+                            };
+                            if (id) {
+                                headers['x-appwrite-id'] = id;
+                            }
+                            const stream = code.slice(start, end + 1);
+                            payload['code'] = new File([stream], code.name);
+                            response = yield this.call('post', uri, headers, payload);
+                            if (!id) {
+                                id = response['$id'];
+                            }
+                            if (onProgress) {
+                                onProgress(Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100);
+                            }
+                        }
+                        return response;
+                    }
                 }),
                 /**
                  * Get Tag
@@ -3935,7 +3964,7 @@
                     }, payload);
                 }),
                 /**
-                 * Create storage bucket
+                 * Create bucket
                  *
                  * Create a new storage bucket.
                  *
@@ -3944,16 +3973,15 @@
                  * @param {string} permission
                  * @param {string[]} read
                  * @param {string[]} write
+                 * @param {boolean} enabled
                  * @param {number} maximumFileSize
                  * @param {string[]} allowedFileExtensions
-                 * @param {boolean} enabled
-                 * @param {string} adapter
                  * @param {boolean} encryption
                  * @param {boolean} antivirus
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createBucket: (bucketId, name, permission, read, write, maximumFileSize, allowedFileExtensions, enabled, adapter, encryption, antivirus) => __awaiter(this, void 0, void 0, function* () {
+                createBucket: (bucketId, name, permission, read, write, enabled, maximumFileSize, allowedFileExtensions, encryption, antivirus) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof bucketId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "bucketId"');
                     }
@@ -3980,17 +4008,14 @@
                     if (typeof write !== 'undefined') {
                         payload['write'] = write;
                     }
+                    if (typeof enabled !== 'undefined') {
+                        payload['enabled'] = enabled;
+                    }
                     if (typeof maximumFileSize !== 'undefined') {
                         payload['maximumFileSize'] = maximumFileSize;
                     }
                     if (typeof allowedFileExtensions !== 'undefined') {
                         payload['allowedFileExtensions'] = allowedFileExtensions;
-                    }
-                    if (typeof enabled !== 'undefined') {
-                        payload['enabled'] = enabled;
-                    }
-                    if (typeof adapter !== 'undefined') {
-                        payload['adapter'] = adapter;
                     }
                     if (typeof encryption !== 'undefined') {
                         payload['encryption'] = encryption;
@@ -4034,15 +4059,15 @@
                  * @param {string} permission
                  * @param {string[]} read
                  * @param {string[]} write
+                 * @param {boolean} enabled
                  * @param {number} maximumFileSize
                  * @param {string[]} allowedFileExtensions
-                 * @param {boolean} enabled
                  * @param {boolean} encryption
                  * @param {boolean} antivirus
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateBucket: (bucketId, name, permission, read, write, maximumFileSize, allowedFileExtensions, enabled, encryption, antivirus) => __awaiter(this, void 0, void 0, function* () {
+                updateBucket: (bucketId, name, permission, read, write, enabled, maximumFileSize, allowedFileExtensions, encryption, antivirus) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof bucketId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "bucketId"');
                     }
@@ -4066,14 +4091,14 @@
                     if (typeof write !== 'undefined') {
                         payload['write'] = write;
                     }
+                    if (typeof enabled !== 'undefined') {
+                        payload['enabled'] = enabled;
+                    }
                     if (typeof maximumFileSize !== 'undefined') {
                         payload['maximumFileSize'] = maximumFileSize;
                     }
                     if (typeof allowedFileExtensions !== 'undefined') {
                         payload['allowedFileExtensions'] = allowedFileExtensions;
-                    }
-                    if (typeof enabled !== 'undefined') {
-                        payload['enabled'] = enabled;
                     }
                     if (typeof encryption !== 'undefined') {
                         payload['encryption'] = encryption;
@@ -4182,7 +4207,7 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createFile: (bucketId, fileId, file, read, write) => __awaiter(this, void 0, void 0, function* () {
+                createFile: (bucketId, fileId, file, read, write, onProgress = (progress) => { }) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof bucketId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "bucketId"');
                     }
@@ -4207,9 +4232,38 @@
                         payload['write'] = write;
                     }
                     const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('post', uri, {
-                        'content-type': 'multipart/form-data',
-                    }, payload);
+                    const size = file.size;
+                    if (size <= Appwrite.CHUNK_SIZE) {
+                        return yield this.call('post', uri, {
+                            'content-type': 'multipart/form-data',
+                        }, payload);
+                    }
+                    else {
+                        let id = undefined;
+                        let response = undefined;
+                        const totalCounters = Math.ceil(size / Appwrite.CHUNK_SIZE);
+                        for (let counter = 0; counter < totalCounters; counter++) {
+                            const start = (counter * Appwrite.CHUNK_SIZE);
+                            const end = Math.min((((counter * Appwrite.CHUNK_SIZE) + Appwrite.CHUNK_SIZE) - 1), size);
+                            const headers = {
+                                'content-type': 'multipart/form-data',
+                                'content-range': 'bytes ' + start + '-' + end + '/' + size
+                            };
+                            if (id) {
+                                headers['x-appwrite-id'] = id;
+                            }
+                            const stream = file.slice(start, end + 1);
+                            payload['file'] = new File([stream], file.name);
+                            response = yield this.call('post', uri, headers, payload);
+                            if (!id) {
+                                id = response['$id'];
+                            }
+                            if (onProgress) {
+                                onProgress(Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100);
+                            }
+                        }
+                        return response;
+                    }
                 }),
                 /**
                  * Get File
@@ -5486,6 +5540,7 @@
             return output;
         }
     }
+    Appwrite.CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
     class Query {
     }
     Query.equal = (attribute, value) => Query.addQuery(attribute, "equal", value);
