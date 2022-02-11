@@ -47,8 +47,8 @@ const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
-const APP_CACHE_BUSTER = 170;
-const APP_VERSION_STABLE = '0.11.0';
+const APP_CACHE_BUSTER = 171;
+const APP_VERSION_STABLE = '0.11.1';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -255,7 +255,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-10.mmdb');
+    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2022-02.mmdb');
 });
 
 /*

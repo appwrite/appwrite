@@ -12,16 +12,16 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM php:8.0-cli-alpine as compile
+FROM php:8.0.14-cli-alpine as compile
 
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
 
-ENV PHP_REDIS_VERSION=5.3.4 \
-    PHP_SWOOLE_VERSION=v4.8.0 \
-    PHP_IMAGICK_VERSION=3.5.1 \
-    PHP_YAML_VERSION=2.2.1 \
-    PHP_MAXMINDDB_VERSION=v1.10.1
+ENV PHP_REDIS_VERSION=5.3.6 \
+    PHP_SWOOLE_VERSION=v4.8.6 \
+    PHP_IMAGICK_VERSION=3.7.0 \
+    PHP_YAML_VERSION=2.2.2 \
+    PHP_MAXMINDDB_VERSION=v1.11.0
 
 RUN \
   apk add --no-cache --virtual .deps \
@@ -100,7 +100,7 @@ RUN \
   ./configure && \
   make && make install
 
-FROM php:8.0-cli-alpine as final
+FROM php:8.0.14-cli-alpine as final
 
 LABEL maintainer="team@appwrite.io"
 
