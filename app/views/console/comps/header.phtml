@@ -223,10 +223,10 @@
     </form>
 </div>
 <div
- id="upload-modal" style="position: absolute; right:0; bottom: 20; background: white;z-index: 9999;">
+ id="upload-modal" style="position: absolute; right:0; bottom: 0; background: white;z-index: 9999;">
     <template x-data x-if="$store.uploader.files.length > 0">
         <template x-data x-for="file in $store.uploader.files">
-            <p x-text="file"></p>
+            <p x-text="file.name"></p>
         </template>
     </template>
 </div>
@@ -239,11 +239,15 @@
                     console.log(this.files);
                 },
                 async uploadFile(target) {
-                    /* console.dir(event.target); */
                     const formData = new FormData(target);
-                    console.dir(formData.get('file'));
                     const sdk = window.ls.container.get('sdk');
-                    console.log(JSON.parse(formData.get('read')));
+                    const file = formData.get('file');
+                    this.files.push({
+                        name: file.name,
+                        progress: 0,
+                        completed: false,
+                        failed: false,
+                    });
                     let read = formData.get('read');
                     if(read) {
                         read = JSON.parse(read);
@@ -253,13 +257,26 @@
                     if(write) {
                         write = JSON.parse(wirte);
                     }
-                    const file = await sdk.storage.createFile(
+                    const response = await sdk.storage.createFile(
                         formData.get('bucketId'),
                         formData.get('fileId'),
                         formData.get('file'),
                         read,
-                        write);
-                    this.files.push(file.name);
+                        write,
+                        (progress) => {
+                            this.files.push({
+                                name: file.name,
+                                progress: progress,
+                                completed: false,
+                                failed: false
+                            });
+                        });
+                    this.files.push({
+                        name: response.name,
+                        progress: 100,
+                        completed: true,
+                        failed: false,
+                    });
                 }
 
             });
