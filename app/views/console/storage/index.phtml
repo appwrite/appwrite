@@ -138,6 +138,12 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                     <div class="margin-bottom-small">File Preview</div>
 
                                                     <div class="margin-bottom-small">
+                                                        <div class="preview-box">
+                                                            <div class="preview-box-image">
+                                                                <span class="IMAGE-OR-ICON">@</span>
+                                                            </div>
+                                                            <span class="preview-box-text">Preview not available</span>
+                                                        </div>
                                                         <img src="" class="file-preview" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/files/{{file.$id}}/preview?width=350&height=250&project={{router.params.project}}&mode=admin" loading="lazy" width="225" height="160" />
                                                     </div>
 
