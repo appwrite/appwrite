@@ -1198,7 +1198,7 @@ App::get('/v1/account/logs')
         $audit = new Audit($dbForProject);
         $auditEvents = [
             'account.create',
-            'account.patch',
+            'account.block',
             'account.update.name',
             'account.update.email',
             'account.update.password',
@@ -1503,14 +1503,15 @@ App::patch('/v1/account/prefs')
 App::patch('/v1/account')
     ->desc('Block Account')
     ->groups(['api', 'account'])
-    ->label('event', 'account.patch')
+    ->label('event', 'account.block')
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'patch')
-    ->label('sdk.description', '/docs/references/account/patch.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk.method', 'block')
+    ->label('sdk.description', '/docs/references/account/block.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1532,7 +1533,7 @@ App::patch('/v1/account')
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'account.patch')
+            ->setParam('event', 'account.block')
             ->setParam('resource', 'user/' . $user->getId())
             ->setParam('data', $user->getArrayCopy())
         ;
@@ -1550,11 +1551,13 @@ App::patch('/v1/account')
         $usage
             ->setParam('users.delete', 1)
         ;
+
         $response
             ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->noContent()
         ;
+
+        $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::delete('/v1/account/sessions/:sessionId')
