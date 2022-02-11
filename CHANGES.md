@@ -1,8 +1,8 @@
 # Version 0.11.1
 
 ## Bugs
-- Fix security vulnerability in the Console
-- Fix security vulnerability in the ACME-Challenge
+- Fix security vulnerability in the Console (#2777)
+- Fix security vulnerability in the ACME-Challenge (#2779)
 
 ## Upgrades
 
