@@ -11,6 +11,7 @@
 - Upgraded `imagick` extenstion to version 3.7.0
 - Upgraded `yaml` extenstion to version 2.2.2
 - Upgraded `maxminddb` extenstion to version 1.11.0
+- Upgraded GEO IP database to version February 2022
 
 # Version 0.11.0
 
