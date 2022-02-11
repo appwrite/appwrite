@@ -365,6 +365,10 @@ services:
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
       - _APP_USAGE_AGGREGATION_INTERVAL
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
 
   appwrite-schedule:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>

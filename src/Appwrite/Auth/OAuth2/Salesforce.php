@@ -15,6 +15,11 @@ class Salesforce extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @var array
@@ -59,32 +64,56 @@ class Salesforce extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code): string
+    protected function getTokens(string $code): array
+    {
+        if(empty($this->tokens)) {
+            $headers = [
+                'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
+                'Content-Type: application/x-www-form-urlencoded',
+            ];
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                'https://login.salesforce.com/services/oauth2/token',
+                $headers,
+                \http_build_query([
+                    'code' => $code,
+                    'redirect_uri' => $this->callback,
+                    'grant_type' => 'authorization_code'
+                ])
+            ), true);
+        }
+
+        return $this->tokens;
+    }
+
+    /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshTokens(string $refreshToken):array
     {
         $headers = [
-            "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret),
-            "Content-Type: application/x-www-form-urlencoded",
+            'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
+            'Content-Type: application/x-www-form-urlencoded',
         ];
-
-        $accessToken = $this->request(
+        $this->tokens = \json_decode($this->request(
             'POST',
             'https://login.salesforce.com/services/oauth2/token',
             $headers,
             \http_build_query([
-                'code' => $code,
-                'redirect_uri' => $this->callback ,
-                'grant_type' => 'authorization_code'
+                'refresh_token' => $refreshToken,
+                'grant_type' => 'refresh_token'
             ])
-        );
-        $accessToken = \json_decode($accessToken, true);
+        ), true);
 
-        if (isset($accessToken['access_token'])) {
-            return $accessToken['access_token'];
+        if(empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
         }
 
-        return '';
+        return $this->tokens;
     }
 
     /**
