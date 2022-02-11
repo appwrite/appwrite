@@ -599,6 +599,61 @@ function runBuildStage(string $buildId, string $projectID, string $path, array $
     }
 }
 
+// POST      /v1/runtimes
+App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
+    ->desc("Create a new build")
+    ->param('functionId', '', new UID(), 'Function unique ID.', false)
+    ->param('deploymentId', '', new UID(), 'Deployment unique ID.', false)
+    ->param('buildId', '', new UID(), 'Build unique ID.', false)
+    ->param('path', '', new Text(0), 'Path to source files.', false)
+    ->param('vars', '', new Assoc(), 'Environment Variables required for the build', false)
+    ->param('runtime', '', new Text(128), 'Runtime for the cloud function', false)
+    ->param('baseImage', '', new Text(128), 'Base image name of the runtime', false)
+    ->inject('projectId')
+    ->inject('response')
+    ->action(function (string $functionId, string $deploymentId, string $buildId, string $path, array $vars, string $runtime, string $baseImage, string $projectId, Response $response) {
+
+        $build = runBuildStage($buildId, $projectId, $path, $vars, $baseImage, $runtime);
+
+        if ( $build['status'] === 'ready') {
+            $build = createRuntimeServer($projectId, $deploymentId, $build, $vars, $baseImage, $runtime);
+        }
+
+        $response
+            ->setStatusCode(201)
+            ->json($build);
+    });
+
+
+// GET /v1/runtimes
+App::get('/v1/runtimes')
+    ->desc("Get the list of currently active runtimes")
+    ->inject('response')
+    ->action(function (Response $response) {
+        // TODO : Get list of active runtimes from swoole table
+        $runtimes = [];
+
+        $response
+            ->setStatusCode(200)
+            ->json($runtimes);
+    });
+
+// GET /v1/runtimes/:runtimeId (projectId + functionId)
+App::get('/v1/runtimes/:runtimeId')
+    ->desc("Get a runtime by its ID")
+    ->param('runtimeId', '', new UID(), 'Runtime unique ID.')
+    ->inject('response')
+    ->action(function (Response $response) {
+        
+        // Get a runtime by its ID
+        $runtime = [];
+
+        $response
+            ->setStatusCode(200)
+            ->json($runtime);
+    });
+
+// POST /v1/execution (get runtime as param, if 404 or 501/503, go and create a runtime first)
 App::post('/v1/execution')
     ->desc('Create a function execution')
     ->param('functionId', '', new Text(1024), 'The FunctionID to execute')
@@ -632,6 +687,7 @@ App::post('/v1/execution')
         }
     );
 
+// DELETE    /v1/runtimes/:runtimeId (projectId + functionId)
 App::delete('/v1/deployments/:deploymentId')
     ->desc('Delete a deployment')
     ->param('deploymentId', '', new UID(), 'Deployment unique ID.', false)
@@ -665,30 +721,6 @@ App::delete('/v1/deployments/:deploymentId')
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
             ->send();
-    });
-
-App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
-    ->desc("Create a new build")
-    ->param('functionId', '', new UID(), 'Function unique ID.', false)
-    ->param('deploymentId', '', new UID(), 'Deployment unique ID.', false)
-    ->param('buildId', '', new UID(), 'Build unique ID.', false)
-    ->param('path', '', new Text(0), 'Path to source files.', false)
-    ->param('vars', '', new Assoc(), 'Environment Variables required for the build', false)
-    ->param('runtime', '', new Text(128), 'Runtime for the cloud function', false)
-    ->param('baseImage', '', new Text(128), 'Base image name of the runtime', false)
-    ->inject('projectId')
-    ->inject('response')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, string $path, array $vars, string $runtime, string $baseImage, string $projectId, Response $response) {
-
-        $build = runBuildStage($buildId, $projectId, $path, $vars, $baseImage, $runtime);
-
-        if ( $build['status'] === 'ready') {
-            $build = createRuntimeServer($projectId, $deploymentId, $build, $vars, $baseImage, $runtime);
-        }
-
-        $response
-            ->setStatusCode(201)
-            ->json($build);
     });
 
 App::setMode(App::MODE_TYPE_PRODUCTION); // Define Mode
