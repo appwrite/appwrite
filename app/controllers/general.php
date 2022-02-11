@@ -7,6 +7,7 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Utopia\Validator\Text;
 use Appwrite\Utopia\View;
 use Utopia\Exception;
 use Utopia\Config\Config;
@@ -524,9 +525,26 @@ App::get('/.well-known/acme-challenge')
     ->inject('request')
     ->inject('response')
     ->action(function ($request, $response) {
+        $uriChunks = \explode('/', $request->getURI());
+        $token = $uriChunks[\count($uriChunks) - 1];
+
+        $validator = new Text(100, [
+            ...Text::NUMBERS,
+            ...Text::ALPHABET_LOWER,
+            ...Text::ALPHABET_UPPER,
+            '-',
+            '_'
+        ]);
+
+        if (!$validator->isValid($token) || \count($uriChunks) !== 4) {
+            throw new Exception('Invalid challenge token.', 400);
+        }
+
+        $filePath = '/.well-known/acme-challenge' . $token;
+
         $base = \realpath(APP_STORAGE_CERTIFICATES);
         $path = \str_replace('/.well-known/acme-challenge/', '', $request->getURI());
-        $absolute = \realpath($base.'/.well-known/acme-challenge/'.$path);
+        $absolute = \realpath($base.'/.well-known/acme-challenge/'.$filePath);
 
         if (!$base) {
             throw new Exception('Storage error', 500);
