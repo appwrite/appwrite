@@ -312,14 +312,16 @@ class DeletesV1 extends Worker
     protected function deleteFunction(Document $document, string $projectId): void
     {
         $dbForProject = $this->getProjectDB($projectId);
+        $functionId = $document->getId();
 
         /**
          * Delete Deployments
          */
+        Console::info("Deleting deployments for function " . $functionId);
         $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
         $deploymentIds = [];
         $this->deleteByGroup('deployments', [
-            new Query('resourceId', Query::TYPE_EQUAL, [$document->getId()])
+            new Query('resourceId', Query::TYPE_EQUAL, [$functionId])
         ], $dbForProject, function (Document $document) use ($storageFunctions, &$deploymentIds) {
             $deploymentIds[] = $document->getId();
             if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
@@ -332,6 +334,7 @@ class DeletesV1 extends Worker
         /**
          * Delete builds
          */
+        Console::info("Deleting builds for function " . $functionId);
         $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
         $buildIds = [];
          foreach ($deploymentIds as $deploymentId) {
@@ -347,18 +350,22 @@ class DeletesV1 extends Worker
             });
         }
 
-        // Delete Executions
+        /** 
+         * Delete Executions
+         */ 
+        Console::info("Deleting executions for function " . $functionId);
         $this->deleteByGroup('executions', [
-            new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
+            new Query('functionId', Query::TYPE_EQUAL, [$functionId])
         ], $dbForProject);
 
         /**
          * Request executor to delete all deployment containers
          */
+        Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
         $executor = new Executor();
         foreach ($deploymentIds as $deploymentId) {
             try {
-                $executor->deleteRuntime($deploymentId, $buildIds[$deploymentId], $projectId);
+                $executor->deleteRuntime($projectId, $functionId, $deploymentId, $buildIds[$deploymentId]);
             } catch (Throwable $th) {
                 Console::error($th->getMessage());
             }
@@ -374,10 +381,12 @@ class DeletesV1 extends Worker
     {
         $dbForProject = $this->getProjectDB($projectId);
         $deploymentId = $document->getId();
+        $functionId = $document->getAttribute('resourceId');
 
         /**
          * Delete deployment files
          */
+        Console::info("Deleting deployment files for deployment " . $deploymentId);
         $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
         if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
             Console::success('Deleted deployment files: ' . $document->getAttribute('path', ''));
@@ -388,6 +397,7 @@ class DeletesV1 extends Worker
         /**
          * Delete builds
          */
+        Console::info("Deleting builds for deployment " . $deploymentId);
         $buildIds = [];
         $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
         $this->deleteByGroup('builds', [
@@ -404,9 +414,10 @@ class DeletesV1 extends Worker
         /**
          * Request executor to delete the deployment container
          */
+        Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
         try {
             $executor = new Executor();
-            $executor->deleteRuntime($deploymentId, $buildIds, $projectId);
+            $executor->deleteRuntime($projectId, $functionId, $deploymentId, $buildIds);
         } catch (Throwable $th) {
             Console::error($th->getMessage());
         }

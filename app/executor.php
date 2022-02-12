@@ -12,8 +12,6 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\UID;
 use Utopia\Logger\Log;
 use Utopia\Orchestration\Adapter\DockerCLI;
 use Utopia\Orchestration\Orchestration;
@@ -28,7 +26,6 @@ use Utopia\Validator\Text;
 
 require_once __DIR__ . '/init.php';
 
-Authorization::disable();
 Swoole\Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
 
 function logError(Throwable $error, string $action, Utopia\Route $route = null)
@@ -120,7 +117,7 @@ try {
         try {
             $orchestration = $orchestrationPool->get();
             $executionStart = \microtime(true);
-            $residueList = $orchestration->list(['label' => 'appwrite-type=function']);
+            $residueList = $orchestration->list(['label' => 'openruntimes-type=function']);
         } catch (\Throwable $th) {
         } finally {
             $orchestrationPool->put($orchestration);
@@ -143,7 +140,7 @@ try {
     call_user_func($logError, $error, "startupError");
 }
 
-function createRuntimeServer(string $projectId, string $deploymentId, array $build, array $vars, string $baseImage, string $runtime): array
+function createRuntimeServer(string $runtimeId, array $build, array $vars, string $baseImage, string $runtime): array
 {
     global $orchestrationPool;
     global $activeFunctions;
@@ -151,7 +148,7 @@ function createRuntimeServer(string $projectId, string $deploymentId, array $bui
     $orchestration = $orchestrationPool->get();
 
     try {
-        $container = 'appwrite-function-' . $deploymentId;
+        $container = 'runtime-' . $runtimeId;
         if ($activeFunctions->exists($container) && !(\substr($activeFunctions->get($container)['status'], 0, 2) === 'Up')) { // Remove container if not online
             // If container is online then stop and remove it
             try {
@@ -164,7 +161,7 @@ function createRuntimeServer(string $projectId, string $deploymentId, array $bui
 
         /** Storage stuff */
         $deploymentPath = $build['outputPath'];
-        $deploymentPathTarget = '/tmp/project-' . $projectId . '/' . $build['$id'] . '/builtCode/code.tar.gz';
+        $deploymentPathTarget = "/tmp/$runtimeId/builtCode/code.tar.gz";
         $deploymentPathTargetDir = \pathinfo($deploymentPathTarget, PATHINFO_DIRNAME);
 
         $device = Storage::getDevice('builds');
@@ -191,13 +188,6 @@ function createRuntimeServer(string $projectId, string $deploymentId, array $bui
         // Generate random secret key
         $secret = \bin2hex(\random_bytes(16));
         $vars = \array_merge($vars, [
-            // 'ENTRYPOINT_NAME' => $deployment->getAttribute('entrypoint', ''),
-            // 'APPWRITE_FUNCTION_ID' => $function->getId(),
-            // 'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-            // 'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
-            // 'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
-            // 'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
-            'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
             'INTERNAL_RUNTIME_KEY' => $secret
         ]);
 
@@ -218,11 +208,10 @@ function createRuntimeServer(string $projectId, string $deploymentId, array $bui
                 name: $container,
                 vars: $vars,
                 labels: [
-                    'appwrite-type' => 'function',
-                    'appwrite-created' => strval($executionTime),
-                    'appwrite-runtime' => $runtime,
-                    'appwrite-project' => $projectId,
-                    'appwrite-deployment' => $deploymentId,
+                    'openruntimes-id' => $runtimeId,
+                    'openruntimes-type' => 'function',
+                    'openruntimes-created' => strval($executionTime),
+                    'openruntimes-runtime' => $runtime
                 ],
                 hostname: $container,
                 mountFolder: $deploymentPathTargetDir,
@@ -256,21 +245,21 @@ function createRuntimeServer(string $projectId, string $deploymentId, array $bui
     }
 };
 
-function execute(string $projectId, string $functionId, string $deploymentId, array $build, array $vars, string $data, string $userId, string $baseImage, string $runtime, string $entrypoint, int $timeout, array $webhooks = []): array
+function execute(string $runtimeId, array $build, array $vars, string $data, string $baseImage, string $runtime, string $entrypoint, int $timeout): array
 {
 
-    Console::info('Executing function: ' . $functionId);
+    Console::info('Executing Runtime: ' . $runtimeId);
 
     global $activeFunctions;
-    $container = 'appwrite-function-' . $deploymentId;
+    $container = 'runtime-' . $runtimeId;
 
     /** Create a new runtime server if there's none running */
     if (!$activeFunctions->exists($container)) {
-        Console::info("Runtime server for $deploymentId not running. Creating new one...");
-        createRuntimeServer($projectId, $deploymentId, $build, $vars, $baseImage, $runtime);
+        Console::info("Runtime server for $runtimeId not running. Creating new one...");
+        createRuntimeServer($runtimeId, $build, $vars, $baseImage, $runtime);
     }
 
-    $key = $activeFunctions->get('appwrite-function-' . $deploymentId, 'key');
+    $key = $activeFunctions->get('runtime-' . $runtimeId, 'key');
 
     $stdout = '';
     $stderr = '';
@@ -387,7 +376,7 @@ function execute(string $projectId, string $functionId, string $deploymentId, ar
     return $execution;
 };
 
-function runBuildStage(string $buildId, string $projectID, string $path, array $vars, string $baseImage, string $runtime): array
+function runBuildStage(string $runtimeId, string $path, array $vars, string $baseImage, string $runtime): array
 {
     
     global $orchestrationPool;
@@ -401,15 +390,16 @@ function runBuildStage(string $buildId, string $projectID, string $path, array $
     $buildEnd = 0;
 
     try {
-        Console::info('Running build stage: ' . $buildId);
+        Console::info('Building runtime with ID : ' . $runtimeId);
+
         // Grab Deployment Files
         $deploymentPath = $path;
         $device = Storage::getDevice('builds');
 
-        $deploymentPathTarget = '/tmp/project-' . $projectID . '/' . $buildId . '/code.tar.gz';
+        $deploymentPathTarget = "/tmp/$runtimeId/code.tar.gz";
         $deploymentPathTargetDir = \pathinfo($deploymentPathTarget, PATHINFO_DIRNAME);
 
-        $container = 'build-stage-' . $buildId;
+        $container = 'build-' . $runtimeId;
 
         // Perform various checks
         if (!\file_exists($deploymentPathTargetDir)) {
@@ -435,16 +425,17 @@ function runBuildStage(string $buildId, string $projectID, string $path, array $
             throw new Exception('Code is not readable: ' . $path);
         }
 
-        $vars = array_map(fn ($v) => strval($v), $vars);
-        $path = '/tmp/project-' . $projectID . '/' . $buildId . '/builtCode';
+        $path = "/tmp/$runtimeId/builtCode";
 
         if (!\file_exists($path)) {
             if (@\mkdir($path, 0777, true)) {
                 \chmod($path, 0777);
             } else {
-                throw new Exception('Can\'t create directory /tmp/project-' . $projectID . '/' . $buildId . '/builtCode');
+                throw new Exception("Can't create directory : /tmp/$runtimeId/builtCode");
             }
         }
+
+        $vars = array_map(fn ($v) => strval($v), $vars);
 
         $orchestration
             ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
@@ -457,11 +448,10 @@ function runBuildStage(string $buildId, string $projectID, string $path, array $
             vars: $vars,
             workdir: '/usr/code',
             labels: [
-                'appwrite-type' => 'function',
-                'appwrite-created' => strval($buildStart),
-                'appwrite-runtime' => $runtime,
-                'appwrite-project' => $projectID,
-                'appwrite-build' => $buildId,
+                'openruntimes-id' => $runtimeId,
+                'openruntimes-type' => 'build',
+                'openruntimes-created' => strval($buildStart),
+                'openruntimes-runtime' => $runtime,
             ],
             command: [
                 'tail',
@@ -471,7 +461,7 @@ function runBuildStage(string $buildId, string $projectID, string $path, array $
             hostname: $container,
             mountFolder: $deploymentPathTargetDir,
             volumes: [
-                '/tmp/project-' . $projectID . '/' . $buildId . '/builtCode' . ':/usr/builtCode:rw'
+                "/tmp/$runtimeId/builtCode" . ':/usr/builtCode:rw'
             ]
         );
 
@@ -515,9 +505,6 @@ function runBuildStage(string $buildId, string $projectID, string $path, array $
         // Repackage Code and Save.
         $compressStdout = '';
         $compressStderr = '';
-
-        $builtCodePath = '/tmp/project-' . $projectID . '/' . $buildId . '/builtCode/code.tar.gz';
-
         $compressSuccess = $orchestration->execute(
             name: $container,
             command: [
@@ -533,6 +520,7 @@ function runBuildStage(string $buildId, string $projectID, string $path, array $
         }
 
         // Check if the build was successful by checking if file exists
+        $builtCodePath = "/tmp/$runtimeId/builtCode/code.tar.gz";
         if (!\file_exists($builtCodePath)) {
             throw new Exception('Something went wrong during the build process.');
         }
@@ -566,7 +554,6 @@ function runBuildStage(string $buildId, string $projectID, string $path, array $
 
         $buildEnd = \time();
         $build = [
-            '$id' => $buildId,
             'outputPath' => $path,
             'status' => 'ready',
             'stdout' => \utf8_encode(\mb_substr($buildStdout, -4096)),
@@ -581,7 +568,6 @@ function runBuildStage(string $buildId, string $projectID, string $path, array $
         $buildEnd = \time();
         $buildStderr = $th->getMessage();
         $build = [
-            '$id' => $buildId,
             'status' => 'failed',
             'stdout' => \utf8_encode(\mb_substr($buildStdout, -4096)),
             'stderr' => \utf8_encode(\mb_substr($buildStderr, -4096)),
@@ -600,23 +586,23 @@ function runBuildStage(string $buildId, string $projectID, string $path, array $
 }
 
 // POST      /v1/runtimes
-App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
-    ->desc("Create a new build")
-    ->param('functionId', '', new UID(), 'Function unique ID.', false)
-    ->param('deploymentId', '', new UID(), 'Deployment unique ID.', false)
-    ->param('buildId', '', new UID(), 'Build unique ID.', false)
+App::post('/v1/runtimes')
+    ->desc("Create a new runtime server")
+    ->param('runtimeId', '', new Text(128), 'Unique runtime ID.', false)
     ->param('path', '', new Text(0), 'Path to source files.', false)
     ->param('vars', '', new Assoc(), 'Environment Variables required for the build', false)
     ->param('runtime', '', new Text(128), 'Runtime for the cloud function', false)
     ->param('baseImage', '', new Text(128), 'Base image name of the runtime', false)
     ->inject('projectId')
     ->inject('response')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, string $path, array $vars, string $runtime, string $baseImage, string $projectId, Response $response) {
+    ->action(function (string $runtimeId, string $path, array $vars, string $runtime, string $baseImage, string $projectId, Response $response) {
 
-        $build = runBuildStage($buildId, $projectId, $path, $vars, $baseImage, $runtime);
-
+        // TODO: Check if runtime already exists..
+        $build = runBuildStage($runtimeId, $path, $vars, $baseImage, $runtime);
         if ( $build['status'] === 'ready') {
-            $build = createRuntimeServer($projectId, $deploymentId, $build, $vars, $baseImage, $runtime);
+            $build = createRuntimeServer($runtimeId, $build, $vars, $baseImage, $runtime);
+        } else {
+            throw new Exception('Failed to build runtime: ' . $build['stderr'], 500);
         }
 
         $response
@@ -641,7 +627,7 @@ App::get('/v1/runtimes')
 // GET /v1/runtimes/:runtimeId (projectId + functionId)
 App::get('/v1/runtimes/:runtimeId')
     ->desc("Get a runtime by its ID")
-    ->param('runtimeId', '', new UID(), 'Runtime unique ID.')
+    ->param('runtimeId', '', new Text(128), 'Runtime unique ID.')
     ->inject('response')
     ->action(function (Response $response) {
         
@@ -653,64 +639,30 @@ App::get('/v1/runtimes/:runtimeId')
             ->json($runtime);
     });
 
-// POST /v1/execution (get runtime as param, if 404 or 501/503, go and create a runtime first)
-App::post('/v1/execution')
-    ->desc('Create a function execution')
-    ->param('functionId', '', new Text(1024), 'The FunctionID to execute')
-    ->param('deploymentId', '', new Text(1024), 'The deployment ID to execute')
-    ->param('buildId', '', new Text(1024), 'The build ID of the function')
-    ->param('path', '', new Text(0), 'Path to built files.', false)
-    ->param('vars', '', new Assoc(), 'Environment Variables required for the build', false)
-    ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
-    ->param('runtime', '', new Text(128), 'Runtime for the cloud function', false)
-    ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file')
-    ->param('timeout', 15, new ValidatorRange(1, 900), 'Function maximum execution time in seconds.', true)
-    ->param('baseImage', '', new Text(128), 'Base image name of the runtime', false)
-    ->param('webhooks', [], new ArrayList(new JSON()), 'Any webhooks that need to be triggered after this execution', true)
-    ->param('userId', '', new Text(1024), 'The UserID of the user who triggered the execution if it was called from a client SDK', true)
-    ->inject('projectId')
-    ->inject('response')
-    ->action(
-        function (string $functionId, string $deploymentId, string $buildId, string $path, array $vars, string $data, string $runtime, string $entrypoint, $timeout, string $baseImage, array $webhooks, string $userId, string $projectId, Response $response) {
-
-            $build = [
-                '$id' => $buildId,
-                'outputPath' => $path,
-            ];
-
-            // Send both data and vars from the caller 
-            $execution = execute($projectId, $functionId, $deploymentId, $build, $vars, $data, $userId, $baseImage, $runtime, $entrypoint, $timeout, $webhooks);
-
-            $response
-                ->setStatusCode(Response::STATUS_CODE_OK)
-                ->json($execution);
-        }
-    );
-
 // DELETE    /v1/runtimes/:runtimeId (projectId + functionId)
-App::delete('/v1/deployments/:deploymentId')
-    ->desc('Delete a deployment')
-    ->param('deploymentId', '', new UID(), 'Deployment unique ID.', false)
+App::delete('/v1/runtimes/:runtimeId')
+    ->desc('Delete a runtime')
+    ->param('runtimeId', '', new Text(128), 'Runtime unique ID.', false)
     ->param('buildIds', [], new ArrayList(new Text(0), 100), 'List of build IDs to delete.', false)
     ->inject('response')
-    ->action(function (string $deploymentId, array $buildIds, Response $response) use ($orchestrationPool) {
+    ->action(function (string $runtimeId, array $buildIds, Response $response) use ($orchestrationPool) {
 
-        Console::info('Deleting deployment: ' . $deploymentId);
+        Console::info('Deleting runtime: ' . $runtimeId);
         $orchestration = $orchestrationPool->get();
 
         // Remove the container of the deployment
-        $status = $orchestration->remove('appwrite-function-' . $deploymentId , true);
+        $status = $orchestration->remove('runtime-' . $runtimeId , true);
         if ($status) {
-            Console::success('Removed container for deployment: ' . $deploymentId);
+            Console::success('Removed runtime container: ' . $runtimeId);
         } else {
-            Console::error('Failed to remove container for deployment: ' . $deploymentId);
+            Console::error('Failed to remove runtime container: ' . $runtimeId);
         }
 
-        // Remove all the build containers
+        // Remove all the build containers with that same  ID
         foreach ($buildIds as $buildId) {
             try {
                 Console::info('Deleting build container : ' . $buildId);
-                $status = $orchestration->remove('build-stage-' . $buildId, true);
+                $status = $orchestration->remove('build-' . $buildId, true);
             } catch (Throwable $th) {
                 Console::error($th->getMessage());
             }
@@ -722,6 +674,35 @@ App::delete('/v1/deployments/:deploymentId')
             ->setStatusCode(Response::STATUS_CODE_OK)
             ->send();
     });
+
+
+// POST /v1/execution (get runtime as param, if 404 or 501/503, go and create a runtime first)
+App::post('/v1/execution')
+    ->desc('Create an execution')
+    ->param('runtimeId', '', new Text(1024), 'The runtimeID to execute')
+    ->param('path', '', new Text(0), 'Path to built files.', false)
+    ->param('vars', '', new Assoc(), 'Environment Variables required for the build', false)
+    ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
+    ->param('runtime', '', new Text(128), 'Runtime for the cloud function', false)
+    ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file')
+    ->param('timeout', 15, new ValidatorRange(1, 900), 'Function maximum execution time in seconds.', true)
+    ->param('baseImage', '', new Text(128), 'Base image name of the runtime', false)
+    ->inject('response')
+    ->action(
+        function (string $runtimeId, string $path, array $vars, string $data, string $runtime, string $entrypoint, $timeout, string $baseImage, Response $response) {
+
+            $build = [
+                'outputPath' => $path,
+            ];
+
+            // Send both data and vars from the caller 
+            $execution = execute($runtimeId, $build, $vars, $data, $baseImage, $runtime, $entrypoint, $timeout);
+
+            $response
+                ->setStatusCode(Response::STATUS_CODE_OK)
+                ->json($execution);
+        }
+    );
 
 App::setMode(App::MODE_TYPE_PRODUCTION); // Define Mode
 

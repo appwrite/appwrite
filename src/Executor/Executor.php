@@ -33,20 +33,20 @@ class Executor
     public function createRuntime(
         string $functionId, 
         string $deploymentId, 
-        string $buildId, 
         string $projectId, 
         string $path, 
         array $vars, 
         string $runtime, 
         string $baseImage) 
     {
-        $route = "/functions/$functionId/deployments/$deploymentId/builds/$buildId";
+        $route = "/runtimes";
         $headers = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
         ];
         $params = [
+            'runtimeId' => "$projectId-$deploymentId",
             'path' => $path,
             'vars' => $vars,
             'runtime' => $runtime,
@@ -63,14 +63,16 @@ class Executor
         return $response['body'];
     }
 
-    public function deleteRuntime(string $deploymentId, array $buildIds, string $projectId)
+    public function deleteRuntime(string $projectId, string $functionId, string $deploymentId, array $buildIds)
     {
-        $route = "/deployments/$deploymentId";
+        $runtimeId = "$projectId-$deploymentId";
+        $route = "/runtimes/$runtimeId";
         $headers = [
             'content-type' =>  'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
         ];
+
         $params = [
             'buildIds' => $buildIds,
         ];
@@ -89,16 +91,13 @@ class Executor
         string $projectId,
         string $functionId,
         string $deploymentId,
-        string $buildId, 
         string $path,
         array $vars,
         string $entrypoint,
         string $data,
         string $runtime,
         string $baseImage,
-        $timeout,
-        $webhooks,
-        string $userId
+        $timeout
     )
     {
         $route = "/execution";
@@ -108,18 +107,14 @@ class Executor
             'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
         ];
         $params = [
-            'functionId' => $functionId,
-            'deploymentId' => $deploymentId,
-            'buildId' => $buildId,
+            'runtimeId' => "$projectId-$deploymentId",
             'path' => $path,
             'vars' => $vars, 
             'data' => $data,
             'runtime' => $runtime,
+            'entrypoint' => $entrypoint,
             'timeout' => $timeout,
             'baseImage' => $baseImage,
-            'webhooks' => $webhooks,
-            'userId' => $userId,
-            'entrypoint' => $entrypoint
         ];
 
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);

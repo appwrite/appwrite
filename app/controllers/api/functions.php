@@ -868,16 +868,13 @@ App::post('/v1/functions/:functionId/executions')
             projectId: $project->getId(),
             functionId: $function->getId(),
             deploymentId: $deployment->getId(),
-            buildId: $deployment->getAttribute('buildId', ''),
             path: $build->getAttribute('outputPath', ''),
             vars: $vars,
             data: $data,
             entrypoint: $deployment->getAttribute('entrypoint', ''),
             runtime: $function->getAttribute('runtime', ''),
             timeout: $function->getAttribute('timeout', 0),
-            baseImage: $runtime['image'],
-            webhooks: $project->getAttribute('webhooks', []),
-            userId: $user->getId(),
+            baseImage: $runtime['image']
         );
 
         /** Update execution status */

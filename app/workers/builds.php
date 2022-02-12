@@ -120,7 +120,6 @@ class BuildsV1 extends Worker
             projectId: $projectId, 
             functionId: $functionId, 
             deploymentId: $deploymentId, 
-            buildId: $buildId, 
             path: $path, 
             vars: $vars, 
             runtime: $key, 
@@ -148,9 +147,6 @@ class BuildsV1 extends Worker
         $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
         $function->setAttribute('scheduleNext', (int)$next);
         $function = $dbForProject->updateDocument('functions', $functionId, $function);
-
-        // /** Create runtime server */
-
 
         Console::success("Build id: $buildId created");
     }

@@ -307,16 +307,13 @@ class FunctionsV1 extends Worker
             projectId: $projectId,
             functionId: $functionId,
             deploymentId: $deploymentId,
-            buildId: $deployment->getAttribute('buildId', ''),
             path: $build->getAttribute('outputPath', ''),
             vars: $vars,
             entrypoint: $deployment->getAttribute('entrypoint', ''),
             data: $vars['APPWRITE_FUNCTION_DATA'],
             runtime: $function->getAttribute('runtime', ''),
             timeout: $function->getAttribute('timeout', 0),
-            baseImage: $runtime['image'],
-            webhooks: $webhooks,
-            userId: $userId,
+            baseImage: $runtime['image']
         );
 
         /** Update execution status */
