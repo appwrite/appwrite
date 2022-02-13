@@ -25,7 +25,7 @@ return [
     ],
     Exception::GENERAL_SERVICE_DISABLED => [
         'name' => Exception::GENERAL_SERVICE_DISABLED,
-        'description' => 'The requested service is disabled. You can enable/disable a service from the Appwrite console or by contacting the project administrator.',
+        'description' => 'The requested service is disabled. You can enable the service from the Appwrite console.',
         'code' => 503,
     ],
     Exception::GENERAL_UNAUTHORIZED_SCOPE => [
@@ -40,7 +40,7 @@ return [
     ],
     Exception::GENERAL_SMTP_DISABLED => [
         'name' => Exception::GENERAL_SMTP_DISABLED,
-        'description' => 'SMTP is disabled on your Appwrite instance. Please contact the project administrator.',
+        'description' => 'SMTP is disabled on your Appwrite instance. You can <a href="/docs/email-delivery">learn more about setting up SMTP</a> in our docs.',
         'code' => 503,
     ],
     Exception::GENERAL_ARGUMENT_INVALID => [
@@ -87,7 +87,7 @@ return [
     ],
     Exception::USER_BLOCKED => [
         'name' => Exception::USER_BLOCKED,
-        'description' => 'The current user has been blocked. Please contact the project administrator for more information.',
+        'description' => 'The current user has been blocked. You can unblock the user from the Appwrite console.',
         'code' => 401,
     ],
     Exception::USER_INVALID_TOKEN => [
@@ -387,7 +387,7 @@ return [
     ],
     Exception::PROJECT_PROVIDER_DISABLED => [
         'name' => Exception::PROJECT_PROVIDER_DISABLED,
-        'description' => 'The chosen OAuth provider is disabled. Please contact your project administrator for more information.',
+        'description' => 'The chosen OAuth provider is disabled. You can enable the OAuth provider using the Appwrite console.',
         'code' => 412,
     ],
     Exception::PROJECT_PROVIDER_UNSUPPORTED => [
