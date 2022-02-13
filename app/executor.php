@@ -136,7 +136,7 @@ try {
     call_user_func($logError, $error, "startupError");
 }
 
-function createRuntimeServer(string $runtimeId, array $build, array $vars, string $baseImage, string $runtime): array
+function createRuntimeServer(string $runtimeId, string $destination, array $vars, string $baseImage, string $runtime): bool
 {
     global $orchestrationPool;
     global $activeFunctions;
@@ -155,8 +155,10 @@ function createRuntimeServer(string $runtimeId, array $build, array $vars, strin
             $activeFunctions->del($container);
         }
 
-        /** Storage stuff */
-        $deploymentPath = $build['outputPath'];
+        /**
+         * Copy built code from build destination to a temporary directory
+         */
+        $deploymentPath = $destination;
         $deploymentPathTarget = "/tmp/$runtimeId/builds/code.tar.gz";
         $deploymentPathTargetDir = \pathinfo($deploymentPathTarget, PATHINFO_DIRNAME);
 
@@ -179,7 +181,10 @@ function createRuntimeServer(string $runtimeId, array $build, array $vars, strin
                 \file_put_contents($deploymentPathTarget, $buffer);
             }
         };
-        /** End Storage stuff */
+
+        /** 
+         * Launch Runtime 
+        */
 
         // Generate random secret key
         $secret = \bin2hex(\random_bytes(16));
@@ -187,7 +192,6 @@ function createRuntimeServer(string $runtimeId, array $build, array $vars, strin
             'INTERNAL_RUNTIME_KEY' => $secret
         ]);
 
-        /** Launch Runtime */
         if (!$activeFunctions->exists($container)) {
             $executionStart = \microtime(true);
             $executionTime = \time();
@@ -229,15 +233,13 @@ function createRuntimeServer(string $runtimeId, array $build, array $vars, strin
                 'key' => $secret,
             ]);
         }
-        /** End Launch Runtime */
-
         Console::success('Runtime Server created in ' . ($executionEnd - $executionStart) . ' seconds');
+        return true;
     } catch (\Throwable $th) {
-        $build['status'] = 'failed';
         Console::error('Runtime Server Creation Failed: '. $th->getMessage());
+        return false;
     } finally {
         $orchestrationPool->put($orchestration);
-        return $build;
     }
 };
 
@@ -387,8 +389,9 @@ App::post('/v1/runtimes')
 
         // TODO: Check if runtime already exists..
 
-        // TODO: Move orchestration pool to a utopia resource
+        // TODO: Move orchestration pool and swoole table to a utopia resource
         global $orchestrationPool;
+        global $activeFunctions;
         $orchestration = $orchestrationPool->get();
 
         $build = [];
@@ -400,7 +403,6 @@ App::post('/v1/runtimes')
 
         try {
             Console::info('Building runtime with ID : ' . $runtimeId);
-
             /** 
              * Temporary file paths in the executor 
              */
@@ -409,20 +411,13 @@ App::post('/v1/runtimes')
             $tmpBuild = "/tmp/$runtimeId/builds/code.tar.gz";
 
             /**
-             * Move code files from source to a temporary location on the executor
+             * Copy code files from source to a temporary location on the executor
              */
             $device = new Local($destination);
-
-            if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
-                if(!$device->move($source, $tmpSource)) {
-                    throw new Exception('Failed to move source code to temporary location.', 500);
-                };
-            } else {
-                $buffer = $device->read($source);
-                if(!$device->write($tmpSource, $buffer)) {
-                    throw new Exception('Failed to write source code to temporary location.', 500);
-                };
-            }
+            $buffer = $device->read($source);
+            if(!$device->write($tmpSource, $buffer)) {
+                throw new Exception('Failed to write source code to temporary location.', 500);
+            };
 
             /**
              * Create a temporary folder to store builds
@@ -530,16 +525,16 @@ App::post('/v1/runtimes')
             }
 
             /**
-             * Upload built code to expected build directory
+             * Move built code to expected build directory
              */
-            $path = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+            $outputPath = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
 
             if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
-                if (!$device->move($tmpBuild, $path)) {
+                if (!$device->move($tmpBuild, $outputPath)) {
                     throw new Exception('Failed to move built code to storage', 500);
                 }
             } else {
-                if (!$device->upload($tmpBuild, $path)) {
+                if (!$device->upload($tmpBuild, $outputPath)) {
                     throw new Exception('Failed to upload built code upload to storage', 500);
                 }
             }
@@ -550,7 +545,7 @@ App::post('/v1/runtimes')
 
             $buildEnd = \time();
             $build = [
-                'outputPath' => $path,
+                'outputPath' => $outputPath,
                 'status' => 'ready',
                 'stdout' => \utf8_encode(\mb_substr($buildStdout, -4096)),
                 'stderr' => \utf8_encode(\mb_substr($buildStderr, -4096)),
@@ -574,18 +569,22 @@ App::post('/v1/runtimes')
             ];
 
             Console::error('Build failed: ' . $th->getMessage());
-        
         } finally {
             if (!empty($id)) {
                 $orchestration->remove($id, true);
             }
-            $orchestrationPool->put($orchestration);
         }
 
-        if ( $build['status'] === 'ready') {
-            $build = createRuntimeServer($runtimeId, $build, $vars, $baseImage, $runtime);
-        } else {
-            throw new Exception('Failed to build runtime: ' . $build['stderr'], 500);
+        if ( $build['status'] !== 'ready') {
+            return $response
+                ->setStatusCode(201)
+                ->json($build);
+        }
+
+        $status = createRuntimeServer($runtimeId, $outputPath, $vars, $baseImage, $runtime);
+
+        if (!$status) {
+            Console::error('Failed to create runtime server');
         }
 
         $response

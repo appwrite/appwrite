@@ -85,13 +85,14 @@ class BuildsV1 extends Worker
 
         $buildId = $deployment->getAttribute('buildId', '');
         $build = null;
+        $startTime = \time();
         if (empty($buildId)) {
             $buildId = $dbForProject->getId();
             $build = $dbForProject->createDocument('builds', new Document([
                 '$id' => $buildId,
                 '$read' => [],
                 '$write' => [],
-                'startTime' => time(),
+                'startTime' => $startTime,
                 'deploymentId' => $deploymentId,
                 'status' => 'processing',
                 'outputPath' => '',
@@ -113,26 +114,37 @@ class BuildsV1 extends Worker
         $build->setAttribute('status', 'building');
         $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
-        $path = $deployment->getAttribute('path');
+        $source = $deployment->getAttribute('path');
         $vars = $function->getAttribute('vars', []);
         $baseImage = $runtime['image'];
-        $response = $this->executor->createRuntime(
-            projectId: $projectId, 
-            functionId: $functionId, 
-            deploymentId: $deploymentId, 
-            source: $path,
-            vars: $vars, 
-            runtime: $key, 
-            baseImage: $baseImage
-        );
-            
-        /** Update the build document */
-        $build->setAttribute('endTime', $response['endTime']);
-        $build->setAttribute('duration', $response['duration']);
-        $build->setAttribute('status', $response['status']);
-        $build->setAttribute('outputPath', $response['outputPath']);
-        $build->setAttribute('stderr', $response['stderr']);
-        $build->setAttribute('stdout', $response['stdout']);
+
+        try {
+            $response = $this->executor->createRuntime(
+                projectId: $projectId, 
+                functionId: $functionId, 
+                deploymentId: $deploymentId, 
+                source: $source,
+                vars: $vars, 
+                runtime: $key, 
+                baseImage: $baseImage
+            );
+
+            /** Update the build document */
+            $build->setAttribute('endTime', $response['endTime']);
+            $build->setAttribute('duration', $response['duration']);
+            $build->setAttribute('status', $response['status']);
+            $build->setAttribute('outputPath', $response['outputPath']);
+            $build->setAttribute('stderr', $response['stderr']);
+            $build->setAttribute('stdout', $response['stdout']);
+        } catch (\Throwable $th) {
+            $endtime = \time();
+            Console::error($th->getMessage());
+            $build->setAttribute('endTime', $endtime);
+            $build->setAttribute('duration', $endtime - $startTime);
+            $build->setAttribute('status', 'failed');
+            $build->setAttribute('stderr', $th->getMessage());
+        }
+        
         $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
         /** Set auto deploy */
