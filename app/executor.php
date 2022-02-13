@@ -372,201 +372,6 @@ function execute(string $runtimeId, array $build, array $vars, string $data, str
     return $execution;
 };
 
-function runBuildStage(string $runtimeId, string $source, string $destination, array $vars, string $baseImage, string $runtime): array
-{
-    global $orchestrationPool;
-    $orchestration = $orchestrationPool->get();
-
-    $build = [];
-    $id = '';
-    $buildStdout = '';
-    $buildStderr = '';
-    $buildStart = \time();
-    $buildEnd = 0;
-
-    try {
-        Console::info('Building runtime with ID : ' . $runtimeId);
-
-        /** 
-         * Temporary file paths in the executor 
-         */
-        $tmpSource = "/tmp/$runtimeId/code.tar.gz";
-        $tmpBuildDir = "/tmp/$runtimeId/builds";
-        $tmpBuild = "/tmp/$runtimeId/builds/code.tar.gz";
-
-        /**
-         * Move code files from source to a temporary location on the executor
-         */
-        $device = new Local($destination);
-
-        if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
-            if(!$device->move($source, $tmpSource)) {
-                throw new Exception('Failed to move source code to temporary location.', 500);
-            };
-        } else {
-            $buffer = $device->read($source);
-            if(!$device->write($tmpSource, $buffer)) {
-                throw new Exception('Failed to write source code to temporary location.', 500);
-            };
-        }
-
-        /**
-         * Create a temporary folder to store builds
-         */
-        if (!\file_exists($tmpBuildDir)) {
-            if (!@\mkdir($tmpBuildDir, 0755, true)) {
-                throw new Exception("Can't create directory : $tmpBuildDir", 500);
-            }
-        }
-
-        /**
-         * Create container
-         */
-        $container = 'build-' . $runtimeId;
-        $vars = array_map(fn ($v) => strval($v), $vars);
-        $orchestration
-            ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
-            ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
-            ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
-        $id = $orchestration->run(
-            image: $baseImage,
-            name: $container,
-            vars: $vars,
-            workdir: '/usr/code',
-            labels: [
-                'openruntimes-id' => $runtimeId,
-                'openruntimes-type' => 'build',
-                'openruntimes-created' => strval($buildStart),
-                'openruntimes-runtime' => $runtime,
-            ],
-            command: [
-                'tail',
-                '-f',
-                '/dev/null'
-            ],
-            hostname: $container,
-            mountFolder: \dirname($tmpSource),
-            volumes: [
-                "$tmpBuildDir:/usr/builds:rw"
-            ]
-        );
-
-        if (empty($id)) {
-            throw new Exception('Failed to create build container', 500);
-        }
-
-        /** 
-         * Extract user code into build container
-         */
-        $untarStdout = '';
-        $untarStderr = '';
-        $untarSuccess = $orchestration->execute(
-            name: $container,
-            command: [
-                'sh',
-                '-c',
-                'mkdir -p /usr/code && cp /tmp/code.tar.gz /usr/workspace/code.tar.gz && cd /usr/workspace/ && tar -zxf /usr/workspace/code.tar.gz -C /usr/code && rm /usr/workspace/code.tar.gz'
-            ],
-            stdout: $untarStdout,
-            stderr: $untarStderr,
-            timeout: 60
-        );
-
-        if (!$untarSuccess) {
-            throw new Exception('Failed to extract tar: ' . $untarStderr);
-        }
-
-        /**
-         * Build code and install dependenices
-         */
-        $buildSuccess = $orchestration->execute(
-            name: $container,
-            command: ['sh', '-c', 'cd /usr/local/src && ./build.sh'],
-            stdout: $buildStdout,
-            stderr: $buildStderr,
-            timeout: App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900)
-        );
-
-        if (!$buildSuccess) {
-            throw new Exception('Failed to build dependencies: ' . $buildStderr);
-        }
-
-        /**
-         * Repackage code and save
-         */
-        $compressStdout = '';
-        $compressStderr = '';
-        $compressSuccess = $orchestration->execute(
-            name: $container,
-            command: [
-                'tar', '-C', '/usr/code', '-czvf', '/usr/builds/code.tar.gz', './'
-            ],
-            stdout: $compressStdout,
-            stderr: $compressStderr,
-            timeout: 60
-        );
-
-        if (!$compressSuccess) {
-            throw new Exception('Failed to compress built code: ' . $compressStderr);
-        }
-
-        // Check if the build was successful by checking if file exists
-        if (!\file_exists($tmpBuild)) {
-            throw new Exception('Something went wrong during the build process.');
-        }
-
-        /**
-         * Upload built code to expected build directory
-         */
-        $path = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-
-        if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
-            if (!$device->move($tmpBuild, $path)) {
-                throw new Exception('Failed to move built code to storage', 500);
-            }
-        } else {
-            if (!$device->upload($tmpBuild, $path)) {
-                throw new Exception('Failed to upload built code upload to storage', 500);
-            }
-        }
-
-        if ($buildStdout === '') {
-            $buildStdout = 'Build Successful!';
-        }
-
-        $buildEnd = \time();
-        $build = [
-            'outputPath' => $path,
-            'status' => 'ready',
-            'stdout' => \utf8_encode(\mb_substr($buildStdout, -4096)),
-            'stderr' => \utf8_encode(\mb_substr($buildStderr, -4096)),
-            'startTime' => $buildStart,
-            'endTime' => $buildEnd,
-            'duration' => $buildEnd - $buildStart,
-        ];
-        
-        Console::success('Build Stage Ran in ' . ($buildEnd - $buildStart) . ' seconds');
-    } catch (Throwable $th) {
-        $buildEnd = \time();
-        $buildStderr = $th->getMessage();
-        $build = [
-            'status' => 'failed',
-            'stdout' => \utf8_encode(\mb_substr($buildStdout, -4096)),
-            'stderr' => \utf8_encode(\mb_substr($buildStderr, -4096)),
-            'startTime' => $buildStart,
-            'endTime' => $buildEnd,
-            'duration' => $buildEnd - $buildStart,
-        ];
-
-        Console::error('Build failed: ' . $th->getMessage());
-    } finally {
-        if (!empty($id)) {
-            $orchestration->remove($id, true);
-        }
-        $orchestrationPool->put($orchestration);
-        return $build;
-    }
-}
 
 // POST      /v1/runtimes
 App::post('/v1/runtimes')
@@ -581,7 +386,202 @@ App::post('/v1/runtimes')
     ->action(function (string $runtimeId, string $source, string $destination, array $vars, string $runtime, string $baseImage, Response $response) {
 
         // TODO: Check if runtime already exists..
-        $build = runBuildStage($runtimeId, $source, $destination, $vars, $baseImage, $runtime);
+
+        // TODO: Move orchestration pool to a utopia resource
+        global $orchestrationPool;
+        $orchestration = $orchestrationPool->get();
+
+        $build = [];
+        $id = '';
+        $buildStdout = '';
+        $buildStderr = '';
+        $buildStart = \time();
+        $buildEnd = 0;
+
+        try {
+            Console::info('Building runtime with ID : ' . $runtimeId);
+
+            /** 
+             * Temporary file paths in the executor 
+             */
+            $tmpSource = "/tmp/$runtimeId/code.tar.gz";
+            $tmpBuildDir = "/tmp/$runtimeId/builds";
+            $tmpBuild = "/tmp/$runtimeId/builds/code.tar.gz";
+
+            /**
+             * Move code files from source to a temporary location on the executor
+             */
+            $device = new Local($destination);
+
+            if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
+                if(!$device->move($source, $tmpSource)) {
+                    throw new Exception('Failed to move source code to temporary location.', 500);
+                };
+            } else {
+                $buffer = $device->read($source);
+                if(!$device->write($tmpSource, $buffer)) {
+                    throw new Exception('Failed to write source code to temporary location.', 500);
+                };
+            }
+
+            /**
+             * Create a temporary folder to store builds
+             */
+            if (!\file_exists($tmpBuildDir)) {
+                if (!@\mkdir($tmpBuildDir, 0755, true)) {
+                    throw new Exception("Can't create directory : $tmpBuildDir", 500);
+                }
+            }
+
+            /**
+             * Create container
+             */
+            $container = 'build-' . $runtimeId;
+            $vars = array_map(fn ($v) => strval($v), $vars);
+            $orchestration
+                ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
+                ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
+                ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
+            $id = $orchestration->run(
+                image: $baseImage,
+                name: $container,
+                vars: $vars,
+                workdir: '/usr/code',
+                labels: [
+                    'openruntimes-id' => $runtimeId,
+                    'openruntimes-type' => 'build',
+                    'openruntimes-created' => strval($buildStart),
+                    'openruntimes-runtime' => $runtime,
+                ],
+                command: [
+                    'tail',
+                    '-f',
+                    '/dev/null'
+                ],
+                hostname: $container,
+                mountFolder: \dirname($tmpSource),
+                volumes: [
+                    "$tmpBuildDir:/usr/builds:rw"
+                ]
+            );
+
+            if (empty($id)) {
+                throw new Exception('Failed to create build container', 500);
+            }
+
+            /** 
+             * Extract user code into build container
+             */
+            $untarStdout = '';
+            $untarStderr = '';
+            $untarSuccess = $orchestration->execute(
+                name: $container,
+                command: [
+                    'sh',
+                    '-c',
+                    'mkdir -p /usr/code && cp /tmp/code.tar.gz /usr/workspace/code.tar.gz && cd /usr/workspace/ && tar -zxf /usr/workspace/code.tar.gz -C /usr/code && rm /usr/workspace/code.tar.gz'
+                ],
+                stdout: $untarStdout,
+                stderr: $untarStderr,
+                timeout: 60
+            );
+
+            if (!$untarSuccess) {
+                throw new Exception('Failed to extract tar: ' . $untarStderr);
+            }
+
+            /**
+             * Build code and install dependenices
+             */
+            $buildSuccess = $orchestration->execute(
+                name: $container,
+                command: ['sh', '-c', 'cd /usr/local/src && ./build.sh'],
+                stdout: $buildStdout,
+                stderr: $buildStderr,
+                timeout: App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900)
+            );
+
+            if (!$buildSuccess) {
+                throw new Exception('Failed to build dependencies: ' . $buildStderr);
+            }
+
+            /**
+             * Repackage code and save
+             */
+            $compressStdout = '';
+            $compressStderr = '';
+            $compressSuccess = $orchestration->execute(
+                name: $container,
+                command: [
+                    'tar', '-C', '/usr/code', '-czvf', '/usr/builds/code.tar.gz', './'
+                ],
+                stdout: $compressStdout,
+                stderr: $compressStderr,
+                timeout: 60
+            );
+
+            if (!$compressSuccess) {
+                throw new Exception('Failed to compress built code: ' . $compressStderr);
+            }
+
+            // Check if the build was successful by checking if file exists
+            if (!\file_exists($tmpBuild)) {
+                throw new Exception('Something went wrong during the build process.');
+            }
+
+            /**
+             * Upload built code to expected build directory
+             */
+            $path = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+
+            if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
+                if (!$device->move($tmpBuild, $path)) {
+                    throw new Exception('Failed to move built code to storage', 500);
+                }
+            } else {
+                if (!$device->upload($tmpBuild, $path)) {
+                    throw new Exception('Failed to upload built code upload to storage', 500);
+                }
+            }
+
+            if ($buildStdout === '') {
+                $buildStdout = 'Build Successful!';
+            }
+
+            $buildEnd = \time();
+            $build = [
+                'outputPath' => $path,
+                'status' => 'ready',
+                'stdout' => \utf8_encode(\mb_substr($buildStdout, -4096)),
+                'stderr' => \utf8_encode(\mb_substr($buildStderr, -4096)),
+                'startTime' => $buildStart,
+                'endTime' => $buildEnd,
+                'duration' => $buildEnd - $buildStart,
+            ];
+            
+            Console::success('Build Stage Ran in ' . ($buildEnd - $buildStart) . ' seconds');
+
+        } catch (Throwable $th) {
+            $buildEnd = \time();
+            $buildStderr = $th->getMessage();
+            $build = [
+                'status' => 'failed',
+                'stdout' => \utf8_encode(\mb_substr($buildStdout, -4096)),
+                'stderr' => \utf8_encode(\mb_substr($buildStderr, -4096)),
+                'startTime' => $buildStart,
+                'endTime' => $buildEnd,
+                'duration' => $buildEnd - $buildStart,
+            ];
+
+            Console::error('Build failed: ' . $th->getMessage());
+        
+        } finally {
+            if (!empty($id)) {
+                $orchestration->remove($id, true);
+            }
+            $orchestrationPool->put($orchestration);
+        }
+
         if ( $build['status'] === 'ready') {
             $build = createRuntimeServer($runtimeId, $build, $vars, $baseImage, $runtime);
         } else {
