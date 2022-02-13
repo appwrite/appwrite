@@ -58,6 +58,11 @@ return [
         'description' => 'The query\'s syntax is invalid. Please check the query and try again.',
         'code' => 400,
     ],
+    Exception::GENERAL_ROUTE_NOT_FOUND => [
+        'name' => Exception::GENERAL_ROUTE_NOT_FOUND,
+        'description' => 'The requested route was not found. Please refer to the docs and try again.',
+        'code' => 404,
+    ],
     Exception::GENERAL_CURSOR_NOT_FOUND => [
         'name' => Exception::GENERAL_CURSOR_NOT_FOUND,
         'description' => 'The cursor is invalid. This can happen if the item represented by the cursor has been deleted.',

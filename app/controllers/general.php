@@ -375,13 +375,24 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         throw $error;
     }
 
+    
+    /** Handle Utopia Errors */
+    if ($error instanceof Utopia\Exception) {
+        $code = $error->getCode();
+        $error = new Exception($error->getMessage(), $code, Exception::GENERAL_UNKNOWN, $error);
+        switch($code) {
+            case 400:
+                $error->setType(Exception::GENERAL_ARGUMENT_INVALID);
+                break;
+            case 404:
+                $error->setType(Exception::GENERAL_ROUTE_NOT_FOUND);
+                break;
+        }
+    }
+
     /** Wrap all exceptions inside Appwrite\Extend\Exception */
     if (!($error instanceof Exception)) {
         $error = new Exception($error->getMessage(), $error->getCode(), Exception::GENERAL_UNKNOWN, $error);
-    }
-    
-    if ($error instanceof Utopia\Exception && $error->getCode() === 400) {
-        $error->setType(Exception::GENERAL_ARGUMENT_INVALID);
     }
 
     $template = ($route) ? $route->getLabel('error', null) : null;

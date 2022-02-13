@@ -42,6 +42,7 @@ class Exception extends \Exception
     const GENERAL_ARGUMENT_INVALID          = 'general_argument_invalid';
     const GENERAL_QUERY_LIMIT_EXCEEDED      = 'general_query_limit_exceeded';
     const GENERAL_QUERY_INVALID             = 'general_query_invalid';
+    const GENERAL_ROUTE_NOT_FOUND           = 'general_route_not_found';
     const GENERAL_CURSOR_NOT_FOUND          = 'general_cursor_not_found';
     const GENERAL_SERVER_ERROR              = 'general_server_error';
 

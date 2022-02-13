@@ -2,7 +2,7 @@
 
 namespace Tests\E2E\General;
 
-use Exception;
+use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectNone;
 use Tests\E2E\Scopes\Scope;
@@ -45,6 +45,7 @@ class HTTPTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertEquals('Not Found', $response['body']['message']);
+        $this->assertEquals(Exception::GENERAL_ROUTE_NOT_FOUND, $response['body']['type']);
         $this->assertEquals(404, $response['body']['code']);
         $this->assertEquals('dev', $response['body']['version']);
     }
