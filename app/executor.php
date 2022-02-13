@@ -376,7 +376,7 @@ function execute(string $runtimeId, array $build, array $vars, string $data, str
     return $execution;
 };
 
-function runBuildStage(string $runtimeId, string $source, array $vars, string $baseImage, string $runtime): array
+function runBuildStage(string $runtimeId, string $source, string $buildDir, array $vars, string $baseImage, string $runtime): array
 {
     global $orchestrationPool;
     $orchestration = $orchestrationPool->get();
@@ -394,7 +394,7 @@ function runBuildStage(string $runtimeId, string $source, array $vars, string $b
         /**
          * Move code files from source to temporary destination
          */
-        $device = new Local();
+        $device = new Local($buildDir);
         $destination = "/tmp/$runtimeId/code.tar.gz";
         if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
             if(!$device->move($source, $destination)) {
@@ -515,16 +515,10 @@ function runBuildStage(string $runtimeId, string $source, array $vars, string $b
             throw new Exception('Something went wrong during the build process.');
         }
 
-        // Upload new code
+        /**
+         * Upload built code to expected build directory
+         */
         $path = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-
-        if (!\file_exists(\dirname($path))) { // Checks if directory path to file exists
-            if (@\mkdir(\dirname($path), 0777, true)) {
-                \chmod(\dirname($path), 0777);
-            } else {
-                throw new Exception('Can\'t create directory: ' . \dirname($path));
-            }
-        }
 
         if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
             if (!$device->move($builtCodePath, $path)) {
@@ -576,16 +570,17 @@ function runBuildStage(string $runtimeId, string $source, array $vars, string $b
 // POST      /v1/runtimes
 App::post('/v1/runtimes')
     ->desc("Create a new runtime server")
-    ->param('runtimeId', '', new Text(128), 'Unique runtime ID.', false)
-    ->param('source', '', new Text(0), 'Path to source files.', false)
-    ->param('vars', '', new Assoc(), 'Environment Variables required for the build', false)
-    ->param('runtime', '', new Text(128), 'Runtime for the cloud function', false)
-    ->param('baseImage', '', new Text(128), 'Base image name of the runtime', false)
+    ->param('runtimeId', '', new Text(128), 'Unique runtime ID.')
+    ->param('source', '', new Text(0), 'Path to source files.')
+    ->param('destination', '', new Text(0), 'Destination folder to store build files into.')
+    ->param('vars', '', new Assoc(), 'Environment Variables required for the build')
+    ->param('runtime', '', new Text(128), 'Runtime for the cloud function')
+    ->param('baseImage', '', new Text(128), 'Base image name of the runtime')
     ->inject('response')
-    ->action(function (string $runtimeId, string $source, array $vars, string $runtime, string $baseImage, Response $response) {
+    ->action(function (string $runtimeId, string $source, string $destination, array $vars, string $runtime, string $baseImage, Response $response) {
 
         // TODO: Check if runtime already exists..
-        $build = runBuildStage($runtimeId, $source, $vars, $baseImage, $runtime);
+        $build = runBuildStage($runtimeId, $source, $destination, $vars, $baseImage, $runtime);
         if ( $build['status'] === 'ready') {
             $build = createRuntimeServer($runtimeId, $build, $vars, $baseImage, $runtime);
         } else {

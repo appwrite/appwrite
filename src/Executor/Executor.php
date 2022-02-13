@@ -4,6 +4,7 @@ namespace Executor;
 
 use Exception;
 use Utopia\App;
+use Utopia\Storage\Storage;
 
 class Executor 
 {
@@ -48,6 +49,7 @@ class Executor
         $params = [
             'runtimeId' => "$projectId-$deploymentId",
             'source' => $source,
+            'destination' => APP_STORAGE_BUILDS . "/app-$projectId",
             'vars' => $vars,
             'runtime' => $runtime,
             'baseImage' => $baseImage
