@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Appwrite\Utopia\Response;
 use Swoole\ConnectionPool;
 use Swoole\Coroutine as Co;
 use Swoole\Http\Request as SwooleRequest;
@@ -11,20 +10,17 @@ use Swoole\Process;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Orchestration\Adapter\DockerCLI;
 use Utopia\Orchestration\Orchestration;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\Swoole\Request;
+use Utopia\Swoole\Response;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
-use Utopia\Validator\JSON;
 use Utopia\Validator\Range as ValidatorRange;
 use Utopia\Validator\Text;
-
-require_once __DIR__ . '/init.php';
 
 Swoole\Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
 
@@ -825,10 +821,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             ->addHeader('Pragma', 'no-cache')
             ->setStatusCode(500);
 
-        $response->dynamic(
-            new Document($output),
-            $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR
-        );
+        $response->json($output);
     }, ['error', 'utopia', 'request', 'response']);
 
     try {
