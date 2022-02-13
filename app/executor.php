@@ -243,7 +243,7 @@ function createRuntimeServer(string $runtimeId, string $destination, array $vars
     }
 };
 
-function execute(string $runtimeId, array $build, array $vars, string $data, string $baseImage, string $runtime, string $entrypoint, int $timeout): array
+function execute(string $runtimeId, string $path, array $vars, string $data, string $baseImage, string $runtime, string $entrypoint, int $timeout): array
 {
 
     Console::info('Executing Runtime: ' . $runtimeId);
@@ -254,7 +254,7 @@ function execute(string $runtimeId, array $build, array $vars, string $data, str
     /** Create a new runtime server if there's none running */
     if (!$activeFunctions->exists($container)) {
         Console::info("Runtime server for $runtimeId not running. Creating new one...");
-        createRuntimeServer($runtimeId, $build, $vars, $baseImage, $runtime);
+        createRuntimeServer($runtimeId, $path, $vars, $baseImage, $runtime);
     }
 
     $key = $activeFunctions->get('runtime-' . $runtimeId, 'key');
@@ -674,12 +674,8 @@ App::post('/v1/execution')
     ->action(
         function (string $runtimeId, string $path, array $vars, string $data, string $runtime, string $entrypoint, $timeout, string $baseImage, Response $response) {
 
-            $build = [
-                'outputPath' => $path,
-            ];
-
             // Send both data and vars from the caller 
-            $execution = execute($runtimeId, $build, $vars, $data, $baseImage, $runtime, $entrypoint, $timeout);
+            $execution = execute($runtimeId, $path, $vars, $data, $baseImage, $runtime, $entrypoint, $timeout);
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_OK)
