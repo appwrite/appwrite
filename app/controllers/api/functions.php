@@ -368,7 +368,6 @@ App::patch('/v1/functions/:functionId/deployment')
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deployment);
-        var_dump($deployment);
         $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
 
         if ($function->isEmpty()) {
