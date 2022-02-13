@@ -917,7 +917,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
-        $this->assertContains('files.' . $file['body']['$id'], $response['data']['channels']);
+        $this->assertContains('buckets.' . $data['bucketId'] . '.files.' . $file['body']['$id'], $response['data']['channels']);
         $this->assertContains('buckets.' . $data['bucketId'] . '.files', $response['data']['channels']);
         $this->assertEquals('storage.files.create', $response['data']['event']);
         $this->assertNotEmpty($response['data']['payload']);
