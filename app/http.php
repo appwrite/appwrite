@@ -193,8 +193,8 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         $logger = $app->getResource("logger");
         if($logger) {
             try {
+                /** @var Utopia\Database\Document $user */
                 $user = $app->getResource('user');
-                /** @var Appwrite\Database\Document $user */
             } catch(\Throwable $_th) {
                 // All good, user is optional information for logger
             }
