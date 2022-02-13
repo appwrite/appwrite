@@ -14,6 +14,11 @@ class Microsoft extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @var array
@@ -36,7 +41,7 @@ class Microsoft extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?'.\http_build_query([
+        return 'https://login.microsoftonline.com/'.$this->getTenantId().'/oauth2/v2.0/authorize?'.\http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'state'=> \json_encode($this->state),
@@ -49,33 +54,55 @@ class Microsoft extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code): string
+    protected function getTokens(string $code): array
     {
-        $headers = ['Content-Type: application/x-www-form-urlencoded'];
-
-        $accessToken = $this->request(
-            'POST',
-            'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-            $headers,
-            \http_build_query([
-                'code' => $code,
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
-                'redirect_uri' => $this->callback,
-                'scope' => \implode(' ', $this->getScopes()),
-                'grant_type' => 'authorization_code'
-            ])
-        );
-
-        $accessToken = \json_decode($accessToken, true);
-
-        if (isset($accessToken['access_token'])) {
-            return $accessToken['access_token'];
+        if(empty($this->tokens)) {
+            $headers = ['Content-Type: application/x-www-form-urlencoded'];
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                'https://login.microsoftonline.com/' . $this->getTenantId() . '/oauth2/v2.0/token',
+                $headers,
+                \http_build_query([
+                    'code' => $code,
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->getClientSecret(),
+                    'redirect_uri' => $this->callback,
+                    'scope' => \implode(' ', $this->getScopes()),
+                    'grant_type' => 'authorization_code'
+                ])
+            ), true);
         }
 
-        return '';
+        return $this->tokens;
+    }
+
+    /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshTokens(string $refreshToken):array
+    {
+        $headers = ['Content-Type: application/x-www-form-urlencoded'];
+        $this->tokens = \json_decode($this->request(
+            'POST',
+            'https://login.microsoftonline.com/' . $this->getTenantId() . '/oauth2/v2.0/token',
+            $headers,
+            \http_build_query([
+                'refresh_token' => $refreshToken,
+                'client_id' => $this->appID,
+                'client_secret' => $this->getClientSecret(),
+                'grant_type' => 'refresh_token'
+            ])
+        ), true);
+
+        if(empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
+        }
+
+        return $this->tokens;
     }
 
     /**
@@ -140,5 +167,40 @@ class Microsoft extends OAuth2
         }
 
         return $this->user;
+    }
+
+    /**
+     * Extracts the Client Secret from the JSON stored in appSecret
+     * @return string
+     */
+    protected function getClientSecret(): string
+    {
+        $secret = $this->decodeJson();
+
+        return (isset($secret['clientSecret'])) ? $secret['clientSecret'] : ''; 
+    }
+
+    /**
+     * Decode the JSON stored in appSecret
+     * @return array
+     */
+    protected function decodeJson(): array
+    {    
+        try {
+            $secret = \json_decode($this->appSecret, true);
+        } catch (\Throwable $th) {
+            throw new Exception('Invalid secret');
+        }
+        return $secret;
+    }
+
+    /**
+     * Extracts the Tenant Id from the JSON stored in appSecret. Defaults to 'common' as a fallback
+     * @return string
+     */
+    protected function getTenantId(): string
+    {
+        $secret = $this->decodeJson();
+        return (isset($secret['tenantId'])) ? $secret['tenantId'] : 'common'; 
     }
 }

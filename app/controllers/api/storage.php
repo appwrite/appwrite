@@ -1,31 +1,31 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\ClamAV\Network;
+use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Exception;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\WhiteList;
-use Utopia\Validator\Range;
-use Utopia\Validator\Text;
-use Utopia\Validator\HexColor;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
-use Appwrite\ClamAV\Network;
+use Utopia\Config\Config;
 use Utopia\Database\Validator\Authorization;
-use Appwrite\Database\Validator\CustomId;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
+use Utopia\Image\Image;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
 use Utopia\Storage\Compression\Algorithms\GZIP;
-use Utopia\Image\Image;
-use Appwrite\OpenSSL\OpenSSL;
-use Appwrite\Utopia\Response;
-use Utopia\Config\Config;
-use Utopia\Database\Database;
-use Utopia\Database\Query;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\WhiteList;
+use Utopia\Validator\Range;
+use Utopia\Validator\Text;
+use Utopia\Validator\HexColor;
 
 App::post('/v1/storage/files')
     ->desc('Create File')

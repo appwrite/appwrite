@@ -82,6 +82,11 @@ return [
         'model' => Response::MODEL_SESSION,
         'note' => '',
     ],
+    'account.sessions.update' => [
+        'description' => 'This event triggers when the account session is updated.',
+        'model' => Response::MODEL_SESSION,
+        'note' => '',
+    ],
     'database.collections.create' => [
         'description' => 'This event triggers when a database collection is created.',
         'model' => Response::MODEL_COLLECTION,
