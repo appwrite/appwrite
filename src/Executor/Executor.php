@@ -34,7 +34,7 @@ class Executor
         string $functionId, 
         string $deploymentId, 
         string $projectId, 
-        string $path, 
+        string $source, 
         array $vars, 
         string $runtime, 
         string $baseImage) 
@@ -47,7 +47,7 @@ class Executor
         ];
         $params = [
             'runtimeId' => "$projectId-$deploymentId",
-            'path' => $path,
+            'source' => $source,
             'vars' => $vars,
             'runtime' => $runtime,
             'baseImage' => $baseImage

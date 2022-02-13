@@ -120,7 +120,7 @@ class BuildsV1 extends Worker
             projectId: $projectId, 
             functionId: $functionId, 
             deploymentId: $deploymentId, 
-            path: $path, 
+            source: $path,
             vars: $vars, 
             runtime: $key, 
             baseImage: $baseImage

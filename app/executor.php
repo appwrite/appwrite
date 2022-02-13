@@ -161,10 +161,10 @@ function createRuntimeServer(string $runtimeId, array $build, array $vars, strin
 
         /** Storage stuff */
         $deploymentPath = $build['outputPath'];
-        $deploymentPathTarget = "/tmp/$runtimeId/builtCode/code.tar.gz";
+        $deploymentPathTarget = "/tmp/$runtimeId/builds/code.tar.gz";
         $deploymentPathTargetDir = \pathinfo($deploymentPathTarget, PATHINFO_DIRNAME);
 
-        $device = Storage::getDevice('builds');
+        $device = new Local();
         if (!\file_exists($deploymentPathTargetDir)) {
             if (@\mkdir($deploymentPathTargetDir, 0777, true)) {
                 \chmod($deploymentPathTargetDir, 0777);
@@ -376,9 +376,8 @@ function execute(string $runtimeId, array $build, array $vars, string $data, str
     return $execution;
 };
 
-function runBuildStage(string $runtimeId, string $path, array $vars, string $baseImage, string $runtime): array
+function runBuildStage(string $runtimeId, string $source, array $vars, string $baseImage, string $runtime): array
 {
-    
     global $orchestrationPool;
     $orchestration = $orchestrationPool->get();
 
@@ -391,56 +390,43 @@ function runBuildStage(string $runtimeId, string $path, array $vars, string $bas
 
     try {
         Console::info('Building runtime with ID : ' . $runtimeId);
+        
+        /**
+         * Move code files from source to temporary destination
+         */
+        $device = new Local();
+        $destination = "/tmp/$runtimeId/code.tar.gz";
+        if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
+            if(!$device->move($source, $destination)) {
+                throw new Exception('Failed to move file to destination.', 500);
+            };
+        } else {
+            $buffer = $device->read($source);
+            if(!$device->write($destination, $buffer)) {
+                throw new Exception('Failed to write file to destination.', 500);
+            };
+        }
 
-        // Grab Deployment Files
-        $deploymentPath = $path;
-        $device = Storage::getDevice('builds');
-
-        $deploymentPathTarget = "/tmp/$runtimeId/code.tar.gz";
-        $deploymentPathTargetDir = \pathinfo($deploymentPathTarget, PATHINFO_DIRNAME);
-
-        $container = 'build-' . $runtimeId;
-
-        // Perform various checks
-        if (!\file_exists($deploymentPathTargetDir)) {
-            if (@\mkdir($deploymentPathTargetDir, 0777, true)) {
-                \chmod($deploymentPathTargetDir, 0777);
-            } else {
-                throw new Exception('Can\'t create directory ' . $deploymentPathTargetDir);
+        /**
+         * Create folder to store builds
+         */
+        $builds = "/tmp/$runtimeId/builds";
+        if (!\file_exists($builds)) {
+            if (!@\mkdir($builds, 0755, true)) {
+                throw new Exception("Can't create directory : $builds", 500);
             }
         }
 
-        if (!\file_exists($deploymentPathTarget)) {
-            if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
-                if (!\copy($deploymentPath, $deploymentPathTarget)) {
-                    throw new Exception('Can\'t create temporary code file ' . $deploymentPathTarget);
-                }
-            } else {
-                $buffer = $device->read($deploymentPath);
-                \file_put_contents($deploymentPathTarget, $buffer);
-            }
-        }
-
-        if (!$device->exists($deploymentPath)) {
-            throw new Exception('Code is not readable: ' . $path);
-        }
-
-        $path = "/tmp/$runtimeId/builtCode";
-
-        if (!\file_exists($path)) {
-            if (@\mkdir($path, 0777, true)) {
-                \chmod($path, 0777);
-            } else {
-                throw new Exception("Can't create directory : /tmp/$runtimeId/builtCode");
-            }
-        }
-
-        $vars = array_map(fn ($v) => strval($v), $vars);
-
+        /**
+         * Create container
+         */
         $orchestration
             ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
             ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
             ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
+
+        $container = 'build-' . $runtimeId;
+        $vars = array_map(fn ($v) => strval($v), $vars);
 
         $id = $orchestration->run(
             image: $baseImage,
@@ -459,17 +445,19 @@ function runBuildStage(string $runtimeId, string $path, array $vars, string $bas
                 '/dev/null'
             ],
             hostname: $container,
-            mountFolder: $deploymentPathTargetDir,
+            mountFolder: \dirname($destination),
             volumes: [
-                "/tmp/$runtimeId/builtCode" . ':/usr/builtCode:rw'
+                "$builds:/usr/builds:rw"
             ]
         );
 
         if (empty($id)) {
-            throw new Exception('Failed to start build container');
+            throw new Exception('Failed to create build container', 500);
         }
 
-        // Extract user code into build container
+        /** 
+         * Extract user code into build container
+         */
         $untarStdout = '';
         $untarStderr = '';
 
@@ -489,7 +477,9 @@ function runBuildStage(string $runtimeId, string $path, array $vars, string $bas
             throw new Exception('Failed to extract tar: ' . $untarStderr);
         }
 
-        // Build Code / Install Dependencies
+        /**
+         * Build code and install dependenices
+         */
         $buildSuccess = $orchestration->execute(
             name: $container,
             command: ['sh', '-c', 'cd /usr/local/src && ./build.sh'],
@@ -508,7 +498,7 @@ function runBuildStage(string $runtimeId, string $path, array $vars, string $bas
         $compressSuccess = $orchestration->execute(
             name: $container,
             command: [
-                'tar', '-C', '/usr/code', '-czvf', '/usr/builtCode/code.tar.gz', './'
+                'tar', '-C', '/usr/code', '-czvf', '/usr/builds/code.tar.gz', './'
             ],
             stdout: $compressStdout,
             stderr: $compressStderr,
@@ -520,14 +510,12 @@ function runBuildStage(string $runtimeId, string $path, array $vars, string $bas
         }
 
         // Check if the build was successful by checking if file exists
-        $builtCodePath = "/tmp/$runtimeId/builtCode/code.tar.gz";
+        $builtCodePath = "$builds/code.tar.gz";
         if (!\file_exists($builtCodePath)) {
             throw new Exception('Something went wrong during the build process.');
         }
 
         // Upload new code
-        $device = Storage::getDevice('builds');
-
         $path = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
 
         if (!\file_exists(\dirname($path))) { // Checks if directory path to file exists
@@ -589,16 +577,15 @@ function runBuildStage(string $runtimeId, string $path, array $vars, string $bas
 App::post('/v1/runtimes')
     ->desc("Create a new runtime server")
     ->param('runtimeId', '', new Text(128), 'Unique runtime ID.', false)
-    ->param('path', '', new Text(0), 'Path to source files.', false)
+    ->param('source', '', new Text(0), 'Path to source files.', false)
     ->param('vars', '', new Assoc(), 'Environment Variables required for the build', false)
     ->param('runtime', '', new Text(128), 'Runtime for the cloud function', false)
     ->param('baseImage', '', new Text(128), 'Base image name of the runtime', false)
-    ->inject('projectId')
     ->inject('response')
-    ->action(function (string $runtimeId, string $path, array $vars, string $runtime, string $baseImage, string $projectId, Response $response) {
+    ->action(function (string $runtimeId, string $source, array $vars, string $runtime, string $baseImage, Response $response) {
 
         // TODO: Check if runtime already exists..
-        $build = runBuildStage($runtimeId, $path, $vars, $baseImage, $runtime);
+        $build = runBuildStage($runtimeId, $source, $vars, $baseImage, $runtime);
         if ( $build['status'] === 'ready') {
             $build = createRuntimeServer($runtimeId, $build, $vars, $baseImage, $runtime);
         } else {
@@ -659,14 +646,15 @@ App::delete('/v1/runtimes/:runtimeId')
         }
 
         // Remove all the build containers with that same  ID
-        foreach ($buildIds as $buildId) {
-            try {
-                Console::info('Deleting build container : ' . $buildId);
-                $status = $orchestration->remove('build-' . $buildId, true);
-            } catch (Throwable $th) {
-                Console::error($th->getMessage());
-            }
-        }
+        // TODO:: Delete build containers
+        // foreach ($buildIds as $buildId) {
+        //     try {
+        //         Console::info('Deleting build container : ' . $buildId);
+        //         $status = $orchestration->remove('build-' . $buildId, true);
+        //     } catch (Throwable $th) {
+        //         Console::error($th->getMessage());
+        //     }
+        // }
 
         $orchestrationPool->put($orchestration);
 
@@ -787,11 +775,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $response = new Response($swooleResponse);
     $app = new App('UTC');
 
-    $projectId = $request->getHeader('x-appwrite-project', '');
-
-    Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId));
-    Storage::setDevice('builds', new Local(APP_STORAGE_BUILDS . '/app-' . $projectId));
-
     // Check environment variable key
     $secretKey = $request->getHeader('x-appwrite-executor-key', '');
 
@@ -847,10 +830,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR
         );
     }, ['error', 'utopia', 'request', 'response']);
-
-    App::setResource('projectId', function () use ($projectId) {
-        return $projectId;
-    });
 
     try {
         $app->run($request, $response);
