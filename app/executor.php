@@ -376,7 +376,7 @@ function execute(string $runtimeId, array $build, array $vars, string $data, str
     return $execution;
 };
 
-function runBuildStage(string $runtimeId, string $source, string $buildDir, array $vars, string $baseImage, string $runtime): array
+function runBuildStage(string $runtimeId, string $source, string $destination, array $vars, string $baseImage, string $runtime): array
 {
     global $orchestrationPool;
     $orchestration = $orchestrationPool->get();
@@ -390,44 +390,48 @@ function runBuildStage(string $runtimeId, string $source, string $buildDir, arra
 
     try {
         Console::info('Building runtime with ID : ' . $runtimeId);
-        
-        /**
-         * Move code files from source to temporary destination
+
+        /** 
+         * Temporary file paths in the executor 
          */
-        $device = new Local($buildDir);
-        $destination = "/tmp/$runtimeId/code.tar.gz";
+        $tmpSource = "/tmp/$runtimeId/code.tar.gz";
+        $tmpBuildDir = "/tmp/$runtimeId/builds";
+        $tmpBuild = "/tmp/$runtimeId/builds/code.tar.gz";
+
+        /**
+         * Move code files from source to a temporary location on the executor
+         */
+        $device = new Local($destination);
+
         if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
-            if(!$device->move($source, $destination)) {
-                throw new Exception('Failed to move file to destination.', 500);
+            if(!$device->move($source, $tmpSource)) {
+                throw new Exception('Failed to move source code to temporary location.', 500);
             };
         } else {
             $buffer = $device->read($source);
-            if(!$device->write($destination, $buffer)) {
-                throw new Exception('Failed to write file to destination.', 500);
+            if(!$device->write($tmpSource, $buffer)) {
+                throw new Exception('Failed to write source code to temporary location.', 500);
             };
         }
 
         /**
-         * Create folder to store builds
+         * Create a temporary folder to store builds
          */
-        $builds = "/tmp/$runtimeId/builds";
-        if (!\file_exists($builds)) {
-            if (!@\mkdir($builds, 0755, true)) {
-                throw new Exception("Can't create directory : $builds", 500);
+        if (!\file_exists($tmpBuildDir)) {
+            if (!@\mkdir($tmpBuildDir, 0755, true)) {
+                throw new Exception("Can't create directory : $tmpBuildDir", 500);
             }
         }
 
         /**
          * Create container
          */
+        $container = 'build-' . $runtimeId;
+        $vars = array_map(fn ($v) => strval($v), $vars);
         $orchestration
             ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
             ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
             ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
-
-        $container = 'build-' . $runtimeId;
-        $vars = array_map(fn ($v) => strval($v), $vars);
-
         $id = $orchestration->run(
             image: $baseImage,
             name: $container,
@@ -445,9 +449,9 @@ function runBuildStage(string $runtimeId, string $source, string $buildDir, arra
                 '/dev/null'
             ],
             hostname: $container,
-            mountFolder: \dirname($destination),
+            mountFolder: \dirname($tmpSource),
             volumes: [
-                "$builds:/usr/builds:rw"
+                "$tmpBuildDir:/usr/builds:rw"
             ]
         );
 
@@ -460,7 +464,6 @@ function runBuildStage(string $runtimeId, string $source, string $buildDir, arra
          */
         $untarStdout = '';
         $untarStderr = '';
-
         $untarSuccess = $orchestration->execute(
             name: $container,
             command: [
@@ -492,7 +495,9 @@ function runBuildStage(string $runtimeId, string $source, string $buildDir, arra
             throw new Exception('Failed to build dependencies: ' . $buildStderr);
         }
 
-        // Repackage Code and Save.
+        /**
+         * Repackage code and save
+         */
         $compressStdout = '';
         $compressStderr = '';
         $compressSuccess = $orchestration->execute(
@@ -510,8 +515,7 @@ function runBuildStage(string $runtimeId, string $source, string $buildDir, arra
         }
 
         // Check if the build was successful by checking if file exists
-        $builtCodePath = "$builds/code.tar.gz";
-        if (!\file_exists($builtCodePath)) {
+        if (!\file_exists($tmpBuild)) {
             throw new Exception('Something went wrong during the build process.');
         }
 
@@ -521,11 +525,11 @@ function runBuildStage(string $runtimeId, string $source, string $buildDir, arra
         $path = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
 
         if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
-            if (!$device->move($builtCodePath, $path)) {
-                throw new Exception('Failed to upload built code upload to storage', 500);
+            if (!$device->move($tmpBuild, $path)) {
+                throw new Exception('Failed to move built code to storage', 500);
             }
         } else {
-            if (!$device->upload($builtCodePath, $path)) {
+            if (!$device->upload($tmpBuild, $path)) {
                 throw new Exception('Failed to upload built code upload to storage', 500);
             }
         }
@@ -557,6 +561,7 @@ function runBuildStage(string $runtimeId, string $source, string $buildDir, arra
             'endTime' => $buildEnd,
             'duration' => $buildEnd - $buildStart,
         ];
+
         Console::error('Build failed: ' . $th->getMessage());
     } finally {
         if (!empty($id)) {
@@ -606,7 +611,7 @@ App::get('/v1/runtimes')
             ->json($runtimes);
     });
 
-// GET /v1/runtimes/:runtimeId (projectId + functionId)
+// GET /v1/runtimes/:runtimeId
 App::get('/v1/runtimes/:runtimeId')
     ->desc("Get a runtime by its ID")
     ->param('runtimeId', '', new Text(128), 'Runtime unique ID.')
@@ -621,7 +626,7 @@ App::get('/v1/runtimes/:runtimeId')
             ->json($runtime);
     });
 
-// DELETE    /v1/runtimes/:runtimeId (projectId + functionId)
+// DELETE    /v1/runtimes/:runtimeId
 App::delete('/v1/runtimes/:runtimeId')
     ->desc('Delete a runtime')
     ->param('runtimeId', '', new Text(128), 'Runtime unique ID.', false)
