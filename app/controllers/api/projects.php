@@ -2,10 +2,10 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
-use Appwrite\Database\Validator\CustomId;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\URL;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
@@ -537,7 +537,7 @@ App::delete('/v1/projects/:projectId')
     ->inject('deletes')
     ->action(function ($projectId, $password, $response, $user, $dbForConsole, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForConsole */
         /** @var Appwrite\Event\Event $deletes */
 
