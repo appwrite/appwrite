@@ -10,7 +10,6 @@ use Swoole\Http\Server;
 use Swoole\Process;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
 use Utopia\Logger\Log;
 use Utopia\Orchestration\Adapter\DockerCLI;
 use Utopia\Orchestration\Orchestration;
@@ -33,6 +32,7 @@ use Utopia\Validator\Text;
 //   - delete pending runtimes older than X minutes ? ENV_VARS
 // Implement other endpoints
 // Get list of supported runtimes on startup - Done
+// Add size validators for the runtime IDs
 // 
 
 Swoole\Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
@@ -163,14 +163,12 @@ App::post('/v1/runtimes')
     // refactor to `name`
     ->param('runtime', '', new Text(128), 'Runtime for the cloud function')
     ->param('baseImage', '', new Text(128), 'Base image name of the runtime')
+    ->inject('orchestrationPool')
+    ->inject('activeFunctions')
     ->inject('response')
-    ->action(function (string $runtimeId, string $source, string $destination, array $vars, string $runtime, string $baseImage, Response $response) {
+    ->action(function (string $runtimeId, string $source, string $destination, array $vars, string $runtime, string $baseImage, $orchestrationPool, $activeFunctions, Response $response) {
 
         // TODO: Check if runtime already exists..
-
-        // TODO: Move orchestration pool and swoole table to a utopia resource
-        global $orchestrationPool;
-        global $activeFunctions;
         $orchestration = $orchestrationPool->get();
 
         $build = [];
@@ -448,8 +446,9 @@ App::post('/v1/runtimes')
 // GET /v1/runtimes
 App::get('/v1/runtimes')
     ->desc("Get the list of currently active runtimes")
+    ->inject('activeFunctions')
     ->inject('response')
-    ->action(function (Response $response) {
+    ->action(function ($activeFunctions, Response $response) {
         // TODO : Get list of active runtimes from swoole table
         $runtimes = [];
 
@@ -463,8 +462,9 @@ App::get('/v1/runtimes')
 App::get('/v1/runtimes/:runtimeId')
     ->desc("Get a runtime by its ID")
     ->param('runtimeId', '', new Text(128), 'Runtime unique ID.')
+    ->inject('activeFunctions')
     ->inject('response')
-    ->action(function (Response $response) {
+    ->action(function ($activeFunctions, Response $response) {
         
         // Get a runtime by its ID
         $runtime = [];
@@ -479,8 +479,9 @@ App::delete('/v1/runtimes/:runtimeId')
     ->desc('Delete a runtime')
     ->param('runtimeId', '', new Text(128), 'Runtime unique ID.', false)
     ->param('buildIds', [], new ArrayList(new Text(0), 100), 'List of build IDs to delete.', false)
+    ->inject('orchestrationPool')
     ->inject('response')
-    ->action(function (string $runtimeId, array $buildIds, Response $response) use ($orchestrationPool) {
+    ->action(function (string $runtimeId, array $buildIds, $orchestrationPool, Response $response) {
 
         Console::info('Deleting runtime: ' . $runtimeId);
         $orchestration = $orchestrationPool->get();
@@ -523,11 +524,10 @@ App::post('/v1/execution')
     ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file')
     ->param('timeout', 15, new ValidatorRange(1, 900), 'Function maximum execution time in seconds.', true)
     ->param('baseImage', '', new Text(128), 'Base image name of the runtime', false)
+    ->inject('activeFunctions')
     ->inject('response')
     ->action(
-        function (string $runtimeId, string $path, array $vars, string $data, string $runtime, string $entrypoint, $timeout, string $baseImage, Response $response) {
-
-            global $activeFunctions;
+        function (string $runtimeId, string $path, array $vars, string $data, string $runtime, string $entrypoint, $timeout, string $baseImage, $activeFunctions, Response $response) {
 
             $container = 'runtime-' . $runtimeId;
 
@@ -717,6 +717,11 @@ $http = new Server("0.0.0.0", 80);
 //     }
 // };
 
+/** Set Resources */
+App::setResource('orchestrationPool', fn() => $orchestrationPool);
+App::setResource('activeFunctions', fn() => $activeFunctions);
+
+/** Set callbacks */
 App::error(function ($error, $utopia, $request, $response) {
     /** @var Exception $error */
     /** @var Utopia\App $utopia */
