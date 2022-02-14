@@ -8,6 +8,8 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Swoole\Http\Server;
 use Swoole\Process;
+use Swoole\Runtime;
+use Swoole\Timer;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Logger\Log;
@@ -28,15 +30,16 @@ use Utopia\Validator\Text;
 // Handle shutdown - Done
 // Get list of supported runtimes on startup - Done
 // Pull runtimes on startup -- Done
+
 // Remove orphans on startup
 // Maintenance job
 //   - delete pending runtimes older than X minutes ? ENV_VARS
 // -- // EXECUTOR_ pattern
 // Add size validators for the runtime IDs 
-// Decide on logic for built and runtime containers
+// Decide on logic for build and runtime containers names ( runtime-ID and build-ID)
 // 
 
-Swoole\Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
+Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 function logError(Throwable $error, string $action, Utopia\Route $route = null)
 {
@@ -671,30 +674,6 @@ App::setMode(App::MODE_TYPE_PRODUCTION); // Define Mode
 
 $http = new Server("0.0.0.0", 80);
 
-function handleShutdown()
-{
-    global $orchestrationPool;
-    Console::info('Cleaning up containers before shutdown...');
-
-    $orchestration = $orchestrationPool->get();
-    $functionsToRemove = $orchestration->list(['label' => 'openruntimes-type=function']);
-    $orchestrationPool->put($orchestration);
-
-    foreach ($functionsToRemove as $container) {
-        go(function () use ($orchestrationPool, $container) { 
-            try {
-                $orchestration = $orchestrationPool->get();
-                $orchestration->remove($container->getId(), true);
-                Console::info('Removed container ' . $container->getName());
-            } catch (\Throwable $th) {
-                Console::error('Failed to remove container: ' . $container->getName());
-            } finally {
-                $orchestrationPool->put($orchestration);
-            }
-        });
-    }
-};
-
 /** Set Resources */
 App::setResource('orchestrationPool', fn() => $orchestrationPool);
 App::setResource('activeFunctions', fn() => $activeFunctions);
@@ -748,26 +727,78 @@ App::init(function ($request, $response) {
 }, ['request', 'response']);
 
 $http->on('start', function ($http) {
+
+    /**
+     * Register handlers for shutdown
+     */
     @Process::signal(SIGINT, function () use ($http) {
-        handleShutdown();
         $http->shutdown();
     });
 
     @Process::signal(SIGQUIT, function () use ($http) {
-        handleShutdown();
         $http->shutdown();
     });
 
     @Process::signal(SIGKILL, function () use ($http) {
-        handleShutdown();
         $http->shutdown();
     });
 
     @Process::signal(SIGTERM, function () use ($http) {
-        handleShutdown();
         $http->shutdown();
     });
+
+    /**
+     * Run a maintenance worker every 5 minutes to remove unused containers
+     */
+    // global $orchestrationPool;
+    // Timer::tick(5000, function () use ($orchestrationPool) {
+    //     Console::info('Running maintenance task every 5 minutes ...');
+    //     $orchestration = $orchestrationPool->get();
+    //     $functionsToRemove = $orchestration->list(['label' => 'openruntimes-type=function']);
+    //     $orchestrationPool->put($orchestration);
+
+    //     foreach ($functionsToRemove as $container) {
+    //         go(function () use ($orchestrationPool, $container) { 
+    //             try {
+    //                 $orchestration = $orchestrationPool->get();
+    //                 $orchestration->remove($container->getId(), true);
+    //                 Console::info('Removed container ' . $container->getName());
+    //             } catch (\Throwable $th) {
+    //                 Console::error('Failed to remove container: ' . $container->getName());
+    //             } finally {
+    //                 $orchestrationPool->put($orchestration);
+    //             }
+    //         });
+    //     }
+    // });
+
 });
+
+
+$http->on("shutdown", function() {
+    global $orchestrationPool;
+    Console::info('Cleaning up containers before shutdown...');
+
+    $orchestration = $orchestrationPool->get();
+    $functionsToRemove = $orchestration->list(['label' => 'openruntimes-type=function']);
+    $orchestrationPool->put($orchestration);
+
+    // This does not seem to be working since this is not a coroutine scope . 
+    foreach ($functionsToRemove as $container) {
+        go(function () use ($orchestrationPool, $container) { 
+            try {
+                $orchestration = $orchestrationPool->get();
+                $orchestration->remove($container->getId(), true);
+                Console::info('Removed container ' . $container->getName());
+            } catch (\Throwable $th) {
+                Console::error('Failed to remove container: ' . $container->getName());
+            } finally {
+                $orchestrationPool->put($orchestration);
+            }
+        });
+    }
+});
+
 
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) {
     $request = new Request($swooleRequest);
