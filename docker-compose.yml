@@ -394,6 +394,8 @@ services:
     networks:
       appwrite:
       runtimes:
+    ports:
+      - 9509:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-functions:/storage/functions:rw

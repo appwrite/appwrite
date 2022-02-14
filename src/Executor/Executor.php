@@ -59,7 +59,7 @@ class Executor
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
-            throw new \Exception('Error creating build: ', $status);
+            throw new \Exception($response['body'], $status);
         } 
 
         return $response['body'];
