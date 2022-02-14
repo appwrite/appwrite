@@ -30,9 +30,11 @@ use Utopia\Validator\Text;
 // Handle shutdown - Done
 // Get list of supported runtimes on startup - Done
 // Pull runtimes on startup -- Done
-// Move orchestration pool creation to server start
+// Move some logic to server start - Done
+// Add updated property to swoole table - Done
+// Clean up deployments older than X seconds
 // Remove attempts logic in executor
-
+// Fix delete endpoint
 // Remove orphans on startup
 // Maintenance job
 //   - delete pending runtimes older than X minutes ? ENV_VARS
@@ -48,10 +50,11 @@ Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 */
 $activeFunctions = new Swoole\Table(1024);
 $activeFunctions->column('id', Swoole\Table::TYPE_STRING, 512);
-$activeFunctions->column('created', Swoole\Table::TYPE_INT, 512);
+$activeFunctions->column('created', Swoole\Table::TYPE_INT, 8);
+$activeFunctions->column('updated', Swoole\Table::TYPE_INT, 8);
 $activeFunctions->column('name', Swoole\Table::TYPE_STRING, 512);
 $activeFunctions->column('status', Swoole\Table::TYPE_STRING, 512);
-$activeFunctions->column('key', Swoole\Table::TYPE_STRING, 4096);
+$activeFunctions->column('key', Swoole\Table::TYPE_STRING, 512);
 $activeFunctions->create();
 
 /**
@@ -379,6 +382,8 @@ App::post('/v1/runtimes')
                 $activeFunctions->set($container, [
                     'id' => $id,
                     'name' => $container,
+                    'created' => $executionTime,
+                    'updated' => $executionTime,
                     'status' => 'Up ' . \round($executionEnd - $executionStart, 2) . 's',
                     'key' => $secret,
                 ]);
@@ -494,7 +499,8 @@ App::post('/v1/execution')
                 throw new Exception('Runtime not found. Please create the runtime.', 404);
             }
 
-            $secret = $activeFunctions->get($container, 'key');
+            $runtime = $activeFunctions->get($container);
+            $secret = $runtime['key'];
             if (empty($secret)) {
                 throw new Exception('Runtime secret not found. Please create the runtime.', 500);
             }
@@ -609,8 +615,11 @@ App::post('/v1/execution')
                     'stderr' => \utf8_encode(\mb_substr($stderr, -8000)),
                     'time' => $executionTime,
                 ];
-            } catch (\Throwable $th) {
 
+                $runtime['updated'] = \time();
+                $activeFunctions->set($container, $runtime);
+            } catch (\Throwable $th) {
+                Console::error('Runtime execution failed: ' . $th->getMessage());
             }
 
             $response
@@ -675,8 +684,8 @@ App::init(function ($request, $response) {
      }
 }, ['request', 'response']);
 
-$http->on('start', function ($http) {
 
+$http->on('start', function ($http) {
      /** 
      * Warmup: make sure images are ready to run fast 🚀
      */
