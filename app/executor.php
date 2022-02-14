@@ -23,16 +23,17 @@ use Utopia\Validator\Range as ValidatorRange;
 use Utopia\Validator\Text;
 
 
-// EXECUTOR_ pattern
 // TODO
-// Discuss and fix startup logic
-//   - Pull runtmies
-//   - Remove orphans
+// Implement other endpoints - Done
+// Handle shutdown - Done
+// Get list of supported runtimes on startup - Done
+// Pull runtimes on startup -- Done
+// Remove orphans on startup
 // Maintenance job
 //   - delete pending runtimes older than X minutes ? ENV_VARS
-// Implement other endpoints - Done
-// Get list of supported runtimes on startup - Done
-// Add size validators for the runtime IDs
+// -- // EXECUTOR_ pattern
+// Add size validators for the runtime IDs 
+// Decide on logic for built and runtime containers
 // 
 
 Swoole\Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
@@ -519,7 +520,6 @@ App::delete('/v1/runtimes/:runtimeId')
     });
 
 
-// POST /v1/execution (get runtime as param, if 404 or 501/503, go and create a runtime first)
 App::post('/v1/execution')
     ->desc('Create an execution')
     ->param('runtimeId', '', new Text(1024), 'The runtimeID to execute')
@@ -671,57 +671,29 @@ App::setMode(App::MODE_TYPE_PRODUCTION); // Define Mode
 
 $http = new Server("0.0.0.0", 80);
 
-// function handleShutdown()
-// {
-//     global $orchestrationPool;
-//     global $register;
+function handleShutdown()
+{
+    global $orchestrationPool;
+    Console::info('Cleaning up containers before shutdown...');
 
-//     try {
-//         Console::info('Cleaning up containers before shutdown...');
+    $orchestration = $orchestrationPool->get();
+    $functionsToRemove = $orchestration->list(['label' => 'openruntimes-type=function']);
+    $orchestrationPool->put($orchestration);
 
-//         // Remove all containers.
-
-//         /** @var Orchestration $orchestration */
-//         $orchestration = $orchestrationPool->get();
-
-//         $functionsToRemove = $orchestration->list(['label' => 'appwrite-type=function']);
-
-//         foreach ($functionsToRemove as $container) {
-//             go(fn () => $orchestration->remove($container->getId(), true));
-
-//             // Get a database instance
-//             $db = $register->get('dbPool')->get();
-//             $cache = $register->get('redisPool')->get();
-
-//             $cache = new Cache(new RedisCache($cache));
-//             $database = new Database(new MariaDB($db), $cache);
-//             $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-//             $database->setNamespace('_project_' . $container->getLabels()["appwrite-project"]);
-
-//             // Get list of all processing executions
-//             $executions = $database->find('executions', [
-//                 new Query('deploymentId', Query::TYPE_EQUAL, [$container->getLabels()["appwrite-deployment"]]),
-//                 new Query('status', Query::TYPE_EQUAL, ['waiting'])
-//             ]);
-
-//             // Mark all processing executions as failed
-//             foreach ($executions as $execution) {
-//                 $execution
-//                     ->setAttribute('status', 'failed')
-//                     ->setAttribute('statusCode', 1)
-//                     ->setAttribute('stderr', 'Appwrite was shutdown during execution');
-
-//                 $database->updateDocument('executions', $execution->getId(), $execution);
-//             }
-
-//             Console::info('Removed container ' . $container->getName());
-//         }
-//     } catch (\Throwable $error) {
-//         logError($error, 'shutdownError');
-//     } finally {
-//         $orchestrationPool->put($orchestration);
-//     }
-// };
+    foreach ($functionsToRemove as $container) {
+        go(function () use ($orchestrationPool, $container) { 
+            try {
+                $orchestration = $orchestrationPool->get();
+                $orchestration->remove($container->getId(), true);
+                Console::info('Removed container ' . $container->getName());
+            } catch (\Throwable $th) {
+                Console::error('Failed to remove container: ' . $container->getName());
+            } finally {
+                $orchestrationPool->put($orchestration);
+            }
+        });
+    }
+};
 
 /** Set Resources */
 App::setResource('orchestrationPool', fn() => $orchestrationPool);
@@ -777,22 +749,22 @@ App::init(function ($request, $response) {
 
 $http->on('start', function ($http) {
     @Process::signal(SIGINT, function () use ($http) {
-        // handleShutdown();
+        handleShutdown();
         $http->shutdown();
     });
 
     @Process::signal(SIGQUIT, function () use ($http) {
-        // handleShutdown();
+        handleShutdown();
         $http->shutdown();
     });
 
     @Process::signal(SIGKILL, function () use ($http) {
-        // handleShutdown();
+        handleShutdown();
         $http->shutdown();
     });
 
     @Process::signal(SIGTERM, function () use ($http) {
-        // handleShutdown();
+        handleShutdown();
         $http->shutdown();
     });
 });
