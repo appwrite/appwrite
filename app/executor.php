@@ -30,6 +30,8 @@ use Utopia\Validator\Text;
 // Handle shutdown - Done
 // Get list of supported runtimes on startup - Done
 // Pull runtimes on startup -- Done
+// Move orchestration pool creation to server start
+// Remove attempts logic in executor
 
 // Remove orphans on startup
 // Maintenance job
@@ -40,6 +42,27 @@ use Utopia\Validator\Text;
 // 
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+
+/**
+* Create a Swoole table to store runtime information 
+*/
+$activeFunctions = new Swoole\Table(1024);
+$activeFunctions->column('id', Swoole\Table::TYPE_STRING, 512);
+$activeFunctions->column('created', Swoole\Table::TYPE_INT, 512);
+$activeFunctions->column('name', Swoole\Table::TYPE_STRING, 512);
+$activeFunctions->column('status', Swoole\Table::TYPE_STRING, 512);
+$activeFunctions->column('key', Swoole\Table::TYPE_STRING, 4096);
+$activeFunctions->create();
+
+/**
+ * Create orchestration pool
+ */
+$orchestrationPool = new ConnectionPool(function () {
+    $dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
+    $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
+    $orchestration = new Orchestration(new DockerCLI($dockerUser, $dockerPass));
+    return $orchestration;
+}, 10);
 
 function logError(Throwable $error, string $action, Utopia\Route $route = null)
 {
@@ -84,80 +107,6 @@ function logError(Throwable $error, string $action, Utopia\Route $route = null)
     Console::error('[Error] Line: ' . $error->getLine());
 };
 
-$orchestrationPool = new ConnectionPool(function () {
-    $dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
-    $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
-    $orchestration = new Orchestration(new DockerCLI($dockerUser, $dockerPass));
-    return $orchestration;
-}, 6);
-
-try {
-
-    $runtimes = new Runtimes();
-    $allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
-    $runtimes = $runtimes->getAll(true, $allowList);
-
-    // Warmup: make sure images are ready to run fast 🚀
-    Co\run(function () use ($runtimes, $orchestrationPool) {
-        foreach ($runtimes as $runtime) {
-            go(function () use ($runtime, $orchestrationPool) {
-                try {
-                    $orchestration = $orchestrationPool->get();
-
-                    Console::info('Warming up ' . $runtime['name'] . ' ' . $runtime['version'] . ' environment...');
-
-                    $response = $orchestration->pull($runtime['image']);
-
-                    if ($response) {
-                        Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
-                    } else {
-                        Console::warning("Failed to Warmup {$runtime['name']} {$runtime['version']}!");
-                    }
-                } catch (\Throwable $th) {
-                } finally {
-                    $orchestrationPool->put($orchestration);
-                }
-            });
-        }
-    });
-
-    $activeFunctions = new Swoole\Table(1024);
-    $activeFunctions->column('id', Swoole\Table::TYPE_STRING, 512);
-    $activeFunctions->column('created', Swoole\Table::TYPE_INT, 512);
-    $activeFunctions->column('name', Swoole\Table::TYPE_STRING, 512);
-    $activeFunctions->column('status', Swoole\Table::TYPE_STRING, 512);
-    $activeFunctions->column('key', Swoole\Table::TYPE_STRING, 4096);
-    $activeFunctions->create();
-
-    Co\run(function () use ($orchestrationPool, $activeFunctions) {
-        try {
-            $orchestration = $orchestrationPool->get();
-            $executionStart = \microtime(true);
-            $residueList = $orchestration->list(['label' => 'openruntimes-type=function']);
-        } catch (\Throwable $th) {
-        } finally {
-            $orchestrationPool->put($orchestration);
-        }
-
-
-        foreach ($residueList as $value) {
-            go(fn () => $activeFunctions->set($value->getName(), [
-                'id' => $value->getId(),
-                'name' => $value->getName(),
-                'status' => $value->getStatus(),
-                'private-key' => ''
-            ]));
-        }
-
-        $executionEnd = \microtime(true);
-        Console::info(count($activeFunctions) . ' functions listed in ' . ($executionEnd - $executionStart) . ' seconds');
-    });
-} catch (\Throwable $error) {
-    call_user_func($logError, $error, "startupError");
-}
-
-
-// POST      /v1/runtimes
 App::post('/v1/runtimes')
     ->desc("Create a new runtime server")
     ->param('runtimeId', '', new Text(128), 'Unique runtime ID.')
@@ -728,6 +677,59 @@ App::init(function ($request, $response) {
 
 $http->on('start', function ($http) {
 
+     /** 
+     * Warmup: make sure images are ready to run fast 🚀
+     */
+    global $orchestrationPool;
+    $runtimes = new Runtimes();
+    $allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
+    $runtimes = $runtimes->getAll(true, $allowList);
+    foreach ($runtimes as $runtime) {
+        go(function () use ($runtime, $orchestrationPool) {
+            try {
+                $orchestration = $orchestrationPool->get();
+
+                Console::info('Warming up ' . $runtime['name'] . ' ' . $runtime['version'] . ' environment...');
+
+                $response = $orchestration->pull($runtime['image']);
+
+                if ($response) {
+                    Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
+                } else {
+                    Console::warning("Failed to Warmup {$runtime['name']} {$runtime['version']}!");
+                }
+            } catch (\Throwable $th) {
+            } finally {
+                $orchestrationPool->put($orchestration);
+            }
+        });
+    }
+
+    /**
+     * Populate swoole table with active runtimes
+     */
+    global $activeFunctions;
+    try {
+        $orchestration = $orchestrationPool->get();
+        $executionStart = \microtime(true);
+        $residueList = $orchestration->list(['label' => 'openruntimes-type=function']);
+    } catch (\Throwable $th) {
+    } finally {
+        $orchestrationPool->put($orchestration);
+    }
+
+    foreach ($residueList as $value) {
+        go(fn () => $activeFunctions->set($value->getName(), [
+            'id' => $value->getId(),
+            'name' => $value->getName(),
+            'status' => $value->getStatus(),
+            'key' => ''
+        ]));
+    }
+
+    $executionEnd = \microtime(true);
+    Console::info(count($activeFunctions) . ' functions listed in ' . ($executionEnd - $executionStart) . ' seconds');
+
     /**
      * Register handlers for shutdown
      */
@@ -752,7 +754,7 @@ $http->on('start', function ($http) {
      */
     // global $orchestrationPool;
     // Timer::tick(5000, function () use ($orchestrationPool) {
-    //     Console::info('Running maintenance task every 5 minutes ...');
+    //     Console::info('Running maintenance task every 5 seconds ...');
     //     $orchestration = $orchestrationPool->get();
     //     $functionsToRemove = $orchestration->list(['label' => 'openruntimes-type=function']);
     //     $orchestrationPool->put($orchestration);
