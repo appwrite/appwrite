@@ -136,95 +136,6 @@ try {
     call_user_func($logError, $error, "startupError");
 }
 
-function createRuntimeServer(string $runtimeId, string $buildOutputPath, array $vars, string $baseImage, string $runtime): bool
-{
-    global $orchestrationPool;
-    global $activeFunctions;
-
-    $orchestration = $orchestrationPool->get();
-
-    try {
-        $container = 'runtime-' . $runtimeId;
-        if ($activeFunctions->exists($container) && !(\substr($activeFunctions->get($container)['status'], 0, 2) === 'Up')) { // Remove container if not online
-            // If container is online then stop and remove it
-            try {
-                $orchestration->remove($container, true);
-            } catch (Exception $e) {
-                throw new Exception('Failed to remove container: ' . $e->getMessage());
-            }
-            $activeFunctions->del($container);
-        }
-
-        /**
-         * Copy code files from source to a temporary location on the executor
-         */
-        $tmpBuild = "/tmp/$runtimeId/builds/code.tar.gz";
-        $device = new Local();
-        $buffer = $device->read($buildOutputPath);
-        if(!$device->write($tmpBuild, $buffer)) {
-            throw new Exception('Failed to write built code to temporary location.', 500);
-        };
-
-        /** 
-         * Launch Runtime 
-        */
-
-        $secret = \bin2hex(\random_bytes(16));
-        $vars = \array_merge($vars, [
-            'INTERNAL_RUNTIME_KEY' => $secret
-        ]);
-
-        if (!$activeFunctions->exists($container)) {
-            $executionStart = \microtime(true);
-            $executionTime = \time();
-
-            $vars = array_map(fn ($v) => strval($v), $vars);
-
-            $orchestration
-                ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', '1'))
-                ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', '256'))
-                ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '256'));
-
-            $id = $orchestration->run(
-                image: $baseImage,
-                name: $container,
-                vars: $vars,
-                labels: [
-                    'openruntimes-id' => $runtimeId,
-                    'openruntimes-type' => 'function',
-                    'openruntimes-created' => strval($executionTime),
-                    'openruntimes-runtime' => $runtime
-                ],
-                hostname: $container,
-                mountFolder: \dirname($tmpBuild),
-            );
-
-            if (empty($id)) {
-                throw new Exception('Failed to create container');
-            }
-
-            // Add to network
-            $orchestration->networkConnect($container, App::getEnv('_APP_EXECUTOR_RUNTIME_NETWORK', 'appwrite_runtimes'));
-
-            $executionEnd = \microtime(true);
-
-            $activeFunctions->set($container, [
-                'id' => $id,
-                'name' => $container,
-                'status' => 'Up ' . \round($executionEnd - $executionStart, 2) . 's',
-                'key' => $secret,
-            ]);
-        }
-        Console::success('Runtime Server created in ' . ($executionEnd - $executionStart) . ' seconds');
-        return true;
-    } catch (\Throwable $th) {
-        Console::error('Runtime Server Creation Failed: '. $th->getMessage());
-        return false;
-    } finally {
-        $orchestrationPool->put($orchestration);
-    }
-};
-
 function execute(string $runtimeId, string $path, array $vars, string $data, string $baseImage, string $runtime, string $entrypoint, int $timeout): array
 {
 
@@ -234,10 +145,10 @@ function execute(string $runtimeId, string $path, array $vars, string $data, str
     $container = 'runtime-' . $runtimeId;
 
     /** Create a new runtime server if there's none running */
-    if (!$activeFunctions->exists($container)) {
-        Console::info("Runtime server for $runtimeId not running. Creating new one...");
-        createRuntimeServer($runtimeId, $path, $vars, $baseImage, $runtime);
-    }
+    // if (!$activeFunctions->exists($container)) {
+    //     Console::info("Runtime server for $runtimeId not running. Creating new one...");
+    //     createRuntimeServer($runtimeId, $path, $vars, $baseImage, $runtime);
+    // }
 
     $key = $activeFunctions->get('runtime-' . $runtimeId, 'key');
 
@@ -555,7 +466,6 @@ App::post('/v1/runtimes')
             if (!empty($id)) {
                 $orchestration->remove($id, true);
             }
-            $orchestrationPool->put($orchestration);
         }
 
         if ( $build['status'] !== 'ready') {
@@ -564,11 +474,82 @@ App::post('/v1/runtimes')
                 ->json($build);
         }
 
-        $status = createRuntimeServer($runtimeId, $outputPath, $vars, $baseImage, $runtime);
-
-        if (!$status) {
-            Console::error('Failed to create runtime server');
+        /** Create runtime server */
+        try {
+            $container = 'runtime-' . $runtimeId;
+            if ($activeFunctions->exists($container) && !(\substr($activeFunctions->get($container)['status'], 0, 2) === 'Up')) { // Remove container if not online
+                // If container is online then stop and remove it
+                try {
+                    $orchestration->remove($container, true);
+                } catch (Exception $e) {
+                    throw new Exception('Failed to remove container: ' . $e->getMessage());
+                }
+                $activeFunctions->del($container);
+            }
+    
+            /**
+             * Copy code files from source to a temporary location on the executor
+             */
+            $buffer = $device->read($outputPath);
+            if(!$device->write($tmpBuild, $buffer)) {
+                throw new Exception('Failed to write built code to temporary location.', 500);
+            };
+    
+            /** 
+             * Launch Runtime 
+            */
+            $secret = \bin2hex(\random_bytes(16));
+            $vars = \array_merge($vars, [
+                'INTERNAL_RUNTIME_KEY' => $secret
+            ]);
+    
+            if (!$activeFunctions->exists($container)) {
+                $executionStart = \microtime(true);
+                $executionTime = \time();
+    
+                $vars = array_map(fn ($v) => strval($v), $vars);
+    
+                $orchestration
+                    ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', '1'))
+                    ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', '256'))
+                    ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '256'));
+    
+                $id = $orchestration->run(
+                    image: $baseImage,
+                    name: $container,
+                    vars: $vars,
+                    labels: [
+                        'openruntimes-id' => $runtimeId,
+                        'openruntimes-type' => 'function',
+                        'openruntimes-created' => strval($executionTime),
+                        'openruntimes-runtime' => $runtime
+                    ],
+                    hostname: $container,
+                    mountFolder: \dirname($tmpBuild),
+                );
+    
+                if (empty($id)) {
+                    throw new Exception('Failed to create container');
+                }
+    
+                // Add to network
+                $orchestration->networkConnect($container, App::getEnv('_APP_EXECUTOR_RUNTIME_NETWORK', 'appwrite_runtimes'));
+    
+                $executionEnd = \microtime(true);
+    
+                $activeFunctions->set($container, [
+                    'id' => $id,
+                    'name' => $container,
+                    'status' => 'Up ' . \round($executionEnd - $executionStart, 2) . 's',
+                    'key' => $secret,
+                ]);
+            }
+            Console::success('Runtime Server created in ' . ($executionEnd - $executionStart) . ' seconds');
+        } catch (\Throwable $th) {
+            Console::error('Runtime Server Creation Failed: '. $th->getMessage());
         }
+
+        $orchestrationPool->put($orchestration);
 
         $response
             ->setStatusCode(201)
