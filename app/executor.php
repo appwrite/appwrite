@@ -30,7 +30,7 @@ use Utopia\Validator\Text;
 //   - Remove orphans
 // Maintenance job
 //   - delete pending runtimes older than X minutes ? ENV_VARS
-// Implement other endpoints
+// Implement other endpoints - Done
 // Get list of supported runtimes on startup - Done
 // Add size validators for the runtime IDs
 // 
@@ -445,14 +445,17 @@ App::post('/v1/runtimes')
 
 // GET /v1/runtimes
 App::get('/v1/runtimes')
-    ->desc("Get the list of currently active runtimes")
+    ->desc("List currently active runtimes")
     ->inject('activeFunctions')
     ->inject('response')
     ->action(function ($activeFunctions, Response $response) {
-        // TODO : Get list of active runtimes from swoole table
         $runtimes = [];
 
-        // Response model for runtime list
+        foreach($activeFunctions as $runtime) {
+            $runtimes[] = $runtime;
+        }
+
+        // TODO: Response model for runtimes and runtimes list
         $response
             ->setStatusCode(200)
             ->json($runtimes);
@@ -464,10 +467,13 @@ App::get('/v1/runtimes/:runtimeId')
     ->param('runtimeId', '', new Text(128), 'Runtime unique ID.')
     ->inject('activeFunctions')
     ->inject('response')
-    ->action(function ($activeFunctions, Response $response) {
-        
-        // Get a runtime by its ID
-        $runtime = [];
+    ->action(function ($runtimeId, $activeFunctions, Response $response) {
+
+        if(!$activeFunctions->exists($runtimeId)) {
+            throw new Exception('Runtime not found', 404);
+        }
+
+        $runtime = $activeFunctions->get($runtimeId);
 
         $response
             ->setStatusCode(200)
