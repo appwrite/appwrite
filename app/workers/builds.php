@@ -138,11 +138,11 @@ class BuildsV1 extends Worker
             $build->setAttribute('stdout', $response['stdout']);
         } catch (\Throwable $th) {
             $endtime = \time();
-            Console::error($th->getMessage());
             $build->setAttribute('endTime', $endtime);
             $build->setAttribute('duration', $endtime - $startTime);
             $build->setAttribute('status', 'failed');
             $build->setAttribute('stderr', $th->getMessage());
+            Console::error($th->getMessage());
         }
         
         $build = $dbForProject->updateDocument('builds', $buildId, $build);

@@ -330,6 +330,7 @@ App::post('/v1/runtimes')
                 ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
                 ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
                 ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
+            
             $id = $orchestration->run(
                 image: $baseImage,
                 name: $container,
