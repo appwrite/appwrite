@@ -136,7 +136,7 @@ try {
     call_user_func($logError, $error, "startupError");
 }
 
-function createRuntimeServer(string $runtimeId, string $destination, array $vars, string $baseImage, string $runtime): bool
+function createRuntimeServer(string $runtimeId, string $buildOutputPath, array $vars, string $baseImage, string $runtime): bool
 {
     global $orchestrationPool;
     global $activeFunctions;
@@ -156,37 +156,19 @@ function createRuntimeServer(string $runtimeId, string $destination, array $vars
         }
 
         /**
-         * Copy built code from build destination to a temporary directory
+         * Copy code files from source to a temporary location on the executor
          */
-        $deploymentPath = $destination;
-        $deploymentPathTarget = "/tmp/$runtimeId/builds/code.tar.gz";
-        $deploymentPathTargetDir = \pathinfo($deploymentPathTarget, PATHINFO_DIRNAME);
-
+        $tmpBuild = "/tmp/$runtimeId/builds/code.tar.gz";
         $device = new Local();
-        if (!\file_exists($deploymentPathTargetDir)) {
-            if (@\mkdir($deploymentPathTargetDir, 0777, true)) {
-                \chmod($deploymentPathTargetDir, 0777);
-            } else {
-                throw new Exception('Can\'t create directory ' . $deploymentPathTargetDir);
-            }
-        }
-
-        if (!\file_exists($deploymentPathTarget)) {
-            if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
-                if (!\copy($deploymentPath, $deploymentPathTarget)) {
-                    throw new Exception('Can\'t create temporary code file ' . $deploymentPathTarget);
-                }
-            } else {
-                $buffer = $device->read($deploymentPath);
-                \file_put_contents($deploymentPathTarget, $buffer);
-            }
+        $buffer = $device->read($buildOutputPath);
+        if(!$device->write($tmpBuild, $buffer)) {
+            throw new Exception('Failed to write built code to temporary location.', 500);
         };
 
         /** 
          * Launch Runtime 
         */
 
-        // Generate random secret key
         $secret = \bin2hex(\random_bytes(16));
         $vars = \array_merge($vars, [
             'INTERNAL_RUNTIME_KEY' => $secret
@@ -214,7 +196,7 @@ function createRuntimeServer(string $runtimeId, string $destination, array $vars
                     'openruntimes-runtime' => $runtime
                 ],
                 hostname: $container,
-                mountFolder: $deploymentPathTargetDir,
+                mountFolder: \dirname($tmpBuild),
             );
 
             if (empty($id)) {
@@ -573,6 +555,7 @@ App::post('/v1/runtimes')
             if (!empty($id)) {
                 $orchestration->remove($id, true);
             }
+            $orchestrationPool->put($orchestration);
         }
 
         if ( $build['status'] !== 'ready') {
@@ -739,6 +722,46 @@ $http = new Server("0.0.0.0", 80);
 //     }
 // };
 
+App::error(function ($error, $utopia, $request, $response) {
+    /** @var Exception $error */
+    /** @var Utopia\App $utopia */
+    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Response $response */
+
+    if ($error instanceof PDOException) {
+        throw $error;
+    }
+
+    $route = $utopia->match($request);
+    // logError($error, "httpError", $route);
+
+    $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+
+    $code = $error->getCode();
+    $message = $error->getMessage();
+
+    $output = ((App::isDevelopment())) ? [
+        'message' => $error->getMessage(),
+        'code' => $error->getCode(),
+        'file' => $error->getFile(),
+        'line' => $error->getLine(),
+        'trace' => $error->getTrace(),
+        'version' => $version,
+    ] : [
+        'message' => $message,
+        'code' => $code,
+        'version' => $version,
+    ];
+
+    $response
+        ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+        ->addHeader('Expires', '0')
+        ->addHeader('Pragma', 'no-cache')
+        ->setStatusCode(500);
+
+    $response->json($output);
+}, ['error', 'utopia', 'request', 'response']);
+
 $http->on('start', function ($http) {
     @Process::signal(SIGINT, function () use ($http) {
         // handleShutdown();
@@ -779,50 +802,10 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         return $swooleResponse->end('401: Authentication Error');
     }
 
-    App::error(function ($error, $utopia, $request, $response) {
-        /** @var Exception $error */
-        /** @var Utopia\App $utopia */
-        /** @var Utopia\Swoole\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-
-        if ($error instanceof PDOException) {
-            throw $error;
-        }
-
-        $route = $utopia->match($request);
-        logError($error, "httpError", $route);
-
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
-
-        $code = $error->getCode();
-        $message = $error->getMessage();
-
-        $output = ((App::isDevelopment())) ? [
-            'message' => $error->getMessage(),
-            'code' => $error->getCode(),
-            'file' => $error->getFile(),
-            'line' => $error->getLine(),
-            'trace' => $error->getTrace(),
-            'version' => $version,
-        ] : [
-            'message' => $message,
-            'code' => $code,
-            'version' => $version,
-        ];
-
-        $response
-            ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-            ->addHeader('Expires', '0')
-            ->addHeader('Pragma', 'no-cache')
-            ->setStatusCode(500);
-
-        $response->json($output);
-    }, ['error', 'utopia', 'request', 'response']);
-
     try {
         $app->run($request, $response);
     } catch (Exception $e) {
-        logError($e, "serverError");
+        // logError($e, "serverError");
         $swooleResponse->end('500: Server Error');
     }
 });
