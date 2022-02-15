@@ -278,7 +278,7 @@
                     const sdk = window.ls.container.get('sdk');
                     const file = formData.get('file');
                     const fileId = formData.get('fileId');
-                    const id = fileId === 'unique()' ? new Date().getTime().toString() : fileId;
+                    const id = fileId === 'unique()' ? performance.now() : fileId;
                     let read = formData.get('read');
                     if(read) {
                         read = JSON.parse(read);
