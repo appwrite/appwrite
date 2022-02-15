@@ -65,7 +65,7 @@ class Bitly extends OAuth2
     protected function getTokens(string $code): array
     {
         if(empty($this->tokens)) {
-            $this->tokens = \json_decode($this->request(
+            $response = $this->request(
                 'POST',
                 $this->resourceEndpoint . 'oauth/access_token',
                 ["Content-Type: application/x-www-form-urlencoded"],
@@ -76,7 +76,11 @@ class Bitly extends OAuth2
                     "redirect_uri" => $this->callback,
                     "state" => \json_encode($this->state)
                 ])
-            ), true);
+            );
+
+            $output = [];
+            \parse_str($response, $output);
+            $this->tokens = $output;
         }
 
         return $this->tokens;
@@ -89,7 +93,7 @@ class Bitly extends OAuth2
      */
     public function refreshTokens(string $refreshToken):array
     {
-        $this->tokens = \json_decode($this->request(
+        $response = $this->request(
             'POST',
             $this->resourceEndpoint . 'oauth/access_token',
             ["Content-Type: application/x-www-form-urlencoded"],
@@ -99,7 +103,11 @@ class Bitly extends OAuth2
                 "refresh_token" => $refreshToken,
                 'grant_type' => 'refresh_token'
             ])
-        ), true);
+        );
+
+        $output = [];
+        \parse_str($response, $output);
+        $this->tokens = $output;
 
         if(empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
