@@ -769,7 +769,7 @@ $http->on('start', function ($http) {
 });
 
 
-$http->on("shutdown", function() {
+$http->on('shutdown', function() {
     global $orchestrationPool;
     Console::info('Cleaning up containers before shutdown...');
 
