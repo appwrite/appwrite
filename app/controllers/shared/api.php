@@ -28,32 +28,6 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
     /** @var Appwrite\Event\Event $functions */
     /** @var Utopia\Database\Database $dbForProject */
 
-    Storage::setDevice('self', new Local());
-    switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
-        case Storage::DEVICE_LOCAL:default:
-            Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId()));
-            Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId()));
-            break;
-        case Storage::DEVICE_S3:
-            $s3AccessKey = App::getEnv('_APP_STORAGE_DEVICE_S3_ACCESS_KEY', '');
-            $s3SecretKey = App::getEnv('_APP_STORAGE_DEVICE_S3_SECRET', '');
-            $s3Region = App::getEnv('_APP_STORAGE_DEVICE_S3_REGION', '');
-            $s3Bucket = App::getEnv('_APP_STORAGE_DEVICE_S3_BUCKET', '');
-            $s3Acl = 'private';
-            Storage::setDevice('files', new S3(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl));
-            Storage::setDevice('functions', new S3(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl));
-            break;
-        case Storage::DEVICE_DO_SPACES:
-            $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_ACCESS_KEY', '');
-            $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_SECRET', '');
-            $doSpacesRegion = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_REGION', '');
-            $doSpacesBucket = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_BUCKET', '');
-            $doSpacesAcl = 'private';
-            Storage::setDevice('files', new DOSpaces(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl));
-            Storage::setDevice('functions', new DOSpaces(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl));
-            break;
-    }
-
     $route = $utopia->match($request);
 
     if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
