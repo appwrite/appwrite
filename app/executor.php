@@ -33,13 +33,12 @@ use Utopia\Validator\Text;
 // Move some logic to server start - Done
 // Add updated property to swoole table - Done
 // Clean up deployments older than X seconds - Done
+// Remove orphans on startup - done
+
 
 // Remove attempts logic in executor
+// Fix error handling and logging
 // Fix delete endpoint
-// Remove orphans on startup
-// Maintenance job
-//   - delete pending runtimes older than X minutes ? ENV_VARS
-// -- // EXECUTOR_ pattern
 // Add size validators for the runtime IDs 
 // Decide on logic for build and runtime containers names ( runtime-ID and build-ID)
 // 
@@ -693,10 +692,12 @@ App::init(function ($request, $response) {
 
 
 $http->on('start', function ($http) {
-     /** 
+    global $orchestrationPool;
+    global $activeRuntimes;
+    
+    /** 
      * Warmup: make sure images are ready to run fast 🚀
      */
-    global $orchestrationPool;
     $runtimes = new Runtimes();
     $allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
     $runtimes = $runtimes->getAll(true, $allowList);
@@ -722,29 +723,30 @@ $http->on('start', function ($http) {
     }
 
     /**
-     * Populate swoole table with active runtimes
+     * Remove residual runtimes
      */
-    global $activeRuntimes;
+    Console::info('Removing orphan runtimes...');
     try {
         $orchestration = $orchestrationPool->get();
-        $executionStart = \microtime(true);
-        $residueList = $orchestration->list(['label' => 'openruntimes-type=function']);
+        $orphans = $orchestration->list(['label' => 'openruntimes-type=function']);
     } catch (\Throwable $th) {
     } finally {
         $orchestrationPool->put($orchestration);
     }
 
-    foreach ($residueList as $value) {
-        go(fn () => $activeRuntimes->set($value->getName(), [
-            'id' => $value->getId(),
-            'name' => $value->getName(),
-            'status' => $value->getStatus(),
-            'key' => ''
-        ]));
+    foreach ($orphans as $runtime) {
+        go(function () use ($runtime, $orchestrationPool) {
+            try {
+                $orchestration = $orchestrationPool->get();
+                $orchestration->remove($runtime->getName(), true);
+                Console::success("Successfully removed {$runtime->getName()}");
+            } catch (\Throwable $th) {
+                Console::error('Orphan runtime deletion failed: ' . $th->getMessage());
+            } finally {
+                $orchestrationPool->put($orchestration);
+            }
+        });
     }
-
-    $executionEnd = \microtime(true);
-    Console::info(count($activeRuntimes) . ' functions listed in ' . ($executionEnd - $executionStart) . ' seconds');
 
     /**
      * Register handlers for shutdown
@@ -768,8 +770,7 @@ $http->on('start', function ($http) {
     /**
      * Run a maintenance worker every MAINTENANCE_INTERVAL seconds to remove inactive runtimes
      */
-    global $orchestrationPool;
-    global $activeRuntimes;
+    
     Timer::tick(MAINTENANCE_INTERVAL * 1000, function () use ($orchestrationPool, $activeRuntimes) {
         Console::warning("Running maintenance task ...");
         foreach ($activeRuntimes as $runtime) {
