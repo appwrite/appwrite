@@ -34,9 +34,11 @@ use Utopia\Validator\Text;
 // Add updated property to swoole table - Done
 // Clean up deployments older than X seconds - Done
 // Remove orphans on startup - done
+// Remove multiple request attempt to the runtime logic in executor - done
 
 
-// Remove attempts logic in executor
+// Shutdown callback isn't working as expected
+// Incorporate Matej's changes in the build stage ( moving of the tar file will be performed by the runtime and not the build stage )
 // Fix error handling and logging
 // Fix delete endpoint
 // Add size validators for the runtime IDs 
@@ -52,12 +54,12 @@ const MAINTENANCE_INTERVAL = 1200; // 20 minutes
 * Create a Swoole table to store runtime information 
 */
 $activeRuntimes = new Swoole\Table(1024);
-$activeRuntimes->column('id', Swoole\Table::TYPE_STRING, 512);
+$activeRuntimes->column('id', Swoole\Table::TYPE_STRING, 256);
 $activeRuntimes->column('created', Swoole\Table::TYPE_INT, 8);
 $activeRuntimes->column('updated', Swoole\Table::TYPE_INT, 8);
-$activeRuntimes->column('name', Swoole\Table::TYPE_STRING, 512);
-$activeRuntimes->column('status', Swoole\Table::TYPE_STRING, 512);
-$activeRuntimes->column('key', Swoole\Table::TYPE_STRING, 512);
+$activeRuntimes->column('name', Swoole\Table::TYPE_STRING, 128);
+$activeRuntimes->column('status', Swoole\Table::TYPE_STRING, 128);
+$activeRuntimes->column('key', Swoole\Table::TYPE_STRING, 256);
 $activeRuntimes->create();
 
 /**
@@ -404,7 +406,6 @@ App::post('/v1/runtimes')
     });
 
 
-// GET /v1/runtimes
 App::get('/v1/runtimes')
     ->desc("List currently active runtimes")
     ->inject('activeRuntimes')
@@ -422,7 +423,6 @@ App::get('/v1/runtimes')
             ->json($runtimes);
     });
 
-// GET /v1/runtimes/:runtimeId
 App::get('/v1/runtimes/:runtimeId')
     ->desc("Get a runtime by its ID")
     ->param('runtimeId', '', new Text(128), 'Runtime unique ID.')
@@ -441,7 +441,6 @@ App::get('/v1/runtimes/:runtimeId')
             ->json($runtime);
     });
 
-// DELETE    /v1/runtimes/:runtimeId
 App::delete('/v1/runtimes/:runtimeId')
     ->desc('Delete a runtime')
     ->param('runtimeId', '', new Text(128), 'Runtime unique ID.', false)
@@ -521,57 +520,38 @@ App::post('/v1/execution')
             $executorResponse = '';
 
             try {
-                $attempts = 0;
-                $max = 5;
-                 // cURL request to runtime
-                do {
-                    $attempts++;
-                    $ch = \curl_init();
-            
-                    $body = \json_encode([
-                        'path' => '/usr/code',
-                        'file' => $entrypoint,
-                        'env' => $vars,
-                        'payload' => $data,
-                        'timeout' => $timeout ?? (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)
-                    ]);
-            
-                    \curl_setopt($ch, CURLOPT_URL, "http://" . $container . ":3000/");
-                    \curl_setopt($ch, CURLOPT_POST, true);
-                    \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-            
-                    \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                    \curl_setopt($ch, CURLOPT_TIMEOUT, $timeout ?? (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900));
-                    \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-            
-                    \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                        'Content-Type: application/json',
-                        'Content-Length: ' . \strlen($body),
-                        'x-internal-challenge: ' . $secret,
-                        'host: null'
-                    ]);
-            
-                    $executorResponse = \curl_exec($ch);
-            
-                    $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            
-                    $error = \curl_error($ch);
-            
-                    $errNo = \curl_errno($ch);
-            
-                    \curl_close($ch);
-                    if ($errNo != CURLE_COULDNT_CONNECT && $errNo != 111) {
-                        break;
-                    }
-            
-                    sleep(1);
-                } while ($attempts < $max);
+                $ch = \curl_init();
+                $body = \json_encode([
+                    'path' => '/usr/code',
+                    'file' => $entrypoint,
+                    'env' => $vars,
+                    'payload' => $data,
+                    'timeout' => $timeout ?? (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)
+                ]);
+                \curl_setopt($ch, CURLOPT_URL, "http://" . $container . ":3000/");
+                \curl_setopt($ch, CURLOPT_POST, true);
+                \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+                \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                \curl_setopt($ch, CURLOPT_TIMEOUT, $timeout ?? (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900));
+                \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        
+                \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Content-Type: application/json',
+                    'Content-Length: ' . \strlen($body),
+                    'x-internal-challenge: ' . $secret,
+                    'host: null'
+                ]);
+        
+                $executorResponse = \curl_exec($ch);
+        
+                $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+                $error = \curl_error($ch);
+        
+                $errNo = \curl_errno($ch);
+        
+                \curl_close($ch);
 
-                if ($attempts >= 5) {
-                    $stderr = 'Failed to connect to executor runtime after 5 attempts.';
-                    $statusCode = 124;
-                }
-            
                 // If timeout error
                 if (in_array($errNo, [CURLE_OPERATION_TIMEDOUT, 110])) {
                     $statusCode = 124;
@@ -647,7 +627,6 @@ App::error(function ($error, $utopia, $request, $response) {
     /** @var Exception $error */
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
 
     $route = $utopia->match($request);
     // logError($error, "httpError", $route);
@@ -770,7 +749,6 @@ $http->on('start', function ($http) {
     /**
      * Run a maintenance worker every MAINTENANCE_INTERVAL seconds to remove inactive runtimes
      */
-    
     Timer::tick(MAINTENANCE_INTERVAL * 1000, function () use ($orchestrationPool, $activeRuntimes) {
         Console::warning("Running maintenance task ...");
         foreach ($activeRuntimes as $runtime) {
