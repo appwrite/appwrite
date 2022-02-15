@@ -32,7 +32,8 @@ use Utopia\Validator\Text;
 // Pull runtimes on startup -- Done
 // Move some logic to server start - Done
 // Add updated property to swoole table - Done
-// Clean up deployments older than X seconds
+// Clean up deployments older than X seconds - Done
+
 // Remove attempts logic in executor
 // Fix delete endpoint
 // Remove orphans on startup
@@ -45,17 +46,20 @@ use Utopia\Validator\Text;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
+/** Constants */
+const MAINTENANCE_INTERVAL = 1200; // 20 minutes
+
 /**
 * Create a Swoole table to store runtime information 
 */
-$activeFunctions = new Swoole\Table(1024);
-$activeFunctions->column('id', Swoole\Table::TYPE_STRING, 512);
-$activeFunctions->column('created', Swoole\Table::TYPE_INT, 8);
-$activeFunctions->column('updated', Swoole\Table::TYPE_INT, 8);
-$activeFunctions->column('name', Swoole\Table::TYPE_STRING, 512);
-$activeFunctions->column('status', Swoole\Table::TYPE_STRING, 512);
-$activeFunctions->column('key', Swoole\Table::TYPE_STRING, 512);
-$activeFunctions->create();
+$activeRuntimes = new Swoole\Table(1024);
+$activeRuntimes->column('id', Swoole\Table::TYPE_STRING, 512);
+$activeRuntimes->column('created', Swoole\Table::TYPE_INT, 8);
+$activeRuntimes->column('updated', Swoole\Table::TYPE_INT, 8);
+$activeRuntimes->column('name', Swoole\Table::TYPE_STRING, 512);
+$activeRuntimes->column('status', Swoole\Table::TYPE_STRING, 512);
+$activeRuntimes->column('key', Swoole\Table::TYPE_STRING, 512);
+$activeRuntimes->create();
 
 /**
  * Create orchestration pool
@@ -120,9 +124,9 @@ App::post('/v1/runtimes')
     ->param('runtime', '', new Text(128), 'Runtime for the cloud function')
     ->param('baseImage', '', new Text(128), 'Base image name of the runtime')
     ->inject('orchestrationPool')
-    ->inject('activeFunctions')
+    ->inject('activeRuntimes')
     ->inject('response')
-    ->action(function (string $runtimeId, string $source, string $destination, array $vars, string $runtime, string $baseImage, $orchestrationPool, $activeFunctions, Response $response) {
+    ->action(function (string $runtimeId, string $source, string $destination, array $vars, string $runtime, string $baseImage, $orchestrationPool, $activeRuntimes, Response $response) {
 
         // TODO: Check if runtime already exists..
         $orchestration = $orchestrationPool->get();
@@ -319,14 +323,14 @@ App::post('/v1/runtimes')
         /** Create runtime server */
         try {
             $container = 'runtime-' . $runtimeId;
-            if ($activeFunctions->exists($container) && !(\substr($activeFunctions->get($container)['status'], 0, 2) === 'Up')) { // Remove container if not online
+            if ($activeRuntimes->exists($container) && !(\substr($activeRuntimes->get($container)['status'], 0, 2) === 'Up')) { // Remove container if not online
                 // If container is online then stop and remove it
                 try {
                     $orchestration->remove($container, true);
                 } catch (Exception $e) {
                     throw new Exception('Failed to remove container: ' . $e->getMessage());
                 }
-                $activeFunctions->del($container);
+                $activeRuntimes->del($container);
             }
     
             /**
@@ -345,7 +349,7 @@ App::post('/v1/runtimes')
                 'INTERNAL_RUNTIME_KEY' => $secret
             ]);
     
-            if (!$activeFunctions->exists($container)) {
+            if (!$activeRuntimes->exists($container)) {
                 $executionStart = \microtime(true);
                 $executionTime = \time();
     
@@ -379,7 +383,7 @@ App::post('/v1/runtimes')
     
                 $executionEnd = \microtime(true);
     
-                $activeFunctions->set($container, [
+                $activeRuntimes->set($container, [
                     'id' => $id,
                     'name' => $container,
                     'created' => $executionTime,
@@ -404,12 +408,12 @@ App::post('/v1/runtimes')
 // GET /v1/runtimes
 App::get('/v1/runtimes')
     ->desc("List currently active runtimes")
-    ->inject('activeFunctions')
+    ->inject('activeRuntimes')
     ->inject('response')
-    ->action(function ($activeFunctions, Response $response) {
+    ->action(function ($activeRuntimes, Response $response) {
         $runtimes = [];
 
-        foreach($activeFunctions as $runtime) {
+        foreach($activeRuntimes as $runtime) {
             $runtimes[] = $runtime;
         }
 
@@ -423,15 +427,15 @@ App::get('/v1/runtimes')
 App::get('/v1/runtimes/:runtimeId')
     ->desc("Get a runtime by its ID")
     ->param('runtimeId', '', new Text(128), 'Runtime unique ID.')
-    ->inject('activeFunctions')
+    ->inject('activeRuntimes')
     ->inject('response')
-    ->action(function ($runtimeId, $activeFunctions, Response $response) {
+    ->action(function ($runtimeId, $activeRuntimes, Response $response) {
 
-        if(!$activeFunctions->exists($runtimeId)) {
+        if(!$activeRuntimes->exists($runtimeId)) {
             throw new Exception('Runtime not found', 404);
         }
 
-        $runtime = $activeFunctions->get($runtimeId);
+        $runtime = $activeRuntimes->get($runtimeId);
 
         $response
             ->setStatusCode(200)
@@ -444,19 +448,22 @@ App::delete('/v1/runtimes/:runtimeId')
     ->param('runtimeId', '', new Text(128), 'Runtime unique ID.', false)
     ->param('buildIds', [], new ArrayList(new Text(0), 100), 'List of build IDs to delete.', false)
     ->inject('orchestrationPool')
+    ->inject('activeRuntimes')
     ->inject('response')
-    ->action(function (string $runtimeId, array $buildIds, $orchestrationPool, Response $response) {
+    ->action(function (string $runtimeId, array $buildIds, $orchestrationPool, $activeRuntimes, Response $response) {
 
         Console::info('Deleting runtime: ' . $runtimeId);
         $orchestration = $orchestrationPool->get();
 
-        // Remove the container of the deployment
-        $status = $orchestration->remove('runtime-' . $runtimeId , true);
+        $container = 'runtime-' . $runtimeId;
+        $status = $orchestration->remove($container, true);
         if ($status) {
             Console::success('Removed runtime container: ' . $runtimeId);
         } else {
             Console::error('Failed to remove runtime container: ' . $runtimeId);
         }
+
+        $activeRuntimes->del($container);
 
         // Remove all the build containers with that same  ID
         // TODO:: Delete build containers
@@ -487,19 +494,19 @@ App::post('/v1/execution')
     ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file')
     ->param('timeout', 15, new ValidatorRange(1, 900), 'Function maximum execution time in seconds.', true)
     ->param('baseImage', '', new Text(128), 'Base image name of the runtime', false)
-    ->inject('activeFunctions')
+    ->inject('activeRuntimes')
     ->inject('response')
     ->action(
-        function (string $runtimeId, string $path, array $vars, string $data, string $runtime, string $entrypoint, $timeout, string $baseImage, $activeFunctions, Response $response) {
+        function (string $runtimeId, string $path, array $vars, string $data, string $runtime, string $entrypoint, $timeout, string $baseImage, $activeRuntimes, Response $response) {
 
             $container = 'runtime-' . $runtimeId;
 
             // TODO: Also check for container status
-            if (!$activeFunctions->exists($container)) {
+            if (!$activeRuntimes->exists($container)) {
                 throw new Exception('Runtime not found. Please create the runtime.', 404);
             }
 
-            $runtime = $activeFunctions->get($container);
+            $runtime = $activeRuntimes->get($container);
             $secret = $runtime['key'];
             if (empty($secret)) {
                 throw new Exception('Runtime secret not found. Please create the runtime.', 500);
@@ -617,7 +624,7 @@ App::post('/v1/execution')
                 ];
 
                 $runtime['updated'] = \time();
-                $activeFunctions->set($container, $runtime);
+                $activeRuntimes->set($container, $runtime);
             } catch (\Throwable $th) {
                 Console::error('Runtime execution failed: ' . $th->getMessage());
             }
@@ -634,7 +641,7 @@ $http = new Server("0.0.0.0", 80);
 
 /** Set Resources */
 App::setResource('orchestrationPool', fn() => $orchestrationPool);
-App::setResource('activeFunctions', fn() => $activeFunctions);
+App::setResource('activeRuntimes', fn() => $activeRuntimes);
 
 /** Set callbacks */
 App::error(function ($error, $utopia, $request, $response) {
@@ -717,7 +724,7 @@ $http->on('start', function ($http) {
     /**
      * Populate swoole table with active runtimes
      */
-    global $activeFunctions;
+    global $activeRuntimes;
     try {
         $orchestration = $orchestrationPool->get();
         $executionStart = \microtime(true);
@@ -728,7 +735,7 @@ $http->on('start', function ($http) {
     }
 
     foreach ($residueList as $value) {
-        go(fn () => $activeFunctions->set($value->getName(), [
+        go(fn () => $activeRuntimes->set($value->getName(), [
             'id' => $value->getId(),
             'name' => $value->getName(),
             'status' => $value->getStatus(),
@@ -737,7 +744,7 @@ $http->on('start', function ($http) {
     }
 
     $executionEnd = \microtime(true);
-    Console::info(count($activeFunctions) . ' functions listed in ' . ($executionEnd - $executionStart) . ' seconds');
+    Console::info(count($activeRuntimes) . ' functions listed in ' . ($executionEnd - $executionStart) . ' seconds');
 
     /**
      * Register handlers for shutdown
@@ -759,29 +766,30 @@ $http->on('start', function ($http) {
     });
 
     /**
-     * Run a maintenance worker every 5 minutes to remove unused containers
+     * Run a maintenance worker every MAINTENANCE_INTERVAL seconds to remove inactive runtimes
      */
-    // global $orchestrationPool;
-    // Timer::tick(5000, function () use ($orchestrationPool) {
-    //     Console::info('Running maintenance task every 5 seconds ...');
-    //     $orchestration = $orchestrationPool->get();
-    //     $functionsToRemove = $orchestration->list(['label' => 'openruntimes-type=function']);
-    //     $orchestrationPool->put($orchestration);
-
-    //     foreach ($functionsToRemove as $container) {
-    //         go(function () use ($orchestrationPool, $container) { 
-    //             try {
-    //                 $orchestration = $orchestrationPool->get();
-    //                 $orchestration->remove($container->getId(), true);
-    //                 Console::info('Removed container ' . $container->getName());
-    //             } catch (\Throwable $th) {
-    //                 Console::error('Failed to remove container: ' . $container->getName());
-    //             } finally {
-    //                 $orchestrationPool->put($orchestration);
-    //             }
-    //         });
-    //     }
-    // });
+    global $orchestrationPool;
+    global $activeRuntimes;
+    Timer::tick(MAINTENANCE_INTERVAL * 1000, function () use ($orchestrationPool, $activeRuntimes) {
+        Console::warning("Running maintenance task ...");
+        foreach ($activeRuntimes as $runtime) {
+            $inactiveThreshold = \time() - App::getEnv('OPENRUNTIMES_INACTIVE_THRESHOLD', 60);
+            if ($runtime['updated'] < $inactiveThreshold) {
+                go(function () use ($runtime, $orchestrationPool, $activeRuntimes) {
+                    try {
+                        $orchestration = $orchestrationPool->get();
+                        $orchestration->remove($runtime['name'], true);
+                        $activeRuntimes->del($runtime['name']);
+                        Console::success("Successfully removed {$runtime['name']}");
+                    } catch (\Throwable $th) {
+                        Console::error('Inactive Runtime deletion failed: ' . $th->getMessage());
+                    } finally {
+                        $orchestrationPool->put($orchestration);
+                    }
+                });
+            }
+        }
+    });
 
 });
 
