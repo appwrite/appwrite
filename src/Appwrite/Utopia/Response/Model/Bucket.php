@@ -61,18 +61,6 @@ class Bucket extends Model
             'default' => true,
             'example' => false,
         ])
-        ->addRule('adapter', [
-            'type' => self::TYPE_STRING,
-            'description' => 'Storage adapter.',
-            'default' => '',
-            'example' => 'local',
-        ])
-        ->addRule('adapterCredentials', [
-            'type' => self::TYPE_JSON,
-            'description' => 'Storage adapter credentials.',
-            'default' => new \stdClass,
-            'example' => ['key' => 'value'],
-        ])
         ->addRule('maximumFileSize', [
             'type' => self::TYPE_INTEGER,
             'description' => 'Maximum file size supported.',
