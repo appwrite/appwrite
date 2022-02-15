@@ -15,6 +15,8 @@ use Utopia\Audit\Audit;
 
 require_once __DIR__ . '/../init.php';
 
+Authorization::disable();
+
 Console::title('Deletes V1 Worker');
 Console::success(APP_NAME . ' deletes worker v1 has started' . "\n");
 
@@ -207,7 +209,7 @@ class DeletesV1 extends Worker
         ], $this->getProjectDB($projectId));
         
         $user->setAttribute('sessions', []);
-        $updated = Authorization::skip(fn() => $this->getProjectDB($projectId)->updateDocument('users', $userId, $user));
+        $updated = $this->getProjectDB($projectId)->updateDocument('users', $userId, $user);
 
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
@@ -429,8 +431,6 @@ class DeletesV1 extends Worker
      */
     protected function deleteById(Document $document, Database $database, callable $callback = null): bool
     {
-        Authorization::disable();
-
         if ($database->deleteDocument($document->getCollection(), $document->getId())) {
             Console::success('Deleted document "' . $document->getId() . '" successfully');
 
@@ -443,8 +443,6 @@ class DeletesV1 extends Worker
             Console::error('Failed to delete document: ' . $document->getId());
             return false;
         }
-
-        Authorization::reset();
     }
 
     /**
@@ -461,7 +459,7 @@ class DeletesV1 extends Worker
         $executionStart = \microtime(true);
 
         while ($sum === $limit) {
-            $projects = Authorization::skip(fn() => $this->getConsoleDB()->find('projects', [], $limit, ($chunk * $limit)));
+            $projects = $this->getConsoleDB()->find('projects', [], $limit, ($chunk * $limit));
 
             $chunk++;
 
@@ -500,11 +498,7 @@ class DeletesV1 extends Worker
         while ($sum === $limit) {
             $chunk++;
 
-            Authorization::disable();
-
             $results = $database->find($collection, $queries, $limit, 0);
-
-            Authorization::reset();
 
             $sum = count($results);
 
