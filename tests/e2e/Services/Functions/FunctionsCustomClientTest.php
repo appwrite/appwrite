@@ -89,15 +89,11 @@ class FunctionsCustomClientTest extends Scope
         // Wait for deployment to be built.
         sleep(10);
 
-        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$function['body']['$id'].'/deployment', [
+        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$function['body']['$id'].'/deployments/'.$deploymentId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'deployment' => $deploymentId,
-        ]);
-
-        // var_dump($function);
+        ], []);
 
         $this->assertEquals(200, $function['headers']['status-code']);
 
@@ -176,13 +172,11 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(201, $deployment['headers']['status-code']);
 
-        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployment', [
+        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployments/'.$deploymentId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
-        ], [
-            'deployment' => $deploymentId,
-        ]);
+        ], []);
 
         $this->assertEquals(200, $function['headers']['status-code']);
 
@@ -360,13 +354,11 @@ class FunctionsCustomClientTest extends Scope
         // Wait for deployment to be built.
         sleep(10);
 
-        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployment', [
+        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployments/'.$deploymentId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
-        ], [
-            'deployment' => $deploymentId,
-        ]);
+        ], []);
 
         $this->assertEquals(200, $function['headers']['status-code']);
 

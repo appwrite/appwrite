@@ -310,12 +310,10 @@ class FunctionsCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/functions/'.$data['functionId'].'/deployment', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/'.$data['functionId'].'/deployments/'.$data['deploymentId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'deployment' => $data['deploymentId'],
-        ]);
+        ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
@@ -687,13 +685,10 @@ class FunctionsCustomServerTest extends Scope
         // Allow build step to run
         sleep(10);
 
-        $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployment', array_merge([
+        $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployments/'.$deploymentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'functionId' => $functionId,
-            'deployment' => $deploymentId,
-        ]);
+        ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $deployment['headers']['status-code']);
        
@@ -779,12 +774,10 @@ class FunctionsCustomServerTest extends Scope
         // Allow build step to run
         sleep(10);
 
-        $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployment', array_merge([
+        $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployments/'.$deploymentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'deployment' => $deploymentId,
-        ]);
+        ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $deployment['headers']['status-code']);
        
