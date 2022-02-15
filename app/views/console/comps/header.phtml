@@ -223,7 +223,7 @@
     </form>
 </div>
 
-<section class="upload-box" x-data>
+<section class="upload-box" x-data x-show="$store.uploader.files.length > 0">
     <div class="upload-box-header">
         <h4 class="upload-box-title">
             <span class="text">Uploading files</span>
@@ -244,7 +244,7 @@
                                 role="progressbar"
                                 aria-valuemin="0"
                                 aria-valuemax="100"></div>
-                            <span class="icon">%</span>
+                            <span class="icon" x-text="file.progress"></span>
                         </div>
                         <label for="file1" class="file-name" x-text="file.name"></label>
                         <button x-show="file.completed" class="icon-button is-success" aria-label="Uploading"><span class="icon-ok"></span></button>
@@ -260,6 +260,17 @@
             Alpine.store('uploader', {
                 files: [],
                 isOpen: true,
+                init() {
+                    window.addEventListener('beforeunload', (event) => {
+                        this.files.forEach((file) => {
+                            if(!file.completed && !file.failed) {
+                                let confirmationMessage = "There are incomplete uploads, are you sure you want to leave?";
+                                event.returnValue = confirmationMessage;
+                                return confirmationMessage;
+                            }
+                        });
+                    });
+                },
                 toggle() {
                     this.isOpen = !this.isOpen;
                 },
@@ -293,8 +304,9 @@
                         progress: 0,
                         completed: false,
                         failed: false,
+                        isCancelled: false,
                     });
-
+                    target.reset();
                     try {
                         const response = await sdk.storage.createFile(
                             formData.get('bucketId'),
@@ -303,13 +315,11 @@
                             read,
                             write,
                             (progress) => {
-                                console.log("progress", progress);
+                                /*if cancelled
+                                throw something*/
                                 this.updateFile(id, {
                                     id: id,
-                                    name: file.name,
                                     progress: Math.round(progress),
-                                    completed: false,
-                                    failed: false
                                 });
                             });
                         this.updateFile(id,{
@@ -319,12 +329,13 @@
                             completed: true,
                             failed: false,
                         });
-                        target.reset();
+                        document.dispatchEvent(new CustomEvent('storage.createFile'));
                     } catch(error) {
                         this.updateFile(id, {
                             id: id,
                             failed: true,
                         });
+                        document.dispatchEvent(new CustomEvent('storage.createFile'));
                     }
                 }
 
