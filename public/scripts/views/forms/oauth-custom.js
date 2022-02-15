@@ -8,14 +8,18 @@
     controller: function (element) {
       // provider configuration for custom forms. Keys will be property names in JSON, values the elementIDs for the according inputs
       let providers = {
-        "Microsoft": {
-          "clientSecret": "oauth2MicrosoftClientSecret",
-          "tenantId": "oauth2MicrosoftTenantId"
-        },
         "Apple": {
           "keyId": "oauth2AppleKeyId",
           "teamId": "oauth2AppleTeamId",
           "p8": "oauth2AppleP8"
+        },
+        "Microsoft": {
+          "clientSecret": "oauth2MicrosoftClientSecret",
+          "tenantId": "oauth2MicrosoftTenantId"
+        },
+        "Oidc": {
+          "clientSecret": "oauth2OidcAppSecret",
+          "discovery": "oauth2OidcDiscovery"
         }
       }
       let provider = element.getAttribute("data-forms-oauth-custom");

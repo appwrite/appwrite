@@ -141,6 +141,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'oidc' => [
+        'name' => 'OpenID Connect',
+        'developers' => 'https://openid.net/developers/specs/',
+        'icon' => 'icon-oidc',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => 'oidc.phtml',
+        'beta' => false,
+        'mock' => false
+    ],
     'paypal' => [
         'name' => 'PayPal',
         'developers' => 'https://developer.paypal.com/docs/api/overview/',

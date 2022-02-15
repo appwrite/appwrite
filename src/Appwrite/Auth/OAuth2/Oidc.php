@@ -11,8 +11,18 @@ class Oidc extends OAuth2
      * @var string
      */
     protected $version = 'v1';
-
+    
     /**
+     * @var array
+     */
+    protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
+    
+     /**
      * @var array
      */
     protected $scopes = [
@@ -22,9 +32,41 @@ class Oidc extends OAuth2
     ];
 
     /**
-     * @var array
+     * @var string
      */
-    protected $user = [];
+    protected $configuration = [
+        'authorization_endpoint' => '',
+        'token_endpoint' => '',
+        'userinfo_endpoint' => '',
+    ];
+
+    /**
+     * Oidc constructor.
+     *
+     * @param string $appId
+     * @param string $jsonSecret
+     * @param string $callback
+     * @param array  $state
+     * @param array $scopes
+     */
+    public function __construct(string $appId, string $jsonSecret, string $callback, array $state = [], array $scopes = [])
+    {
+        // Extract appSecret and discovery from JSON
+        try {
+            $json = \json_decode($jsonSecret, true);
+            $appSecret = isset($json['clientSecret']) ? $json['clientSecret'] : '';
+            $discovery = isset($json['discovery']) ? $json['discovery'] : '';
+        } catch (\Throwable $th) {
+            throw new Exception('Invalid secret');
+        }
+        parent::__construct($appId, $appSecret, $callback, $state, $scopes);
+        
+        // Get config from .well-known discovery endpoint
+        $configResponse = \json_decode($this->request('GET',$discovery),true);
+        $this->configuration['authorization_endpoint'] = isset($configResponse['authorization_endpoint']) ? $configResponse['authorization_endpoint'] : '';
+        $this->configuration['token_endpoint'] = isset($configResponse['token_endpoint']) ? $configResponse['token_endpoint'] : '';
+        $this->configuration['userinfo_endpoint'] = isset($configResponse['userinfo_endpoint']) ? $configResponse['userinfo_endpoint'] : '';
+    }
 
     /**
      * @return string
@@ -39,16 +81,7 @@ class Oidc extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $envScopes = getEnv('_APP_OIDC_SCOPES');
-
-        if(!empty($envScopes)){
-            $scopesToAdd = explode(' ',$envScopes);
-            foreach ($scopesToAdd as $scope) {
-                $this->addScope($scope);
-            }
-        }
-
-        return getEnv('_APP_OIDC_AUTH_ENDPOINT').'?'. \http_build_query([
+        return $this->configuration['authorization_endpoint'].'?'. \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'scope' => \implode(' ', $this->getScopes()),
@@ -62,29 +95,53 @@ class Oidc extends OAuth2
      *
      * @return string
      */
-    public function getAccessToken(string $code): string
+    public function getTokens(string $code): array
+    {
+        if(empty($this->tokens)){
+            $headers = ['Content-Type: application/x-www-form-urlencoded;charset=UTF-8'];
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                $this->configuration['token_endpoint'],
+                $headers,
+                \http_build_query([
+                    'code' => $code,
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
+                    'redirect_uri' => $this->callback,
+                    'grant_type' => 'authorization_code'
+                ])
+            ), true);
+        }
+
+        return $this->tokens;
+    }
+
+    /**
+     * @param string $refreshToken
+     *
+     * @return string
+     */
+    public function refreshTokens(string $refreshToken): array
     {
         $headers = ['Content-Type: application/x-www-form-urlencoded;charset=UTF-8'];
-        $accessToken = $this->request(
+        $this->tokens = \json_decode($this->request(
             'POST',
-            getEnv('_APP_OIDC_TOKEN_ENDPOINT'),
+            $this->configuration['token_endpoint'],
             $headers,
             \http_build_query([
-                'code' => $code,
+                'refresh_token' => $refreshToken,
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
                 'redirect_uri' => $this->callback,
-                'grant_type' => 'authorization_code'
+                'grant_type' => 'refresh_token'
             ])
-        );
+        ), true);
 
-        $accessToken = \json_decode($accessToken, true);
-
-        if (isset($accessToken['access_token'])) {
-            return $accessToken['access_token'];
+        if(empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
         }
 
-        return '';
+        return $this->tokens;
     }
 
     /**
@@ -144,8 +201,7 @@ class Oidc extends OAuth2
     {
         if (empty($this->user)) {
             $headers = ['Authorization: Bearer '.$accessToken];
-            $user = $this->request('GET', getEnv('_APP_OIDC_USERINFO_ENDPOINT'),
-                $headers);
+            $user = $this->request('GET', $this->configuration['userinfo_endpoint'],$headers);
             $this->user = \json_decode($user, true);
         }
         return $this->user;

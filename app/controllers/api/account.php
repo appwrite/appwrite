@@ -276,7 +276,6 @@ App::get('/v1/account/sessions/oauth2/:provider')
         $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
         $appId = $project->getAttribute('providers', [])[$provider.'Appid'] ?? '';
         $appSecret = $project->getAttribute('providers', [])[$provider.'Secret'] ?? '{}';
-        $oidcEnabled = !empty(App::getEnv('_APP_OIDC_AUTH_ENDPOINT')) && !empty(App::getEnv('_APP_OIDC_TOKEN_ENDPOINT')) && !empty(App::getEnv('_APP_OIDC_USERINFO_ENDPOINT'));
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
             $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
@@ -285,10 +284,6 @@ App::get('/v1/account/sessions/oauth2/:provider')
         
         if (empty($appId) || empty($appSecret)) {
             throw new Exception('This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.', 412);
-        }
-
-        if (strcmp($provider,'oidc') === 0 && !$oidcEnabled) {
-            throw new Exception('This provider is disabled. Please configure the oidc provider environment variables to continue.', 412);
         }
 
         $className = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
@@ -845,6 +840,7 @@ App::put('/v1/account/sessions/magic-url')
         $user
             ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND)
             ->setAttribute('tokens', $tokens);
+
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -1535,7 +1531,6 @@ App::delete('/v1/account')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', false));
 
         // TODO Seems to be related to users.php/App::delete('/v1/users/:userId'). Can we share code between these two? Do todos below apply to users.php?
-
         // TODO delete all tokens or only current session?
         // TODO delete all user data according to GDPR. Make sure everything is backed up and backups are deleted later
         /*
