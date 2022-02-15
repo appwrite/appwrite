@@ -53,7 +53,7 @@ class Github extends OAuth2
     protected function getTokens(string $code): array
     {
         if(empty($this->tokens)) {
-            $this->tokens = \json_decode($this->request(
+            $response = $this->request(
                 'POST',
                 'https://github.com/login/oauth/access_token',
                 [],
@@ -63,7 +63,11 @@ class Github extends OAuth2
                     'client_secret' => $this->appSecret,
                     'code' => $code
                 ])
-            ), true);
+            );
+
+            $output = [];
+            \parse_str($response, $output);
+            $this->tokens = $output;
         }
 
         return $this->tokens;
@@ -76,7 +80,7 @@ class Github extends OAuth2
      */
     public function refreshTokens(string $refreshToken):array
     {
-        $this->tokens = \json_decode($this->request(
+        $response = $this->request(
             'POST',
             'https://github.com/login/oauth/access_token',
             [],
@@ -86,7 +90,11 @@ class Github extends OAuth2
                 'grant_type' => 'refresh_token',
                 'refresh_token' => $refreshToken
             ])
-        ), true);
+        );
+
+        $output = [];
+        \parse_str($response, $output);
+        $this->tokens = $output;
 
         if(empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
