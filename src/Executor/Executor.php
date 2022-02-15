@@ -54,7 +54,6 @@ class Executor
             'baseImage' => $baseImage
         ];
 
-        var_dump($params);
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
 
         $status = $response['headers']['status-code'];
