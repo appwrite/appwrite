@@ -405,11 +405,13 @@ App::get('/v1/runtimes/:runtimeId')
     ->inject('response')
     ->action(function ($runtimeId, $activeRuntimes, Response $response) {
 
-        if(!$activeRuntimes->exists($runtimeId)) {
+        $container = 'runtime-' . $runtimeId;
+
+        if(!$activeRuntimes->exists($container)) {
             throw new Exception('Runtime not found', 404);
         }
 
-        $runtime = $activeRuntimes->get($runtimeId);
+        $runtime = $activeRuntimes->get($container);
 
         $response
             ->setStatusCode(200)
@@ -603,20 +605,37 @@ App::error(function ($error, $response) {
     // $route = $utopia->match($request);
     // logError($error, "httpError", $route);
 
+    switch ($error->getCode()) {
+        case 400: // Error allowed publicly
+        case 401: // Error allowed publicly
+        case 402: // Error allowed publicly
+        case 403: // Error allowed publicly
+        case 404: // Error allowed publicly
+        case 409: // Error allowed publicly
+        case 412: // Error allowed publicly
+        case 429: // Error allowed publicly
+        case 501: // Error allowed publicly
+        case 503: // Error allowed publicly
+            $code = $error->getCode();
+            break;
+        default:
+            $code = 500; // All other errors get the generic 500 server error status code
+    }
+    
     $output = [
         'message' => $error->getMessage(),
         'code' => $error->getCode(),
         'file' => $error->getFile(),
         'line' => $error->getLine(),
         'trace' => $error->getTrace(),
-        'version' => App::getEnv('_APP_VERSION', 'UNKNOWN'),
+        'version' => App::getEnv('OPENRUNTIMES_VERSION', 'UNKNOWN'),
     ];
 
     $response
         ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
         ->addHeader('Expires', '0')
         ->addHeader('Pragma', 'no-cache')
-        ->setStatusCode($error->getCode());
+        ->setStatusCode($code);
 
     $response->json($output);
 }, ['error', 'response']);
