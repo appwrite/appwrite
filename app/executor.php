@@ -34,8 +34,8 @@ use Utopia\Validator\Text;
 // Remove multiple request attempt to the runtime logic in executor - done
 // Remove builds param from delete endpoint - done
 // Shutdown callback isn't working as expected - done
+// Fix error handling - done
 
-// Fix error handling 
 // Fix logging
 // Fix delete endpoint
 // Incorporate Matej's changes in the build stage ( moving of the tar file will be performed by the runtime and not the build stage )
@@ -437,7 +437,6 @@ App::delete('/v1/runtimes/:runtimeId')
             $orchestration->remove($container, true);
             $activeRuntimes->del($container);
             Console::success('Removed runtime container: ' . $container);
-        } catch (\Throwable $th) {
         } finally {
             $orchestrationPool->put($orchestration);
         }
