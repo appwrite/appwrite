@@ -32,6 +32,7 @@ use Utopia\Validator\Text;
 // Clean up deployments older than X seconds - Done
 // Remove orphans on startup - done
 // Remove multiple request attempt to the runtime logic in executor - done
+// Remove builds param from delete endpoint - done
 
 
 // Shutdown callback isn't working as expected
@@ -421,6 +422,7 @@ App::get('/v1/runtimes')
 
 App::get('/v1/runtimes/:runtimeId')
     ->desc("Get a runtime by its ID")
+    // Change the text validators to UID
     ->param('runtimeId', '', new Text(128), 'Runtime unique ID.')
     ->inject('activeRuntimes')
     ->inject('response')
@@ -482,8 +484,8 @@ App::delete('/v1/runtimes/:runtimeId')
 App::post('/v1/execution')
     ->desc('Create an execution')
     ->param('runtimeId', '', new Text(1024), 'The runtimeID to execute')
-    ->param('path', '', new Text(0), 'Path to built files.', false)
-    ->param('vars', '', new Assoc(), 'Environment Variables required for the build', false)
+    ->param('path', '', new Text(0), 'Path containing the built files.', false)
+    ->param('vars', '', new Assoc(), 'Environment variables required for the build', false)
     ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
     ->param('runtime', '', new Text(128), 'Runtime for the cloud function', false)
     ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file')
@@ -496,7 +498,6 @@ App::post('/v1/execution')
 
             $container = 'runtime-' . $runtimeId;
 
-            // TODO: Also check for container status
             if (!$activeRuntimes->exists($container)) {
                 throw new Exception('Runtime not found. Please create the runtime.', 404);
             }
@@ -599,6 +600,7 @@ App::post('/v1/execution')
                     'time' => $executionTime,
                 ];
 
+                /** Update swoole table */
                 $runtime['updated'] = \time();
                 $activeRuntimes->set($container, $runtime);
             } catch (\Throwable $th) {
@@ -681,11 +683,8 @@ $http->on('start', function ($http) {
         go(function () use ($runtime, $orchestrationPool) {
             try {
                 $orchestration = $orchestrationPool->get();
-
                 Console::info('Warming up ' . $runtime['name'] . ' ' . $runtime['version'] . ' environment...');
-
                 $response = $orchestration->pull($runtime['image']);
-
                 if ($response) {
                     Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
                 } else {
