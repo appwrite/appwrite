@@ -336,12 +336,10 @@ class DeletesV1 extends Worker
          */
         Console::info("Deleting builds for function " . $functionId);
         $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
-        $buildIds = [];
          foreach ($deploymentIds as $deploymentId) {
             $this->deleteByGroup('builds', [
                 new Query('deploymentId', Query::TYPE_EQUAL, [$deploymentId])
-            ], $dbForProject, function (Document $document) use ($storageBuilds, $deploymentId, &$buildIds) {
-                $buildIds[$deploymentId][] = $document->getId();
+            ], $dbForProject, function (Document $document) use ($storageBuilds, $deploymentId) {
                 if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
                     Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
                 } else {
@@ -365,7 +363,7 @@ class DeletesV1 extends Worker
         $executor = new Executor();
         foreach ($deploymentIds as $deploymentId) {
             try {
-                $executor->deleteRuntime($projectId, $functionId, $deploymentId, $buildIds[$deploymentId]);
+                $executor->deleteRuntime($projectId, $functionId, $deploymentId);
             } catch (Throwable $th) {
                 Console::error($th->getMessage());
             }
@@ -398,12 +396,10 @@ class DeletesV1 extends Worker
          * Delete builds
          */
         Console::info("Deleting builds for deployment " . $deploymentId);
-        $buildIds = [];
         $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
         $this->deleteByGroup('builds', [
             new Query('deploymentId', Query::TYPE_EQUAL, [$deploymentId])
-        ], $dbForProject, function (Document $document) use ($storageBuilds, &$buildIds) {
-            $buildIds[] = $document->getId();
+        ], $dbForProject, function (Document $document) use ($storageBuilds) {
             if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
                 Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
             } else {
@@ -417,7 +413,7 @@ class DeletesV1 extends Worker
         Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
         try {
             $executor = new Executor();
-            $executor->deleteRuntime($projectId, $functionId, $deploymentId, $buildIds);
+            $executor->deleteRuntime($projectId, $functionId, $deploymentId);
         } catch (Throwable $th) {
             Console::error($th->getMessage());
         }

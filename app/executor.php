@@ -3,7 +3,6 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Appwrite\Runtimes\Runtimes;
 use Swoole\ConnectionPool;
-use Swoole\Coroutine as Co;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Swoole\Http\Server;
@@ -19,11 +18,9 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\Swoole\Request;
 use Utopia\Swoole\Response;
-use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Range as ValidatorRange;
 use Utopia\Validator\Text;
-
 
 // TODO
 // Implement other endpoints - Done
@@ -43,7 +40,6 @@ use Utopia\Validator\Text;
 // Fix delete endpoint
 // Add size validators for the runtime IDs 
 // Decide on logic for build and runtime containers names ( runtime-ID and build-ID)
-// 
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
@@ -444,24 +440,27 @@ App::get('/v1/runtimes/:runtimeId')
 App::delete('/v1/runtimes/:runtimeId')
     ->desc('Delete a runtime')
     ->param('runtimeId', '', new Text(128), 'Runtime unique ID.', false)
-    ->param('buildIds', [], new ArrayList(new Text(0), 100), 'List of build IDs to delete.', false)
     ->inject('orchestrationPool')
     ->inject('activeRuntimes')
     ->inject('response')
-    ->action(function (string $runtimeId, array $buildIds, $orchestrationPool, $activeRuntimes, Response $response) {
-
-        Console::info('Deleting runtime: ' . $runtimeId);
-        $orchestration = $orchestrationPool->get();
+    ->action(function (string $runtimeId, $orchestrationPool, $activeRuntimes, Response $response) {
 
         $container = 'runtime-' . $runtimeId;
-        $status = $orchestration->remove($container, true);
-        if ($status) {
-            Console::success('Removed runtime container: ' . $runtimeId);
-        } else {
+        Console::info('Deleting runtime: ' . $container);
+        try {
+            $orchestration = $orchestrationPool->get();
+            $status = $orchestration->remove($container, true);
+            if ($status) {
+                Console::success('Removed runtime container: ' . $runtimeId);
+            } else {
+                Console::error('Failed to remove runtime container: ' . $runtimeId);
+            }
+            $activeRuntimes->del($container);
+        } catch (\Throwable $th) {
             Console::error('Failed to remove runtime container: ' . $runtimeId);
+        } finally {
+            $orchestrationPool->put($orchestration);
         }
-
-        $activeRuntimes->del($container);
 
         // Remove all the build containers with that same  ID
         // TODO:: Delete build containers
@@ -473,8 +472,6 @@ App::delete('/v1/runtimes/:runtimeId')
         //         Console::error($th->getMessage());
         //     }
         // }
-
-        $orchestrationPool->put($orchestration);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)

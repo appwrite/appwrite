@@ -65,7 +65,7 @@ class Executor
         return $response['body'];
     }
 
-    public function deleteRuntime(string $projectId, string $functionId, string $deploymentId, array $buildIds)
+    public function deleteRuntime(string $projectId, string $functionId, string $deploymentId)
     {
         $runtimeId = "$projectId-$deploymentId";
         $route = "/runtimes/$runtimeId";
@@ -75,9 +75,7 @@ class Executor
             'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
         ];
 
-        $params = [
-            'buildIds' => $buildIds,
-        ];
+        $params = [];
 
         $response = $this->call(self::METHOD_DELETE, $route, $headers, $params, true, 30);
         
