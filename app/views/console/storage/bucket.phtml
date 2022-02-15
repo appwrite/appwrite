@@ -193,7 +193,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                     <button type="button" data-ls-if="{{file.chunksTotal}} == {{file.chunksUploaded}}" data-ls-ui-trigger="file-update-{{file.$id}},modal-close">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse desktops-only-inline tablets-only-inline">Cancel</button>
                                                 </footer>
                                             </div>
-                                            <span data-ls-if="{{file.chunksTotal}} != {{file.chunksUploaded}}">pending</span>
+                                            <span class="pill is-pending" data-ls-if="{{file.chunksTotal}} != {{file.chunksUploaded}}">pending</span>
                                         </td>
                                         <td data-title="Type: ">
                                             <span class="text-fade text-size-small" data-ls-bind="{{file.mimeType}}"></span>
