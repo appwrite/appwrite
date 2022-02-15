@@ -861,7 +861,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('connected', $response['type']);
         $this->assertNotEmpty($response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(1, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
         $this->assertNotEmpty($response['data']['user']);
         $this->assertEquals($user['$id'], $response['data']['user']['$id']);
