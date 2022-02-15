@@ -864,32 +864,40 @@ App::post('/v1/functions/:functionId/executions')
 
         /** Execute function */
         $executor = new Executor();
-        $responseExecute = $executor->createExecution(
-            projectId: $project->getId(),
-            functionId: $function->getId(),
-            deploymentId: $deployment->getId(),
-            path: $build->getAttribute('outputPath', ''),
-            vars: $vars,
-            data: $data,
-            entrypoint: $deployment->getAttribute('entrypoint', ''),
-            runtime: $function->getAttribute('runtime', ''),
-            timeout: $function->getAttribute('timeout', 0),
-            baseImage: $runtime['image']
-        );
+        $executionResponse = [];
+        try {
+            $executionResponse = $executor->createExecution(
+                projectId: $project->getId(),
+                functionId: $function->getId(),
+                deploymentId: $deployment->getId(),
+                path: $build->getAttribute('outputPath', ''),
+                vars: $vars,
+                data: $data,
+                entrypoint: $deployment->getAttribute('entrypoint', ''),
+                runtime: $function->getAttribute('runtime', ''),
+                timeout: $function->getAttribute('timeout', 0),
+                baseImage: $runtime['image']
+            );
 
-        /** Update execution status */
-        $execution->setAttribute('status', $responseExecute['status']);
-        $execution->setAttribute('statusCode', $responseExecute['statusCode']);
-        $execution->setAttribute('stdout', $responseExecute['stdout']);
-        $execution->setAttribute('stderr', $responseExecute['stderr']);
-        $execution->setAttribute('time', $responseExecute['time']);
+            /** Update execution status */
+            $execution->setAttribute('status', $executionResponse['status']);
+            $execution->setAttribute('statusCode', $executionResponse['statusCode']);
+            $execution->setAttribute('stdout', $executionResponse['stdout']);
+            $execution->setAttribute('stderr', $executionResponse['stderr']);
+            $execution->setAttribute('time', $executionResponse['time']);
+        } catch (\Throwable $th) {
+            $execution->setAttribute('status', 'failed');
+            $execution->setAttribute('statusCode', $th->getCode());
+            $execution->setAttribute('stderr', $th->getMessage());
+            Console::error($th->getMessage());
+        }
+
         Authorization::skip(fn() => $dbForProject->updateDocument('executions', $executionId, $execution));
-
-        $responseExecute['response'] = ($responseExecute['status'] !== 'completed') ? $responseExecute['stderr'] : $responseExecute['stdout'];
+        $executionResponse['response'] = ($executionResponse['status'] !== 'completed') ? $executionResponse['stderr'] : $executionResponse['stdout'];
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic(new Document($responseExecute), Response::MODEL_SYNC_EXECUTION);
+            ->dynamic(new Document($executionResponse), Response::MODEL_SYNC_EXECUTION);
     });
 
 App::get('/v1/functions/:functionId/executions')

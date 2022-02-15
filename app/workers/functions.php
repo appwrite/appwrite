@@ -14,27 +14,11 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Orchestration\Adapter\DockerAPI;
-use Utopia\Orchestration\Orchestration;
 
 require_once __DIR__.'/../init.php';
 
-Runtime::enableCoroutine(0);
-
 Console::title('Functions V1 Worker');
 Console::success(APP_NAME . ' functions worker v1 has started');
-
-$runtimes = Config::getParam('runtimes');
-
-$dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
-$dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
-$dockerEmail = App::getEnv('DOCKERHUB_PULL_EMAIL', null);
-$orchestration = new Orchestration(new DockerAPI($dockerUser, $dockerPass, $dockerEmail));
-
-$warmupEnd = \microtime(true);
-$warmupTime = $warmupEnd - $warmupStart;
-
-Console::success('Finished warmup in ' . $warmupTime . ' seconds');
 
 class FunctionsV1 extends Worker
 {
@@ -303,25 +287,33 @@ class FunctionsV1 extends Worker
         $vars = \array_merge($function->getAttribute('vars', []), $vars);
 
         /** Execute function */
-        $executionResponse = $this->executor->createExecution(
-            projectId: $projectId,
-            functionId: $functionId,
-            deploymentId: $deploymentId,
-            path: $build->getAttribute('outputPath', ''),
-            vars: $vars,
-            entrypoint: $deployment->getAttribute('entrypoint', ''),
-            data: $vars['APPWRITE_FUNCTION_DATA'],
-            runtime: $function->getAttribute('runtime', ''),
-            timeout: $function->getAttribute('timeout', 0),
-            baseImage: $runtime['image']
-        );
+        try {
+            $executionResponse = $this->executor->createExecution(
+                projectId: $projectId,
+                functionId: $functionId,
+                deploymentId: $deploymentId,
+                path: $build->getAttribute('outputPath', ''),
+                vars: $vars,
+                entrypoint: $deployment->getAttribute('entrypoint', ''),
+                data: $vars['APPWRITE_FUNCTION_DATA'],
+                runtime: $function->getAttribute('runtime', ''),
+                timeout: $function->getAttribute('timeout', 0),
+                baseImage: $runtime['image']
+            );
 
-        /** Update execution status */
-        $execution->setAttribute('status', $executionResponse['status']);
-        $execution->setAttribute('statusCode', $executionResponse['statusCode']);
-        $execution->setAttribute('stdout', $executionResponse['stdout']);
-        $execution->setAttribute('stderr', $executionResponse['stderr']);
-        $execution->setAttribute('time', $executionResponse['time']);
+            /** Update execution status */
+            $execution->setAttribute('status', $executionResponse['status']);
+            $execution->setAttribute('statusCode', $executionResponse['statusCode']);
+            $execution->setAttribute('stdout', $executionResponse['stdout']);
+            $execution->setAttribute('stderr', $executionResponse['stderr']);
+            $execution->setAttribute('time', $executionResponse['time']);
+        } catch (\Throwable $th) {
+            $execution->setAttribute('status', 'failed');
+            $execution->setAttribute('statusCode', $th->getCode());
+            $execution->setAttribute('stderr', $th->getMessage());
+            Console::error($th->getMessage());
+        }
+
         $execution = Authorization::skip(fn() => $dbForProject->updateDocument('executions', $executionId, $execution));
 
         /** Trigger Webhook */
