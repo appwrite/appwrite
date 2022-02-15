@@ -33,16 +33,15 @@ use Utopia\Validator\Text;
 // Remove orphans on startup - done
 // Remove multiple request attempt to the runtime logic in executor - done
 // Remove builds param from delete endpoint - done
+// Shutdown callback isn't working as expected - done
 
-
-// Shutdown callback isn't working as expected
 // Incorporate Matej's changes in the build stage ( moving of the tar file will be performed by the runtime and not the build stage )
 // Fix error handling and logging
 // Fix delete endpoint
 // Add size validators for the runtime IDs 
 // Decide on logic for build and runtime containers names ( runtime-ID and build-ID)
 
-Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
 
 /** Constants */
 const MAINTENANCE_INTERVAL = 1200; // 20 minutes
@@ -769,7 +768,7 @@ $http->on('start', function ($http) {
 });
 
 
-$http->on('shutdown', function() {
+$http->on('beforeShutdown', function() {
     global $orchestrationPool;
     Console::info('Cleaning up containers before shutdown...');
 
@@ -777,7 +776,6 @@ $http->on('shutdown', function() {
     $functionsToRemove = $orchestration->list(['label' => 'openruntimes-type=function']);
     $orchestrationPool->put($orchestration);
 
-    // This does not seem to be working since this is not a coroutine scope . 
     foreach ($functionsToRemove as $container) {
         go(function () use ($orchestrationPool, $container) { 
             try {
