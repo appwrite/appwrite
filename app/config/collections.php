@@ -2158,9 +2158,9 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_status',
+                '$id' => '_key_deployment',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['status'],
+                'attributes' => ['deploymentId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ]

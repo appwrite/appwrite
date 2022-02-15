@@ -408,7 +408,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
             $buildId = $database->getId();
             $database->createDocument('builds', new Document([
                 '$id' => $buildId,
-                '$read' => ($userId !== '') ? ['user:' . $userId] : [],
+                '$read' => [],
                 '$write' => [],
                 'startTime' => time(),
                 'deploymentId' => $deployment->getId(),
@@ -685,9 +685,7 @@ function runBuildStage(string $buildId, string $deploymentId, string $projectID)
 
         // Update deployment Status
         $build->setAttribute('status', 'building');
-        $deployment->setAttribute('status', 'building');
         $database->updateDocument('builds', $buildId, $build);
-        $database->updateDocument('deployments', $deploymentId, $deployment);
 
         // Check if runtime is active
         $runtime = $runtimes[$build->getAttribute('runtime', '')] ?? null;
@@ -748,6 +746,7 @@ function runBuildStage(string $buildId, string $deploymentId, string $projectID)
         }
 
         $vars = $resource->getAttribute('vars', []);
+        $vars['ENTRYPOINT_NAME'] = $resource->getAttribute('entrypoint', '');
 
         $orchestration
             ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
@@ -903,13 +902,10 @@ function runBuildStage(string $buildId, string $deploymentId, string $projectID)
             ->setAttribute('stdout',  \utf8_encode(\mb_substr($buildStdout, -4096)))
             ->setAttribute('stderr', \utf8_encode(\mb_substr($e->getMessage(), -4096)))
             ->setAttribute('startTime', $buildStart)
-            ->setAttribute('endTime', \microtime(true))
-            ->setAttribute('duration', \microtime(true) - $buildStart);
+            ->setAttribute('endTime', \time())
+            ->setAttribute('duration', \time() - $buildStart);
 
         $build = $database->updateDocument('builds', $buildId, $build);
-
-        $deployment->setAttribute('status', 'failed');
-        $database->updateDocument('deployments', $deploymentId, $deployment);
 
         // also remove the container if it exists
         if (isset($id)) {
@@ -955,58 +951,63 @@ App::post('/v1/functions/:functionId/executions')
 
 App::delete('/v1/functions/:functionId')
     ->desc('Delete a function')
-    ->param('functionId', '', new UID(), 'The FunctionID to delete')
+    ->param('functionId', '', new UID())
+    ->inject('projectId')
     ->inject('response')
     ->inject('dbForProject')
     ->action(
-        function (string $functionId, Response $response, Database $dbForProject) use ($orchestrationPool) {
-            try {
-                /** @var Orchestration $orchestration */
-                $orchestration = $orchestrationPool->get();
-                
-                // Get function document
-                $function = $dbForProject->getDocument('functions', $functionId);
+        function (string $functionId, string $projectId, Response $response, Database $dbForProject) use ($orchestrationPool) {
 
-                // Check if function exists
-                if ($function->isEmpty()) {
-                    throw new Exception('Function not found', 404);
-                }
+            $results = $dbForProject->find('deployments', [new Query('resourceId', Query::TYPE_EQUAL, [$functionId])], 999);
 
-                $results = $dbForProject->find('deployments', [new Query('functionId', Query::TYPE_EQUAL, [$functionId])], 999);
-
-                // If amount is 0 then we simply return true
-                if (count($results) === 0) {
-                    $response
-                        ->setStatusCode(Response::STATUS_CODE_OK)
-                        ->send();
-                }
-
-                // Delete the containers of all deployments
-                foreach ($results as $deployment) {
-                    // Remove any ongoing builds
-                    if ($deployment->getAttribute('buildId')) {
-                        $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
-
-                        if ($build->getAttribute('status') === 'building') {
-                            // Remove the build
-                            $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
-                            Console::info('Removed build for deployment ' . $deployment['$id']);
-                        }
-                    }
-
-                    $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
-                    Console::info('Removed container for deployment ' . $deployment['$id']);
-                }
-
+            // If amount is 0 then we simply return true
+            if (count($results) === 0) {
                 $response
                     ->setStatusCode(Response::STATUS_CODE_OK)
                     ->send();
-            } catch (Throwable $th) {
-                $orchestrationPool->put($orchestration);
-                throw $th; 
-            } finally {
-                $orchestrationPool->put($orchestration);
             }
+
+            Console::info('Deleting function: ' . $functionId);
+            // Delete the containers of all deployments
+            global $register;
+            foreach ($results as $deployment) {
+                go(function () use ($orchestrationPool, $deployment, $register, $projectId) {
+                    $db = $register->get('dbPool')->get();
+                    $redis = $register->get('redisPool')->get();
+                    $cache = new Cache(new RedisCache($redis));
+                    $dbForProject = new Database(new MariaDB($db), $cache);
+                    $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+                    $dbForProject->setNamespace('_project_' . $projectId);
+                    
+                    try {
+                        $orchestration = $orchestrationPool->get();
+                        // Remove the container of the deployment
+                        $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
+                        Console::success('Removed container for deployment: ' . $deployment['$id']);
+
+                        $builds = $dbForProject->find('builds', [ 
+                            new Query('deploymentId', Query::TYPE_EQUAL, [$deployment['$id']]),
+                            new Query('status', Query::TYPE_EQUAL, ['building'])
+                        ], 999);
+        
+                        // Remove all the build containers
+                        foreach ($builds as $build) {
+                            $orchestration->remove('build-stage-' . $build['$id'], true);
+                            Console::success("Removed build contanier: $build for deployment: " . $deployment['$id']);
+                        }
+                    } catch (\Throwable $th) {
+                        Console::error($th->getMessage());
+                    } finally {
+                        $orchestrationPool->put($orchestration);
+                        $register->get('dbPool')->put($db);
+                        $register->get('redisPool')->put($redis);
+                    }
+                });
+            }
+
+            $response
+                ->setStatusCode(Response::STATUS_CODE_OK)
+                ->send();
         }
     );
 
@@ -1045,40 +1046,43 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/runtime')
 App::delete('/v1/deployments/:deploymentId')
     ->desc('Delete a deployment')
     ->param('deploymentId', '', new UID(), 'Deployment unique ID.')
+    ->inject('projectId')
     ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (string $deploymentId, Response $response, Database $dbForProject) use ($orchestrationPool) {
-        try {
-            /** @var Orchestration $orchestration */
-            $orchestration = $orchestrationPool->get();
-            
-            // Get deployment document
-            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+    ->action(function (string $deploymentId, string $projectId, Response $response) use ($orchestrationPool) {
+        Console::info('Deleting deployment: ' . $deploymentId);
+        global $register;
+        go(function () use ($projectId, $orchestrationPool, $register, $deploymentId) {
+            try {
+                $orchestration = $orchestrationPool->get();
+                // Remove the container of the deployment
+                $orchestration->remove('appwrite-function-' . $deploymentId , true);
+                Console::success('Removed container for deployment: ' . $deploymentId);
 
-            // Check if deployment exists
-            if ($deployment->isEmpty()) {
-                throw new Exception('Deployment not found', 404);
-            }
+                $db = $register->get('dbPool')->get();
+                $redis = $register->get('redisPool')->get();
+                $cache = new Cache(new RedisCache($redis));
+                $dbForProject = new Database(new MariaDB($db), $cache);
+                $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+                $dbForProject->setNamespace('_project_' . $projectId);
 
-            // Remove any ongoing builds
-            if ($deployment->getAttribute('buildId')) {
-                $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId'));
+                $builds = $dbForProject->find('builds', [ 
+                    new Query('deploymentId', Query::TYPE_EQUAL, [$deploymentId]),
+                    new Query('status', Query::TYPE_EQUAL, ['building'])
+                ], 999);
 
-                if ($build->getAttribute('status') === 'building') {
-                    // Remove the build
-                    $orchestration->remove('build-stage-' . $deployment->getAttribute('buildId'), true);
-                    Console::info('Removed build for deployment ' . $deployment['$id']);
+                // Remove all the build containers
+                foreach ($builds as $build) {
+                    $orchestration->remove('build-stage-' . $build['$id'], true);
+                    Console::success("Removed build container: $build for deployment: " . $deploymentId);
                 }
+            } catch (\Throwable $th) {
+                Console::error($th->getMessage());
+            } finally {
+                $orchestrationPool->put($orchestration);
+                $register->get('dbPool')->put($db);
+                $register->get('redisPool')->put($redis);
             }
-
-            // Remove the container of the deployment
-            $orchestration->remove('appwrite-function-' . $deployment['$id'], true);
-            Console::info('Removed container for deployment ' . $deployment['$id']);
-        } catch (Throwable $th) {
-            $orchestrationPool->put($orchestration);
-            throw $th;
-        }
-        $orchestrationPool->put($orchestration);
+        });
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
@@ -1147,12 +1151,10 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
             // Deploy Runtime Server
             try {
-                Console::info("[ INFO ] Creating runtime server");
+                Console::info("Creating runtime server");
                 createRuntimeServer($functionId, $projectId, $deploymentId, $dbForProject);
             } catch (\Throwable $th) {
                 Console::error($th->getMessage());
-                $deployment->setAttribute('status', 'failed');
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
                 throw $th;
             }
         });

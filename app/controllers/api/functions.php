@@ -423,43 +423,12 @@ App::delete('/v1/functions/:functionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('deletes')
-    ->inject('project')
-    ->action(function ($functionId, $response, $dbForProject, $deletes, $project) {
+    ->action(function ($functionId, $response, $dbForProject, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $deletes */
-        /** @var Utopia\Database\Document $project */
 
         $function = $dbForProject->getDocument('functions', $functionId);
-
-        // Request executor to delete deployment containers
-        $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/$functionId");
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
-        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'x-appwrite-project: '.$project->getId(),
-            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
-        ]);
-
-        $executorResponse = \curl_exec($ch);
-
-        $error = \curl_error($ch);
-
-        if (!empty($error)) {
-            throw new Exception('Executor Cleanup Error: ' . $error, 500);
-        }
-
-        // Check status code
-        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        if (200 !== $statusCode) {
-            throw new Exception('Executor error: ' . $executorResponse, $statusCode);
-        }
-
-        \curl_close($ch);
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
@@ -713,64 +682,29 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->inject('project')
-    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $usage, $project) {
+    ->inject('deletes')
+    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $usage, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
-        /** @var Utopia\Database\Document $project */
+        /** @var Appwrite\Event\Event $deletes */
 
         $function = $dbForProject->getDocument('functions', $functionId);
-
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
         
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found', 404);
+        }
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception('Deployment not found', 404);
         }
 
-        if ($deployment->isEmpty()) {
-            throw new Exception('deployment not found', 404);
-        }
-
-        // Request executor to delete deployment containers
-        $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/deployments/$deploymentId");
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
-        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'x-appwrite-project: '.$project->getId(),
-            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
-        ]);
-
-        $executorResponse = \curl_exec($ch);
-
-        $error = \curl_error($ch);
-
-        if (!empty($error)) {
-            throw new Exception('Executor Cleanup error: ' . $error, 500);
-        }
-
-        // Check status code
-        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        if (200 !== $statusCode) {
-            throw new Exception('Executor error: ' . $executorResponse, $statusCode);
-        }
-
-        \curl_close($ch);
-
-        $device = Storage::getDevice('functions');
-
-        if ($device->delete($deployment->getAttribute('path', ''))) {
-            if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-                throw new Exception('Failed to remove deployment from DB', 500);
-            }
+        if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+            throw new Exception('Failed to remove deployment from DB', 500);
         }
 
         if($function->getAttribute('deployment') === $deployment->getId()) { // Reset function deployment
@@ -781,6 +715,11 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
 
         $usage
             ->setParam('storage', $deployment->getAttribute('size', 0) * -1)
+        ;
+
+        $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $deployment)
         ;
 
         $response->noContent();
