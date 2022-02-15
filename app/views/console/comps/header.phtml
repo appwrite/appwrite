@@ -316,7 +316,11 @@
                             write,
                             (progress) => {
                                 /*if cancelled
-                                throw something*/
+                                throw something
+                                 - When cancelled we need to delete the file
+                                 - but we don't yet have the id of the file,
+                                 - after resumable upload change, we will have the id
+                                */
                                 this.updateFile(id, {
                                     id: id,
                                     progress: Math.round(progress),
