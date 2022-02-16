@@ -915,14 +915,21 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
 
-        if (!\in_array($mime, $inputs)) {
-            $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
+        if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > APP_LIMIT_PREVIEW) {
+            if(!\in_array($mime, $inputs)) {
+                $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
+            } else {
+                // it was an image but the file size exceeded the limit
+                $path = $fileLogos['default_image'];
+            }
+
             $algorithm = null;
             $cipher = null;
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
             $key = \md5($path . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
         }
+
 
         $compressor = new GZIP();
 
