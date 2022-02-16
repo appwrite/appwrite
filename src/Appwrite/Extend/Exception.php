@@ -33,6 +33,7 @@ class Exception extends \Exception
 
     /** General */
     const GENERAL_UNKNOWN                   = 'general_unknown';
+    const GENERAL_MOCK                      = 'general_mock';
     const GENERAL_ACCESS_FORBIDDEN          = 'general_access_forbidden';
     const GENERAL_UNKNOWN_ORIGIN            = 'general_unknown_origin';
     const GENERAL_SERVICE_DISABLED          = 'general_service_disabled';

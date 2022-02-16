@@ -13,6 +13,11 @@ return [
         'description' => 'An unknown error has occured. Please check the logs for more information.',
         'code' => 500, 
     ],
+    Exception::GENERAL_MOCK => [
+        'name' => Exception::GENERAL_MOCK,
+        'description' => 'General errors thrown by the mock controller used for testing.',
+        'code' => 400, 
+    ],
     Exception::GENERAL_ACCESS_FORBIDDEN => [
         'name' => Exception::GENERAL_ACCESS_FORBIDDEN,
         'description' => 'Access to this API is forbidden.',
