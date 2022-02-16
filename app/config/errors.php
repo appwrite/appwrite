@@ -259,6 +259,11 @@ return [
         'description' => 'The file size is either not valid or exceeds the maximum allowed size. Please check the file or the value of the _APP_STORAGE_LIMIT environment variable.',
         'code' => 400,
     ],
+    Exception::STORAGE_INVALID_CONTENT_RANGE => [
+        'name' => Exception::STORAGE_INVALID_CONTENT_RANGE,
+        'description' => 'The content range is invalid. Please check the value of the Content-Range header.',
+        'code' => 400,
+    ],
     Exception::STORAGE_INVALID_FILE => [
         'name' => Exception::STORAGE_INVALID_FILE,
         'description' => 'The uploaded file is invalid. Please check the file and try again.',

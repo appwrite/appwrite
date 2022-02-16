@@ -90,6 +90,7 @@ class Exception extends \Exception
     const STORAGE_FILE_EMPTY                = 'storage_file_empty';
     const STORAGE_FILE_TYPE_UNSUPPORTED     = 'storage_file_type_unsupported';
     const STORAGE_INVALID_FILE_SIZE         = 'storage_invalid_file_size';
+    const STORAGE_INVALID_CONTENT_RANGE     = 'storage_invalid_content_range';
     const STORAGE_INVALID_FILE              = 'storage_invalid_file';
 
     /** Functions */
