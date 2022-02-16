@@ -345,7 +345,7 @@ App::put('/v1/functions/:functionId')
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
-App::patch('/v1/functions/:functionId/deployment')
+App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Update Function Deployment')
     ->label('scope', 'functions.write')
@@ -358,17 +358,17 @@ App::patch('/v1/functions/:functionId/deployment')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('deployment', '', new UID(), 'Deployment ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->action(function ($functionId, $deployment, $response, $dbForProject, $project) {
+    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
 
         $function = $dbForProject->getDocument('functions', $functionId);
-        $deployment = $dbForProject->getDocument('deployments', $deployment);
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
         $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
 
         if ($function->isEmpty()) {
@@ -992,7 +992,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         $response->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
-App::post('/v1/builds/:buildId')
+App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
     ->desc('Retry Build')
     ->label('scope', 'functions.write')
@@ -1003,14 +1003,27 @@ App::post('/v1/builds/:buildId')
     ->label('sdk.description', '/docs/references/functions/retry-build.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('functionId', '', new UID(), 'Function ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->param('buildId', '', new UID(), 'Build unique ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->action(function ($buildId, $response, $dbForProject, $project) {
+    ->action(function ($functionId, $deploymentId, $buildId, $response, $dbForProject, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        if ($function->isEmpty()) {
+            throw new Exception('Function not found', 404);
+        }
+
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found', 404);
+        }
 
         $build = Authorization::skip(fn() => $dbForProject->getDocument('builds', $buildId));
 
