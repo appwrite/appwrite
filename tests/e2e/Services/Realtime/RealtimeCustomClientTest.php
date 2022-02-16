@@ -851,7 +851,7 @@ class RealtimeCustomClientTest extends Scope
         $session = $user['session'] ?? '';
         $projectId = $this->getProject()['$id'];
 
-        $client = $this->getWebsocket(['files', 'buckets'], [
+        $client = $this->getWebsocket(['files'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_'.$projectId.'=' . $session
         ]);
@@ -861,9 +861,8 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('connected', $response['type']);
         $this->assertNotEmpty($response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(1, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
-        $this->assertContains('buckets', $response['data']['channels']);
         $this->assertNotEmpty($response['data']['user']);
         $this->assertEquals($user['$id'], $response['data']['user']['$id']);
 
@@ -881,18 +880,7 @@ class RealtimeCustomClientTest extends Scope
             'write' => ['role:all'],
             'permission' => 'bucket'
         ]);
-        $response = json_decode($client->receive(), true);
 
-        $this->assertArrayHasKey('type', $response);
-        $this->assertArrayHasKey('data', $response);
-        $this->assertEquals('event', $response['type']);
-        $this->assertNotEmpty($response['data']);
-        $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(2, $response['data']['channels']);
-        $this->assertContains('buckets', $response['data']['channels']);
-        $this->assertContains('buckets.' . $bucket1['body']['$id'], $response['data']['channels']);
-        $this->assertEquals('storage.buckets.create', $response['data']['event']);
-        $this->assertNotEmpty($response['data']['payload']);
         $data = ['bucketId' => $bucket1['body']['$id']];
         /**
          * Test File Create
@@ -905,7 +893,6 @@ class RealtimeCustomClientTest extends Scope
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'read' => ['role:all'],
             'write' => ['role:all'],
-            'folderId' => 'xyz',
         ]);
 
         $response = json_decode($client->receive(), true);
@@ -917,7 +904,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
-        $this->assertContains('files.' . $file['body']['$id'], $response['data']['channels']);
+        $this->assertContains('buckets.' . $data['bucketId'] . '.files.' . $file['body']['$id'], $response['data']['channels']);
         $this->assertContains('buckets.' . $data['bucketId'] . '.files', $response['data']['channels']);
         $this->assertEquals('storage.files.create', $response['data']['event']);
         $this->assertNotEmpty($response['data']['payload']);
@@ -944,7 +931,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
-        $this->assertContains('files.' . $file['body']['$id'], $response['data']['channels']);
+        $this->assertContains('buckets.' . $data['bucketId'] . '.files.' . $file['body']['$id'], $response['data']['channels']);
         $this->assertContains('buckets.' . $data['bucketId'] . '.files', $response['data']['channels']);
         $this->assertEquals('storage.files.update', $response['data']['event']);
         $this->assertNotEmpty($response['data']['payload']);
@@ -966,7 +953,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
-        $this->assertContains('files.' . $file['body']['$id'], $response['data']['channels']);
+        $this->assertContains('buckets.' . $data['bucketId'] . '.files.' . $file['body']['$id'], $response['data']['channels']);
         $this->assertContains('buckets.' . $data['bucketId'] . '.files', $response['data']['channels']);
         $this->assertEquals('storage.files.delete', $response['data']['event']);
         $this->assertNotEmpty($response['data']['payload']);

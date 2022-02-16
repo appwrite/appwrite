@@ -358,15 +358,17 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('user')
     ->inject('audits')
     ->inject('usage')
+    ->inject('events')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('deviceLocal')
-    ->action(function ($bucketId, $fileId, $file, $read, $write, $request, $response, $dbForProject, $user, $audits, $usage, $mode, $deviceFiles, $deviceLocal) {
+    ->action(function ($bucketId, $fileId, $file, $read, $write, $request, $response, $dbForProject, $user, $audits, $usage, $events, $mode, $deviceFiles, $deviceLocal) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Utopia\Storage\Device $deviceFiles */
         /** @var Utopia\Storage\Device $deviceLocal */
@@ -672,6 +674,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 throw new Exception('Document already exists', 409);
             }
         }
+
+        $events->setParam('bucket', $bucket->getArrayCopy());
 
         $metadata = null; // was causing leaks as it was passed by reference
 
@@ -1339,12 +1343,14 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('audits')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($bucketId, $fileId, $read, $write, $response, $dbForProject, $user, $audits, $usage, $mode) {
+    ->inject('events')
+    ->action(function ($bucketId, $fileId, $read, $write, $response, $dbForProject, $user, $audits, $usage, $mode, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwirte\Event\Event $events */
         /** @var string $mode */
 
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
@@ -1405,6 +1411,8 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
                     ->setAttribute('$write', $write)
             );
         }
+
+        $events->setParam('bucket', $bucket->getArrayCopy());
 
         $audits
             ->setParam('event', 'storage.files.update')
@@ -1521,6 +1529,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $events
             ->setParam('eventData', $response->output($file, Response::MODEL_FILE))
+            ->setParam('bucket', $bucket->getArrayCopy())
         ;
 
         $response->noContent();
