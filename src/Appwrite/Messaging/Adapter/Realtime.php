@@ -295,8 +295,15 @@ class Realtime extends Adapter
                 $roles = ($collection->getAttribute('permission') === 'collection') ? $collection->getRead() : $payload->getRead();
 
                 break;
-            case strpos($event, 'storage.') === 0:
+            case strpos($event, 'storage.buckets.') === 0:
+                $channels[] = 'buckets';
+                $channels[] = 'buckets.' . $payload->getId();
+                $roles = $payload->getRead();
+
+                break;
+            case strpos($event, 'storage.files') === 0:
                 $channels[] = 'files';
+                $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files';
                 $channels[] = 'files.' . $payload->getId();
                 $roles = $payload->getRead();
 

@@ -49,6 +49,10 @@ use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
 use Utopia\Database\Query;
+use Utopia\Storage\Storage;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\S3;
+use Utopia\Storage\Device\DOSpaces;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -60,6 +64,9 @@ const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
+const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
+const APP_LIMIT_ENCRYPTION = 20000000; //20MB
+const APP_LIMIT_COMPRESSION = 20000000; //20MB
 const APP_CACHE_BUSTER = 201;
 const APP_VERSION_STABLE = '0.13.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
@@ -74,6 +81,7 @@ const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
+const APP_STORAGE_READ_BUFFER = 20 * (1000 * 1000); //20MB other names `APP_STORAGE_MEMORY_LIMIT`, `APP_STORAGE_MEMORY_BUFFER`, `APP_STORAGE_READ_LIMIT`, `APP_STORAGE_BUFFER_LIMIT`
 const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite';
 const APP_SOCIAL_TWITTER_HANDLE = 'appwrite';
 const APP_SOCIAL_FACEBOOK = 'https://www.facebook.com/appwrite.io';
@@ -106,6 +114,7 @@ const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_CERTIFICATES = 'certificates';
 const DELETE_TYPE_USAGE = 'usage';
 const DELETE_TYPE_REALTIME = 'realtime';
+const DELETE_TYPE_BUCKETS = 'buckets';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -116,6 +125,8 @@ const APP_AUTH_TYPE_SESSION = 'Session';
 const APP_AUTH_TYPE_JWT = 'JWT';
 const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
+// Response related
+const MAX_OUTPUT_CHUNK_SIZE = 2*1024*1024; // 2MB
 
 $register = new Registry();
 
@@ -780,6 +791,53 @@ App::setResource('dbForConsole', function($db, $cache) {
 
     return $database;
 }, ['db', 'cache']);
+
+
+App::setResource('deviceLocal', function() {
+    return new Local();
+});
+
+App::setResource('deviceFiles', function($project) {
+    switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
+        case Storage::DEVICE_LOCAL:default:
+            return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+        case Storage::DEVICE_S3:
+            $s3AccessKey = App::getEnv('_APP_STORAGE_DEVICE_S3_ACCESS_KEY', '');
+            $s3SecretKey = App::getEnv('_APP_STORAGE_DEVICE_S3_SECRET', '');
+            $s3Region = App::getEnv('_APP_STORAGE_DEVICE_S3_REGION', '');
+            $s3Bucket = App::getEnv('_APP_STORAGE_DEVICE_S3_BUCKET', '');
+            $s3Acl = 'private';
+            return new S3(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
+        case Storage::DEVICE_DO_SPACES:
+            $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_ACCESS_KEY', '');
+            $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_SECRET', '');
+            $doSpacesRegion = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_REGION', '');
+            $doSpacesBucket = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_BUCKET', '');
+            $doSpacesAcl = 'private';
+            return new DOSpaces(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+    }
+}, ['project']);
+
+App::setResource('deviceFunctions', function($project) {
+    switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
+        case Storage::DEVICE_LOCAL:default:
+            return new Local(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+        case Storage::DEVICE_S3:
+            $s3AccessKey = App::getEnv('_APP_STORAGE_DEVICE_S3_ACCESS_KEY', '');
+            $s3SecretKey = App::getEnv('_APP_STORAGE_DEVICE_S3_SECRET', '');
+            $s3Region = App::getEnv('_APP_STORAGE_DEVICE_S3_REGION', '');
+            $s3Bucket = App::getEnv('_APP_STORAGE_DEVICE_S3_BUCKET', '');
+            $s3Acl = 'private';
+            return new S3(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
+        case Storage::DEVICE_DO_SPACES:
+            $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_ACCESS_KEY', '');
+            $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_SECRET', '');
+            $doSpacesRegion = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_REGION', '');
+            $doSpacesBucket = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_BUCKET', '');
+            $doSpacesAcl = 'private';
+            return new DOSpaces(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+    }
+}, ['project']);
 
 App::setResource('mode', function($request) {
     /** @var Appwrite\Utopia\Request $request */

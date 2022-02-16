@@ -851,7 +851,7 @@ class RealtimeCustomClientTest extends Scope
         $session = $user['session'] ?? '';
         $projectId = $this->getProject()['$id'];
 
-        $client = $this->getWebsocket(['files'], [
+        $client = $this->getWebsocket(['files', 'buckets'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_'.$projectId.'=' . $session
         ]);
@@ -861,15 +861,43 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('connected', $response['type']);
         $this->assertNotEmpty($response['data']);
-        $this->assertCount(1, $response['data']['channels']);
+        $this->assertCount(2, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
+        $this->assertContains('buckets', $response['data']['channels']);
         $this->assertNotEmpty($response['data']['user']);
         $this->assertEquals($user['$id'], $response['data']['user']['$id']);
 
         /**
+         * Test Bucket Create
+         */
+        $bucket1 = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'bucketId' => 'unique()',
+            'name' => 'Bucket 1',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+            'permission' => 'bucket'
+        ]);
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains('buckets', $response['data']['channels']);
+        $this->assertContains('buckets.' . $bucket1['body']['$id'], $response['data']['channels']);
+        $this->assertEquals('storage.buckets.create', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
+        $data = ['bucketId' => $bucket1['body']['$id']];
+        /**
          * Test File Create
          */
-        $file = $this->client->call(Client::METHOD_POST, '/storage/files', array_merge([
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -887,18 +915,19 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
         $this->assertContains('files.' . $file['body']['$id'], $response['data']['channels']);
+        $this->assertContains('buckets.' . $data['bucketId'] . '.files', $response['data']['channels']);
         $this->assertEquals('storage.files.create', $response['data']['event']);
         $this->assertNotEmpty($response['data']['payload']);
 
-        $data = ['fileId' => $file['body']['$id']];
+        $data['fileId'] = $file['body']['$id'];
 
         /**
          * Test File Update
          */
-        $this->client->call(Client::METHOD_PUT, '/storage/files/' . $data['fileId'], array_merge([
+        $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -913,16 +942,17 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
         $this->assertContains('files.' . $file['body']['$id'], $response['data']['channels']);
+        $this->assertContains('buckets.' . $data['bucketId'] . '.files', $response['data']['channels']);
         $this->assertEquals('storage.files.update', $response['data']['event']);
         $this->assertNotEmpty($response['data']['payload']);
 
         /**
          * Test File Delete
          */
-        $this->client->call(Client::METHOD_DELETE, '/storage/files/' . $data['fileId'], array_merge([
+        $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -934,9 +964,10 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
         $this->assertContains('files.' . $file['body']['$id'], $response['data']['channels']);
+        $this->assertContains('buckets.' . $data['bucketId'] . '.files', $response['data']['channels']);
         $this->assertEquals('storage.files.delete', $response['data']['event']);
         $this->assertNotEmpty($response['data']['payload']);
 
