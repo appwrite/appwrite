@@ -464,14 +464,14 @@ App::post('/v1/functions/:functionId/deployments')
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
     ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
-    ->param('deploy', false, new Boolean(true), 'Automatically deploy the function when it is finished building.', false)
+    ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.', false)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('user')
     ->inject('project')
-    ->action(function ($functionId, $entrypoint, $file, $deploy, $request, $response, $dbForProject, $usage, $user, $project) {
+    ->action(function ($functionId, $entrypoint, $file, $activate, $request, $response, $dbForProject, $usage, $user, $project) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
@@ -520,16 +520,16 @@ App::post('/v1/functions/:functionId/deployments')
             throw new Exception('Failed moving file', 500);
         }
 
-        if ((bool) $deploy) {
+        if ((bool) $activate) {
             // Remove deploy for all other deployments.
             $deployments = $dbForProject->find('deployments', [
-                new Query('deploy', Query::TYPE_EQUAL, [true]),
+                new Query('activate', Query::TYPE_EQUAL, [true]),
                 new Query('resourceId', Query::TYPE_EQUAL, [$functionId]),
                 new Query('resourceType', Query::TYPE_EQUAL, ['functions'])
             ]);
 
             foreach ($deployments as $deployment) {
-                $deployment->setAttribute('deploy', false);
+                $deployment->setAttribute('activate', false);
                 $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
             }
         }
@@ -546,7 +546,7 @@ App::post('/v1/functions/:functionId/deployments')
             'path' => $path,
             'size' => $size,
             'search' => implode(' ', [$deploymentId, $entrypoint]),
-            'deploy' => ($deploy === 'true'),
+            'activate' => ((bool) $activate === true),
         ]));
 
         // Enqueue a message to start the build
