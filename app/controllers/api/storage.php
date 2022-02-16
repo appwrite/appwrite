@@ -909,24 +909,27 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception('File not found', 404);
         }
 
-        if($file->getAttribute('sizeActual') > APP_LIMIT_PREVIEW) {
-            throw new Exception('Preview not supported for file above ' . Storage::human(APP_LIMIT_PREVIEW) . ' in size.', 400);
-        }
-
         $path = $file->getAttribute('path');
         $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
         $algorithm = $file->getAttribute('algorithm');
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
 
-        if (!\in_array($mime, $inputs)) {
-            $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
+        if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > APP_LIMIT_PREVIEW) {
+            if(!\in_array($mime, $inputs)) {
+                $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
+            } else {
+                // it was an image but the file size exceeded the limit
+                $path = $fileLogos['default_image'];
+            }
+
             $algorithm = null;
             $cipher = null;
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
             $key = \md5($path . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
         }
+
 
         $compressor = new GZIP();
 
