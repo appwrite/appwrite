@@ -483,7 +483,7 @@ App::post('/v1/execution')
             $runtime = $activeRuntimes->get($container);
             $secret = $runtime['key'];
             if (empty($secret)) {
-                throw new Exception('Runtime secret not found. Please create the runtime.', 500);
+                throw new Exception('Runtime secret not found. Please re-create the runtime.', 500);
             }
 
             Console::info('Executing Runtime: ' . $runtimeId);
