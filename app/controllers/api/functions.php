@@ -406,6 +406,14 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
             ]);  // Async task rescheduale
         }
 
+        // Enqueue a message to start the build
+        Resque::enqueue(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, [
+            'projectId' => $project->getId(),
+            'functionId' => $function->getId(),
+            'deploymentId' => $deploymentId,
+            'type' => BUILD_TYPE_DEPLOYMENT
+        ]);
+
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 

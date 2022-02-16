@@ -117,7 +117,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                                 data-failure="alert"
                                                 data-failure-param-alert-text="Failed to update deployment"
                                                 data-failure-param-alert-classname="error">
-                                                <input type="hidden" name="deployment" data-ls-bind="{{deployment.$id}}">
+                                                <input type="hidden" name="deploymentId" data-ls-bind="{{deployment.$id}}">
                                                 <button>Activate</button>
                                             </form>
                                             <form data-ls-if="({{deployment.$id}} !== {{project-function.deployment}} && {{deployment.status}} == 'failed')" name="functions.retryBuild" class="pull-end"
