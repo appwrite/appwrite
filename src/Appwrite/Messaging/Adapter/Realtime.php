@@ -301,7 +301,7 @@ class Realtime extends Adapter
                 }
                 $channels[] = 'files';
                 $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files';
-                $channels[] = 'buckets.' . $payload.getAttribute('bucketId') . '.files.' . $payload->getId();
+                $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files.' . $payload->getId();
                 $roles = $payload->getRead();
 
                 break;
