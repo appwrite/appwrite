@@ -909,6 +909,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception('File not found', 404);
         }
 
+        if($file->getAttribute('sizeActual') > APP_LIMIT_PREVIEW) {
+            throw new Exception('Preview not supported for file above ' . Storage::human(APP_LIMIT_PREVIEW) . ' in size.');
+        }
+
         $path = $file->getAttribute('path');
         $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
         $algorithm = $file->getAttribute('algorithm');
