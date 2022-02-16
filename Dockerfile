@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM node:16-alpine as node
+FROM node:16.13.2-alpine3.15 as node
 
 WORKDIR /usr/local/src/
 
@@ -24,7 +24,7 @@ COPY public /usr/local/src/public
 RUN npm ci
 RUN npm run build
 
-FROM php:8.0.14-cli-alpine as compile
+FROM php:8.0.14-cli-alpine3.15 as compile
 
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
@@ -123,7 +123,7 @@ RUN \
   ./configure && \
   make && make install
 
-FROM php:8.0.14-cli-alpine as final
+FROM php:8.0.14-cli-alpine3.15 as final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -152,6 +152,15 @@ ENV _APP_SERVER=swoole \
     _APP_STORAGE_ANTIVIRUS=enabled \
     _APP_STORAGE_ANTIVIRUS_HOST=clamav \
     _APP_STORAGE_ANTIVIRUS_PORT=3310 \
+    _APP_STORAGE_DEVICE=Local \
+    _APP_STORAGE_DEVICE_S3_ACCESS_KEY= \
+    _APP_STORAGE_DEVICE_S3_SECRET= \
+    _APP_STORAGE_DEVICE_S3_REGION= \
+    _APP_STORAGE_DEVICE_S3_BUCKET= \
+    _APP_STORAGE_DEVICE_DO_SPACES_ACCESS_KEY= \
+    _APP_STORAGE_DEVICE_DO_SPACES_SECRET= \
+    _APP_STORAGE_DEVICE_DO_SPACES_REGION= \
+    _APP_STORAGE_DEVICE_DO_SPACES_BUCKET= \
     _APP_REDIS_HOST=redis \
     _APP_REDIS_PORT=6379 \
     _APP_DB_HOST=mariadb \

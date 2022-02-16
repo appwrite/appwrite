@@ -2,7 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
@@ -48,7 +48,7 @@ App::post('/v1/functions')
     ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
     ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
+    ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function ($functionId, $name, $execute, $runtime, $vars, $events, $schedule, $timeout, $response, $dbForProject) {
@@ -296,7 +296,7 @@ App::put('/v1/functions/:functionId')
     ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
     ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, new Range(1, 900), 'Maximum execution time in seconds.', true)
+    ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
@@ -498,15 +498,15 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->inject('user')
-    ->inject('project')
-    ->action(function ($functionId, $entrypoint, $file, $deploy, $request, $response, $dbForProject, $usage, $user, $project) {
+    ->inject('deviceFunctions')
+    ->inject('deviceLocal')
+    ->action(function ($functionId, $command, $file, $request, $response, $dbForProject, $usage, $deviceFunctions, $deviceLocal) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
-        /** @var Appwrite\Auth\User $user */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Storage\Device $deviceFunctions */
+        /** @var Utopia\Storage\Device $deviceLocal */
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -515,9 +515,8 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $file = $request->getFiles('code');
-        $device = Storage::getDevice('functions');
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSize = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
+        $fileSizeValidator = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
         $upload = new Upload();
 
         if (empty($file)) {
@@ -525,27 +524,62 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         // Make sure we handle a single file and multiple files the same way
-        $file['name'] = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
-        $file['tmp_name'] = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
-        $file['size'] = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+        $fileName = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
+        $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
+        $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         if (!$fileExt->isValid($file['name'])) { // Check if file type is allowed
             throw new Exception('File type not allowed', 400);
         }
 
-        if (!$fileSize->isValid($file['size'])) { // Check if file size is exceeding allowed limit
+        $contentRange = $request->getHeader('content-range');
+        $tagId = $dbForProject->getId();
+        $chunk = 1;
+        $chunks = 1;
+
+        if (!empty($contentRange)) {
+            $start = $request->getContentRangeStart();
+            $end = $request->getContentRangeEnd();
+            $fileSize = $request->getContentRangeSize();
+            $tagId = $request->getHeader('x-appwrite-id', $tagId);
+            if(is_null($start) || is_null($end) || is_null($fileSize)) {
+                throw new Exception('Invalid content-range header', 400);
+            }
+
+            if ($end === $fileSize) {
+                //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
+                $chunks = $chunk = -1;
+            } else {
+                // Calculate total number of chunks based on the chunk size i.e ($rangeEnd - $rangeStart)
+                $chunks = (int) ceil($fileSize / ($end + 1 - $start));
+                $chunk = (int) ($start / ($end + 1 - $start)) + 1;
+            }
+        }
+
+        if (!$fileSizeValidator->isValid($fileSize)) { // Check if file size is exceeding allowed limit
             throw new Exception('File size not allowed', 400);
         }
 
-        if (!$upload->isValid($file['tmp_name'])) {
+        if (!$upload->isValid($fileTmpName)) {
             throw new Exception('Invalid file', 403);
         }
 
         // Save to storage
-        $size = $device->getFileSize($file['tmp_name']);
-        $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
+        $fileSize ??= $deviceLocal->getFileSize($fileTmpName);
+        $path = $deviceFunctions->getPath($tagId.'.'.\pathinfo($fileName, PATHINFO_EXTENSION));
         
-        if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
+        $tag = $dbForProject->getDocument('tags', $tagId);
+
+        if(!$tag->isEmpty()) {
+            $chunks = $tag->getAttribute('chunksTotal', 1);
+            if($chunk == -1) {
+                $chunk = $chunks;
+            }
+        }
+
+        $chunksUploaded = $deviceFunctions->upload($fileTmpName, $path, $chunk, $chunks);
+
+        if (empty($chunksUploaded)) {
             throw new Exception('Failed moving file', 500);
         }
 
@@ -562,22 +596,43 @@ App::post('/v1/functions/:functionId/deployments')
             }
         }
         
-        $deploymentId = $dbForProject->getId();
-        $deployment = $dbForProject->createDocument('deployments', new Document([
-            '$id' => $deploymentId,
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
-            'functionId' => $function->getId(),
-            'dateCreated' => time(),
-            'entrypoint' => $entrypoint,
-            'path' => $path,
-            'size' => $size,
-            'search' => implode(' ', [$deploymentId, $entrypoint]),
-            'status' => 'processing',
-            'buildStdout' => '',
-            'buildStderr' => '',
-            'deploy' => ($deploy === 'true'),
-        ]));
+        if($chunksUploaded === $chunks) {
+            $fileSize = $deviceFunctions->getFileSize($path);
+
+            if ($tag->isEmpty()) {
+                $tag = $dbForProject->createDocument('tags', new Document([
+                    '$id' => $tagId,
+                    '$read' => [],
+                    '$write' => [],
+                    'functionId' => $function->getId(),
+                    'dateCreated' => time(),
+                    'command' => $command,
+                    'path' => $path,
+                    'size' => $fileSize,
+                    'search' => implode(' ', [$tagId, $command]),
+                ]));
+            } else {
+                $tag = $dbForProject->updateDocument('tags', $tagId, $tag->setAttribute('size', $fileSize));
+            }
+        } else {
+            if($tag->isEmpty()) {
+                $tag = $dbForProject->createDocument('tags', new Document([
+                    '$id' => $tagId,
+                    '$read' => [],
+                    '$write' => [],
+                    'functionId' => $function->getId(),
+                    'dateCreated' => time(),
+                    'command' => $command,
+                    'path' => $path,
+                    'size' => 0,
+                    'chunksTotal' => $chunks,
+                    'chunksUploaded' => $chunksUploaded,
+                    'search' => implode(' ', [$tagId, $command]),
+                ]));
+            } else {
+                $tag = $dbForProject->updateDocument('tags', $tagId, $tag->setAttribute('chunksUploaded', $chunksUploaded));
+            }
+        }
 
         // Enqueue a message to start the build
         Resque::enqueue('v1-builds', 'BuildsV1', [
@@ -714,12 +769,12 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->inject('project')
-    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $usage, $project) {
+    ->inject('deviceFunctions')
+    ->action(function ($functionId, $tagId, $response, $dbForProject, $usage, $deviceFunctions) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
-        /** @var Utopia\Database\Document $project */
+        /** @var Utopia\Storage\Device $deviceFunctions */
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -764,13 +819,9 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
             throw new Exception('Executor error: ' . $executorResponse, $statusCode);
         }
 
-        \curl_close($ch);
-
-        $device = Storage::getDevice('functions');
-
-        if ($device->delete($deployment->getAttribute('path', ''))) {
-            if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-                throw new Exception('Failed to remove deployment from DB', 500);
+        if ($deviceFunctions->delete($tag->getAttribute('path', ''))) {
+            if (!$dbForProject->deleteDocument('tags', $tag->getId())) {
+                throw new Exception('Failed to remove tag from DB', 500);
             }
         }
 

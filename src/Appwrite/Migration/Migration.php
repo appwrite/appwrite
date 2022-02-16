@@ -2,107 +2,58 @@
 
 namespace Appwrite\Migration;
 
-use Appwrite\Database\Document as OldDocument;
-use Appwrite\Database\Database as OldDatabase;
-use PDO;
-use Redis;
 use Swoole\Runtime;
+use Utopia\Database\Document;
+use Utopia\Database\Database;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Exception;
 
 abstract class Migration
 {
     /**
-     * @var array
-     */
-    protected array $options;
-
-    /**
-     * @var PDO
-     */
-    protected PDO $db;
-
-    /**
-     * @var Redis
-     */
-    protected Redis $cache;
-
-    /**
      * @var int
      */
-    protected int $limit = 500;
+    protected int $limit = 100;
 
     /**
-     * @var OldDocument
+     * @var Document
      */
-    protected OldDocument $project;
+    protected Document $project;
 
     /**
-     * @var OldDatabase
+     * @var Database
      */
-    protected OldDatabase $oldProjectDB;
+    protected Database $projectDB;
 
     /**
-     * @var OldDatabase
+     * @var Database
      */
-    protected OldDatabase $oldConsoleDB;
+    protected Database $consoleDB;
 
     /**
      * @var array
      */
     public static array $versions = [
-        '0.6.0' => 'V05',
-        '0.7.0' => 'V06',
-        '0.8.0' => 'V07',
-        '0.9.0' => 'V08',
-        '0.9.1' => 'V08',
-        '0.9.2' => 'V08',
-        '0.9.3' => 'V08',
-        '0.9.4' => 'V08',
-        '0.10.0' => 'V09',
-        '0.10.1' => 'V09',
-        '0.10.2' => 'V09',
-        '0.10.3' => 'V09',
-        '0.10.4' => 'V09',
-        '0.11.0' => 'V10',
-        '0.12.0' => 'V11',
-        '0.12.1' => 'V11',
+        '0.13.0' => 'V12',
     ];
-
-    /**
-     * Migration constructor.
-     *
-     * @param PDO $db
-     * @param Redis|null $cache
-     * @param array $options
-     * @return void 
-     */
-    public function __construct(PDO $db, Redis $cache = null, array $options = [])
-    {
-        $this->options = $options;
-        $this->db = $db;
-        if (!is_null($cache)) {
-            $this->cache = $cache;
-        }
-    }
 
     /**
      * Set project for migration.
      *
-     * @param OldDocument $project
-     * @param OldDatabase $projectDB
-     * @param OldDatabase $oldConsoleDB
+     * @param Document $project
+     * @param Database $projectDB
+     * @param Database $oldConsoleDB
      *
      * @return self
      */
-    public function setProject(OldDocument $project, OldDatabase $projectDB, OldDatabase $oldConsoleDB): self
+    public function setProject(Document $project, Database $projectDB, Database $consoleDB): self
     {
         $this->project = $project;
+        $this->projectDB = $projectDB;
+        $this->projectDB->setNamespace('_project_' . $this->project->getId());
 
-        $this->oldProjectDB = $projectDB;
-        $this->oldProjectDB->setNamespace('app_' . $project->getId());
-
-        $this->oldConsoleDB = $oldConsoleDB;
+        $this->consoleDB = $consoleDB;
 
         return $this;
     }
@@ -114,52 +65,72 @@ abstract class Migration
      */
     public function forEachDocument(callable $callback): void
     {
-        $sum = $this->limit;
-        $offset = 0;
+        Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-        while ($sum >= $this->limit) {
-            $all = $this->projectDB->getCollection([
-                'limit' => $this->limit,
-                'offset' => $offset,
-                'orderType' => 'DESC',
-            ]);
+        /** @var array $collections */
+        $collections = Config::getParam('collections', []);
 
-            $sum = \count($all);
-            Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+        foreach ($collections as $collection) {
+            $sum = 0;
+            $nextDocument = null;
+            $collectionCount = $this->projectDB->count($collection['$id']);
+            Console::log('Migrating Collection ' . $collection['$id'] . ':');
 
-            Console::log('Migrating: ' . $offset . ' / ' . $this->projectDB->getSum());
-            \Co\run(function () use ($all, $callback) {
-                foreach ($all as $document) {
-                    go(function () use ($document, $callback) {
-                        if (empty($document->getId()) || empty($document->getCollection())) {
-                            if ($document->getCollection() !== 0) {
-                                Console::warning('Skipped Document due to missing ID or Collection.');
+            do {
+                $documents = $this->projectDB->find($collection['$id'], limit: $this->limit, cursor: $nextDocument);
+                $count = count($documents);
+                $sum += $count;
+
+                Console::log($sum . ' / ' . $collectionCount);
+
+                \Co\run(function (array $documents, callable $callback) {
+                    foreach ($documents as $document) {
+                        go(function (Document $document, callable $callback) {
+                            if (empty($document->getId()) || empty($document->getCollection())) {
+                                return;
                             }
-                            return;
-                        }
 
-                        $old = $document->getArrayCopy();
-                        $new = call_user_func($callback, $document);
+                            $old = $document->getArrayCopy();
+                            $new = call_user_func($callback, $document);
 
-                        if (!$this->check_diff_multi($new->getArrayCopy(), $old)) {
-                            return;
-                        }
+                            foreach ($document as &$attr) {
+                                if ($attr instanceof Document) {
+                                    $attr = call_user_func($callback, $attr);
+                                }
 
-                        try {
-                            $new = $this->projectDB->overwriteDocument($new->getArrayCopy());
-                        } catch (\Throwable $th) {
-                            Console::error('Failed to update document: ' . $th->getMessage());
-                            return;
-
-                            if ($document && $new->getId() !== $document->getId()) {
-                                throw new Exception('Duplication Error');
+                                if (\is_array($attr)) {
+                                    foreach ($attr as &$child) {
+                                        if ($child instanceof Document) {
+                                            $child = call_user_func($callback, $child);
+                                        }
+                                    }
+                                }
                             }
-                        }
-                    });
+
+                            if (!$this->check_diff_multi($new->getArrayCopy(), $old)) {
+                                return;
+                            }
+
+                            try {
+                                $new = $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
+                            } catch (\Throwable $th) {
+                                Console::error('Failed to update document: ' . $th->getMessage());
+                                return;
+
+                                if ($document && $new->getId() !== $document->getId()) {
+                                    throw new Exception('Duplication Error');
+                                }
+                            }
+                        }, $document, $callback);
+                    }
+                }, $documents, $callback);
+
+                if ($count !== $this->limit) {
+                    $nextDocument = null;
+                } else {
+                    $nextDocument = end($documents);
                 }
-            });
-
-            $offset += $this->limit;
+            } while (!is_null($nextDocument));
         }
     }
 

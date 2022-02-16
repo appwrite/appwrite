@@ -82,6 +82,11 @@ return [
         'model' => Response::MODEL_SESSION,
         'note' => '',
     ],
+    'account.sessions.update' => [
+        'description' => 'This event triggers when the account session is updated.',
+        'model' => Response::MODEL_SESSION,
+        'note' => '',
+    ],
     'database.collections.create' => [
         'description' => 'This event triggers when a database collection is created.',
         'model' => Response::MODEL_COLLECTION,
@@ -185,6 +190,21 @@ return [
     'storage.files.delete' => [
         'description' => 'This event triggers when a storage file is deleted.',
         'model' => Response::MODEL_FILE,
+        'note' => '',
+    ],
+    'storage.buckets.create' => [
+        'description' => 'This event triggers when a storage bucket is created.',
+        'model' => Response::MODEL_BUCKET,
+        'note' => '',
+    ],
+    'storage.buckets.update' => [
+        'description' => 'This event triggers when a storage bucket is updated.',
+        'model' => Response::MODEL_BUCKET,
+        'note' => '',
+    ],
+    'storage.buckets.delete' => [
+        'description' => 'This event triggers when a storage bucket is deleted.',
+        'model' => Response::MODEL_BUCKET,
         'note' => '',
     ],
     'users.create' => [
