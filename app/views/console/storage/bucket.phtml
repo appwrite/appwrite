@@ -98,7 +98,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                             <img src="" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/buckets/{{router.params.id}}/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" width="30" height="30" loading="lazy" />
                                         </td>
                                         <td data-title="Name: " class="text-one-liner" data-ls-attrs="title={{file.name}}" >
-                                            <div data-ls-ui-trigger="modal-file-update-{{file.$id}}" class="link" data-ls-bind="{{file.name}}"></div>
+                                            <span data-ls-ui-trigger="modal-file-update-{{file.$id}}" class="link" data-ls-bind="{{file.name}}"></span>
                                             <div data-ls-attrs="data-open-event=modal-file-update-{{file.$id}}" data-button-hide="1" data-ui-modal class="box modal sticky-footer width-large close" >
                                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
