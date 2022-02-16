@@ -136,6 +136,22 @@ class BuildsV1 extends Worker
             $build->setAttribute('outputPath', $response['outputPath']);
             $build->setAttribute('stderr', $response['stderr']);
             $build->setAttribute('stdout', $response['stdout']);
+
+            Console::success("Build id: $buildId created");
+
+            /** Set auto deploy */
+            if ($deployment->getAttribute('activate') === true) {
+                $function->setAttribute('deployment', $deployment->getId());
+                $function = $dbForProject->updateDocument('functions', $functionId, $function);
+            }
+
+            /** Update function schedule */
+            $schedule = $function->getAttribute('schedule', '');
+            $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
+            $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
+            $function->setAttribute('scheduleNext', (int)$next);
+            $function = $dbForProject->updateDocument('functions', $functionId, $function);
+
         } catch (\Throwable $th) {
             $endtime = \time();
             $build->setAttribute('endTime', $endtime);
@@ -143,24 +159,9 @@ class BuildsV1 extends Worker
             $build->setAttribute('status', 'failed');
             $build->setAttribute('stderr', $th->getMessage());
             Console::error($th->getMessage());
+        } finally {
+            $build = $dbForProject->updateDocument('builds', $buildId, $build);
         }
-        
-        $build = $dbForProject->updateDocument('builds', $buildId, $build);
-
-        /** Set auto deploy */
-        if ($deployment->getAttribute('activate') === true) {
-            $function->setAttribute('deployment', $deployment->getId());
-            $function = $dbForProject->updateDocument('functions', $functionId, $function);
-        }
-
-        /** Update function schedule */
-        $schedule = $function->getAttribute('schedule', '');
-        $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
-        $function->setAttribute('scheduleNext', (int)$next);
-        $function = $dbForProject->updateDocument('functions', $functionId, $function);
-
-        Console::success("Build id: $buildId created");
     }
 
     public function shutdown(): void {}

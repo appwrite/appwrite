@@ -58,7 +58,7 @@ class Executor
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
-            throw new \Exception($response['body'], $status);
+            throw new \Exception($response['body']['message'], $status);
         } 
 
         return $response['body'];
@@ -80,7 +80,7 @@ class Executor
         
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
-            throw new \Exception('Error deleting deployment: ' . $deploymentId , $status);
+            throw new \Exception($response['body']['message'], $status);
         }
 
         return $response['body'];
@@ -120,7 +120,7 @@ class Executor
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
-            throw new \Exception('Error creating execution: ', $status);
+            throw new \Exception($response['body']['message'], $status);
         } 
 
         return $response['body'];
