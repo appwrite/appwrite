@@ -489,6 +489,7 @@ App::post('/v1/execution')
 
             Console::info('Executing Runtime: ' . $runtimeId);
             
+            $execution = [];
             $executionStart = \microtime(true);
             $stdout = '';
             $stderr = '';
@@ -496,95 +497,91 @@ App::post('/v1/execution')
             $errNo = -1;
             $executorResponse = '';
 
-            try {
-                $ch = \curl_init();
-                $body = \json_encode([
-                    'path' => '/usr/code',
-                    'file' => $entrypoint,
-                    'env' => $vars,
-                    'payload' => $data,
-                    'timeout' => $timeout ?? (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)
-                ]);
-                \curl_setopt($ch, CURLOPT_URL, "http://" . $container . ":3000/");
-                \curl_setopt($ch, CURLOPT_POST, true);
-                \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-                \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                \curl_setopt($ch, CURLOPT_TIMEOUT, $timeout ?? (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900));
-                \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        
-                \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                    'Content-Type: application/json',
-                    'Content-Length: ' . \strlen($body),
-                    'x-internal-challenge: ' . $secret,
-                    'host: null'
-                ]);
-        
-                $executorResponse = \curl_exec($ch);
-        
-                $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        
-                $error = \curl_error($ch);
-        
-                $errNo = \curl_errno($ch);
-        
-                \curl_close($ch);
+            $ch = \curl_init();
+            $body = \json_encode([
+                'path' => '/usr/code',
+                'file' => $entrypoint,
+                'env' => $vars,
+                'payload' => $data,
+                'timeout' => $timeout ?? (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)
+            ]);
+            \curl_setopt($ch, CURLOPT_URL, "http://" . $container . ":3000/");
+            \curl_setopt($ch, CURLOPT_POST, true);
+            \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            \curl_setopt($ch, CURLOPT_TIMEOUT, $timeout ?? (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900));
+            \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+    
+            \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Content-Length: ' . \strlen($body),
+                'x-internal-challenge: ' . $secret,
+                'host: null'
+            ]);
+    
+            $executorResponse = \curl_exec($ch);
+    
+            $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    
+            $error = \curl_error($ch);
+    
+            $errNo = \curl_errno($ch);
+    
+            \curl_close($ch);
 
-                // If timeout error
-                if (in_array($errNo, [CURLE_OPERATION_TIMEDOUT, 110])) {
-                    $statusCode = 124;
-                }
-            
-                // 110 is the Swoole error code for timeout, see: https://www.swoole.co.uk/docs/swoole-error-code
-                if ($errNo !== 0 && $errNo !== CURLE_COULDNT_CONNECT && $errNo !== CURLE_OPERATION_TIMEDOUT && $errNo !== 110) {
-                    throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 500);
-                }
-            
-                $executionData = [];
-            
-                if (!empty($executorResponse)) {
-                    $executionData = json_decode($executorResponse, true);
-                }
-            
-                if (isset($executionData['code'])) {
-                    $statusCode = $executionData['code'];
-                }
-            
-                if ($statusCode === 500) {
-                    if (isset($executionData['message'])) {
-                        $stderr = $executionData['message'];
-                    } else {
-                        $stderr = 'Internal Runtime error';
-                    }
-                } else if ($statusCode === 124) {
-                    $stderr = 'Execution timed out.';
-                } else if ($statusCode === 0) {
-                    $stderr = 'Execution failed.';
-                } else if ($statusCode >= 200 && $statusCode < 300) {
-                    $stdout = $executorResponse;
-                } else {
-                    $stderr = 'Execution failed.';
-                }
-            
-                $executionEnd = \microtime(true);
-                $executionTime = ($executionEnd - $executionStart);
-                $functionStatus = ($statusCode >= 200 && $statusCode < 300) ? 'completed' : 'failed';
-            
-                Console::success('Function executed in ' . $executionTime . ' seconds, status: ' . $functionStatus);
-            
-                $execution = [
-                    'status' => $functionStatus,
-                    'statusCode' => $statusCode,
-                    'stdout' => \utf8_encode(\mb_substr($stdout, -8000)),
-                    'stderr' => \utf8_encode(\mb_substr($stderr, -8000)),
-                    'time' => $executionTime,
-                ];
-
-                /** Update swoole table */
-                $runtime['updated'] = \time();
-                $activeRuntimes->set($container, $runtime);
-            } catch (\Throwable $th) {
-                Console::error('Runtime execution failed: ' . $th->getMessage());
+            // If timeout error
+            if (in_array($errNo, [CURLE_OPERATION_TIMEDOUT, 110])) {
+                $statusCode = 124;
             }
+        
+            // 110 is the Swoole error code for timeout, see: https://www.swoole.co.uk/docs/swoole-error-code
+            if ($errNo !== 0 && $errNo !== CURLE_COULDNT_CONNECT && $errNo !== CURLE_OPERATION_TIMEDOUT && $errNo !== 110) {
+                throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 500);
+            }
+        
+            $executionData = [];
+        
+            if (!empty($executorResponse)) {
+                $executionData = json_decode($executorResponse, true);
+            }
+        
+            if (isset($executionData['code'])) {
+                $statusCode = $executionData['code'];
+            }
+        
+            if ($statusCode === 500) {
+                if (isset($executionData['message'])) {
+                    $stderr = $executionData['message'];
+                } else {
+                    $stderr = 'Internal Runtime error';
+                }
+            } else if ($statusCode === 124) {
+                $stderr = 'Execution timed out.';
+            } else if ($statusCode === 0) {
+                $stderr = 'Execution failed.';
+            } else if ($statusCode >= 200 && $statusCode < 300) {
+                $stdout = $executorResponse;
+            } else {
+                $stderr = 'Execution failed.';
+            }
+        
+            $executionEnd = \microtime(true);
+            $executionTime = ($executionEnd - $executionStart);
+            $functionStatus = ($statusCode >= 200 && $statusCode < 300) ? 'completed' : 'failed';
+        
+            Console::success('Function executed in ' . $executionTime . ' seconds, status: ' . $functionStatus);
+        
+            $execution = [
+                'status' => $functionStatus,
+                'statusCode' => $statusCode,
+                'stdout' => \utf8_encode(\mb_substr($stdout, -8000)),
+                'stderr' => \utf8_encode(\mb_substr($stderr, -8000)),
+                'time' => $executionTime,
+            ];
+
+            /** Update swoole table */
+            $runtime['updated'] = \time();
+            $activeRuntimes->set($container, $runtime);
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_OK)
