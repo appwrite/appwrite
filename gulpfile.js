@@ -57,7 +57,7 @@ const configApp = {
         'public/scripts/views/forms/move-down.js',
         'public/scripts/views/forms/move-up.js',
         'public/scripts/views/forms/nav.js',
-        'public/scripts/views/forms/oauth-apple.js',
+        'public/scripts/views/forms/oauth-custom.js',
         'public/scripts/views/forms/password-meter.js',
         'public/scripts/views/forms/pell.js',
         'public/scripts/views/forms/required.js',

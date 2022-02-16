@@ -1,6 +1,3 @@
-<p align="right">
-    <a href="#其他语言">🌍 其他语言</a>
-</p>
 <br />
 <p align="center">
     <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/appwrite.svg" alt="Appwrite Logo"></a>
@@ -19,7 +16,9 @@
 [![翻译](https://img.shields.io/badge/translate-f02e65?style=flat-square)](docs/tutorials/add-translations.md)
 [![周边商店](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io)
 
-Appwrite是一个基于dcoker的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，以及后端。Appwrite 通过视觉化界面极简了从零编写 API 的繁琐过程，在保证软件安全的前提下为开发者创造了一个高效的开发环境。
+[English](README.md) | 简体中文
+
+Appwrite是一个基于Docker的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，以及后端。Appwrite 通过视觉化界面极简了从零编写 API 的繁琐过程，在保证软件安全的前提下为开发者创造了一个高效的开发环境。
 
 Appwrite 可以提供给开发者用户验证，外部授权，用户数据读写检索，文件储存, 图像处理，云函数计算，[等多种服务]（https：/ /appwrite.io/docs）。
 
@@ -60,7 +59,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:0.12.1
+    appwrite/appwrite:0.12.2
 ```
 
 ### Windows
@@ -72,7 +71,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:0.12.1
+    appwrite/appwrite:0.12.2
 ```
 
 #### PowerShell
@@ -82,7 +81,7 @@ docker run -it --rm ,
     --volume /var/run/docker.sock:/var/run/docker.sock ,
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw ,
     --entrypoint="install" ,
-    appwrite/appwrite:0.12.1
+    appwrite/appwrite:0.12.2
 ```
 
 运行后，可以在浏览器上访问 http://localhost 找到 Appwrite 控制台。在非 Linux 的本机主机上完成安装后，服务器可能需要几分钟才能启动。
@@ -170,7 +169,3 @@ Appwrite API 界面层利用后台缓存和任务委派来提供极速的响应�
 ## 版权说明
 
 版权详情，访问 [BSD 3-Clause License](./LICENSE)。
-
-## 其他语言
-- [English](README.md)
-- [简体中文](README-CN.md)
