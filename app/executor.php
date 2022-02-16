@@ -35,12 +35,13 @@ use Utopia\Validator\Text;
 // Remove builds param from delete endpoint - done
 // Shutdown callback isn't working as expected - done
 // Fix error handling - done
+// Decide on logic for build and runtime containers names ( runtime-ID and build-ID) - done
+// Add size validators for the runtime IDs - done
+
 
 // Fix logging
 // Fix delete endpoint
 // Incorporate Matej's changes in the build stage ( moving of the tar file will be performed by the runtime and not the build stage )
-// Add size validators for the runtime IDs 
-// Decide on logic for build and runtime containers names ( runtime-ID and build-ID)
 
 Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
 
@@ -114,11 +115,10 @@ function logError(Throwable $error, string $action, Utopia\Route $route = null)
 
 App::post('/v1/runtimes')
     ->desc("Create a new runtime server")
-    ->param('runtimeId', '', new Text(128), 'Unique runtime ID.')
+    ->param('runtimeId', '', new Text(62), 'Unique runtime ID.')
     ->param('source', '', new Text(0), 'Path to source files.')
     ->param('destination', '', new Text(0), 'Destination folder to store build files into.')
     ->param('vars', '', new Assoc(), 'Environment Variables required for the build')
-    // refactor to `name`
     ->param('runtime', '', new Text(128), 'Runtime for the cloud function')
     ->param('baseImage', '', new Text(128), 'Base image name of the runtime')
     ->inject('orchestrationPool')
@@ -126,8 +126,7 @@ App::post('/v1/runtimes')
     ->inject('response')
     ->action(function (string $runtimeId, string $source, string $destination, array $vars, string $runtime, string $baseImage, $orchestrationPool, $activeRuntimes, Response $response) {
 
-        // TODO: Check if runtime already exists..
-        $container = 'runtime-' . $runtimeId;
+        $container = 'r-' . $runtimeId;
 
         if ($activeRuntimes->exists($container)) {
             throw new Exception('Runtime already exists.', 409);
@@ -171,7 +170,7 @@ App::post('/v1/runtimes')
              * Create container
              */
             $orchestration = $orchestrationPool->get();
-            $container = 'build-' . $runtimeId;
+            $container = 'b-' . $runtimeId;
             $vars = array_map(fn ($v) => strval($v), $vars);
             $orchestration
                 ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
@@ -321,7 +320,7 @@ App::post('/v1/runtimes')
             /** 
              * Launch Runtime 
             */
-            $container = 'runtime-' . $runtimeId;
+            $container = 'r-' . $runtimeId;
             $secret = \bin2hex(\random_bytes(16));
             $vars = \array_merge($vars, [
                 'INTERNAL_RUNTIME_KEY' => $secret
@@ -400,12 +399,12 @@ App::get('/v1/runtimes')
 
 App::get('/v1/runtimes/:runtimeId')
     ->desc("Get a runtime by its ID")
-    ->param('runtimeId', '', new Text(128), 'Runtime unique ID.')
+    ->param('runtimeId', '', new Text(62), 'Runtime unique ID.')
     ->inject('activeRuntimes')
     ->inject('response')
     ->action(function ($runtimeId, $activeRuntimes, Response $response) {
 
-        $container = 'runtime-' . $runtimeId;
+        $container = 'r-' . $runtimeId;
 
         if(!$activeRuntimes->exists($container)) {
             throw new Exception('Runtime not found', 404);
@@ -420,13 +419,13 @@ App::get('/v1/runtimes/:runtimeId')
 
 App::delete('/v1/runtimes/:runtimeId')
     ->desc('Delete a runtime')
-    ->param('runtimeId', '', new Text(128), 'Runtime unique ID.', false)
+    ->param('runtimeId', '', new Text(62), 'Runtime unique ID.', false)
     ->inject('orchestrationPool')
     ->inject('activeRuntimes')
     ->inject('response')
     ->action(function (string $runtimeId, $orchestrationPool, $activeRuntimes, Response $response) {
 
-        $container = 'runtime-' . $runtimeId;
+        $container = 'r-' . $runtimeId;
 
         if(!$activeRuntimes->exists($container)) {
             throw new Exception('Runtime not found', 404);
@@ -462,7 +461,7 @@ App::delete('/v1/runtimes/:runtimeId')
 
 App::post('/v1/execution')
     ->desc('Create an execution')
-    ->param('runtimeId', '', new Text(1024), 'The runtimeID to execute')
+    ->param('runtimeId', '', new Text(62), 'The runtimeID to execute')
     ->param('path', '', new Text(0), 'Path containing the built files.', false)
     ->param('vars', '', new Assoc(), 'Environment variables required for the build', false)
     ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
@@ -475,7 +474,7 @@ App::post('/v1/execution')
     ->action(
         function (string $runtimeId, string $path, array $vars, string $data, string $runtime, string $entrypoint, $timeout, string $baseImage, $activeRuntimes, Response $response) {
 
-            $container = 'runtime-' . $runtimeId;
+            $container = 'r-' . $runtimeId;
 
             if (!$activeRuntimes->exists($container)) {
                 throw new Exception('Runtime not found. Please create the runtime.', 404);
