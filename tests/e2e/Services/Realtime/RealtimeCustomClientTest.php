@@ -893,7 +893,6 @@ class RealtimeCustomClientTest extends Scope
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'read' => ['role:all'],
             'write' => ['role:all'],
-            'folderId' => 'xyz',
         ]);
 
         $response = json_decode($client->receive(), true);
