@@ -243,12 +243,14 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         if ($project->getId() !== 'console') {
             $payload = new Document($response->getPayload());
             $collection = new Document($events->getParam('collection') ?? []);
+            $bucket = new Document($events->getParam('bucket') ?? []);
 
             $target = Realtime::fromPayload(
                 event: $events->getParam('event'), 
                 payload: $payload, 
                 project: $project, 
-                collection: $collection
+                collection: $collection,
+                bucket: $bucket,
             );
 
             Realtime::send(
