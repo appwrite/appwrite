@@ -910,7 +910,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         if($file->getAttribute('sizeActual') > APP_LIMIT_PREVIEW) {
-            throw new Exception('Preview not supported for file above ' . Storage::human(APP_LIMIT_PREVIEW) . ' in size.');
+            throw new Exception('Preview not supported for file above ' . Storage::human(APP_LIMIT_PREVIEW) . ' in size.', 400);
         }
 
         $path = $file->getAttribute('path');
