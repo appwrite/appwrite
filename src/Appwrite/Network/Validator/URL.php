@@ -22,6 +22,7 @@ class URL extends Validator
     {
         $this->allowedSchemes = $allowedSchemes;
     }
+
     /**
      * Get Description
      *
@@ -32,7 +33,7 @@ class URL extends Validator
     public function getDescription(): string
     {
         if (!empty($this->allowedSchemes)) {
-            return 'Value must be a valid URL with following schemes ('. \implode(', ', $this->allowedSchemes) .')';
+            return 'Value must be a valid URL with following schemes (' . \implode(', ', $this->allowedSchemes) . ')';
         }
 
         return 'Value must be a valid URL';
