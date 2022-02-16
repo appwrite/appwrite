@@ -449,9 +449,9 @@ class V11 extends Migration
                  */
                 $document->removeAttribute('tasks');
 
-                /*
-                    * Add enabled OAuth2 providers to default data rules
-                    */
+                /**
+                 * Add enabled OAuth2 providers to default data rules
+                 */
                 foreach ($providers as $index => $provider) {
                     $appId = $document->getAttribute('usersOauth2' . \ucfirst($index) . 'Appid');
                     $appSecret = $document->getAttribute('usersOauth2' . \ucfirst($index) . 'Secret');
@@ -467,9 +467,14 @@ class V11 extends Migration
 
                 $document->setAttribute('providers', $newProviders);
 
-                /*
-                    * Migrate User providers settings
-                    */
+                /**
+                 * Populate search string
+                 */
+                $document->setAttribute('search', $this->buildSearchAttribute(['$id', 'name'], $document));
+
+                /**
+                 * Migrate User providers settings
+                 */
                 $oldAuths = [
                     'email-password' => 'usersAuthEmailPassword',
                     'magic-url' => 'usersAuthMagicURL',
@@ -594,7 +599,29 @@ class V11 extends Migration
             case OldDatabase::SYSTEM_COLLECTION_FUNCTIONS:
                 $document->setAttribute('events', $document->getAttribute('events', []));
 
+                /**
+                 * Populate search string
+                 */
+                $document->setAttribute('search', $this->buildSearchAttribute(['$id', 'name', 'runtime'], $document));
+
                 break;
+
+            case OldDatabase::SYSTEM_COLLECTION_TAGS:
+                /**
+                 * Populate search string
+                 */
+                $document->setAttribute('search', $this->buildSearchAttribute(['$id', 'command'], $document));
+
+                break;
+
+            case OldDatabase::SYSTEM_COLLECTION_EXECUTIONS:
+                /**
+                 * Populate search string
+                 */
+                $document->setAttribute('search', $this->buildSearchAttribute(['$id', 'functionId'], $document));
+
+                break;
+
             case OldDatabase::SYSTEM_COLLECTION_WEBHOOKS:
                 $projectId = $this->getProjectIdFromReadPermissions($document);
 
@@ -656,17 +683,27 @@ class V11 extends Migration
                 $write = $document->getWrite();
                 $document->setAttribute('$write', str_replace('user:{self}', "user:{$document->getId()}", $write));
 
+                /**
+                 * Populate search string
+                 */
+                $document->setAttribute('search', $this->buildSearchAttribute(['$id', 'email', 'name'], $document));
+
                 break;
             case OldDatabase::SYSTEM_COLLECTION_TEAMS:
 
                 /**
                  * Replace team:{self} with team:TEAM_ID
                  */
-                $read = $document->getWrite();
+                $read = $document->getRead();
                 $write = $document->getWrite();
 
                 $document->setAttribute('$read', str_replace('team:{self}', "team:{$document->getId()}", $read));
                 $document->setAttribute('$write', str_replace('team:{self}', "team:{$document->getId()}", $write));
+
+                /**
+                 * Populate search string
+                 */
+                $document->setAttribute('search', $this->buildSearchAttribute(['$id', 'name'], $document));
 
                 break;
             case OldDatabase::SYSTEM_COLLECTION_FILES:
@@ -699,6 +736,12 @@ class V11 extends Migration
                  */
                 $document->removeAttribute('folderId');
                 $document->removeAttribute('token');
+
+                /**
+                 * Populate search string
+                 */
+                $document->setAttribute('search', $this->buildSearchAttribute(['$id', 'name'], $document));
+
                 break;
         }
 
@@ -817,5 +860,19 @@ class V11 extends Migration
         }
 
         return $project->getId();
+    }
+
+    /**
+     * Builds a search string for a fulltext index.
+     *
+     * @param array $values
+     * @param Document $document
+     * @return string
+     */
+    private function buildSearchAttribute(array $values, Document $document): string
+    {
+        $values = array_filter(array_map(fn (string $value) => $document->getAttribute($value) ?? '', $values));
+
+        return implode(' ', $values);
     }
 }

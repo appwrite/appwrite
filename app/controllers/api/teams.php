@@ -564,25 +564,40 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
-        $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
+        $isOwner = Authorization::isRole('team:' . $team->getId() . '/owner');;
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception('User is not allowed to modify roles', 401);
         }
 
-        // Update the roles
+        /**
+         * Update the roles
+         */
         $membership->setAttribute('roles', $roles);
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
 
-        // TODO sync updated membership in the user $profile object using TYPE_REPLACE
+        /**
+         * Replace membership on profile
+         */
+        $memberships = array_filter($profile->getAttribute('memberships'), fn (Document $m) => $m->getId() !== $membership->getId());
+
+        $profile
+            ->setAttribute('memberships', $memberships)
+            ->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND);
+
+        Authorization::skip(fn () => $dbForProject->updateDocument('users', $profile->getId(), $profile));
 
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'teams.memberships.update')
-            ->setParam('resource', 'team/'.$teamId)
-        ;
+            ->setParam('resource', 'team/' . $teamId);
 
-        $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
+        $response->dynamic(
+            $membership
+                ->setAttribute('email', $profile->getAttribute('email'))
+                ->setAttribute('name', $profile->getAttribute('name')),
+            Response::MODEL_MEMBERSHIP
+        );
     });
 
 App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
