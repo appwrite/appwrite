@@ -90,8 +90,11 @@ class Exception extends \Exception
     const STORAGE_FILE_EMPTY                = 'storage_file_empty';
     const STORAGE_FILE_TYPE_UNSUPPORTED     = 'storage_file_type_unsupported';
     const STORAGE_INVALID_FILE_SIZE         = 'storage_invalid_file_size';
-    const STORAGE_INVALID_CONTENT_RANGE     = 'storage_invalid_content_range';
     const STORAGE_INVALID_FILE              = 'storage_invalid_file';
+    const STORAGE_BUCKET_ALREADY_EXISTS     = 'storage_bucket_already_exists';
+    const STORAGE_BUCKET_NOT_FOUND          = 'storage_bucket_not_found';
+    const STORAGE_INVALID_CONTENT_RANGE     = 'storage_invalid_content_range';
+    const STORAGE_INVALID_RANGE             = 'storage_invalid_range';
 
     /** Functions */
     const FUNCTION_NOT_FOUND                = 'function_not_found';

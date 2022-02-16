@@ -259,15 +259,30 @@ return [
         'description' => 'The file size is either not valid or exceeds the maximum allowed size. Please check the file or the value of the _APP_STORAGE_LIMIT environment variable.',
         'code' => 400,
     ],
+    Exception::STORAGE_INVALID_FILE => [
+        'name' => Exception::STORAGE_INVALID_FILE,
+        'description' => 'The uploaded file is invalid. Please check the file and try again.',
+        'code' => 403,
+    ],
+    Exception::STORAGE_BUCKET_ALREADY_EXISTS => [
+        'name' => Exception::STORAGE_BUCKET_ALREADY_EXISTS,
+        'description' => 'A storage bucket with the requested ID already exists.',
+        'code' => 409,
+    ],
+    Exception::STORAGE_BUCKET_NOT_FOUND => [
+        'name' => Exception::STORAGE_BUCKET_NOT_FOUND,
+        'description' => 'Storage bucket with the requested ID could not be found.',
+        'code' => 404,
+    ],
     Exception::STORAGE_INVALID_CONTENT_RANGE => [
         'name' => Exception::STORAGE_INVALID_CONTENT_RANGE,
         'description' => 'The content range is invalid. Please check the value of the Content-Range header.',
         'code' => 400,
     ],
-    Exception::STORAGE_INVALID_FILE => [
-        'name' => Exception::STORAGE_INVALID_FILE,
-        'description' => 'The uploaded file is invalid. Please check the file and try again.',
-        'code' => 403,
+    Exception::STORAGE_INVALID_RANGE => [
+        'name' => Exception::STORAGE_INVALID_RANGE,
+        'description' => 'The requested range is not satisfiable. Please check the value of the Range header.',
+        'code' => 416,
     ],
 
     /** Functions  */
