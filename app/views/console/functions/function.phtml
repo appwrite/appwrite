@@ -135,6 +135,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                                 data-failure-param-alert-text="Failed to retry build"
                                                 data-failure-param-alert-classname="error">
                                                 <input type="hidden" name="buildId" data-ls-bind="{{deployment.buildId}}">
+                                                <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}">
+                                                <input type="hidden" name="deploymentId" data-ls-bind="{{deployment.$id}}">
                                                 <button>Retry Build</button>
                                             </form>
    

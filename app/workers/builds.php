@@ -39,22 +39,15 @@ class BuildsV1 extends Worker
     {
         $type = $this->args['type'] ?? '';
         $projectId = $this->args['projectId'] ?? '';
-
+        $functionId = $this->args['functionId'] ?? '';
+        $deploymentId = $this->args['deploymentId'] ?? '';
+        
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
-                $functionId = $this->args['functionId'] ?? '';
-                $deploymentId = $this->args['deploymentId'] ?? '';
+            case BUILD_TYPE_RETRY:
                 Console::info("Creating build for deployment: $deploymentId");
                 $this->buildDeployment($projectId, $functionId, $deploymentId);
                 break;
-
-            // case BUILD_TYPE_RETRY:
-            //     $buildId = $this->args['buildId'] ?? '';
-            //     $functionId = $this->args['functionId'] ?? '';
-            //     $deploymentId = $this->args['deploymentId'] ?? '';
-            //     Console::info("Retrying build for id: $buildId");
-            //     $this->createBuild($projectId, $functionId, $deploymentId, $buildId);
-            //     break;
 
             default:
                 throw new \Exception('Invalid build type');
