@@ -119,7 +119,18 @@ class BuildsV1 extends Worker
                 source: $source,
                 vars: $vars, 
                 runtime: $key, 
-                baseImage: $baseImage
+                baseImage: $baseImage,
+                commands: [
+                    'sh', '-c',
+                    'mkdir -p /usr/code && \
+                    cp /tmp/code.tar.gz /usr/workspace/code.tar.gz && \ 
+                    cd /usr/workspace/ && \
+                    tar -zxf /usr/workspace/code.tar.gz -C /usr/code && \
+                    rm /usr/workspace/code.tar.gz && \
+                    cd /usr/local/src && \
+                    ./build.sh && \
+                    tar -C /usr/code -czf /usr/builds/code.tar.gz ./'
+                ]
             );
 
             /** Update the build document */

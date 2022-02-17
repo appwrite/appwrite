@@ -18,6 +18,7 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\Swoole\Request;
 use Utopia\Swoole\Response;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Range as ValidatorRange;
 use Utopia\Validator\Text;
@@ -118,13 +119,14 @@ App::post('/v1/runtimes')
     ->param('runtimeId', '', new Text(62), 'Unique runtime ID.')
     ->param('source', '', new Text(0), 'Path to source files.')
     ->param('destination', '', new Text(0), 'Destination folder to store build files into.')
-    ->param('vars', '', new Assoc(), 'Environment Variables required for the build')
+    ->param('vars', [], new Assoc(), 'Environment Variables required for the build')
+    ->param('commands', [], new ArrayList(new Text(0)), 'Commands required to build the container')
     ->param('runtime', '', new Text(128), 'Runtime for the cloud function')
     ->param('baseImage', '', new Text(128), 'Base image name of the runtime')
     ->inject('orchestrationPool')
     ->inject('activeRuntimes')
     ->inject('response')
-    ->action(function (string $runtimeId, string $source, string $destination, array $vars, string $runtime, string $baseImage, $orchestrationPool, $activeRuntimes, Response $response) {
+    ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $baseImage, $orchestrationPool, $activeRuntimes, Response $response) {
 
         $container = 'r-' . $runtimeId;
 
@@ -173,7 +175,7 @@ App::post('/v1/runtimes')
             $container = 'b-' . $runtimeId;
             $vars = array_map(fn ($v) => strval($v), $vars);
             $orchestration
-                ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 0))
+                ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 1))
                 ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
                 ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
             
@@ -207,61 +209,21 @@ App::post('/v1/runtimes')
             /** 
              * Extract user code into build container
              */
-            $untarStdout = '';
-            $untarStderr = '';
-            $untarSuccess = $orchestration->execute(
+            $status = $orchestration->execute(
                 name: $container,
-                command: [
-                    'sh',
-                    '-c',
-                    'mkdir -p /usr/code && cp /tmp/code.tar.gz /usr/workspace/code.tar.gz && cd /usr/workspace/ && tar -zxf /usr/workspace/code.tar.gz -C /usr/code && rm /usr/workspace/code.tar.gz'
-                ],
-                stdout: $untarStdout,
-                stderr: $untarStderr,
-                timeout: 60
-            );
-
-            if (!$untarSuccess) {
-                throw new Exception('Failed to extract tarfile ' . $untarStderr, 500);
-            }
-
-            /**
-             * Build code and install dependenices
-             */
-            $buildSuccess = $orchestration->execute(
-                name: $container,
-                command: ['sh', '-c', 'cd /usr/local/src && ./build.sh'],
+                command: $commands,
                 stdout: $buildStdout,
                 stderr: $buildStderr,
-                timeout: App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900)
+                timeout: App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)
             );
 
-            if (!$buildSuccess) {
-                throw new Exception('Failed to build dependencies: ' . $buildStderr, 500);
-            }
-
-            /**
-             * Repackage code and save
-             */
-            $compressStdout = '';
-            $compressStderr = '';
-            $compressSuccess = $orchestration->execute(
-                name: $container,
-                command: [
-                    'tar', '-C', '/usr/code', '-czvf', '/usr/builds/code.tar.gz', './'
-                ],
-                stdout: $compressStdout,
-                stderr: $compressStderr,
-                timeout: 60
-            );
-
-            if (!$compressSuccess) {
-                throw new Exception('Failed to compress built code: ' . $compressStderr, 500);
+            if (!$status) {
+                throw new Exception('Failed to build dependenices ' . $buildStderr, 500);
             }
 
             // Check if the build was successful by checking if file exists
             if (!\file_exists($tmpBuild)) {
-                throw new Exception('Something went wrong during the build process');
+                throw new Exception('Something went wrong during the build process', 500);
             }
 
             /**
@@ -287,8 +249,8 @@ App::post('/v1/runtimes')
             $build = [
                 'outputPath' => $outputPath,
                 'status' => 'ready',
-                'stdout' => \utf8_encode(\mb_substr($buildStdout, -4096)),
-                'stderr' => \utf8_encode(\mb_substr($buildStderr, -4096)),
+                'stdout' => \utf8_encode($buildStdout),
+                'stderr' => \utf8_encode($buildStderr),
                 'startTime' => $buildStart,
                 'endTime' => $buildEnd,
                 'duration' => $buildEnd - $buildStart,
@@ -332,9 +294,9 @@ App::post('/v1/runtimes')
             $vars = array_map(fn ($v) => strval($v), $vars);
 
             $orchestration
-                ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', '1'))
-                ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', '256'))
-                ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '256'));
+                ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 1))
+                ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
+                ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
 
             $id = $orchestration->run(
                 image: $baseImage,
@@ -463,7 +425,7 @@ App::post('/v1/execution')
     ->desc('Create an execution')
     ->param('runtimeId', '', new Text(62), 'The runtimeID to execute')
     ->param('path', '', new Text(0), 'Path containing the built files.', false)
-    ->param('vars', '', new Assoc(), 'Environment variables required for the build', false)
+    ->param('vars', [], new Assoc(), 'Environment variables required for the build', false)
     ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
     ->param('runtime', '', new Text(128), 'Runtime for the cloud function', false)
     ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file')
