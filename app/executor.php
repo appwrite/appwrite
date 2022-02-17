@@ -116,7 +116,7 @@ function logError(Throwable $error, string $action, Utopia\Route $route = null)
     Console::error('[Error] Line: ' . $error->getLine());
 };
 
-function getDevice($root): Device {
+function getStorageDevice($root): Device {
     switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
         case Storage::DEVICE_LOCAL:default:
             return new Local($root);
