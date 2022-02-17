@@ -275,7 +275,10 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = false;
                         break;
                     case 'Utopia\Database\Validator\UID':
-                    case 'Appwrite\Database\Validator\CustomId':
+                    case 'Appwrite\Utopia\Database\Validator\CustomId':
+                        if($route->getLabel('sdk.methodType', '') === 'upload') {
+                            $node['schema']['x-upload-id'] = true;
+                        }
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
@@ -325,8 +328,13 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = $validator->getMin();
                         break;
                     case 'Utopia\Validator\Numeric':
+                    case 'Utopia\Validator\Integer':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'int32';
+                        break;
+                    case 'Utopia\Validator\FloatValidator':
+                        $node['schema']['type'] = 'number';
+                        $node['schema']['format'] = 'float';
                         break;
                     case 'Utopia\Validator\Length':
                         $node['schema']['type'] = $validator->getType();

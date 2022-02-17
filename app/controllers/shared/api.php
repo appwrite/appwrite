@@ -1,14 +1,16 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Messaging\Adapter\Realtime;
 use Utopia\App;
-use Utopia\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Database\Document;
+use Utopia\Storage\Device\DOSpaces;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Exception;
 use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\S3;
 use Utopia\Storage\Storage;
 
 App::init(function ($utopia, $request, $response, $project, $user, $events, $audits, $usage, $deletes, $database, $dbForProject, $mode) {
@@ -25,10 +27,6 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
     /** @var Appwrite\Event\Event $database */
     /** @var Appwrite\Event\Event $functions */
     /** @var Utopia\Database\Database $dbForProject */
-
-    Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
-    Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
-    Storage::setDevice('builds', new Local(APP_STORAGE_BUILDS.'/app-'.$project->getId()));
 
     $route = $utopia->match($request);
 
@@ -219,12 +217,14 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         if ($project->getId() !== 'console') {
             $payload = new Document($response->getPayload());
             $collection = new Document($events->getParam('collection') ?? []);
+            $bucket = new Document($events->getParam('bucket') ?? []);
 
             $target = Realtime::fromPayload(
                 event: $events->getParam('event'), 
                 payload: $payload, 
                 project: $project, 
-                collection: $collection
+                collection: $collection,
+                bucket: $bucket,
             );
 
             Realtime::send(

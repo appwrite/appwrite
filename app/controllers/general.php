@@ -13,15 +13,13 @@ use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Utopia\Response\Filters\V06;
-use Appwrite\Utopia\Response\Filters\V07;
-use Appwrite\Utopia\Response\Filters\V08;
 use Appwrite\Utopia\Response\Filters\V11;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Appwrite\Utopia\Request\Filters\V12;
+use Utopia\Validator\Text;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
@@ -159,15 +157,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
     if ($responseFormat) {
         switch($responseFormat) {
-            case version_compare ($responseFormat , '0.6.2', '<=') :
-                Response::setFilter(new V06());
-                break;
-            case version_compare ($responseFormat , '0.7.2', '<=') :
-                Response::setFilter(new V07());
-                break;
-            case version_compare ($responseFormat , '0.8.0', '<=') :
-                Response::setFilter(new V08());
-                break;
             case version_compare ($responseFormat , '0.11.0', '<=') :
                 Response::setFilter(new V11());
                 break;
@@ -196,7 +185,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         ->addHeader('Server', 'Appwrite')
         ->addHeader('X-Content-Type-Options', 'nosniff')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, Cache-Control, Expires, Pragma')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma')
         ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
         ->addHeader('Access-Control-Allow-Origin', $refDomain)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -314,7 +303,7 @@ App::options(function ($request, $response) {
     $response
         ->addHeader('Server', 'Appwrite')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
         ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
         ->addHeader('Access-Control-Allow-Origin', $origin)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -337,8 +326,8 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
     if($logger) {
         if($error->getCode() >= 500 || $error->getCode() === 0) {
             try {
+                /** @var Utopia\Database\Document $user */
                 $user = $utopia->getResource('user');
-                /** @var Appwrite\Database\Document $user */
             } catch(\Throwable $th) {
                 // All good, user is optional information for logger
             }
@@ -411,6 +400,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         case 404: // Error allowed publicly
         case 409: // Error allowed publicly
         case 412: // Error allowed publicly
+        case 416: // Error allowed publicly
         case 429: // Error allowed publicly
         case 501: // Error allowed publicly
         case 503: // Error allowed publicly
@@ -525,8 +515,25 @@ App::get('/.well-known/acme-challenge')
     ->inject('request')
     ->inject('response')
     ->action(function ($request, $response) {
+        $uriChunks = \explode('/', $request->getURI());
+        $token = $uriChunks[\count($uriChunks) - 1];
+
+        $validator = new Text(100, [
+            ...Text::NUMBERS,
+            ...Text::ALPHABET_LOWER,
+            ...Text::ALPHABET_UPPER,
+            '-',
+            '_'
+        ]);
+
+        if (!$validator->isValid($token) || \count($uriChunks) !== 4) {
+            throw new Exception('Invalid challenge token.', 400);
+        }
+
+        $filePath = '/.well-known/acme-challenge' . $token;
+
         $base = \realpath(APP_STORAGE_CERTIFICATES);
-        $path = \str_replace('/.well-known/acme-challenge/', '', $request->getURI());
+        $path = \str_replace('/.well-known/acme-challenge/', '', $filePath);
         $absolute = \realpath($base.'/.well-known/acme-challenge/'.$path);
 
         if (!$base) {

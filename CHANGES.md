@@ -1,4 +1,5 @@
 # Unreleased Version 0.13.0
+
 - Added ability to create syncronous function executions
 - Introduced new execution model for functions
 - Improved functions execution times
@@ -10,6 +11,20 @@
   - Updated endpoints to reflect the new terminology 
   - Updated UI with these changes
   - Updated event names from `function.tags.*` to `function.deployments.*`
+ 
+# Version 0.12.2
+
+## Bugs
+- Fix security vulnerability in the Console (#2778)
+- Fix security vulnerability in the ACME-Challenge (#2780)
+
+## Upgrades
+
+- Upgraded `redis` extenstion to version 5.3.6
+- Upgraded `swoole` extenstion to version 4.8.6
+- Upgraded `imagick` extenstion to version 3.7.0
+- Upgraded GEO IP database to version February 2022
+
 # Version 0.12.1
 
 ## Bugs
@@ -95,6 +110,21 @@
 - Upgraded Redis to 6.2
 - Upgraded InfluxDB to 1.4.0
 - Upgraded Telegraf to 1.3.0
+
+# Version 0.11.1
+
+## Bugs
+- Fix security vulnerability in the Console (#2777)
+- Fix security vulnerability in the ACME-Challenge (#2779)
+
+## Upgrades
+- Upgraded redis extenstion to version 5.3.6
+- Upgraded swoole extenstion to version 4.8.6
+- Upgraded imagick extenstion to version 3.7.0
+- Upgraded yaml extenstion to version 2.2.2
+- Upgraded maxminddb extenstion to version 1.11.0
+- Upgraded GEO IP database to version February 2022
+
 # Version 0.11.0
 
 ## Features

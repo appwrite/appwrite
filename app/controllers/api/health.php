@@ -358,11 +358,12 @@ App::get('/v1/health/stats') // Currently only used internally
     ->label('docs', false)
     ->inject('response')
     ->inject('register')
-    ->action(function ($response, $register) {
+    ->inject('deviceFiles')
+    ->action(function ($response, $register, $deviceFiles) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Registry\Registry $register */
+        /** @var Utopia\Storage\Device $deviceFiles */
 
-        $device = Storage::getDevice('files');
         $cache = $register->get('cache');
 
         $cacheStats = $cache->info();
@@ -370,9 +371,9 @@ App::get('/v1/health/stats') // Currently only used internally
         $response
             ->json([
                 'storage' => [
-                    'used' => Storage::human($device->getDirectorySize($device->getRoot().'/')),
-                    'partitionTotal' => Storage::human($device->getPartitionTotalSpace()),
-                    'partitionFree' => Storage::human($device->getPartitionFreeSpace()),
+                    'used' => Storage::human($deviceFiles->getDirectorySize($deviceFiles->getRoot().'/')),
+                    'partitionTotal' => Storage::human($deviceFiles->getPartitionTotalSpace()),
+                    'partitionFree' => Storage::human($deviceFiles->getPartitionFreeSpace()),
                 ],
                 'cache' => [
                     'uptime' => $cacheStats['uptime_in_seconds'] ?? 0,
