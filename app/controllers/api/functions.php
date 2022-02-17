@@ -543,14 +543,16 @@ App::post('/v1/functions/:functionId/deployments')
         
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        if(!$deployment->isEmpty()) {
+        $metadata = ['content_type' => $deviceLocal->getFileMimeType($fileTmpName)];
+        if (!$deployment->isEmpty()) {
             $chunks = $deployment->getAttribute('chunksTotal', 1);
-            if($chunk == -1) {
+            $metadata = $deployment->getAttribute('metadata', []);
+            if ($chunk === -1) {
                 $chunk = $chunks;
             }
         }
 
-        $chunksUploaded = $deviceFunctions->upload($fileTmpName, $path, $chunk, $chunks);
+        $chunksUploaded = $deviceFunctions->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
 
         if (empty($chunksUploaded)) {
             throw new Exception('Failed moving file', 500);
@@ -585,16 +587,28 @@ App::post('/v1/functions/:functionId/deployments')
                     'size' => $fileSize,
                     'search' => implode(' ', [$deploymentId, $entrypoint]),
                     'activate' => ((bool) $activate === true),
+                    'metadata' => $metadata,
                 ]));
             } else {
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', $fileSize));
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', $fileSize)->setAttribute('metadata', $metadata));
             }
+            // Enqueue a message to start the build
+            Resque::enqueue(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, [
+                'projectId' => $project->getId(),
+                'resourceId' => $function->getId(),
+                'deploymentId' => $deploymentId,
+                'type' => BUILD_TYPE_DEPLOYMENT
+            ]);
+
+            $usage
+                ->setParam('storage', $deployment->getAttribute('size', 0))
+            ;
         } else {
             if($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
                     '$id' => $deploymentId,
-                    '$read' => [],
-                    '$write' => [],
+                    '$read' => ['role:all'],
+                    '$write' => ['role:all'],
                     'resourceId' => $function->getId(),
                     'dateCreated' => time(),
                     'entrypoint' => $entrypoint,
@@ -604,24 +618,14 @@ App::post('/v1/functions/:functionId/deployments')
                     'chunksUploaded' => $chunksUploaded,
                     'search' => implode(' ', [$deploymentId, $entrypoint]),
                     'activate' => ((bool) $activate === true),
+                    'metadata' => $metadata,
                 ]));
             } else {
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('chunksUploaded', $chunksUploaded));
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('chunksUploaded', $chunksUploaded)->setAttribute('metadata', $metadata));
             }
         }
 
-        // Enqueue a message to start the build
-        Resque::enqueue(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, [
-            'projectId' => $project->getId(),
-            'resourceId' => $function->getId(),
-            'deploymentId' => $deploymentId,
-            'type' => BUILD_TYPE_DEPLOYMENT
-        ]);
-
-        $usage
-            ->setParam('storage', $deployment->getAttribute('size', 0))
-        ;
-
+        $metadata = null;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
