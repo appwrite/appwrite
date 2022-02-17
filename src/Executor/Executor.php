@@ -37,6 +37,7 @@ class Executor
         string $source, 
         string $runtime, 
         string $baseImage,
+        string $workdir,
         array $vars = [],
         array $commands = []
     ) {
@@ -49,9 +50,10 @@ class Executor
             'runtimeId' => "$projectId-$deploymentId",
             'source' => $source,
             'destination' => APP_STORAGE_BUILDS . "/app-$projectId",
-            'vars' => $vars,
             'runtime' => $runtime,
             'baseImage' => $baseImage,
+            'workdir' => $workdir,
+            'vars' => $vars,
             'commands' => $commands
         ];
 
@@ -133,7 +135,7 @@ class Executor
         if ($status >= 400) {
             switch ($status) {
                 case 404:
-                    $response = $this->createRuntime($functionId, $deploymentId, $projectId, $path, $runtime, $baseImage, $vars);
+                    $response = $this->createRuntime($functionId, $deploymentId, $projectId, $path, $runtime, $baseImage, '', $vars);
                     /** Try to create the execution once more */
                     $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
                     $status = $response['headers']['status-code'];

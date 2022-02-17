@@ -120,6 +120,7 @@ class BuildsV1 extends Worker
                 vars: $vars, 
                 runtime: $key, 
                 baseImage: $baseImage,
+                workdir: '/usr/code',
                 commands: [
                     'sh', '-c',
                     'mkdir -p /usr/code && \
