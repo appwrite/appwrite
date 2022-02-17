@@ -8,6 +8,7 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Appwrite\Extend\Exception;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -17,7 +18,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Exception;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\ArrayList;
@@ -117,7 +117,7 @@ App::get('/v1/teams')
             $cursorTeam = $dbForProject->getDocument('teams', $cursor);
 
             if ($cursorTeam->isEmpty()) {
-                throw new Exception("Team '{$cursor}' for the 'cursor' value not found.", 400);
+                throw new Exception("Team '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
 
@@ -157,7 +157,7 @@ App::get('/v1/teams/:teamId')
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
         }
 
         $response->dynamic($team, Response::MODEL_TEAM);
@@ -186,7 +186,7 @@ App::put('/v1/teams/:teamId')
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
         }
 
         $team = $dbForProject->updateDocument('teams', $team->getId(),$team
@@ -222,7 +222,7 @@ App::delete('/v1/teams/:teamId')
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
         }
 
         $memberships = $dbForProject->find('memberships', [
@@ -232,12 +232,12 @@ App::delete('/v1/teams/:teamId')
         // TODO delete all members individually from the user object
         foreach ($memberships as $membership) {
             if (!$dbForProject->deleteDocument('memberships', $membership->getId())) {
-                throw new Exception('Failed to remove membership for team from DB', 500);
+                throw new Exception('Failed to remove membership for team from DB', 500, Exception::GENERAL_SERVER_ERROR);
             }
         }
 
         if (!$dbForProject->deleteDocument('teams', $teamId)) {
-            throw new Exception('Failed to remove team from DB', 500);
+            throw new Exception('Failed to remove team from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $deletes
@@ -287,7 +287,7 @@ App::post('/v1/teams/:teamId/memberships')
         /** @var Appwrite\Event\Event $mails */
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503);
+            throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
         }
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -298,7 +298,7 @@ App::post('/v1/teams/:teamId/memberships')
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
         }
 
         $invitee = $dbForProject->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
@@ -311,7 +311,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $sum = $dbForProject->count('users', [], APP_LIMIT_USERS);
 
                 if($sum >= $limit) {
-                    throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+                    throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
                 }
             }
 
@@ -341,14 +341,14 @@ App::post('/v1/teams/:teamId/memberships')
                     'search' => implode(' ', [$userId, $email, $name]),
                 ])));
             } catch (Duplicate $th) {
-                throw new Exception('Account already exists', 409);
+                throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
             }
         }
 
         $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
-            throw new Exception('User is not allowed to send invitations for this team', 401);
+            throw new Exception('User is not allowed to send invitations for this team', 401, Exception::USER_UNAUTHORIZED);
         }
 
         $secret = Auth::tokenGenerator();
@@ -370,7 +370,7 @@ App::post('/v1/teams/:teamId/memberships')
             try {
                 $membership = Authorization::skip(fn() => $dbForProject->createDocument('memberships', $membership));
             } catch (Duplicate $th) {
-                throw new Exception('User has already been invited or is already a member of this team', 409);
+                throw new Exception('User has already been invited or is already a member of this team', 409, Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
             $team->setAttribute('sum', $team->getAttribute('sum', 0) + 1);
             $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
@@ -383,7 +383,7 @@ App::post('/v1/teams/:teamId/memberships')
             try {
                 $membership = $dbForProject->createDocument('memberships', $membership);
             } catch (Duplicate $th) {
-                throw new Exception('User has already been invited or is already a member of this team', 409);
+                throw new Exception('User has already been invited or is already a member of this team', 409, Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
         }
 
@@ -447,14 +447,14 @@ App::get('/v1/teams/:teamId/memberships')
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
         }
 
         if (!empty($cursor)) {
             $cursorMembership = $dbForProject->getDocument('memberships', $cursor);
 
             if ($cursorMembership->isEmpty()) {
-                throw new Exception("Membership '{$cursor}' for the 'cursor' value not found.", 400);
+                throw new Exception("Membership '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
 
@@ -502,13 +502,13 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
         }
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
         if($membership->isEmpty() || empty($membership->getAttribute('userId'))) {
-            throw new Exception('Membership not found', 404);
+            throw new Exception('Membership not found', 404, Exception::MEMBERSHIP_NOT_FOUND);
         }
 
         $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
@@ -550,17 +550,17 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
 
         $team = $dbForProject->getDocument('teams', $teamId);
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
         }
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
         if ($membership->isEmpty()) {
-            throw new Exception('Membership not found', 404);
+            throw new Exception('Membership not found', 404, Exception::MEMBERSHIP_NOT_FOUND);
         }
 
         $profile = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
         if ($profile->isEmpty()) {
-            throw new Exception('User not found', 404);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -568,7 +568,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
-            throw new Exception('User is not allowed to modify roles', 401);
+            throw new Exception('User is not allowed to modify roles', 401, Exception::USER_UNAUTHORIZED);
         }
 
         // Update the roles
@@ -621,25 +621,25 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
         if ($membership->isEmpty()) {
-            throw new Exception('Membership not found', 404);
+            throw new Exception('Membership not found', 404, Exception::MEMBERSHIP_NOT_FOUND);
         }
 
         if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception('Team IDs don\'t match', 404);
+            throw new Exception('Team IDs don\'t match', 404, Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
         $team = Authorization::skip(fn() => $dbForProject->getDocument('teams', $teamId));
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
         }
 
         if (Auth::hash($secret) !== $membership->getAttribute('secret')) {
-            throw new Exception('Secret key not valid', 401);
+            throw new Exception('Secret key not valid', 401, Exception::TEAM_INVALID_SECRET);
         }
 
         if ($userId != $membership->getAttribute('userId')) {
-            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
+            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401, Exception::TEAM_INVITE_MISMATCH);
         }
 
         if ($user->isEmpty()) {
@@ -647,7 +647,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         if ($membership->getAttribute('userId') !== $user->getId()) {
-            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
+            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401, Exception::TEAM_INVITE_MISMATCH);
         }
 
         $membership // Attach user to team
@@ -743,7 +743,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
         if ($membership->isEmpty()) {
-            throw new Exception('Invite not found', 404);
+            throw new Exception('Invite not found', 404, Exception::TEAM_INVITE_NOT_FOUND);
         }
 
         if ($membership->getAttribute('teamId') !== $teamId) {
@@ -753,21 +753,21 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
         }
 
         try {
             $dbForProject->deleteDocument('memberships', $membership->getId());
         } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized permissions', 401);
+            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         } catch (\Exception $exception) {
-            throw new Exception('Failed to remove membership from DB', 500);
+            throw new Exception('Failed to remove membership from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $memberships = $user->getAttribute('memberships', []);

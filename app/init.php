@@ -20,6 +20,7 @@ error_reporting(E_ALL);
 use Appwrite\Extend\PDO;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
@@ -138,6 +139,7 @@ App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
  */
 Config::load('events', __DIR__.'/config/events.php');
 Config::load('auth', __DIR__.'/config/auth.php');
+Config::load('errors', __DIR__.'/config/errors.php');
 Config::load('providers', __DIR__.'/config/providers.php');
 Config::load('platforms', __DIR__.'/config/platforms.php');
 Config::load('collections', __DIR__.'/config/collections.php');
@@ -362,7 +364,7 @@ $register->set('logger', function () { // Register error logger
     }
 
     if(!Logger::hasProvider($providerName)) {
-        throw new Exception("Logging provider not supported. Logging disabled.");
+        throw new Exception("Logging provider not supported. Logging disabled.", 500, Exception::GENERAL_SERVER_ERROR);
     }
 
     $classname = '\\Utopia\\Logger\\Adapter\\'.\ucfirst($providerName);
@@ -707,7 +709,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         try {
             $payload = $jwt->decode($authJWT);
         } catch (JWTException $error) {
-            throw new Exception('Failed to verify JWT. '.$error->getMessage(), 401);
+            throw new Exception('Failed to verify JWT. '.$error->getMessage(), 401, Exception::USER_JWT_INVALID);
         }
 
         $jwtUserId = $payload['userId'] ?? '';
