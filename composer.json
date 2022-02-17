@@ -11,7 +11,8 @@
     ],
     "autoload": {
         "psr-4": {
-            "Appwrite\\": "src/Appwrite"
+            "Appwrite\\": "src/Appwrite",
+            "Executor\\": "src/Executor"
         }
     },
     "autoload-dev": {

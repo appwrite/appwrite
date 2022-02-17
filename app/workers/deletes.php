@@ -5,6 +5,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Appwrite\Resque\Worker;
+use Executor\Executor;
 use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -313,44 +314,16 @@ class DeletesV1 extends Worker
     protected function deleteFunction(Document $document, string $projectId): void
     {
         $dbForProject = $this->getProjectDB($projectId);
-
-        /**
-         * Request executor to delete all deployment containers
-         */
-        try {
-            $ch = \curl_init();
-            \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-            \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/{$document->getId()}");
-            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json',
-                'x-appwrite-project: '. $projectId,
-                'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
-            ]);
-
-            $executorResponse = \curl_exec($ch);
-            $error = \curl_error($ch);
-            if (!empty($error)) {
-                throw new Exception($error, 500);
-            }
-
-            $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            if ($statusCode >= 400) {
-                throw new Exception('Executor error: ' . $executorResponse, $statusCode);
-            }
-
-            \curl_close($ch);
-        } catch (Throwable $th) {
-            Console::error($th->getMessage());
-        }
+        $functionId = $document->getId();
 
         /**
          * Delete Deployments
          */
+        Console::info("Deleting deployments for function " . $functionId);
         $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
         $deploymentIds = [];
         $this->deleteByGroup('deployments', [
-            new Query('resourceId', Query::TYPE_EQUAL, [$document->getId()])
+            new Query('resourceId', Query::TYPE_EQUAL, [$functionId])
         ], $dbForProject, function (Document $document) use ($storageFunctions, &$deploymentIds) {
             $deploymentIds[] = $document->getId();
             if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
@@ -363,11 +336,12 @@ class DeletesV1 extends Worker
         /**
          * Delete builds
          */
-        if (!empty($deploymentIds)) {
-            $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
+        Console::info("Deleting builds for function " . $functionId);
+        $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
+         foreach ($deploymentIds as $deploymentId) {
             $this->deleteByGroup('builds', [
-                new Query('deploymentId', Query::TYPE_EQUAL, $deploymentIds)
-            ], $dbForProject, function (Document $document) use ($storageBuilds) {
+                new Query('deploymentId', Query::TYPE_EQUAL, [$deploymentId])
+            ], $dbForProject, function (Document $document) use ($storageBuilds, $deploymentId) {
                 if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
                     Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
                 } else {
@@ -376,10 +350,26 @@ class DeletesV1 extends Worker
             });
         }
 
-        // Delete Executions
+        /** 
+         * Delete Executions
+         */ 
+        Console::info("Deleting executions for function " . $functionId);
         $this->deleteByGroup('executions', [
-            new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
+            new Query('functionId', Query::TYPE_EQUAL, [$functionId])
         ], $dbForProject);
+
+        /**
+         * Request executor to delete all deployment containers
+         */
+        Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
+        $executor = new Executor();
+        foreach ($deploymentIds as $deploymentId) {
+            try {
+                $executor->deleteRuntime($projectId, $functionId, $deploymentId);
+            } catch (Throwable $th) {
+                Console::error($th->getMessage());
+            }
+        }
 
     }
 
@@ -390,41 +380,13 @@ class DeletesV1 extends Worker
     protected function deleteDeployment(Document $document, string $projectId): void
     {
         $dbForProject = $this->getProjectDB($projectId);
-
-        /**
-         * Request executor to delete the deployment containers
-         */
-        try {
-            $ch = \curl_init();
-            \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-            // TODO: Implement coroutines.
-            \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/deployments/{$document->getId()}");
-            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json',
-                'x-appwrite-project: '. $projectId,
-                'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
-            ]);
-
-            $executorResponse = \curl_exec($ch);
-            $error = \curl_error($ch);
-            if (!empty($error)) {
-                throw new Exception($error, 500);
-            }
-
-            $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            if ($statusCode >= 400) {
-                throw new Exception('Executor error: ' . $executorResponse, $statusCode);
-            }
-
-            \curl_close($ch);
-        } catch (Throwable $th) {
-            Console::error($th->getMessage());
-        }
+        $deploymentId = $document->getId();
+        $functionId = $document->getAttribute('resourceId');
 
         /**
          * Delete deployment files
          */
+        Console::info("Deleting deployment files for deployment " . $deploymentId);
         $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
         if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
             Console::success('Deleted deployment files: ' . $document->getAttribute('path', ''));
@@ -435,9 +397,10 @@ class DeletesV1 extends Worker
         /**
          * Delete builds
          */
+        Console::info("Deleting builds for deployment " . $deploymentId);
         $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
         $this->deleteByGroup('builds', [
-            new Query('deploymentId', Query::TYPE_EQUAL, [$document->getId()])
+            new Query('deploymentId', Query::TYPE_EQUAL, [$deploymentId])
         ], $dbForProject, function (Document $document) use ($storageBuilds) {
             if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
                 Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
@@ -446,6 +409,16 @@ class DeletesV1 extends Worker
             }
         });
 
+        /**
+         * Request executor to delete the deployment container
+         */
+        Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
+        try {
+            $executor = new Executor();
+            $executor->deleteRuntime($projectId, $functionId, $deploymentId);
+        } catch (Throwable $th) {
+            Console::error($th->getMessage());
+        }
     }
 
 

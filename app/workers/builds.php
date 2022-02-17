@@ -2,6 +2,7 @@
 
 use Appwrite\Resque\Worker;
 use Cron\CronExpression;
+use Executor\Executor;
 use Utopia\Database\Validator\Authorization;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -20,68 +21,37 @@ Console::success(APP_NAME.' build worker v1 has started');
 // TODO: Executor should return appropriate response codes.
 class BuildsV1 extends Worker
 { 
+    /**
+     * @var Executor
+     */
+    private $executor = null;
 
     public function getName(): string 
     {
         return "builds";
     }
 
-    public function init(): void {}
+    public function init(): void {
+        $this->executor = new Executor();
+    }
 
     public function run(): void
     {
         $type = $this->args['type'] ?? '';
         $projectId = $this->args['projectId'] ?? '';
-
+        $functionId = $this->args['functionId'] ?? '';
+        $deploymentId = $this->args['deploymentId'] ?? '';
+        
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
-                $functionId = $this->args['functionId'] ?? '';
-                $deploymentId = $this->args['deploymentId'] ?? '';
+            case BUILD_TYPE_RETRY:
                 Console::info("Creating build for deployment: $deploymentId");
                 $this->buildDeployment($projectId, $functionId, $deploymentId);
-                break;
-
-            case BUILD_TYPE_RETRY:
-                $buildId = $this->args['buildId'] ?? '';
-                $functionId = $this->args['functionId'] ?? '';
-                $deploymentId = $this->args['deploymentId'] ?? '';
-                Console::info("Retrying build for id: $buildId");
-                $this->createBuild($projectId, $functionId, $deploymentId, $buildId);
                 break;
 
             default:
                 throw new \Exception('Invalid build type');
                 break;
-        }
-    }
-
-    protected function createBuild(string $projectId, string $functionId, string $deploymentId, string $buildId)
-    {
-        // TODO: What is a reasonable time to wait for a build to complete?
-        $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/$functionId/deployments/$deploymentId/builds/$buildId");
-        \curl_setopt($ch, CURLOPT_POST, true);
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
-        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'x-appwrite-project: '.$projectId,
-            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
-        ]);
-
-        $response = \curl_exec($ch);
-        $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        $error = \curl_error($ch);
-        if (!empty($error)) {
-            throw new \Exception($error);
-        }
-
-        \curl_close($ch);
-
-        if ($responseStatus >= 400) {
-            throw new \Exception("Build failed with status code: $responseStatus");
         }
     }
 
@@ -94,7 +64,6 @@ class BuildsV1 extends Worker
             throw new Exception('Function not found', 404);
         }
 
-        // Get deployment document
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
         if ($deployment->isEmpty()) {
             throw new Exception('Deployment not found', 404);
@@ -108,46 +77,84 @@ class BuildsV1 extends Worker
         }
 
         $buildId = $deployment->getAttribute('buildId', '');
-
-        // If build ID is empty, create a new build
+        $build = null;
+        $startTime = \time();
         if (empty($buildId)) {
-            try {
-                $buildId = $dbForProject->getId();
-                $dbForProject->createDocument('builds', new Document([
-                    '$id' => $buildId,
-                    '$read' => [],
-                    '$write' => [],
-                    'startTime' => time(),
-                    'deploymentId' => $deploymentId,
-                    'status' => 'processing',
-                    'outputPath' => '',
-                    'runtime' => $function->getAttribute('runtime'),
-                    'source' => $deployment->getAttribute('path'),
-                    'sourceType' => Storage::DEVICE_LOCAL,
-                    'stdout' => '',
-                    'stderr' => '',
-                    'endTime' => 0,
-                    'duration' => 0
-                ]));
-            } catch (\Throwable $th) {
-                $deployment->setAttribute('buildId', '');
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
-                Console::error($th->getMessage());
-                throw $th;
-            }
-        }
-
-        // Build the Code
-        try {
+            $buildId = $dbForProject->getId();
+            $build = $dbForProject->createDocument('builds', new Document([
+                '$id' => $buildId,
+                '$read' => [],
+                '$write' => [],
+                'startTime' => $startTime,
+                'deploymentId' => $deploymentId,
+                'status' => 'processing',
+                'outputPath' => '',
+                'runtime' => $function->getAttribute('runtime'),
+                'source' => $deployment->getAttribute('path'),
+                'sourceType' => Storage::DEVICE_LOCAL,
+                'stdout' => '',
+                'stderr' => '',
+                'endTime' => 0,
+                'duration' => 0
+            ]));
             $deployment->setAttribute('buildId', $buildId);
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
-            $this->createBuild($projectId, $functionId, $deploymentId, $buildId);
-        } catch (\Throwable $th) {
-            Console::error($th->getMessage());
-            throw $th;
+        } else {
+            $build = $dbForProject->getDocument('builds', $buildId);
         }
 
-        Console::success("Build id: $buildId started");
+        /** Request the executor to build the code... */
+        $build->setAttribute('status', 'building');
+        $build = $dbForProject->updateDocument('builds', $buildId, $build);
+
+        $source = $deployment->getAttribute('path');
+        $vars = $function->getAttribute('vars', []);
+        $baseImage = $runtime['image'];
+
+        try {
+            $response = $this->executor->createRuntime(
+                projectId: $projectId, 
+                functionId: $functionId, 
+                deploymentId: $deploymentId, 
+                source: $source,
+                vars: $vars, 
+                runtime: $key, 
+                baseImage: $baseImage
+            );
+
+            /** Update the build document */
+            $build->setAttribute('endTime', $response['endTime']);
+            $build->setAttribute('duration', $response['duration']);
+            $build->setAttribute('status', $response['status']);
+            $build->setAttribute('outputPath', $response['outputPath']);
+            $build->setAttribute('stderr', $response['stderr']);
+            $build->setAttribute('stdout', $response['stdout']);
+
+            Console::success("Build id: $buildId created");
+
+            /** Set auto deploy */
+            if ($deployment->getAttribute('activate') === true) {
+                $function->setAttribute('deployment', $deployment->getId());
+                $function = $dbForProject->updateDocument('functions', $functionId, $function);
+            }
+
+            /** Update function schedule */
+            $schedule = $function->getAttribute('schedule', '');
+            $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
+            $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
+            $function->setAttribute('scheduleNext', (int)$next);
+            $function = $dbForProject->updateDocument('functions', $functionId, $function);
+
+        } catch (\Throwable $th) {
+            $endtime = \time();
+            $build->setAttribute('endTime', $endtime);
+            $build->setAttribute('duration', $endtime - $startTime);
+            $build->setAttribute('status', 'failed');
+            $build->setAttribute('stderr', $th->getMessage());
+            Console::error($th->getMessage());
+        } finally {
+            $build = $dbForProject->updateDocument('builds', $buildId, $build);
+        }
     }
 
     public function shutdown(): void {}

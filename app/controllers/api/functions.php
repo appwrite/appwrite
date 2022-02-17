@@ -25,6 +25,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Config\Config;
 use Cron\CronExpression;
+use Executor\Executor;
 use Utopia\CLI\Console;
 use Utopia\Validator\Boolean;
 
@@ -331,7 +332,7 @@ App::put('/v1/functions/:functionId')
         ])));
 
         if ($next && $schedule !== $original) {
-            ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
+            ResqueScheduler::enqueueAt($next, Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME, [
                 'projectId' => $project->getId(),
                 'webhooks' => $project->getAttribute('webhooks', []),
                 'functionId' => $function->getId(),
@@ -344,7 +345,7 @@ App::put('/v1/functions/:functionId')
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
-App::patch('/v1/functions/:functionId/deployment')
+App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Update Function Deployment')
     ->label('scope', 'functions.write')
@@ -357,17 +358,17 @@ App::patch('/v1/functions/:functionId/deployment')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('deployment', '', new UID(), 'Deployment ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->action(function ($functionId, $deployment, $response, $dbForProject, $project) {
+    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
 
         $function = $dbForProject->getDocument('functions', $functionId);
-        $deployment = $dbForProject->getDocument('deployments', $deployment);
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
         $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
 
         if ($function->isEmpty()) {
@@ -404,7 +405,6 @@ App::patch('/v1/functions/:functionId/deployment')
                 'trigger' => 'schedule',
             ]);  // Async task rescheduale
         }
-
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
@@ -463,14 +463,14 @@ App::post('/v1/functions/:functionId/deployments')
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
     ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
-    ->param('deploy', false, new Boolean(true), 'Automatically deploy the function when it is finished building.', false)
+    ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.', false)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('user')
     ->inject('project')
-    ->action(function ($functionId, $entrypoint, $file, $deploy, $request, $response, $dbForProject, $usage, $user, $project) {
+    ->action(function ($functionId, $entrypoint, $file, $activate, $request, $response, $dbForProject, $usage, $user, $project) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
@@ -519,16 +519,16 @@ App::post('/v1/functions/:functionId/deployments')
             throw new Exception('Failed moving file', 500);
         }
 
-        if ((bool) $deploy) {
+        if ((bool) $activate) {
             // Remove deploy for all other deployments.
             $deployments = $dbForProject->find('deployments', [
-                new Query('deploy', Query::TYPE_EQUAL, [true]),
+                new Query('activate', Query::TYPE_EQUAL, [true]),
                 new Query('resourceId', Query::TYPE_EQUAL, [$functionId]),
                 new Query('resourceType', Query::TYPE_EQUAL, ['functions'])
             ]);
 
             foreach ($deployments as $deployment) {
-                $deployment->setAttribute('deploy', false);
+                $deployment->setAttribute('activate', false);
                 $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
             }
         }
@@ -545,7 +545,7 @@ App::post('/v1/functions/:functionId/deployments')
             'path' => $path,
             'size' => $size,
             'search' => implode(' ', [$deploymentId, $entrypoint]),
-            'deploy' => ($deploy === 'true'),
+            'activate' => ((bool) $activate === true),
         ]));
 
         // Enqueue a message to start the build
@@ -616,8 +616,8 @@ App::get('/v1/functions/:functionId/deployments')
         $sum = $dbForProject->count('deployments', $queries, APP_LIMIT_COUNT);
 
         foreach ($results as $result) {
-            $build = $dbForProject->getDocument('builds', $result->getAttribute('buildId'));
-            $result->setAttribute('status', $build->getAttribute('status', 'pending'));
+            $build = $dbForProject->getDocument('builds', $result->getAttribute('buildId', ''));
+            $result->setAttribute('status', $build->getAttribute('status', 'processing'));
             $result->setAttribute('buildStderr', $build->getAttribute('stderr', ''));
             $result->setAttribute('buildStdout', $build->getAttribute('stdout', ''));
         }
@@ -758,7 +758,15 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception('Function not found', 404);
         }
 
-        $deployment = Authorization::skip(fn() => $dbForProject->getDocument('deployments', $function->getAttribute('deployment')));
+        $runtimes = Config::getParam('runtimes', []);
+
+        $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
+
+        if (\is_null($runtime)) {
+            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported', 400);
+        }
+
+        $deployment = Authorization::skip(fn() => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404);
@@ -766,6 +774,16 @@ App::post('/v1/functions/:functionId/executions')
 
         if ($deployment->isEmpty()) {
             throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404);
+        }
+
+        /** Check if build has completed */
+        $build = Authorization::skip(fn() => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+        if ($build->isEmpty()) {
+            throw new Exception('Build not found', 404);
+        }
+
+        if ($build->getAttribute('status') !== 'ready') {
+            throw new Exception('Build not ready', 400);
         }
 
         $validator = new Authorization('execute');
@@ -779,7 +797,7 @@ App::post('/v1/functions/:functionId/executions')
         $execution = Authorization::skip(fn() => $dbForProject->createDocument('executions', new Document([
             '$id' => $executionId,
             '$read' => (!$user->isEmpty()) ? ['user:' . $user->getId()] : [],
-            '$write' => ['role:all'],
+            '$write' => [],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
             'deploymentId' => $deployment->getId(),
@@ -814,56 +832,71 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         if ($async) {
-            Resque::enqueue('v1-functions', 'FunctionsV1', [
+            Resque::enqueue(Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME, [
                 'projectId' => $project->getId(),
-                'webhooks' => $project->getAttribute('webhooks', []),
                 'functionId' => $function->getId(),
+                'webhooks' => $project->getAttribute('webhooks', []),
                 'executionId' => $execution->getId(),
                 'trigger' => 'http',
                 'data' => $data,
                 'userId' => $user->getId(),
-                'jwt' => $jwt
+                'jwt' => $jwt,
             ]);
 
             $response->setStatusCode(Response::STATUS_CODE_CREATED);
-            $response->dynamic($execution, Response::MODEL_EXECUTION);
-            return $response;
+            return $response->dynamic($execution, Response::MODEL_EXECUTION);
         }
 
-        // Directly execute function.
-        $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor/v1/functions/{$function->getId()}/executions");
-        \curl_setopt($ch, CURLOPT_POST, true);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-            'trigger' => 'http',
-            'projectId' => $project->getId(),
-            'executionId' => $execution->getId(),
-            'data' => $data,
-            'webhooks' => $project->getAttribute('webhooks', []),
-            'userId' => $user->getId(),
-            'jwt' => $jwt,
-        ]));
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, CURLOPT_TIMEOUT, App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900) + 200); // + 200 for safety margin
-        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'x-appwrite-project: '.$project->getId(),
-            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
+        /** Collect environment variables */
+        $vars = \array_merge($function->getAttribute('vars', []), [
+            'APPWRITE_FUNCTION_ID' => $function->getId(),
+            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
+            'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
+            'APPWRITE_FUNCTION_TRIGGER' => 'http',
+            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
+            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
+            'APPWRITE_FUNCTION_DATA' => $data,
+            'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
+            'APPWRITE_FUNCTION_USER_ID' => $user->getId(),
+            'APPWRITE_FUNCTION_JWT' => $jwt,
         ]);
-    
-        $responseExecute = \curl_exec($ch);
-    
-        $error = \curl_error($ch);
-        if (!empty($error)) {
-            Console::error('Curl error: '.$error);
+
+        /** Execute function */
+        $executor = new Executor();
+        $executionResponse = [];
+        try {
+            $executionResponse = $executor->createExecution(
+                projectId: $project->getId(),
+                functionId: $function->getId(),
+                deploymentId: $deployment->getId(),
+                path: $build->getAttribute('outputPath', ''),
+                vars: $vars,
+                data: $data,
+                entrypoint: $deployment->getAttribute('entrypoint', ''),
+                runtime: $function->getAttribute('runtime', ''),
+                timeout: $function->getAttribute('timeout', 0),
+                baseImage: $runtime['image']
+            );
+
+            /** Update execution status */
+            $execution->setAttribute('status', $executionResponse['status']);
+            $execution->setAttribute('statusCode', $executionResponse['statusCode']);
+            $execution->setAttribute('stdout', $executionResponse['stdout']);
+            $execution->setAttribute('stderr', $executionResponse['stderr']);
+            $execution->setAttribute('time', $executionResponse['time']);
+        } catch (\Throwable $th) {
+            $execution->setAttribute('status', 'failed');
+            $execution->setAttribute('statusCode', $th->getCode());
+            $execution->setAttribute('stderr', $th->getMessage());
+            Console::error($th->getMessage());
         }
-    
-        \curl_close($ch);
+
+        Authorization::skip(fn() => $dbForProject->updateDocument('executions', $executionId, $execution));
+        $executionResponse['response'] = ($executionResponse['status'] !== 'completed') ? $executionResponse['stderr'] : $executionResponse['stdout'];
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic(new Document(json_decode($responseExecute, true)), Response::MODEL_SYNC_EXECUTION);
+            ->dynamic(new Document($executionResponse), Response::MODEL_SYNC_EXECUTION);
     });
 
 App::get('/v1/functions/:functionId/executions')
@@ -958,7 +991,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         $response->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
-App::post('/v1/builds/:buildId')
+App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
     ->desc('Retry Build')
     ->label('scope', 'functions.write')
@@ -969,14 +1002,27 @@ App::post('/v1/builds/:buildId')
     ->label('sdk.description', '/docs/references/functions/retry-build.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('functionId', '', new UID(), 'Function ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->param('buildId', '', new UID(), 'Build unique ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->action(function ($buildId, $response, $dbForProject, $project) {
+    ->action(function ($functionId, $deploymentId, $buildId, $response, $dbForProject, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        if ($function->isEmpty()) {
+            throw new Exception('Function not found', 404);
+        }
+
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found', 404);
+        }
 
         $build = Authorization::skip(fn() => $dbForProject->getDocument('builds', $buildId));
 
@@ -991,7 +1037,8 @@ App::post('/v1/builds/:buildId')
         // Enqueue a message to start the build
         Resque::enqueue(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, [
             'projectId' => $project->getId(),
-            'buildId' => $buildId,
+            'functionId' => $function->getId(),
+            'deploymentId' => $deploymentId,
             'type' => BUILD_TYPE_RETRY
         ]);
 

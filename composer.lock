@@ -119,7 +119,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "96a536e0ad7e3788cd2493e39cdf94b44206411d"
+                "reference": "991a8674c75f78644b557c9723869c370b3290b5"
             },
             "require": {
                 "php": ">=8.0",
@@ -160,7 +160,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2022-01-19T09:26:05+00:00"
+            "time": "2022-02-01T10:58:43+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -2135,16 +2135,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.14.0",
+            "version": "0.14.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "2f2527bb080cf578fba327ea2ec637064561d403"
+                "reference": "ecc143f2cfe16b23675407035c6b5375ba263285"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/2f2527bb080cf578fba327ea2ec637064561d403",
-                "reference": "2f2527bb080cf578fba327ea2ec637064561d403",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/ecc143f2cfe16b23675407035c6b5375ba263285",
+                "reference": "ecc143f2cfe16b23675407035c6b5375ba263285",
                 "shasum": ""
             },
             "require": {
@@ -2192,9 +2192,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.14.0"
+                "source": "https://github.com/utopia-php/database/tree/0.14.1"
             },
-            "time": "2022-01-21T16:34:34+00:00"
+            "time": "2022-01-25T13:01:20+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5715,16 +5715,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v6.0.2",
+            "version": "v6.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "dd434fa8d69325e5d210f63070014d889511fcb3"
+                "reference": "22e8efd019c3270c4f79376234a3f8752cd25490"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/dd434fa8d69325e5d210f63070014d889511fcb3",
-                "reference": "dd434fa8d69325e5d210f63070014d889511fcb3",
+                "url": "https://api.github.com/repos/symfony/console/zipball/22e8efd019c3270c4f79376234a3f8752cd25490",
+                "reference": "22e8efd019c3270c4f79376234a3f8752cd25490",
                 "shasum": ""
             },
             "require": {
@@ -5790,7 +5790,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v6.0.2"
+                "source": "https://github.com/symfony/console/tree/v6.0.3"
             },
             "funding": [
                 {
@@ -5806,7 +5806,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-12-27T21:05:08+00:00"
+            "time": "2022-01-26T17:23:29+00:00"
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
@@ -6216,16 +6216,16 @@
         },
         {
             "name": "symfony/string",
-            "version": "v6.0.2",
+            "version": "v6.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/string.git",
-                "reference": "bae261d0c3ac38a1f802b4dfed42094296100631"
+                "reference": "522144f0c4c004c80d56fa47e40e17028e2eefc2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/string/zipball/bae261d0c3ac38a1f802b4dfed42094296100631",
-                "reference": "bae261d0c3ac38a1f802b4dfed42094296100631",
+                "url": "https://api.github.com/repos/symfony/string/zipball/522144f0c4c004c80d56fa47e40e17028e2eefc2",
+                "reference": "522144f0c4c004c80d56fa47e40e17028e2eefc2",
                 "shasum": ""
             },
             "require": {
@@ -6281,7 +6281,7 @@
                 "utf8"
             ],
             "support": {
-                "source": "https://github.com/symfony/string/tree/v6.0.2"
+                "source": "https://github.com/symfony/string/tree/v6.0.3"
             },
             "funding": [
                 {
@@ -6297,7 +6297,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-12-16T22:13:01+00:00"
+            "time": "2022-01-02T09:55:41+00:00"
         },
         {
             "name": "textalk/websocket",

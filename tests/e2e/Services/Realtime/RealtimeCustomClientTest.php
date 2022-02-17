@@ -1002,13 +1002,11 @@ class RealtimeCustomClientTest extends Scope
         // Wait for deployment to be built.
         sleep(5);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployment', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployments/'.$deploymentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'deployment' => $deploymentId,
-        ]);
+        ]), []);
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']['$id']);
@@ -1049,6 +1047,15 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($responseUpdate['data']['payload']);
 
         $client->close();
+
+        // Cleanup : Delete function 
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 
     public function testChannelTeams(): array

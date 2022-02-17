@@ -117,7 +117,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                                 data-failure="alert"
                                                 data-failure-param-alert-text="Failed to update deployment"
                                                 data-failure-param-alert-classname="error">
-                                                <input type="hidden" name="deployment" data-ls-bind="{{deployment.$id}}">
+                                                <input type="hidden" name="deploymentId" data-ls-bind="{{deployment.$id}}">
                                                 <button>Activate</button>
                                             </form>
                                             <form data-ls-if="({{deployment.$id}} !== {{project-function.deployment}} && {{deployment.status}} == 'failed')" name="functions.retryBuild" class="pull-end"
@@ -135,6 +135,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                                 data-failure-param-alert-text="Failed to retry build"
                                                 data-failure-param-alert-classname="error">
                                                 <input type="hidden" name="buildId" data-ls-bind="{{deployment.buildId}}">
+                                                <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}">
+                                                <input type="hidden" name="deploymentId" data-ls-bind="{{deployment.$id}}">
                                                 <button>Retry Build</button>
                                             </form>
    
@@ -685,7 +687,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                 <input type="file" name="code" id="deployment-code" size="1" required accept="application/x-gzip,.gz">
                 <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
 
-                <label for="deployment-deploy" class="margin-bottom-large">Auto Deploy Deployment after build <input type="checkbox" class="margin-start-small" id="deployment-deploy" name="deploy" /></label>
+                <label for="deployment-activate" class="margin-bottom-large">Auto Activate Deployment after build <input type="checkbox" class="margin-start-small" id="deployment-activate" name="activate" /></label>
 
                 <footer>
                     <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
