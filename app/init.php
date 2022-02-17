@@ -49,6 +49,7 @@ use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
 use Utopia\Database\Query;
+use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
@@ -815,7 +816,7 @@ App::setResource('deviceBuilds', function($project) {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
 }, ['project']);
 
-function getDevice($root) {
+function getDevice($root): Device {
     switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
         case Storage::DEVICE_LOCAL:default:
             return new Local($root);
