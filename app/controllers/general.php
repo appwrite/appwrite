@@ -19,6 +19,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Appwrite\Utopia\Request\Filters\V12;
+use Utopia\Validator\Text;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
@@ -513,8 +514,25 @@ App::get('/.well-known/acme-challenge')
     ->inject('request')
     ->inject('response')
     ->action(function ($request, $response) {
+        $uriChunks = \explode('/', $request->getURI());
+        $token = $uriChunks[\count($uriChunks) - 1];
+
+        $validator = new Text(100, [
+            ...Text::NUMBERS,
+            ...Text::ALPHABET_LOWER,
+            ...Text::ALPHABET_UPPER,
+            '-',
+            '_'
+        ]);
+
+        if (!$validator->isValid($token) || \count($uriChunks) !== 4) {
+            throw new Exception('Invalid challenge token.', 400);
+        }
+
+        $filePath = '/.well-known/acme-challenge' . $token;
+
         $base = \realpath(APP_STORAGE_CERTIFICATES);
-        $path = \str_replace('/.well-known/acme-challenge/', '', $request->getURI());
+        $path = \str_replace('/.well-known/acme-challenge/', '', $filePath);
         $absolute = \realpath($base.'/.well-known/acme-challenge/'.$path);
 
         if (!$base) {

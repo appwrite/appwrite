@@ -19,9 +19,9 @@ class Func extends Model
             ->addRule('execute', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Execution permissions.',
-                'default' => '',
+                'default' => [],
                 'example' => 'role:member',
-                'array' => false,
+                'array' => true,
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,

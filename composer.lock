@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "eba5438fb1baf147ea65b20bba4dd5e8",
+    "content-hash": "85bddee9d6951fa078bee158e8b9bd5a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -531,12 +531,12 @@
                 }
             },
             "autoload": {
-                "psr-4": {
-                    "GuzzleHttp\\": "src/"
-                },
                 "files": [
                     "src/functions_include.php"
-                ]
+                ],
+                "psr-4": {
+                    "GuzzleHttp\\": "src/"
+                }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -1033,12 +1033,12 @@
                 }
             },
             "autoload": {
-                "psr-4": {
-                    "MongoDB\\": "src/"
-                },
                 "files": [
                     "src/functions.php"
-                ]
+                ],
+                "psr-4": {
+                    "MongoDB\\": "src/"
+                }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -2145,12 +2145,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "195fd16b69c0cd388c16051826ec59fa4647a610"
+                "reference": "49c74b0d8455c616895b794b24496f32f0e91b5a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/195fd16b69c0cd388c16051826ec59fa4647a610",
-                "reference": "195fd16b69c0cd388c16051826ec59fa4647a610",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/49c74b0d8455c616895b794b24496f32f0e91b5a",
+                "reference": "49c74b0d8455c616895b794b24496f32f0e91b5a",
                 "shasum": ""
             },
             "require": {
@@ -2200,7 +2200,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/fix-perms"
             },
-            "time": "2022-02-07T12:09:11+00:00"
+            "time": "2022-02-17T14:32:38+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2258,16 +2258,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.19.5",
+            "version": "0.19.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "1c28ba9a5b491cf7c90c535fefee5832c7133623"
+                "reference": "7d9b28365fb794001cb34dd028659452d4e71b7d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/1c28ba9a5b491cf7c90c535fefee5832c7133623",
-                "reference": "1c28ba9a5b491cf7c90c535fefee5832c7133623",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/7d9b28365fb794001cb34dd028659452d4e71b7d",
+                "reference": "7d9b28365fb794001cb34dd028659452d4e71b7d",
                 "shasum": ""
             },
             "require": {
@@ -2301,9 +2301,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.19.5"
+                "source": "https://github.com/utopia-php/framework/tree/0.19.6"
             },
-            "time": "2022-01-04T14:40:23+00:00"
+            "time": "2022-02-10T17:05:22+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -3083,16 +3083,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.17.1",
+            "version": "0.17.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "3542c6ed0f808b6a9f6735a8aad7ccda961bea29"
+                "reference": "37bc6fc1b4b4940c7659748d7d2d5110da5457a4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/3542c6ed0f808b6a9f6735a8aad7ccda961bea29",
-                "reference": "3542c6ed0f808b6a9f6735a8aad7ccda961bea29",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/37bc6fc1b4b4940c7659748d7d2d5110da5457a4",
+                "reference": "37bc6fc1b4b4940c7659748d7d2d5110da5457a4",
                 "shasum": ""
             },
             "require": {
@@ -3126,9 +3126,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.17.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.17.2"
             },
-            "time": "2022-01-07T12:55:37+00:00"
+            "time": "2022-01-28T08:25:10+00:00"
         },
         {
             "name": "composer/pcre",
@@ -3966,16 +3966,16 @@
         },
         {
             "name": "phar-io/version",
-            "version": "3.1.0",
+            "version": "3.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phar-io/version.git",
-                "reference": "bae7c545bef187884426f042434e561ab1ddb182"
+                "reference": "15a90844ad40f127afd244c0cad228de2a80052a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phar-io/version/zipball/bae7c545bef187884426f042434e561ab1ddb182",
-                "reference": "bae7c545bef187884426f042434e561ab1ddb182",
+                "url": "https://api.github.com/repos/phar-io/version/zipball/15a90844ad40f127afd244c0cad228de2a80052a",
+                "reference": "15a90844ad40f127afd244c0cad228de2a80052a",
                 "shasum": ""
             },
             "require": {
@@ -4011,9 +4011,9 @@
             "description": "Library for handling version information and constraints",
             "support": {
                 "issues": "https://github.com/phar-io/version/issues",
-                "source": "https://github.com/phar-io/version/tree/3.1.0"
+                "source": "https://github.com/phar-io/version/tree/3.1.1"
             },
-            "time": "2021-02-23T14:00:09+00:00"
+            "time": "2022-02-07T21:56:48+00:00"
         },
         {
             "name": "phpdocumentor/reflection-common",
@@ -4622,11 +4622,11 @@
                 }
             },
             "autoload": {
-                "classmap": [
-                    "src/"
-                ],
                 "files": [
                     "src/Framework/Assert/Functions.php"
+                ],
+                "classmap": [
+                    "src/"
                 ]
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -5222,16 +5222,16 @@
         },
         {
             "name": "sebastian/global-state",
-            "version": "5.0.3",
+            "version": "5.0.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/global-state.git",
-                "reference": "23bd5951f7ff26f12d4e3242864df3e08dec4e49"
+                "reference": "0ca8db5a5fc9c8646244e629625ac486fa286bf2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/global-state/zipball/23bd5951f7ff26f12d4e3242864df3e08dec4e49",
-                "reference": "23bd5951f7ff26f12d4e3242864df3e08dec4e49",
+                "url": "https://api.github.com/repos/sebastianbergmann/global-state/zipball/0ca8db5a5fc9c8646244e629625ac486fa286bf2",
+                "reference": "0ca8db5a5fc9c8646244e629625ac486fa286bf2",
                 "shasum": ""
             },
             "require": {
@@ -5274,7 +5274,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/global-state/issues",
-                "source": "https://github.com/sebastianbergmann/global-state/tree/5.0.3"
+                "source": "https://github.com/sebastianbergmann/global-state/tree/5.0.5"
             },
             "funding": [
                 {
@@ -5282,7 +5282,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-06-11T13:31:12+00:00"
+            "time": "2022-02-14T08:28:10+00:00"
         },
         {
             "name": "sebastian/lines-of-code",
@@ -6016,12 +6016,12 @@
                 }
             },
             "autoload": {
-                "psr-4": {
-                    "Symfony\\Polyfill\\Mbstring\\": ""
-                },
                 "files": [
                     "bootstrap.php"
-                ]
+                ],
+                "psr-4": {
+                    "Symfony\\Polyfill\\Mbstring\\": ""
+                }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
