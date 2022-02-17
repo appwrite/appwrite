@@ -142,7 +142,7 @@ class Executor
                     }
                     break;
                 case 425:
-                    for ($i = 0; $i < 3; $i++) {
+                    for ($attempts = 0; $attempts < 3; $attempts++) {
                         sleep(1);
                         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
                         $status = $response['headers']['status-code'];
