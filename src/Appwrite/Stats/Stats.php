@@ -132,6 +132,10 @@ class Stats
         }
 
         $storageMertics = [
+            'storage.buckets.create',
+            'storage.buckets.read',
+            'storage.buckets.update',
+            'storage.buckets.delete',
             'storage.files.create',
             'storage.files.read',
             'storage.files.update',

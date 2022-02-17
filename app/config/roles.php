@@ -28,6 +28,8 @@ $admins = [
     'documents.write',
     'files.read',
     'files.write',
+    'buckets.read',
+    'buckets.write',
     'users.read',
     'users.write',
     'collections.read',

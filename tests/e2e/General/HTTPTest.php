@@ -26,7 +26,7 @@ class HTTPTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEquals('Appwrite', $response['headers']['server']);
         $this->assertEquals('GET, POST, PUT, PATCH, DELETE', $response['headers']['access-control-allow-methods']);
-        $this->assertEquals('Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, Cache-Control, Expires, Pragma, X-Fallback-Cookies', $response['headers']['access-control-allow-headers']);
+        $this->assertEquals('Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies', $response['headers']['access-control-allow-headers']);
         $this->assertEquals('X-Fallback-Cookies', $response['headers']['access-control-expose-headers']);
         $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
         $this->assertEquals('true', $response['headers']['access-control-allow-credentials']);
@@ -92,6 +92,35 @@ class HTTPTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('# robotstxt.org/', $response['body']);
+    }
+
+    public function testAcmeChallenge()
+    {
+        // Preparation
+        $previousEndpoint = $this->client->getEndpoint();
+        $this->client->setEndpoint("http://localhost");
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/.well-known/acme-challenge/8DdIKX257k6Dih5s_saeVMpTnjPJdKO5Ase0OCiJrIg', \array_merge([
+            'origin' => 'http://localhost',
+        ]), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        // 'Unknown path', but validation passed
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/.well-known/acme-challenge/../../../../../../../etc/passwd', \array_merge([
+            'origin' => 'http://localhost',
+        ]), []);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Cleanup
+        $this->client->setEndpoint($previousEndpoint);
     }
 
     // public function testSpecSwagger2()

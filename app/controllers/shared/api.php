@@ -6,9 +6,11 @@ use Utopia\App;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Database\Document;
+use Utopia\Storage\Device\DOSpaces;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Exception;
 use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\S3;
 use Utopia\Storage\Storage;
 
 App::init(function ($utopia, $request, $response, $project, $user, $events, $audits, $usage, $deletes, $database, $dbForProject, $mode) {
@@ -25,9 +27,6 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
     /** @var Appwrite\Event\Event $database */
     /** @var Appwrite\Event\Event $functions */
     /** @var Utopia\Database\Database $dbForProject */
-
-    Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
-    Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
 
     $route = $utopia->match($request);
 
