@@ -53,7 +53,7 @@ class V12 extends Migration
         /**
          * Remove empty generated Console Project.
          */
-        if ($this->projectDB->getNamespace() === '_project_console') {
+        if ($this->consoleDB->getNamespace() === '_project_console' && $projectId === 'console') {
             $all = [];
             foreach ($this->collections as $collection) {
                 $all[] = "_{$projectId}_{$collection['$id']}";
