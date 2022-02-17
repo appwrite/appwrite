@@ -35,15 +35,14 @@ class Executor
         string $deploymentId, 
         string $projectId, 
         string $source, 
-        array $vars, 
         string $runtime, 
         string $baseImage,
-        array $commands
+        array $vars = [],
+        array $commands = []
     ) {
         $route = "/runtimes";
         $headers = [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
             'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
         ];
         $params = [
@@ -72,7 +71,6 @@ class Executor
         $route = "/runtimes/$runtimeId";
         $headers = [
             'content-type' =>  'application/json',
-            'x-appwrite-project' => $projectId,
             'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
         ];
 
@@ -99,12 +97,23 @@ class Executor
         string $runtime,
         string $baseImage,
         $timeout
-    )
-    {
+    ) {
+
+        // - 1st request
+        // - POST /execution
+        // - 404 - runtime not found
+        // - POST /runtimes - 200
+        // - POST /execution
+
+        // - 2nd request
+        // - POST /execution
+        // - 425 - runtime is not ready
+        // - Retries x 3 + 100ms wait
+        // - POST /execution
+        // - if failes anyway - throw and 4xx/5xx error
         $route = "/execution";
         $headers = [
             'content-type' =>  'application/json',
-            'x-appwrite-project' => $projectId,
             'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
         ];
         $params = [
@@ -119,11 +128,37 @@ class Executor
         ];
 
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
-
         $status = $response['headers']['status-code'];
+        
         if ($status >= 400) {
-            throw new \Exception($response['body']['message'], $status);
-        } 
+            switch ($status) {
+                case 404:
+                    $response = $this->createRuntime($functionId, $deploymentId, $projectId, $path, $runtime, $baseImage, $vars);
+                    /** Try to create the execution once more */
+                    $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
+                    $status = $response['headers']['status-code'];
+                    if ($status >= 400) {
+                        throw new \Exception($response['body']['message'], $status);
+                    }
+                    break;
+                case 425:
+                    for ($i = 0; $i < 3; $i++) {
+                        sleep(1);
+                        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
+                        $status = $response['headers']['status-code'];
+
+                        if ($status < 400) {
+                            break;
+                        }
+                        if ($status !== 425) {
+                            throw new Exception($response['body']['message'], $status);
+                        }
+                    }
+                    throw new Exception($response['body']['message'], 503);
+                default:
+                    throw new \Exception($response['body']['message'], $status);
+            }
+        }
 
         return $response['body'];
     }
