@@ -2,6 +2,7 @@
 
 return [ // Based on this list @see http://stackoverflow.com/a/4212908/2299554
     'default' => __DIR__.'/logos/none.png',
+    'default_image' => __DIR__.'/logos/image.png',
     
     // Video Files
     'video/mp4' => __DIR__.'/logos/video.png',

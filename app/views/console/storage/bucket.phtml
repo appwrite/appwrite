@@ -85,7 +85,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                 <thead>
                                     <tr>
                                         <th width="40"></th>
-                                        <th>Filename</th>
+                                        <th width="100%">Filename</th>
                                         <th width="140">Type</th>
                                         <th width="100">Size</th>
                                         <th width="120">Created</th>
@@ -98,7 +98,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                             <img src="" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/buckets/{{router.params.id}}/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" width="30" height="30" loading="lazy" />
                                         </td>
                                         <td data-title="Name: " class="text-one-liner" data-ls-attrs="title={{file.name}}" >
-                                            <div data-ls-ui-trigger="modal-file-update-{{file.$id}}" class="link" data-ls-bind="{{file.name}}"></div>
+                                            <span data-ls-ui-trigger="modal-file-update-{{file.$id}}" class="link" data-ls-bind="{{file.name}}"></span>
                                             <div data-ls-attrs="data-open-event=modal-file-update-{{file.$id}}" data-button-hide="1" data-ui-modal class="box modal sticky-footer width-large close" >
                                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
@@ -164,7 +164,13 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                         <div class="margin-bottom-small">File Preview</div>
 
                                                         <div class="margin-bottom-small">
-                                                            <img src="" class="file-preview" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/buckets/{{router.params.id}}/files/{{file.$id}}/preview?width=350&height=250&project={{router.params.project}}&mode=admin" loading="lazy" width="225" height="160" />
+                                                            <div data-ls-if="{{file.chunksTotal}} != {{file.chunksUploaded}}" class="preview-box">
+                                                                <div class="preview-box-image">
+                                                                    <img src="/images/default_preview.svg" />
+                                                                </div>
+                                                                <span class="preview-box-text">Preview not available</span>
+                                                            </div>
+                                                            <img data-ls-if="{{file.chunksTotal}} == {{file.chunksUploaded}}" src="" class="file-preview" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/buckets/{{router.params.id}}/files/{{file.$id}}/preview?width=350&height=250&project={{router.params.project}}&mode=admin" loading="lazy" width="225" height="160" />
                                                         </div>
 
                                                         <div class="margin-bottom-tiny">
@@ -193,7 +199,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                     <button type="button" data-ls-if="{{file.chunksTotal}} == {{file.chunksUploaded}}" data-ls-ui-trigger="file-update-{{file.$id}},modal-close">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse desktops-only-inline tablets-only-inline">Cancel</button>
                                                 </footer>
                                             </div>
-                                            <span data-ls-if="{{file.chunksTotal}} != {{file.chunksUploaded}}">pending</span>
+                                            <span class="pill is-pending" data-ls-if="{{file.chunksTotal}} != {{file.chunksUploaded}}">pending</span>
                                         </td>
                                         <td data-title="Type: ">
                                             <span class="text-fade text-size-small" data-ls-bind="{{file.mimeType}}"></span>
@@ -206,7 +212,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                             <span class="text-fade text-size-small" data-ls-bind="{{file.dateCreated|dateText}}"></span>
                                         </td>
                                         <td data-title="" style="overflow: visible">
-                                           <div class="drop-list pull-end" data-ls-ui-open="" data-button-aria="File Options" data-button-class="icon-dot-3" data-blur="1">
+                                           <div class="drop-list pull-end" data-ls-ui-open="" data-button-aria="File Options" data-button-class="icon-dot-3 reset-inner-button" data-blur="1">
                                                 <ul class="arrow-center">
                                                     <li><span data-ls-ui-trigger="modal-file-update-{{file.$id}}" class="link">Update</span></li>
                                                     <li><a href="javascript:void(0)" data-ls-ui-trigger="file-delete-{{file.$id}}">Delete</a></li>

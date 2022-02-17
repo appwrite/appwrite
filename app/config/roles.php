@@ -13,8 +13,6 @@ $member = [
     'documents.write',
     'files.read',
     'files.write',
-    'buckets.read',
-    'buckets.write',
     'projects.read',
     'projects.write',
     'locale.read',

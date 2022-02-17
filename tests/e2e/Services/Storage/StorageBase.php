@@ -12,11 +12,11 @@ trait StorageBase
         /**
          * Test for SUCCESS
          */
-        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], $this->getHeaders()), [
+        ], [
             'bucketId' => 'unique()',
             'name' => 'Test Bucket',
             'permission' => 'file',
@@ -52,11 +52,11 @@ trait StorageBase
          * This should also validate the test for when Bucket encryption
          * is disabled as we are using same test
          */
-        $bucket2 = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+        $bucket2 = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], $this->getHeaders()), [
+        ], [
             'bucketId' => 'unique()',
             'name' => 'Test Bucket 2',
             'permission' => 'file',

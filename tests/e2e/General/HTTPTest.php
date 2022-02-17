@@ -2,7 +2,7 @@
 
 namespace Tests\E2E\General;
 
-use Exception;
+use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectNone;
 use Tests\E2E\Scopes\Scope;
@@ -45,6 +45,7 @@ class HTTPTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertEquals('Not Found', $response['body']['message']);
+        $this->assertEquals(Exception::GENERAL_ROUTE_NOT_FOUND, $response['body']['type']);
         $this->assertEquals(404, $response['body']['code']);
         $this->assertEquals('dev', $response['body']['version']);
     }
@@ -92,6 +93,35 @@ class HTTPTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('# robotstxt.org/', $response['body']);
+    }
+
+    public function testAcmeChallenge()
+    {
+        // Preparation
+        $previousEndpoint = $this->client->getEndpoint();
+        $this->client->setEndpoint("http://localhost");
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/.well-known/acme-challenge/8DdIKX257k6Dih5s_saeVMpTnjPJdKO5Ase0OCiJrIg', \array_merge([
+            'origin' => 'http://localhost',
+        ]), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        // 'Unknown path', but validation passed
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/.well-known/acme-challenge/../../../../../../../etc/passwd', \array_merge([
+            'origin' => 'http://localhost',
+        ]), []);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Cleanup
+        $this->client->setEndpoint($previousEndpoint);
     }
 
     // public function testSpecSwagger2()
