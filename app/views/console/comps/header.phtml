@@ -246,7 +246,8 @@
                                 aria-valuemax="100"></div>
                             <span class="icon" x-text="file.progress"></span>
                         </div>
-                        <label for="file1" class="file-name" x-text="file.name"></label>
+                        <label for="file1" class="file-name trim-inner-text" x-text="file.name"></label>
+                        <span class="pill is-failed" x-show="file.failed">failed</span>
                         <button x-show="file.completed" class="icon-button is-success" aria-label="Uploading"><span class="icon-check"></span></button>
                         <button x-show="!file.completed" class="icon-button" aria-label="Uploading" @click="$store.uploader.removeFile(file.id)"><span class="icon-x"></span></button>
                     </li>
