@@ -17,10 +17,7 @@ use PHPUnit\Framework\TestCase;
 
 class URLTest extends TestCase
 {
-    /**
-     * @var Domain
-     */
-    protected $url = null;
+    protected ?URL $url;
 
     public function setUp():void
     {
@@ -32,9 +29,9 @@ class URLTest extends TestCase
         $this->url = null;
     }
 
-    public function testIsValid()
+    public function testIsValid(): void
     {
-        // Assertions
+        $this->assertEquals('Value must be a valid URL', $this->url->getDescription());
         $this->assertEquals(true, $this->url->isValid('http://example.com'));
         $this->assertEquals(true, $this->url->isValid('https://example.com'));
         $this->assertEquals(true, $this->url->isValid('htts://example.com')); // does not validate protocol
@@ -44,5 +41,14 @@ class URLTest extends TestCase
         $this->assertEquals(false, $this->url->isValid('htt@s://example.com'));
         $this->assertEquals(true, $this->url->isValid('http://www.example.com/foo%2\u00c2\u00a9zbar'));
         $this->assertEquals(true, $this->url->isValid('http://www.example.com/?q=%3Casdf%3E'));
+    }
+
+    public function testIsValidAllowedSchemes(): void
+    {
+        $this->url = new URL(['http', 'https']);
+        $this->assertEquals('Value must be a valid URL with following schemes (http, https)', $this->url->getDescription());
+        $this->assertEquals(true, $this->url->isValid('http://example.com'));
+        $this->assertEquals(true, $this->url->isValid('https://example.com'));
+        $this->assertEquals(false, $this->url->isValid('gopher://www.example.com'));
     }
 }

@@ -107,6 +107,7 @@ trait ProjectCustom
                 'account.verification.update',
                 'account.delete',
                 'account.sessions.create',
+                'account.sessions.update',
                 'account.sessions.delete',
                 'database.collections.create',
                 'database.collections.update',

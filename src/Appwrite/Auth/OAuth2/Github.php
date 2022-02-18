@@ -3,6 +3,7 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
+use Utopia\Exception;
 
 class Github extends OAuth2
 {
@@ -10,6 +11,11 @@ class Github extends OAuth2
      * @var array
      */
     protected $user = [];
+    
+    /**
+     * @var array
+     */
+    protected $tokens = [];
 
     /**
      * @var array
@@ -42,31 +48,59 @@ class Github extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code):string
+    protected function getTokens(string $code): array
     {
-        $accessToken = $this->request(
+        if(empty($this->tokens)) {
+            $response = $this->request(
+                'POST',
+                'https://github.com/login/oauth/access_token',
+                [],
+                \http_build_query([
+                    'client_id' => $this->appID,
+                    'redirect_uri' => $this->callback,
+                    'client_secret' => $this->appSecret,
+                    'code' => $code
+                ])
+            );
+
+            $output = [];
+            \parse_str($response, $output);
+            $this->tokens = $output;
+        }
+
+        return $this->tokens;
+    }
+
+    /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshTokens(string $refreshToken):array
+    {
+        $response = $this->request(
             'POST',
             'https://github.com/login/oauth/access_token',
             [],
             \http_build_query([
                 'client_id' => $this->appID,
-                'redirect_uri' => $this->callback,
                 'client_secret' => $this->appSecret,
-                'code' => $code
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken
             ])
         );
 
         $output = [];
+        \parse_str($response, $output);
+        $this->tokens = $output;
 
-        \parse_str($accessToken, $output);
-
-        if (isset($output['access_token'])) {
-            return $output['access_token'];
+        if(empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
         }
 
-        return '';
+        return $this->tokens;
     }
 
     /**
