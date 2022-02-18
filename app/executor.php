@@ -197,11 +197,6 @@ App::post('/v1/runtimes')
                     'openruntimes-created' => strval($buildStart),
                     'openruntimes-runtime' => $runtime,
                 ],
-                // command: [
-                //     'tail',
-                //     '-f',
-                //     '/dev/null'
-                // ],
                 mountFolder: \dirname($tmpSource),
                 workdir: $workdir,
                 volumes: [

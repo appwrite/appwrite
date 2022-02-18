@@ -3,7 +3,6 @@
 namespace Executor;
 
 use Exception;
-use phpDocumentor\Reflection\DocBlock\Tags\Var_;
 use Utopia\App;
 use Utopia\CLI\Console;
 
@@ -110,18 +109,6 @@ class Executor
         $timeout
     ) {
 
-        // - 1st request
-        // - POST /execution
-        // - 404 - runtime not found
-        // - POST /runtimes - 200
-        // - POST /execution
-
-        // - 2nd request
-        // - POST /execution
-        // - 425 - runtime is not ready
-        // - Retries x 3 + 100ms wait
-        // - POST /execution
-        // - if failes anyway - throw and 4xx/5xx error
         $route = "/execution";
         $headers = [
             'content-type' =>  'application/json',
@@ -145,7 +132,6 @@ class Executor
             for ($attempts = 0; $attempts < 3; $attempts++) {
                 switch ($status) {
                     case 404:
-                        Console::error("Runtime not found. Creating runtine");
                         $response = $this->createRuntime(
                             functionId: $functionId,
                             deploymentId: $deploymentId,
@@ -156,11 +142,8 @@ class Executor
                             vars: $vars,
                             commands: []
                         );
-                        /** Try to create the execution once more */
-                        Console::error("Creating execution");
                         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
                         $status = $response['headers']['status-code'];
-                        var_dump($status);
                         break;
                     case 406:
                         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
