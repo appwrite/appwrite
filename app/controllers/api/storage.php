@@ -99,8 +99,6 @@ App::post('/v1/storage/buckets')
                 ]);
             }
 
-            $dbForProject->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
-
             $bucket = $dbForProject->createDocument('buckets', new Document([
                 '$id' => $bucketId,
                 '$collection' => 'buckets',
@@ -117,6 +115,10 @@ App::post('/v1/storage/buckets')
                 '$write' => $write ?? [],
                 'search' => implode(' ', [$bucketId, $name]),
             ]));
+
+            $bucket = $dbForProject->getDocument('buckets', $bucketId);
+
+            $dbForProject->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
         } catch (Duplicate $th) {
             throw new Exception('Bucket already exists', 409, Exception::STORAGE_BUCKET_ALREADY_EXISTS);
         }
