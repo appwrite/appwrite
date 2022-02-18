@@ -132,9 +132,9 @@ App::post('/v1/runtimes')
     ->inject('response')
     ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $network, string $baseImage, bool $remove, string $workdir, $orchestrationPool, $activeRuntimes, Response $response) {
 
-        $container = 'r-' . $runtimeId;
+        $containerName = 'r-' . $runtimeId;
 
-        if ($activeRuntimes->exists($container)) {
+        if ($activeRuntimes->exists($containerName)) {
             throw new Exception('Runtime already exists.', 409);
         }
 
@@ -146,7 +146,7 @@ App::post('/v1/runtimes')
         $buildEnd = 0;
 
         try {
-            Console::info('Building runtime with ID : ' . $runtimeId);
+            Console::info('Building container : ' . $containerName);
             /** 
              * Temporary file paths in the executor 
              */
@@ -175,7 +175,6 @@ App::post('/v1/runtimes')
              * Create container
              */
             $orchestration = $orchestrationPool->get();
-            $container = 'r-' . $runtimeId;
             $secret = \bin2hex(\random_bytes(16));
             $vars = \array_merge($vars, [
                 'INTERNAL_RUNTIME_KEY' => $secret
@@ -188,12 +187,12 @@ App::post('/v1/runtimes')
             
             $buildId = $orchestration->run(
                 image: $baseImage,
-                name: $container,
-                hostname: $container,
+                name: $containerName,
+                hostname: $containerName,
                 vars: $vars,
                 labels: [
                     'openruntimes-id' => $runtimeId,
-                    'openruntimes-type' => 'build',
+                    'openruntimes-type' => 'runtime',
                     'openruntimes-created' => strval($buildStart),
                     'openruntimes-runtime' => $runtime,
                 ],
@@ -209,7 +208,7 @@ App::post('/v1/runtimes')
             }
 
             if (!empty($network)) {
-                $orchestration->networkConnect($container, $network);
+                $orchestration->networkConnect($containerName, $network);
             }
 
             /** 
@@ -217,7 +216,7 @@ App::post('/v1/runtimes')
              */
             if (!empty($commands)) {
                 $status = $orchestration->execute(
-                    name: $container,
+                    name: $containerName,
                     command: $commands,
                     stdout: $buildStdout,
                     stderr: $buildStderr,
@@ -268,9 +267,9 @@ App::post('/v1/runtimes')
             ]);
 
             if (!$remove) {
-                $activeRuntimes->set($container, [
+                $activeRuntimes->set($containerName, [
                     'id' => $buildId,
-                    'name' => $container,
+                    'name' => $containerName,
                     'created' => $buildStart,
                     'updated' => $buildEnd,
                     'status' => 'Up ' . \round($buildEnd - $buildStart, 2) . 's',
@@ -290,68 +289,6 @@ App::post('/v1/runtimes')
             }
             $orchestrationPool->put($orchestration);
         }
-
-        // /** Create runtime server */
-        // try {
-        //     $orchestration = $orchestrationPool->get();
-        //     /**
-        //      * Copy code files from source to a temporary location on the executor
-        //      */
-        //     $buffer = $device->read($source);
-        //     if(!$device->write($tmpSource, $buffer)) {
-        //         throw new Exception('Failed to copy built code to temporary location.', 500);
-        //     };
-    
-        //     /** 
-        //      * Launch Runtime 
-        //     */
-        //     $container = 'r-' . $runtimeId;
-        //     $secret = \bin2hex(\random_bytes(16));
-        //     $vars = \array_merge($vars, [
-        //         'INTERNAL_RUNTIME_KEY' => $secret
-        //     ]);
-    
-        //     $executionStart = \microtime(true);
-        //     $executionTime = \time();
-
-        //     $vars = array_map(fn ($v) => strval($v), $vars);
-
-        //     $orchestration
-        //         ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 1))
-        //         ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
-        //         ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
-
-        //     $id = $orchestration->run(
-        //         image: $baseImage,
-        //         name: $container,
-        //         vars: $vars,
-        //         labels: [
-        //             'openruntimes-id' => $runtimeId,
-        //             'openruntimes-type' => 'function',
-        //             'openruntimes-created' => strval($executionTime),
-        //             'openruntimes-runtime' => $runtime
-        //         ],
-        //         hostname: $container,
-        //         mountFolder: \dirname($tmpSource),
-        //     );
-
-        //     if (empty($id)) {
-        //         throw new Exception('Failed to create runtime', 500);
-        //     }
-
-        //     $orchestration->networkConnect($container, App::getEnv('_APP_EXECUTOR_RUNTIME_NETWORK', 'openruntimes'));
-
-        //     $executionEnd = \microtime(true);
-
-        
-
-        //     Console::success('Runtime Server created in ' . ($executionEnd - $executionStart) . ' seconds');
-        // } catch (\Throwable $th) {
-        //     Console::error('Runtime Server Creation Failed: '. $th->getMessage());
-        //     throw new Exception($th->getMessage(), 500);
-        // } finally {
-        //     $orchestrationPool->put($orchestration);
-        // }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -606,8 +543,6 @@ App::error(function ($error, $response) {
         'version' => App::getEnv('OPENRUNTIMES_VERSION', 'UNKNOWN'),
     ];
 
-    var_dump($output);
-
     $response
         ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
         ->addHeader('Expires', '0')
@@ -663,7 +598,7 @@ $http->on('start', function ($http) {
     Console::info('Removing orphan runtimes...');
     try {
         $orchestration = $orchestrationPool->get();
-        $orphans = $orchestration->list(['label' => 'openruntimes-type=function']);
+        $orphans = $orchestration->list(['label' => 'openruntimes-type=runtime']);
     } catch (\Throwable $th) {
     } finally {
         $orchestrationPool->put($orchestration);
@@ -734,7 +669,7 @@ $http->on('beforeShutdown', function() {
     Console::info('Cleaning up containers before shutdown...');
 
     $orchestration = $orchestrationPool->get();
-    $functionsToRemove = $orchestration->list(['label' => 'openruntimes-type=function']);
+    $functionsToRemove = $orchestration->list(['label' => 'openruntimes-type=runtime']);
     $orchestrationPool->put($orchestration);
 
     foreach ($functionsToRemove as $container) {
