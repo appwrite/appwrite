@@ -765,6 +765,25 @@
                     }, payload);
                 }),
                 /**
+                 * Update Session (Refresh Tokens)
+                 *
+                 *
+                 * @param {string} sessionId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateSession: (sessionId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof sessionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "sessionId"');
+                    }
+                    let path = '/account/sessions/{sessionId}'.replace('{sessionId}', sessionId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Delete Account Session
                  *
                  * Use this endpoint to log out the currently logged in user from all their
@@ -1463,9 +1482,9 @@
                  * @param {string} collectionId
                  * @param {string} key
                  * @param {boolean} required
-                 * @param {string} min
-                 * @param {string} max
-                 * @param {string} xdefault
+                 * @param {number} min
+                 * @param {number} max
+                 * @param {number} xdefault
                  * @param {boolean} array
                  * @throws {AppwriteException}
                  * @returns {Promise}
