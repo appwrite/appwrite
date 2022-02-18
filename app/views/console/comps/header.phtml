@@ -229,8 +229,8 @@
             <span class="text">Uploading files</span>
             <span class="amount" x-text="$store.uploader.files.length"></span>
         </h4>
-        <button class="icon-button" :class="$store.uploader.isOpen ? '' : 'is-open'" aria-label="toggle upload box" @click="$store.uploader.toggle()"><span class="icon-down-open" aria-hidden="true"></span></button>
-        <button class="icon-button" aria-label="close upload box"><span class="icon-cancel" aria-hidden="true"></span></button>
+        <button class="icon-button" :class="$store.uploader.isOpen ? '' : 'is-open'" aria-label="toggle upload box" @click="$store.uploader.toggle()"><span class="icon-chevron-down" aria-hidden="true"></span></button>
+        <button class="icon-button" aria-label="close upload box"><span class="icon-x" aria-hidden="true"></span></button>
     </div>
     <div class="upload-box-content" :class="$store.uploader.isOpen ? 'is-open' : ''">
         <ul class="upload-box-list">
@@ -247,8 +247,8 @@
                             <span class="icon" x-text="file.progress"></span>
                         </div>
                         <label for="file1" class="file-name" x-text="file.name"></label>
-                        <button x-show="file.completed" class="icon-button is-success" aria-label="Uploading"><span class="icon-ok"></span></button>
-                        <button x-show="!file.completed" class="icon-button" aria-label="Uploading" @click="$store.uploader.removeFile(file.id)"><span class="icon-cancel"></span></button>
+                        <button x-show="file.completed" class="icon-button is-success" aria-label="Uploading"><span class="icon-check"></span></button>
+                        <button x-show="!file.completed" class="icon-button" aria-label="Uploading" @click="$store.uploader.removeFile(file.id)"><span class="icon-x"></span></button>
                     </li>
                 </template>
             </template>

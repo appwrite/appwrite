@@ -95,7 +95,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                 <tbody data-ls-loop="project-files.files" data-ls-as="file">
                                     <tr>
                                         <td class="hide">
-                                            <img src="" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/buckets/{{router.params.id}}/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" width="30" height="30" loading="lazy" />
+                                            <img src="" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/buckets/{{router.params.id}}/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" width="30" height="30" loading="lazy" alt="" />
                                         </td>
                                         <td class="col-name" data-title="Name: " data-ls-attrs="title={{file.name}}" >
                                             <div class="trim-inner-text">
@@ -167,7 +167,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                             <div class="margin-bottom-small">
                                                                 <div data-ls-if="{{file.chunksTotal}} != {{file.chunksUploaded}}" class="preview-box">
                                                                     <div class="preview-box-image">
-                                                                        <img src="/images/default_preview.svg" width="200" height="100" />
+                                                                        <img src="/images/default_preview.svg" width="200" height="100"  alt=""/>
                                                                     </div>
                                                                     <span class="preview-box-text">Preview not available</span>
                                                                 </div>
