@@ -12,6 +12,7 @@ use Swoole\Timer;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 use Utopia\Orchestration\Adapter\DockerCLI;
 use Utopia\Orchestration\Orchestration;
 use Utopia\Storage\Device\Local;
@@ -39,9 +40,8 @@ use Utopia\Validator\Text;
 // Fix error handling - done
 // Decide on logic for build and runtime containers names ( runtime-ID and build-ID) - done
 // Add size validators for the runtime IDs - done
+// Fix logging - done
 
-
-// Fix logging
 // Fix delete endpoint
 // Incorporate Matej's changes in the build stage ( moving of the tar file will be performed by the runtime and not the build stage )
 
@@ -72,11 +72,23 @@ $orchestrationPool = new ConnectionPool(function () {
     return $orchestration;
 }, 10);
 
+
+/**
+ * Create logger instance
+ */
+$providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
+$providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
+$logger = null;
+
+if(!empty($providerName) && !empty($providerConfig) && Logger::hasProvider($providerName)) {
+    $classname = '\\Utopia\\Logger\\Adapter\\'.\ucfirst($providerName);
+    $adapter = new $classname($providerConfig);
+    $logger = new Logger($adapter);
+}
+
 function logError(Throwable $error, string $action, Utopia\Route $route = null)
 {
-    global $register;
-
-    $logger = $register->get('logger');
+    global $logger;
 
     if ($logger) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
@@ -138,12 +150,12 @@ App::post('/v1/runtimes')
             throw new Exception('Runtime already exists.', 409);
         }
 
-        $build = [];
-        $buildId = '';
-        $buildStdout = '';
-        $buildStderr = '';
-        $buildStart = \time();
-        $buildEnd = 0;
+        $container = [];
+        $containerId = '';
+        $stdout = '';
+        $stderr = '';
+        $startTime = \time();
+        $endTime = 0;
 
         try {
             Console::info('Building container : ' . $containerName);
@@ -185,7 +197,7 @@ App::post('/v1/runtimes')
                 ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
                 ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
             
-            $buildId = $orchestration->run(
+            $containerId = $orchestration->run(
                 image: $baseImage,
                 name: $containerName,
                 hostname: $containerName,
@@ -193,7 +205,7 @@ App::post('/v1/runtimes')
                 labels: [
                     'openruntimes-id' => $runtimeId,
                     'openruntimes-type' => 'runtime',
-                    'openruntimes-created' => strval($buildStart),
+                    'openruntimes-created' => strval($startTime),
                     'openruntimes-runtime' => $runtime,
                 ],
                 mountFolder: \dirname($tmpSource),
@@ -203,7 +215,7 @@ App::post('/v1/runtimes')
                 ]
             );
 
-            if (empty($buildId)) {
+            if (empty($containerId)) {
                 throw new Exception('Failed to create build container', 500);
             }
 
@@ -218,13 +230,13 @@ App::post('/v1/runtimes')
                 $status = $orchestration->execute(
                     name: $containerName,
                     command: $commands,
-                    stdout: $buildStdout,
-                    stderr: $buildStderr,
+                    stdout: $stdout,
+                    stderr: $stderr,
                     timeout: App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)
                 );
 
                 if (!$status) {
-                    throw new Exception('Failed to build dependenices ' . $buildStderr, 500);
+                    throw new Exception('Failed to build dependenices ' . $stderr, 500);
                 }
             }
 
@@ -249,50 +261,50 @@ App::post('/v1/runtimes')
                         throw new Exception('Failed to upload built code upload to storage', 500);
                     }
                 }
-                $build['outputPath'] = $outputPath;
+                $container['outputPath'] = $outputPath;
             }
 
-            if (empty($buildStdout)) {
-                $buildStdout = 'Build Successful!';
+            if (empty($stdout)) {
+                $stdout = 'Build Successful!';
             }
 
-            $buildEnd = \time();
-            $build = array_merge($build, [
+            $endTime = \time();
+            $container = array_merge($container, [
                 'status' => 'ready',
-                'stdout' => \utf8_encode($buildStdout),
-                'stderr' => \utf8_encode($buildStderr),
-                'startTime' => $buildStart,
-                'endTime' => $buildEnd,
-                'duration' => $buildEnd - $buildStart,
+                'stdout' => \utf8_encode($stdout),
+                'stderr' => \utf8_encode($stderr),
+                'startTime' => $startTime,
+                'endTime' => $endTime,
+                'duration' => $endTime - $startTime,
             ]);
 
             if (!$remove) {
                 $activeRuntimes->set($containerName, [
-                    'id' => $buildId,
+                    'id' => $containerId,
                     'name' => $containerName,
-                    'created' => $buildStart,
-                    'updated' => $buildEnd,
-                    'status' => 'Up ' . \round($buildEnd - $buildStart, 2) . 's',
+                    'created' => $startTime,
+                    'updated' => $endTime,
+                    'status' => 'Up ' . \round($endTime - $startTime, 2) . 's',
                     'key' => $secret,
                 ]);
             }
            
 
-            Console::success('Build Stage completed in ' . ($buildEnd - $buildStart) . ' seconds');
+            Console::success('Build Stage completed in ' . ($endTime - $startTime) . ' seconds');
         
         } catch (Throwable $th) {
             Console::error('Build failed: ' . $th->getMessage());
             throw new Exception($th->getMessage(), 500);
         } finally {
-            if (!empty($buildId) && $remove) {
-                $orchestration->remove($buildId, true);
+            if (!empty($containerId) && $remove) {
+                $orchestration->remove($containerId, true);
             }
             $orchestrationPool->put($orchestration);
         }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($build);
+            ->json($container);
     });
 
 
@@ -308,7 +320,7 @@ App::get('/v1/runtimes')
         }
 
         $response
-            ->setStatusCode(200)
+            ->setStatusCode(Response::STATUS_CODE_OK)
             ->json($runtimes);
     });
 
@@ -328,7 +340,7 @@ App::get('/v1/runtimes/:runtimeId')
         $runtime = $activeRuntimes->get($container);
 
         $response
-            ->setStatusCode(200)
+            ->setStatusCode(Response::STATUS_CODE_OK)
             ->json($runtime);
     });
 
@@ -512,9 +524,10 @@ App::setResource('orchestrationPool', fn() => $orchestrationPool);
 App::setResource('activeRuntimes', fn() => $activeRuntimes);
 
 /** Set callbacks */
-App::error(function ($error, $response) {
-    // $route = $utopia->match($request);
-    // logError($error, "httpError", $route);
+App::error(function ($utopia, $error, $request, $response) {
+    $route = $utopia->match($request);
+    logError($error, "httpError", $route);
+    
     switch ($error->getCode()) {
         case 400: // Error allowed publicly
         case 401: // Error allowed publicly
@@ -550,7 +563,7 @@ App::error(function ($error, $response) {
         ->setStatusCode($code);
 
     $response->json($output);
-}, ['error', 'response']);
+}, ['utopia', 'error', 'request', 'response']);
 
 App::init(function ($request, $response) {
      $secretKey = $request->getHeader('x-appwrite-executor-key', '');
@@ -696,7 +709,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     try {
         $app->run($request, $response);
     } catch (\Throwable $th) {
-        // logError($e, "serverError");
+        logError($th, "serverError");
         $swooleResponse->setStatusCode(500);
         $output = [
             'message' => 'Error: '. $th->getMessage(),
