@@ -12,7 +12,7 @@ use Utopia\Storage\Validator\Upload;
 use Appwrite\Utopia\Response;
 use Appwrite\Task\Validator\Cron;
 use Utopia\App;
-use Appwrite\Extend\Exception;
+use Utopia\Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -106,7 +106,7 @@ App::get('/v1/functions')
             $cursorFunction = $dbForProject->getDocument('functions', $cursor);
 
             if ($cursorFunction->isEmpty()) {
-                throw new Exception("Function '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+                throw new Exception("Function '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
 
@@ -171,7 +171,7 @@ App::get('/v1/functions/:functionId')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception('Function not found', 404);
         }
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
@@ -200,7 +200,7 @@ App::get('/v1/functions/:functionId/usage')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception('Function not found', 404);
         }
         
         $usage = [];
@@ -311,7 +311,7 @@ App::put('/v1/functions/:functionId')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception('Function not found', 404);
         }
 
         $original = $function->getAttribute('schedule', '');
@@ -371,7 +371,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
         $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception('Function not found', 404);
         }
 
         if ($deployment->isEmpty()) {
@@ -430,11 +430,11 @@ App::delete('/v1/functions/:functionId')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception('Function not found', 404);
         }
 
         if (!$dbForProject->deleteDocument('functions', $function->getId())) {
-            throw new Exception('Failed to remove function from DB', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception('Failed to remove function from DB', 500);
         }
 
         $deletes
@@ -484,7 +484,7 @@ App::post('/v1/functions/:functionId/deployments')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception('Function not found', 404);
         }
 
         $file = $request->getFiles('code');
@@ -493,7 +493,7 @@ App::post('/v1/functions/:functionId/deployments')
         $upload = new Upload();
 
         if (empty($file)) {
-            throw new Exception('No file sent', 400, Exception::STORAGE_FILE_EMPTY);
+            throw new Exception('No file sent', 400);
         }
 
         // Make sure we handle a single file and multiple files the same way
@@ -502,7 +502,7 @@ App::post('/v1/functions/:functionId/deployments')
         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         if (!$fileExt->isValid($file['name'])) { // Check if file type is allowed
-            throw new Exception('File type not allowed', 400, Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
+            throw new Exception('File type not allowed', 400);
         }
 
         $contentRange = $request->getHeader('content-range');
@@ -516,7 +516,7 @@ App::post('/v1/functions/:functionId/deployments')
             $fileSize = $request->getContentRangeSize();
             $deploymentId = $request->getHeader('x-appwrite-id', $deploymentId);
             if(is_null($start) || is_null($end) || is_null($fileSize)) {
-                throw new Exception('Invalid content-range header', 400, Exception::STORAGE_INVALID_CONTENT_RANGE);
+                throw new Exception('Invalid content-range header', 400);
             }
 
             if ($end === $fileSize) {
@@ -530,11 +530,11 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         if (!$fileSizeValidator->isValid($fileSize)) { // Check if file size is exceeding allowed limit
-            throw new Exception('File size not allowed', 400, Exception::STORAGE_INVALID_FILE_SIZE);
+            throw new Exception('File size not allowed', 400);
         }
 
         if (!$upload->isValid($fileTmpName)) {
-            throw new Exception('Invalid file', 403, Exception::STORAGE_INVALID_FILE);
+            throw new Exception('Invalid file', 403);
         }
 
         // Save to storage
@@ -555,7 +555,7 @@ App::post('/v1/functions/:functionId/deployments')
         $chunksUploaded = $deviceFunctions->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
 
         if (empty($chunksUploaded)) {
-            throw new Exception('Failed moving file', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception('Failed moving file', 500);
         }
 
         if ((bool) $activate) {
@@ -658,7 +658,7 @@ App::get('/v1/functions/:functionId/deployments')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception('Function not found', 404);
         }
 
         if (!empty($cursor)) {
@@ -717,7 +717,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception('Function not found', 404);
         }
 
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -760,7 +760,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception('Function not found', 404);
         }
         
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -826,7 +826,7 @@ App::post('/v1/functions/:functionId/executions')
         $function = Authorization::skip(fn() => $dbForProject->getDocument('functions', $functionId));
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception('Function not found', 404);
         }
 
         $runtimes = Config::getParam('runtimes', []);
@@ -860,7 +860,7 @@ App::post('/v1/functions/:functionId/executions')
         $validator = new Authorization('execute');
 
         if (!$validator->isValid($function->getAttribute('execute'))) { // Check if user has write access to execute function
-            throw new Exception($validator->getDescription(), 401, Exception::USER_UNAUTHORIZED);
+            throw new Exception($validator->getDescription(), 401);
         }
 
         $executionId = $dbForProject->getId();
@@ -996,14 +996,14 @@ App::get('/v1/functions/:functionId/executions')
         $function = Authorization::skip(fn() => $dbForProject->getDocument('functions', $functionId));
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception('Function not found', 404);
         }
 
         if (!empty($cursor)) {
             $cursorExecution = $dbForProject->getDocument('executions', $cursor);
 
             if ($cursorExecution->isEmpty()) {
-                throw new Exception("Execution '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+                throw new Exception("Execution '{$cursor}' for the 'cursor' value not found.", 400);
             }
         }
 
@@ -1046,17 +1046,17 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         $function = Authorization::skip(fn() => $dbForProject->getDocument('functions', $functionId));
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception('Function not found', 404);
         }
 
         $execution = $dbForProject->getDocument('executions', $executionId);
 
         if ($execution->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception('Execution not found', 404, Exception::EXECUTION_NOT_FOUND);
+            throw new Exception('Execution not found', 404);
         }
 
         if ($execution->isEmpty()) {
-            throw new Exception('Execution not found', 404, Exception::EXECUTION_NOT_FOUND);
+            throw new Exception('Execution not found', 404);
         }
 
         $response->dynamic($execution, Response::MODEL_EXECUTION);
