@@ -324,8 +324,6 @@ input[type=url] {
     text-align: left;
     direction: ltr;
   }
-
-  ;
 }
 
 select {
@@ -1134,6 +1132,7 @@ ol {
 
   ul {
     .box;
+    border-radius: 4px;
     box-shadow: 0 0 6px rgba(0, 0, 0, 0.10);
     display: none;
     position: absolute;
@@ -1159,6 +1158,7 @@ ol {
       .func-end(30px);
       .func-start(unset);
     }
+    &.no-arrow::before{display:none;}
 
     li {
       border-bottom: solid 1px var(--config-color-fade-super);
@@ -1168,11 +1168,11 @@ ol {
 
 
       &:first-child {
-        border-radius: 10px 10px 0 0;
+        border-radius: 4px 4px 0 0;
       }
 
       &:last-child {
-        border-radius: 0 0 10px 10px;
+        border-radius: 0 0 4px 4px;
       }
 
       &:hover {
