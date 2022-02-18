@@ -117,10 +117,12 @@ class BuildsV1 extends Worker
                 functionId: $functionId, 
                 deploymentId: $deploymentId, 
                 source: $source,
+                destination: APP_STORAGE_BUILDS . "/app-$projectId",
                 vars: $vars, 
                 runtime: $key, 
                 baseImage: $baseImage,
                 workdir: '/usr/code',
+                remove: true,
                 commands: [
                     'sh', '-c',
                     'mkdir -p /usr/code && \

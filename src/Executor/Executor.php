@@ -3,7 +3,9 @@
 namespace Executor;
 
 use Exception;
+use phpDocumentor\Reflection\DocBlock\Tags\Var_;
 use Utopia\App;
+use Utopia\CLI\Console;
 
 class Executor 
 {
@@ -34,10 +36,13 @@ class Executor
         string $functionId, 
         string $deploymentId, 
         string $projectId, 
-        string $source, 
+        string $source,
         string $runtime, 
         string $baseImage,
-        string $workdir,
+        bool $remove = false,
+        string $workdir = '',
+        string $destination = '',
+        string $network = '',
         array $vars = [],
         array $commands = []
     ) {
@@ -49,13 +54,17 @@ class Executor
         $params = [
             'runtimeId' => "$projectId-$deploymentId",
             'source' => $source,
-            'destination' => APP_STORAGE_BUILDS . "/app-$projectId",
+            'destination' => $destination,
             'runtime' => $runtime,
             'baseImage' => $baseImage,
             'workdir' => $workdir,
+            'network' => empty($network) ? App::getEnv('_APP_EXECUTOR_RUNTIME_NETWORK', 'openruntimes') : $network,
             'vars' => $vars,
+            'remove' => $remove,
             'commands' => $commands
         ];
+
+        var_dump($params);
 
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
 
@@ -131,35 +140,47 @@ class Executor
 
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
         $status = $response['headers']['status-code'];
-        
+
         if ($status >= 400) {
-            switch ($status) {
-                case 404:
-                    $response = $this->createRuntime($functionId, $deploymentId, $projectId, $path, $runtime, $baseImage, '', $vars);
-                    /** Try to create the execution once more */
-                    $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
-                    $status = $response['headers']['status-code'];
-                    if ($status >= 400) {
-                        throw new \Exception($response['body']['message'], $status);
-                    }
-                    break;
-                case 425:
-                    for ($attempts = 0; $attempts < 3; $attempts++) {
-                        sleep(1);
+            for ($attempts = 0; $attempts < 3; $attempts++) {
+                switch ($status) {
+                    case 404:
+                        Console::error("Runtime not found. Creating runtine");
+                        $response = $this->createRuntime(
+                            functionId: $functionId,
+                            deploymentId: $deploymentId,
+                            projectId: $projectId,
+                            source: $path,
+                            runtime: $runtime,
+                            baseImage: $baseImage,
+                            vars: $vars,
+                            commands: []
+                        );
+                        /** Try to create the execution once more */
+                        Console::error("Creating execution");
                         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
                         $status = $response['headers']['status-code'];
+                        var_dump($status);
+                        break;
+                    case 406:
+                        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
+                        $status = $response['headers']['status-code'];
+                        break;
+                    default:
+                        throw new \Exception($response['body']['message'], $status);
+                }
 
-                        if ($status < 400) {
-                            break;
-                        }
-                        if ($status !== 425) {
-                            throw new Exception($response['body']['message'], $status);
-                        }
-                    }
-                    throw new Exception($response['body']['message'], 503);
-                default:
+                if ($status < 400) {
+                    return $response['body'];
+                }
+                
+                if ($status != 406) {
                     throw new \Exception($response['body']['message'], $status);
+                }
+
+                sleep(1);
             }
+            throw new Exception($response['body']['message'], 503);
         }
 
         return $response['body'];
@@ -261,10 +282,6 @@ class Executor
         curl_close($ch);
 
         $responseHeaders['status-code'] = $responseStatus;
-
-        if ($responseStatus === 500) {
-            echo 'Server error('.$method.': '.$path.'. Params: '.json_encode($params).'): '.json_encode($responseBody)."\n";
-        }
 
         return [
             'headers' => $responseHeaders,

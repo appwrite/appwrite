@@ -20,6 +20,7 @@ use Utopia\Swoole\Request;
 use Utopia\Swoole\Response;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Range as ValidatorRange;
 use Utopia\Validator\Text;
 
@@ -118,16 +119,18 @@ App::post('/v1/runtimes')
     ->desc("Create a new runtime server")
     ->param('runtimeId', '', new Text(62), 'Unique runtime ID.')
     ->param('source', '', new Text(0), 'Path to source files.')
-    ->param('destination', '', new Text(0), 'Destination folder to store build files into.')
+    ->param('destination', '', new Text(0), 'Destination folder to store build files into.', true)
     ->param('vars', [], new Assoc(), 'Environment Variables required for the build')
     ->param('commands', [], new ArrayList(new Text(0)), 'Commands required to build the container')
     ->param('runtime', '', new Text(128), 'Runtime for the cloud function')
+    ->param('network', '', new Text(128), 'Network to attach the container to')
     ->param('baseImage', '', new Text(128), 'Base image name of the runtime')
-    ->param('workdir', '', new Text(256), 'Working directory')
+    ->param('remove', false, new Boolean(), 'Remove a runtime after execution')
+    ->param('workdir', '', new Text(256), 'Working directory', true)
     ->inject('orchestrationPool')
     ->inject('activeRuntimes')
     ->inject('response')
-    ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $baseImage, string $workdir, $orchestrationPool, $activeRuntimes, Response $response) {
+    ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $network, string $baseImage, bool $remove, string $workdir, $orchestrationPool, $activeRuntimes, Response $response) {
 
         $container = 'r-' . $runtimeId;
 
@@ -172,7 +175,11 @@ App::post('/v1/runtimes')
              * Create container
              */
             $orchestration = $orchestrationPool->get();
-            $container = 'b-' . $runtimeId;
+            $container = 'r-' . $runtimeId;
+            $secret = \bin2hex(\random_bytes(16));
+            $vars = \array_merge($vars, [
+                'INTERNAL_RUNTIME_KEY' => $secret
+            ]);
             $vars = array_map(fn ($v) => strval($v), $vars);
             $orchestration
                 ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 1))
@@ -190,11 +197,11 @@ App::post('/v1/runtimes')
                     'openruntimes-created' => strval($buildStart),
                     'openruntimes-runtime' => $runtime,
                 ],
-                command: [
-                    'tail',
-                    '-f',
-                    '/dev/null'
-                ],
+                // command: [
+                //     'tail',
+                //     '-f',
+                //     '/dev/null'
+                // ],
                 mountFolder: \dirname($tmpSource),
                 workdir: $workdir,
                 volumes: [
@@ -204,6 +211,10 @@ App::post('/v1/runtimes')
 
             if (empty($buildId)) {
                 throw new Exception('Failed to create build container', 500);
+            }
+
+            if (!empty($network)) {
+                $orchestration->networkConnect($container, $network);
             }
 
             /** 
@@ -247,7 +258,7 @@ App::post('/v1/runtimes')
                 $build['outputPath'] = $outputPath;
             }
 
-            if ($buildStdout === '') {
+            if (empty($buildStdout)) {
                 $buildStdout = 'Build Successful!';
             }
 
@@ -261,86 +272,91 @@ App::post('/v1/runtimes')
                 'duration' => $buildEnd - $buildStart,
             ]);
 
+            if (!$remove) {
+                $activeRuntimes->set($container, [
+                    'id' => $buildId,
+                    'name' => $container,
+                    'created' => $buildStart,
+                    'updated' => $buildEnd,
+                    'status' => 'Up ' . \round($buildEnd - $buildStart, 2) . 's',
+                    'key' => $secret,
+                ]);
+            }
+           
+
             Console::success('Build Stage completed in ' . ($buildEnd - $buildStart) . ' seconds');
         
         } catch (Throwable $th) {
             Console::error('Build failed: ' . $th->getMessage());
             throw new Exception($th->getMessage(), 500);
         } finally {
-            if (!empty($buildId)) {
+            if (!empty($buildId) && $remove) {
                 $orchestration->remove($buildId, true);
             }
             $orchestrationPool->put($orchestration);
         }
 
-        /** Create runtime server */
-        try {
-            $orchestration = $orchestrationPool->get();
-            /**
-             * Copy code files from source to a temporary location on the executor
-             */
-            $buffer = $device->read($outputPath);
-            if(!$device->write($tmpBuild, $buffer)) {
-                throw new Exception('Failed to copy built code to temporary location.', 500);
-            };
+        // /** Create runtime server */
+        // try {
+        //     $orchestration = $orchestrationPool->get();
+        //     /**
+        //      * Copy code files from source to a temporary location on the executor
+        //      */
+        //     $buffer = $device->read($source);
+        //     if(!$device->write($tmpSource, $buffer)) {
+        //         throw new Exception('Failed to copy built code to temporary location.', 500);
+        //     };
     
-            /** 
-             * Launch Runtime 
-            */
-            $container = 'r-' . $runtimeId;
-            $secret = \bin2hex(\random_bytes(16));
-            $vars = \array_merge($vars, [
-                'INTERNAL_RUNTIME_KEY' => $secret
-            ]);
+        //     /** 
+        //      * Launch Runtime 
+        //     */
+        //     $container = 'r-' . $runtimeId;
+        //     $secret = \bin2hex(\random_bytes(16));
+        //     $vars = \array_merge($vars, [
+        //         'INTERNAL_RUNTIME_KEY' => $secret
+        //     ]);
     
-            $executionStart = \microtime(true);
-            $executionTime = \time();
+        //     $executionStart = \microtime(true);
+        //     $executionTime = \time();
 
-            $vars = array_map(fn ($v) => strval($v), $vars);
+        //     $vars = array_map(fn ($v) => strval($v), $vars);
 
-            $orchestration
-                ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 1))
-                ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
-                ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
+        //     $orchestration
+        //         ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 1))
+        //         ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
+        //         ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
 
-            $id = $orchestration->run(
-                image: $baseImage,
-                name: $container,
-                vars: $vars,
-                labels: [
-                    'openruntimes-id' => $runtimeId,
-                    'openruntimes-type' => 'function',
-                    'openruntimes-created' => strval($executionTime),
-                    'openruntimes-runtime' => $runtime
-                ],
-                hostname: $container,
-                mountFolder: \dirname($tmpBuild),
-            );
+        //     $id = $orchestration->run(
+        //         image: $baseImage,
+        //         name: $container,
+        //         vars: $vars,
+        //         labels: [
+        //             'openruntimes-id' => $runtimeId,
+        //             'openruntimes-type' => 'function',
+        //             'openruntimes-created' => strval($executionTime),
+        //             'openruntimes-runtime' => $runtime
+        //         ],
+        //         hostname: $container,
+        //         mountFolder: \dirname($tmpSource),
+        //     );
 
-            if (empty($id)) {
-                throw new Exception('Failed to create runtime', 500);
-            }
+        //     if (empty($id)) {
+        //         throw new Exception('Failed to create runtime', 500);
+        //     }
 
-            $orchestration->networkConnect($container, App::getEnv('_APP_EXECUTOR_RUNTIME_NETWORK', 'openruntimes'));
+        //     $orchestration->networkConnect($container, App::getEnv('_APP_EXECUTOR_RUNTIME_NETWORK', 'openruntimes'));
 
-            $executionEnd = \microtime(true);
+        //     $executionEnd = \microtime(true);
 
-            $activeRuntimes->set($container, [
-                'id' => $id,
-                'name' => $container,
-                'created' => $executionTime,
-                'updated' => $executionTime,
-                'status' => 'Up ' . \round($executionEnd - $executionStart, 2) . 's',
-                'key' => $secret,
-            ]);
+        
 
-            Console::success('Runtime Server created in ' . ($executionEnd - $executionStart) . ' seconds');
-        } catch (\Throwable $th) {
-            Console::error('Runtime Server Creation Failed: '. $th->getMessage());
-            throw new Exception($th->getMessage(), 500);
-        } finally {
-            $orchestrationPool->put($orchestration);
-        }
+        //     Console::success('Runtime Server created in ' . ($executionEnd - $executionStart) . ' seconds');
+        // } catch (\Throwable $th) {
+        //     Console::error('Runtime Server Creation Failed: '. $th->getMessage());
+        //     throw new Exception($th->getMessage(), 500);
+        // } finally {
+        //     $orchestrationPool->put($orchestration);
+        // }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -502,7 +518,7 @@ App::post('/v1/execution')
         
             // 110 is the Swoole error code for timeout, see: https://www.swoole.co.uk/docs/swoole-error-code
             if ($errNo !== 0 && $errNo !== CURLE_COULDNT_CONNECT && $errNo !== CURLE_OPERATION_TIMEDOUT && $errNo !== 110) {
-                throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 500);
+                throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 406);
             }
         
             $executionData = [];
@@ -567,15 +583,16 @@ App::setResource('activeRuntimes', fn() => $activeRuntimes);
 App::error(function ($error, $response) {
     // $route = $utopia->match($request);
     // logError($error, "httpError", $route);
-
     switch ($error->getCode()) {
         case 400: // Error allowed publicly
         case 401: // Error allowed publicly
         case 402: // Error allowed publicly
         case 403: // Error allowed publicly
         case 404: // Error allowed publicly
+        case 406: // Error allowed publicly
         case 409: // Error allowed publicly
         case 412: // Error allowed publicly
+        case 425: // Error allowed publicly
         case 429: // Error allowed publicly
         case 501: // Error allowed publicly
         case 503: // Error allowed publicly
@@ -593,6 +610,8 @@ App::error(function ($error, $response) {
         'trace' => $error->getTrace(),
         'version' => App::getEnv('OPENRUNTIMES_VERSION', 'UNKNOWN'),
     ];
+
+    var_dump($output);
 
     $response
         ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
