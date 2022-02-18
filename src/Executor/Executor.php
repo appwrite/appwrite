@@ -39,6 +39,7 @@ class Executor
         string $runtime, 
         string $baseImage,
         bool $remove = false,
+        string $entrypoint = '',
         string $workdir = '',
         string $destination = '',
         string $network = '',
@@ -56,6 +57,7 @@ class Executor
             'destination' => $destination,
             'runtime' => $runtime,
             'baseImage' => $baseImage,
+            'entrypoint' => $entrypoint,
             'workdir' => $workdir,
             'network' => empty($network) ? App::getEnv('_APP_EXECUTOR_RUNTIME_NETWORK', 'openruntimes') : $network,
             'vars' => $vars,
@@ -129,7 +131,7 @@ class Executor
         $status = $response['headers']['status-code'];
 
         if ($status >= 400) {
-            for ($attempts = 0; $attempts < 3; $attempts++) {
+            for ($attempts = 0; $attempts < 10; $attempts++) {
                 switch ($status) {
                     case 404:
                         $response = $this->createRuntime(
@@ -140,6 +142,7 @@ class Executor
                             runtime: $runtime,
                             baseImage: $baseImage,
                             vars: $vars,
+                            entrypoint: $entrypoint,
                             commands: []
                         );
                         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);

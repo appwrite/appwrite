@@ -137,12 +137,13 @@ App::post('/v1/runtimes')
     ->param('runtime', '', new Text(128), 'Runtime for the cloud function')
     ->param('network', '', new Text(128), 'Network to attach the container to')
     ->param('baseImage', '', new Text(128), 'Base image name of the runtime')
+    ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file', true)
     ->param('remove', false, new Boolean(), 'Remove a runtime after execution')
     ->param('workdir', '', new Text(256), 'Working directory', true)
     ->inject('orchestrationPool')
     ->inject('activeRuntimes')
     ->inject('response')
-    ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $network, string $baseImage, bool $remove, string $workdir, $orchestrationPool, $activeRuntimes, Response $response) {
+    ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $network, string $baseImage, string $entrypoint, bool $remove, string $workdir, $orchestrationPool, $activeRuntimes, Response $response) {
 
         $containerName = 'r-' . $runtimeId;
 
@@ -189,7 +190,8 @@ App::post('/v1/runtimes')
             $orchestration = $orchestrationPool->get();
             $secret = \bin2hex(\random_bytes(16));
             $vars = \array_merge($vars, [
-                'INTERNAL_RUNTIME_KEY' => $secret
+                'INTERNAL_RUNTIME_KEY' => $secret,
+                'INTERNAL_RUNTIME_ENTRYPOINT' => $entrypoint,
             ]);
             $vars = array_map(fn ($v) => strval($v), $vars);
             $orchestration
@@ -211,7 +213,7 @@ App::post('/v1/runtimes')
                 mountFolder: \dirname($tmpSource),
                 workdir: $workdir,
                 volumes: [
-                    \dirname($tmpBuild). ":/usr/builds:rw"
+                    \dirname($tmpBuild). ":/usr/code:rw"
                 ]
             );
 
@@ -240,6 +242,10 @@ App::post('/v1/runtimes')
                 }
             }
 
+
+            var_dump($destination);
+            var_dump($tmpBuild);
+
             /**
              * Move built code to expected build directory
              */
@@ -251,16 +257,13 @@ App::post('/v1/runtimes')
 
                 $device = new Local($destination);
                 $outputPath = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+                var_dump($outputPath);
 
-                if (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
-                    if (!$device->move($tmpBuild, $outputPath)) {
-                        throw new Exception('Failed to move built code to storage', 500);
-                    }
-                } else {
-                    if (!$device->upload($tmpBuild, $outputPath)) {
-                        throw new Exception('Failed to upload built code upload to storage', 500);
-                    }
-                }
+                $buffer = $device->read($tmpBuild);
+                if(!$device->write($outputPath, $buffer)) {
+                    throw new Exception('Failed to move built code to storage', 500);
+                };
+
                 $container['outputPath'] = $outputPath;
             }
 

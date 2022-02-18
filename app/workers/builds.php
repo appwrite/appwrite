@@ -131,8 +131,7 @@ class BuildsV1 extends Worker
                     tar -zxf /usr/workspace/code.tar.gz -C /usr/code && \
                     rm /usr/workspace/code.tar.gz && \
                     cd /usr/local/src && \
-                    ./build.sh && \
-                    tar -C /usr/code -czf /usr/builds/code.tar.gz ./'
+                    ./build.sh'
                 ]
             );
 
