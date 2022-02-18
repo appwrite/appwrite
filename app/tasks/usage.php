@@ -316,51 +316,55 @@ $cli
                         }
 
                         $query = "SELECT sum(value) AS \"value\" FROM \"{$table}\" WHERE \"time\" > '{$start}' AND \"time\" < '{$end}' AND \"metric_type\"='counter' {$filters} GROUP BY time({$period['key']}), \"projectId\" {$groupBy} FILL(null)";
-                        $result = $database->query($query);
-
-                        $points = $result->getPoints();
-                        foreach ($points as $point) {
-                            $projectId = $point['projectId'];
-
-                            if (!empty($projectId) && $projectId !== 'console') {
-                                $dbForProject->setNamespace('_project_' . $projectId);
-                                $metricUpdated = $metric;
-
-                                if (!empty($groupBy)) {
-                                    $groupedBy = $point[$options['groupBy']] ?? '';
-                                    if (empty($groupedBy)) {
-                                        continue;
+                        try {
+                            $result = $database->query($query);
+    
+                            $points = $result->getPoints();
+                            foreach ($points as $point) {
+                                $projectId = $point['projectId'];
+    
+                                if (!empty($projectId) && $projectId !== 'console') {
+                                    $dbForProject->setNamespace('_project_' . $projectId);
+                                    $metricUpdated = $metric;
+    
+                                    if (!empty($groupBy)) {
+                                        $groupedBy = $point[$options['groupBy']] ?? '';
+                                        if (empty($groupedBy)) {
+                                            continue;
+                                        }
+                                        $metricUpdated = str_replace($options['groupBy'], $groupedBy, $metric);
                                     }
-                                    $metricUpdated = str_replace($options['groupBy'], $groupedBy, $metric);
-                                }
-
-                                $time = \strtotime($point['time']);
-                                $id = \md5($time . '_' . $period['key'] . '_' . $metricUpdated); //Construct unique id for each metric using time, period and metric
-                                $value = (!empty($point['value'])) ? $point['value'] : 0;
-
-                                try {
-                                    $document = $dbForProject->getDocument('stats', $id);
-                                    if ($document->isEmpty()) {
-                                        $dbForProject->createDocument('stats', new Document([
-                                            '$id' => $id,
-                                            'period' => $period['key'],
-                                            'time' => $time,
-                                            'metric' => $metricUpdated,
-                                            'value' => $value,
-                                            'type' => 0,
-                                        ]));
-                                    } else {
-                                        $dbForProject->updateDocument(
-                                            'stats',
-                                            $document->getId(),
-                                            $document->setAttribute('value', $value)
-                                        );
+    
+                                    $time = \strtotime($point['time']);
+                                    $id = \md5($time . '_' . $period['key'] . '_' . $metricUpdated); //Construct unique id for each metric using time, period and metric
+                                    $value = (!empty($point['value'])) ? $point['value'] : 0;
+    
+                                    try {
+                                        $document = $dbForProject->getDocument('stats', $id);
+                                        if ($document->isEmpty()) {
+                                            $dbForProject->createDocument('stats', new Document([
+                                                '$id' => $id,
+                                                'period' => $period['key'],
+                                                'time' => $time,
+                                                'metric' => $metricUpdated,
+                                                'value' => $value,
+                                                'type' => 0,
+                                            ]));
+                                        } else {
+                                            $dbForProject->updateDocument(
+                                                'stats',
+                                                $document->getId(),
+                                                $document->setAttribute('value', $value)
+                                            );
+                                        }
+                                        $latestTime[$metric][$period['key']] = $time;
+                                    } catch (\Exception $e) { // if projects are deleted this might fail
+                                        Console::warning("Failed to save data for project {$projectId} and metric {$metricUpdated}: {$e->getMessage()}");
                                     }
-                                    $latestTime[$metric][$period['key']] = $time;
-                                } catch (\Exception $e) { // if projects are deleted this might fail
-                                    Console::warning("Failed to save data for project {$projectId} and metric {$metricUpdated}: {$e->getMessage()}");
                                 }
                             }
+                        } catch (\Exception $e) {
+                            Console::warning("Failed to Query: {$e->getMessage()}");
                         }
                     }
                 }
