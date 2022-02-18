@@ -25,7 +25,6 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'functionId' => 'unique()',
-            'execute' => ['role:all'],
             'name' => 'Test',
             'runtime' => 'php-8.0',
             'vars' => [
@@ -59,9 +58,6 @@ class FunctionsCustomServerTest extends Scope
             'account.create',
             'account.delete',
         ], $response1['body']['events']);
-        $this->assertEquals([
-            'role:all'
-        ], $response1['body']['execute']);
         $this->assertEquals('0 0 1 1 *', $response1['body']['schedule']);
         $this->assertEquals(10, $response1['body']['timeout']);
        
@@ -298,6 +294,41 @@ class FunctionsCustomServerTest extends Scope
 
         // Wait for deployment to build.
         sleep(15);
+
+        /**
+         * Test for Large Code File SUCCESS
+         */
+        $source = realpath(__DIR__ . '/../../../resources/functions/php-large.tar.gz');
+        $chunkSize = 5*1024*1024;
+        $handle = @fopen($source, "rb");
+        $mimeType = 'application/x-gzip';
+        $counter = 0;
+        $size = filesize($source);
+        $headers = [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ];
+        $id = '';
+        while (!feof($handle)) {
+            $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'php-large-fx.tar.gz');
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
+            if(!empty($id)) {
+                $headers['x-appwrite-id'] = $id;
+            }
+            $largeTag = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/deployments', array_merge($headers, $this->getHeaders()), [
+                'entrypoint' => 'index.php',
+                'code' => $curlFile,
+            ]);
+            $counter++;
+            $id = $largeTag['body']['$id'];
+        }
+        @fclose($handle);
+
+        $this->assertEquals(201, $largeTag['headers']['status-code']);
+        $this->assertNotEmpty($largeTag['body']['$id']);
+        $this->assertIsInt($largeTag['body']['dateCreated']);
+        $this->assertEquals('index.php', $largeTag['body']['entrypoint']);
+        $this->assertGreaterThan(10000, $largeTag['body']['size']);
        
         /**
          * Test for FAILURE
@@ -346,9 +377,9 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals($function['body']['sum'], 1);
+        $this->assertEquals($function['body']['sum'], 2);
         $this->assertIsArray($function['body']['deployments']);
-        $this->assertCount(1, $function['body']['deployments']);
+        $this->assertCount(2, $function['body']['deployments']);
 
         /**
          * Test search queries
@@ -361,9 +392,9 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals($function['body']['sum'], 1);
+        $this->assertEquals(2, $function['body']['sum']);
         $this->assertIsArray($function['body']['deployments']);
-        $this->assertCount(1, $function['body']['deployments']);
+        $this->assertCount(2, $function['body']['deployments']);
         $this->assertEquals($function['body']['deployments'][0]['$id'], $data['deploymentId']);
 
         $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/deployments', array_merge([
@@ -374,9 +405,9 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals($function['body']['sum'], 1);
+        $this->assertEquals(2, $function['body']['sum']);
         $this->assertIsArray($function['body']['deployments']);
-        $this->assertCount(1, $function['body']['deployments']);
+        $this->assertCount(2, $function['body']['deployments']);
         $this->assertEquals($function['body']['deployments'][0]['$id'], $data['deploymentId']);
 
         $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/deployments', array_merge([
@@ -387,9 +418,9 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals($function['body']['sum'], 1);
+        $this->assertEquals(2, $function['body']['sum']);
         $this->assertIsArray($function['body']['deployments']);
-        $this->assertCount(1, $function['body']['deployments']);
+        $this->assertCount(2, $function['body']['deployments']);
         $this->assertEquals($function['body']['deployments'][0]['$id'], $data['deploymentId']);
 
         return $data;

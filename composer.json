@@ -21,12 +21,6 @@
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
-    "repositories": [
-        {
-            "url": "https://github.com/appwrite/runtimes.git",
-            "type": "git"
-        }
-    ],
     "require": {
         "php": ">=8.0.0",
         "ext-curl": "*",
@@ -57,7 +51,7 @@
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
         "utopia-php/swoole": "0.3.*",
-        "utopia-php/storage": "0.5.*",
+        "utopia-php/storage": "0.7.*",
         "utopia-php/websocket": "0.1.0",
         "utopia-php/image": "0.5.*",
         "utopia-php/orchestration": "0.4.*",
@@ -70,8 +64,18 @@
         "adhocore/jwt": "1.1.2",
         "slickdeals/statsd": "3.1.0"
     },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/appwrite/sdk-generator"
+        },
+        {
+            "url": "https://github.com/appwrite/runtimes.git",
+            "type": "git"
+        }
+    ],
     "require-dev": {
-        "appwrite/sdk-generator": "0.17.2",
+        "appwrite/sdk-generator": "dev-feat-preps-for-0.13",
         "phpunit/phpunit": "9.5.10",
         "swoole/ide-helper": "4.8.5",
         "textalk/websocket": "1.5.5",

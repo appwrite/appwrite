@@ -8,7 +8,7 @@ use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Exception;
+use Appwrite\Extend\Exception;
 use Utopia\Image\Image;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
@@ -25,15 +25,15 @@ $avatarCallback = function ($type, $code, $width, $height, $quality, $response) 
     $set = Config::getParam('avatar-' . $type, []);
 
     if (empty($set)) {
-        throw new Exception('Avatar set not found', 404);
+        throw new Exception('Avatar set not found', 404, Exception::AVATAR_SET_NOT_FOUND);
     }
 
     if (!\array_key_exists($code, $set)) {
-        throw new Exception('Avatar not found', 404);
+        throw new Exception('Avatar not found', 404, Exception::AVATAR_NOT_FOUND);
     }
 
     if (!\extension_loaded('imagick')) {
-        throw new Exception('Imagick extension is missing', 500);
+        throw new Exception('Imagick extension is missing', 500, Exception::GENERAL_SERVER_ERROR);
     }
 
     $output = 'png';
@@ -43,7 +43,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality, $response) 
     $type = 'png';
 
     if (!\is_readable($path)) {
-        throw new Exception('File not readable in ' . $path, 500);
+        throw new Exception('File not readable in ' . $path, 500, Exception::GENERAL_SERVER_ERROR);
     }
 
     $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size
@@ -169,19 +169,19 @@ App::get('/v1/avatars/image')
         }
 
         if (!\extension_loaded('imagick')) {
-            throw new Exception('Imagick extension is missing', 500);
+            throw new Exception('Imagick extension is missing', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $fetch = @\file_get_contents($url, false);
 
         if (!$fetch) {
-            throw new Exception('Image not found', 404);
+            throw new Exception('Image not found', 404, Exception::AVATAR_IMAGE_NOT_FOUND);
         }
 
         try {
             $image = new Image($fetch);
         } catch (\Exception$exception) {
-            throw new Exception('Unable to parse image', 500);
+            throw new Exception('Unable to parse image', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $image->crop((int) $width, (int) $height);
@@ -238,7 +238,7 @@ App::get('/v1/avatars/favicon')
         }
 
         if (!\extension_loaded('imagick')) {
-            throw new Exception('Imagick extension is missing', 500);
+            throw new Exception('Imagick extension is missing', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $curl = \curl_init();
@@ -259,7 +259,7 @@ App::get('/v1/avatars/favicon')
         \curl_close($curl);
 
         if (!$html) {
-            throw new Exception('Failed to fetch remote URL', 404);
+            throw new Exception('Failed to fetch remote URL', 404, Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
         $doc = new DOMDocument();
@@ -317,7 +317,7 @@ App::get('/v1/avatars/favicon')
             $data = @\file_get_contents($outputHref, false);
 
             if (empty($data) || (\mb_substr($data, 0, 5) === '<html') || \mb_substr($data, 0, 5) === '<!doc') {
-                throw new Exception('Favicon not found', 404);
+                throw new Exception('Favicon not found', 404, Exception::AVATAR_ICON_NOT_FOUND);
             }
 
             $cache->save($key, $data);
@@ -333,7 +333,7 @@ App::get('/v1/avatars/favicon')
         $fetch = @\file_get_contents($outputHref, false);
 
         if (!$fetch) {
-            throw new Exception('Icon not found', 404);
+            throw new Exception('Icon not found', 404, Exception::AVATAR_ICON_NOT_FOUND);
         }
 
         $image = new Image($fetch);

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "70ce232aec13929c9cc7901fa34282a0",
+    "content-hash": "0a0bb53e6a5daeb3afde139b8199da3b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2630,20 +2630,20 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.5.1",
+            "version": "0.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "e672aa3fc2a8ba689aff65f68ff29f1d608223b8"
+                "reference": "ad628025be3b3e0818ea1e6cb701cc08a1c52344"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/e672aa3fc2a8ba689aff65f68ff29f1d608223b8",
-                "reference": "e672aa3fc2a8ba689aff65f68ff29f1d608223b8",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/ad628025be3b3e0818ea1e6cb701cc08a1c52344",
+                "reference": "ad628025be3b3e0818ea1e6cb701cc08a1c52344",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.4",
+                "php": ">=8.0",
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
@@ -2676,9 +2676,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.5.1"
+                "source": "https://github.com/utopia-php/storage/tree/0.6.0"
             },
-            "time": "2021-12-13T15:17:14+00:00"
+            "time": "2022-01-31T06:29:51+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -3077,17 +3077,11 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.17.2",
+            "version": "dev-feat-preps-for-0.13",
             "source": {
                 "type": "git",
-                "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "37bc6fc1b4b4940c7659748d7d2d5110da5457a4"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/37bc6fc1b4b4940c7659748d7d2d5110da5457a4",
-                "reference": "37bc6fc1b4b4940c7659748d7d2d5110da5457a4",
-                "shasum": ""
+                "url": "https://github.com/appwrite/sdk-generator",
+                "reference": "96735eef25d5a98d0582bb4925b42db593c974f8"
             },
             "require": {
                 "ext-curl": "*",
@@ -3107,7 +3101,6 @@
                     "Appwrite\\Spec\\": "src/Spec"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -3118,11 +3111,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "support": {
-                "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.17.2"
-            },
-            "time": "2022-01-28T08:25:10+00:00"
+            "time": "2022-01-30T07:29:08+00:00"
         },
         {
             "name": "composer/pcre",
@@ -6639,7 +6628,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "appwrite/php-runtimes": 20
+        "appwrite/sdk-generator": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

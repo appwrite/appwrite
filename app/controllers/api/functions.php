@@ -5,7 +5,6 @@ use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Validator\UID;
-use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
@@ -470,13 +469,17 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('usage')
     ->inject('user')
     ->inject('project')
-    ->action(function ($functionId, $entrypoint, $file, $activate, $request, $response, $dbForProject, $usage, $user, $project) {
+    ->inject('deviceFunctions')
+    ->inject('deviceLocal')
+    ->action(function ($functionId, $entrypoint, $file, $activate, $request, $response, $dbForProject, $usage, $user, $project, $deviceFunctions, $deviceLocal) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
         /** @var Appwrite\Auth\User $user */
         /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Storage\Device $deviceFunctions */
+        /** @var Utopia\Storage\Device $deviceLocal */
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -485,9 +488,8 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $file = $request->getFiles('code');
-        $device = Storage::getDevice('functions');
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSize = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
+        $fileSizeValidator = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
         $upload = new Upload();
 
         if (empty($file)) {
@@ -495,27 +497,64 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         // Make sure we handle a single file and multiple files the same way
-        $file['name'] = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
-        $file['tmp_name'] = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
-        $file['size'] = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+        $fileName = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
+        $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
+        $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         if (!$fileExt->isValid($file['name'])) { // Check if file type is allowed
             throw new Exception('File type not allowed', 400);
         }
 
-        if (!$fileSize->isValid($file['size'])) { // Check if file size is exceeding allowed limit
+        $contentRange = $request->getHeader('content-range');
+        $deploymentId = $dbForProject->getId();
+        $chunk = 1;
+        $chunks = 1;
+
+        if (!empty($contentRange)) {
+            $start = $request->getContentRangeStart();
+            $end = $request->getContentRangeEnd();
+            $fileSize = $request->getContentRangeSize();
+            $deploymentId = $request->getHeader('x-appwrite-id', $deploymentId);
+            if(is_null($start) || is_null($end) || is_null($fileSize)) {
+                throw new Exception('Invalid content-range header', 400);
+            }
+
+            if ($end === $fileSize) {
+                //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
+                $chunks = $chunk = -1;
+            } else {
+                // Calculate total number of chunks based on the chunk size i.e ($rangeEnd - $rangeStart)
+                $chunks = (int) ceil($fileSize / ($end + 1 - $start));
+                $chunk = (int) ($start / ($end + 1 - $start)) + 1;
+            }
+        }
+
+        if (!$fileSizeValidator->isValid($fileSize)) { // Check if file size is exceeding allowed limit
             throw new Exception('File size not allowed', 400);
         }
 
-        if (!$upload->isValid($file['tmp_name'])) {
+        if (!$upload->isValid($fileTmpName)) {
             throw new Exception('Invalid file', 403);
         }
 
         // Save to storage
-        $size = $device->getFileSize($file['tmp_name']);
-        $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
+        $fileSize ??= $deviceLocal->getFileSize($fileTmpName);
+        $path = $deviceFunctions->getPath($deploymentId.'.'.\pathinfo($fileName, PATHINFO_EXTENSION));
         
-        if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        $metadata = ['content_type' => $deviceLocal->getFileMimeType($fileTmpName)];
+        if (!$deployment->isEmpty()) {
+            $chunks = $deployment->getAttribute('chunksTotal', 1);
+            $metadata = $deployment->getAttribute('metadata', []);
+            if ($chunk === -1) {
+                $chunk = $chunks;
+            }
+        }
+
+        $chunksUploaded = $deviceFunctions->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
+
+        if (empty($chunksUploaded)) {
             throw new Exception('Failed moving file', 500);
         }
 
@@ -533,33 +572,60 @@ App::post('/v1/functions/:functionId/deployments')
             }
         }
         
-        $deploymentId = $dbForProject->getId();
-        $deployment = $dbForProject->createDocument('deployments', new Document([
-            '$id' => $deploymentId,
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
-            'resourceId' => $function->getId(),
-            'resourceType' => 'functions',
-            'dateCreated' => time(),
-            'entrypoint' => $entrypoint,
-            'path' => $path,
-            'size' => $size,
-            'search' => implode(' ', [$deploymentId, $entrypoint]),
-            'activate' => ((bool) $activate === true),
-        ]));
+        if($chunksUploaded === $chunks) {
+            $fileSize = $deviceFunctions->getFileSize($path);
 
-        // Enqueue a message to start the build
-        Resque::enqueue(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, [
-            'projectId' => $project->getId(),
-            'functionId' => $function->getId(),
-            'deploymentId' => $deploymentId,
-            'type' => BUILD_TYPE_DEPLOYMENT
-        ]);
+            if ($deployment->isEmpty()) {
+                $deployment = $dbForProject->createDocument('deployments', new Document([
+                    '$id' => $deploymentId,
+                    '$read' => ['role:all'],
+                    '$write' => ['role:all'],
+                    'resourceId' => $function->getId(),
+                    'dateCreated' => time(),
+                    'entrypoint' => $entrypoint,
+                    'path' => $path,
+                    'size' => $fileSize,
+                    'search' => implode(' ', [$deploymentId, $entrypoint]),
+                    'activate' => ((bool) $activate === true),
+                    'metadata' => $metadata,
+                ]));
+            } else {
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', $fileSize)->setAttribute('metadata', $metadata));
+            }
+            // Enqueue a message to start the build
+            Resque::enqueue(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, [
+                'projectId' => $project->getId(),
+                'resourceId' => $function->getId(),
+                'deploymentId' => $deploymentId,
+                'type' => BUILD_TYPE_DEPLOYMENT
+            ]);
 
-        $usage
-            ->setParam('storage', $deployment->getAttribute('size', 0))
-        ;
+            $usage
+                ->setParam('storage', $deployment->getAttribute('size', 0))
+            ;
+        } else {
+            if($deployment->isEmpty()) {
+                $deployment = $dbForProject->createDocument('deployments', new Document([
+                    '$id' => $deploymentId,
+                    '$read' => ['role:all'],
+                    '$write' => ['role:all'],
+                    'resourceId' => $function->getId(),
+                    'dateCreated' => time(),
+                    'entrypoint' => $entrypoint,
+                    'path' => $path,
+                    'size' => 0,
+                    'chunksTotal' => $chunks,
+                    'chunksUploaded' => $chunksUploaded,
+                    'search' => implode(' ', [$deploymentId, $entrypoint]),
+                    'activate' => ((bool) $activate === true),
+                    'metadata' => $metadata,
+                ]));
+            } else {
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('chunksUploaded', $chunksUploaded)->setAttribute('metadata', $metadata));
+            }
+        }
 
+        $metadata = null;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
@@ -683,11 +749,13 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('deletes')
-    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $usage, $deletes) {
+    ->inject('deviceFunctions')
+    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $usage, $deletes, $deviceFunctions) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
         /** @var Appwrite\Event\Event $deletes */
+        /** @var Utopia\Storage\Device $deviceFunctions */
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -703,8 +771,10 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
             throw new Exception('Deployment not found', 404);
         }
 
-        if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-            throw new Exception('Failed to remove deployment from DB', 500);
+        if ($deviceFunctions->delete($deployment->getAttribute('path', ''))) {
+            if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                throw new Exception('Failed to remove deployment from DB', 500);
+            }
         }
 
         if($function->getAttribute('deployment') === $deployment->getId()) { // Reset function deployment
