@@ -125,13 +125,8 @@ class BuildsV1 extends Worker
                 remove: true,
                 commands: [
                     'sh', '-c',
-                    'mkdir -p /usr/code && \
-                    cp /tmp/code.tar.gz /usr/workspace/code.tar.gz && \ 
-                    cd /usr/workspace/ && \
-                    tar -zxf /usr/workspace/code.tar.gz -C /usr/code && \
-                    rm /usr/workspace/code.tar.gz && \
-                    cd /usr/local/src && \
-                    ./build.sh'
+                    'tar -zxf /tmp/code.tar.gz -C /usr/code && \
+                    cd /usr/local/src && ./build.sh'
                 ]
             );
 
