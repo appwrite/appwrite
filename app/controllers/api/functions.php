@@ -3,6 +3,7 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Validator\File;
@@ -12,7 +13,6 @@ use Utopia\Storage\Validator\Upload;
 use Appwrite\Utopia\Response;
 use Appwrite\Task\Validator\Cron;
 use Utopia\App;
-use Utopia\Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
