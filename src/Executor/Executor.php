@@ -37,8 +37,9 @@ class Executor
         string $source, 
         array $vars, 
         string $runtime, 
-        string $baseImage) 
-    {
+        string $baseImage,
+        array $commands
+    ) {
         $route = "/runtimes";
         $headers = [
             'content-type' => 'application/json',
@@ -51,7 +52,8 @@ class Executor
             'destination' => APP_STORAGE_BUILDS . "/app-$projectId",
             'vars' => $vars,
             'runtime' => $runtime,
-            'baseImage' => $baseImage
+            'baseImage' => $baseImage,
+            'commands' => $commands
         ];
 
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);

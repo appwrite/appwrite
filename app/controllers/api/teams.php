@@ -63,7 +63,9 @@ App::post('/v1/teams')
         ])));
 
         if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
+            $membershipId = $dbForProject->getId();
             $membership = new Document([
+                '$id' => $membershipId,
                 '$read' => ['user:'.$user->getId(), 'team:'.$team->getId()],
                 '$write' => ['user:'.$user->getId(), 'team:'.$team->getId().'/owner'],
                 'userId' => $user->getId(),
@@ -73,6 +75,7 @@ App::post('/v1/teams')
                 'joined' => \time(),
                 'confirm' => true,
                 'secret' => '',
+                'search' => implode(' ', [$membershipId, $user->getId()])
             ]);
 
             $membership = $dbForProject->createDocument('memberships', $membership);
@@ -353,8 +356,9 @@ App::post('/v1/teams/:teamId/memberships')
 
         $secret = Auth::tokenGenerator();
 
+        $membershipId = $dbForProject->getId();
         $membership = new Document([
-            '$id' => $dbForProject->getId(),
+            '$id' => $membershipId,
             '$read' => ['role:all'],
             '$write' => ['user:'.$invitee->getId(), 'team:'.$team->getId().'/owner'],
             'userId' => $invitee->getId(),
@@ -364,6 +368,7 @@ App::post('/v1/teams/:teamId/memberships')
             'joined' => ($isPrivilegedUser || $isAppUser) ? \time() : 0,
             'confirm' => ($isPrivilegedUser || $isAppUser),
             'secret' => Auth::hash($secret),
+            'search' => implode(' ', [$membershipId, $invitee->getId()])
         ]);
 
         if ($isPrivilegedUser || $isAppUser) { // Allow admin to create membership
@@ -458,8 +463,27 @@ App::get('/v1/teams/:teamId/memberships')
             }
         }
 
-        $memberships = $dbForProject->find('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], $limit, $offset, [], [$orderType], $cursorMembership ?? null, $cursorDirection);
-        $sum = $dbForProject->count('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], APP_LIMIT_COUNT);
+        $queries = [new Query('teamId', Query::TYPE_EQUAL, [$teamId])];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
+
+        $memberships = $dbForProject->find(
+            collection: 'memberships',
+            queries: $queries,
+            limit: $limit,
+            offset: $offset,
+            orderTypes: [$orderType],
+            cursor: $cursorMembership ?? null,
+            cursorDirection: $cursorDirection
+        );
+
+        $sum = $dbForProject->count(
+            collection:'memberships',
+            queries: $queries,
+            max: APP_LIMIT_COUNT
+        );
 
         $memberships = array_filter($memberships, fn(Document $membership) => !empty($membership->getAttribute('userId')));
 
@@ -565,25 +589,40 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
-        $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
+        $isOwner = Authorization::isRole('team:' . $team->getId() . '/owner');;
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception('User is not allowed to modify roles', 401);
         }
 
-        // Update the roles
+        /**
+         * Update the roles
+         */
         $membership->setAttribute('roles', $roles);
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
 
-        // TODO sync updated membership in the user $profile object using TYPE_REPLACE
+        /**
+         * Replace membership on profile
+         */
+        $memberships = array_filter($profile->getAttribute('memberships'), fn (Document $m) => $m->getId() !== $membership->getId());
+
+        $profile
+            ->setAttribute('memberships', $memberships)
+            ->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND);
+
+        Authorization::skip(fn () => $dbForProject->updateDocument('users', $profile->getId(), $profile));
 
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'teams.memberships.update')
-            ->setParam('resource', 'team/'.$teamId)
-        ;
+            ->setParam('resource', 'team/' . $teamId);
 
-        $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
+        $response->dynamic(
+            $membership
+                ->setAttribute('email', $profile->getAttribute('email'))
+                ->setAttribute('name', $profile->getAttribute('name')),
+            Response::MODEL_MEMBERSHIP
+        );
     });
 
 App::patch('/v1/teams/:teamId/memberships/:membershipId/status')

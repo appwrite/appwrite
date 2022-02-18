@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "be98fbe479fad1146fb54411ebfc9a57",
+    "content-hash": "70ce232aec13929c9cc7901fa34282a0",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -119,11 +119,11 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "85053974a0d17415c0bd955ac8d6758c0d186d2b"
+                "reference": "ea44eb19af851a3fe4ecf73e789f374f70d778c5"
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/orchestration": "0.3.x",
+                "utopia-php/orchestration": "0.4.*",
                 "utopia-php/system": "0.4.*"
             },
             "require-dev": {
@@ -160,7 +160,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2022-02-09T12:31:08+00:00"
+            "time": "2022-02-17T12:06:12+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -2470,16 +2470,16 @@
         },
         {
             "name": "utopia-php/orchestration",
-            "version": "0.3.0",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/orchestration.git",
-                "reference": "5398361b39fdb7a15b561ebf243c4cb75a68432a"
+                "reference": "6f25a47e6d6b14540853b62db43c676aecf80519"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/5398361b39fdb7a15b561ebf243c4cb75a68432a",
-                "reference": "5398361b39fdb7a15b561ebf243c4cb75a68432a",
+                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/6f25a47e6d6b14540853b62db43c676aecf80519",
+                "reference": "6f25a47e6d6b14540853b62db43c676aecf80519",
                 "shasum": ""
             },
             "require": {
@@ -2519,9 +2519,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/orchestration/issues",
-                "source": "https://github.com/utopia-php/orchestration/tree/0.3.0"
+                "source": "https://github.com/utopia-php/orchestration/tree/0.4.0"
             },
-            "time": "2021-12-20T14:08:08+00:00"
+            "time": "2022-02-17T11:48:37+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -3077,11 +3077,17 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "dev-feat-preps-for-0.13",
+            "version": "0.17.2",
             "source": {
                 "type": "git",
-                "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "b977fcf357a267f41299539ac9095aa7bbcc2600"
+                "url": "https://github.com/appwrite/sdk-generator.git",
+                "reference": "37bc6fc1b4b4940c7659748d7d2d5110da5457a4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/37bc6fc1b4b4940c7659748d7d2d5110da5457a4",
+                "reference": "37bc6fc1b4b4940c7659748d7d2d5110da5457a4",
+                "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
@@ -3116,7 +3122,11 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2022-02-15T11:09:40+00:00"
+            "support": {
+                "issues": "https://github.com/appwrite/sdk-generator/issues",
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.17.2"
+            },
+            "time": "2022-01-28T08:25:10+00:00"
         },
         {
             "name": "composer/pcre",
