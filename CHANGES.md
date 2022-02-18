@@ -1,3 +1,12 @@
+# Version 0.12.3
+
+## Bugs
+- Fix update membership roles (#2799)
+- Fix migration to 0.12.x to populate search fields (#2799)
+
+## Security
+- Fix URL schema Validation to only allow http/https (#2801)
+
 # Version 0.12.2
 
 ## Bugs
