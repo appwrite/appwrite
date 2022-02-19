@@ -1,6 +1,7 @@
 <?php
 
 return function ($request, $response) {
+    $request = \json_decode($request['env'], true);
     return $response->json([
         'APPWRITE_FUNCTION_ID' => $request->env['APPWRITE_FUNCTION_ID'],
         'APPWRITE_FUNCTION_NAME' => $request->env['APPWRITE_FUNCTION_NAME'],

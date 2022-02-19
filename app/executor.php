@@ -129,7 +129,7 @@ function logError(Throwable $error, string $action, Utopia\Route $route = null)
 
 App::post('/v1/runtimes')
     ->desc("Create a new runtime server")
-    ->param('runtimeId', '', new Text(62), 'Unique runtime ID.')
+    ->param('runtimeId', '', new Text(64), 'Unique runtime ID.')
     ->param('source', '', new Text(0), 'Path to source files.')
     ->param('destination', '', new Text(0), 'Destination folder to store build files into.', true)
     ->param('vars', [], new Assoc(), 'Environment Variables required for the build')
@@ -145,9 +145,7 @@ App::post('/v1/runtimes')
     ->inject('response')
     ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $network, string $baseImage, string $entrypoint, bool $remove, string $workdir, $orchestrationPool, $activeRuntimes, Response $response) {
 
-        $containerName = 'r-' . $runtimeId;
-
-        if ($activeRuntimes->exists($containerName)) {
+        if ($activeRuntimes->exists($runtimeId)) {
             throw new Exception('Runtime already exists.', 409);
         }
 
@@ -159,7 +157,7 @@ App::post('/v1/runtimes')
         $endTime = 0;
 
         try {
-            Console::info('Building container : ' . $containerName);
+            Console::info('Building container : ' . $runtimeId);
             /** 
              * Temporary file paths in the executor 
              */
@@ -201,8 +199,8 @@ App::post('/v1/runtimes')
             
             $containerId = $orchestration->run(
                 image: $baseImage,
-                name: $containerName,
-                hostname: $containerName,
+                name: $runtimeId,
+                hostname: $runtimeId,
                 vars: $vars,
                 labels: [
                     'openruntimes-id' => $runtimeId,
@@ -222,7 +220,7 @@ App::post('/v1/runtimes')
             }
 
             if (!empty($network)) {
-                $orchestration->networkConnect($containerName, $network);
+                $orchestration->networkConnect($runtimeId, $network);
             }
 
             /** 
@@ -230,7 +228,7 @@ App::post('/v1/runtimes')
              */
             if (!empty($commands)) {
                 $status = $orchestration->execute(
-                    name: $containerName,
+                    name: $runtimeId,
                     command: $commands,
                     stdout: $stdout,
                     stderr: $stderr,
@@ -241,10 +239,6 @@ App::post('/v1/runtimes')
                     throw new Exception('Failed to build dependenices ' . $stderr, 500);
                 }
             }
-
-
-            var_dump($destination);
-            var_dump($tmpBuild);
 
             /**
              * Move built code to expected build directory
@@ -257,7 +251,6 @@ App::post('/v1/runtimes')
 
                 $device = new Local($destination);
                 $outputPath = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-                var_dump($outputPath);
 
                 $buffer = $device->read($tmpBuild);
                 if(!$device->write($outputPath, $buffer)) {
@@ -282,9 +275,9 @@ App::post('/v1/runtimes')
             ]);
 
             if (!$remove) {
-                $activeRuntimes->set($containerName, [
+                $activeRuntimes->set($runtimeId, [
                     'id' => $containerId,
-                    'name' => $containerName,
+                    'name' => $runtimeId,
                     'created' => $startTime,
                     'updated' => $endTime,
                     'status' => 'Up ' . \round($endTime - $startTime, 2) . 's',
@@ -329,18 +322,16 @@ App::get('/v1/runtimes')
 
 App::get('/v1/runtimes/:runtimeId')
     ->desc("Get a runtime by its ID")
-    ->param('runtimeId', '', new Text(62), 'Runtime unique ID.')
+    ->param('runtimeId', '', new Text(64), 'Runtime unique ID.')
     ->inject('activeRuntimes')
     ->inject('response')
     ->action(function ($runtimeId, $activeRuntimes, Response $response) {
 
-        $container = 'r-' . $runtimeId;
-
-        if(!$activeRuntimes->exists($container)) {
+        if(!$activeRuntimes->exists($runtimeId)) {
             throw new Exception('Runtime not found', 404);
         }
 
-        $runtime = $activeRuntimes->get($container);
+        $runtime = $activeRuntimes->get($runtimeId);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
@@ -349,25 +340,23 @@ App::get('/v1/runtimes/:runtimeId')
 
 App::delete('/v1/runtimes/:runtimeId')
     ->desc('Delete a runtime')
-    ->param('runtimeId', '', new Text(62), 'Runtime unique ID.', false)
+    ->param('runtimeId', '', new Text(64), 'Runtime unique ID.', false)
     ->inject('orchestrationPool')
     ->inject('activeRuntimes')
     ->inject('response')
     ->action(function (string $runtimeId, $orchestrationPool, $activeRuntimes, Response $response) {
 
-        $container = 'r-' . $runtimeId;
-
-        if(!$activeRuntimes->exists($container)) {
+        if(!$activeRuntimes->exists($runtimeId)) {
             throw new Exception('Runtime not found', 404);
         }
 
-        Console::info('Deleting runtime: ' . $container);
+        Console::info('Deleting runtime: ' . $runtimeId);
 
         try {
             $orchestration = $orchestrationPool->get();
-            $orchestration->remove($container, true);
-            $activeRuntimes->del($container);
-            Console::success('Removed runtime container: ' . $container);
+            $orchestration->remove($runtimeId, true);
+            $activeRuntimes->del($runtimeId);
+            Console::success('Removed runtime container: ' . $runtimeId);
         } finally {
             $orchestrationPool->put($orchestration);
         }
@@ -391,7 +380,7 @@ App::delete('/v1/runtimes/:runtimeId')
 
 App::post('/v1/execution')
     ->desc('Create an execution')
-    ->param('runtimeId', '', new Text(62), 'The runtimeID to execute')
+    ->param('runtimeId', '', new Text(64), 'The runtimeID to execute')
     ->param('path', '', new Text(0), 'Path containing the built files.', false)
     ->param('vars', [], new Assoc(), 'Environment variables required for the build', false)
     ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
@@ -404,13 +393,11 @@ App::post('/v1/execution')
     ->action(
         function (string $runtimeId, string $path, array $vars, string $data, string $runtime, string $entrypoint, $timeout, string $baseImage, $activeRuntimes, Response $response) {
 
-            $container = 'r-' . $runtimeId;
-
-            if (!$activeRuntimes->exists($container)) {
+            if (!$activeRuntimes->exists($runtimeId)) {
                 throw new Exception('Runtime not found. Please create the runtime.', 404);
             }
 
-            $runtime = $activeRuntimes->get($container);
+            $runtime = $activeRuntimes->get($runtimeId);
             $secret = $runtime['key'];
             if (empty($secret)) {
                 throw new Exception('Runtime secret not found. Please re-create the runtime.', 500);
@@ -434,7 +421,7 @@ App::post('/v1/execution')
                 'payload' => $data,
                 'timeout' => $timeout ?? (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)
             ]);
-            \curl_setopt($ch, CURLOPT_URL, "http://" . $container . ":3000/");
+            \curl_setopt($ch, CURLOPT_URL, "http://" . $runtimeId . ":3000/");
             \curl_setopt($ch, CURLOPT_POST, true);
             \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
             \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -510,7 +497,7 @@ App::post('/v1/execution')
 
             /** Update swoole table */
             $runtime['updated'] = \time();
-            $activeRuntimes->set($container, $runtime);
+            $activeRuntimes->set($runtimeId, $runtime);
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_OK)
@@ -615,7 +602,6 @@ $http->on('start', function ($http) {
     try {
         $orchestration = $orchestrationPool->get();
         $orphans = $orchestration->list(['label' => 'openruntimes-type=runtime']);
-    } catch (\Throwable $th) {
     } finally {
         $orchestrationPool->put($orchestration);
     }
