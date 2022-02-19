@@ -24,5 +24,6 @@ module.exports = async (req, res) => {
         'APPWRITE_FUNCTION_USER_ID' : req.env.APPWRITE_FUNCTION_USER_ID,
         'APPWRITE_FUNCTION_JWT' : req.env.APPWRITE_FUNCTION_JWT,
         'APPWRITE_FUNCTION_PROJECT_ID' : req.env.APPWRITE_FUNCTION_PROJECT_ID,
+        'CUSTOM_VARIABLE' : req.env.CUSTOM_VARIABLE
     });
 }

@@ -870,7 +870,9 @@ class FunctionsCustomServerTest extends Scope
             'functionId' => 'unique()',
             'name' => 'Test '.$name,
             'runtime' => $name,
-            'vars' => [],
+            'vars' => [
+                'CUSTOM_VARIABLE' => 'variable',
+            ],
             'events' => [],
             'schedule' => '',
             'timeout' => $timeout,
@@ -934,6 +936,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
         $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT_DATA']);
         $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);
+        $this->assertEquals('variable', $output['CUSTOM_VARIABLE']);
         $this->assertEquals('', $output['APPWRITE_FUNCTION_USER_ID']);
         $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
