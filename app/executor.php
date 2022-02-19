@@ -41,9 +41,10 @@ use Utopia\Validator\Text;
 // Decide on logic for build and runtime containers names ( runtime-ID and build-ID) - done
 // Add size validators for the runtime IDs - done
 // Fix logging - done
+// Incorporate Matej's changes in the build stage ( moving of the tar file will be performed by the runtime and not the build stage ) - done
+
 
 // Fix delete endpoint
-// Incorporate Matej's changes in the build stage ( moving of the tar file will be performed by the runtime and not the build stage )
 
 Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
 
