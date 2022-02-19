@@ -275,6 +275,9 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = false;
                         break;
                     case 'Utopia\Database\Validator\UID':
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
+                        break;
                     case 'Appwrite\Utopia\Database\Validator\CustomId':
                         if($route->getLabel('sdk.methodType', '') === 'upload') {
                             $node['schema']['x-upload-id'] = true;
