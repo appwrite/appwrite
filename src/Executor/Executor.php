@@ -65,7 +65,7 @@ class Executor
             'commands' => $commands
         ];
 
-        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
+        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900));
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {

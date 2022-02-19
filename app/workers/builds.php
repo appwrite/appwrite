@@ -126,7 +126,7 @@ class BuildsV1 extends Worker
                 commands: [
                     'sh', '-c',
                     'tar -zxf /tmp/code.tar.gz -C /usr/code && \
-                    cd /usr/local/src && ./build.sh'
+                    cd /usr/local/src/ && ./build.sh'
                 ]
             );
 
