@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e28c5946b102f637cc247b026f42ae0e",
+    "content-hash": "366fe0389feaf13e3b3132b684ea2e20",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -115,20 +115,18 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "dev-refactor",
+            "version": "0.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "ea44eb19af851a3fe4ecf73e789f374f70d778c5"
+                "reference": "e41ecbfec8c4adb1f5da01dc70c2578a7e32e9c6"
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/orchestration": "0.4.*",
                 "utopia-php/system": "0.4.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
-                "utopia-php/cli": "0.11.*",
                 "vimeo/psalm": "4.0.1"
             },
             "type": "library",
@@ -148,10 +146,6 @@
                 {
                     "name": "Torsten Dittmann",
                     "email": "torsten@appwrite.io"
-                },
-                {
-                    "name": "Bradley Schofield",
-                    "email": "bradley@appwrite.io"
                 }
             ],
             "description": "Appwrite repository for Cloud Function runtimes that contains the configurations and tests for all of the Appwrite runtime environments.",
@@ -160,7 +154,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2022-02-17T12:06:12+00:00"
+            "time": "2022-02-19T00:08:41+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -4235,16 +4229,16 @@
         },
         {
             "name": "phpunit/php-code-coverage",
-            "version": "9.2.10",
+            "version": "9.2.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "d5850aaf931743067f4bfc1ae4cbd06468400687"
+                "reference": "665a1ac0a763c51afc30d6d130dac0813092b17f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/d5850aaf931743067f4bfc1ae4cbd06468400687",
-                "reference": "d5850aaf931743067f4bfc1ae4cbd06468400687",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/665a1ac0a763c51afc30d6d130dac0813092b17f",
+                "reference": "665a1ac0a763c51afc30d6d130dac0813092b17f",
                 "shasum": ""
             },
             "require": {
@@ -4300,7 +4294,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/php-code-coverage/issues",
-                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.10"
+                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.11"
             },
             "funding": [
                 {
@@ -4308,7 +4302,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-12-05T09:12:13+00:00"
+            "time": "2022-02-18T12:46:09+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",
@@ -6638,9 +6632,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "appwrite/php-runtimes": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
