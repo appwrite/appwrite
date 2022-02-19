@@ -65,8 +65,8 @@
                                 - after resumable upload change, we will have the id
                             */
                             this.updateFile(id, {
-                                id: id,
-                                progress: Math.round(progress),
+                                id: progress.$id,
+                                progress: Math.round(progress.progress),
                             });
                         });
                     this.updateFile(id,{
