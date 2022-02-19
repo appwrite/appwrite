@@ -415,8 +415,6 @@ App::post('/v1/execution')
 
             $ch = \curl_init();
             $body = \json_encode([
-                'path' => '/usr/code',
-                'file' => $entrypoint,
                 'env' => $vars,
                 'payload' => $data,
                 'timeout' => $timeout ?? (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)
