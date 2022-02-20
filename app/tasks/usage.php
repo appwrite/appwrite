@@ -370,18 +370,22 @@ $cli
                 }
             }
 
-            /**
-             * Aggregate MariaDB every 15 minutes
-             * Some of the queries here might contain full-table scans.
-             */
             if ($iterations % 30 != 0) { // Aggregate aggregate number of objects in database only after 15 minutes
                 $iterations++;
                 $loopTook = microtime(true) - $loopStart;
                 $now = date('d-m-Y H:i:s', time());
+                Console::info("[{$now}] Aggregation took {$loopTook} seconds");
                 return;
-            }                    
-            $latestProject = null;
+            }
 
+            /**
+             * Aggregate MariaDB every 15 minutes
+             * Some of the queries here might contain full-table scans.
+             */
+            $now = date('d-m-Y H:i:s', time());
+            Console::info("[{$now}] Aggregating database counters.");
+            
+            $latestProject = null;
             do { // Loop over all the projects
                 $attempts = 0;
                 $max = 10;
