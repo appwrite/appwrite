@@ -378,8 +378,12 @@ class OpenAPI3 extends Format
                     $body['content'][$consumes[0]]['schema']['properties'][$name] = [
                         'type' => $node['schema']['type'],
                         'description' => $node['description'],
-                        'x-example' => $node['x-example'] ?? null,
+                        'x-example' => $node['schema']['x-example'] ?? null
                     ];
+
+                    if($node['schema']['x-upload-id'] ?? false) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-upload-id'] = $node['schema']['x-upload-id'];
+                    }
 
                     if(isset($node['default'])) {
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['default'] = $node['default'];
