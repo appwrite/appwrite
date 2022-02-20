@@ -467,6 +467,7 @@ $cli
                             'namespace' => '',
                             'subCollections' => [ // Some collections, like collections and later buckets have child collections that need counting
                                 'documents' => [
+                                    'collectionPrefix' => 'collection_',
                                     'namespace' => '',
                                 ],
                             ],
