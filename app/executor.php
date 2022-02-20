@@ -198,20 +198,26 @@ App::post('/v1/runtimes')
                 ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
                 ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
             
+            $entrypoint = empty($commands) ? [] : [
+                'tail',
+                '-f',
+                '/dev/null'
+            ];
             $containerId = $orchestration->run(
                 image: $baseImage,
                 name: $runtimeId,
                 hostname: $runtimeId,
                 vars: $vars,
+                command: $entrypoint,
                 labels: [
                     'openruntimes-id' => $runtimeId,
                     'openruntimes-type' => 'runtime',
                     'openruntimes-created' => strval($startTime),
                     'openruntimes-runtime' => $runtime,
                 ],
-                mountFolder: \dirname($tmpSource),
                 workdir: $workdir,
                 volumes: [
+                    \dirname($tmpSource). ':/tmp:rw',
                     \dirname($tmpBuild). ":/usr/code:rw"
                 ]
             );
@@ -285,7 +291,6 @@ App::post('/v1/runtimes')
                     'key' => $secret,
                 ]);
             }
-           
 
             Console::success('Build Stage completed in ' . ($endTime - $startTime) . ' seconds');
         
