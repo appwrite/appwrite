@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\CLI\Console;
 use Utopia\Database\Database;
 
 class FunctionsCustomClientTest extends Scope
@@ -73,13 +74,17 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(201, $function['headers']['status-code']);
 
+        $folder = 'php';
+        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        $this->packageCode($folder);
+
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/deployments', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'entrypoint' => 'index.php',
-            'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
+            'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -156,13 +161,17 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(201, $function['headers']['status-code']);
 
+        $folder = 'php-fn';
+        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        $this->packageCode($folder);
+
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
             'entrypoint' => 'index.php',
-            'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php-fn.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'), //different tarball names intentional
+            'code' => new CURLFile($code, 'application/x-gzip', \basename($code)), //different tarball names intentional
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -338,13 +347,17 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(201, $function['headers']['status-code']);
 
+        $folder = 'php-fn';
+        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        $this->packageCode($folder);
+
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
             'entrypoint' => 'index.php',
-            'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php-fn.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'), //different tarball names intentional
+            'code' => new CURLFile($code, 'application/x-gzip', \basename($code)), //different tarball names intentional
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
