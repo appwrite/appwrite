@@ -43,7 +43,7 @@
                 const fileId = formData.get('fileId');
                 let id = fileId === 'unique()' ? performance.now() : fileId;
                 let read = formData.get('read');
-                if(!file) {
+                if(!file || !fileId) {
                     return;
                 }
                 if(read) {
