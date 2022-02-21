@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\CLI\Console;
 use WebSocket\ConnectionException;
 
 
@@ -985,13 +986,19 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals($function['headers']['status-code'], 201);
         $this->assertNotEmpty($function['body']['$id']);
 
+        $folder = 'timeout';
+        $stderr = '';
+        $stdout= '';
+        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        Console::execute('cd '.realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
+        
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'entrypoint' => 'index.php',
-            'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/timeout.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
+            'code' => new CURLFile($code, 'application/x-gzip', basename($code))
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
