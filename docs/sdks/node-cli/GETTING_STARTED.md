@@ -31,7 +31,7 @@ You can also fetch all the collections in your current project using
 appwrite init collection
 ```
 
-The CLI also comes with a convenient `--all` flag to perform both these steps at once using
+The CLI also comes with a convenient `--all` flag to perform both these steps at once.
 
 ```sh
 appwrite init --all
