@@ -9,7 +9,7 @@ $ appwrite login
 ? Enter your password ********
 ✓ Success 
 ```
-This will also prompt you to enter your appwrite endpoint ( default: http://localhost/v1 ) 
+This will also prompt you to enter your Appwrite endpoint ( default: http://localhost/v1 ) 
 
 * ### Initialising your project
 Once logged in, the CLI needs to be initialised before you can use it with your Appwrite project. You can do this with the `appwrite init project` command. 
