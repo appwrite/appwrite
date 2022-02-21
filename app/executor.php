@@ -203,7 +203,7 @@ App::post('/v1/runtimes')
                 '-f',
                 '/dev/null'
             ];
-            
+
             $containerId = $orchestration->run(
                 image: $baseImage,
                 name: $runtimeId,
@@ -548,7 +548,7 @@ App::error(function ($utopia, $error, $request, $response) {
         'file' => $error->getFile(),
         'line' => $error->getLine(),
         'trace' => $error->getTrace(),
-        'version' => App::getEnv('OPENRUNTIMES_VERSION', 'UNKNOWN'),
+        'version' => App::getEnv('_APP_VERSION', 'UNKNOWN')
     ];
 
     $response

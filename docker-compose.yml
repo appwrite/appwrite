@@ -393,7 +393,6 @@ services:
         - VERSION=dev
     networks:
       appwrite:
-      runtimes:
     ports:
       - 9519:80
     volumes:
@@ -497,10 +496,6 @@ services:
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
       - _APP_USAGE_SYNC_INTERVAL
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
 
   appwrite-schedule:
     entrypoint: schedule
@@ -677,7 +672,6 @@ services:
 networks:
   gateway:
   appwrite:
-  runtimes:
 
 volumes:
   appwrite-mariadb:

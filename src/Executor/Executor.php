@@ -59,7 +59,7 @@ class Executor
             'baseImage' => $baseImage,
             'entrypoint' => $entrypoint,
             'workdir' => $workdir,
-            'network' => empty($network) ? App::getEnv('_APP_EXECUTOR_RUNTIME_NETWORK', 'openruntimes') : $network,
+            'network' => empty($network) ? App::getEnv('_APP_EXECUTOR_RUNTIME_NETWORK', 'appwrite_runtimes') : $network,
             'vars' => $vars,
             'remove' => $remove,
             'commands' => $commands
