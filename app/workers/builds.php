@@ -140,8 +140,14 @@ class BuildsV1 extends Worker
 
             Console::success("Build id: $buildId created");
 
+
+            var_dump("Going to set auto deploy");
+            var_dump($deployment);
+            var_dump($deployment->getAttribute('activate'));
+            var_dump(gettype($deployment->getAttribute('activate')));
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
+                var_dump("Setting auto deploy");
                 $function->setAttribute('deployment', $deployment->getId());
                 $function = $dbForProject->updateDocument('functions', $functionId, $function);
             }
