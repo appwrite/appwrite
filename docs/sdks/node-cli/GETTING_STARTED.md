@@ -127,7 +127,7 @@ $ appwrite -h
 To get information about a particular service and the commands available in a service you can use 
 ```sh
 $ appwrite users // or
-$ apwrite users --help // or
+$ appwrite users --help // or
 $ appwrite users help // or
 $ appwrite accounts
 ```
