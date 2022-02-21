@@ -14,6 +14,17 @@
                     });
                 });
             },
+            cancelAll() {
+                if(confirm("Are you sure? This will cancel and remove any ungoing uploads?")){
+                   this.files.forEach(file => {
+                        if(file.completed || file.failed) {
+                            this.removeFile(file.id);
+                        } else {
+                            this.updateFile(file.id, {cancelled: true});
+                        }
+                    });
+                }
+            },
             toggle() {
                 this.isOpen = !this.isOpen;
             },

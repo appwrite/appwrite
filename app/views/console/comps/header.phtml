@@ -230,7 +230,7 @@
             <span class="amount" x-text="$store.uploader.files.length"></span>
         </h4>
         <button class="icon-button" :class="$store.uploader.isOpen ? '' : 'is-open'" aria-label="toggle upload box" @click="$store.uploader.toggle()"><span class="icon-chevron-down" aria-hidden="true"></span></button>
-        <button class="icon-button" aria-label="close upload box"><span class="icon-x" aria-hidden="true"></span></button>
+        <button class="icon-button" @click="$store.uploader.cancelAll()" aria-label="close upload box"><span class="icon-x" aria-hidden="true"></span></button>
     </div>
     <div class="upload-box-content" :class="$store.uploader.isOpen ? 'is-open' : ''">
         <ul class="upload-box-list">
