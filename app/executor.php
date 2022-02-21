@@ -178,11 +178,12 @@ App::post('/v1/runtimes')
                 ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
                 ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
             
-            $entrypoint = empty($commands) ? [] : [
+            /** Keep the container alive if we have commands to be executed */
+            $entrypoint = !empty($commands) ? [
                 'tail',
                 '-f',
                 '/dev/null'
-            ];
+            ] : [];
 
             $containerId = $orchestration->run(
                 image: $baseImage,
