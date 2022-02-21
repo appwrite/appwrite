@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\CLI\Console;
 
 class WebhooksCustomServerTest extends Scope
 {
@@ -398,12 +399,18 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
+        $stderr = '';
+        $stdout= '';
+        $folder = 'timeout';
+        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        Console::execute('cd '.realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
+
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'entrypoint' => 'index.php',
-            'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/timeout.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
+            'code' => new CURLFile($code, 'application/x-gzip', \basename($code))
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
