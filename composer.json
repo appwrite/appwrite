@@ -46,7 +46,7 @@
         "utopia-php/cache": "0.4.*",
         "utopia-php/cli": "0.11.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "dev-fix-perms as 0.14.99",
+        "utopia-php/database": "0.15.*",
         "utopia-php/locale": "0.4.*",
         "utopia-php/orchestration": "0.2.*",
         "utopia-php/registry": "0.5.*",
