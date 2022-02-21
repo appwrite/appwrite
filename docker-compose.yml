@@ -393,6 +393,7 @@ services:
         - VERSION=dev
     networks:
       appwrite:
+      runtimes:
     ports:
       - 9519:80
     volumes:
@@ -672,6 +673,7 @@ services:
 networks:
   gateway:
   appwrite:
+  runtimes:
 
 volumes:
   appwrite-mariadb:

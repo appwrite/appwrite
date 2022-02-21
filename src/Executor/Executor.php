@@ -162,7 +162,7 @@ class Executor
                     throw new \Exception($response['body']['message'], $status);
                 }
 
-                sleep(1);
+                sleep(2);
             }
             throw new Exception($response['body']['message'], 503);
         }

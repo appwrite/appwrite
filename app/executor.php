@@ -25,25 +25,6 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Range as ValidatorRange;
 use Utopia\Validator\Text;
 
-// TODO
-// Implement other endpoints - Done
-// Handle shutdown - Done
-// Get list of supported runtimes on startup - Done
-// Pull runtimes on startup -- Done
-// Move some logic to server start - Done
-// Add updated property to swoole table - Done
-// Clean up deployments older than X seconds - Done
-// Remove orphans on startup - done
-// Remove multiple request attempt to the runtime logic in executor - done
-// Remove builds param from delete endpoint - done
-// Shutdown callback isn't working as expected - done
-// Fix error handling - done
-// Decide on logic for build and runtime containers names ( runtime-ID and build-ID) - done
-// Add size validators for the runtime IDs - done
-// Fix logging - done
-// Incorporate Matej's changes in the build stage ( moving of the tar file will be performed by the runtime and not the build stage ) - done
-
-
 // Fix delete endpoint
 
 Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
