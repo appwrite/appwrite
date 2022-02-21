@@ -1,11 +1,14 @@
 (function(window){
     document.addEventListener('alpine:init', () => {
         Alpine.store('uploader', {
-            files: [],
+            _files: [],
+            files() {
+                return (this._files ?? []).filter((file) => !file.cancelled);
+            },
             isOpen: true,
             init() {
                 window.addEventListener('beforeunload', (event) => {
-                    this.files.forEach((file) => {
+                    this._files.forEach((file) => {
                         if(!file.completed && !file.failed) {
                             let confirmationMessage = "There are incomplete uploads, are you sure you want to leave?";
                             event.returnValue = confirmationMessage;
@@ -16,7 +19,7 @@
             },
             cancelAll() {
                 if(confirm("Are you sure? This will cancel and remove any ungoing uploads?")){
-                   this.files.forEach(file => {
+                   this._files.forEach(file => {
                         if(file.completed || file.failed) {
                             this.removeFile(file.id);
                         } else {
@@ -29,15 +32,15 @@
                 this.isOpen = !this.isOpen;
             },
             addFile(file) {
-                this.files.push(file);
+                this._files.push(file);
             },
             updateFile(id, file) {
-                this.files = this.files.map((oldFile) => id == oldFile.id ? {...oldFile, ...file} : oldFile);
+                this._files = this._files.map((oldFile) => id == oldFile.id ? {...oldFile, ...file} : oldFile);
             },
             removeFile(id) {
                 const file = this.getFile(id) ?? {};
                 if(file.completed || file.failed) {
-                    this.files = this.files.filter((file) => file.id !== id);
+                    this._files = this._files.filter((file) => file.id !== id);
                 } else {
                     if(confirm("Are you sure you want to cancel the upload?")) {
                         this.updateFile(id, {cancelled: true});
@@ -45,7 +48,7 @@
                 }
             },
             getFile(id) {
-                return this.files.find((file) => file.id === id);
+                return this._files.find((file) => file.id === id);
             },
             async uploadFile(target) {
                 const formData = new FormData(target);
