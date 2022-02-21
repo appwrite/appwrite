@@ -31,21 +31,22 @@
   }
   &-content {
     background-color:var(--p-content-bg-color); color:var(--p-content-text-color);
-    height:0; overflow:hidden;
+    height:0; overflow:auto;
     transition:var(--transition);
     &.is-open {height:200px; /* consider to change to rem */}
   }
   &-list {}
   &-item {
-    display:flex; padding:13px 20px;
-    .file-name { @include trim; align-self:center; margin-inline-end:auto; }
+    display:flex; align-items:center; padding:13px 20px;
+    .file-name {text-overflow:ellipsis; white-space:nowrap; overflow:hidden; align-self:center; margin-inline-end:auto; line-height:normal; }
     .icon-button{ align-self:center; margin-inline-start:16px;}
+    .pill{margin-inline-start:8px;}
     &:not(:last-child) { border-bottom:solid 1px var(--p-border-color); }
   }
 
   /* responsive */
   @media @phones { inset-inline:16px; inset-block-end:20px; }
-  @media @tablets, @desktops { inset-inline-end:24px; inset-block-end:24px; }
+  @media @tablets, @desktops { max-width:285px; inset-inline-end:24px; inset-block-end:24px; }
 
   /* dark theme */
   :root .theme-dark &{
@@ -58,9 +59,9 @@
   @upload-image-size-default: 40px;
   --p-upload-image-size:var(--upload-image-size, @upload-image-size-default);
   --p-upload-bg-color:var(--config-color-fade-super);
-  --p-upload-icon-color:var(--config-color-fade-light);
+  --p-upload-icon-color:var(--config-color-fade);
 
-  position:relative; display:grid; place-content:center;
+  position:relative; display:grid; place-content:center; flex-shrink:0;
   width:var(--p-upload-image-size);
   height:var(--p-upload-image-size);
   background-color:var(--p-upload-bg-color);
@@ -86,7 +87,6 @@
                     hsl(var(--zero-value)) 100%)";
   }
   &.is-finished {
-    --p-upload-icon-color:var(--config-color-fade);
     .progress{ display:none; }
   }
   /* dark theme */
