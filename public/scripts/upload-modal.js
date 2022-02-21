@@ -39,6 +39,7 @@
             async uploadFile(target) {
                 const formData = new FormData(target);
                 const sdk = window.ls.container.get('sdk');
+                const bucketId = formData.get('bucketId');
                 const file = formData.get('file');
                 const fileId = formData.get('fileId');
                 let id = fileId === 'unique()' ? performance.now() : fileId;
@@ -75,7 +76,7 @@
                 target.reset();
                 try {
                     const response = await sdk.storage.createFile(
-                        formData.get('bucketId'),
+                        bucketId,
                         fileId,
                         file,
                         read,
@@ -89,23 +90,43 @@
 
                             const file = this.getFile(id) ?? {};
                             if(file.cancelled === true) {
-                                throw 'Cancelled by user';
+                                throw 'USER_CANCELLED';
                             }
                         });
-                    this.updateFile(id,{
-                        id: response.$id,
-                        name: response.name,
-                        progress: 100,
-                        completed: true,
-                        failed: false,
-                    });
+                    const existingFile = this.getFile(id) ?? {};
+                    if(existingFile.cancelled) {
+                        this.updateFile(id,{
+                            id: response.$id,
+                            name: response.name,
+                            failed: false,
+                        });
+                        id = response.$id;
+                        throw 'USER_CANCELLED'
+                    } else {
+                        this.updateFile(id,{
+                            id: response.$id,
+                            name: response.name,
+                            progress: 100,
+                            completed: true,
+                            failed: false,
+                        });
+                        id = response.$id;
+                    }
                     document.dispatchEvent(new CustomEvent('storage.createFile'));
                 } catch(error) {
-                    console.error(error);
-                    this.updateFile(id, {
-                        id: id,
-                        failed: true,
-                    });
+                    if(error === 'USER_CANCELLED') {
+                        await sdk.storage.deleteFile(bucketId, id);
+                        this.updateFile(id, {
+                            cancelled: false,
+                            failed: true,
+                        });
+                        this.removeFile(id);
+                    } else {
+                        this.updateFile(id, {
+                            id: id,
+                            failed: true,
+                        });
+                    }
                     document.dispatchEvent(new CustomEvent('storage.createFile'));
                 }
             }
