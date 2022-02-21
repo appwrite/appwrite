@@ -25,7 +25,6 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Range as ValidatorRange;
 use Utopia\Validator\Text;
 
-// Fix delete endpoint
 
 Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
 
