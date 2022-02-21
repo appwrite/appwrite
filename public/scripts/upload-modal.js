@@ -28,7 +28,9 @@
                 if(file.completed || file.failed) {
                     this.files = this.files.filter((file) => file.id !== id);
                 } else {
-                    this.updateFile(id, {cancelled: true});
+                    if(confirm("Are you sure you want to cancel the upload?")) {
+                        this.updateFile(id, {cancelled: true});
+                    }
                 }
             },
             getFile(id) {
@@ -41,6 +43,9 @@
                 const fileId = formData.get('fileId');
                 let id = fileId === 'unique()' ? performance.now() : fileId;
                 let read = formData.get('read');
+                if(!file) {
+                    return;
+                }
                 if(read) {
                     read = JSON.parse(read);
                 }
@@ -49,14 +54,24 @@
                     write = JSON.parse(wirte);
                 }
 
-                this.addFile({
-                    id: id,
-                    name: file.name,
-                    progress: 0,
-                    completed: false,
-                    failed: false,
-                    cancelled: false,
-                });
+                if(this.getFile(id)) {
+                    this.updateFile(id, {
+                        name: file.name,
+                        completed: false,
+                        failed: false,
+                        cancelled: false,
+                    });
+                } else {
+                    this.addFile({
+                        id: id,
+                        name: file.name,
+                        progress: 0,
+                        completed: false,
+                        failed: false,
+                        cancelled: false,
+                    });
+                }
+
                 target.reset();
                 try {
                     const response = await sdk.storage.createFile(

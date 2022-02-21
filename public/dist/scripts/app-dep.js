@@ -492,7 +492,7 @@ if(typeof file!=='undefined'){payload['file']=file;}
 if(typeof read!=='undefined'){payload['read']=read;}
 if(typeof write!=='undefined'){payload['write']=write;}
 const uri=new URL(this.config.endpoint+path);const size=file.size;if(size<=Appwrite.CHUNK_SIZE){return yield this.call('post',uri,{'content-type':'multipart/form-data',},payload);}
-let id=undefined;let response=undefined;const headers={'content-type':'multipart/form-data',};let counter=0;const totalCounters=Math.ceil(size/Appwrite.CHUNK_SIZE);if(fileId!='unique()'){try{response=yield this.call('GET',new URL(this.config.endpoint+path+fileId),headers);counter=response.chunksUploaded;}
+let id=undefined;let response=undefined;const headers={'content-type':'multipart/form-data',};let counter=0;const totalCounters=Math.ceil(size/Appwrite.CHUNK_SIZE);if(fileId!='unique()'){try{response=yield this.call('GET',new URL(this.config.endpoint+path+'/'+fileId),headers);counter=response.chunksUploaded;}
 catch(e){}}
 for(counter;counter<totalCounters;counter++){const start=(counter*Appwrite.CHUNK_SIZE);const end=Math.min((((counter*Appwrite.CHUNK_SIZE)+Appwrite.CHUNK_SIZE)-1),size);headers['content-range']='bytes '+start+'-'+end+'/'+size;if(id){headers['x-appwrite-id']=id;}
 const stream=file.slice(start,end+1);payload['file']=new File([stream],file.name);response=yield this.call('post',uri,headers,payload);if(!id){id=response['$id'];}

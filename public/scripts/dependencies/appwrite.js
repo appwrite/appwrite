@@ -4271,7 +4271,7 @@
                     const totalCounters = Math.ceil(size / Appwrite.CHUNK_SIZE);
                     if (fileId != 'unique()') {
                         try {
-                            response = yield this.call('GET', new URL(this.config.endpoint + path + fileId), headers);
+                            response = yield this.call('GET', new URL(this.config.endpoint + path + '/' + fileId), headers);
                             counter = response.chunksUploaded;
                         }
                         catch (e) {

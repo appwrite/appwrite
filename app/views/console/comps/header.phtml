@@ -244,7 +244,8 @@
                                 role="progressbar"
                                 aria-valuemin="0"
                                 aria-valuemax="100"></div>
-                            <span class="icon" x-text="file.progress"></span>
+                            <span x-show="!file.completed" class="icon" x-text="file.progress + '%'"></span>
+                            <span x-show="file.completed" class="icon"></span>
                         </div>
                         <label for="file1" class="file-name trim-inner-text" x-text="file.name"></label>
                         <span class="pill is-failed" x-show="file.failed">failed</span>
