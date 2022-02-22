@@ -75,6 +75,7 @@
                         completed: false,
                         failed: false,
                         cancelled: false,
+                        error: "",
                     });
                 } else {
                     this.addFile({
@@ -84,6 +85,7 @@
                         completed: false,
                         failed: false,
                         cancelled: false,
+                        error: "",
                     });
                 }
 
@@ -99,6 +101,7 @@
                             this.updateFile(id, {
                                 id: progress.$id,
                                 progress: Math.round(progress.progress),
+                                error: "",
                             });
                             id = progress.$id;
 
@@ -139,6 +142,7 @@
                         this.updateFile(id, {
                             id: id,
                             failed: true,
+                            error: error.message ?? error
                         });
                     }
                     document.dispatchEvent(new CustomEvent('storage.createFile'));

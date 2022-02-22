@@ -247,8 +247,8 @@
                             <span x-show="!file.completed" class="icon" x-text="file.progress + '%'"></span>
                             <span x-show="file.completed" class="icon icon-file"></span>
                         </div>
-                        <label for="file1" class="file-name trim-inner-text" x-text="file.name"></label>
-                        <span class="pill is-failed" x-show="file.failed">failed</span>
+                        <label for="file1" class="file-name trim-inner-text" x-text="file.name" :title="file.name"></label>
+                        <span class="pill is-failed" x-show="file.failed" :title="file.error">failed</span>
                         <button x-show="file.completed" class="icon-button is-success" aria-label="Uploading"><span class="icon-check"></span></button>
                         <button x-show="!file.completed" class="icon-button" aria-label="Uploading" @click="$store.uploader.removeFile(file.id)"><span class="icon-x"></span></button>
                     </li>
