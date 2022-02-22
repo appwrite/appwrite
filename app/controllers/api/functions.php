@@ -375,7 +375,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
         }
 
         if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found', Exception::DEPLOYMENT_NOT_FOUND);
+            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         if ($build->isEmpty()) {
