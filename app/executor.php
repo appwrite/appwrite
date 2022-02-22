@@ -172,9 +172,10 @@ App::post('/v1/runtimes')
             /**
              * Copy code files from source to a temporary location on the executor
              */
-            $device = new Local();
-            $buffer = $device->read($source);
-            if(!$device->write($tmpSource, $buffer)) {
+            $sourceDevice = getStorageDevice("/");
+            $localDevice = new Local();
+            $buffer = $sourceDevice->read($source);
+            if(!$localDevice->write($tmpSource, $buffer)) {
                 throw new Exception('Failed to copy source code to temporary directory', 500);
             };
 
@@ -262,11 +263,12 @@ App::post('/v1/runtimes')
                     throw new Exception('Something went wrong during the build process', 500);
                 }
 
-                $device = new Local($destination);
-                $outputPath = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+                $destinationDevice =  getStorageDevice($destination);
+                $localDevice = new Local();
+                $outputPath = $destinationDevice->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
 
-                $buffer = $device->read($tmpBuild);
-                if(!$device->write($outputPath, $buffer)) {
+                $buffer = $localDevice->read($tmpBuild);
+                if(!$destinationDevice->upload($buffer, $outputPath)) {
                     throw new Exception('Failed to move built code to storage', 500);
                 };
 
