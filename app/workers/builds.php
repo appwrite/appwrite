@@ -39,7 +39,7 @@ class BuildsV1 extends Worker
     {
         $type = $this->args['type'] ?? '';
         $projectId = $this->args['projectId'] ?? '';
-        $functionId = $this->args['functionId'] ?? '';
+        $functionId = $this->args['resourceId'] ?? '';
         $deploymentId = $this->args['deploymentId'] ?? '';
         
         switch ($type) {
