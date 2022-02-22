@@ -834,6 +834,17 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/webhooks', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Webhook Test',
+            'events' => ['account.create', 'account.update.email'],
+            'url' => 'invalid://appwrite.io',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
         return $data;
     }
 
@@ -975,6 +986,17 @@ class ProjectsConsoleClientTest extends Scope
             'security' => false,
             'httpUser' => '',
             'httpPass' => '',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Webhook Test Update',
+            'events' => ['account.delete', 'account.sessions.delete', 'storage.files.create'],
+            'url' => 'invalid://appwrite.io/new',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);

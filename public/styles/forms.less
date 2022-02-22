@@ -239,6 +239,20 @@ button,
   }
 }
 
+button.close {
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  padding: 0;
+  margin: 0;
+  background: var(--config-color-normal);
+  color: var(--config-color-background-fade);
+  border-radius: 50%;
+  .icon-cancel::before{line-height:1;}
+  &.is-margin-top-10{margin-top:10px;}
+}
+
+
 label {
   margin-bottom: 15px;
   display: block;
@@ -583,8 +597,8 @@ input[type=checkbox], input[type=radio] {
 
   &:checked:after {
     text-align: center;
-    font-family: "fontello";
-    content: '\e83d';
+    font-family: "icon";
+    content: '\ea14';
     font-size: 16px;
     line-height: 20px;
     color: var(--config-color-background-fade);
@@ -618,6 +632,10 @@ input[type=checkbox], input[type=radio] {
   &:checked:hover:after {
     border-color: var(--config-color-focus);
   }
+}
+
+input[type=checkbox] {
+  &:after {border-radius:4px;}
 }
 
 .input-copy {
@@ -1027,8 +1045,8 @@ hr {
       }
 
       &:before {
-        content: '\e807';
-        font-family: "fontello";
+        content: '\ea11';
+        font-family: 'icon';
         font-size: 12px;
         position: absolute;
         width: 20px;
@@ -1294,8 +1312,8 @@ ol {
 
       &::before {
         .pull-end;
-        content: '\e807';
-        font-family: fontello;
+        content: '\ea11';
+        font-family: 'icon';
         font-style: normal;
         display: inline-block;
         text-align: center;
@@ -1336,7 +1354,7 @@ ol {
     height: 18px;
     width: 18px;
     line-height: 18px;
-    font-size: 12px;
+    font-size: 10px;
     padding: 0;
     margin: 0;
     color: var(--config-color-fade);
