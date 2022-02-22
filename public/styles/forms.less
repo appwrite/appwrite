@@ -239,6 +239,20 @@ button,
   }
 }
 
+button.close {
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  padding: 0;
+  margin: 0;
+  background: var(--config-color-normal);
+  color: var(--config-color-background-fade);
+  border-radius: 50%;
+  .icon-cancel::before{line-height:1;}
+  &.is-margin-top-10{margin-top:10px;}
+}
+
+
 label {
   margin-bottom: 15px;
   display: block;
@@ -620,6 +634,10 @@ input[type=checkbox], input[type=radio] {
   &:checked:hover:after {
     border-color: var(--config-color-focus);
   }
+}
+
+input[type=checkbox] {
+  &:after {border-radius:4px;}
 }
 
 .input-copy {
