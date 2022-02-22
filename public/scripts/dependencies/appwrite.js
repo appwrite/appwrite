@@ -765,6 +765,25 @@
                     }, payload);
                 }),
                 /**
+                 * Update Session (Refresh Tokens)
+                 *
+                 *
+                 * @param {string} sessionId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateSession: (sessionId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof sessionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "sessionId"');
+                    }
+                    let path = '/account/sessions/{sessionId}'.replace('{sessionId}', sessionId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Delete Account Session
                  *
                  * Use this endpoint to log out the currently logged in user from all their
@@ -1463,9 +1482,9 @@
                  * @param {string} collectionId
                  * @param {string} key
                  * @param {boolean} required
-                 * @param {string} min
-                 * @param {string} max
-                 * @param {string} xdefault
+                 * @param {number} min
+                 * @param {number} max
+                 * @param {number} xdefault
                  * @param {boolean} array
                  * @throws {AppwriteException}
                  * @returns {Promise}
@@ -2561,32 +2580,37 @@
                             'content-type': 'multipart/form-data',
                         }, payload);
                     }
-                    else {
-                        let id = undefined;
-                        let response = undefined;
-                        const totalCounters = Math.ceil(size / Appwrite.CHUNK_SIZE);
-                        for (let counter = 0; counter < totalCounters; counter++) {
-                            const start = (counter * Appwrite.CHUNK_SIZE);
-                            const end = Math.min((((counter * Appwrite.CHUNK_SIZE) + Appwrite.CHUNK_SIZE) - 1), size);
-                            const headers = {
-                                'content-type': 'multipart/form-data',
-                                'content-range': 'bytes ' + start + '-' + end + '/' + size
-                            };
-                            if (id) {
-                                headers['x-appwrite-id'] = id;
-                            }
-                            const stream = code.slice(start, end + 1);
-                            payload['code'] = new File([stream], code.name);
-                            response = yield this.call('post', uri, headers, payload);
-                            if (!id) {
-                                id = response['$id'];
-                            }
-                            if (onProgress) {
-                                onProgress(Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100);
-                            }
+                    let id = undefined;
+                    let response = undefined;
+                    const headers = {
+                        'content-type': 'multipart/form-data',
+                    };
+                    let counter = 0;
+                    const totalCounters = Math.ceil(size / Appwrite.CHUNK_SIZE);
+                    for (counter; counter < totalCounters; counter++) {
+                        const start = (counter * Appwrite.CHUNK_SIZE);
+                        const end = Math.min((((counter * Appwrite.CHUNK_SIZE) + Appwrite.CHUNK_SIZE) - 1), size);
+                        headers['content-range'] = 'bytes ' + start + '-' + end + '/' + size;
+                        if (id) {
+                            headers['x-appwrite-id'] = id;
                         }
-                        return response;
+                        const stream = code.slice(start, end + 1);
+                        payload['code'] = new File([stream], code.name);
+                        response = yield this.call('post', uri, headers, payload);
+                        if (!id) {
+                            id = response['$id'];
+                        }
+                        if (onProgress) {
+                            onProgress({
+                                $id: response.$id,
+                                progress: Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100,
+                                sizeUpploaded: end + 1,
+                                chunksTotal: response.chunksTotal,
+                                chunksUploaded: response.chunksUploaded
+                            });
+                        }
                     }
+                    return response;
                 }),
                 /**
                  * Get Tag
@@ -4238,32 +4262,45 @@
                             'content-type': 'multipart/form-data',
                         }, payload);
                     }
-                    else {
-                        let id = undefined;
-                        let response = undefined;
-                        const totalCounters = Math.ceil(size / Appwrite.CHUNK_SIZE);
-                        for (let counter = 0; counter < totalCounters; counter++) {
-                            const start = (counter * Appwrite.CHUNK_SIZE);
-                            const end = Math.min((((counter * Appwrite.CHUNK_SIZE) + Appwrite.CHUNK_SIZE) - 1), size);
-                            const headers = {
-                                'content-type': 'multipart/form-data',
-                                'content-range': 'bytes ' + start + '-' + end + '/' + size
-                            };
-                            if (id) {
-                                headers['x-appwrite-id'] = id;
-                            }
-                            const stream = file.slice(start, end + 1);
-                            payload['file'] = new File([stream], file.name);
-                            response = yield this.call('post', uri, headers, payload);
-                            if (!id) {
-                                id = response['$id'];
-                            }
-                            if (onProgress) {
-                                onProgress(Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100);
-                            }
+                    let id = undefined;
+                    let response = undefined;
+                    const headers = {
+                        'content-type': 'multipart/form-data',
+                    };
+                    let counter = 0;
+                    const totalCounters = Math.ceil(size / Appwrite.CHUNK_SIZE);
+                    if (fileId != 'unique()') {
+                        try {
+                            response = yield this.call('GET', new URL(this.config.endpoint + path + '/' + fileId), headers);
+                            counter = response.chunksUploaded;
                         }
-                        return response;
+                        catch (e) {
+                        }
                     }
+                    for (counter; counter < totalCounters; counter++) {
+                        const start = (counter * Appwrite.CHUNK_SIZE);
+                        const end = Math.min((((counter * Appwrite.CHUNK_SIZE) + Appwrite.CHUNK_SIZE) - 1), size);
+                        headers['content-range'] = 'bytes ' + start + '-' + end + '/' + size;
+                        if (id) {
+                            headers['x-appwrite-id'] = id;
+                        }
+                        const stream = file.slice(start, end + 1);
+                        payload['file'] = new File([stream], file.name);
+                        response = yield this.call('post', uri, headers, payload);
+                        if (!id) {
+                            id = response['$id'];
+                        }
+                        if (onProgress) {
+                            onProgress({
+                                $id: response.$id,
+                                progress: Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100,
+                                sizeUpploaded: end + 1,
+                                chunksTotal: response.chunksTotal,
+                                chunksUploaded: response.chunksUploaded
+                            });
+                        }
+                    }
+                    return response;
                 }),
                 /**
                  * Get File
@@ -4382,7 +4419,8 @@
                  * Get a file preview image. Currently, this method supports preview for image
                  * files (jpg, png, and gif), other supported formats, like pdf, docs, slides,
                  * and spreadsheets, will return the file icon image. You can also pass query
-                 * string arguments for cutting and resizing your preview image.
+                 * string arguments for cutting and resizing your preview image. Preview is
+                 * supported only for image files smaller than 10MB.
                  *
                  * @param {string} bucketId
                  * @param {string} fileId
