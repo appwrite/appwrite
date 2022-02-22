@@ -3071,17 +3071,11 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.17.2",
+            "version": "dev-feat-preps-for-0.13",
             "source": {
                 "type": "git",
-                "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "37bc6fc1b4b4940c7659748d7d2d5110da5457a4"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/37bc6fc1b4b4940c7659748d7d2d5110da5457a4",
-                "reference": "37bc6fc1b4b4940c7659748d7d2d5110da5457a4",
-                "shasum": ""
+                "url": "https://github.com/appwrite/sdk-generator",
+                "reference": "b977fcf357a267f41299539ac9095aa7bbcc2600"
             },
             "require": {
                 "ext-curl": "*",
@@ -3116,11 +3110,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "support": {
-                "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.17.2"
-            },
-            "time": "2022-01-28T08:25:10+00:00"
+            "time": "2022-02-15T11:09:40+00:00"
         },
         {
             "name": "composer/pcre",
