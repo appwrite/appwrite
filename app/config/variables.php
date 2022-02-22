@@ -445,7 +445,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_S3_REGION',
+                'name' => '_APP_STORAGE_S3_REGION',
                 'description' => 'AWS S3 storage region. Required when storage adapter is set to S3. You can find your region info for your bucket from AWS console.',
                 'introduction' => '0.13.0',
                 'default' => 'us-eas-1',
