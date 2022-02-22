@@ -2141,16 +2141,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.15.0",
+            "version": "0.15.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "19d581575ac20bf2e81ffa63ad0e0b52aa96d0a8"
+                "reference": "eb4f61ec40d697acdfd574638ecd075e4f44b864"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/19d581575ac20bf2e81ffa63ad0e0b52aa96d0a8",
-                "reference": "19d581575ac20bf2e81ffa63ad0e0b52aa96d0a8",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/eb4f61ec40d697acdfd574638ecd075e4f44b864",
+                "reference": "eb4f61ec40d697acdfd574638ecd075e4f44b864",
                 "shasum": ""
             },
             "require": {
@@ -2198,9 +2198,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.15.0"
+                "source": "https://github.com/utopia-php/database/tree/0.15.1"
             },
-            "time": "2022-02-21T18:04:57+00:00"
+            "time": "2022-02-22T09:33:37+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3702,9 +3702,6 @@
             },
             "require": {
                 "php": "^7.1 || ^8.0"
-            },
-            "replace": {
-                "myclabs/deep-copy": "self.version"
             },
             "require-dev": {
                 "doctrine/collections": "^1.0",
@@ -6669,5 +6666,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.2.0"
 }
