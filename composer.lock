@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "34f00d2ccd1a38f669028bcab82c0f94",
+    "content-hash": "92614eab8d44998df216484f617c2026",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -115,20 +115,18 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "dev-refactor",
+            "version": "0.7.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "ea44eb19af851a3fe4ecf73e789f374f70d778c5"
+                "reference": "5021856c78f61c8dc542ca2fc704a8d1025583e2"
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/orchestration": "0.4.*",
                 "utopia-php/system": "0.4.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
-                "utopia-php/cli": "0.11.*",
                 "vimeo/psalm": "4.0.1"
             },
             "type": "library",
@@ -148,10 +146,6 @@
                 {
                     "name": "Torsten Dittmann",
                     "email": "torsten@appwrite.io"
-                },
-                {
-                    "name": "Bradley Schofield",
-                    "email": "bradley@appwrite.io"
                 }
             ],
             "description": "Appwrite repository for Cloud Function runtimes that contains the configurations and tests for all of the Appwrite runtime environments.",
@@ -160,7 +154,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2022-02-17T12:06:12+00:00"
+            "time": "2022-02-20T20:31:52+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -2630,16 +2624,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.7.0",
+            "version": "0.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "de12487f77346475e2deed82212c6f842c9ae4a8"
+                "reference": "1921d5da3d155c1e03b26f8f6184dba3a69cd5e4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/de12487f77346475e2deed82212c6f842c9ae4a8",
-                "reference": "de12487f77346475e2deed82212c6f842c9ae4a8",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/1921d5da3d155c1e03b26f8f6184dba3a69cd5e4",
+                "reference": "1921d5da3d155c1e03b26f8f6184dba3a69cd5e4",
                 "shasum": ""
             },
             "require": {
@@ -2676,9 +2670,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.7.0"
+                "source": "https://github.com/utopia-php/storage/tree/0.7.1"
             },
-            "time": "2022-02-09T13:02:47+00:00"
+            "time": "2022-02-20T13:27:43+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -2911,16 +2905,16 @@
     "packages-dev": [
         {
             "name": "amphp/amp",
-            "version": "v2.6.1",
+            "version": "v2.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/amp.git",
-                "reference": "c5fc66a78ee38d7ac9195a37bacaf940eb3f65ae"
+                "reference": "9d5100cebffa729aaffecd3ad25dc5aeea4f13bb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/amp/zipball/c5fc66a78ee38d7ac9195a37bacaf940eb3f65ae",
-                "reference": "c5fc66a78ee38d7ac9195a37bacaf940eb3f65ae",
+                "url": "https://api.github.com/repos/amphp/amp/zipball/9d5100cebffa729aaffecd3ad25dc5aeea4f13bb",
+                "reference": "9d5100cebffa729aaffecd3ad25dc5aeea4f13bb",
                 "shasum": ""
             },
             "require": {
@@ -2942,13 +2936,13 @@
                 }
             },
             "autoload": {
-                "psr-4": {
-                    "Amp\\": "lib"
-                },
                 "files": [
                     "lib/functions.php",
                     "lib/Internal/functions.php"
-                ]
+                ],
+                "psr-4": {
+                    "Amp\\": "lib"
+                }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -2973,7 +2967,7 @@
                 }
             ],
             "description": "A non-blocking concurrency framework for PHP applications.",
-            "homepage": "http://amphp.org/amp",
+            "homepage": "https://amphp.org/amp",
             "keywords": [
                 "async",
                 "asynchronous",
@@ -2988,7 +2982,7 @@
             "support": {
                 "irc": "irc://irc.freenode.org/amphp",
                 "issues": "https://github.com/amphp/amp/issues",
-                "source": "https://github.com/amphp/amp/tree/v2.6.1"
+                "source": "https://github.com/amphp/amp/tree/v2.6.2"
             },
             "funding": [
                 {
@@ -2996,7 +2990,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-09-23T18:43:08+00:00"
+            "time": "2022-02-20T17:52:18+00:00"
         },
         {
             "name": "amphp/byte-stream",
@@ -3951,16 +3945,16 @@
         },
         {
             "name": "phar-io/version",
-            "version": "3.1.1",
+            "version": "3.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phar-io/version.git",
-                "reference": "15a90844ad40f127afd244c0cad228de2a80052a"
+                "reference": "4f7fd7836c6f332bb2933569e566a0d6c4cbed74"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phar-io/version/zipball/15a90844ad40f127afd244c0cad228de2a80052a",
-                "reference": "15a90844ad40f127afd244c0cad228de2a80052a",
+                "url": "https://api.github.com/repos/phar-io/version/zipball/4f7fd7836c6f332bb2933569e566a0d6c4cbed74",
+                "reference": "4f7fd7836c6f332bb2933569e566a0d6c4cbed74",
                 "shasum": ""
             },
             "require": {
@@ -3996,9 +3990,9 @@
             "description": "Library for handling version information and constraints",
             "support": {
                 "issues": "https://github.com/phar-io/version/issues",
-                "source": "https://github.com/phar-io/version/tree/3.1.1"
+                "source": "https://github.com/phar-io/version/tree/3.2.1"
             },
-            "time": "2022-02-07T21:56:48+00:00"
+            "time": "2022-02-21T01:04:05+00:00"
         },
         {
             "name": "phpdocumentor/reflection-common",
@@ -4229,16 +4223,16 @@
         },
         {
             "name": "phpunit/php-code-coverage",
-            "version": "9.2.10",
+            "version": "9.2.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "d5850aaf931743067f4bfc1ae4cbd06468400687"
+                "reference": "665a1ac0a763c51afc30d6d130dac0813092b17f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/d5850aaf931743067f4bfc1ae4cbd06468400687",
-                "reference": "d5850aaf931743067f4bfc1ae4cbd06468400687",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/665a1ac0a763c51afc30d6d130dac0813092b17f",
+                "reference": "665a1ac0a763c51afc30d6d130dac0813092b17f",
                 "shasum": ""
             },
             "require": {
@@ -4294,7 +4288,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/php-code-coverage/issues",
-                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.10"
+                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.11"
             },
             "funding": [
                 {
@@ -4302,7 +4296,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-12-05T09:12:13+00:00"
+            "time": "2022-02-18T12:46:09+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",
@@ -6553,7 +6547,6 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "appwrite/php-runtimes": 20,
         "appwrite/sdk-generator": 20
     },
     "prefer-stable": false,

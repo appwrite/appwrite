@@ -558,7 +558,9 @@ App::post('/v1/functions/:functionId/deployments')
             throw new Exception('Failed moving file', 500);
         }
 
-        if ((bool) $activate) {
+        $activate = (bool) filter_var($activate, FILTER_VALIDATE_BOOLEAN);
+
+        if ($activate) {
             // Remove deploy for all other deployments.
             $deployments = $dbForProject->find('deployments', [
                 new Query('activate', Query::TYPE_EQUAL, [true]),

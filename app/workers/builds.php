@@ -117,19 +117,16 @@ class BuildsV1 extends Worker
                 functionId: $functionId, 
                 deploymentId: $deploymentId, 
                 source: $source,
+                destination: APP_STORAGE_BUILDS . "/app-$projectId",
                 vars: $vars, 
                 runtime: $key, 
                 baseImage: $baseImage,
+                workdir: '/usr/code',
+                remove: true,
                 commands: [
                     'sh', '-c',
-                    'mkdir -p /usr/code && \
-                    cp /tmp/code.tar.gz /usr/workspace/code.tar.gz && \ 
-                    cd /usr/workspace/ && \
-                    tar -zxf /usr/workspace/code.tar.gz -C /usr/code && \
-                    rm /usr/workspace/code.tar.gz && \
-                    cd /usr/local/src && \
-                    ./build.sh && \
-                    tar -C /usr/code -czf /usr/builds/code.tar.gz ./'
+                    'tar -zxf /tmp/code.tar.gz -C /usr/code && \
+                    cd /usr/local/src/ && ./build.sh'
                 ]
             );
 
