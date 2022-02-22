@@ -453,7 +453,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_S3_BUCKET',
+                'name' => '_APP_STORAGE_S3_BUCKET',
                 'description' => 'AWS S3 storage bucket. Required when storage adapter is set to S3. You can create buckets in your AWS console.',
                 'introduction' => '0.13.0',
                 'default' => '',
