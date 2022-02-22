@@ -500,7 +500,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_FUNCTIONS_DEPLOYMENT_LIMIT',
-                'description' => 'The maximum size deployment in bytes.',
+                'description' => 'The maximum size deployment in bytes. The default value is 30MB.',
                 'introduction' => '0.13.0',
                 'default' => '30000000',
                 'required' => false,
