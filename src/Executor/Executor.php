@@ -4,6 +4,7 @@ namespace Executor;
 
 use Exception;
 use Utopia\App;
+use Utopia\CLI\Console;
 
 class Executor 
 {
@@ -34,29 +35,37 @@ class Executor
         string $functionId, 
         string $deploymentId, 
         string $projectId, 
-        string $source, 
-        array $vars, 
+        string $source,
         string $runtime, 
         string $baseImage,
-        array $commands
+        bool $remove = false,
+        string $entrypoint = '',
+        string $workdir = '',
+        string $destination = '',
+        string $network = '',
+        array $vars = [],
+        array $commands = []
     ) {
         $route = "/runtimes";
         $headers = [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
             'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
         ];
         $params = [
             'runtimeId' => "$projectId-$deploymentId",
             'source' => $source,
-            'destination' => APP_STORAGE_BUILDS . "/app-$projectId",
-            'vars' => $vars,
+            'destination' => $destination,
             'runtime' => $runtime,
             'baseImage' => $baseImage,
+            'entrypoint' => $entrypoint,
+            'workdir' => $workdir,
+            'network' => empty($network) ? App::getEnv('_APP_EXECUTOR_RUNTIME_NETWORK', 'appwrite_runtimes') : $network,
+            'vars' => $vars,
+            'remove' => $remove,
             'commands' => $commands
         ];
 
-        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
+        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900));
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -72,7 +81,6 @@ class Executor
         $route = "/runtimes/$runtimeId";
         $headers = [
             'content-type' =>  'application/json',
-            'x-appwrite-project' => $projectId,
             'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
         ];
 
@@ -99,12 +107,11 @@ class Executor
         string $runtime,
         string $baseImage,
         $timeout
-    )
-    {
+    ) {
+
         $route = "/execution";
         $headers = [
             'content-type' =>  'application/json',
-            'x-appwrite-project' => $projectId,
             'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
         ];
         $params = [
@@ -119,11 +126,46 @@ class Executor
         ];
 
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
-
         $status = $response['headers']['status-code'];
+
         if ($status >= 400) {
-            throw new \Exception($response['body']['message'], $status);
-        } 
+            for ($attempts = 0; $attempts < 5; $attempts++) {
+                switch ($status) {
+                    case 404:
+                        $response = $this->createRuntime(
+                            functionId: $functionId,
+                            deploymentId: $deploymentId,
+                            projectId: $projectId,
+                            source: $path,
+                            runtime: $runtime,
+                            baseImage: $baseImage,
+                            vars: $vars,
+                            entrypoint: $entrypoint,
+                            commands: []
+                        );
+                        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
+                        $status = $response['headers']['status-code'];
+                        break;
+                    case 406:
+                        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
+                        $status = $response['headers']['status-code'];
+                        break;
+                    default:
+                        throw new \Exception($response['body']['message'], $status);
+                }
+
+                if ($status < 400) {
+                    return $response['body'];
+                }
+                
+                if ($status != 406) {
+                    throw new \Exception($response['body']['message'], $status);
+                }
+
+                sleep(2);
+            }
+            throw new Exception($response['body']['message'], 503);
+        }
 
         return $response['body'];
     }
@@ -224,10 +266,6 @@ class Executor
         curl_close($ch);
 
         $responseHeaders['status-code'] = $responseStatus;
-
-        if ($responseStatus === 500) {
-            echo 'Server error('.$method.': '.$path.'. Params: '.json_encode($params).'): '.json_encode($responseBody)."\n";
-        }
 
         return [
             'headers' => $responseHeaders,
