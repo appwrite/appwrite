@@ -1841,6 +1841,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => 'metadata',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384, // https://tools.ietf.org/html/rfc4288#section-4.2
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
                 '$id' => 'chunksTotal',
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
