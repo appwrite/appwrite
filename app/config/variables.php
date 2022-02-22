@@ -499,6 +499,15 @@ return [
         'description' => '',
         'variables' => [
             [
+                'name' => '_APP_FUNCTIONS_DEPLOYMENT_LIMIT',
+                'description' => 'The maximum size deployment in bytes. The default value is 30MB.',
+                'introduction' => '0.13.0',
+                'default' => '30000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_FUNCTIONS_TIMEOUT',
                 'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds.',
                 'introduction' => '0.7.0',

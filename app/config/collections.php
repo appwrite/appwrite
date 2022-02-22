@@ -1751,9 +1751,9 @@ $collections = [
                 '$id' => '_key_search',
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
-                'lengths' => [2048],
-                'orders' => [Database::ORDER_ASC],
-            ]
+                'lengths' => [],
+                'orders' => [],
+            ],
         ],
     ],
 
@@ -1872,6 +1872,17 @@ $collections = [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
+            ],
+            [
+                '$id' => 'metadata',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384, // https://tools.ietf.org/html/rfc4288#section-4.2
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['json'],
             ],
             [
                 '$id' => 'search',

@@ -3,6 +3,7 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Validator\File;
@@ -12,7 +13,6 @@ use Utopia\Storage\Validator\Upload;
 use Appwrite\Utopia\Response;
 use Appwrite\Task\Validator\Cron;
 use Utopia\App;
-use Utopia\Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -375,7 +375,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
         }
 
         if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found', 404);
+            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         if ($build->isEmpty()) {
@@ -489,7 +489,7 @@ App::post('/v1/functions/:functionId/deployments')
 
         $file = $request->getFiles('code');
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSizeValidator = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
+        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_DEPLOYMENT_LIMIT', 0));
         $upload = new Upload();
 
         if (empty($file)) {
@@ -583,6 +583,7 @@ App::post('/v1/functions/:functionId/deployments')
                     '$read' => ['role:all'],
                     '$write' => ['role:all'],
                     'resourceId' => $function->getId(),
+                    'resourceType' => 'functions',
                     'dateCreated' => time(),
                     'entrypoint' => $entrypoint,
                     'path' => $path,
@@ -612,6 +613,7 @@ App::post('/v1/functions/:functionId/deployments')
                     '$read' => ['role:all'],
                     '$write' => ['role:all'],
                     'resourceId' => $function->getId(),
+                    'resourceType' => 'functions',
                     'dateCreated' => time(),
                     'entrypoint' => $entrypoint,
                     'path' => $path,
@@ -667,7 +669,8 @@ App::get('/v1/functions/:functionId/deployments')
             $cursorDeployment = $dbForProject->getDocument('deployments', $cursor);
 
             if ($cursorDeployment->isEmpty()) {
-                throw new Exception("Deployment '{$cursor}' for the 'cursor' value not found.", 400);
+                // TODO: Shouldn't this be a 404 error ? 
+                throw new Exception("Tag '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
 
@@ -724,11 +727,11 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
-            throw new Exception('Deployment not found', 404);
+            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found', 404);
+            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
@@ -766,16 +769,16 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
         if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found', 404);
+            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
-            throw new Exception('Deployment not found', 404);
+            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         if ($deviceFunctions->delete($deployment->getAttribute('path', ''))) {
             if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-                throw new Exception('Failed to remove deployment from DB', 500);
+                throw new Exception('Failed to remove deployment from DB', 500, Exception::GENERAL_SERVER_ERROR);
             }
         }
 
@@ -841,11 +844,11 @@ App::post('/v1/functions/:functionId/executions')
         $deployment = Authorization::skip(fn() => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
-            throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404);
+            throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404, Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404);
+            throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404, Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         /** Check if build has completed */
