@@ -621,7 +621,7 @@ App::post('/v1/functions/:functionId/deployments')
                     'chunksTotal' => $chunks,
                     'chunksUploaded' => $chunksUploaded,
                     'search' => implode(' ', [$deploymentId, $entrypoint]),
-                    'activate' => ((bool) $activate === true),
+                    'activate' => $activate,
                     'metadata' => $metadata,
                 ]));
             } else {
