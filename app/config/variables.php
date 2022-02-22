@@ -485,7 +485,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_DO_SPACES_BUCKET',
+                'name' => '_APP_STORAGE_DO_SPACES_BUCKET',
                 'description' => 'DigitalOcean spaces bucket. Required when storage adapter is set to DOSpaces. You can create spaces in your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
