@@ -25,6 +25,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'functionId' => 'unique()',
+            'execute' => ['role:all'],
             'name' => 'Test',
             'runtime' => 'php-8.0',
             'vars' => [
@@ -58,6 +59,9 @@ class FunctionsCustomServerTest extends Scope
             'account.create',
             'account.delete',
         ], $response1['body']['events']);
+        $this->assertEquals([
+            'role:all'
+        ], $response1['body']['execute']);
         $this->assertEquals('0 0 1 1 *', $response1['body']['schedule']);
         $this->assertEquals(10, $response1['body']['timeout']);
        

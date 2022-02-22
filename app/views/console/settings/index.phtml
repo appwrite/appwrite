@@ -241,11 +241,6 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                 </p>
                                 <?php endif; ?>
                             </div>
-
-                            <hr />
-
-                            <div class="text-align-center text-size-small text-bold text-success" data-ls-if="!!({{console-project.serviceStatusFor<?php echo ucFirst($this->escape($key)); ?>}})">Enabled</div>
-                            <div class="text-align-center text-size-small text-bold text-danger" data-ls-if="(!{{console-project.serviceStatusFor<?php echo ucFirst($this->escape($key)); ?>}})">Disabled</div>
                         </div>
                     </li>
                     <?php endforeach; ?>
@@ -548,7 +543,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                 <div class="margin-bottom-tiny">
                                     <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red">Pending Approval</span>
                                 </div>
-                                <span class="text-size-small text-fade" data-ls-bind="{{member.email}}"></small>
+                                <span class="text-size-small text-fade" data-ls-bind="{{member.email}}"></span>
                             </li>
                         </ul>
                     </div>
