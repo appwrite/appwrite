@@ -589,7 +589,7 @@ App::post('/v1/functions/:functionId/deployments')
                     'path' => $path,
                     'size' => $fileSize,
                     'search' => implode(' ', [$deploymentId, $entrypoint]),
-                    'activate' => ((bool) $activate === true),
+                    'activate' => $activate,
                     'metadata' => $metadata,
                 ]));
             } else {
