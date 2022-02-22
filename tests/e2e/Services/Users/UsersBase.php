@@ -149,7 +149,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'search' => '*united.co.uk'
+            'search' => 'united.co.uk'
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -163,7 +163,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'search' => '*manchester*'
+            'search' => 'man'
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -179,6 +179,7 @@ trait UsersBase
         ], $this->getHeaders()), [
             'search' => $data['userId']
         ]);
+
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
