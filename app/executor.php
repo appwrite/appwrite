@@ -264,7 +264,6 @@ App::post('/v1/runtimes')
                 }
 
                 $destinationDevice =  getStorageDevice($destination);
-                $localDevice = new Local();
                 $outputPath = $destinationDevice->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
 
                 $buffer = $localDevice->read($tmpBuild);
