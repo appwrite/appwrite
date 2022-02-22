@@ -268,7 +268,7 @@ App::post('/v1/runtimes')
                 $outputPath = $destinationDevice->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
 
                 $buffer = $localDevice->read($tmpBuild);
-                if(!$destinationDevice->upload($buffer, $outputPath)) {
+                if(!$destinationDevice->write($outputPath, $buffer, $localDevice->getFileMimeType($tmpBuild))) {
                     throw new Exception('Failed to move built code to storage', 500);
                 };
 
