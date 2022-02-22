@@ -1751,9 +1751,9 @@ $collections = [
                 '$id' => '_key_search',
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
-                'lengths' => [],
-                'orders' => [],
-            ],
+                'lengths' => [2048],
+                'orders' => [Database::ORDER_ASC],
+            ]
         ],
     ],
 
