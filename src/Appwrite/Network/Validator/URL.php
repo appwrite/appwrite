@@ -9,10 +9,20 @@ use Utopia\Validator;
  *
  * Validate that an variable is a valid URL
  *
- * @package Utopia\Validator
+ * @package Appwrite\Network\Validator
  */
 class URL extends Validator
 {
+    protected array $allowedSchemes;
+
+    /**
+     * @param array $allowedSchemes
+     */
+    public function __construct(array $allowedSchemes = [])
+    {
+        $this->allowedSchemes = $allowedSchemes;
+    }
+
     /**
      * Get Description
      *
@@ -22,6 +32,10 @@ class URL extends Validator
      */
     public function getDescription(): string
     {
+        if (!empty($this->allowedSchemes)) {
+            return 'Value must be a valid URL with following schemes (' . \implode(', ', $this->allowedSchemes) . ')';
+        }
+
         return 'Value must be a valid URL';
     }
 
@@ -36,6 +50,10 @@ class URL extends Validator
     public function isValid($value): bool
     {
         if (\filter_var($value, FILTER_VALIDATE_URL) === false) {
+            return false;
+        }
+
+        if (!empty($this->allowedSchemes) && !\in_array(\parse_url($value, PHP_URL_SCHEME), $this->allowedSchemes)) {
             return false;
         }
 

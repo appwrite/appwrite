@@ -28,6 +28,48 @@ trait TeamsBaseClient
         $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['email']);
         $this->assertEquals('owner', $response['body']['memberships'][0]['roles'][0]);
 
+        $membershipId = $response['body']['memberships'][0]['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid.'/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $this->getUser()['$id']
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertNotEmpty($response['body']['memberships'][0]);
+        $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['name']);
+        $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['email']);
+        $this->assertEquals('owner', $response['body']['memberships'][0]['roles'][0]);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid.'/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $membershipId
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertNotEmpty($response['body']['memberships'][0]);
+        $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['name']);
+        $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['email']);
+        $this->assertEquals('owner', $response['body']['memberships'][0]['roles'][0]);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid.'/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'unknown'
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertEmpty($response['body']['memberships']);
+        $this->assertEquals(0, $response['body']['sum']);
+
         /**
          * Test for FAILURE
          */

@@ -81,7 +81,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                         <div class="margin-bottom-small text-align-end text-size-small text-fade"><span data-ls-bind="{{project-files.sum}}"></span> files found</div>
 
                         <div class="box margin-bottom">
-                            <table class="vertical">
+                            <table class="vertical" style="overflow: visible">
                                 <thead>
                                     <tr>
                                         <th width="40"></th>
@@ -89,128 +89,143 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                         <th width="140">Type</th>
                                         <th width="100">Size</th>
                                         <th width="120">Created</th>
+                                        <th width="52"></th>
                                     </tr>
                                 </thead>
                                 <tbody data-ls-loop="project-files.files" data-ls-as="file">
                                     <tr>
                                         <td class="hide">
-                                            <img src="" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/buckets/{{router.params.id}}/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" width="30" height="30" loading="lazy" />
+                                            <img src="" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/buckets/{{router.params.id}}/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" width="30" height="30" loading="lazy" alt="" />
                                         </td>
-                                        <td data-title="Name: " class="text-one-liner" data-ls-attrs="title={{file.name}}" >
-                                            <div data-ui-modal class="box modal sticky-footer width-large close" data-button-text="{{file.name}}" data-button-class="link" data-button-element="span">
-                                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+                                        <td class="col-name" data-title="Name: " data-ls-attrs="title={{file.name}}" >
+                                            <div class="trim-inner-text">
+                                                <span data-ls-ui-trigger="modal-file-update-{{file.$id}}" class="link text-one-liner" data-ls-bind="{{file.name}}"></span>
+                                                <div data-ls-attrs="data-open-event=modal-file-update-{{file.$id}}" data-button-hide="1" data-ui-modal class="box modal sticky-footer width-large close" >
+                                                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                                <h1>Update File</h1>
+                                                    <h1>Update File</h1>
 
-                                                <hr />
+                                                    <hr />
 
-                                                <div class="row responsive modalize">
-                                                    <div class="col span-8">
-                                                        <form class="strip"
-                                                            data-analytics
-                                                            data-analytics-activity
-                                                            data-analytics-event="submit"
-                                                            data-analytics-category="console"
-                                                            data-analytics-label="Update Storage File"
-                                                            data-service="storage.updateFile"
-                                                            data-event="file-update-{{file.$id}}"
-                                                            data-scope="sdk"
-                                                            data-success="alert,trigger"
-                                                            data-success-param-alert-text="File updated successfully"
-                                                            data-success-param-trigger-events="storage.updateFile"
-                                                            data-failure="alert"
-                                                            data-failure-param-alert-text="Failed to update file"
-                                                            data-failure-param-alert-classname="error">
+                                                    <div class="row responsive modalize">
+                                                        <div class="col span-8">
+                                                            <form class="strip"
+                                                                  data-analytics
+                                                                  data-analytics-activity
+                                                                  data-analytics-event="submit"
+                                                                  data-analytics-category="console"
+                                                                  data-analytics-label="Update Storage File"
+                                                                  data-service="storage.updateFile"
+                                                                  data-event="file-update-{{file.$id}}"
+                                                                  data-scope="sdk"
+                                                                  data-success="alert,trigger"
+                                                                  data-success-param-alert-text="File updated successfully"
+                                                                  data-success-param-trigger-events="storage.updateFile"
+                                                                  data-failure="alert"
+                                                                  data-failure-param-alert-text="Failed to update file"
+                                                                  data-failure-param-alert-classname="error">
 
-                                                            <label for="files-fileId">File ID</label>
-                                                            <div class="input-copy">
-                                                                <input data-forms-copy type="text" data-ls-attrs="id=file-id-{{file.$id}}" name="fileId" disabled data-ls-bind="{{file.$id}}" />
+                                                                <label for="files-fileId">File ID</label>
+                                                                <div class="input-copy">
+                                                                    <input data-forms-copy type="text" data-ls-attrs="id=file-id-{{file.$id}}" name="fileId" disabled data-ls-bind="{{file.$id}}" />
+                                                                </div>
+                                                                <input type="hidden" data-ls-attrs="id=file-bucketId-{{file.$id}}" name="bucketId" data-ls-bind="{{file.bucketId}}">
+
+                                                                <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
+                                                                <input type="hidden" data-ls-attrs="id=file-read-{{file.$id}}" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$read}}" placeholder="User ID, Team ID or Role" />
+                                                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+
+                                                                <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
+                                                                <input type="hidden" data-ls-attrs="id=file-write-{{file.$id}}" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$write}}" placeholder="User ID, Team ID or Role" />
+                                                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                                            </form>
+
+                                                            <form class="strip"
+                                                                  data-analytics
+                                                                  data-analytics-activity
+                                                                  data-analytics-event="submit"
+                                                                  data-analytics-category="console"
+                                                                  data-analytics-label="Delete File"
+                                                                  data-service="storage.deleteFile"
+                                                                  data-scope="sdk"
+                                                                  data-event="file-delete-{{file.$id}}"
+                                                                  data-confirm="Are you sure you want to delete this file?"
+                                                                  data-success="alert,trigger"
+                                                                  data-success-param-alert-text="Deleted file successfully"
+                                                                  data-success-param-trigger-events="storage.deleteFile"
+                                                                  data-failure="alert"
+                                                                  data-failure-param-alert-text="Failed to delete file"
+                                                                  data-failure-param-alert-classname="error">
+
+                                                                <input type="hidden" name="bucketId" data-ls-bind="{{file.bucketId}}" />
+                                                                <input type="hidden" name="fileId" data-ls-bind="{{file.$id}}" />
+                                                            </form>
+                                                        </div>
+                                                        <div class="col span-4 text-size-small">
+                                                            <div class="margin-bottom-small">File Preview</div>
+
+                                                            <div class="margin-bottom-small">
+                                                                <div data-ls-if="{{file.chunksTotal}} != {{file.chunksUploaded}}" class="preview-box">
+                                                                    <div class="preview-box-image">
+                                                                        <img src="/images/default_preview.svg" width="200" height="100"  alt=""/>
+                                                                    </div>
+                                                                    <span class="preview-box-text">Preview not available</span>
+                                                                </div>
+                                                                <img data-ls-if="{{file.chunksTotal}} == {{file.chunksUploaded}}" src="" class="file-preview" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/buckets/{{router.params.id}}/files/{{file.$id}}/preview?width=350&height=250&project={{router.params.project}}&mode=admin" loading="lazy" width="225" height="160" />
                                                             </div>
-                                                            <input type="hidden" data-ls-attrs="id=file-bucketId-{{file.$id}}" name="bucketId" data-ls-bind="{{file.bucketId}}">
 
-                                                            <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                                            <input type="hidden" data-ls-attrs="id=file-read-{{file.$id}}" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$read}}" placeholder="User ID, Team ID or Role" />
-                                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                                            <div class="margin-bottom-tiny">
+                                                                <a href="" data-ls-attrs="href={{env.ENDPOINT}}/v1/storage/buckets/{{router.params.id}}/files/{{file.$id}}/view?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> New Window <i class="icon-link-ext"></i></a>
+                                                            </div>
 
-                                                            <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                                            <input type="hidden" data-ls-attrs="id=file-write-{{file.$id}}" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$write}}" placeholder="User ID, Team ID or Role" />
-                                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
-                                                        </form>
+                                                            <div class="margin-bottom-small">
+                                                                <a href="" data-ls-attrs="href={{env.ENDPOINT}}/v1/storage/buckets/{{router.params.id}}/files/{{file.$id}}/download?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Download <i class="icon-link-ext"></i></a>
+                                                            </div>
 
-                                                        <form class="strip"
-                                                            data-analytics
-                                                            data-analytics-activity
-                                                            data-analytics-event="submit"
-                                                            data-analytics-category="console"
-                                                            data-analytics-label="Delete File"
-                                                            data-service="storage.deleteFile"
-                                                            data-scope="sdk"
-                                                            data-event="file-delete-{{file.$id}}"
-                                                            data-confirm="Are you sure you want to delete this file?"
-                                                            data-success="alert,trigger"
-                                                            data-success-param-alert-text="Deleted file successfully"
-                                                            data-success-param-trigger-events="storage.deleteFile"
-                                                            data-failure="alert"
-                                                            data-failure-param-alert-text="Failed to delete file"
-                                                            data-failure-param-alert-classname="error">
-
-                                                            <input type="hidden" name="bucketId" data-ls-bind="{{file.bucketId}}" />
-                                                            <input type="hidden" name="fileId" data-ls-bind="{{file.$id}}" />
-                                                        </form>
-                                                    </div>
-                                                    <div data-ls-if="{{file.chunksTotal}} == {{file.chunksUploaded}}" class="col span-4 text-size-small">
-                                                        <div class="margin-bottom-small">File Preview</div>
-
-                                                        <div class="margin-bottom-small">
-                                                            <img src="" class="file-preview" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/buckets/{{router.params.id}}/files/{{file.$id}}/preview?width=350&height=250&project={{router.params.project}}&mode=admin" loading="lazy" width="225" height="160" />
-                                                        </div>
-
-                                                        <div class="margin-bottom-tiny">
-                                                            <a href="" data-ls-attrs="href={{env.ENDPOINT}}/v1/storage/buckets/{{router.params.id}}/files/{{file.$id}}/view?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> New Window <i class="icon-link-ext"></i></a>
-                                                        </div>
-
-                                                        <div class="margin-bottom-small">
-                                                            <a href="" data-ls-attrs="href={{env.ENDPOINT}}/v1/storage/buckets/{{router.params.id}}/files/{{file.$id}}/download?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Download <i class="icon-link-ext"></i></a>
-                                                        </div>
-
-                                                        <div class="margin-bottom-tiny">
-                                                            <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Type: <span data-ls-bind="{{file.mimeType}}"></span>
-                                                        </div>
-                                                        <div class="margin-bottom-tiny">
-                                                            <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Size: <span data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
-                                                            <span data-ls-bind="{{file.sizeOriginal|humanFileUnit}}"></span>
-                                                        </div>
-                                                        <div class="margin-bottom">
-                                                            <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Created at: <span data-ls-bind="{{file.dateCreated|dateText}}"></span>
+                                                            <div class="margin-bottom-tiny">
+                                                                <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Type: <span data-ls-bind="{{file.mimeType}}"></span>
+                                                            </div>
+                                                            <div class="margin-bottom-tiny">
+                                                                <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Size: <span data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
+                                                                <span data-ls-bind="{{file.sizeOriginal|humanFileUnit}}"></span>
+                                                            </div>
+                                                            <div class="margin-bottom">
+                                                                <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Created at: <span data-ls-bind="{{file.dateCreated|dateText}}"></span>
+                                                            </div>
                                                         </div>
                                                     </div>
+
+                                                    <footer>
+                                                        <button class="link pull-end text-danger" data-ls-ui-trigger="file-delete-{{file.$id}},modal-close">Delete File</button>
+                                                        <button type="button" data-ls-if="{{file.chunksTotal}} == {{file.chunksUploaded}}" data-ls-ui-trigger="file-update-{{file.$id}},modal-close">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse desktops-only-inline tablets-only-inline">Cancel</button>
+                                                    </footer>
                                                 </div>
-
-                                                <footer>
-                                                    <button class="link pull-end text-danger" data-ls-ui-trigger="file-delete-{{file.$id}},modal-close">Delete File</button>
-                                                    <button type="button" data-ls-if="{{file.chunksTotal}} == {{file.chunksUploaded}}" data-ls-ui-trigger="file-update-{{file.$id}},modal-close">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse desktops-only-inline tablets-only-inline">Cancel</button>
-                                                </footer>
+                                                <span class="pill is-pending" data-ls-if="{{file.chunksTotal}} != {{file.chunksUploaded}}">pending</span>
                                             </div>
                                         </td>
                                         <td data-title="Type: ">
                                             <span class="text-fade text-size-small" data-ls-bind="{{file.mimeType}}"></span>
                                         </td>
                                         <td data-title="Size: ">
-                                            <div data-ls-if="{{file.chunksTotal}} == {{file.chunksUploaded}}" >
-                                                <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
-                                                <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileUnit}}"></span>
-                                            </div>
-                                            <span class="text-fade text-size-small" data-ls-if="{{file.chunksTotal}} != {{file.chunksUploaded}}">incomplete</span>
+                                            <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
+                                            <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileUnit}}"></span>
                                         </td>
                                         <td data-title="Created: ">
                                             <span class="text-fade text-size-small" data-ls-bind="{{file.dateCreated|dateText}}"></span>
+                                        </td>
+                                        <td data-title="" class="cell-options-more" style="overflow: visible">
+                                           <div class="drop-list end" data-ls-ui-open="" data-button-aria="File Options" data-button-class="icon-dot-3 reset-inner-button" data-blur="1">
+                                                <ul class="no-arrow">
+                                                    <li data-ls-ui-trigger="modal-file-update-{{file.$id}}"><span class="margin-start-small icon icon-edit"></span> <span class="link">Update</span></li>
+                                                    <li data-ls-ui-trigger="file-delete-{{file.$id}}"><span class="margin-start-small icon icon-trash-2"></span><span class="link">Delete</span></li>
+                                                </ul>
+                                            </div> 
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
-
                     <div class="pull-end text-align-center paging">
                         <form
                             data-service="storage.listFiles"
@@ -254,16 +269,9 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Create Storage File"
-                            data-service="storage.createFile"
-                            data-event="submit"
-                            data-scope="sdk"
-                            data-loading="Uploading File..."
-                            data-success="alert,trigger,reset"
-                            data-success-param-alert-text="File uploaded successfully"
-                            data-success-param-trigger-events="storage.createFile"
-                            data-failure="alert"
-                            data-failure-param-alert-text="Failed to upload file"
-                            data-failure-param-alert-classname="error">
+                            x-data
+                            @submit.prevent="$store.uploader.uploadFile($event.target)"
+                            >
                             <input type="hidden" name="bucketId" id="files-bucketId" data-ls-bind="{{router.params.id}}">
 
                             <label for="fileId">File ID</label>

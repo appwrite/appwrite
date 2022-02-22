@@ -290,7 +290,7 @@ class Realtime extends Adapter
 
                 $channels[] = 'documents';
                 $channels[] = 'collections.' . $payload->getAttribute('$collection') . '.documents';
-                $channels[] = 'documents.' . $payload->getId();
+                $channels[] = 'collections.' . $payload->getAttribute('$collection') . '.documents.' . $payload->getId();
 
                 $roles = ($collection->getAttribute('permission') === 'collection') ? $collection->getRead() : $payload->getRead();
 
