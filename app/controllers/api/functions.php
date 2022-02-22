@@ -489,7 +489,7 @@ App::post('/v1/functions/:functionId/deployments')
 
         $file = $request->getFiles('code');
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_DEPLOYMENT_LIMIT', 0));
+        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', 0));
         $upload = new Upload();
 
         if (empty($file)) {
