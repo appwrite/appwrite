@@ -19,6 +19,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Appwrite\Utopia\Request\Filters\V12;
+use Appwrite\Utopia\Response\Filters\V12 as FiltersV12;
 use Utopia\Validator\Text;
 
 Config::setParam('domainVerification', false);
@@ -157,6 +158,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
     if ($responseFormat) {
         switch($responseFormat) {
+            case version_compare ($responseFormat , '0.12.3', '<='):
+                Response::setFilter(new FiltersV12());
+                break;
             case version_compare ($responseFormat , '0.11.0', '<=') :
                 Response::setFilter(new V11());
                 break;
