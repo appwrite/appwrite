@@ -262,8 +262,14 @@ class Swagger2 extends Format
                         $node['type'] = $validator->getType();
                         $node['x-example'] = false;
                         break;
-                    case 'Utopia\Database\Validator\UID':
                     case 'Appwrite\Utopia\Database\Validator\CustomId':
+                        if($route->getLabel('sdk.methodType', '') === 'upload') {
+                            $node['x-upload-id'] = true;
+                        }
+                        $node['type'] = $validator->getType();
+                        $node['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
+                        break;
+                    case 'Utopia\Database\Validator\UID':
                         $node['type'] = $validator->getType();
                         $node['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;

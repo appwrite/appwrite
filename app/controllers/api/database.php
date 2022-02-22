@@ -1,7 +1,7 @@
 <?php
 
 use Utopia\App;
-use Utopia\Exception;
+use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
@@ -65,22 +65,22 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
     $collection = $dbForProject->getDocument('collections', $collectionId);
 
     if ($collection->isEmpty()) {
-        throw new Exception('Collection not found', 404);
+        throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
     }
 
     if (!empty($format)) {
         if (!Structure::hasFormat($format, $type)) {
-            throw new Exception("Format {$format} not available for {$type} attributes.", 400);
+            throw new Exception("Format {$format} not available for {$type} attributes.", 400, Exception::ATTRIBUTE_FORMAT_UNSUPPORTED);
         }
     }
 
     // Must throw here since dbForProject->createAttribute is performed by db worker
     if ($required && $default) {
-        throw new Exception('Cannot set default value for required attribute', 400);
+        throw new Exception('Cannot set default value for required attribute', 400, Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED);
     }
 
     if ($array && $default) {
-        throw new Exception('Cannot set default value for array attributes', 400);
+        throw new Exception('Cannot set default value for array attributes', 400, Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED);
     }
 
     try {
@@ -104,10 +104,10 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
         $attribute = $dbForProject->createDocument('attributes', $attribute);
     }
     catch (DuplicateException $exception) {
-        throw new Exception('Attribute already exists', 409);
+        throw new Exception('Attribute already exists', 409, Exception::ATTRIBUTE_ALREADY_EXISTS);
     }
     catch (LimitException $exception) {
-        throw new Exception('Attribute limit exceeded', 400);
+        throw new Exception('Attribute limit exceeded', 400, Exception::ATTRIBUTE_LIMIT_EXCEEDED);
     }
 
     $dbForProject->deleteCachedDocument('collections', $collectionId);
@@ -181,9 +181,9 @@ App::post('/v1/database/collections')
 
             $dbForProject->createCollection('collection_' . $collection->getInternalId());
         } catch (DuplicateException $th) {
-            throw new Exception('Collection already exists', 409);
+            throw new Exception('Collection already exists', 409, Exception::COLLECTION_ALREADY_EXISTS);
         } catch (LimitException $th) {
-            throw new Exception('Collection limit exceeded', 400);
+            throw new Exception('Collection limit exceeded', 400, Exception::COLLECTION_LIMIT_EXCEEDED);
         }
 
         $audits
@@ -226,7 +226,7 @@ App::get('/v1/database/collections')
             $cursorCollection = $dbForProject->getDocument('collections', $cursor);
 
             if ($cursorCollection->isEmpty()) {
-                throw new Exception("Collection '{$cursor}' for the 'cursor' value not found.", 400);
+                throw new Exception("Collection '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
 
@@ -266,7 +266,7 @@ App::get('/v1/database/collections/:collectionId')
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
         if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+            throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
         $usage->setParam('database.collections.read', 1);
@@ -407,7 +407,7 @@ App::get('/v1/database/:collectionId/usage')
         $collection = $dbForProject->getCollection('collection_' . $collectionDocument->getInternalId());
 
         if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+            throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
         $usage = [];
@@ -519,7 +519,7 @@ App::get('/v1/database/collections/:collectionId/logs')
         $collection = $dbForProject->getCollection('collection_' . $collectionDocument->getInternalId());
 
         if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+            throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
         $audit = new Audit($dbForProject);
@@ -608,7 +608,7 @@ App::put('/v1/database/collections/:collectionId')
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
         if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+            throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
         $read ??= $collection->getRead() ?? []; // By default inherit read permissions
@@ -627,10 +627,10 @@ App::put('/v1/database/collections/:collectionId')
             );
         }
         catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized permissions', 401);
+            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
         catch (StructureException $exception) {
-            throw new Exception('Bad structure. '.$exception->getMessage(), 400);
+            throw new Exception('Bad structure. '.$exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
         }
 
         $usage->setParam('database.collections.update', 1);
@@ -672,11 +672,11 @@ App::delete('/v1/database/collections/:collectionId')
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
         if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+            throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
         if (!$dbForProject->deleteDocument('collections', $collectionId)) {
-            throw new Exception('Failed to remove collection from DB', 500);
+            throw new Exception('Failed to remove collection from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $dbForProject->deleteCachedCollection('collection_' . $collection->getInternalId());
@@ -734,7 +734,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
         // Ensure attribute default is within required size
         $validator = new Text($size);
         if (!is_null($default) && !$validator->isValid($default)) {
-            throw new Exception($validator->getDescription(), 400);
+            throw new Exception($validator->getDescription(), 400, Exception::ATTRIBUTE_VALUE_INVALID);
         }
 
         $attribute = createAttribute($collectionId, new Document([
@@ -826,14 +826,14 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
         foreach ($elements as $element) {
             $length = \strlen($element);
             if ($length === 0) {
-                throw new Exception('Each enum element must not be empty', 400);
+                throw new Exception('Each enum element must not be empty', 400, Exception::ATTRIBUTE_VALUE_INVALID);
 
             }
             $size = ($length > $size) ? $length : $size;
         }
 
         if (!is_null($default) && !in_array($default, $elements)) {
-            throw new Exception('Default value not found in elements', 400);
+            throw new Exception('Default value not found in elements', 400, Exception::ATTRIBUTE_VALUE_INVALID);
         }
 
         $attribute = createAttribute($collectionId, new Document([
@@ -969,13 +969,13 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
         $max = (is_null($max)) ? PHP_INT_MAX : \intval($max);
 
         if ($min > $max) {
-            throw new Exception('Minimum value must be lesser than maximum value', 400);
+            throw new Exception('Minimum value must be lesser than maximum value', 400, Exception::ATTRIBUTE_VALUE_INVALID);
         }
 
         $validator = new Range($min, $max, Database::VAR_INTEGER);
 
         if (!is_null($default) && !$validator->isValid($default)) {
-            throw new Exception($validator->getDescription(), 400);
+            throw new Exception($validator->getDescription(), 400, Exception::ATTRIBUTE_VALUE_INVALID);
         }
 
         $size = $max > 2147483647 ? 8 : 4; // Automatically create BigInt depending on max value
@@ -1040,7 +1040,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
         $max = (is_null($max)) ? PHP_FLOAT_MAX : \floatval($max);
 
         if ($min > $max) {
-            throw new Exception('Minimum value must be lesser than maximum value', 400);
+            throw new Exception('Minimum value must be lesser than maximum value', 400, Exception::ATTRIBUTE_VALUE_INVALID);
         }
 
         // Ensure default value is a float
@@ -1051,7 +1051,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
         $validator = new Range($min, $max, Database::VAR_FLOAT);
 
         if (!is_null($default) && !$validator->isValid($default)) {
-            throw new Exception($validator->getDescription(), 400);
+            throw new Exception($validator->getDescription(), 400, Exception::ATTRIBUTE_VALUE_INVALID);
         }
 
         $attribute = createAttribute($collectionId, new Document([
@@ -1141,7 +1141,7 @@ App::get('/v1/database/collections/:collectionId/attributes')
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
         if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+            throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
         $attributes = $collection->getAttribute('attributes');
@@ -1185,13 +1185,13 @@ App::get('/v1/database/collections/:collectionId/attributes/:key')
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
         if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+            throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
         $attribute = $dbForProject->getDocument('attributes', $collectionId.'_'.$key);
 
         if ($attribute->isEmpty()) {
-            throw new Exception('Attribute not found', 404);
+            throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
         }
 
         // Select response model based on type and format
@@ -1247,13 +1247,13 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
         if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+            throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
         $attribute = $dbForProject->getDocument('attributes', $collectionId.'_'.$key);
 
         if ($attribute->isEmpty()) {
-            throw new Exception('Attribute not found', 404);
+            throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
         }
 
         // Only update status if removing available attribute
@@ -1335,7 +1335,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
         if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+            throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
         $count = $dbForProject->count('indexes', [
@@ -1345,7 +1345,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
         $limit = 64 - MariaDB::getNumberOfDefaultIndexes();
 
         if ($count >= $limit) {
-            throw new Exception('Index limit exceeded', 400);
+            throw new Exception('Index limit exceeded', 400, Exception::INDEX_LIMIT_EXCEEDED);
         }
 
         // Convert Document[] to array of attribute metadata
@@ -1359,7 +1359,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
             $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
 
             if ($attributeIndex === false) {
-                throw new Exception('Unknown attribute: ' . $attribute, 400);
+                throw new Exception('Unknown attribute: ' . $attribute, 400, Exception::ATTRIBUTE_UNKNOWN);
             }
 
             $attributeStatus = $oldAttributes[$attributeIndex]['status'];
@@ -1368,7 +1368,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
 
             // ensure attribute is available
             if ($attributeStatus !== 'available') {
-                throw new Exception ('Attribute not available: ' . $oldAttributes[$attributeIndex]['key'], 400);
+                throw new Exception ('Attribute not available: ' . $oldAttributes[$attributeIndex]['key'], 400, Exception::ATTRIBUTE_NOT_AVAILABLE);
             }
 
             // set attribute size as index length only for strings
@@ -1387,7 +1387,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
                 'orders' => $orders,
             ]));
         } catch (DuplicateException $th) {
-            throw new Exception('Index already exists', 409);
+            throw new Exception('Index already exists', 409, Exception::INDEX_ALREADY_EXISTS);
         }
 
         $dbForProject->deleteCachedDocument('collections', $collectionId);
@@ -1432,7 +1432,7 @@ App::get('/v1/database/collections/:collectionId/indexes')
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
         if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+            throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
         $indexes = $collection->getAttribute('indexes');
@@ -1468,7 +1468,7 @@ App::get('/v1/database/collections/:collectionId/indexes/:key')
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
         if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+            throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
         $indexes = $collection->getAttribute('indexes');
@@ -1477,7 +1477,7 @@ App::get('/v1/database/collections/:collectionId/indexes/:key')
         $indexIndex = array_search($key, array_column($indexes, 'key'));
 
         if ($indexIndex === false) {
-            throw new Exception('Index not found', 404);
+            throw new Exception('Index not found', 404, Exception::INDEX_NOT_FOUND);
         }
 
         $index = new Document([\array_merge($indexes[$indexIndex], [
@@ -1519,13 +1519,13 @@ App::delete('/v1/database/collections/:collectionId/indexes/:key')
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
         if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+            throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
         $index = $dbForProject->getDocument('indexes', $collectionId.'_'.$key);
 
         if (empty($index->getId())) {
-            throw new Exception('Index not found', 404);
+            throw new Exception('Index not found', 404, Exception::INDEX_NOT_FOUND);
         }
 
         // Only update status if removing available index
@@ -1592,11 +1592,11 @@ App::post('/v1/database/collections/:collectionId/documents')
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data)) {
-            throw new Exception('Missing payload', 400);
+            throw new Exception('Missing payload', 400, Exception::DOCUMENT_MISSING_PAYLOAD);
         }
 
         if (isset($data['$id'])) {
-            throw new Exception('$id is not allowed for creating new documents, try update instead', 400);
+            throw new Exception('$id is not allowed for creating new documents, try update instead', 400, Exception::DOCUMENT_INVALID_STRUCTURE);
         }
 
         /**
@@ -1608,7 +1608,7 @@ App::post('/v1/database/collections/:collectionId/documents')
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
             if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-                throw new Exception('Collection not found', 404);
+                throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
             }
         }
 
@@ -1616,7 +1616,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         if ($collection->getAttribute('permission') === 'collection') {
             $validator = new Authorization('write');
             if (!$validator->isValid($collection->getWrite())) {
-                throw new Exception('Unauthorized permissions', 401);
+                throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
             }
         }
 
@@ -1631,12 +1631,13 @@ App::post('/v1/database/collections/:collectionId/documents')
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach ($data['$read'] as $read) {
                 if (!Authorization::isRole($read)) {
-                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                    // TODO: Isn't this a 401: Unauthorized Error ? 
+                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::USER_UNAUTHORIZED);
                 }
             }
             foreach ($data['$write'] as $write) {
                 if (!Authorization::isRole($write)) {
-                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::USER_UNAUTHORIZED);
                 }
             }
         }
@@ -1651,10 +1652,10 @@ App::post('/v1/database/collections/:collectionId/documents')
             $document->setAttribute('$collection', $collectionId);
         }
         catch (StructureException $exception) {
-            throw new Exception($exception->getMessage(), 400);
+            throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
         }
         catch (DuplicateException $exception) {
-            throw new Exception('Document already exists', 409);
+            throw new Exception('Document already exists', 409, Exception::DOCUMENT_ALREADY_EXISTS);
         }
 
         $events->setParam('collection', $collection->getArrayCopy());
@@ -1712,7 +1713,7 @@ App::get('/v1/database/collections/:collectionId/documents')
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
             if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-                throw new Exception('Collection not found', 404);
+                throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
             }
         }
 
@@ -1720,7 +1721,7 @@ App::get('/v1/database/collections/:collectionId/documents')
         if ($collection->getAttribute('permission') === 'collection') {
             $validator = new Authorization('read');
             if (!$validator->isValid($collection->getRead())) {
-                throw new Exception('Unauthorized permissions', 401);
+                throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
             }
         }
 
@@ -1728,7 +1729,7 @@ App::get('/v1/database/collections/:collectionId/documents')
             $query = Query::parse($query);
 
             if (\count($query->getValues()) > 100) {
-                throw new Exception("You cannot use more than 100 query values on attribute '{$query->getAttribute()}'", 400);
+                throw new Exception("You cannot use more than 100 query values on attribute '{$query->getAttribute()}'", 400, Exception::GENERAL_QUERY_LIMIT_EXCEEDED);
             }
 
             return $query;
@@ -1737,7 +1738,7 @@ App::get('/v1/database/collections/:collectionId/documents')
         if (!empty($queries)) {
             $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []), true);
             if (!$validator->isValid($queries)) {
-                throw new Exception($validator->getDescription(), 400);
+                throw new Exception($validator->getDescription(), 400, Exception::GENERAL_QUERY_INVALID);
             }
         }
 
@@ -1748,7 +1749,7 @@ App::get('/v1/database/collections/:collectionId/documents')
                 : $dbForProject->getDocument('collection_' . $collection->getInternalId(), $cursor);
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400);
+                throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
 
@@ -1806,7 +1807,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
             if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-                throw new Exception('Collection not found', 404);
+                throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
             }
         }
 
@@ -1814,7 +1815,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
         if ($collection->getAttribute('permission') === 'collection') {
             $validator = new Authorization('read');
             if (!$validator->isValid($collection->getRead())) {
-                throw new Exception('Unauthorized permissions', 401);
+                throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
             }
         }
 
@@ -1831,7 +1832,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
         $document->setAttribute('$collection', $collectionId);
 
         if ($document->isEmpty()) {
-            throw new Exception('No document found', 404);
+            throw new Exception('No document found', 404, Exception::DOCUMENT_NOT_FOUND);
         }
 
         $usage
@@ -1871,13 +1872,13 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId/logs')
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
         if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
+            throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
         $document = $dbForProject->getDocument('collection_' . $collection->getInternalId(), $documentId);
 
         if ($document->isEmpty()) {
-            throw new Exception('No document found', 404);
+            throw new Exception('No document found', 404, Exception::DOCUMENT_NOT_FOUND);
         }
 
         $audit = new Audit($dbForProject);
@@ -1972,7 +1973,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
             if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-                throw new Exception('Collection not found', 404);
+                throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
             }
         }
 
@@ -1980,7 +1981,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         if ($collection->getAttribute('permission') === 'collection') {
             $validator = new Authorization('write');
             if (!$validator->isValid($collection->getWrite())) {
-                throw new Exception('Unauthorized permissions', 401);
+                throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
             }
 
             $document = Authorization::skip(fn() => $dbForProject->getDocument('collection_' . $collection->getInternalId(), $documentId));
@@ -1990,17 +1991,17 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
 
 
         if ($document->isEmpty()) {
-            throw new Exception('Document not found', 404);
+            throw new Exception('Document not found', 404, Exception::DOCUMENT_NOT_FOUND);
         }
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data)) {
-            throw new Exception('Missing payload', 400);
+            throw new Exception('Missing payload', 400, Exception::DOCUMENT_MISSING_PAYLOAD);
         }
  
         if (!\is_array($data)) {
-            throw new Exception('Data param should be a valid JSON object', 400);
+            throw new Exception('Data param should be a valid JSON object', 400, Exception::DOCUMENT_INVALID_STRUCTURE);
         }
 
         $data = \array_merge($document->getArrayCopy(), $data);
@@ -2017,14 +2018,14 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
             if(!is_null($read)) {
                 foreach ($data['$read'] as $read) {
                     if (!Authorization::isRole($read)) {
-                        throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400);
+                        throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::USER_UNAUTHORIZED);
                     }
                 }
             }
             if(!is_null($write)) {
                 foreach ($data['$write'] as $write) {
                     if (!Authorization::isRole($write)) {
-                        throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400);
+                        throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
                     }
                 }
             }
@@ -2043,13 +2044,13 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
             $document->setAttribute('$collection', $collectionId);
         }
         catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized permissions', 401);
+            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
         catch (DuplicateException $exception) {
-            throw new Exception('Document already exists', 409);
+            throw new Exception('Document already exists', 409, Exception::DOCUMENT_ALREADY_EXISTS);
         }
         catch (StructureException $exception) {
-            throw new Exception($exception->getMessage(), 400);
+            throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
         }
 
         $events->setParam('collection', $collection->getArrayCopy());
@@ -2104,7 +2105,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
             if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-                throw new Exception('Collection not found', 404);
+                throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
             }
         }
 
@@ -2112,7 +2113,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         if ($collection->getAttribute('permission') === 'collection') {
             $validator = new Authorization('write');
             if (!$validator->isValid($collection->getWrite())) {
-                throw new Exception('Unauthorized permissions', 401);
+                throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
             }
         }
 
@@ -2124,7 +2125,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         }
 
         if ($document->isEmpty()) {
-            throw new Exception('No document found', 404);
+            throw new Exception('No document found', 404, Exception::DOCUMENT_NOT_FOUND);
         }
 
         if ($collection->getAttribute('permission') === 'collection') {

@@ -44,16 +44,16 @@
         "utopia-php/analytics": "0.2.*",
         "utopia-php/audit": "0.8.*",
         "utopia-php/cache": "0.4.*",
-        "utopia-php/cli": "0.11.*",
+        "utopia-php/cli": "0.12.*",
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.15.*",
         "utopia-php/locale": "0.4.*",
-        "utopia-php/orchestration": "0.2.*",
+        "utopia-php/orchestration": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
         "utopia-php/swoole": "0.3.*",
-        "utopia-php/storage": "0.5.*",
+        "utopia-php/storage": "0.7.*",
         "utopia-php/websocket": "0.1.0",
         "utopia-php/image": "0.5.*",
 
@@ -66,8 +66,14 @@
         "adhocore/jwt": "1.1.2",
         "slickdeals/statsd": "3.1.0"
     },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/appwrite/sdk-generator"
+        }
+    ],
     "require-dev": {
-        "appwrite/sdk-generator": "0.17.2",
+        "appwrite/sdk-generator": "dev-feat-preps-for-0.13",
         "phpunit/phpunit": "9.5.10",
         "swoole/ide-helper": "4.8.3",
         "textalk/websocket": "1.5.5",

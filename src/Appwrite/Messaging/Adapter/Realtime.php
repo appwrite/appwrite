@@ -240,7 +240,7 @@ class Realtime extends Adapter
      * @param Document|null $project 
      * @return array 
      */
-    public static function fromPayload(string $event, Document $payload, Document $project = null, Document $collection = null): array
+    public static function fromPayload(string $event, Document $payload, Document $project = null, Document $collection = null, Document $bucket = null): array
     {
         $channels = [];
         $roles = [];
@@ -285,7 +285,7 @@ class Realtime extends Adapter
                 break;
             case strpos($event, 'database.documents.') === 0:
                 if ($collection->isEmpty()) {
-                    throw new \Exception('Collection need to be passed to to Realtime for Document events in the Database.');
+                    throw new \Exception('Collection needs to be passed to Realtime for Document events in the Database.');
                 }
 
                 $channels[] = 'documents';
@@ -295,9 +295,13 @@ class Realtime extends Adapter
                 $roles = ($collection->getAttribute('permission') === 'collection') ? $collection->getRead() : $payload->getRead();
 
                 break;
-            case strpos($event, 'storage.') === 0:
+            case strpos($event, 'storage.files') === 0:
+                if($bucket->isEmpty()) {
+                    throw new \Exception('Bucket needs to be pased to Realtime for File events in the Storage.');
+                }
                 $channels[] = 'files';
-                $channels[] = 'files.' . $payload->getId();
+                $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files';
+                $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files.' . $payload->getId();
                 $roles = $payload->getRead();
 
                 break;

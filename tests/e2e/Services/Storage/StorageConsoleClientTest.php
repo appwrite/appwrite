@@ -38,19 +38,31 @@ class StorageConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(count($response['body']), 3);
+        $this->assertEquals(count($response['body']), 13);
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['storage']);
-        $this->assertIsArray($response['body']['files']);
+        $this->assertIsArray($response['body']['filesStorage']);
+        $this->assertIsArray($response['body']['filesCount']);
     }
 
     public function testGetStorageBucketUsage()
     {
+        //create bucket
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => 'unique()',
+            'name' => 'Test Bucket',
+            'permission' => 'file'
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
         /**
          * Test for FAILURE
          */
 
-        $response = $this->client->call(Client::METHOD_GET, '/storage/default/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/storage/' . $bucketId . '/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -61,19 +73,19 @@ class StorageConsoleClientTest extends Scope
 
         // TODO: Uncomment once we implement check for missing bucketId in the usage endpoint.
 
-        // $response = $this->client->call(Client::METHOD_GET, '/storage/randomBucketId/usage', array_merge([
-        //     'content-type' => 'application/json',
-        //     'x-appwrite-project' => $this->getProject()['$id']
-        // ], $this->getHeaders()), [
-        //     'range' => '24h'
-        // ]);
+        $response = $this->client->call(Client::METHOD_GET, '/storage/randomBucketId/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '24h'
+        ]);
 
-        // $this->assertEquals($response['headers']['status-code'], 404);
+        $this->assertEquals($response['headers']['status-code'], 404);
 
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/storage/default/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/storage/' . $bucketId .  '/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -81,12 +93,13 @@ class StorageConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(count($response['body']), 6);
+        $this->assertEquals(count($response['body']), 7);
         $this->assertEquals($response['body']['range'], '24h');
         $this->assertIsArray($response['body']['filesCount']);
         $this->assertIsArray($response['body']['filesCreate']);
         $this->assertIsArray($response['body']['filesRead']);
         $this->assertIsArray($response['body']['filesUpdate']);
         $this->assertIsArray($response['body']['filesDelete']);
+        $this->assertIsArray($response['body']['filesStorage']);
     }
 }

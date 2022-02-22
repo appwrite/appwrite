@@ -7,7 +7,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Database;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Exception;
+use Exception;
 
 abstract class Migration
 {
