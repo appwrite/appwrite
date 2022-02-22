@@ -437,7 +437,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_S3_SECRET',
+                'name' => '_APP_STORAGE_S3_SECRET',
                 'description' => 'AWS S3 storage secret key. Required when the storage adapter is set to S3. You can get your secret key from your AWS console.',
                 'introduction' => '0.13.0',
                 'default' => '',
