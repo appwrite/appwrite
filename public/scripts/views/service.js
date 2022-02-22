@@ -40,8 +40,7 @@
 
         redirect: function(url) {
           return function(router) {
-            //router.change(url || "/");
-            window.location = url || "/";
+            router.change(url || "/");
           };
         },
 
