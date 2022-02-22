@@ -469,7 +469,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_DO_SPACES_SECRET',
+                'name' => '_APP_STORAGE_DO_SPACES_SECRET',
                 'description' => 'DigitalOcean spaces secret key. Required when the storage adapter is set to DOSpaces. You can get your secret key from your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
