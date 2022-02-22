@@ -477,7 +477,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_DO_SPACES_REGION',
+                'name' => '_APP_STORAGE_DO_SPACES_REGION',
                 'description' => 'DigitalOcean spaces region. Required when storage adapter is set to DOSpaces. You can find your region info for your space from DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => 'us-eas-1',
