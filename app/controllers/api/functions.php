@@ -617,7 +617,7 @@ App::post('/v1/functions/:functionId/deployments')
                     'dateCreated' => time(),
                     'entrypoint' => $entrypoint,
                     'path' => $path,
-                    'size' => 0,
+                    'size' => $fileSize,
                     'chunksTotal' => $chunks,
                     'chunksUploaded' => $chunksUploaded,
                     'search' => implode(' ', [$deploymentId, $entrypoint]),
