@@ -541,10 +541,30 @@ class DeletesV1 extends Worker
 
     protected function deleteBucket(Document $document, string $projectId)
     {
-        $bucketId = $document->getId();
         $dbForProject = $this->getProjectDB($projectId);
-        $dbForProject->deleteCollection('bucket_' . $bucketId);
-        $device = $this->getFilesDevice($projectId);
-        $device->deletePath($bucketId);
+        $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
+
+        $device = new Local(APP_STORAGE_UPLOADS.'/app-'.$projectId);
+        
+        switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
+            case Storage::DEVICE_S3:
+                $s3AccessKey = App::getEnv('_APP_STORAGE_DEVICE_S3_ACCESS_KEY', '');
+                $s3SecretKey = App::getEnv('_APP_STORAGE_DEVICE_S3_SECRET', '');
+                $s3Region = App::getEnv('_APP_STORAGE_DEVICE_S3_REGION', '');
+                $s3Bucket = App::getEnv('_APP_STORAGE_DEVICE_S3_BUCKET', '');
+                $s3Acl = 'private';
+                $device = new S3(APP_STORAGE_UPLOADS . '/app-' . $projectId, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
+                break;
+            case Storage::DEVICE_DO_SPACES:
+                $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_ACCESS_KEY', '');
+                $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_SECRET', '');
+                $doSpacesRegion = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_REGION', '');
+                $doSpacesBucket = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_BUCKET', '');
+                $doSpacesAcl = 'private';
+                $device = new DOSpaces(APP_STORAGE_UPLOADS . '/app-' . $projectId, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+                break;
+        }
+        
+        $device->deletePath($document->getId());
     }
 }

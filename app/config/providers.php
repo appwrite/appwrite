@@ -84,7 +84,7 @@ return [ // Ordered by ABC.
     'github' => [
         'name' => 'GitHub',
         'developers' => 'https://developer.github.com/',
-        'icon' => 'icon-github-circled',
+        'icon' => 'icon-github',
         'enabled' => true,
         'sandbox' => false,
         'form' => false,
