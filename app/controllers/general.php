@@ -543,8 +543,8 @@ App::get('/.well-known/acme-challenge')
         $filePath = '/.well-known/acme-challenge' . $token;
 
         $base = \realpath(APP_STORAGE_CERTIFICATES);
-        $path = \str_replace('/.well-known/acme-challenge/', '', $request->getURI());
-        $absolute = \realpath($base.'/.well-known/acme-challenge/'.$filePath);
+        $path = \str_replace('/.well-known/acme-challenge/', '', $filePath);
+        $absolute = \realpath($base.'/.well-known/acme-challenge/'.$path);
 
         if (!$base) {
             throw new Exception('Storage error', 500);
