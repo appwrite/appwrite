@@ -13,7 +13,6 @@ use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Storage;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Audit\Audit;
 
