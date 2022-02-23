@@ -529,11 +529,8 @@ App::get('/.well-known/acme-challenge')
             throw new Exception('Invalid challenge token.', 400);
         }
 
-        $filePath = '/.well-known/acme-challenge' . $token;
-
         $base = \realpath(APP_STORAGE_CERTIFICATES);
-        $path = \str_replace('/.well-known/acme-challenge/', '', $filePath);
-        $absolute = \realpath($base.'/.well-known/acme-challenge/'.$path);
+        $absolute = \realpath($base.'/.well-known/acme-challenge/'.$token);
 
         if (!$base) {
             throw new Exception('Storage error', 500);
