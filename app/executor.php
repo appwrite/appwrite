@@ -15,7 +15,10 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Orchestration\Adapter\DockerCLI;
 use Utopia\Orchestration\Orchestration;
+use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Device\S3;
 use Utopia\Storage\Storage;
 use Utopia\Swoole\Request;
 use Utopia\Swoole\Response;
@@ -108,6 +111,27 @@ function logError(Throwable $error, string $action, Utopia\Route $route = null)
     Console::error('[Error] Line: ' . $error->getLine());
 };
 
+function getStorageDevice($root): Device {
+    switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
+        case Storage::DEVICE_LOCAL:default:
+            return new Local($root);
+        case Storage::DEVICE_S3:
+            $s3AccessKey = App::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
+            $s3SecretKey = App::getEnv('_APP_STORAGE_S3_SECRET', '');
+            $s3Region = App::getEnv('_APP_STORAGE_S3_REGION', '');
+            $s3Bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
+            $s3Acl = 'private';
+            return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
+        case Storage::DEVICE_DO_SPACES:
+            $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
+            $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
+            $doSpacesRegion = App::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
+            $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
+            $doSpacesAcl = 'private';
+            return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+    }
+}
+
 App::post('/v1/runtimes')
     ->desc("Create a new runtime server")
     ->param('runtimeId', '', new Text(64), 'Unique runtime ID.')
@@ -148,9 +172,10 @@ App::post('/v1/runtimes')
             /**
              * Copy code files from source to a temporary location on the executor
              */
-            $device = new Local();
-            $buffer = $device->read($source);
-            if(!$device->write($tmpSource, $buffer)) {
+            $sourceDevice = getStorageDevice("/");
+            $localDevice = new Local();
+            $buffer = $sourceDevice->read($source);
+            if(!$localDevice->write($tmpSource, $buffer)) {
                 throw new Exception('Failed to copy source code to temporary directory', 500);
             };
 
@@ -238,11 +263,11 @@ App::post('/v1/runtimes')
                     throw new Exception('Something went wrong during the build process', 500);
                 }
 
-                $device = new Local($destination);
-                $outputPath = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+                $destinationDevice =  getStorageDevice($destination);
+                $outputPath = $destinationDevice->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
 
-                $buffer = $device->read($tmpBuild);
-                if(!$device->write($outputPath, $buffer)) {
+                $buffer = $localDevice->read($tmpBuild);
+                if(!$destinationDevice->write($outputPath, $buffer, $localDevice->getFileMimeType($tmpBuild))) {
                     throw new Exception('Failed to move built code to storage', 500);
                 };
 

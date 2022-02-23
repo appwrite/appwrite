@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Extend\Exception;
 use Appwrite\Utopia\View;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -315,6 +316,36 @@ App::get('/console/storage')
             ->setParam('body', $page);
     });
 
+App::get('/console/storage/bucket')
+    ->groups(['web', 'console'])
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->param('id', '', new UID(), 'Bucket unique ID.')
+    ->inject('response')
+    ->inject('layout')
+    ->action(function ($id, $response, $layout) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\View $layout */
+
+        $page = new View(__DIR__.'/../../views/console/storage/bucket.phtml');
+        $page
+            ->setParam('home', App::getEnv('_APP_HOME', 0))
+            ->setParam('fileLimit', App::getEnv('_APP_STORAGE_LIMIT', 0))
+            ->setParam('fileLimitHuman', Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0)))
+        ;
+        
+        $layout
+            ->setParam('title', APP_NAME.' - Storage Buckets')
+            ->setParam('body', $page)
+        ;
+
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Expires', 0)
+            ->addHeader('Pragma', 'no-cache')
+        ;
+    });
+
 App::get('/console/users')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
@@ -419,9 +450,9 @@ App::get('/console/version')
             if ($version && isset($version['version'])) {
                 return $response->json(['version' => $version['version']]);
             } else {
-                throw new Exception('Failed to check for a newer version', 500);
+                throw new Exception('Failed to check for a newer version', 500, Exception::GENERAL_SERVER_ERROR);
             }
         } catch (\Throwable $th) {
-            throw new Exception('Failed to check for a newer version', 500);
+            throw new Exception('Failed to check for a newer version', 500, Exception::GENERAL_SERVER_ERROR);
         }
     });

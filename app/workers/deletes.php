@@ -1,5 +1,6 @@
 <?php
 
+use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -7,9 +8,11 @@ use Utopia\Database\Validator\Authorization;
 use Appwrite\Resque\Worker;
 use Executor\Executor;
 use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\S3;
+use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Storage;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Audit\Audit;
 
@@ -62,6 +65,9 @@ class DeletesV1 extends Worker
                         break;
                     case DELETE_TYPE_TEAMS:
                         $this->deleteMemberships($document, $projectId);
+                        break;
+                    case DELETE_TYPE_BUCKETS:
+                        $this->deleteBucket($document, $projectId);
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
@@ -531,5 +537,14 @@ class DeletesV1 extends Worker
         } else {
             Console::info("No certificate files found for {$domain}");
         }
+    }
+
+    protected function deleteBucket(Document $document, string $projectId)
+    {
+        $bucketId = $document->getId();
+        $dbForProject = $this->getProjectDB($projectId);
+        $dbForProject->deleteCollection('bucket_' . $bucketId);
+        $device = $this->getFilesDevice($projectId);
+        $device->deletePath($bucketId);
     }
 }

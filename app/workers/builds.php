@@ -39,7 +39,7 @@ class BuildsV1 extends Worker
     {
         $type = $this->args['type'] ?? '';
         $projectId = $this->args['projectId'] ?? '';
-        $functionId = $this->args['functionId'] ?? '';
+        $functionId = $this->args['resourceId'] ?? '';
         $deploymentId = $this->args['deploymentId'] ?? '';
         
         switch ($type) {
@@ -91,7 +91,7 @@ class BuildsV1 extends Worker
                 'outputPath' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path'),
-                'sourceType' => Storage::DEVICE_LOCAL,
+                'sourceType' => App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL),
                 'stdout' => '',
                 'stderr' => '',
                 'endTime' => 0,
