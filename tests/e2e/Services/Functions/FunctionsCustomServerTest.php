@@ -300,15 +300,26 @@ class FunctionsCustomServerTest extends Scope
         // Wait for deployment to build.
         sleep(15);
 
+        return array_merge($data, ['deploymentId' => $deploymentId]);
+    }
+
+    /**
+     * @depends testUpdate
+     */
+    public function testCreateDeploymentLarge($data): array {
         /**
          * Test for Large Code File SUCCESS
          */
-        $source = realpath(__DIR__ . '/../../../resources/functions/php-large.tar.gz');
+
+        $folder = 'php-large';
+        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        $this->packageCode($folder);
+
         $chunkSize = 5*1024*1024;
-        $handle = @fopen($source, "rb");
+        $handle = @fopen($code, "rb");
         $mimeType = 'application/x-gzip';
         $counter = 0;
-        $size = filesize($source);
+        $size = filesize($code);
         $headers = [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id']
@@ -334,12 +345,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsInt($largeTag['body']['dateCreated']);
         $this->assertEquals('index.php', $largeTag['body']['entrypoint']);
         $this->assertGreaterThan(10000, $largeTag['body']['size']);
-       
-        /**
-         * Test for FAILURE
-         */
-
-        return array_merge($data, ['deploymentId' => $deploymentId]);
+        
+        return $data;
     }
 
     /**
