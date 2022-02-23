@@ -412,8 +412,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $file = $request->getFiles('file');
 
         /**
-     * Validators
-     */
+         * Validators
+         */
         $allowedFileExtensions = $bucket->getAttribute('allowedFileExtensions', []);
         $fileExt = new FileExt($allowedFileExtensions);
 
