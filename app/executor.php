@@ -142,17 +142,20 @@ App::post('/v1/runtimes')
             /** 
              * Temporary file paths in the executor 
              */
-            $tmpSource = "/tmp/$runtimeId/code.tar.gz";
+            
+            $tmpSource = "/tmp/$runtimeId/src/code.tar.gz";
             $tmpBuild = "/tmp/$runtimeId/builds/code.tar.gz";
 
             /**
              * Copy code files from source to a temporary location on the executor
              */
             $device = new Local();
+            // $source = /storage/functions/app-<projectID>/code.tar.gz
             $buffer = $device->read($source);
             if(!$device->write($tmpSource, $buffer)) {
                 throw new Exception('Failed to copy source code to temporary directory', 500);
             };
+            // $destination = /storage/builds/app-<projectID>/code.tar.gz
 
             /**
              * Create the mount folder
@@ -200,7 +203,7 @@ App::post('/v1/runtimes')
                 workdir: $workdir,
                 volumes: [
                     \dirname($tmpSource). ':/tmp:rw',
-                    \dirname($tmpBuild). ":/usr/code:rw"
+                    \dirname($tmpBuild). ':/usr/code:rw'
                 ]
             );
 
