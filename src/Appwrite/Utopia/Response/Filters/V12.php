@@ -27,6 +27,12 @@ class V12 extends Filter
             case Response::MODEL_FUNCTION:
                 $parsedResponse = $this->parseFunction($content);
 
+            case Response::MODEL_USAGE_BUCKETS:
+                $parsedResponse = $this->parseUsageBuckets($content);
+
+            case Response::MODEL_USAGE_STORAGE:
+                $parsedResponse = $this->parseUsageStorage($content);
+
         }
 
         return $parsedResponse;
@@ -61,8 +67,35 @@ class V12 extends Filter
 
     protected function parseFunction(array $content)
     {
-        $content['required'] = implode(' ', $content['required']);
+        $content['execute'] = implode(' ', $content['execute']);
 
         return $content;
+    }
+
+    protected function parseUsageBuckets(array $content)
+    {
+        unset($content['filesStorage']);
+    }
+
+    protected function parseUsageStorage(array $content)
+    {
+        $content['storage'] = $content['filesStorage'];
+        unset($content['filesStorage']);
+
+        $content['files'] = $content['tagsStorage'];
+        unset($content['tagsStorage']);
+
+        unset($content['filesCount']);
+        unset($content['bucketsCount']);
+        unset($content['bucketsCreate']);
+        unset($content['bucketsRead']);
+        unset($content['bucketsUpdate']);
+        unset($content['bucketsDelete']);
+        unset($content['filesCount']);
+        unset($content['bucketsDelete']);
+        unset($content['filesCreate']);
+        unset($content['filesRead']);
+        unset($content['filesUpdate']);
+        unset($content['filesDelete']);
     }
 }
