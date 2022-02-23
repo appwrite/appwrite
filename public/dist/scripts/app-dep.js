@@ -445,29 +445,68 @@ if(typeof httpUser!=='undefined'){payload['httpUser']=httpUser;}
 if(typeof httpPass!=='undefined'){payload['httpPass']=httpPass;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('put',uri,{'content-type':'application/json',},payload);}),deleteWebhook:(projectId,webhookId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof webhookId==='undefined'){throw new AppwriteException('Missing required parameter: "webhookId"');}
-let path='/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}',projectId).replace('{webhookId}',webhookId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);})};this.storage={listFiles:(search,limit,offset,cursor,cursorDirection,orderType)=>__awaiter(this,void 0,void 0,function*(){let path='/storage/files';let payload={};if(typeof search!=='undefined'){payload['search']=search;}
+let path='/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}',projectId).replace('{webhookId}',webhookId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);})};this.storage={listBuckets:(search,limit,offset,cursor,cursorDirection,orderType)=>__awaiter(this,void 0,void 0,function*(){let path='/storage/buckets';let payload={};if(typeof search!=='undefined'){payload['search']=search;}
 if(typeof limit!=='undefined'){payload['limit']=limit;}
 if(typeof offset!=='undefined'){payload['offset']=offset;}
 if(typeof cursor!=='undefined'){payload['cursor']=cursor;}
 if(typeof cursorDirection!=='undefined'){payload['cursorDirection']=cursorDirection;}
 if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createFile:(fileId,file,read,write)=>__awaiter(this,void 0,void 0,function*(){if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
+const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createBucket:(bucketId,name,permission,read,write,maximumFileSize,allowedFileExtensions,enabled,adapter,encryption,antivirus)=>__awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
+if(typeof permission==='undefined'){throw new AppwriteException('Missing required parameter: "permission"');}
+let path='/storage/buckets';let payload={};if(typeof bucketId!=='undefined'){payload['bucketId']=bucketId;}
+if(typeof name!=='undefined'){payload['name']=name;}
+if(typeof permission!=='undefined'){payload['permission']=permission;}
+if(typeof read!=='undefined'){payload['read']=read;}
+if(typeof write!=='undefined'){payload['write']=write;}
+if(typeof maximumFileSize!=='undefined'){payload['maximumFileSize']=maximumFileSize;}
+if(typeof allowedFileExtensions!=='undefined'){payload['allowedFileExtensions']=allowedFileExtensions;}
+if(typeof enabled!=='undefined'){payload['enabled']=enabled;}
+if(typeof adapter!=='undefined'){payload['adapter']=adapter;}
+if(typeof encryption!=='undefined'){payload['encryption']=encryption;}
+if(typeof antivirus!=='undefined'){payload['antivirus']=antivirus;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getBucket:(bucketId)=>__awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+let path='/storage/buckets/{bucketId}'.replace('{bucketId}',bucketId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateBucket:(bucketId,name,permission,read,write,maximumFileSize,allowedFileExtensions,enabled,encryption,antivirus)=>__awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
+if(typeof permission==='undefined'){throw new AppwriteException('Missing required parameter: "permission"');}
+let path='/storage/buckets/{bucketId}'.replace('{bucketId}',bucketId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
+if(typeof permission!=='undefined'){payload['permission']=permission;}
+if(typeof read!=='undefined'){payload['read']=read;}
+if(typeof write!=='undefined'){payload['write']=write;}
+if(typeof maximumFileSize!=='undefined'){payload['maximumFileSize']=maximumFileSize;}
+if(typeof allowedFileExtensions!=='undefined'){payload['allowedFileExtensions']=allowedFileExtensions;}
+if(typeof enabled!=='undefined'){payload['enabled']=enabled;}
+if(typeof encryption!=='undefined'){payload['encryption']=encryption;}
+if(typeof antivirus!=='undefined'){payload['antivirus']=antivirus;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('put',uri,{'content-type':'application/json',},payload);}),deleteBucket:(bucketId)=>__awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+let path='/storage/buckets/{bucketId}'.replace('{bucketId}',bucketId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),listFiles:(bucketId,search,limit,offset,cursor,cursorDirection,orderType)=>__awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+let path='/storage/buckets/{bucketId}/files'.replace('{bucketId}',bucketId);let payload={};if(typeof search!=='undefined'){payload['search']=search;}
+if(typeof limit!=='undefined'){payload['limit']=limit;}
+if(typeof offset!=='undefined'){payload['offset']=offset;}
+if(typeof cursor!=='undefined'){payload['cursor']=cursor;}
+if(typeof cursorDirection!=='undefined'){payload['cursorDirection']=cursorDirection;}
+if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createFile:(bucketId,fileId,file,read,write)=>__awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
 if(typeof file==='undefined'){throw new AppwriteException('Missing required parameter: "file"');}
-let path='/storage/files';let payload={};if(typeof fileId!=='undefined'){payload['fileId']=fileId;}
+let path='/storage/buckets/{bucketId}/files'.replace('{bucketId}',bucketId);let payload={};if(typeof fileId!=='undefined'){payload['fileId']=fileId;}
 if(typeof file!=='undefined'){payload['file']=file;}
 if(typeof read!=='undefined'){payload['read']=read;}
 if(typeof write!=='undefined'){payload['write']=write;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'multipart/form-data',},payload);}),getFile:(fileId)=>__awaiter(this,void 0,void 0,function*(){if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
-let path='/storage/files/{fileId}'.replace('{fileId}',fileId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateFile:(fileId,read,write)=>__awaiter(this,void 0,void 0,function*(){if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
-if(typeof read==='undefined'){throw new AppwriteException('Missing required parameter: "read"');}
-if(typeof write==='undefined'){throw new AppwriteException('Missing required parameter: "write"');}
-let path='/storage/files/{fileId}'.replace('{fileId}',fileId);let payload={};if(typeof read!=='undefined'){payload['read']=read;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'multipart/form-data',},payload);}),getFile:(bucketId,fileId)=>__awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
+let path='/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}',bucketId).replace('{fileId}',fileId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateFile:(bucketId,fileId,read,write)=>__awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
+let path='/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}',bucketId).replace('{fileId}',fileId);let payload={};if(typeof read!=='undefined'){payload['read']=read;}
 if(typeof write!=='undefined'){payload['write']=write;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('put',uri,{'content-type':'application/json',},payload);}),deleteFile:(fileId)=>__awaiter(this,void 0,void 0,function*(){if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
-let path='/storage/files/{fileId}'.replace('{fileId}',fileId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),getFileDownload:(fileId)=>{if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
-let path='/storage/files/{fileId}/download'.replace('{fileId}',fileId);let payload={};const uri=new URL(this.config.endpoint+path);payload['project']=this.config.project;for(const[key,value]of Object.entries(this.flatten(payload))){uri.searchParams.append(key,value);}
-return uri;},getFilePreview:(fileId,width,height,gravity,quality,borderWidth,borderColor,borderRadius,opacity,rotation,background,output)=>{if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
-let path='/storage/files/{fileId}/preview'.replace('{fileId}',fileId);let payload={};if(typeof width!=='undefined'){payload['width']=width;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('put',uri,{'content-type':'application/json',},payload);}),deleteFile:(bucketId,fileId)=>__awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
+let path='/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}',bucketId).replace('{fileId}',fileId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),getFileDownload:(bucketId,fileId)=>{if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
+let path='/storage/buckets/{bucketId}/files/{fileId}/download'.replace('{bucketId}',bucketId).replace('{fileId}',fileId);let payload={};const uri=new URL(this.config.endpoint+path);payload['project']=this.config.project;for(const[key,value]of Object.entries(this.flatten(payload))){uri.searchParams.append(key,value);}
+return uri;},getFilePreview:(bucketId,fileId,width,height,gravity,quality,borderWidth,borderColor,borderRadius,opacity,rotation,background,output)=>__awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
+let path='/storage/buckets/{bucketId}/files/{fileId}/preview'.replace('{bucketId}',bucketId).replace('{fileId}',fileId);let payload={};if(typeof width!=='undefined'){payload['width']=width;}
 if(typeof height!=='undefined'){payload['height']=height;}
 if(typeof gravity!=='undefined'){payload['gravity']=gravity;}
 if(typeof quality!=='undefined'){payload['quality']=quality;}
@@ -478,9 +517,9 @@ if(typeof opacity!=='undefined'){payload['opacity']=opacity;}
 if(typeof rotation!=='undefined'){payload['rotation']=rotation;}
 if(typeof background!=='undefined'){payload['background']=background;}
 if(typeof output!=='undefined'){payload['output']=output;}
-const uri=new URL(this.config.endpoint+path);payload['project']=this.config.project;for(const[key,value]of Object.entries(this.flatten(payload))){uri.searchParams.append(key,value);}
-return uri;},getFileView:(fileId)=>{if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
-let path='/storage/files/{fileId}/view'.replace('{fileId}',fileId);let payload={};const uri=new URL(this.config.endpoint+path);payload['project']=this.config.project;for(const[key,value]of Object.entries(this.flatten(payload))){uri.searchParams.append(key,value);}
+const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getFileView:(bucketId,fileId)=>{if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
+let path='/storage/buckets/{bucketId}/files/{fileId}/view'.replace('{bucketId}',bucketId).replace('{fileId}',fileId);let payload={};const uri=new URL(this.config.endpoint+path);payload['project']=this.config.project;for(const[key,value]of Object.entries(this.flatten(payload))){uri.searchParams.append(key,value);}
 return uri;},getUsage:(range)=>__awaiter(this,void 0,void 0,function*(){let path='/storage/usage';let payload={};if(typeof range!=='undefined'){payload['range']=range;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getBucketUsage:(bucketId,range)=>__awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
 let path='/storage/{bucketId}/usage'.replace('{bucketId}',bucketId);let payload={};if(typeof range!=='undefined'){payload['range']=range;}
