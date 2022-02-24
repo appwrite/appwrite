@@ -156,7 +156,6 @@ class Response extends SwooleResponse
     const MODEL_DEPLOYMENT = 'deployment';
     const MODEL_DEPLOYMENT_LIST = 'deploymentList';
     const MODEL_EXECUTION = 'execution';
-    const MODEL_SYNC_EXECUTION = 'syncExecution';
     const MODEL_EXECUTION_LIST = 'executionList';
     const MODEL_BUILD = 'build';
     const MODEL_BUILD_LIST = 'buildList';
