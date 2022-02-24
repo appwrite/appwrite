@@ -942,7 +942,6 @@ App::post('/v1/functions/:functionId/executions')
         try {
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
-                functionId: $function->getId(),
                 deploymentId: $deployment->getId(),
                 path: $build->getAttribute('outputPath', ''),
                 vars: $vars,
@@ -967,11 +966,10 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         Authorization::skip(fn() => $dbForProject->updateDocument('executions', $executionId, $execution));
-        $executionResponse['response'] = ($executionResponse['status'] !== 'completed') ? $executionResponse['stderr'] : $executionResponse['stdout'];
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic(new Document($executionResponse), Response::MODEL_SYNC_EXECUTION);
+            ->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
 App::get('/v1/functions/:functionId/executions')
