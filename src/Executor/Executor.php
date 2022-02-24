@@ -36,7 +36,6 @@ class Executor
      * 
      * Launches a runtime container for a deployment ready for execution
      * 
-     * @param string $functionId
      * @param string $deploymentId
      * @param string $projectId
      * @param string $source
@@ -126,7 +125,6 @@ class Executor
      * Create an execution
      * 
      * @param string $projectId
-     * @param string $functionId
      * @param string $deploymentId
      * @param string $path
      * @param array $vars

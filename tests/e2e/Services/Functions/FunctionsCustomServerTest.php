@@ -594,12 +594,12 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals('completed', $execution['body']['status']);
-        $this->assertStringContainsString($data['deploymentId'], $execution['body']['response']);
-        $this->assertStringContainsString('Test1', $execution['body']['response']);
-        $this->assertStringContainsString('http', $execution['body']['response']);
-        $this->assertStringContainsString('PHP', $execution['body']['response']);
-        $this->assertStringContainsString('8.0', $execution['body']['response']);
-        // $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
+        $this->assertStringContainsString($data['deploymentId'], $execution['body']['stdout']);
+        $this->assertStringContainsString('Test1', $execution['body']['stdout']);
+        $this->assertStringContainsString('http', $execution['body']['stdout']);
+        $this->assertStringContainsString('PHP', $execution['body']['stdout']);
+        $this->assertStringContainsString('8.0', $execution['body']['stdout']);
+        // $this->assertStringContainsString('êä', $execution['body']['sdtout']); // tests unknown utf-8 chars
         $this->assertLessThan(0.500, $execution['body']['time']);
 
         return $data;
