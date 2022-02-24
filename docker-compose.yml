@@ -399,11 +399,7 @@ services:
 
   appwrite-executor:
     container_name: appwrite-executor
-    entrypoint:
-      - php
-      - -e
-      - /usr/src/code/app/executor.php
-      - -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
+    entrypoint: executor
     stop_signal: SIGINT
     build:
       context: .
