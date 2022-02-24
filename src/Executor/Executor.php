@@ -129,7 +129,7 @@ class Executor
         $status = $response['headers']['status-code'];
 
         if ($status >= 400) {
-            for ($attempts = 0; $attempts < 5; $attempts++) {
+            for ($attempts = 0; $attempts < 10; $attempts++) {
                 switch ($status) {
                     case 404:
                         $response = $this->createRuntime(
