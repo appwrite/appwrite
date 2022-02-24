@@ -32,7 +32,6 @@ class Executor
     }
 
     public function createRuntime(
-        string $functionId, 
         string $deploymentId, 
         string $projectId, 
         string $source,
@@ -75,7 +74,7 @@ class Executor
         return $response['body'];
     }
 
-    public function deleteRuntime(string $projectId, string $functionId, string $deploymentId)
+    public function deleteRuntime(string $projectId, string $deploymentId)
     {
         $runtimeId = "$projectId-$deploymentId";
         $route = "/runtimes/$runtimeId";
@@ -98,7 +97,6 @@ class Executor
 
     public function createExecution(
         string $projectId,
-        string $functionId,
         string $deploymentId,
         string $path,
         array $vars,
@@ -116,13 +114,9 @@ class Executor
         ];
         $params = [
             'runtimeId' => "$projectId-$deploymentId",
-            'path' => $path,
             'vars' => $vars, 
             'data' => $data,
-            'runtime' => $runtime,
-            'entrypoint' => $entrypoint,
             'timeout' => $timeout,
-            'baseImage' => $baseImage,
         ];
 
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
@@ -133,7 +127,6 @@ class Executor
                 switch ($status) {
                     case 404:
                         $response = $this->createRuntime(
-                            functionId: $functionId,
                             deploymentId: $deploymentId,
                             projectId: $projectId,
                             source: $path,

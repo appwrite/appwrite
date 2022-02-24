@@ -114,7 +114,6 @@ class BuildsV1 extends Worker
         try {
             $response = $this->executor->createRuntime(
                 projectId: $projectId, 
-                functionId: $functionId, 
                 deploymentId: $deploymentId, 
                 entrypoint: $deployment->getAttribute('entrypoint'),
                 source: $source,
