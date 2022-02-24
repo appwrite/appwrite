@@ -377,7 +377,6 @@ $cli
                 $loopTook = microtime(true) - $loopStart;
                 $now = date('d-m-Y H:i:s', time());
                 Console::info("[{$now}] Aggregation took {$loopTook} seconds");
-                Console::warning($e->getTraceAsString());
                 return;
             }
 
