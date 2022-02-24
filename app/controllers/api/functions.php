@@ -562,15 +562,15 @@ App::post('/v1/functions/:functionId/deployments')
 
         if ($activate) {
             // Remove deploy for all other deployments.
-            $deployments = $dbForProject->find('deployments', [
+            $activeDeployments = $dbForProject->find('deployments', [
                 new Query('activate', Query::TYPE_EQUAL, [true]),
                 new Query('resourceId', Query::TYPE_EQUAL, [$functionId]),
                 new Query('resourceType', Query::TYPE_EQUAL, ['functions'])
             ]);
 
-            foreach ($deployments as $deployment) {
-                $deployment->setAttribute('activate', false);
-                $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+            foreach ($activeDeployments as $activeDeployment) {
+                $activeDeployment->setAttribute('activate', false);
+                $dbForProject->updateDocument('deployments', $activeDeployment->getId(), $activeDeployment);
             }
         }
         
