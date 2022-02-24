@@ -942,7 +942,6 @@ App::post('/v1/functions/:functionId/executions')
         try {
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
-                functionId: $function->getId(),
                 deploymentId: $deployment->getId(),
                 path: $build->getAttribute('outputPath', ''),
                 vars: $vars,

@@ -290,7 +290,6 @@ class FunctionsV1 extends Worker
         try {
             $executionResponse = $this->executor->createExecution(
                 projectId: $projectId,
-                functionId: $functionId,
                 deploymentId: $deploymentId,
                 path: $build->getAttribute('outputPath', ''),
                 vars: $vars,

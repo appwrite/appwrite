@@ -31,8 +31,25 @@ class Executor
         $this->endpoint = $endpoint;
     }
 
+    /**
+     * Create runtime
+     * 
+     * Launches a runtime container for a deployment ready for execution
+     * 
+     * @param string $deploymentId
+     * @param string $projectId
+     * @param string $source
+     * @param string $runtime
+     * @param string $baseImage
+     * @param bool $remove
+     * @param string $entrypoint
+     * @param string $workdir
+     * @param string $destinaction
+     * @param string $network
+     * @param array $vars
+     * @param array $commands
+     */
     public function createRuntime(
-        string $functionId, 
         string $deploymentId, 
         string $projectId, 
         string $source,
@@ -75,7 +92,15 @@ class Executor
         return $response['body'];
     }
 
-    public function deleteRuntime(string $projectId, string $functionId, string $deploymentId)
+    /**
+     * Delete Runtime
+     * 
+     * Deletes a runtime and cleans up any containers remaining.
+     * 
+     * @param string $projectId
+     * @param string $deploymentId
+     */
+    public function deleteRuntime(string $projectId, string $deploymentId)
     {
         $runtimeId = "$projectId-$deploymentId";
         $route = "/runtimes/$runtimeId";
@@ -96,9 +121,23 @@ class Executor
         return $response['body'];
     }
 
+    /**
+     * Create an execution
+     * 
+     * @param string $projectId
+     * @param string $deploymentId
+     * @param string $path
+     * @param array $vars
+     * @param string $entrypoint
+     * @param string $data
+     * @param string runtime
+     * @param string $baseImage
+     * @param int $timeout
+     * 
+     * @return array
+     */
     public function createExecution(
         string $projectId,
-        string $functionId,
         string $deploymentId,
         string $path,
         array $vars,
@@ -108,7 +147,6 @@ class Executor
         string $baseImage,
         $timeout
     ) {
-
         $route = "/execution";
         $headers = [
             'content-type' =>  'application/json',
@@ -116,13 +154,9 @@ class Executor
         ];
         $params = [
             'runtimeId' => "$projectId-$deploymentId",
-            'path' => $path,
             'vars' => $vars, 
             'data' => $data,
-            'runtime' => $runtime,
-            'entrypoint' => $entrypoint,
             'timeout' => $timeout,
-            'baseImage' => $baseImage,
         ];
 
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, 30);
@@ -133,7 +167,6 @@ class Executor
                 switch ($status) {
                     case 404:
                         $response = $this->createRuntime(
-                            functionId: $functionId,
                             deploymentId: $deploymentId,
                             projectId: $projectId,
                             source: $path,

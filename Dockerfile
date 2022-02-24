@@ -269,6 +269,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/realtime && \
+    chmod +x /usr/local/bin/executor && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \
@@ -282,8 +283,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-functions && \
     chmod +x /usr/local/bin/worker-builds && \
     chmod +x /usr/local/bin/worker-mails && \
-    chmod +x /usr/local/bin/worker-webhooks && \
-    chmod +x /usr/local/bin/executor
+    chmod +x /usr/local/bin/worker-webhooks
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/

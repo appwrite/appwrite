@@ -371,7 +371,7 @@ class DeletesV1 extends Worker
         $executor = new Executor();
         foreach ($deploymentIds as $deploymentId) {
             try {
-                $executor->deleteRuntime($projectId, $functionId, $deploymentId);
+                $executor->deleteRuntime($projectId, $deploymentId);
             } catch (Throwable $th) {
                 Console::error($th->getMessage());
             }
@@ -421,7 +421,7 @@ class DeletesV1 extends Worker
         Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
         try {
             $executor = new Executor();
-            $executor->deleteRuntime($projectId, $functionId, $deploymentId);
+            $executor->deleteRuntime($projectId, $deploymentId);
         } catch (Throwable $th) {
             Console::error($th->getMessage());
         }

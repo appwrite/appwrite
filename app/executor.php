@@ -395,17 +395,13 @@ App::delete('/v1/runtimes/:runtimeId')
 App::post('/v1/execution')
     ->desc('Create an execution')
     ->param('runtimeId', '', new Text(64), 'The runtimeID to execute')
-    ->param('path', '', new Text(0), 'Path containing the built files.', false)
     ->param('vars', [], new Assoc(), 'Environment variables required for the build', false)
     ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
-    ->param('runtime', '', new Text(128), 'Runtime for the cloud function', false)
-    ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file')
     ->param('timeout', 15, new ValidatorRange(1, 900), 'Function maximum execution time in seconds.', true)
-    ->param('baseImage', '', new Text(128), 'Base image name of the runtime', false)
     ->inject('activeRuntimes')
     ->inject('response')
     ->action(
-        function (string $runtimeId, string $path, array $vars, string $data, string $runtime, string $entrypoint, $timeout, string $baseImage, $activeRuntimes, Response $response) {
+        function (string $runtimeId, array $vars, string $data, $timeout, $activeRuntimes, Response $response) {
 
             if (!$activeRuntimes->exists($runtimeId)) {
                 throw new Exception('Runtime not found. Please create the runtime.', 404);

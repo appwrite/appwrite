@@ -174,16 +174,6 @@ services:
       - appwrite
     environment:
       - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_BUILD_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
@@ -193,13 +183,11 @@ services:
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_RUNTIME_NETWORK
-      - _APP_USAGE_STATS
-      - _APP_STATSD_HOST
-      - _APP_STATSD_PORT
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - DOCKERHUB_PULL_USERNAME
       - DOCKERHUB_PULL_PASSWORD
+      - OPENRUNTIMES_INACTIVE_THRESHOLD
 
   appwrite-worker-database:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
