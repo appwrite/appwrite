@@ -24,7 +24,7 @@ class Build extends Model
             ])
             ->addRule('deploymentId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The deployment that created this build',
+                'description' => 'The deployment that created this build.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
@@ -35,7 +35,7 @@ class Build extends Model
             // Building - The deployment is currently being built
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The build status.',
+                'description' => 'The build status. There are a few different types and each one means something different. \nFailed - The deployment build has failed. More details can usually be found in buildStderr\nReady - The deployment build was successful and the deployment is ready to be deployed\nProcessing - The deployment is currently waiting to have a build triggered\nBuilding - The deployment is currently being built',
                 'default' => '',
                 'example' => 'ready',
             ])
@@ -71,17 +71,17 @@ class Build extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Build';
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_BUILD;
     }

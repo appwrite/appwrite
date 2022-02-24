@@ -122,9 +122,12 @@ class Func extends Model
     }
 
     /**
-     * Get Collection
+     * Filter Function
      * 
-     * @return string
+     * Automatically converts a [] default to a stdClass, this is called while grabbing the document.
+     * 
+     * @param Document $document
+     * @return Document
      */
     public function filter(Document $document): Document
     {
