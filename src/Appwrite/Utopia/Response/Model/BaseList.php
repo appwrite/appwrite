@@ -34,7 +34,7 @@ class BaseList extends Model
         if ($paging) {
             $this->addRule('sum', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total number of documents in the collection. When the total number of document in the collection 5000+, the sum returned will be capped at 5000.',
+                'description' => 'Total number of items available in the server. When the total number of items available is 5000+, the sum returned will be capped at 5000.',
                 'default' => 0,
                 'example' => 5,
             ]);
