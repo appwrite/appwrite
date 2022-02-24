@@ -116,6 +116,7 @@ class BuildsV1 extends Worker
                 projectId: $projectId, 
                 functionId: $functionId, 
                 deploymentId: $deploymentId, 
+                entrypoint: $deployment->getAttribute('entrypoint'),
                 source: $source,
                 destination: APP_STORAGE_BUILDS . "/app-$projectId",
                 vars: $vars, 
