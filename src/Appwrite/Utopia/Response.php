@@ -31,7 +31,6 @@ use Appwrite\Utopia\Response\Model\Domain;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
-use Appwrite\Utopia\Response\Model\SyncExecution;
 use Appwrite\Utopia\Response\Model\Build;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Bucket;
@@ -267,7 +266,6 @@ class Response extends SwooleResponse
             ->setModel(new Runtime())
             ->setModel(new Deployment())
             ->setModel(new Execution())
-            ->setModel(new SyncExecution())
             ->setModel(new Build())
             ->setModel(new Project())
             ->setModel(new Webhook())

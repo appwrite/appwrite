@@ -968,19 +968,9 @@ App::post('/v1/functions/:functionId/executions')
 
         Authorization::skip(fn() => $dbForProject->updateDocument('executions', $executionId, $execution));
 
-        $executionResponse['$id'] = $executionId;
-        $executionResponse['$read'] = $execution->getAttribute('$read', []);
-        $executionResponse['$write'] = $execution->getAttribute('$write', []);
-        $executionResponse['functionId'] = $function->getId();
-        $executionResponse['dateCreated'] = $execution->getAttribute('dateCreated');
-        $executionResponse['trigger'] = $execution->getAttribute('trigger');
-        $executionResponse['status'] = $execution->getAttribute('status');
-        $executionResponse['statusCode'] = $execution->getAttribute('statusCode');
-        $executionResponse['time'] = $execution->getAttribute('time');
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic(new Document($executionResponse), Response::MODEL_EXECUTION);
+            ->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
 App::get('/v1/functions/:functionId/executions')
