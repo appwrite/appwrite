@@ -598,6 +598,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_FUNCTIONS_INACTIVE_THRESHOLD',
+                'description' => 'The minimum time a function can be inactive before it\'s container is shutdown and put to sleep. The default value is 60 seconds',
+                'introduction' => '0.13.0',
+                'default' => '60',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => 'DOCKERHUB_PULL_USERNAME',
                 'description' => 'The username for hub.docker.com. This variable is used to pull images from hub.docker.com.',
                 'introduction' => '0.10.0',
