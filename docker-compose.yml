@@ -432,7 +432,7 @@ services:
       - _APP_LOGGING_CONFIG
       - DOCKERHUB_PULL_USERNAME
       - DOCKERHUB_PULL_PASSWORD
-      - OPENRUNTIMES_INACTIVE_THRESHOLD
+      - _APP_RUNTIMES_INACTIVE_THRESHOLD
 
   appwrite-worker-mails:
     entrypoint: worker-mails
