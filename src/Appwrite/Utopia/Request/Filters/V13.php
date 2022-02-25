@@ -12,22 +12,22 @@ class V13 extends Filter
         switch ($model) {
             // Replaced Types
             case "database.createFloatAttribute":
-                $content = $this->convertStringToNum($content, "min");
-                $content = $this->convertStringToNum($content, "max");
-                $content = $this->convertStringToNum($content, "default");
+                $content = $this->convertNumToString($content, "min");
+                $content = $this->convertNumToString($content, "max");
+                $content = $this->convertNumToString($content, "default");
                 break;
             case "database.createIntegerAttribute":
-                $content = $this->convertStringToNum($content, "min");
-                $content = $this->convertStringToNum($content, "max");
-                $content = $this->convertStringToNum($content, "default");
+                $content = $this->convertNumToString($content, "min");
+                $content = $this->convertNumToString($content, "max");
+                $content = $this->convertNumToString($content, "default");
                 break;
         }
 
         return $content;
     }
 
-    private function convertStringToNum($content, $value) {
-        $content[$value] = (float) $content[$value];
+    private function convertNumToString($content, $value) {
+        $content[$value] = (string) $content[$value];
         return $content;
     }
 }
