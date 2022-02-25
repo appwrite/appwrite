@@ -581,6 +581,7 @@ App::post('/v1/functions/:functionId/deployments')
             }
 
             $activate = (bool) filter_var($activate, FILTER_VALIDATE_BOOLEAN);
+
             if ($activate) {
                 // Remove deploy for all other deployments.
                 $activeDeployments = $dbForProject->find('deployments', [
