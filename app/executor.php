@@ -303,8 +303,8 @@ App::post('/v1/runtimes')
             Console::success('Build Stage completed in ' . ($endTime - $startTime) . ' seconds');
         
         } catch (Throwable $th) {
-            Console::error('Build failed: ' . $th->getMessage());
-            throw new Exception($th->getMessage(), 500);
+            Console::error('Build failed: ' . $th->getMessage() . $stdout);
+            throw new Exception($th->getMessage() . $stdout, 500);
         } finally {
             if (!empty($containerId) && $remove) {
                 $orchestration->remove($containerId, true);
