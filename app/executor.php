@@ -653,7 +653,7 @@ $http->on('start', function ($http) {
     Timer::tick(MAINTENANCE_INTERVAL * 1000, function () use ($orchestrationPool, $activeRuntimes) {
         Console::warning("Running maintenance task ...");
         foreach ($activeRuntimes as $runtime) {
-            $inactiveThreshold = \time() - App::getEnv('_APP_RUNTIMES_INACTIVE_THRESHOLD', 60);
+            $inactiveThreshold = \time() - App::getEnv('_APP_FUNCTIONS_INACTIVE_THRESHOLD', 60);
             if ($runtime['updated'] < $inactiveThreshold) {
                 go(function () use ($runtime, $orchestrationPool, $activeRuntimes) {
                     try {
