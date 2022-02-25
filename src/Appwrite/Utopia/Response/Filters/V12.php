@@ -27,6 +27,9 @@ class V12 extends Filter
             case Response::MODEL_FUNCTION:
                 $parsedResponse = $this->parseFunction($content);
 
+            case Response::MODEL_EXECUTION:
+                $parsedResponse = $this->parseExecution($content);
+
             case Response::MODEL_USAGE_BUCKETS:
                 $parsedResponse = $this->parseUsageBuckets($content);
 
@@ -68,6 +71,7 @@ class V12 extends Filter
     protected function parseFunction(array $content)
     {
         $content['execute'] = implode(' ', $content['execute']);
+        $content['tag'] = $content['deployment'];
 
         return $content;
     }
@@ -97,5 +101,11 @@ class V12 extends Filter
         unset($content['filesRead']);
         unset($content['filesUpdate']);
         unset($content['filesDelete']);
+    }
+
+    protected function parseExecution($content) {
+        $content['exitCode'] = $content['statusCode'];
+
+        return $content;
     }
 }
