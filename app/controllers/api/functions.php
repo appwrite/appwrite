@@ -558,22 +558,6 @@ App::post('/v1/functions/:functionId/deployments')
             throw new Exception('Failed moving file', 500);
         }
 
-        $activate = (bool) filter_var($activate, FILTER_VALIDATE_BOOLEAN);
-
-        if ($activate) {
-            // Remove deploy for all other deployments.
-            $activeDeployments = $dbForProject->find('deployments', [
-                new Query('activate', Query::TYPE_EQUAL, [true]),
-                new Query('resourceId', Query::TYPE_EQUAL, [$functionId]),
-                new Query('resourceType', Query::TYPE_EQUAL, ['functions'])
-            ]);
-
-            foreach ($activeDeployments as $activeDeployment) {
-                $activeDeployment->setAttribute('activate', false);
-                $dbForProject->updateDocument('deployments', $activeDeployment->getId(), $activeDeployment);
-            }
-        }
-        
         if($chunksUploaded === $chunks) {
             $fileSize = $deviceFunctions->getFileSize($path);
 
@@ -595,6 +579,22 @@ App::post('/v1/functions/:functionId/deployments')
             } else {
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', $fileSize)->setAttribute('metadata', $metadata));
             }
+
+            $activate = (bool) filter_var($activate, FILTER_VALIDATE_BOOLEAN);
+            if ($activate) {
+                // Remove deploy for all other deployments.
+                $activeDeployments = $dbForProject->find('deployments', [
+                    new Query('activate', Query::TYPE_EQUAL, [true]),
+                    new Query('resourceId', Query::TYPE_EQUAL, [$functionId]),
+                    new Query('resourceType', Query::TYPE_EQUAL, ['functions'])
+                ]);
+
+                foreach ($activeDeployments as $activeDeployment) {
+                    $activeDeployment->setAttribute('activate', false);
+                    $dbForProject->updateDocument('deployments', $activeDeployment->getId(), $activeDeployment);
+                }
+            }
+
             // Enqueue a message to start the build
             Resque::enqueue(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, [
                 'projectId' => $project->getId(),
@@ -1110,7 +1110,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         // Enqueue a message to start the build
         Resque::enqueue(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, [
             'projectId' => $project->getId(),
-            'functionId' => $function->getId(),
+            'resourceId' => $function->getId(),
             'deploymentId' => $deploymentId,
             'type' => BUILD_TYPE_RETRY
         ]);
