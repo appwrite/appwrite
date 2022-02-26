@@ -209,6 +209,6 @@ class HTTPTest extends Scope
         $this->assertIsString($body['server-php']);
         $this->assertIsString($body['server-python']);
         $this->assertIsString($body['server-ruby']);
-        $this->assertIsString($body['server-cli']);
+        $this->assertIsString($body['console-cli']);
     }
 }
