@@ -3075,7 +3075,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "ab774e0e8aa9795a4e9f97a0810c147b7ee03957"
+                "reference": "36e459dfd97a5693746e733ca9947a02ce12b0dc"
             },
             "require": {
                 "ext-curl": "*",
@@ -3110,7 +3110,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2022-02-27T07:46:18+00:00"
+            "time": "2022-02-27T08:06:11+00:00"
         },
         {
             "name": "composer/pcre",
