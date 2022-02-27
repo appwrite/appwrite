@@ -590,12 +590,12 @@ $http->on('start', function ($http) {
             try {
                 $orchestration = $orchestrationPool->get();
                 Console::info('Warming up ' . $runtime['name'] . ' ' . $runtime['version'] . ' environment...');
-                // $response = $orchestration->pull($runtime['image']);
-                // if ($response) {
-                //     Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
-                // } else {
-                //     Console::warning("Failed to Warmup {$runtime['name']} {$runtime['version']}!");
-                // }
+                $response = $orchestration->pull($runtime['image']);
+                if ($response) {
+                    Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
+                } else {
+                    Console::warning("Failed to Warmup {$runtime['name']} {$runtime['version']}!");
+                }
             } catch (\Throwable $th) {
             } finally {
                 $orchestrationPool->put($orchestration);
