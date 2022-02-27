@@ -310,7 +310,7 @@ return [
     ],
     Exception::BUILD_IN_PROGRESS => [
         'name' => Exception::BUILD_IN_PROGRESS,
-        'description' => 'Build with the requested ID is already in progress. Please wait before you can ret',
+        'description' => 'Build with the requested ID is already in progress. Please wait before you can retry.',
         'code' => 400,
     ],
 
