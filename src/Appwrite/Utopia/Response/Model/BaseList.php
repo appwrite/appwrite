@@ -32,9 +32,21 @@ class BaseList extends Model
         $this->public = $public;
 
         if ($paging) {
-            $this->addRule('sum', [
+            $namesWithCap = [
+                'documents', 'collections', 'users', 'files', 'buckets', 'functions',
+                'deployments', 'executions', 'projects', 'webhooks', 'keys',
+                'platforms', 'domains', 'memberships', 'teams'
+            ];
+
+            if (\in_array($namesWithCap, $name)) {
+                $description = 'Total number of ' . $key . ' documents that matched your query used as reference for offset pagination. When the `total` is more than 5000, it will be capped at 5000, and cursor pagination should be used. Read more about [pagination](https://appwrite.io/docs/pagination).';
+            } else {
+                $description = 'Total number of ' . $key . ' documents that matched your query.';
+            }
+
+            $this->addRule('total', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total number of items available on the server.',
+                'description' => $description,
                 'default' => 0,
                 'example' => 5,
             ]);

@@ -544,8 +544,8 @@ trait WebhooksBase
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals('Arsenal', $webhook['data']['name']);
-        $this->assertGreaterThan(-1, $webhook['data']['sum']);
-        $this->assertIsInt($webhook['data']['sum']);
+        $this->assertGreaterThan(-1, $webhook['data']['total']);
+        $this->assertIsInt($webhook['data']['total']);
         $this->assertIsInt($webhook['data']['dateCreated']);
 
         /**
@@ -584,8 +584,8 @@ trait WebhooksBase
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals('Demo New', $webhook['data']['name']);
-        $this->assertGreaterThan(-1, $webhook['data']['sum']);
-        $this->assertIsInt($webhook['data']['sum']);
+        $this->assertGreaterThan(-1, $webhook['data']['total']);
+        $this->assertIsInt($webhook['data']['total']);
         $this->assertIsInt($webhook['data']['dateCreated']);
 
         /**
@@ -627,8 +627,8 @@ trait WebhooksBase
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals('Chelsea', $webhook['data']['name']);
-        $this->assertGreaterThan(-1, $webhook['data']['sum']);
-        $this->assertIsInt($webhook['data']['sum']);
+        $this->assertGreaterThan(-1, $webhook['data']['total']);
+        $this->assertIsInt($webhook['data']['total']);
         $this->assertIsInt($webhook['data']['dateCreated']);
 
         /**

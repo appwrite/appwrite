@@ -146,7 +146,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals($functions['headers']['status-code'], 200);
-        $this->assertEquals($functions['body']['sum'], 2);
+        $this->assertEquals($functions['body']['total'], 2);
         $this->assertIsArray($functions['body']['functions']);
         $this->assertCount(2, $functions['body']['functions']);
         $this->assertEquals($functions['body']['functions'][0]['name'], 'Test');
@@ -389,7 +389,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals($function['body']['sum'], 2);
+        $this->assertEquals($function['body']['total'], 2);
         $this->assertIsArray($function['body']['deployments']);
         $this->assertCount(2, $function['body']['deployments']);
 
@@ -404,7 +404,7 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals(2, $function['body']['sum']);
+        $this->assertEquals(2, $function['body']['total']);
         $this->assertIsArray($function['body']['deployments']);
         $this->assertCount(2, $function['body']['deployments']);
         $this->assertEquals($function['body']['deployments'][0]['$id'], $data['deploymentId']);
@@ -417,7 +417,7 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals(2, $function['body']['sum']);
+        $this->assertEquals(2, $function['body']['total']);
         $this->assertIsArray($function['body']['deployments']);
         $this->assertCount(2, $function['body']['deployments']);
         $this->assertEquals($function['body']['deployments'][0]['$id'], $data['deploymentId']);
@@ -430,7 +430,7 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals(2, $function['body']['sum']);
+        $this->assertEquals(2, $function['body']['total']);
         $this->assertIsArray($function['body']['deployments']);
         $this->assertCount(2, $function['body']['deployments']);
         $this->assertEquals($function['body']['deployments'][0]['$id'], $data['deploymentId']);
@@ -540,7 +540,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals($function['body']['sum'], 1);
+        $this->assertEquals($function['body']['total'], 1);
         $this->assertIsArray($function['body']['executions']);
         $this->assertCount(1, $function['body']['executions']);
         $this->assertEquals($function['body']['executions'][0]['$id'], $data['executionId']);
@@ -557,8 +557,8 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['sum']);
-        $this->assertIsInt($response['body']['sum']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertIsInt($response['body']['total']);
         $this->assertCount(1, $response['body']['executions']);
         $this->assertEquals($data['functionId'], $response['body']['executions'][0]['functionId']);
 
@@ -570,8 +570,8 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['sum']);
-        $this->assertIsInt($response['body']['sum']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertIsInt($response['body']['total']);
         $this->assertCount(1, $response['body']['executions']);
         $this->assertEquals($data['executionId'], $response['body']['executions'][0]['$id']);
 
@@ -753,7 +753,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals($executions['headers']['status-code'], 200);
-        $this->assertEquals($executions['body']['sum'], 1);
+        $this->assertEquals($executions['body']['total'], 1);
         $this->assertIsArray($executions['body']['executions']);
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
@@ -868,7 +868,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
         
         $this->assertEquals($executions['headers']['status-code'], 200);
-        $this->assertEquals($executions['body']['sum'], 1);
+        $this->assertEquals($executions['body']['total'], 1);
         $this->assertIsArray($executions['body']['executions']);
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
@@ -974,7 +974,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
         
         $this->assertEquals($executions['headers']['status-code'], 200);
-        $this->assertEquals($executions['body']['sum'], 1);
+        $this->assertEquals($executions['body']['total'], 1);
         $this->assertIsArray($executions['body']['executions']);
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
@@ -1079,7 +1079,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
         
         $this->assertEquals($executions['headers']['status-code'], 200);
-        $this->assertEquals($executions['body']['sum'], 1);
+        $this->assertEquals($executions['body']['total'], 1);
         $this->assertIsArray($executions['body']['executions']);
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
@@ -1184,7 +1184,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
         
         $this->assertEquals($executions['headers']['status-code'], 200);
-        $this->assertEquals($executions['body']['sum'], 1);
+        $this->assertEquals($executions['body']['total'], 1);
         $this->assertIsArray($executions['body']['executions']);
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
@@ -1289,7 +1289,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
         
         $this->assertEquals($executions['headers']['status-code'], 200);
-        $this->assertEquals($executions['body']['sum'], 1);
+        $this->assertEquals($executions['body']['total'], 1);
         $this->assertIsArray($executions['body']['executions']);
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
@@ -1394,7 +1394,7 @@ class FunctionsCustomServerTest extends Scope
     //     ], $this->getHeaders()));
         
     //     $this->assertEquals($executions['headers']['status-code'], 200);
-    //     $this->assertEquals($executions['body']['sum'], 1);
+    //     $this->assertEquals($executions['body']['total'], 1);
     //     $this->assertIsArray($executions['body']['executions']);
     //     $this->assertCount(1, $executions['body']['executions']);
     //     $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
@@ -1419,7 +1419,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $runtimes['headers']['status-code']);
-        $this->assertGreaterThan(0, $runtimes['body']['sum']);
+        $this->assertGreaterThan(0, $runtimes['body']['total']);
 
         $runtime = $runtimes['body']['runtimes'][0];
 

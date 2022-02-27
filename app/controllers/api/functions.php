@@ -118,7 +118,7 @@ App::get('/v1/functions')
 
         $response->dynamic(new Document([
             'functions' => $dbForProject->find('functions', $queries, $limit, $offset, [], [$orderType], $cursorFunction ?? null, $cursorDirection),
-            'sum' => $dbForProject->count('functions', $queries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('functions', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FUNCTION_LIST);
     });
 
@@ -145,7 +145,7 @@ App::get('/v1/functions/runtimes')
         }, array_keys($runtimes));
 
         $response->dynamic(new Document([ 
-            'sum' => count($runtimes),
+            'total' => count($runtimes),
             'runtimes' => $runtimes
         ]), Response::MODEL_RUNTIME_LIST);
     });
@@ -686,7 +686,7 @@ App::get('/v1/functions/:functionId/deployments')
         $queries[] = new Query('resourceType', Query::TYPE_EQUAL, ['functions']);
 
         $results = $dbForProject->find('deployments', $queries, $limit, $offset, [], [$orderType], $cursorDeployment ?? null, $cursorDirection);
-        $sum = $dbForProject->count('deployments', $queries, APP_LIMIT_COUNT);
+        $total = $dbForProject->count('deployments', $queries, APP_LIMIT_COUNT);
 
         foreach ($results as $result) {
             $build = $dbForProject->getDocument('builds', $result->getAttribute('buildId', ''));
@@ -697,7 +697,7 @@ App::get('/v1/functions/:functionId/deployments')
 
         $response->dynamic(new Document([
             'deployments' => $results,
-            'sum' => $sum,
+            'total' => $total,
         ]), Response::MODEL_DEPLOYMENT_LIST);
     });
 
@@ -1020,11 +1020,11 @@ App::get('/v1/functions/:functionId/executions')
         }
 
         $results = $dbForProject->find('executions', $queries, $limit, $offset, [], [Database::ORDER_DESC], $cursorExecution ?? null, $cursorDirection);
-        $sum = $dbForProject->count('executions', $queries, APP_LIMIT_COUNT);
+        $total = $dbForProject->count('executions', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'executions' => $results,
-            'sum' => $sum,
+            'total' => $total,
         ]), Response::MODEL_EXECUTION_LIST);
     });
 

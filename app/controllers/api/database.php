@@ -239,7 +239,7 @@ App::get('/v1/database/collections')
 
         $response->dynamic(new Document([
             'collections' => $dbForProject->find('collections', $queries, $limit, $offset, [], [$orderType], $cursorCollection ?? null, $cursorDirection),
-            'sum' => $dbForProject->count('collections', $queries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('collections', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_COLLECTION_LIST);
     });
 
@@ -569,7 +569,7 @@ App::get('/v1/database/collections/:collectionId/logs')
         }
 
         $response->dynamic(new Document([
-            'sum' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -1146,7 +1146,7 @@ App::get('/v1/database/collections/:collectionId/attributes')
         $usage->setParam('database.collections.read', 1);
 
         $response->dynamic(new Document([
-            'sum' => \count($attributes),
+            'total' => \count($attributes),
             'attributes' => $attributes
         ]), Response::MODEL_ATTRIBUTE_LIST);
     });
@@ -1437,7 +1437,7 @@ App::get('/v1/database/collections/:collectionId/indexes')
         $usage->setParam('database.collections.read', 1);
 
         $response->dynamic(new Document([
-            'sum' => \count($indexes),
+            'total' => \count($indexes),
             'indexes' => $indexes,
         ]), Response::MODEL_INDEX_LIST);
     });
@@ -1753,10 +1753,10 @@ App::get('/v1/database/collections/:collectionId/documents')
         if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document[] $documents */
             $documents = Authorization::skip(fn() => $dbForProject->find('collection_' . $collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection));
-            $sum = Authorization::skip(fn() => $dbForProject->count('collection_' . $collectionId, $queries, APP_LIMIT_COUNT));
+            $total = Authorization::skip(fn() => $dbForProject->count('collection_' . $collectionId, $queries, APP_LIMIT_COUNT));
         } else {
             $documents = $dbForProject->find('collection_' . $collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
-            $sum = $dbForProject->count('collection_' . $collectionId, $queries, APP_LIMIT_COUNT);
+            $total = $dbForProject->count('collection_' . $collectionId, $queries, APP_LIMIT_COUNT);
         }
 
         /**
@@ -1770,7 +1770,7 @@ App::get('/v1/database/collections/:collectionId/documents')
         ;
 
         $response->dynamic(new Document([
-            'sum' => $sum,
+            'total' => $total,
             'documents' => $documents,
         ]), Response::MODEL_DOCUMENT_LIST);
     });
@@ -1927,7 +1927,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId/logs')
             }
         }
         $response->dynamic(new Document([
-            'sum' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });

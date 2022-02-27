@@ -28,9 +28,9 @@ class Team extends Model
                 'default' => 0,
                 'example' => 1592981250,
             ])
-            ->addRule('sum', [
+            ->addRule('total', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total sum of team members.',
+                'description' => 'Total number of team members.',
                 'default' => 0,
                 'example' => 7,
             ])
