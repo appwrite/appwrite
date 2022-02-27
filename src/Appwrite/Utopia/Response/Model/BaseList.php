@@ -38,7 +38,7 @@ class BaseList extends Model
                 'platforms', 'domains', 'memberships', 'teams'
             ];
 
-            if (\in_array($namesWithCap, $name)) {
+            if (\in_array($name, $namesWithCap)) {
                 $description = 'Total number of ' . $key . ' documents that matched your query used as reference for offset pagination. When the `total` is more than 5000, it will be capped at 5000, and cursor pagination should be used. Read more about [pagination](https://appwrite.io/docs/pagination).';
             } else {
                 $description = 'Total number of ' . $key . ' documents that matched your query.';
