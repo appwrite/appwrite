@@ -291,6 +291,28 @@ return [
         'description' => 'Function with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::FUNCTION_RUNTIME_UNSUPPORTED => [
+        'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
+        'description' => 'The requested runtime is either inactive or unsupported. Please check the value of the _APP_FUNCTIONS_RUNTIMES environment variable.',
+        'code' => 404,
+    ],
+
+    /** Builds  */
+    Exception::BUILD_NOT_FOUND => [
+        'name' => Exception::BUILD_NOT_FOUND,
+        'description' => 'Build with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::BUILD_NOT_READY => [
+        'name' => Exception::BUILD_NOT_READY,
+        'description' => 'Build with the requested ID is builing and not ready for execution.',
+        'code' => 400,
+    ],
+    Exception::BUILD_IN_PROGRESS => [
+        'name' => Exception::BUILD_IN_PROGRESS,
+        'description' => 'Build with the requested ID is already in progress. Please wait before you can retry.',
+        'code' => 400,
+    ],
 
     /** Deployments */
     Exception::DEPLOYMENT_NOT_FOUND => [
