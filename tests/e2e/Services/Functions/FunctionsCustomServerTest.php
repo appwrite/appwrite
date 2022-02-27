@@ -593,6 +593,8 @@ class FunctionsCustomServerTest extends Scope
             'async' => false,
         ]);
 
+        $this->assertEquals(201, $execution['headers']['status-code']);
+
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertStringContainsString($data['deploymentId'], $execution['body']['stdout']);
         $this->assertStringContainsString('Test1', $execution['body']['stdout']);
