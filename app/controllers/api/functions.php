@@ -384,7 +384,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
         }
 
         if ($build->getAttribute('status') !== 'ready') {
-            throw new Exception('Build not ready', 400);
+            throw new Exception('Build not ready', 400, Exception::BUILD_NOT_READY);
         }
 
         $schedule = $function->getAttribute('schedule', '');
