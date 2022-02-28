@@ -164,10 +164,10 @@ App::post('/v1/runtimes')
 
         try {
             Console::info('Building container : ' . $runtimeId);
+            
             /** 
              * Temporary file paths in the executor 
              */
-            
             $tmpSource = "/tmp/$runtimeId/src/code.tar.gz";
             $tmpBuild = "/tmp/$runtimeId/builds/code.tar.gz";
 
