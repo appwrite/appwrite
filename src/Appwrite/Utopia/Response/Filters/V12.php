@@ -70,7 +70,6 @@ class V12 extends Filter
 
     protected function parseFunction(array $content)
     {
-        $content['execute'] = implode(' ', $content['execute']);
         $content['tag'] = $content['deployment'];
 
         return $content;
