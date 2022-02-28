@@ -13,7 +13,7 @@ class AttributeList extends Model
         $this
             ->addRule('total', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total amount of attributes in the given collection.',
+                'description' => 'Total number of attributes in the given collection.',
                 'default' => 0,
                 'example' => 5,
             ])
