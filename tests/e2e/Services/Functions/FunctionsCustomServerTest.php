@@ -205,7 +205,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals($function['headers']['status-code'], 200);
         $this->assertEquals($function['body']['name'], 'Test');
-               
+
         /**
          * Test for FAILURE
          */
@@ -281,7 +281,7 @@ class FunctionsCustomServerTest extends Scope
         $folder = 'php';
         $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
         $this->packageCode($folder);
-        
+
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -298,7 +298,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
 
         // Wait for deployment to build.
-        sleep(15);
+        sleep(30);
 
         return array_merge($data, ['deploymentId' => $deploymentId]);
     }
