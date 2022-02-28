@@ -99,8 +99,6 @@ App::post('/v1/storage/buckets')
                 ]);
             }
 
-            $dbForProject->createCollection('bucket_' . $bucketId, $attributes, $indexes);
-
             $bucket = $dbForProject->createDocument('buckets', new Document([
                 '$id' => $bucketId,
                 '$collection' => 'buckets',
@@ -117,6 +115,10 @@ App::post('/v1/storage/buckets')
                 '$write' => $write ?? [],
                 'search' => implode(' ', [$bucketId, $name]),
             ]));
+
+            $bucket = $dbForProject->getDocument('buckets', $bucketId);
+
+            $dbForProject->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
         } catch (Duplicate $th) {
             throw new Exception('Bucket already exists', 409, Exception::STORAGE_BUCKET_ALREADY_EXISTS);
         }
@@ -483,11 +485,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $path = str_ireplace($deviceFiles->getRoot(), $deviceFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
 
         if ($permissionBucket) {
-            $file = Authorization::skip(function () use ($dbForProject, $bucketId, $fileId) {
-                return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
+            $file = Authorization::skip(function () use ($dbForProject, $bucket, $fileId) {
+                return $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
             });
         } else {
-            $file = $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         }
 
         $metadata = ['content_type' => $deviceLocal->getFileMimeType($fileTmpName)];
@@ -579,11 +581,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'metadata' => $metadata,
                     ]);
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function () use ($dbForProject, $bucketId, $doc) {
-                            return $dbForProject->createDocument('bucket_' . $bucketId, $doc);
+                        $file = Authorization::skip(function () use ($dbForProject, $bucket, $doc) {
+                            return $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
                         });
                     } else {
-                        $file = $dbForProject->createDocument('bucket_' . $bucketId, $doc);
+                        $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
                     }
                 } else {
                     $file = $file
@@ -601,11 +603,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('chunksUploaded', $chunksUploaded);
 
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function () use ($dbForProject, $bucketId, $fileId, $file) {
-                            return $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file);
+                        $file = Authorization::skip(function () use ($dbForProject, $bucket, $fileId, $file) {
+                            return $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                         });
                     } else {
-                        $file = $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file);
+                        $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                     }
 
                 }
@@ -649,11 +651,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'metadata' => $metadata,
                     ]);
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function () use ($dbForProject, $bucketId, $doc) {
-                            return $dbForProject->createDocument('bucket_' . $bucketId, $doc);
+                        $file = Authorization::skip(function () use ($dbForProject, $bucket, $doc) {
+                            return $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
                         });
                     } else {
-                        $file = $dbForProject->createDocument('bucket_' . $bucketId, $doc);
+                        $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
                     }
                 } else {
                     $file = $file
@@ -661,11 +663,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('metadata', $metadata);
 
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function () use ($dbForProject, $bucketId, $fileId, $file) {
-                            return $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file);
+                        $file = Authorization::skip(function () use ($dbForProject, $bucket, $fileId, $file) {
+                            return $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                         });
                     } else {
-                        $file = $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file);
+                        $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                     }
                 }
             } catch (StructureException $exception) {
@@ -737,10 +739,10 @@ App::get('/v1/storage/buckets/:bucketId/files')
         if (!empty($cursor)) {
             if ($bucket->getAttribute('permission') === 'bucket') {
                 $cursorFile = Authorization::skip(function () use ($dbForProject, $bucket, $cursor) {
-                    return $dbForProject->getDocument('bucket_' . $bucket->getId(), $cursor);
+                    return $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor);
                 });
             } else {
-                $cursorFile = $dbForProject->getDocument('bucket_' . $bucket->getId(), $cursor);
+                $cursorFile = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor);
             }
 
             if ($cursorFile->isEmpty()) {
@@ -755,11 +757,11 @@ App::get('/v1/storage/buckets/:bucketId/files')
         }
 
         if ($bucket->getAttribute('permission') === 'bucket') {
-            $files = Authorization::skip(function () use ($dbForProject, $bucketId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderType) {
-                return $dbForProject->find('bucket_' . $bucketId, $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection);
+            $files = Authorization::skip(function () use ($dbForProject, $bucket, $queries, $limit, $offset, $cursor, $cursorDirection, $orderType) {
+                return $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection);
             });
         } else {
-            $files = $dbForProject->find('bucket_' . $bucketId, $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection);
+            $files = $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection);
         }
 
         $usage
@@ -769,7 +771,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
 
         $response->dynamic(new Document([
             'files' => $files,
-            'sum' => $dbForProject->count('bucket_' . $bucketId, $queries, APP_LIMIT_COUNT),
+            'sum' => $dbForProject->count('bucket_' . $bucket->getInternalId(), $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FILE_LIST);
     });
 
@@ -813,11 +815,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function () use ($dbForProject, $bucketId, $fileId) {
-                return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
+            $file = Authorization::skip(function () use ($dbForProject, $bucket, $fileId) {
+                return $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
             });
         } else {
-            $file = $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         }
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
@@ -902,11 +904,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         if ($bucket->getAttribute('permission') === 'bucket') {
             // skip authorization
-            $file = Authorization::skip(function () use ($dbForProject, $bucketId, $fileId) {
-                return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
+            $file = Authorization::skip(function () use ($dbForProject, $bucket, $fileId) {
+                return $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
             });
         } else {
-            $file = $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         }
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
@@ -1061,11 +1063,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         }
 
         if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucketId) {
-                return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
+            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucket) {
+                return $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
             });
         } else {
-            $file = $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         }
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
@@ -1206,11 +1208,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         }
 
         if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucketId) {
-                return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
+            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucket) {
+                return $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
             });
         } else {
-            $file = $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         }
 
         $mimes = Config::getParam('storage-mimes');
@@ -1387,11 +1389,11 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucketId) {
-                return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
+            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucket) {
+                return $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
             });
         } else {
-            $file = $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         }
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
@@ -1399,14 +1401,14 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucketId, $file, $read, $write) {
-                return $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file
+            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucket, $file, $read, $write) {
+                return $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file
                         ->setAttribute('$read', $read)
                         ->setAttribute('$write', $write)
                 );
             });
         } else {
-            $file = $dbForProject->updateDocument('bucket_' . $bucketId, $fileId, $file
+            $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file
                     ->setAttribute('$read', $read)
                     ->setAttribute('$write', $write)
             );
@@ -1475,11 +1477,11 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucketId) {
-                return $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
+            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucket) {
+                return $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
             });
         } else {
-            $file = $dbForProject->getDocument('bucket_' . $bucketId, $fileId);
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         }
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
@@ -1503,11 +1505,11 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             $deviceLocal->delete($cacheDir, true);
 
             if ($bucket->getAttribute('permission') === 'bucket') {
-                $deleted = Authorization::skip(function () use ($dbForProject, $fileId, $bucketId) {
-                    return $dbForProject->deleteDocument('bucket_' . $bucketId, $fileId);
+                $deleted = Authorization::skip(function () use ($dbForProject, $fileId, $bucket) {
+                    return $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
                 });
             } else {
-                $deleted = $dbForProject->deleteDocument('bucket_' . $bucketId, $fileId);
+                $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
             }
             if (!$deleted) {
                 throw new Exception('Failed to remove file from DB', 500, Exception::GENERAL_SERVER_ERROR);

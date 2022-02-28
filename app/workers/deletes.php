@@ -458,9 +458,8 @@ class DeletesV1 extends Worker
 
     protected function deleteBucket(Document $document, string $projectId)
     {
-        $bucketId = $document->getId();
         $dbForProject = $this->getProjectDB($projectId);
-        $dbForProject->deleteCollection('bucket_' . $bucketId);
+        $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
 
         $device = new Local(APP_STORAGE_UPLOADS.'/app-'.$projectId);
         
@@ -483,6 +482,6 @@ class DeletesV1 extends Worker
                 break;
         }
         
-        $device->deletePath($bucketId);
+        $device->deletePath($document->getId());
     }
 }
