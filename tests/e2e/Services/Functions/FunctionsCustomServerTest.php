@@ -1035,7 +1035,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(10);
+        sleep(30);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',
