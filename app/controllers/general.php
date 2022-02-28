@@ -13,13 +13,13 @@ use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Utopia\Response\Filters\V11;
+use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
+use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Appwrite\Utopia\Request\Filters\V12;
-use Appwrite\Utopia\Response\Filters\V12 as FiltersV12;
+use Appwrite\Utopia\Request\Filters\V12 as RequestV12;
 use Utopia\Validator\Text;
 
 Config::setParam('domainVerification', false);
@@ -47,7 +47,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     if ($requestFormat) {
         switch($requestFormat) {
             case version_compare ($requestFormat , '0.12.0', '<') :
-                Request::setFilter(new V12());
+                Request::setFilter(new RequestV12());
                 break;
             default:
                 Request::setFilter(null);
@@ -158,11 +158,11 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
     if ($responseFormat) {
         switch($responseFormat) {
-            case version_compare ($responseFormat , '0.12.3', '<='):
-                Response::setFilter(new FiltersV12());
+            case version_compare ($responseFormat , '0.12.4', '<='):
+                Response::setFilter(new ResponseV12());
                 break;
             case version_compare ($responseFormat , '0.11.0', '<=') :
-                Response::setFilter(new V11());
+                Response::setFilter(new ResponseV11());
                 break;
             default:
                 Response::setFilter(null);

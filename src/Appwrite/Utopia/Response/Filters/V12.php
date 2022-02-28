@@ -20,22 +20,27 @@ class V12 extends Filter
                 break;
             case Response::MODEL_SESSION:
                 $parsedResponse = $this->parseSession($content);
+                break;
 
             case Response::MODEL_FILE:
                 $parsedResponse = $this->parseFile($content);
+                break;
 
             case Response::MODEL_FUNCTION:
                 $parsedResponse = $this->parseFunction($content);
+                break;
 
             case Response::MODEL_EXECUTION:
                 $parsedResponse = $this->parseExecution($content);
+                break;
 
             case Response::MODEL_USAGE_BUCKETS:
                 $parsedResponse = $this->parseUsageBuckets($content);
+                break;
 
             case Response::MODEL_USAGE_STORAGE:
                 $parsedResponse = $this->parseUsageStorage($content);
-
+                break;
         }
 
         return $parsedResponse;
