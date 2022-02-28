@@ -131,7 +131,6 @@ abstract class Migration
                             try {
                                 $new = $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
                             } catch (\Throwable $th) {
-                                var_dump($th->getTraceAsString());
                                 Console::error('Failed to update document: ' . $th->getMessage());
                                 return;
 
