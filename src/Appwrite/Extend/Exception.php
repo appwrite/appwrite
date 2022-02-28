@@ -98,9 +98,15 @@ class Exception extends \Exception
 
     /** Functions */
     const FUNCTION_NOT_FOUND                = 'function_not_found';
+    const FUNCTION_RUNTIME_UNSUPPORTED      = 'function_runtime_unsupported';
 
     /** Deployments */
     const DEPLOYMENT_NOT_FOUND              = 'deployment_not_found';
+
+    /** Builds */
+    const BUILD_NOT_FOUND                   = 'build_not_found';
+    const BUILD_NOT_READY                   = 'build_not_ready';
+    const BUILD_IN_PROGRESS                 = 'build_in_progress';
 
     /** Execution */
     const EXECUTION_NOT_FOUND               = 'execution_not_found';

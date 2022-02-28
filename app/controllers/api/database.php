@@ -111,7 +111,7 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
     }
 
     $dbForProject->deleteCachedDocument('collections', $collectionId);
-    $dbForProject->deleteCachedCollection('collection_' . $collectionId);
+    $dbForProject->deleteCachedCollection('collection_' . $collection->getInternalId());
 
     // Pass clone of $attribute object to workers
     // so we can later modify Document to fit response model
@@ -166,7 +166,7 @@ App::post('/v1/database/collections')
         $collectionId = $collectionId == 'unique()' ? $dbForProject->getId() : $collectionId;
 
         try {
-            $collection = $dbForProject->createDocument('collections', new Document([
+            $dbForProject->createDocument('collections', new Document([
                 '$id' => $collectionId,
                 '$read' => $read ?? [], // Collection permissions for collection documents (based on permission model)
                 '$write' => $write ?? [], // Collection permissions for collection documents (based on permission model)
@@ -177,8 +177,9 @@ App::post('/v1/database/collections')
                 'name' => $name,
                 'search' => implode(' ', [$collectionId, $name]),
             ]));
+            $collection = $dbForProject->getDocument('collections', $collectionId);
 
-            $dbForProject->createCollection('collection_' . $collectionId);
+            $dbForProject->createCollection('collection_' . $collection->getInternalId());
         } catch (DuplicateException $th) {
             throw new Exception('Collection already exists', 409, Exception::COLLECTION_ALREADY_EXISTS);
         } catch (LimitException $th) {
@@ -402,7 +403,8 @@ App::get('/v1/database/:collectionId/usage')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Registry\Registry $register */
 
-        $collection = $dbForProject->getCollection('collection_' . $collectionId);
+        $collectionDocument = $dbForProject->getDocument('collections', $collectionId);
+        $collection = $dbForProject->getCollection('collection_' . $collectionDocument->getInternalId());
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
@@ -513,7 +515,8 @@ App::get('/v1/database/collections/:collectionId/logs')
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
 
-        $collection = $dbForProject->getCollection('collection_' . $collectionId);
+        $collectionDocument = $dbForProject->getDocument('collections', $collectionId);
+        $collection = $dbForProject->getCollection('collection_' . $collectionDocument->getInternalId());
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
@@ -676,7 +679,7 @@ App::delete('/v1/database/collections/:collectionId')
             throw new Exception('Failed to remove collection from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
-        $dbForProject->deleteCachedCollection('collection_' . $collectionId);
+        $dbForProject->deleteCachedCollection('collection_' . $collection->getInternalId());
 
         $deletes
             ->setParam('type', DELETE_TYPE_DOCUMENT)
@@ -1259,7 +1262,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
         }
 
         $dbForProject->deleteCachedDocument('collections', $collectionId);
-        $dbForProject->deleteCachedCollection('collection_' . $collectionId);
+        $dbForProject->deleteCachedCollection('collection_' . $collection->getInternalId());
 
         $database
             ->setParam('type', DATABASE_TYPE_DELETE_ATTRIBUTE)
@@ -1642,9 +1645,9 @@ App::post('/v1/database/collections/:collectionId/documents')
         try {
             if ($collection->getAttribute('permission') === 'collection') {
                 /** @var Document $document */
-                $document = Authorization::skip(fn() => $dbForProject->createDocument('collection_' . $collectionId, new Document($data)));
+                $document = Authorization::skip(fn() => $dbForProject->createDocument('collection_' . $collection->getInternalId(), new Document($data)));
             } else {
-                $document = $dbForProject->createDocument('collection_' . $collectionId, new Document($data));
+                $document = $dbForProject->createDocument('collection_' . $collection->getInternalId(), new Document($data));
             }
             $document->setAttribute('$collection', $collectionId);
         }
@@ -1742,8 +1745,8 @@ App::get('/v1/database/collections/:collectionId/documents')
         $cursorDocument = null;
         if (!empty($cursor)) {
             $cursorDocument = $collection->getAttribute('permission') === 'collection'
-                ? Authorization::skip(fn () => $dbForProject->getDocument('collection_' . $collectionId, $cursor))
-                : $dbForProject->getDocument('collection_' . $collectionId, $cursor);
+                ? Authorization::skip(fn () => $dbForProject->getDocument('collection_' . $collection->getInternalId(), $cursor))
+                : $dbForProject->getDocument('collection_' . $collection->getInternalId(), $cursor);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
@@ -1752,11 +1755,11 @@ App::get('/v1/database/collections/:collectionId/documents')
 
         if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document[] $documents */
-            $documents = Authorization::skip(fn() => $dbForProject->find('collection_' . $collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection));
-            $total = Authorization::skip(fn() => $dbForProject->count('collection_' . $collectionId, $queries, APP_LIMIT_COUNT));
+            $documents = Authorization::skip(fn() => $dbForProject->find('collection_' . $collection->getInternalId(), $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection));
+            $total = Authorization::skip(fn() => $dbForProject->count('collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT));
         } else {
-            $documents = $dbForProject->find('collection_' . $collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
-            $total = $dbForProject->count('collection_' . $collectionId, $queries, APP_LIMIT_COUNT);
+            $documents = $dbForProject->find('collection_' . $collection->getInternalId(), $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
+            $total = $dbForProject->count('collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
         }
 
         /**
@@ -1818,9 +1821,9 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
 
         if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document $document */
-            $document = Authorization::skip(fn() => $dbForProject->getDocument('collection_' . $collectionId, $documentId));
+            $document = Authorization::skip(fn() => $dbForProject->getDocument('collection_' . $collection->getInternalId(), $documentId));
         } else {
-            $document = $dbForProject->getDocument('collection_' . $collectionId, $documentId);
+            $document = $dbForProject->getDocument('collection_' . $collection->getInternalId(), $documentId);
         }
 
         /**
@@ -1872,7 +1875,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId/logs')
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $document = $dbForProject->getDocument('collection_' . $collectionId, $documentId);
+        $document = $dbForProject->getDocument('collection_' . $collection->getInternalId(), $documentId);
 
         if ($document->isEmpty()) {
             throw new Exception('No document found', 404, Exception::DOCUMENT_NOT_FOUND);
@@ -1981,9 +1984,9 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
                 throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
             }
 
-            $document = Authorization::skip(fn() => $dbForProject->getDocument('collection_' . $collectionId, $documentId));
+            $document = Authorization::skip(fn() => $dbForProject->getDocument('collection_' . $collection->getInternalId(), $documentId));
         } else {
-            $document = $dbForProject->getDocument('collection_' . $collectionId, $documentId);
+            $document = $dbForProject->getDocument('collection_' . $collection->getInternalId(), $documentId);
         }
 
 
@@ -2031,9 +2034,9 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         try {
             if ($collection->getAttribute('permission') === 'collection') {
                 /** @var Document $document */
-                $document = Authorization::skip(fn() => $dbForProject->updateDocument('collection_' . $collection->getId(), $document->getId(), new Document($data)));
+                $document = Authorization::skip(fn() => $dbForProject->updateDocument('collection_' . $collection->getInternalId(), $document->getId(), new Document($data)));
             } else {
-                $document = $dbForProject->updateDocument('collection_' . $collection->getId(), $document->getId(), new Document($data));
+                $document = $dbForProject->updateDocument('collection_' . $collection->getInternalId(), $document->getId(), new Document($data));
             }
             /**
              * Reset $collection attribute to remove prefix.
@@ -2116,9 +2119,9 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
 
         if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document $document */
-            $document = Authorization::skip(fn() => $dbForProject->getDocument('collection_' . $collectionId, $documentId));
+            $document = Authorization::skip(fn() => $dbForProject->getDocument('collection_' . $collection->getInternalId(), $documentId));
         } else {
-            $document = $dbForProject->getDocument('collection_' . $collectionId, $documentId);
+            $document = $dbForProject->getDocument('collection_' . $collection->getInternalId(), $documentId);
         }
 
         if ($document->isEmpty()) {
@@ -2126,12 +2129,12 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         }
 
         if ($collection->getAttribute('permission') === 'collection') {
-            Authorization::skip(fn() => $dbForProject->deleteDocument('collection_' . $collectionId, $documentId));
+            Authorization::skip(fn() => $dbForProject->deleteDocument('collection_' . $collection->getInternalId(), $documentId));
         } else {
-            $dbForProject->deleteDocument('collection_' . $collectionId, $documentId);
+            $dbForProject->deleteDocument('collection_' . $collection->getInternalId(), $documentId);
         }
 
-        $dbForProject->deleteCachedDocument('collection_' . $collectionId, $documentId);
+        $dbForProject->deleteCachedDocument('collection_' . $collection->getInternalId(), $documentId);
 
         /**
          * Reset $collection attribute to remove prefix.

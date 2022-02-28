@@ -1716,7 +1716,7 @@ App::patch('/v1/account/sessions/:sessionId')
                 $className = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
              
                 if (!\class_exists($className)) {
-                    throw new Exception('Provider is not supported', 501);
+                    throw new Exception('Provider is not supported', 501, Exception::PROJECT_PROVIDER_UNSUPPORTED);
                 }
 
                 $oauth2 = new $className($appId, $appSecret, '', [], []);
@@ -1753,7 +1753,7 @@ App::patch('/v1/account/sessions/:sessionId')
             }
         }
 
-        throw new Exception('Session not found', 404);
+        throw new Exception('Session not found', 404, Exception::USER_SESSION_NOT_FOUND);
     });
 
 App::delete('/v1/account/sessions')
