@@ -48,6 +48,7 @@ trait RealtimeBase
         $this->assertEquals('error', $payload['type']);
         $this->assertEquals(1008, $payload['data']['code']);
         $this->assertEquals('Missing channels', $payload['data']['message']);
+        \usleep(250000); // 250ms
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
     }

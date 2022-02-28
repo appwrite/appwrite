@@ -290,7 +290,6 @@ class FunctionsV1 extends Worker
         try {
             $executionResponse = $this->executor->createExecution(
                 projectId: $projectId,
-                functionId: $functionId,
                 deploymentId: $deploymentId,
                 path: $build->getAttribute('outputPath', ''),
                 vars: $vars,
@@ -329,6 +328,13 @@ class FunctionsV1 extends Worker
 
         /** Trigger realtime event */
         $target = Realtime::fromPayload('functions.executions.update', $execution);
+        Realtime::send(
+            projectId: 'console',
+            payload: $execution->getArrayCopy(),
+            event: 'functions.executions.update',
+            channels: $target['channels'],
+            roles: $target['roles']
+        );
         Realtime::send(
             projectId: $projectId,
             payload: $execution->getArrayCopy(),

@@ -27,11 +27,12 @@
     }
 
     class AppwriteException extends Error {
-        constructor(message, code = 0, response = '') {
+        constructor(message, code = 0, type = '', response = '') {
             super(message);
             this.name = 'AppwriteException';
             this.message = message;
             this.code = code;
+            this.type = type;
             this.response = response;
         }
     }
@@ -2433,7 +2434,7 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createDeployment: (functionId, entrypoint, code, activate) => __awaiter(this, void 0, void 0, function* () {
+                createDeployment: (functionId, entrypoint, code, activate, onProgress = (progress) => { }) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -2458,9 +2459,43 @@
                         payload['activate'] = activate;
                     }
                     const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('post', uri, {
+                    const size = code.size;
+                    if (size <= Appwrite.CHUNK_SIZE) {
+                        return yield this.call('post', uri, {
+                            'content-type': 'multipart/form-data',
+                        }, payload);
+                    }
+                    let id = undefined;
+                    let response = undefined;
+                    const headers = {
                         'content-type': 'multipart/form-data',
-                    }, payload);
+                    };
+                    let counter = 0;
+                    const totalCounters = Math.ceil(size / Appwrite.CHUNK_SIZE);
+                    for (counter; counter < totalCounters; counter++) {
+                        const start = (counter * Appwrite.CHUNK_SIZE);
+                        const end = Math.min((((counter * Appwrite.CHUNK_SIZE) + Appwrite.CHUNK_SIZE) - 1), size);
+                        headers['content-range'] = 'bytes ' + start + '-' + end + '/' + size;
+                        if (id) {
+                            headers['x-appwrite-id'] = id;
+                        }
+                        const stream = code.slice(start, end + 1);
+                        payload['code'] = new File([stream], code.name);
+                        response = yield this.call('post', uri, headers, payload);
+                        if (!id) {
+                            id = response['$id'];
+                        }
+                        if (onProgress) {
+                            onProgress({
+                                $id: response.$id,
+                                progress: Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100,
+                                sizeUploaded: end + 1,
+                                chunksTotal: response.chunksTotal,
+                                chunksUploaded: response.chunksUploaded
+                            });
+                        }
+                    }
+                    return response;
                 }),
                 /**
                  * Get Deployment
@@ -3989,7 +4024,7 @@
                     }, payload);
                 }),
                 /**
-                 * Create storage bucket
+                 * Create bucket
                  *
                  * Create a new storage bucket.
                  *
@@ -3998,16 +4033,15 @@
                  * @param {string} permission
                  * @param {string[]} read
                  * @param {string[]} write
+                 * @param {boolean} enabled
                  * @param {number} maximumFileSize
                  * @param {string[]} allowedFileExtensions
-                 * @param {boolean} enabled
-                 * @param {string} adapter
                  * @param {boolean} encryption
                  * @param {boolean} antivirus
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createBucket: (bucketId, name, permission, read, write, maximumFileSize, allowedFileExtensions, enabled, adapter, encryption, antivirus) => __awaiter(this, void 0, void 0, function* () {
+                createBucket: (bucketId, name, permission, read, write, enabled, maximumFileSize, allowedFileExtensions, encryption, antivirus) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof bucketId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "bucketId"');
                     }
@@ -4034,17 +4068,14 @@
                     if (typeof write !== 'undefined') {
                         payload['write'] = write;
                     }
+                    if (typeof enabled !== 'undefined') {
+                        payload['enabled'] = enabled;
+                    }
                     if (typeof maximumFileSize !== 'undefined') {
                         payload['maximumFileSize'] = maximumFileSize;
                     }
                     if (typeof allowedFileExtensions !== 'undefined') {
                         payload['allowedFileExtensions'] = allowedFileExtensions;
-                    }
-                    if (typeof enabled !== 'undefined') {
-                        payload['enabled'] = enabled;
-                    }
-                    if (typeof adapter !== 'undefined') {
-                        payload['adapter'] = adapter;
                     }
                     if (typeof encryption !== 'undefined') {
                         payload['encryption'] = encryption;
@@ -4088,15 +4119,15 @@
                  * @param {string} permission
                  * @param {string[]} read
                  * @param {string[]} write
+                 * @param {boolean} enabled
                  * @param {number} maximumFileSize
                  * @param {string[]} allowedFileExtensions
-                 * @param {boolean} enabled
                  * @param {boolean} encryption
                  * @param {boolean} antivirus
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateBucket: (bucketId, name, permission, read, write, maximumFileSize, allowedFileExtensions, enabled, encryption, antivirus) => __awaiter(this, void 0, void 0, function* () {
+                updateBucket: (bucketId, name, permission, read, write, enabled, maximumFileSize, allowedFileExtensions, encryption, antivirus) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof bucketId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "bucketId"');
                     }
@@ -4120,14 +4151,14 @@
                     if (typeof write !== 'undefined') {
                         payload['write'] = write;
                     }
+                    if (typeof enabled !== 'undefined') {
+                        payload['enabled'] = enabled;
+                    }
                     if (typeof maximumFileSize !== 'undefined') {
                         payload['maximumFileSize'] = maximumFileSize;
                     }
                     if (typeof allowedFileExtensions !== 'undefined') {
                         payload['allowedFileExtensions'] = allowedFileExtensions;
-                    }
-                    if (typeof enabled !== 'undefined') {
-                        payload['enabled'] = enabled;
                     }
                     if (typeof encryption !== 'undefined') {
                         payload['encryption'] = encryption;
@@ -4236,7 +4267,7 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createFile: (bucketId, fileId, file, read, write) => __awaiter(this, void 0, void 0, function* () {
+                createFile: (bucketId, fileId, file, read, write, onProgress = (progress) => { }) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof bucketId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "bucketId"');
                     }
@@ -4261,9 +4292,51 @@
                         payload['write'] = write;
                     }
                     const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('post', uri, {
+                    const size = file.size;
+                    if (size <= Appwrite.CHUNK_SIZE) {
+                        return yield this.call('post', uri, {
+                            'content-type': 'multipart/form-data',
+                        }, payload);
+                    }
+                    let id = undefined;
+                    let response = undefined;
+                    const headers = {
                         'content-type': 'multipart/form-data',
-                    }, payload);
+                    };
+                    let counter = 0;
+                    const totalCounters = Math.ceil(size / Appwrite.CHUNK_SIZE);
+                    if (fileId != 'unique()') {
+                        try {
+                            response = yield this.call('GET', new URL(this.config.endpoint + path + '/' + fileId), headers);
+                            counter = response.chunksUploaded;
+                        }
+                        catch (e) {
+                        }
+                    }
+                    for (counter; counter < totalCounters; counter++) {
+                        const start = (counter * Appwrite.CHUNK_SIZE);
+                        const end = Math.min((((counter * Appwrite.CHUNK_SIZE) + Appwrite.CHUNK_SIZE) - 1), size);
+                        headers['content-range'] = 'bytes ' + start + '-' + end + '/' + size;
+                        if (id) {
+                            headers['x-appwrite-id'] = id;
+                        }
+                        const stream = file.slice(start, end + 1);
+                        payload['file'] = new File([stream], file.name);
+                        response = yield this.call('post', uri, headers, payload);
+                        if (!id) {
+                            id = response['$id'];
+                        }
+                        if (onProgress) {
+                            onProgress({
+                                $id: response.$id,
+                                progress: Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100,
+                                sizeUploaded: end + 1,
+                                chunksTotal: response.chunksTotal,
+                                chunksUploaded: response.chunksUploaded
+                            });
+                        }
+                    }
+                    return response;
                 }),
                 /**
                  * Get File
@@ -4382,7 +4455,8 @@
                  * Get a file preview image. Currently, this method supports preview for image
                  * files (jpg, png, and gif), other supported formats, like pdf, docs, slides,
                  * and spreadsheets, will return the file icon image. You can also pass query
-                 * string arguments for cutting and resizing your preview image.
+                 * string arguments for cutting and resizing your preview image. Preview is
+                 * supported only for image files smaller than 10MB.
                  *
                  * @param {string} bucketId
                  * @param {string} fileId
@@ -5508,7 +5582,7 @@
                         };
                     }
                     if (400 <= response.status) {
-                        throw new AppwriteException(data === null || data === void 0 ? void 0 : data.message, response.status, data);
+                        throw new AppwriteException(data === null || data === void 0 ? void 0 : data.message, response.status, data === null || data === void 0 ? void 0 : data.type, data);
                     }
                     const cookieFallback = response.headers.get('X-Fallback-Cookies');
                     if (typeof window !== 'undefined' && window.localStorage && cookieFallback) {
@@ -5540,6 +5614,7 @@
             return output;
         }
     }
+    Appwrite.CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
     class Query {
     }
     Query.equal = (attribute, value) => Query.addQuery(attribute, "equal", value);

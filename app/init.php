@@ -71,7 +71,7 @@ const APP_LIMIT_ENCRYPTION = 20000000; //20MB
 const APP_LIMIT_COMPRESSION = 20000000; //20MB
 const APP_LIMIT_PREVIEW = 10000000; //10MB file size limit for preview endpoint
 const APP_CACHE_BUSTER = 201;
-const APP_VERSION_STABLE = '0.13.0';
+const APP_VERSION_STABLE = '0.12.3';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -786,7 +786,7 @@ App::setResource('dbForProject', function($db, $cache, $project) {
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace('_project_'.$project->getId());
+    $database->setNamespace("_{$project->getId()}");
 
     return $database;
 }, ['db', 'cache', 'project']);
@@ -796,7 +796,7 @@ App::setResource('dbForConsole', function($db, $cache) {
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace('_project_console');
+    $database->setNamespace('_console');
 
     return $database;
 }, ['db', 'cache']);

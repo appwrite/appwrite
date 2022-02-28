@@ -176,6 +176,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_WORKER_PER_CORE',
+                'description' => 'Internal Worker per core for the API, Realtime and Executor containers. Can be configured to optimize performance.',
+                'introduction' => '0.13.0',
+                'default' => 6,
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],
@@ -593,6 +602,15 @@ return [
                 'description' => 'Deprecated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead!',
                 'introduction' => '0.7.0',
                 'default' => 'node-16.0,php-7.4,python-3.9,ruby-3.0,java-16.0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_INACTIVE_THRESHOLD',
+                'description' => 'The minimum time a function can be inactive before it\'s container is shutdown and put to sleep. The default value is 60 seconds',
+                'introduction' => '0.13.0',
+                'default' => '60',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

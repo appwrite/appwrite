@@ -160,13 +160,15 @@ App::post('/v1/runtimes')
         $stderr = '';
         $startTime = \time();
         $endTime = 0;
+        $orchestration = $orchestrationPool->get();
 
         try {
             Console::info('Building container : ' . $runtimeId);
+            
             /** 
              * Temporary file paths in the executor 
              */
-            $tmpSource = "/tmp/$runtimeId/code.tar.gz";
+            $tmpSource = "/tmp/$runtimeId/src/code.tar.gz";
             $tmpBuild = "/tmp/$runtimeId/builds/code.tar.gz";
 
             /**
@@ -191,7 +193,6 @@ App::post('/v1/runtimes')
             /**
              * Create container
              */
-            $orchestration = $orchestrationPool->get();
             $secret = \bin2hex(\random_bytes(16));
             $vars = \array_merge($vars, [
                 'INTERNAL_RUNTIME_KEY' => $secret,
@@ -199,9 +200,9 @@ App::post('/v1/runtimes')
             ]);
             $vars = array_map(fn ($v) => strval($v), $vars);
             $orchestration
-                ->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', 1))
-                ->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', 256))
-                ->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
+                ->setCpus((int) App::getEnv('_APP_FUNCTIONS_CPUS', 0))
+                ->setMemory((int) App::getEnv('_APP_FUNCTIONS_MEMORY', 0))
+                ->setSwap((int) App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 0));
             
             /** Keep the container alive if we have commands to be executed */
             $entrypoint = !empty($commands) ? [
@@ -225,7 +226,7 @@ App::post('/v1/runtimes')
                 workdir: $workdir,
                 volumes: [
                     \dirname($tmpSource). ':/tmp:rw',
-                    \dirname($tmpBuild). ":/usr/code:rw"
+                    \dirname($tmpBuild). ':/usr/code:rw'
                 ]
             );
 
@@ -263,7 +264,7 @@ App::post('/v1/runtimes')
                     throw new Exception('Something went wrong during the build process', 500);
                 }
 
-                $destinationDevice =  getStorageDevice($destination);
+                $destinationDevice = getStorageDevice($destination);
                 $outputPath = $destinationDevice->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
 
                 $buffer = $localDevice->read($tmpBuild);
@@ -302,8 +303,8 @@ App::post('/v1/runtimes')
             Console::success('Build Stage completed in ' . ($endTime - $startTime) . ' seconds');
         
         } catch (Throwable $th) {
-            Console::error('Build failed: ' . $th->getMessage());
-            throw new Exception($th->getMessage(), 500);
+            Console::error('Build failed: ' . $th->getMessage() . $stdout);
+            throw new Exception($th->getMessage() . $stdout, 500);
         } finally {
             if (!empty($containerId) && $remove) {
                 $orchestration->remove($containerId, true);
@@ -394,17 +395,13 @@ App::delete('/v1/runtimes/:runtimeId')
 App::post('/v1/execution')
     ->desc('Create an execution')
     ->param('runtimeId', '', new Text(64), 'The runtimeID to execute')
-    ->param('path', '', new Text(0), 'Path containing the built files.', false)
     ->param('vars', [], new Assoc(), 'Environment variables required for the build', false)
     ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
-    ->param('runtime', '', new Text(128), 'Runtime for the cloud function', false)
-    ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file')
     ->param('timeout', 15, new ValidatorRange(1, 900), 'Function maximum execution time in seconds.', true)
-    ->param('baseImage', '', new Text(128), 'Base image name of the runtime', false)
     ->inject('activeRuntimes')
     ->inject('response')
     ->action(
-        function (string $runtimeId, string $path, array $vars, string $data, string $runtime, string $entrypoint, $timeout, string $baseImage, $activeRuntimes, Response $response) {
+        function (string $runtimeId, array $vars, string $data, $timeout, $activeRuntimes, Response $response) {
 
             if (!$activeRuntimes->exists($runtimeId)) {
                 throw new Exception('Runtime not found. Please create the runtime.', 404);
@@ -656,7 +653,7 @@ $http->on('start', function ($http) {
     Timer::tick(MAINTENANCE_INTERVAL * 1000, function () use ($orchestrationPool, $activeRuntimes) {
         Console::warning("Running maintenance task ...");
         foreach ($activeRuntimes as $runtime) {
-            $inactiveThreshold = \time() - App::getEnv('OPENRUNTIMES_INACTIVE_THRESHOLD', 60);
+            $inactiveThreshold = \time() - App::getEnv('_APP_FUNCTIONS_INACTIVE_THRESHOLD', 60);
             if ($runtime['updated'] < $inactiveThreshold) {
                 go(function () use ($runtime, $orchestrationPool, $activeRuntimes) {
                     try {
