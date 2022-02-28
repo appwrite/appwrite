@@ -171,7 +171,8 @@ class HTTPTest extends Scope
 
             if(
                 (strpos($file, 'latest') === false) &&
-                (strpos($file, '0.12.x') === false)
+                (strpos($file, '0.12.x') === false) &&
+                (strpos($file, '0.13.x') === false)
              ) {
                 continue;
             }
@@ -184,7 +185,6 @@ class HTTPTest extends Scope
             ], json_decode(file_get_contents($directory.$file), true));
 
             $response['body'] = json_decode($response['body'], true);
-
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertTrue(empty($response['body']));
         }
@@ -209,6 +209,6 @@ class HTTPTest extends Scope
         $this->assertIsString($body['server-php']);
         $this->assertIsString($body['server-python']);
         $this->assertIsString($body['server-ruby']);
-        $this->assertIsString($body['server-cli']);
+        $this->assertIsString($body['console-cli']);
     }
 }

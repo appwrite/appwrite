@@ -76,8 +76,8 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
             ;
         }
 
-        if (($abuse->check() // Route is rate-limited
-        && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not disabled
+        if ((App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled' // Route is rate-limited
+        && $abuse->check()) // Abuse is not disabled
         && (!$isAppUser && !$isPrivilegedUser)) // User is not an admin or API key
         {
             throw new Exception('Too many requests', 429, Exception::GENERAL_RATE_LIMIT_EXCEEDED);

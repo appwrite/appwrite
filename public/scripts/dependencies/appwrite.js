@@ -27,11 +27,12 @@
     }
 
     class AppwriteException extends Error {
-        constructor(message, code = 0, response = '') {
+        constructor(message, code = 0, type = '', response = '') {
             super(message);
             this.name = 'AppwriteException';
             this.message = message;
             this.code = code;
+            this.type = type;
             this.response = response;
         }
     }
@@ -2368,6 +2369,236 @@
                     }, payload);
                 }),
                 /**
+                 * List Deployments
+                 *
+                 * Get a list of all the project's code deployments. You can use the query
+                 * params to filter your results.
+                 *
+                 * @param {string} functionId
+                 * @param {string} search
+                 * @param {number} limit
+                 * @param {number} offset
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
+                 * @param {string} orderType
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                listDeployments: (functionId, search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    let path = '/functions/{functionId}/deployments'.replace('{functionId}', functionId);
+                    let payload = {};
+                    if (typeof search !== 'undefined') {
+                        payload['search'] = search;
+                    }
+                    if (typeof limit !== 'undefined') {
+                        payload['limit'] = limit;
+                    }
+                    if (typeof offset !== 'undefined') {
+                        payload['offset'] = offset;
+                    }
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
+                    }
+                    if (typeof orderType !== 'undefined') {
+                        payload['orderType'] = orderType;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Deployment
+                 *
+                 * Create a new function code deployment. Use this endpoint to upload a new
+                 * version of your code function. To execute your newly uploaded code, you'll
+                 * need to update the function's deployment to use your new deployment UID.
+                 *
+                 * This endpoint accepts a tar.gz file compressed with your code. Make sure to
+                 * include any dependencies your code has within the compressed file. You can
+                 * learn more about code packaging in the [Appwrite Cloud Functions
+                 * tutorial](/docs/functions).
+                 *
+                 * Use the "command" param to set the entry point used to execute your code.
+                 *
+                 * @param {string} functionId
+                 * @param {string} entrypoint
+                 * @param {File} code
+                 * @param {boolean} activate
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createDeployment: (functionId, entrypoint, code, activate, onProgress = (progress) => { }) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    if (typeof entrypoint === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "entrypoint"');
+                    }
+                    if (typeof code === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "code"');
+                    }
+                    if (typeof activate === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "activate"');
+                    }
+                    let path = '/functions/{functionId}/deployments'.replace('{functionId}', functionId);
+                    let payload = {};
+                    if (typeof entrypoint !== 'undefined') {
+                        payload['entrypoint'] = entrypoint;
+                    }
+                    if (typeof code !== 'undefined') {
+                        payload['code'] = code;
+                    }
+                    if (typeof activate !== 'undefined') {
+                        payload['activate'] = activate;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    const size = code.size;
+                    if (size <= Appwrite.CHUNK_SIZE) {
+                        return yield this.call('post', uri, {
+                            'content-type': 'multipart/form-data',
+                        }, payload);
+                    }
+                    let id = undefined;
+                    let response = undefined;
+                    const headers = {
+                        'content-type': 'multipart/form-data',
+                    };
+                    let counter = 0;
+                    const totalCounters = Math.ceil(size / Appwrite.CHUNK_SIZE);
+                    for (counter; counter < totalCounters; counter++) {
+                        const start = (counter * Appwrite.CHUNK_SIZE);
+                        const end = Math.min((((counter * Appwrite.CHUNK_SIZE) + Appwrite.CHUNK_SIZE) - 1), size);
+                        headers['content-range'] = 'bytes ' + start + '-' + end + '/' + size;
+                        if (id) {
+                            headers['x-appwrite-id'] = id;
+                        }
+                        const stream = code.slice(start, end + 1);
+                        payload['code'] = new File([stream], code.name);
+                        response = yield this.call('post', uri, headers, payload);
+                        if (!id) {
+                            id = response['$id'];
+                        }
+                        if (onProgress) {
+                            onProgress({
+                                $id: response.$id,
+                                progress: Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100,
+                                sizeUploaded: end + 1,
+                                chunksTotal: response.chunksTotal,
+                                chunksUploaded: response.chunksUploaded
+                            });
+                        }
+                    }
+                    return response;
+                }),
+                /**
+                 * Get Deployment
+                 *
+                 * Get a code deployment by its unique ID.
+                 *
+                 * @param {string} functionId
+                 * @param {string} deploymentId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getDeployment: (functionId, deploymentId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    if (typeof deploymentId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "deploymentId"');
+                    }
+                    let path = '/functions/{functionId}/deployments/{deploymentId}'.replace('{functionId}', functionId).replace('{deploymentId}', deploymentId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Function Deployment
+                 *
+                 * Update the function code deployment ID using the unique function ID. Use
+                 * this endpoint to switch the code deployment that should be executed by the
+                 * execution endpoint.
+                 *
+                 * @param {string} functionId
+                 * @param {string} deploymentId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateDeployment: (functionId, deploymentId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    if (typeof deploymentId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "deploymentId"');
+                    }
+                    let path = '/functions/{functionId}/deployments/{deploymentId}'.replace('{functionId}', functionId).replace('{deploymentId}', deploymentId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Delete Deployment
+                 *
+                 * Delete a code deployment by its unique ID.
+                 *
+                 * @param {string} functionId
+                 * @param {string} deploymentId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                deleteDeployment: (functionId, deploymentId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    if (typeof deploymentId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "deploymentId"');
+                    }
+                    let path = '/functions/{functionId}/deployments/{deploymentId}'.replace('{functionId}', functionId).replace('{deploymentId}', deploymentId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('delete', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Retry Build
+                 *
+                 *
+                 * @param {string} functionId
+                 * @param {string} deploymentId
+                 * @param {string} buildId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                retryBuild: (functionId, deploymentId, buildId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    if (typeof deploymentId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "deploymentId"');
+                    }
+                    if (typeof buildId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "buildId"');
+                    }
+                    let path = '/functions/{functionId}/deployments/{deploymentId}/builds/{buildId}'.replace('{functionId}', functionId).replace('{deploymentId}', deploymentId).replace('{buildId}', buildId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * List Executions
                  *
                  * Get a list of all the current user function execution logs. You can use the
@@ -2420,10 +2651,11 @@
                  *
                  * @param {string} functionId
                  * @param {string} data
+                 * @param {boolean} async
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createExecution: (functionId, data) => __awaiter(this, void 0, void 0, function* () {
+                createExecution: (functionId, data, async) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -2431,6 +2663,9 @@
                     let payload = {};
                     if (typeof data !== 'undefined') {
                         payload['data'] = data;
+                    }
+                    if (typeof async !== 'undefined') {
+                        payload['async'] = async;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
@@ -2458,205 +2693,6 @@
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Update Function Tag
-                 *
-                 * Update the function code tag ID using the unique function ID. Use this
-                 * endpoint to switch the code tag that should be executed by the execution
-                 * endpoint.
-                 *
-                 * @param {string} functionId
-                 * @param {string} tag
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                updateTag: (functionId, tag) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof functionId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "functionId"');
-                    }
-                    if (typeof tag === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "tag"');
-                    }
-                    let path = '/functions/{functionId}/tag'.replace('{functionId}', functionId);
-                    let payload = {};
-                    if (typeof tag !== 'undefined') {
-                        payload['tag'] = tag;
-                    }
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('patch', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * List Tags
-                 *
-                 * Get a list of all the project's code tags. You can use the query params to
-                 * filter your results.
-                 *
-                 * @param {string} functionId
-                 * @param {string} search
-                 * @param {number} limit
-                 * @param {number} offset
-                 * @param {string} cursor
-                 * @param {string} cursorDirection
-                 * @param {string} orderType
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                listTags: (functionId, search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof functionId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "functionId"');
-                    }
-                    let path = '/functions/{functionId}/tags'.replace('{functionId}', functionId);
-                    let payload = {};
-                    if (typeof search !== 'undefined') {
-                        payload['search'] = search;
-                    }
-                    if (typeof limit !== 'undefined') {
-                        payload['limit'] = limit;
-                    }
-                    if (typeof offset !== 'undefined') {
-                        payload['offset'] = offset;
-                    }
-                    if (typeof cursor !== 'undefined') {
-                        payload['cursor'] = cursor;
-                    }
-                    if (typeof cursorDirection !== 'undefined') {
-                        payload['cursorDirection'] = cursorDirection;
-                    }
-                    if (typeof orderType !== 'undefined') {
-                        payload['orderType'] = orderType;
-                    }
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('get', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Create Tag
-                 *
-                 * Create a new function code tag. Use this endpoint to upload a new version
-                 * of your code function. To execute your newly uploaded code, you'll need to
-                 * update the function's tag to use your new tag UID.
-                 *
-                 * This endpoint accepts a tar.gz file compressed with your code. Make sure to
-                 * include any dependencies your code has within the compressed file. You can
-                 * learn more about code packaging in the [Appwrite Cloud Functions
-                 * tutorial](/docs/functions).
-                 *
-                 * Use the "command" param to set the entry point used to execute your code.
-                 *
-                 * @param {string} functionId
-                 * @param {string} command
-                 * @param {File} code
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                createTag: (functionId, command, code, onProgress = (progress) => { }) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof functionId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "functionId"');
-                    }
-                    if (typeof command === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "command"');
-                    }
-                    if (typeof code === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "code"');
-                    }
-                    let path = '/functions/{functionId}/tags'.replace('{functionId}', functionId);
-                    let payload = {};
-                    if (typeof command !== 'undefined') {
-                        payload['command'] = command;
-                    }
-                    if (typeof code !== 'undefined') {
-                        payload['code'] = code;
-                    }
-                    const uri = new URL(this.config.endpoint + path);
-                    const size = code.size;
-                    if (size <= Appwrite.CHUNK_SIZE) {
-                        return yield this.call('post', uri, {
-                            'content-type': 'multipart/form-data',
-                        }, payload);
-                    }
-                    let id = undefined;
-                    let response = undefined;
-                    const headers = {
-                        'content-type': 'multipart/form-data',
-                    };
-                    let counter = 0;
-                    const totalCounters = Math.ceil(size / Appwrite.CHUNK_SIZE);
-                    for (counter; counter < totalCounters; counter++) {
-                        const start = (counter * Appwrite.CHUNK_SIZE);
-                        const end = Math.min((((counter * Appwrite.CHUNK_SIZE) + Appwrite.CHUNK_SIZE) - 1), size);
-                        headers['content-range'] = 'bytes ' + start + '-' + end + '/' + size;
-                        if (id) {
-                            headers['x-appwrite-id'] = id;
-                        }
-                        const stream = code.slice(start, end + 1);
-                        payload['code'] = new File([stream], code.name);
-                        response = yield this.call('post', uri, headers, payload);
-                        if (!id) {
-                            id = response['$id'];
-                        }
-                        if (onProgress) {
-                            onProgress({
-                                $id: response.$id,
-                                progress: Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100,
-                                sizeUpploaded: end + 1,
-                                chunksTotal: response.chunksTotal,
-                                chunksUploaded: response.chunksUploaded
-                            });
-                        }
-                    }
-                    return response;
-                }),
-                /**
-                 * Get Tag
-                 *
-                 * Get a code tag by its unique ID.
-                 *
-                 * @param {string} functionId
-                 * @param {string} tagId
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                getTag: (functionId, tagId) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof functionId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "functionId"');
-                    }
-                    if (typeof tagId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "tagId"');
-                    }
-                    let path = '/functions/{functionId}/tags/{tagId}'.replace('{functionId}', functionId).replace('{tagId}', tagId);
-                    let payload = {};
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('get', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Delete Tag
-                 *
-                 * Delete a code tag by its unique ID.
-                 *
-                 * @param {string} functionId
-                 * @param {string} tagId
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                deleteTag: (functionId, tagId) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof functionId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "functionId"');
-                    }
-                    if (typeof tagId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "tagId"');
-                    }
-                    let path = '/functions/{functionId}/tags/{tagId}'.replace('{functionId}', functionId).replace('{tagId}', tagId);
-                    let payload = {};
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('delete', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
@@ -4294,7 +4330,7 @@
                             onProgress({
                                 $id: response.$id,
                                 progress: Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100,
-                                sizeUpploaded: end + 1,
+                                sizeUploaded: end + 1,
                                 chunksTotal: response.chunksTotal,
                                 chunksUploaded: response.chunksUploaded
                             });
@@ -5546,7 +5582,7 @@
                         };
                     }
                     if (400 <= response.status) {
-                        throw new AppwriteException(data === null || data === void 0 ? void 0 : data.message, response.status, data);
+                        throw new AppwriteException(data === null || data === void 0 ? void 0 : data.message, response.status, data === null || data === void 0 ? void 0 : data.type, data);
                     }
                     const cookieFallback = response.headers.get('X-Fallback-Cookies');
                     if (typeof window !== 'undefined' && window.localStorage && cookieFallback) {
