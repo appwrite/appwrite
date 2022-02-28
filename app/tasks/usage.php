@@ -361,11 +361,13 @@ $cli
                                     $latestTime[$metric][$period['key']] = $time;
                                 } catch (\Exception $e) { // if projects are deleted this might fail
                                     Console::warning("Failed to save data for project {$projectId} and metric {$metricUpdated}: {$e->getMessage()}");
+                                    Console::warning($e->getTraceAsString());
                                 }
                             }
                         }
                     } catch (\Exception $e) {
                         Console::warning("Failed to Query: {$e->getMessage()}");
+                        Console::warning($e->getTraceAsString());
                     }
                 }
             }
@@ -419,44 +421,50 @@ $cli
                     $storageTotal = $dbForProject->sum('tags', 'size');
 
                     $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
-                    $id = \md5($time . '_30m_storage.tags.total'); //Construct unique id for each metric using time, period and metric
+                    $id = \md5($time . '_30m_storage.deployments.total'); //Construct unique id for each metric using time, period and metric
                     $document = $dbForProject->getDocument('stats', $id);
-                    if ($document->isEmpty()) {
-                        $dbForProject->createDocument('stats', new Document([
-                            '$id' => $id,
-                            'period' => '30m',
-                            'time' => $time,
-                            'metric' => 'storage.tags.total',
-                            'value' => $storageTotal,
-                            'type' => 1,
-                        ]));
-                    } else {
-                        $dbForProject->updateDocument(
-                            'stats',
-                            $document->getId(),
-                            $document->setAttribute('value', $storageTotal)
-                        );
+                    try {
+
+                        if ($document->isEmpty()) {
+                            $dbForProject->createDocument('stats', new Document([
+                                '$id' => $id,
+                                'period' => '30m',
+                                'time' => $time,
+                                'metric' => 'storage.deployments.total',
+                                'value' => $storageTotal,
+                                'type' => 1,
+                            ]));
+                        } else {
+                            $dbForProject->updateDocument(
+                                'stats',
+                                $document->getId(),
+                                $document->setAttribute('value', $storageTotal)
+                            );
+                        }
+                        $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
+                        $id = \md5($time . '_1d_storage.deployments.total'); //Construct unique id for each metric using time, period and metric
+                        $document = $dbForProject->getDocument('stats', $id);
+                        if ($document->isEmpty()) {
+                            $dbForProject->createDocument('stats', new Document([
+                                '$id' => $id,
+                                'period' => '1d',
+                                'time' => $time,
+                                'metric' => 'storage.deployments.total',
+                                'value' => $storageTotal,
+                                'type' => 1,
+                            ]));
+                        } else {
+                            $dbForProject->updateDocument(
+                                'stats',
+                                $document->getId(),
+                                $document->setAttribute('value', $storageTotal)
+                            );
+                        }
+                    } catch(\Exception $e) {
+                        Console::warning("Failed to save data for project {$projectId} and metric storage.deployments.total: {$e->getMessage()}");
+                        Console::warning($e->getTraceAsString());
                     }
 
-                    $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
-                    $id = \md5($time . '_1d_storage.tags.total'); //Construct unique id for each metric using time, period and metric
-                    $document = $dbForProject->getDocument('stats', $id);
-                    if ($document->isEmpty()) {
-                        $dbForProject->createDocument('stats', new Document([
-                            '$id' => $id,
-                            'period' => '1d',
-                            'time' => $time,
-                            'metric' => 'storage.tags.total',
-                            'value' => $storageTotal,
-                            'type' => 1,
-                        ]));
-                    } else {
-                        $dbForProject->updateDocument(
-                            'stats',
-                            $document->getId(),
-                            $document->setAttribute('value', $storageTotal)
-                        );
-                    }
 
                     $collections = [
                         'users' => [
@@ -749,6 +757,7 @@ $cli
                             }
                         } catch (\Exception$e) {
                             Console::warning("Failed to save database counters data for project {$collection}: {$e->getMessage()}");
+                            Console::warning($e->getTraceAsString());
                         }
                     }
                 }

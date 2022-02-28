@@ -439,11 +439,11 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                         <div data-ls-if="{{project-bucket.permission}} == 'bucket'">
 
                                             <label for="bucket-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
-                                            <input type="hidden" id="bucket-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-bucket.$permissions.read}}" placeholder="User ID, Team ID or Role" />
+                                            <input type="hidden" id="bucket-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-bucket.$read}}" placeholder="User ID, Team ID or Role" />
                                             <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
 
                                             <label for="bucket-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                            <input type="hidden" id="bucket-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-bucket.$permissions.write}}" placeholder="User ID, Team ID or Role" />
+                                            <input type="hidden" id="bucket-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-bucket.$write}}" placeholder="User ID, Team ID or Role" />
                                             <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
                                         </div>
                                     </div>

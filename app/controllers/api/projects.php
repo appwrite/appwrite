@@ -601,7 +601,7 @@ App::post('/v1/projects/:projectId/webhooks')
             throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
-        $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
+        $security = (bool) filter_var($security, FILTER_VALIDATE_BOOLEAN);
 
         $webhook = new Document([
             '$id' => $dbForConsole->getId(),

@@ -30,6 +30,9 @@ class Event
 
     const CERTIFICATES_QUEUE_NAME = 'v1-certificates';
     const CERTIFICATES_CLASS_NAME = 'CertificatesV1';
+
+    const BUILDS_QUEUE_NAME = 'v1-builds';
+    const BUILDS_CLASS_NAME = 'BuildsV1';
     
     /**
      * @var string

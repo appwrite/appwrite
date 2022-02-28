@@ -2,9 +2,10 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
+use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Validator\UID;
-use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
@@ -12,7 +13,6 @@ use Utopia\Storage\Validator\Upload;
 use Appwrite\Utopia\Response;
 use Appwrite\Task\Validator\Cron;
 use Utopia\App;
-use Appwrite\Extend\Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -24,6 +24,9 @@ use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Config\Config;
 use Cron\CronExpression;
+use Executor\Executor;
+use Utopia\CLI\Console;
+use Utopia\Validator\Boolean;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -62,7 +65,7 @@ App::post('/v1/functions')
             'status' => 'disabled',
             'name' => $name,
             'runtime' => $runtime,
-            'tag' => '',
+            'deployment' => '',
             'vars' => $vars,
             'events' => $events,
             'schedule' => $schedule,
@@ -298,10 +301,12 @@ App::put('/v1/functions/:functionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $dbForProject, $project) {
+    ->inject('user')
+    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $dbForProject, $project, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
+        /** @var Appwrite\Auth\User $user */
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -310,8 +315,8 @@ App::put('/v1/functions/:functionId')
         }
 
         $original = $function->getAttribute('schedule', '');
-        $cron = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
+        $cron = (!empty($function->getAttribute('deployment', null)) && !empty($schedule)) ? new CronExpression($schedule) : null;
+        $next = (!empty($function->getAttribute('deployment', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
@@ -326,10 +331,11 @@ App::put('/v1/functions/:functionId')
         ])));
 
         if ($next && $schedule !== $original) {
-            ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
+            ResqueScheduler::enqueueAt($next, Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME, [
                 'projectId' => $project->getId(),
                 'webhooks' => $project->getAttribute('webhooks', []),
                 'functionId' => $function->getId(),
+                'userId' => $user->getId(),
                 'executionId' => null,
                 'trigger' => 'schedule',
             ]);  // Async task rescheduale
@@ -338,45 +344,54 @@ App::put('/v1/functions/:functionId')
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
-App::patch('/v1/functions/:functionId/tag')
+App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
-    ->desc('Update Function Tag')
+    ->desc('Update Function Deployment')
     ->label('scope', 'functions.write')
-    ->label('event', 'functions.tags.update')
+    ->label('event', 'functions.deployments.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'updateTag')
-    ->label('sdk.description', '/docs/references/functions/update-function-tag.md')
+    ->label('sdk.method', 'updateDeployment')
+    ->label('sdk.description', '/docs/references/functions/update-function-deployment.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('tag', '', new UID(), 'Tag ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->action(function ($functionId, $tag, $response, $dbForProject, $project) {
+    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
 
         $function = $dbForProject->getDocument('functions', $functionId);
-        $tag = $dbForProject->getDocument('tags', $tag);
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
         }
 
-        if ($tag->isEmpty()) {
-            throw new Exception('Tag not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
+        if ($build->isEmpty()) {
+            throw new Exception('Build not found', 404, Exception::BUILD_NOT_FOUND);
+        }
+
+        if ($build->getAttribute('status') !== 'ready') {
+            throw new Exception('Build not ready', 400, Exception::BUILD_NOT_READY);
         }
 
         $schedule = $function->getAttribute('schedule', '');
-        $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
+        $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
+        $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
-            'tag' => $tag->getId(),
+            'deployment' => $deployment->getId(),
             'scheduleNext' => (int)$next,
         ])));
 
@@ -389,7 +404,6 @@ App::patch('/v1/functions/:functionId/tag')
                 'trigger' => 'schedule',
             ]);  // Async task rescheduale
         }
-
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
@@ -431,34 +445,39 @@ App::delete('/v1/functions/:functionId')
         $response->noContent();
     });
 
-App::post('/v1/functions/:functionId/tags')
+App::post('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
-    ->desc('Create Tag')
+    ->desc('Create Deployment')
     ->label('scope', 'functions.write')
-    ->label('event', 'functions.tags.create')
+    ->label('event', 'functions.deployments.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'createTag')
-    ->label('sdk.description', '/docs/references/functions/create-tag.md')
+    ->label('sdk.method', 'createDeployment')
+    ->label('sdk.description', '/docs/references/functions/create-deployment.md')
     ->label('sdk.packaging', true)
     ->label('sdk.request.type', 'multipart/form-data')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TAG)
+    ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('command', '', new Text('1028'), 'Code execution command.')
+    ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
     ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
+    ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.', false)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
+    ->inject('user')
+    ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function ($functionId, $command, $file, $request, $response, $dbForProject, $usage, $deviceFunctions, $deviceLocal) {
+    ->action(function ($functionId, $entrypoint, $file, $activate, $request, $response, $dbForProject, $usage, $user, $project, $deviceFunctions, $deviceLocal) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
+        /** @var Appwrite\Auth\User $user */
+        /** @var Appwrite\Database\Document $project */
         /** @var Utopia\Storage\Device $deviceFunctions */
         /** @var Utopia\Storage\Device $deviceLocal */
 
@@ -470,7 +489,7 @@ App::post('/v1/functions/:functionId/tags')
 
         $file = $request->getFiles('code');
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSizeValidator = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
+        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', 0));
         $upload = new Upload();
 
         if (empty($file)) {
@@ -487,7 +506,7 @@ App::post('/v1/functions/:functionId/tags')
         }
 
         $contentRange = $request->getHeader('content-range');
-        $tagId = $dbForProject->getId();
+        $deploymentId = $dbForProject->getId();
         $chunk = 1;
         $chunks = 1;
 
@@ -495,7 +514,7 @@ App::post('/v1/functions/:functionId/tags')
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
             $fileSize = $request->getContentRangeSize();
-            $tagId = $request->getHeader('x-appwrite-id', $tagId);
+            $deploymentId = $request->getHeader('x-appwrite-id', $deploymentId);
             if(is_null($start) || is_null($end) || is_null($fileSize)) {
                 throw new Exception('Invalid content-range header', 400, Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
@@ -520,85 +539,120 @@ App::post('/v1/functions/:functionId/tags')
 
         // Save to storage
         $fileSize ??= $deviceLocal->getFileSize($fileTmpName);
-        $path = $deviceFunctions->getPath($tagId.'.'.\pathinfo($fileName, PATHINFO_EXTENSION));
+        $path = $deviceFunctions->getPath($deploymentId.'.'.\pathinfo($fileName, PATHINFO_EXTENSION));
         
-        $tag = $dbForProject->getDocument('tags', $tagId);
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        if(!$tag->isEmpty()) {
-            $chunks = $tag->getAttribute('chunksTotal', 1);
-            if($chunk == -1) {
+        $metadata = ['content_type' => $deviceLocal->getFileMimeType($fileTmpName)];
+        if (!$deployment->isEmpty()) {
+            $chunks = $deployment->getAttribute('chunksTotal', 1);
+            $metadata = $deployment->getAttribute('metadata', []);
+            if ($chunk === -1) {
                 $chunk = $chunks;
             }
         }
 
-        $chunksUploaded = $deviceFunctions->upload($fileTmpName, $path, $chunk, $chunks);
+        $chunksUploaded = $deviceFunctions->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
 
         if (empty($chunksUploaded)) {
             throw new Exception('Failed moving file', 500, Exception::GENERAL_SERVER_ERROR);
         }
-        
+
         if($chunksUploaded === $chunks) {
+
+            $activate = (bool) filter_var($activate, FILTER_VALIDATE_BOOLEAN);
+
+            if ($activate) {
+                // Remove deploy for all other deployments.
+                $activeDeployments = $dbForProject->find('deployments', [
+                    new Query('activate', Query::TYPE_EQUAL, [true]),
+                    new Query('resourceId', Query::TYPE_EQUAL, [$functionId]),
+                    new Query('resourceType', Query::TYPE_EQUAL, ['functions'])
+                ]);
+
+                foreach ($activeDeployments as $activeDeployment) {
+                    $activeDeployment->setAttribute('activate', false);
+                    $dbForProject->updateDocument('deployments', $activeDeployment->getId(), $activeDeployment);
+                }
+            }
+            
             $fileSize = $deviceFunctions->getFileSize($path);
 
-            if ($tag->isEmpty()) {
-                $tag = $dbForProject->createDocument('tags', new Document([
-                    '$id' => $tagId,
-                    '$read' => [],
-                    '$write' => [],
-                    'functionId' => $function->getId(),
+            if ($deployment->isEmpty()) {
+                $deployment = $dbForProject->createDocument('deployments', new Document([
+                    '$id' => $deploymentId,
+                    '$read' => ['role:all'],
+                    '$write' => ['role:all'],
+                    'resourceId' => $function->getId(),
+                    'resourceType' => 'functions',
                     'dateCreated' => time(),
-                    'command' => $command,
+                    'entrypoint' => $entrypoint,
                     'path' => $path,
                     'size' => $fileSize,
-                    'search' => implode(' ', [$tagId, $command]),
+                    'search' => implode(' ', [$deploymentId, $entrypoint]),
+                    'activate' => $activate,
+                    'metadata' => $metadata,
                 ]));
             } else {
-                $tag = $dbForProject->updateDocument('tags', $tagId, $tag->setAttribute('size', $fileSize));
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', $fileSize)->setAttribute('metadata', $metadata));
             }
+
+            // Enqueue a message to start the build
+            Resque::enqueue(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, [
+                'projectId' => $project->getId(),
+                'resourceId' => $function->getId(),
+                'deploymentId' => $deploymentId,
+                'type' => BUILD_TYPE_DEPLOYMENT
+            ]);
+
+            $usage
+                ->setParam('storage', $deployment->getAttribute('size', 0))
+            ;
         } else {
-            if($tag->isEmpty()) {
-                $tag = $dbForProject->createDocument('tags', new Document([
-                    '$id' => $tagId,
-                    '$read' => [],
-                    '$write' => [],
-                    'functionId' => $function->getId(),
+            if($deployment->isEmpty()) {
+                $deployment = $dbForProject->createDocument('deployments', new Document([
+                    '$id' => $deploymentId,
+                    '$read' => ['role:all'],
+                    '$write' => ['role:all'],
+                    'resourceId' => $function->getId(),
+                    'resourceType' => 'functions',
                     'dateCreated' => time(),
-                    'command' => $command,
+                    'entrypoint' => $entrypoint,
                     'path' => $path,
-                    'size' => 0,
+                    'size' => $fileSize,
                     'chunksTotal' => $chunks,
                     'chunksUploaded' => $chunksUploaded,
-                    'search' => implode(' ', [$tagId, $command]),
+                    'search' => implode(' ', [$deploymentId, $entrypoint]),
+                    'activate' => $activate,
+                    'metadata' => $metadata,
                 ]));
             } else {
-                $tag = $dbForProject->updateDocument('tags', $tagId, $tag->setAttribute('chunksUploaded', $chunksUploaded));
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('chunksUploaded', $chunksUploaded)->setAttribute('metadata', $metadata));
             }
         }
 
-        $usage
-            ->setParam('storage', $tag->getAttribute('size', 0))
-        ;
+        $metadata = null;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($tag, Response::MODEL_TAG);
+        $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
-App::get('/v1/functions/:functionId/tags')
+App::get('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
-    ->desc('List Tags')
+    ->desc('List Deployments')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listTags')
-    ->label('sdk.description', '/docs/references/functions/list-tags.md')
+    ->label('sdk.method', 'listDeployments')
+    ->label('sdk.description', '/docs/references/functions/list-deployments.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TAG_LIST)
+    ->label('sdk.response.model', Response::MODEL_DEPLOYMENT_LIST)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of tags to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of deployments to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursor', '', new UID(), 'ID of the tag used as the starting point for the query, excluding the tag itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('cursor', '', new UID(), 'ID of the deployment used as the starting point for the query, excluding the deployment itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
@@ -614,9 +668,9 @@ App::get('/v1/functions/:functionId/tags')
         }
 
         if (!empty($cursor)) {
-            $cursorTag = $dbForProject->getDocument('tags', $cursor);
+            $cursorDeployment = $dbForProject->getDocument('deployments', $cursor);
 
-            if ($cursorTag->isEmpty()) {
+            if ($cursorDeployment->isEmpty()) {
                 // TODO: Shouldn't this be a 404 error ? 
                 throw new Exception("Tag '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
@@ -628,33 +682,41 @@ App::get('/v1/functions/:functionId/tags')
             $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
-        $queries[] = new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]);
+        $queries[] = new Query('resourceId', Query::TYPE_EQUAL, [$function->getId()]);
+        $queries[] = new Query('resourceType', Query::TYPE_EQUAL, ['functions']);
 
-        $results = $dbForProject->find('tags', $queries, $limit, $offset, [], [$orderType], $cursorTag ?? null, $cursorDirection);
-        $sum = $dbForProject->count('tags', $queries, APP_LIMIT_COUNT);
+        $results = $dbForProject->find('deployments', $queries, $limit, $offset, [], [$orderType], $cursorDeployment ?? null, $cursorDirection);
+        $sum = $dbForProject->count('deployments', $queries, APP_LIMIT_COUNT);
+
+        foreach ($results as $result) {
+            $build = $dbForProject->getDocument('builds', $result->getAttribute('buildId', ''));
+            $result->setAttribute('status', $build->getAttribute('status', 'processing'));
+            $result->setAttribute('buildStderr', $build->getAttribute('stderr', ''));
+            $result->setAttribute('buildStdout', $build->getAttribute('stdout', ''));
+        }
 
         $response->dynamic(new Document([
-            'tags' => $results,
+            'deployments' => $results,
             'sum' => $sum,
-        ]), Response::MODEL_TAG_LIST);
+        ]), Response::MODEL_DEPLOYMENT_LIST);
     });
 
-App::get('/v1/functions/:functionId/tags/:tagId')
+App::get('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
-    ->desc('Get Tag')
+    ->desc('Get Deployment')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getTag')
-    ->label('sdk.description', '/docs/references/functions/get-tag.md')
+    ->label('sdk.method', 'getDeployment')
+    ->label('sdk.description', '/docs/references/functions/get-deployment.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TAG)
+    ->label('sdk.response.model', Response::MODEL_DEPLOYMENT_LIST)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('tagId', '', new UID(), 'Tag ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($functionId, $tagId, $response, $dbForProject) {
+    ->action(function ($functionId, $deploymentId, $response, $dbForProject) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
 
@@ -664,72 +726,77 @@ App::get('/v1/functions/:functionId/tags/:tagId')
             throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
         }
 
-        $tag = $dbForProject->getDocument('tags', $tagId);
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        if ($tag->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception('Tag not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
+        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
+            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        if ($tag->isEmpty()) {
-            throw new Exception('Tag not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $response->dynamic($tag, Response::MODEL_TAG);
+        $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
-App::delete('/v1/functions/:functionId/tags/:tagId')
+App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
-    ->desc('Delete Tag')
+    ->desc('Delete Deployment')
     ->label('scope', 'functions.write')
-    ->label('event', 'functions.tags.delete')
+    ->label('event', 'functions.deployments.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'deleteTag')
-    ->label('sdk.description', '/docs/references/functions/delete-tag.md')
+    ->label('sdk.method', 'deleteDeployment')
+    ->label('sdk.description', '/docs/references/functions/delete-deployment.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('tagId', '', new UID(), 'Tag ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
+    ->inject('deletes')
     ->inject('deviceFunctions')
-    ->action(function ($functionId, $tagId, $response, $dbForProject, $usage, $deviceFunctions) {
+    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $usage, $deletes, $deviceFunctions) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
+        /** @var Appwrite\Event\Event $deletes */
         /** @var Utopia\Storage\Device $deviceFunctions */
 
         $function = $dbForProject->getDocument('functions', $functionId);
-
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
         }
         
-        $tag = $dbForProject->getDocument('tags', $tagId);
-
-        if ($tag->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception('Tag not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        if ($tag->isEmpty()) {
-            throw new Exception('Tag not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
+        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
+            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        if ($deviceFunctions->delete($tag->getAttribute('path', ''))) {
-            if (!$dbForProject->deleteDocument('tags', $tag->getId())) {
-                throw new Exception('Failed to remove tag from DB', 500, Exception::GENERAL_SERVER_ERROR);
+        if ($deviceFunctions->delete($deployment->getAttribute('path', ''))) {
+            if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                throw new Exception('Failed to remove deployment from DB', 500, Exception::GENERAL_SERVER_ERROR);
             }
         }
 
-        if($function->getAttribute('tag') === $tag->getId()) { // Reset function tag
+        if($function->getAttribute('deployment') === $deployment->getId()) { // Reset function deployment
             $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
-                'tag' => '',
+                'deployment' => '',
             ])));
         }
 
         $usage
-            ->setParam('storage', $tag->getAttribute('size', 0) * -1)
+            ->setParam('storage', $deployment->getAttribute('size', 0) * -1)
+        ;
+
+        $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $deployment)
         ;
 
         $response->noContent();
@@ -751,12 +818,12 @@ App::post('/v1/functions/:functionId/executions')
     ->label('abuse-time', 60)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('data', '', new Text(8192), 'String of custom data to send to function.', true)
-    // ->param('async', 1, new Range(0, 1), 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
+    ->param('async', true, new Boolean(), 'Execute code asynchronously. Default value is true.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('user')
-    ->action(function ($functionId, $data, /*$async,*/ $response, $project, $dbForProject, $user) {
+    ->action(function ($functionId, $data, $async, $response, $project, $dbForProject, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForProject */
@@ -768,14 +835,32 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
         }
 
-        $tag = Authorization::skip(fn() => $dbForProject->getDocument('tags', $function->getAttribute('tag')));
+        $runtimes = Config::getParam('runtimes', []);
 
-        if ($tag->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404, Exception::DEPLOYMENT_NOT_FOUND);
+        $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
+
+        if (\is_null($runtime)) {
+            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported', 400, Exception::FUNCTION_RUNTIME_UNSUPPORTED);
         }
 
-        if ($tag->isEmpty()) {
-            throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404, Exception::DEPLOYMENT_NOT_FOUND);
+        $deployment = Authorization::skip(fn() => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
+
+        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
+            throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404, Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404, Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
+        /** Check if build has completed */
+        $build = Authorization::skip(fn() => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+        if ($build->isEmpty()) {
+            throw new Exception('Build not found', 404, Exception::BUILD_NOT_FOUND);
+        }
+
+        if ($build->getAttribute('status') !== 'ready') {
+            throw new Exception('Build not ready', 400, Exception::BUILD_NOT_READY);
         }
 
         $validator = new Authorization('execute');
@@ -792,10 +877,10 @@ App::post('/v1/functions/:functionId/executions')
             '$write' => [],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
-            'tagId' => $tag->getId(),
+            'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event
             'status' => 'waiting', // waiting / processing / completed / failed
-            'exitCode' => 0,
+            'statusCode' => 0,
             'stdout' => '',
             'stderr' => '',
             'time' => 0.0,
@@ -823,19 +908,70 @@ App::post('/v1/functions/:functionId/executions')
             }
         }
 
-        Resque::enqueue('v1-functions', 'FunctionsV1', [
-            'projectId' => $project->getId(),
-            'webhooks' => $project->getAttribute('webhooks', []),
-            'functionId' => $function->getId(),
-            'executionId' => $execution->getId(),
-            'trigger' => 'http',
-            'data' => $data,
-            'userId' => $user->getId(),
-            'jwt' => $jwt,
+        if ($async) {
+            Resque::enqueue(Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME, [
+                'projectId' => $project->getId(),
+                'functionId' => $function->getId(),
+                'webhooks' => $project->getAttribute('webhooks', []),
+                'executionId' => $execution->getId(),
+                'trigger' => 'http',
+                'data' => $data,
+                'userId' => $user->getId(),
+                'jwt' => $jwt,
+            ]);
+
+            $response->setStatusCode(Response::STATUS_CODE_CREATED);
+            return $response->dynamic($execution, Response::MODEL_EXECUTION);
+        }
+
+        /** Collect environment variables */
+        $vars = \array_merge($function->getAttribute('vars', []), [
+            'APPWRITE_FUNCTION_ID' => $function->getId(),
+            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
+            'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
+            'APPWRITE_FUNCTION_TRIGGER' => 'http',
+            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
+            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
+            'APPWRITE_FUNCTION_DATA' => $data,
+            'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
+            'APPWRITE_FUNCTION_USER_ID' => $user->getId(),
+            'APPWRITE_FUNCTION_JWT' => $jwt,
         ]);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($execution, Response::MODEL_EXECUTION);
+        /** Execute function */
+        $executor = new Executor();
+        $executionResponse = [];
+        try {
+            $executionResponse = $executor->createExecution(
+                projectId: $project->getId(),
+                deploymentId: $deployment->getId(),
+                path: $build->getAttribute('outputPath', ''),
+                vars: $vars,
+                data: $data,
+                entrypoint: $deployment->getAttribute('entrypoint', ''),
+                runtime: $function->getAttribute('runtime', ''),
+                timeout: $function->getAttribute('timeout', 0),
+                baseImage: $runtime['image']
+            );
+
+            /** Update execution status */
+            $execution->setAttribute('status', $executionResponse['status']);
+            $execution->setAttribute('statusCode', $executionResponse['statusCode']);
+            $execution->setAttribute('stdout', $executionResponse['stdout']);
+            $execution->setAttribute('stderr', $executionResponse['stderr']);
+            $execution->setAttribute('time', $executionResponse['time']);
+        } catch (\Throwable $th) {
+            $execution->setAttribute('status', 'failed');
+            $execution->setAttribute('statusCode', $th->getCode());
+            $execution->setAttribute('stderr', $th->getMessage());
+            Console::error($th->getMessage());
+        }
+
+        Authorization::skip(fn() => $dbForProject->updateDocument('executions', $executionId, $execution));
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
 App::get('/v1/functions/:functionId/executions')
@@ -928,4 +1064,58 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         }
 
         $response->dynamic($execution, Response::MODEL_EXECUTION);
+    });
+
+App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
+    ->groups(['api', 'functions'])
+    ->desc('Retry Build')
+    ->label('scope', 'functions.write')
+    ->label('event', 'functions.deployments.update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'retryBuild')
+    ->label('sdk.description', '/docs/references/functions/retry-build.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('functionId', '', new UID(), 'Function ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
+    ->param('buildId', '', new UID(), 'Build unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->action(function ($functionId, $deploymentId, $buildId, $response, $dbForProject, $project) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var Utopia\Database\Document $project */
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        if ($function->isEmpty()) {
+            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+        }
+
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
+        $build = Authorization::skip(fn() => $dbForProject->getDocument('builds', $buildId));
+
+        if ($build->isEmpty()) {
+            throw new Exception('Build not found', 404, Exception::BUILD_NOT_FOUND);
+        }
+
+        if ($build->getAttribute('status') !== 'failed') {
+            throw new Exception('Build not failed', 400, Exception::BUILD_IN_PROGRESS);
+        }
+
+        // Enqueue a message to start the build
+        Resque::enqueue(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, [
+            'projectId' => $project->getId(),
+            'resourceId' => $function->getId(),
+            'deploymentId' => $deploymentId,
+            'type' => BUILD_TYPE_RETRY
+        ]);
+
+        $response->noContent();
     });

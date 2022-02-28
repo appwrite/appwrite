@@ -8,17 +8,15 @@
             isOpen: true,
             init() {
                 window.addEventListener('beforeunload', (event) => {
-                    this._files.forEach((file) => {
-                        if(!file.completed && !file.failed) {
-                            let confirmationMessage = "There are incomplete uploads, are you sure you want to leave?";
-                            event.returnValue = confirmationMessage;
-                            return confirmationMessage;
-                        }
-                    });
+                    if(this.hasOngoingUploads()) {
+                        let confirmationMessage = "There are incomplete uploads, are you sure you want to leave?";
+                        event.returnValue = confirmationMessage;
+                        return confirmationMessage;
+                    }
                 });
             },
             cancelAll() {
-                if(confirm("Are you sure? This will cancel and remove any ungoing uploads?")){
+                if(this.hasOngoingUploads() ? confirm("Are you sure? This will cancel and remove any ongoing uploads?") : true){
                    this._files.forEach(file => {
                         if(file.completed || file.failed) {
                             this.removeFile(file.id);
@@ -27,6 +25,16 @@
                         }
                     });
                 }
+            },
+            hasOngoingUploads() {
+                let ongoing = false;
+                this._files.some((file) => {
+                    if(!file.completed && !file.failed) {
+                        ongoing = true;
+                        return;
+                    }
+                });
+                return ongoing;
             },
             toggle() {
                 this.isOpen = !this.isOpen;

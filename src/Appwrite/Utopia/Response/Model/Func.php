@@ -4,6 +4,8 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use stdClass;
+use Utopia\Database\Document;
 
 class Func extends Model
 {
@@ -53,16 +55,16 @@ class Func extends Model
                 'default' => '',
                 'example' => 'python-3.8',
             ])
-            ->addRule('tag', [
+            ->addRule('deployment', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function active tag ID.',
+                'description' => 'Function\'s active deployment ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('vars', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Function environment variables.',
-                'default' => new \stdClass,
+                'default' => new \stdClass(),
                 'example' => ['key' => 'value'],
             ])
             ->addRule('events', [
@@ -117,5 +119,26 @@ class Func extends Model
     public function getType():string
     {
         return Response::MODEL_FUNCTION;
+    }
+
+    /**
+     * Filter Function
+     * 
+     * Automatically converts a [] default to a stdClass, this is called while grabbing the document.
+     * 
+     * @param Document $document
+     * @return Document
+     */
+    public function filter(Document $document): Document
+    {
+        $vars = $document->getAttribute('vars');
+        if($vars instanceof Document) {
+            $vars = $vars->getArrayCopy();
+        }
+
+        if(is_array($vars) && empty($vars)) {
+            $document->setAttribute('vars', new stdClass());
+        }
+        return $document;
     }
 }
