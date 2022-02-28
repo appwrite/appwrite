@@ -1065,7 +1065,8 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $responseUpdate['type']);
         $this->assertNotEmpty($responseUpdate['data']);
         $this->assertArrayHasKey('timestamp', $responseUpdate['data']);
-        $this->assertCount(3, $responseUpdate['data']['channels']);
+        $this->assertCount(4, $responseUpdate['data']['channels']);
+        $this->assertContains('console', $responseUpdate['data']['channels']);
         $this->assertContains('executions', $responseUpdate['data']['channels']);
         $this->assertContains('executions.' . $execution['body']['$id'], $responseUpdate['data']['channels']);
         $this->assertContains('functions.' . $execution['body']['functionId'], $responseUpdate['data']['channels']);
