@@ -160,6 +160,7 @@ App::post('/v1/runtimes')
         $stderr = '';
         $startTime = \time();
         $endTime = 0;
+        $orchestration = $orchestrationPool->get();
 
         try {
             Console::info('Building container : ' . $runtimeId);
@@ -192,7 +193,6 @@ App::post('/v1/runtimes')
             /**
              * Create container
              */
-            $orchestration = $orchestrationPool->get();
             $secret = \bin2hex(\random_bytes(16));
             $vars = \array_merge($vars, [
                 'INTERNAL_RUNTIME_KEY' => $secret,
