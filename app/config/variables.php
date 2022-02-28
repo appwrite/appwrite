@@ -438,7 +438,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_S3_ACCESS_KEY',
+                'name' => '_APP_STORAGE_S3_ACCESS_KEY',
                 'description' => 'AWS S3 storage access key. Required when the storage adapter is set to S3. You can get your access key from your AWS console',
                 'introduction' => '0.13.0',
                 'default' => '',
@@ -446,7 +446,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_S3_SECRET',
+                'name' => '_APP_STORAGE_S3_SECRET',
                 'description' => 'AWS S3 storage secret key. Required when the storage adapter is set to S3. You can get your secret key from your AWS console.',
                 'introduction' => '0.13.0',
                 'default' => '',
@@ -454,7 +454,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_S3_REGION',
+                'name' => '_APP_STORAGE_S3_REGION',
                 'description' => 'AWS S3 storage region. Required when storage adapter is set to S3. You can find your region info for your bucket from AWS console.',
                 'introduction' => '0.13.0',
                 'default' => 'us-eas-1',
@@ -462,7 +462,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_S3_BUCKET',
+                'name' => '_APP_STORAGE_S3_BUCKET',
                 'description' => 'AWS S3 storage bucket. Required when storage adapter is set to S3. You can create buckets in your AWS console.',
                 'introduction' => '0.13.0',
                 'default' => '',
@@ -470,7 +470,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_DO_SPACES_ACCESS_KEY',
+                'name' => '_APP_STORAGE_DO_SPACES_ACCESS_KEY',
                 'description' => 'DigitalOcean spaces access key. Required when the storage adapter is set to DOSpaces. You can get your access key from your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
@@ -478,7 +478,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_DO_SPACES_SECRET',
+                'name' => '_APP_STORAGE_DO_SPACES_SECRET',
                 'description' => 'DigitalOcean spaces secret key. Required when the storage adapter is set to DOSpaces. You can get your secret key from your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
@@ -486,7 +486,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_DO_SPACES_REGION',
+                'name' => '_APP_STORAGE_DO_SPACES_REGION',
                 'description' => 'DigitalOcean spaces region. Required when storage adapter is set to DOSpaces. You can find your region info for your space from DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => 'us-eas-1',
@@ -494,7 +494,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_DO_SPACES_BUCKET',
+                'name' => '_APP_STORAGE_DO_SPACES_BUCKET',
                 'description' => 'DigitalOcean spaces bucket. Required when storage adapter is set to DOSpaces. You can create spaces in your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
