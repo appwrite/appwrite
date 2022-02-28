@@ -118,7 +118,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                         data-name="project-users"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-users.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-users.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                     </form>
 
                     <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-users.total|pageTotal}}"></span>
@@ -133,7 +133,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                         data-name="project-users"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-users.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-users.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                     </form>
                 </div>
 
@@ -266,7 +266,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                         data-name="project-teams"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-teams.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-teams.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                     </form>
 
                     <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-teams.total|pageTotal}}"></span>
@@ -281,7 +281,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                         data-name="project-teams"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-teams.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-teams.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                     </form>
                 </div>
 

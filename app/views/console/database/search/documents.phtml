@@ -107,7 +107,7 @@ $rules = $collection->getAttribute('rules', []);
                 data-name="project-documents"
                 data-success="state"
                 data-success-param-state-keys="search,offset">
-                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-documents.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-documents.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
             </form>
 
             <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-documents.total|pageTotal}}"></span>
@@ -123,7 +123,7 @@ $rules = $collection->getAttribute('rules', []);
                 data-name="project-documents"
                 data-success="state"
                 data-success-param-state-keys="search,offset">
-                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-documents.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-documents.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
             </form>
         </div>
 
