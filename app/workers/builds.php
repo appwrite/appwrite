@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Cron\CronExpression;
 use Executor\Executor;
@@ -58,6 +59,8 @@ class BuildsV1 extends Worker
     protected function buildDeployment(string $projectId, string $functionId, string $deploymentId) 
     {
         $dbForProject = $this->getProjectDB($projectId);
+        $dbForConsole = $this->getConsoleDB();
+        $project = $dbForConsole->getDocument('projects', $projectId);
         
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -106,6 +109,16 @@ class BuildsV1 extends Worker
         /** Request the executor to build the code... */
         $build->setAttribute('status', 'building');
         $build = $dbForProject->updateDocument('builds', $buildId, $build);
+
+        /** Send realtime event */
+        $target = Realtime::fromPayload('functions.deployments.update', $build, $project);
+        Realtime::send(
+            projectId: 'console',
+            payload: $build->getArrayCopy(),
+            event: 'functions.deployments.update',
+            channels: $target['channels'],
+            roles: $target['roles']
+        );
 
         $source = $deployment->getAttribute('path');
         $vars = $function->getAttribute('vars', []);
@@ -162,6 +175,18 @@ class BuildsV1 extends Worker
             Console::error($th->getMessage());
         } finally {
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
+
+            /** 
+             * Send realtime Event 
+             */
+            $target = Realtime::fromPayload('functions.deployments.update', $build, $project);
+            Realtime::send(
+                projectId: 'console',
+                payload: $build->getArrayCopy(),
+                event: 'functions.deployments.update',
+                channels: $target['channels'],
+                roles: $target['roles']
+            );
         }
     }
 
