@@ -313,6 +313,13 @@ class Realtime extends Adapter
                     $roles = $payload->getRead();
                 }
                 break;
+            case strpos($event, 'functions.deployments.') === 0:
+                var_dump('received deployment event');
+                $channels[] = 'console';
+                $projectId = 'console';
+                $roles = ['team:' . $project->getAttribute('teamId')];
+                
+                break;
         }
 
         return [

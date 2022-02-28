@@ -76,6 +76,13 @@ window.addEventListener("load", async () => {
         document.dispatchEvent(new CustomEvent('database.createIndex'));
 
         break;
+      case 'functions.deployments.create':
+      case 'functions.deployments.update':
+      case 'functions.deployments.delete':
+          document.dispatchEvent(new CustomEvent('functions.createDeployment'));
+
+          break;
+
     }
 
   });
