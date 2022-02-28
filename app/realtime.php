@@ -46,9 +46,12 @@ $stats->create();
 
 $containerId = uniqid();
 $statsDocument = null;
+$workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
 
 $adapter = new Adapter\Swoole(port: App::getEnv('PORT', 80));
-$adapter->setPackageMaxLength(64000); // Default maximum Package Size (64kb)
+$adapter
+    ->setPackageMaxLength(64000) // Default maximum Package Size (64kb)
+    ->setWorkerNumber($workerNumber);
 
 $server = new Server($adapter);
 
