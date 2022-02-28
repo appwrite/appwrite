@@ -999,7 +999,7 @@ class FunctionsCustomServerTest extends Scope
         $folder = 'python';
         $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
         $this->packageCode($folder);
-        
+
         $entrypoint = 'main.py';
         $timeout = 2;
 
@@ -1050,7 +1050,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
         
-        sleep(10);
+        sleep(30);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions/'.$executionId, array_merge([
             'content-type' => 'application/json',
