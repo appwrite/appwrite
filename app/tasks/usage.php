@@ -259,7 +259,7 @@ $cli
         $dbForConsole = new Database(new MariaDB($db), $cacheAdapter);
         $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $dbForConsole->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $dbForConsole->setNamespace('_project_console');
+        $dbForConsole->setNamespace('_console');
 
         $latestTime = [];
 
@@ -325,7 +325,7 @@ $cli
                             $projectId = $point['projectId'];
 
                             if (!empty($projectId) && $projectId !== 'console') {
-                                $dbForProject->setNamespace('_project_' . $projectId);
+                                $dbForProject->setNamespace('_' . $projectId);
                                 $metricUpdated = $metric;
 
                                 if (!empty($groupBy)) {
@@ -415,7 +415,7 @@ $cli
                     $projectId = $project->getId();
 
                     // Get total storage
-                    $dbForProject->setNamespace('_project_' . $projectId);
+                    $dbForProject->setNamespace('_' . $projectId);
                     $storageTotal = $dbForProject->sum('tags', 'size');
 
                     $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
@@ -489,7 +489,7 @@ $cli
 
                     foreach ($collections as $collection => $options) {
                         try {
-                            $dbForProject->setNamespace("_project_{$projectId}");
+                            $dbForProject->setNamespace("_{$projectId}");
                             $count = $dbForProject->count($collection);
                             $metricPrefix = $options['metricPrefix'] ?? '';
                             $metric = empty($metricPrefix) ? "{$collection}.count" : "{$metricPrefix}.{$collection}.count";
@@ -545,7 +545,7 @@ $cli
                             $subCollectionTotals = []; //total project level sum of sub collections
 
                             do { // Loop over all the parent collection document for each sub collection
-                                $dbForProject->setNamespace("_project_{$projectId}");
+                                $dbForProject->setNamespace("_{$projectId}");
                                 $parents = $dbForProject->find($collection, [], 100, cursor: $latestParent); // Get all the parents for the sub collections for example for documents, this will get all the collections
 
                                 if (empty($parents)) {
@@ -556,12 +556,12 @@ $cli
 
                                 foreach ($parents as $parent) {
                                     foreach ($subCollections as $subCollection => $subOptions) { // Sub collection counts, like database.collections.collectionId.documents.count
-                                        $dbForProject->setNamespace("_project_{$projectId}");
+                                        $dbForProject->setNamespace("_{$projectId}");
                                         $count = $dbForProject->count(($subOptions['collectionPrefix'] ?? '') . $parent->getId());
 
                                         $subCollectionCounts[$subCollection] = ($subCollectionCounts[$subCollection] ?? 0) + $count; // Project level counts for sub collections like database.documents.count
 
-                                        $dbForProject->setNamespace("_project_{$projectId}");
+                                        $dbForProject->setNamespace("_{$projectId}");
 
                                         $metric = empty($metricPrefix) ? "{$collection}.{$parent->getId()}.{$subCollection}.count" : "{$metricPrefix}.{$collection}.{$parent->getId()}.{$subCollection}.count";
                                         $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
@@ -610,12 +610,12 @@ $cli
                                             continue;
                                         }
 
-                                        $dbForProject->setNamespace("_project_{$projectId}");
+                                        $dbForProject->setNamespace("_{$projectId}");
                                         $total = (int) $dbForProject->sum(($subOptions['collectionPrefix'] ?? '') . $parent->getId(), $sum['field']);
 
                                         $subCollectionTotals[$subCollection] = ($ssubCollectionTotals[$subCollection] ?? 0) + $total; // Project level sum for sub collections like storage.total
 
-                                        $dbForProject->setNamespace("_project_{$projectId}");
+                                        $dbForProject->setNamespace("_{$projectId}");
 
                                         $metric = empty($metricPrefix) ? "{$collection}.{$parent->getId()}.{$subCollection}.total" : "{$metricPrefix}.{$collection}.{$parent->getId()}.{$subCollection}.total";
                                         $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
@@ -660,7 +660,7 @@ $cli
                              * Inserting project level counts for sub collections like database.documents.count
                              */
                             foreach ($subCollectionCounts as $subCollection => $count) {
-                                $dbForProject->setNamespace("_project_{$projectId}");
+                                $dbForProject->setNamespace("_{$projectId}");
 
                                 $metric = empty($metricPrefix) ? "{$subCollection}.count" : "{$metricPrefix}.{$subCollection}.count";
 
@@ -709,7 +709,7 @@ $cli
                              * Inserting project level sums for sub collections like storage.total
                              */
                             foreach ($subCollectionTotals as $subCollection => $count) {
-                                $dbForProject->setNamespace("_project_{$projectId}");
+                                $dbForProject->setNamespace("_{$projectId}");
 
                                 $metric = empty($metricPrefix) ? "{$subCollection}.total" : "{$metricPrefix}.{$subCollection}.total";
 

@@ -780,7 +780,7 @@ App::setResource('dbForProject', function($db, $cache, $project) {
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace('_project_'.$project->getId());
+    $database->setNamespace("_{$project->getId()}");
 
     return $database;
 }, ['db', 'cache', 'project']);
@@ -790,7 +790,7 @@ App::setResource('dbForConsole', function($db, $cache) {
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace('_project_console');
+    $database->setNamespace('_console');
 
     return $database;
 }, ['db', 'cache']);
