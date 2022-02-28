@@ -101,10 +101,10 @@ App::post('/v1/projects')
             'auths' => $auths,
             'search' => implode(' ', [$projectId, $name]),
         ]));
+        /** @var array $collections */
+        $collections = Config::getParam('collections', []); 
 
-        $collections = Config::getParam('collections', []); /** @var array $collections */
-
-        $dbForProject->setNamespace('_project_' . $project->getId());
+        $dbForProject->setNamespace("_{$project->getId()}");
         $dbForProject->create('appwrite');
 
         $audit = new Audit($dbForProject);
@@ -269,7 +269,7 @@ App::get('/v1/projects/:projectId/usage')
                 ],
             ];
 
-            $dbForProject->setNamespace('_project_' . $projectId);
+            $dbForProject->setNamespace("_{$projectId}");
 
             $metrics = [
                 'requests',

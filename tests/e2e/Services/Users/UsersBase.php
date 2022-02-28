@@ -149,7 +149,21 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'search' => 'manchester-united.co.uk'
+            'search' => 'united.co.uk'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertIsArray($response['body']);
+        $this->assertIsArray($response['body']['users']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertCount(1, $response['body']['users']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'man'
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -165,6 +179,7 @@ trait UsersBase
         ], $this->getHeaders()), [
             'search' => $data['userId']
         ]);
+
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);

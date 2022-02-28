@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "deeea4a225c55fccc04729750dd8c5ec",
+    "content-hash": "318c53aaac3cdfbdb728acc5e59b8057",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2129,16 +2129,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.14.1",
+            "version": "0.15.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "ecc143f2cfe16b23675407035c6b5375ba263285"
+                "reference": "eb4f61ec40d697acdfd574638ecd075e4f44b864"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/ecc143f2cfe16b23675407035c6b5375ba263285",
-                "reference": "ecc143f2cfe16b23675407035c6b5375ba263285",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/eb4f61ec40d697acdfd574638ecd075e4f44b864",
+                "reference": "eb4f61ec40d697acdfd574638ecd075e4f44b864",
                 "shasum": ""
             },
             "require": {
@@ -2186,9 +2186,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.14.1"
+                "source": "https://github.com/utopia-php/database/tree/0.15.1"
             },
-            "time": "2022-01-25T13:01:20+00:00"
+            "time": "2022-02-22T09:33:37+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3075,7 +3075,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "36e459dfd97a5693746e733ca9947a02ce12b0dc"
+                "reference": "4a43aa70c2f0b243edfc689f618a85f7d0817287"
             },
             "require": {
                 "ext-curl": "*",
@@ -3110,7 +3110,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2022-02-27T08:06:11+00:00"
+            "time": "2022-02-22T10:51:55+00:00"
         },
         {
             "name": "composer/pcre",
@@ -3684,6 +3684,9 @@
             },
             "require": {
                 "php": "^7.1 || ^8.0"
+            },
+            "replace": {
+                "myclabs/deep-copy": "self.version"
             },
             "require-dev": {
                 "doctrine/collections": "^1.0",
@@ -6570,5 +6573,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.1.0"
 }

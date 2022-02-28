@@ -88,6 +88,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_LOCALE
+      - _APP_WORKER_PER_CORE
       - _APP_CONSOLE_WHITELIST_ROOT
       - _APP_CONSOLE_WHITELIST_EMAILS
       - _APP_CONSOLE_WHITELIST_IPS
@@ -174,6 +175,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST

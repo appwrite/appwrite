@@ -184,10 +184,10 @@ abstract class Worker
                 if (!$projectId) {
                     throw new \Exception('ProjectID not provided - cannot get database');
                 }
-                $namespace = "_project_{$projectId}";
+                $namespace = "_{$projectId}";
                 break;
             case self::DATABASE_CONSOLE:
-                $namespace = "_project_console";
+                $namespace = "_console";
                 $sleep = 5; // ConsoleDB needs extra sleep time to ensure tables are created
                 break;
             default:
