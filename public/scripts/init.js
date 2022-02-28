@@ -83,6 +83,13 @@ window.addEventListener("load", async () => {
 
           break;
 
+      case 'functions.executions.create':
+      case 'functions.executions.update':
+      case 'functions.executions.delete':
+          document.dispatchEvent(new CustomEvent('functions.createExecution'));
+
+          break;
+
     }
 
   });
