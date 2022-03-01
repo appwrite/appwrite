@@ -167,12 +167,12 @@ class V12 extends Migration
                             'search' => 'buckets Default',
                         ]));
                         $this->createCollection('files', 'bucket_1');
-                        $nextDocument = null;
-                        $path = "/storage/uploads/app-{$this->project->getId()}";
 
                         /**
                          * Rename folder on volumes.
                          */
+                        $path = "/storage/uploads/app-{$this->project->getId()}";
+
                         if (is_dir("{$path}/")) {
                             mkdir("/storage/uploads/app-{$this->project->getId()}/default");
 
@@ -182,34 +182,20 @@ class V12 extends Migration
                                 }
                             }
                         }
-
-                        do {
-                            $documents = $this->projectDB->find('files', limit: $this->limit, cursor: $nextDocument);
-                            $count = count($documents);
-                            \Co\run(function (array $documents) {
-                                foreach ($documents as $document) {
-                                    go(function (Document $document) {
-                                        $path = "/storage/uploads/app-{$this->project->getId()}";
-                                        $new = str_replace($path, "{$path}/default", $document->getAttribute('path'));
-                                        $document
-                                            ->setAttribute('bucketId', 'default')
-                                            ->setAttribute('path', $new);
-                                        $this->projectDB->createDocument('bucket_1', $document);
-                                    }, $document);
-                                }
-                            }, $documents);
-
-                            if ($count !== $this->limit) {
-                                $nextDocument = null;
-                            } else {
-                                $nextDocument = end($documents);
-                            }
-                        } while (!is_null($nextDocument));
                     }
 
                     break;
 
                 case 'functions':
+                    try {
+                        /**
+                         * Rename tag to deployment
+                         */
+                        $this->projectDB->renameAttribute($id, 'tag', 'deployment');
+                    } catch (\Throwable $th) {
+                        Console::warning("'deployment' from {$id}: {$th->getMessage()}");
+                    }
+
                     /**
                      * Create deployments table if not exists.
                      */
@@ -226,7 +212,15 @@ class V12 extends Migration
         }
     }
 
-    protected function createCollection(string $id, string $name = null)
+    /**
+     * Creates colletion from the config collection.
+     *
+     * @param string $id
+     * @param string|null $name
+     * @return void
+     * @throws \Throwable
+     */
+    protected function createCollection(string $id, string $name = null): void
     {
         $name ??= $id;
 
@@ -265,7 +259,48 @@ class V12 extends Migration
         }
     }
 
-    protected function migrateCustomCollections()
+    /**
+     * 
+     * @param \Utopia\Database\Document $document 
+     * @param string $internalId 
+     * @return void 
+     * @throws \Exception 
+     * @throws \PDOException 
+     */
+    protected function migratePermissionsToDedicatedTable(string $collection, Document $document): void
+    {
+        $sql = "SELECT _read, _write FROM `{$this->projectDB->getDefaultDatabase()}`.`{$this->projectDB->getNamespace()}_{$collection}` WHERE _uid = {$this->pdo->quote($document->getid())}";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+
+        $permissions = $stmt->fetch();
+
+        $read  = json_decode($permissions['_read'] ?? null) ?? [];
+        $write = json_decode($permissions['_write'] ?? null) ?? [];
+
+        $permissions = [];
+        foreach ($read as $permission) {
+            $permissions[] = "('read', '{$permission}', '{$document->getId()}')";
+        }
+
+        foreach ($write as $permission) {
+            $permissions[] = "('write', '{$permission}', '{$document->getId()}')";
+        }
+
+        if (!empty($permissions)) {
+            $queryPermissions = "INSERT IGNORE INTO `{$this->projectDB->getDefaultDatabase()}`.`{$this->projectDB->getNamespace()}_{$collection}_perms` (_type, _permission, _document) VALUES " . implode(', ', $permissions);
+            $stmtPermissions = $this->pdo->prepare($queryPermissions);
+            $stmtPermissions->execute();
+        }
+    }
+
+    /**
+     * Migrates all user's database collections.
+     *
+     * @return void
+     * @throws \Exception
+     */
+    protected function migrateCustomCollections(): void
     {
         $nextCollection = null;
 
@@ -279,6 +314,10 @@ class V12 extends Migration
                         $id = $collection->getId();
                         $projectId = $this->project->getId();
                         $internalId = $collection->getInternalId();
+
+                        /**
+                         * Rename user's colletion table schema
+                         */
                         $this->pdo->prepare("ALTER TABLE IF EXISTS _project_{$projectId}_collection_{$id} RENAME TO _{$projectId}_collection_{$internalId}")->execute();
                         $this->pdo->prepare("CREATE TABLE IF NOT EXISTS _{$projectId}_collection_{$internalId}_perms (
                             `_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -306,29 +345,7 @@ class V12 extends Migration
 
                             foreach ($documents as $document) {
                                 go(function (Document $document, string $internalId) {
-                                    $sql = "SELECT _read, _write FROM `{$this->projectDB->getDefaultDatabase()}`.`{$this->projectDB->getNamespace()}_collection_{$internalId}` WHERE _uid = {$this->pdo->quote($document->getid())}";
-                                    $stmt = $this->pdo->prepare($sql);
-                                    $stmt->execute();
-
-                                    $permissions = $stmt->fetch();
-
-                                    $read  = json_decode($permissions['_read'] ?? null) ?? [];
-                                    $write = json_decode($permissions['_write'] ?? null) ?? [];
-
-                                    $permissions = [];
-                                    foreach ($read as $permission) {
-                                        $permissions[] = "('read', '{$permission}', '{$document->getId()}')";
-                                    }
-
-                                    foreach ($write as $permission) {
-                                        $permissions[] = "('write', '{$permission}', '{$document->getId()}')";
-                                    }
-
-                                    if (!empty($permissions)) {
-                                        $queryPermissions = "INSERT IGNORE INTO `{$this->projectDB->getDefaultDatabase()}`.`{$this->projectDB->getNamespace()}_collection_{$internalId}_perms` (_type, _permission, _document) VALUES " . implode(', ', $permissions);
-                                        $stmtPermissions = $this->pdo->prepare($queryPermissions);
-                                        $stmtPermissions->execute();
-                                    }
+                                    $this->migratePermissionsToDedicatedTable("collection_{$internalId}", $document);
                                 }, $document, $internalId);
                             }
 
@@ -339,6 +356,9 @@ class V12 extends Migration
                             }
                         } while (!is_null($nextDocument));
 
+                        /**
+                         * Remove _read and _write columns
+                         */
                         $this->pdo->prepare("
                             ALTER TABLE `{$this->projectDB->getDefaultDatabase()}`.`{$this->projectDB->getNamespace()}_collection_{$internalId}`
                             DROP COLUMN _read,
@@ -355,8 +375,10 @@ class V12 extends Migration
             }
         } while (!is_null($nextCollection));
     }
+
     /**
      * Migrate all Permission to new System with dedicated Table.
+     *
      * @return void
      * @throws \Exception
      */
@@ -396,29 +418,7 @@ class V12 extends Migration
                 \Co\run(function (array $documents) {
                     foreach ($documents as $document) {
                         go(function (Document $document) {
-                            $sql = "SELECT _read, _write FROM `{$this->projectDB->getDefaultDatabase()}`.`{$this->projectDB->getNamespace()}_{$document->getCollection()}` WHERE _uid = {$this->pdo->quote($document->getid())}";
-                            $stmt = $this->pdo->prepare($sql);
-                            $stmt->execute();
-
-                            $permissions = $stmt->fetch();
-
-                            $read  = json_decode($permissions['_read'] ?? null) ?? [];
-                            $write = json_decode($permissions['_write'] ?? null) ?? [];
-
-                            $permissions = [];
-                            foreach ($read as $permission) {
-                                $permissions[] = "('read', '{$permission}', '{$document->getId()}')";
-                            }
-
-                            foreach ($write as $permission) {
-                                $permissions[] = "('write', '{$permission}', '{$document->getId()}')";
-                            }
-
-                            if (!empty($permissions)) {
-                                $queryPermissions = "INSERT IGNORE INTO `{$this->projectDB->getDefaultDatabase()}`.`{$this->projectDB->getNamespace()}_{$document->getCollection()}_perms` (_type, _permission, _document) VALUES " . implode(', ', $permissions);
-                                $stmtPermissions = $this->pdo->prepare($queryPermissions);
-                                $stmtPermissions->execute();
-                            }
+                            $this->migratePermissionsToDedicatedTable($document->getCollection(), $document);
                         }, $document);
                     }
                 }, $documents);
@@ -430,6 +430,9 @@ class V12 extends Migration
                 }
             } while (!is_null($nextDocument));
 
+            /**
+             * Remove _read and _write columns
+             */
             $this->pdo->prepare("
                 ALTER TABLE `{$this->projectDB->getDefaultDatabase()}`.`{$this->projectDB->getNamespace()}_{$id}`
                 DROP COLUMN _read,
@@ -443,6 +446,12 @@ class V12 extends Migration
         usleep(100000);
     }
 
+    /**
+     * Fix run on each document
+     *
+     * @param \Utopia\Database\Document $document 
+     * @return \Utopia\Database\Document 
+     */
     protected function fixDocument(Document $document)
     {
         switch ($document->getCollection()) {
@@ -473,6 +482,13 @@ class V12 extends Migration
 
             case 'teams':
                 /**
+                 * Rename sum to total
+                 */
+                if (empty($document->getAttribute('total'))) {
+                    $document->setAttribute('total', $document->getAttribute('sum'));
+                }
+
+                /**
                  * Populate search string from Migration to 0.12.
                  */
                 if (empty($document->getAttribute('search'))) {
@@ -483,6 +499,14 @@ class V12 extends Migration
 
             case 'files':
                 /**
+                 * Update File Path
+                 */
+                $path = "/storage/uploads/app-{$this->project->getId()}";
+                $new = str_replace($path, "{$path}/default", $document->getAttribute('path'));
+                $document
+                    ->setAttribute('bucketId', 'default')
+                    ->setAttribute('path', $new);
+                /**
                  * Populate search string from Migration to 0.12.
                  */
                 if (empty($document->getAttribute('search'))) {
@@ -492,21 +516,13 @@ class V12 extends Migration
                 break;
 
             case 'functions':
+                $document->setAttribute('deployment', null);
+
                 /**
                  * Populate search string from Migration to 0.12.
                  */
                 if (empty($document->getAttribute('search'))) {
                     $document->setAttribute('search', $this->buildSearchAttribute(['$id', 'name', 'runtime'], $document));
-                }
-
-                break;
-
-            case 'tags':
-                /**
-                 * Populate search string from Migration to 0.12.
-                 */
-                if (empty($document->getAttribute('search'))) {
-                    $document->setAttribute('search', $this->buildSearchAttribute(['$id', 'command'], $document));
                 }
 
                 break;
