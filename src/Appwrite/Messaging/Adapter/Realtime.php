@@ -307,11 +307,16 @@ class Realtime extends Adapter
                 break;
             case strpos($event, 'functions.executions.') === 0:
                 if (!empty($payload->getRead())) {
+                    $channels[] = 'console';
                     $channels[] = 'executions';
                     $channels[] = 'executions.' . $payload->getId();
                     $channels[] = 'functions.' . $payload->getAttribute('functionId');
                     $roles = $payload->getRead();
                 }
+                break;
+            case strpos($event, 'functions.deployments.') === 0:
+                $channels[] = 'console';
+                $roles = ['team:' . $project->getAttribute('teamId')];
                 break;
         }
 

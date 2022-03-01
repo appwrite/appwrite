@@ -68,7 +68,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                             data-success="trigger"
                             data-success-param-trigger-events="functions.listDeployments">
 
-                            <h3>Deployments <span class="text-fade text-size-small pull-end margin-top-small" data-ls-bind="{{project-function-deployments.sum}} deployments found"></span></h3>
+                            <h3>Deployments <span class="text-fade text-size-small pull-end margin-top-small" data-ls-bind="{{project-function-deployments.total}} deployments found"></span></h3>
 
                             <div data-ls-if="0 == {{project-function-deployments.deployments.length}} || undefined == {{project-function-deployments.deployments.length}}" class="box margin-top margin-bottom">
                                 <h3 class="margin-bottom-small text-bold">No Deployments Found</h3>
@@ -179,7 +179,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                         </div>
 
                         <div class="pull-start">
-                            <button data-ls-ui-trigger="deploy-deployment">Create Deployment</button>
+                            <button data-ls-ui-trigger="create-deployment">Create Deployment</button>
                         </div>
 
                         <div class="pull-end paging">
@@ -194,10 +194,10 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                 data-name="project-function-deployments"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-function-deployments.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-function-deployments.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                             </form>
 
-                            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-deployments.sum|pageTotal}}"></span>
+                            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-deployments.total|pageTotal}}"></span>
 
                             <form
                                 data-service="functions.listDeployments"
@@ -210,7 +210,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                 data-name="project-function-deployments"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-function-deployments.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-function-deployments.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                             </form>
                         </div>
                     </div>
@@ -331,7 +331,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
             <?php endif;?>
             <li data-state="/console/functions/function/logs?id={{router.params.id}}&project={{router.params.project}}">
 
-                <div class="text-fade text-size-small pull-end margin-top" data-ls-bind="{{project-function-executions.sum}} executions found"></div>
+                <div class="text-fade text-size-small pull-end margin-top" data-ls-bind="{{project-function-executions.total}} executions found"></div>
 
                 <h2>Logs</h2>
 
@@ -439,10 +439,10 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                 data-name="project-function-executions"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-function-executions.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-function-executions.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                             </form>
 
-                            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-executions.sum|pageTotal}}"></span>
+                            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-executions.total|pageTotal}}"></span>
 
                             <form
                                 data-service="functions.listExecutions"
@@ -455,7 +455,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                 data-name="project-function-executions"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-function-executions.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-function-executions.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                             </form>
                         </div>
                     </div>
@@ -631,7 +631,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
         <button type="submit" style="vertical-align: top;">Execute Now</button>
      </form>
 </div>
-<div data-ui-modal class="modal close box sticky-footer" data-button-hide="on" data-open-event="deploy-deployment">
+<div data-ui-modal class="modal close box sticky-footer" data-button-hide="on" data-open-event="create-deployment">
     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
     <h1 class="margin-bottom-xl">Create a New Deployment</h1>
@@ -645,6 +645,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
             <div class="margin-bottom">
                 <textarea type="hidden" data-ls-bind="appwrite functions createDeployment \
     --functionId={{project-function.$id}} \
+    --activate=true \
     --entrypoint='scriptFile' \
     --code='/myrepo/myfunction'" data-forms-code="bash" data-lang="bash" data-lang-label="Bash"></textarea>
             </div>
@@ -654,6 +655,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
             <div class="margin-bottom">
                 <textarea type="hidden" data-ls-bind="appwrite functions createDeployment `
     --functionId={{project-function.$id}} `
+    --activate=true `
     --entrypoint='scriptFile' `
     --code='/myrepo/myfunction'" data-forms-code="powershell" data-lang="powershell" data-lang-label="PowerShell"></textarea>
             </div>

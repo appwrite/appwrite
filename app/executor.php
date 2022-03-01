@@ -160,13 +160,14 @@ App::post('/v1/runtimes')
         $stderr = '';
         $startTime = \time();
         $endTime = 0;
+        $orchestration = $orchestrationPool->get();
 
         try {
             Console::info('Building container : ' . $runtimeId);
+            
             /** 
              * Temporary file paths in the executor 
              */
-            
             $tmpSource = "/tmp/$runtimeId/src/code.tar.gz";
             $tmpBuild = "/tmp/$runtimeId/builds/code.tar.gz";
 
@@ -192,7 +193,6 @@ App::post('/v1/runtimes')
             /**
              * Create container
              */
-            $orchestration = $orchestrationPool->get();
             $secret = \bin2hex(\random_bytes(16));
             $vars = \array_merge($vars, [
                 'INTERNAL_RUNTIME_KEY' => $secret,

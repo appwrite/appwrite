@@ -128,7 +128,7 @@ App::get('/v1/users')
 
         $response->dynamic(new Document([
             'users' => $dbForProject->find('users', $queries, $limit, $offset, [], [$orderType], $cursorUser ?? null, $cursorDirection),
-            'sum' => $dbForProject->count('users', $queries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('users', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_USER_LIST);
     });
 
@@ -243,7 +243,7 @@ App::get('/v1/users/:userId/sessions')
         ;
         $response->dynamic(new Document([
             'sessions' => $sessions,
-            'sum' => count($sessions),
+            'total' => count($sessions),
         ]), Response::MODEL_SESSION_LIST);
     });
 
@@ -348,7 +348,7 @@ App::get('/v1/users/:userId/logs')
         ;
 
         $response->dynamic(new Document([
-            'sum' => $audit->countLogsByUserAndEvents($user->getId(), $auditEvents),
+            'total' => $audit->countLogsByUserAndEvents($user->getId(), $auditEvents),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });

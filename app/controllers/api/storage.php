@@ -174,7 +174,7 @@ App::get('/v1/storage/buckets')
 
         $response->dynamic(new Document([
             'buckets' => $dbForProject->find('buckets', $queries, $limit, $offset, [], [$orderType], $cursorBucket ?? null, $cursorDirection),
-            'sum' => $dbForProject->count('buckets', $queries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('buckets', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_BUCKET_LIST);
     });
 
@@ -771,7 +771,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
 
         $response->dynamic(new Document([
             'files' => $files,
-            'sum' => $dbForProject->count('bucket_' . $bucket->getInternalId(), $queries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('bucket_' . $bucket->getInternalId(), $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FILE_LIST);
     });
 
@@ -864,13 +864,15 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->inject('usage')
     ->inject('mode')
     ->inject('deviceFiles')
-    ->action(function ($bucketId, $fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForProject, $usage, $mode, $deviceFiles) {
+    ->inject('deviceLocal')
+    ->action(function ($bucketId, $fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForProject, $usage, $mode, $deviceFiles, $deviceLocal) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Utopia\Storage\Device $deviceFiles */
+        /** @var Utopia\Storage\Device $deviceLocal */
         /** @var string $mode */
 
         if (!\extension_loaded('imagick')) {
@@ -935,6 +937,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
             $key = \md5($path . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
+            $deviceFiles = $deviceLocal;
         }
 
 

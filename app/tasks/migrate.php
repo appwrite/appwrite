@@ -46,7 +46,13 @@ $cli
         $offset = 0;
         $projects = [$console];
         $count = 0;
-        $totalProjects = $consoleDB->count('projects') + 1;
+
+        try {
+            $totalProjects = $consoleDB->count('projects') + 1;
+        } catch (\Throwable $th) {
+            $consoleDB->setNamespace('_console');
+            $totalProjects = $consoleDB->count('projects') + 1;
+        }
 
         $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
         $migration = new $class();

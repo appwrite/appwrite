@@ -22,7 +22,7 @@ trait TeamsBaseClient
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsInt($response['body']['sum']);
+        $this->assertIsInt($response['body']['total']);
         $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
         $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['name']);
         $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['email']);
@@ -38,7 +38,7 @@ trait TeamsBaseClient
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsInt($response['body']['sum']);
+        $this->assertIsInt($response['body']['total']);
         $this->assertNotEmpty($response['body']['memberships'][0]);
         $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['name']);
         $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['email']);
@@ -52,7 +52,7 @@ trait TeamsBaseClient
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsInt($response['body']['sum']);
+        $this->assertIsInt($response['body']['total']);
         $this->assertNotEmpty($response['body']['memberships'][0]);
         $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['name']);
         $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['email']);
@@ -66,9 +66,9 @@ trait TeamsBaseClient
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsInt($response['body']['sum']);
+        $this->assertIsInt($response['body']['total']);
         $this->assertEmpty($response['body']['memberships']);
-        $this->assertEquals(0, $response['body']['sum']);
+        $this->assertEquals(0, $response['body']['total']);
 
         /**
          * Test for FAILURE
@@ -191,7 +191,7 @@ trait TeamsBaseClient
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $memberships['headers']['status-code']);
-        $this->assertIsInt($memberships['body']['sum']);
+        $this->assertIsInt($memberships['body']['total']);
         $this->assertNotEmpty($memberships['body']['memberships']);
         $this->assertCount(2, $memberships['body']['memberships']);
 
@@ -203,7 +203,7 @@ trait TeamsBaseClient
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsInt($response['body']['sum']);
+        $this->assertIsInt($response['body']['total']);
         $this->assertNotEmpty($response['body']['memberships']);
         $this->assertCount(1, $response['body']['memberships']);
         $this->assertEquals($memberships['body']['memberships'][1]['$id'], $response['body']['memberships'][0]['$id']);
@@ -441,7 +441,7 @@ trait TeamsBaseClient
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, $response['body']['sum']);
+        $this->assertEquals(2, $response['body']['total']);
         
         $ownerMembershipUid = $response['body']['memberships'][0]['$id'];
 
@@ -496,7 +496,7 @@ trait TeamsBaseClient
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertEquals(1, $response['body']['total']);
 
         /**
          * Test for when the owner tries to delete their membership

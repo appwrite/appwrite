@@ -203,7 +203,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(200, $files['headers']['status-code']);
-        $this->assertGreaterThan(0, $files['body']['sum']);
+        $this->assertGreaterThan(0, $files['body']['total']);
         $this->assertGreaterThan(0, count($files['body']['files']));
 
         /**

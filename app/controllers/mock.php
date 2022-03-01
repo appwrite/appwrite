@@ -244,6 +244,9 @@ App::post('/v1/mock/tests/general/upload')
         $file = $request->getFiles('file');
         
         $contentRange = $request->getHeader('content-range');
+
+        $chunkSize = 5*1024*1024; // 5MB
+
         if(!empty($contentRange)) {
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
@@ -267,21 +270,25 @@ App::post('/v1/mock/tests/general/upload')
                 throw new Exception('All chunked request must have id header (except first)', 400, Exception::GENERAL_MOCK);
             }
 
-            if($end !== $size && $end-$start+1 !== 5*1024*1024) {
+            if($end !== $size && $end-$start+1 !== $chunkSize) {
                 throw new Exception('Chunk size must be 5MB (except last chunk)', 400, Exception::GENERAL_MOCK);
             }
 
             foreach ($file['size'] as $i => $sz) {
-                if ($end !== $size && $sz !== 5*1024*1024) {
+                if ($end !== $size && $sz !== $chunkSize) {
                     throw new Exception('Wrong chunk size', 400, Exception::GENERAL_MOCK);
                 }
                 
-                if($sz > 5*1024*1024) {
+                if($sz > $chunkSize) {
                     throw new Exception('Chunk size must be 5MB or less', 400, Exception::GENERAL_MOCK);
                 }
             }
             if($end !== $size) {
-                $response->json(['$id'=> 'newfileid']);
+                $response->json([
+                    '$id'=> 'newfileid',
+                    'chunksTotal' => $file['size'] / $chunkSize,
+                    'chunksUploaded' => $start / $chunkSize
+                ]);
             }
         } else {
             $file['tmp_name'] = (\is_array($file['tmp_name'])) ? $file['tmp_name'] : [$file['tmp_name']];

@@ -273,13 +273,13 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                         data-success="trigger"
                         data-success-param-trigger-events="projects.listDomains">
 
-                        <div data-ls-if="0 == {{console-domains.sum}} || undefined == {{console-domains.sum}}" class="box margin-top margin-bottom">
+                        <div data-ls-if="0 == {{console-domains.total}} || undefined == {{console-domains.total}}" class="box margin-top margin-bottom">
                             <h3 class="margin-bottom-small text-bold">No Custom Domains Added</h3>
 
                             <p class="margin-bottom-no">You haven't created any custom domains for your project yet.</p>
                         </div>
 
-                        <div class="box margin-bottom" data-ls-if="0 != {{console-domains.sum}}">
+                        <div class="box margin-bottom" data-ls-if="0 != {{console-domains.total}}">
                             <table class="vertical">
                                 <thead>
                                     <tr>

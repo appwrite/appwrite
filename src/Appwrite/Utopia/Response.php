@@ -157,7 +157,7 @@ class Response extends SwooleResponse
     const MODEL_EXECUTION = 'execution';
     const MODEL_EXECUTION_LIST = 'executionList';
     const MODEL_BUILD = 'build';
-    const MODEL_BUILD_LIST = 'buildList';
+    const MODEL_BUILD_LIST = 'buildList';  // Not used anywhere yet
     const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
  
     // Project
@@ -225,7 +225,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
             ->setModel(new BaseList('Deployments List', self::MODEL_DEPLOYMENT_LIST, 'deployments', self::MODEL_DEPLOYMENT))
             ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
-            ->setModel(new BaseList('Builds List', self::MODEL_BUILD_LIST, 'builds', self::MODEL_BUILD))
+            ->setModel(new BaseList('Builds List', self::MODEL_BUILD_LIST, 'builds', self::MODEL_BUILD)) // Not used anywhere yet
             ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
             ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))

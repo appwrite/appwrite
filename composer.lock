@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "deeea4a225c55fccc04729750dd8c5ec",
+    "content-hash": "b7919cd5b669605d051fadd3818523a7",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2129,16 +2129,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.14.1",
+            "version": "0.15.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "ecc143f2cfe16b23675407035c6b5375ba263285"
+                "reference": "4ae9f1162d6640ccfe28afa0bbc60b907a7ad1c0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/ecc143f2cfe16b23675407035c6b5375ba263285",
-                "reference": "ecc143f2cfe16b23675407035c6b5375ba263285",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/4ae9f1162d6640ccfe28afa0bbc60b907a7ad1c0",
+                "reference": "4ae9f1162d6640ccfe28afa0bbc60b907a7ad1c0",
                 "shasum": ""
             },
             "require": {
@@ -2186,9 +2186,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.14.1"
+                "source": "https://github.com/utopia-php/database/tree/0.15.2"
             },
-            "time": "2022-01-25T13:01:20+00:00"
+            "time": "2022-02-28T15:53:37+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3075,7 +3075,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "36e459dfd97a5693746e733ca9947a02ce12b0dc"
+                "reference": "3af54e71d0088b72b3223efc511b77e254fb7a1d"
             },
             "require": {
                 "ext-curl": "*",
@@ -3110,7 +3110,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2022-02-27T08:06:11+00:00"
+            "time": "2022-03-01T09:53:31+00:00"
         },
         {
             "name": "composer/pcre",
@@ -4223,16 +4223,16 @@
         },
         {
             "name": "phpunit/php-code-coverage",
-            "version": "9.2.13",
+            "version": "9.2.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "deac8540cb7bd40b2b8cfa679b76202834fd04e8"
+                "reference": "9f4d60b6afe5546421462b76cd4e633ebc364ab4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/deac8540cb7bd40b2b8cfa679b76202834fd04e8",
-                "reference": "deac8540cb7bd40b2b8cfa679b76202834fd04e8",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/9f4d60b6afe5546421462b76cd4e633ebc364ab4",
+                "reference": "9f4d60b6afe5546421462b76cd4e633ebc364ab4",
                 "shasum": ""
             },
             "require": {
@@ -4288,7 +4288,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/php-code-coverage/issues",
-                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.13"
+                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.14"
             },
             "funding": [
                 {
@@ -4296,7 +4296,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-02-23T17:02:38+00:00"
+            "time": "2022-02-28T12:38:02+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",
@@ -5703,16 +5703,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v6.0.3",
+            "version": "v6.0.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "22e8efd019c3270c4f79376234a3f8752cd25490"
+                "reference": "3bebf4108b9e07492a2a4057d207aa5a77d146b1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/22e8efd019c3270c4f79376234a3f8752cd25490",
-                "reference": "22e8efd019c3270c4f79376234a3f8752cd25490",
+                "url": "https://api.github.com/repos/symfony/console/zipball/3bebf4108b9e07492a2a4057d207aa5a77d146b1",
+                "reference": "3bebf4108b9e07492a2a4057d207aa5a77d146b1",
                 "shasum": ""
             },
             "require": {
@@ -5778,7 +5778,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v6.0.3"
+                "source": "https://github.com/symfony/console/tree/v6.0.5"
             },
             "funding": [
                 {
@@ -5794,7 +5794,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-01-26T17:23:29+00:00"
+            "time": "2022-02-25T10:48:52+00:00"
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
