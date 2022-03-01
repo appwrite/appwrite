@@ -18,11 +18,11 @@ It's really easy to contribute to an open-source project, but when using GitHub,
 
 ### 1.1 Fork the Appwrite repository
 
-Before making any changes, you will need to fork Appwrite's repository to keep branches on the official repo clean. To do that, visit [Appwrite's Runtime repository](https://github.com/appwrite/php-runtimes) and click on the fork button.
+Before making any changes, you will need to fork Appwrite's repository to keep branches on the official repo clean. To do that, visit [Appwrite's Runtime repository](https://github.com/appwrite/runtimes) and click on the fork button.
 
 [![Fork button](https://github.com/appwrite/appwrite/raw/master/docs/tutorials/images/fork.png)](https://github.com/appwrite/appwrite/blob/master/docs/tutorials/images/fork.png)
 
-This will redirect you from `github.com/appwrite/php-runtimes` to `github.com/YOUR_USERNAME/php-runtimes`, meaning all changes you do are only done inside your repository. Once you are there, click the highlighted `Code` button, copy the URL and clone the repository to your computer using the `git clone` command:
+This will redirect you from `github.com/appwrite/runtimes` to `github.com/YOUR_USERNAME/runtimes`, meaning all changes you do are only done inside your repository. Once you are there, click the highlighted `Code` button, copy the URL and clone the repository to your computer using the `git clone` command:
 ```bash
 $ git clone COPIED_URL
 ```
@@ -53,7 +53,7 @@ The `launch.sh` file for an interpreted runtime should extract the `/tmp/code.ta
 
 ---
 Compiled Languages only have a `build.sh` file.
-The `build.sh` script for a compiled runtime is used to move the user's source code and rename it into source files for the runtime (The `APPWRITE_ENTRYPOINT_NAME` environment variable can help with this) it will also build the code and move it into the `/usr/code` folder. Compiled runtime executables **must** be called `runtime` for the ubuntu or alpine images to detect and run them.
+The `build.sh` script for a compiled runtime is used to move the user's source code and rename it into source files for the runtime (The `ENTRYPOINT_NAME` environment variable can help with this) it will also build the code and move it into the `/usr/code` folder. Compiled runtime executables **must** be called `runtime` for the ubuntu or alpine images to detect and run them.
 
 #### Note:
 `/tmp/code.tar.gz` is always created from the `/usr/code` folder in the build stage. If you need any files for either compiled or interpreted runtimes you should place them there and extract them from the `/tmp/code.tar.gz` during the `launch.sh` script to get the files you need.
@@ -63,7 +63,7 @@ Internally the runtime can be anything you like as long as it follows the standa
 
 The best way to go about writing a runtime is like so:
 Initialize a web server that runs on port 3000 and uses any IP Address (0.0.0.0) and on each `POST` request do the following:
-1. Check that the `x-internal-challenge` header matches the `APPWRITE_INTERNAL_RUNTIME_KEY` environment variable. If not return an error with a `401` status code and an `unauthorized` error message.
+1. Check that the `x-internal-challenge` header matches the `INTERNAL_RUNTIME_KEY` environment variable. If not return an error with a `401` status code and an `unauthorized` error message.
 2. Decode the executor's JSON POST request. This normally looks like so:
 ```json
 {
@@ -219,13 +219,13 @@ echo  'LANGUAGE_NAME Packaging...'
 rm $(pwd)/tests/resources/LANGUAGE_NAME.tar.gz
 tar -zcvf $(pwd)/tests/resources/LANGUAGE_NAME.tar.gz -C $(pwd)/tests/resources/LANGUAGE_NAME .
 ```
-Then save this file. Then `cd` into the root of the `php-runtimes` project in a terminal. Run the following command replacing the `LANGUAGE_NAME` with your language's name:
+Then save this file. Then `cd` into the root of the `runtimes` project in a terminal. Run the following command replacing the `LANGUAGE_NAME` with your language's name:
 ```
 chmod +x ./tests/resources/package-LANGUAGE_NAME.sh && ./tests/resources/package-LANGUAGE_NAME.sh
 ```
 This command adds execution permissions to your script and executes it.
 
-NOTE: If you ever want to repackage your script you can simply run: `./tests/resources/package-LANGUAGE_NAME.sh` in the root of the `php-runtimes` project since you don't have to change permissions more than once.
+NOTE: If you ever want to repackage your script you can simply run: `./tests/resources/package-LANGUAGE_NAME.sh` in the root of the `runtimes` project since you don't have to change permissions more than once.
 
 ### 5.3 Adding your runtime to the main testing script
 Now you have created your test execution script and have packaged it up for your runtime to execute you can now add it to the main testing script. Open up the `./tests/Runtimes/RuntimesTest.php` file and find the part where we are defining `$this->tests`.
@@ -245,12 +245,12 @@ Make sure to replace all instances of `LANGUAGE_NAME` with your language's name 
 Once you have done this and saved it, it is finally time to move onto one of the final steps.
 
 ### 5.4 Running the tests.
-Running the tests is easy, simply run `docker-compose up` in the root of the `php-runtimes` folder. This will launch a Docker container with the test script and start running through all the runtimes making sure to test them thoroughly.
+Running the tests is easy, simply run `docker-compose up` in the root of the `runtimes` folder. This will launch a Docker container with the test script and start running through all the runtimes making sure to test them thoroughly.
 
-If all tests pass then congratulations! You can now go ahead and file a PR against the `php-runtimes` repo making sure to target the `refactor` branch, make sure you're ready to respond to any feedback which can arise during our code review.
+If all tests pass then congratulations! You can now go ahead and file a PR against the `runtimes` repo making sure to target the `refactor` branch, make sure you're ready to respond to any feedback which can arise during our code review.
 
 ## 6. Raise a pull request
-First of all, commit the changes with the message `Added XXX Runtime` and push it. This will publish a new branch to your forked version of Appwrite. If you visit it at `github.com/YOUR_USERNAME/php-runtimes`, you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
+First of all, commit the changes with the message `Added XXX Runtime` and push it. This will publish a new branch to your forked version of Appwrite. If you visit it at `github.com/YOUR_USERNAME/runtimes`, you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
 
 ## ![face_with_head_bandage](https://github.githubassets.com/images/icons/emoji/unicode/1f915.png) Stuck ?
 

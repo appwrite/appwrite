@@ -1,3 +1,17 @@
+# Unreleased Version 0.13.0
+
+- Added ability to create syncronous function executions
+- Introduced new execution model for functions
+- Improved functions execution times
+- Improved functions execution times
+- Create a new builds worker to handle building of deployments
+- **[ Breaking ]** **Tags** have been renamed to **Deployments**
+  - Rename `tagId` to `deplyomentId` in collections
+  - Rename tags to deployments in the docs
+  - Updated endpoints to reflect the new terminology 
+  - Updated UI with these changes
+  - Updated event names from `function.tags.*` to `function.deployments.*`
+ 
 # Version 0.12.3
 
 ## Bugs
@@ -200,7 +214,6 @@
 ## Bugs
 - Fixed memory leak in realtime service (#1606)
 - Fixed function execution output now being UTF-8 encoded before saved (#1607)
-
 # Version 0.10.2
 
 ## Bugs
@@ -232,9 +245,7 @@
 - Fixed MariaDB timeout after 24 hours (#1510)
 - Fixed upgrading installation with customized `docker-compose.yml` file (#1513)
 - Fixed usage stats on the dashboard displaying invalid total users count (#1514)
-
 # Version 0.9.4
-
 ## Security
 
 - Fixed security vulnerability that exposes project ID's from other admin users (#1453)

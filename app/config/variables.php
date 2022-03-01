@@ -176,6 +176,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_WORKER_PER_CORE',
+                'description' => 'Internal Worker per core for the API, Realtime and Executor containers. Can be configured to optimize performance.',
+                'introduction' => '0.13.0',
+                'default' => 6,
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],
@@ -429,7 +438,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_S3_ACCESS_KEY',
+                'name' => '_APP_STORAGE_S3_ACCESS_KEY',
                 'description' => 'AWS S3 storage access key. Required when the storage adapter is set to S3. You can get your access key from your AWS console',
                 'introduction' => '0.13.0',
                 'default' => '',
@@ -437,7 +446,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_S3_SECRET',
+                'name' => '_APP_STORAGE_S3_SECRET',
                 'description' => 'AWS S3 storage secret key. Required when the storage adapter is set to S3. You can get your secret key from your AWS console.',
                 'introduction' => '0.13.0',
                 'default' => '',
@@ -445,7 +454,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_S3_REGION',
+                'name' => '_APP_STORAGE_S3_REGION',
                 'description' => 'AWS S3 storage region. Required when storage adapter is set to S3. You can find your region info for your bucket from AWS console.',
                 'introduction' => '0.13.0',
                 'default' => 'us-eas-1',
@@ -453,7 +462,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_S3_BUCKET',
+                'name' => '_APP_STORAGE_S3_BUCKET',
                 'description' => 'AWS S3 storage bucket. Required when storage adapter is set to S3. You can create buckets in your AWS console.',
                 'introduction' => '0.13.0',
                 'default' => '',
@@ -461,7 +470,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_DO_SPACES_ACCESS_KEY',
+                'name' => '_APP_STORAGE_DO_SPACES_ACCESS_KEY',
                 'description' => 'DigitalOcean spaces access key. Required when the storage adapter is set to DOSpaces. You can get your access key from your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
@@ -469,7 +478,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_DO_SPACES_SECRET',
+                'name' => '_APP_STORAGE_DO_SPACES_SECRET',
                 'description' => 'DigitalOcean spaces secret key. Required when the storage adapter is set to DOSpaces. You can get your secret key from your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
@@ -477,7 +486,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_DO_SPACES_REGION',
+                'name' => '_APP_STORAGE_DO_SPACES_REGION',
                 'description' => 'DigitalOcean spaces region. Required when storage adapter is set to DOSpaces. You can find your region info for your space from DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => 'us-eas-1',
@@ -485,7 +494,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE_DO_SPACES_BUCKET',
+                'name' => '_APP_STORAGE_DO_SPACES_BUCKET',
                 'description' => 'DigitalOcean spaces bucket. Required when storage adapter is set to DOSpaces. You can create spaces in your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
@@ -499,9 +508,27 @@ return [
         'description' => '',
         'variables' => [
             [
+                'name' => '_APP_FUNCTIONS_SIZE_LIMIT',
+                'description' => 'The maximum size deployment in bytes. The default value is 30MB.',
+                'introduction' => '0.13.0',
+                'default' => '30000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_FUNCTIONS_TIMEOUT',
                 'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds.',
                 'introduction' => '0.7.0',
+                'default' => '900',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_BUILD_TIMEOUT',
+                'description' => 'The maximum number of seconds allowed as a timeout value when building a new function. The default value is 900 seconds.',
+                'introduction' => '0.13.0',
                 'default' => '900',
                 'required' => false,
                 'question' => '',
@@ -553,10 +580,37 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_EXECUTOR_SECRET',
+                'description' => 'The secret key used by Appwrite to communicate with the function executor. Make sure to change this!',
+                'introduction' => '0.13.0',
+                'default' => 'your-secret-key',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EXECUTOR_RUNTIME_NETWORK',
+                'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
+                'introduction' => '0.13.0',
+                'default' => 'appwrite_runtimes',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_FUNCTIONS_ENVS',
                 'description' => 'Deprecated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead!',
                 'introduction' => '0.7.0',
                 'default' => 'node-16.0,php-7.4,python-3.9,ruby-3.0,java-16.0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_INACTIVE_THRESHOLD',
+                'description' => 'The minimum time a function can be inactive before it\'s container is shutdown and put to sleep. The default value is 60 seconds',
+                'introduction' => '0.13.0',
+                'default' => '60',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

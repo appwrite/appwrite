@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Extend\Exception;
 use Utopia\App;
 
 /**
@@ -18,6 +19,6 @@ App::post('/v1/graphql')
     ->label('scope', 'public')
     ->action(
         function () {
-            throw new Exception('GraphQL support is coming soon!', 502);
+            throw new Exception('GraphQL support is coming soon!', 502, Exception::GENERAL_SERVER_ERROR);
         }
     );

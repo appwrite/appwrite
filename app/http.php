@@ -23,9 +23,11 @@ use Utopia\Logger\Log\User;
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
 $payloadSize = 6 * (1024 * 1024); // 6MB
+$workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
 
 $http
     ->set([
+        'worker_num' => $workerNumber,
         'open_http2_protocol' => true,
         // 'document_root' => __DIR__.'/../public',
         // 'enable_static_handler' => true,
@@ -164,6 +166,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 '$write' => ['role:all'],
                 'search' => 'buckets Default',
             ]));
+
+            $bucket = $dbForConsole->getDocument('buckets', 'default');
     
             Console::success('[Setup] - Creating files collection for default bucket...');
             $files = $collections['files'] ?? [];
@@ -196,7 +200,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 ]);
             }
     
-            $dbForConsole->createCollection('bucket_' . 'default', $attributes, $indexes);
+            $dbForConsole->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
         }
 
         Console::success('[Setup] - Server database init completed...');

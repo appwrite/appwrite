@@ -152,18 +152,18 @@ return [
         'model' => Response::MODEL_ANY,
         'note' => 'version >= 0.7',
     ],
-    'functions.tags.create' => [
-        'description' => 'This event triggers when a function tag is created.',
-        'model' => Response::MODEL_TAG,
+    'functions.deployments.create' => [
+        'description' => 'This event triggers when a function delpoyment is created.',
+        'model' => Response::MODEL_DEPLOYMENT,
         'note' => 'version >= 0.7',
     ],
-    'functions.tags.update' => [
-        'description' => 'This event triggers when a function tag is updated.',
+    'functions.deployments.update' => [
+        'description' => 'This event triggers when a function delpoyment is updated.',
         'model' => Response::MODEL_FUNCTION,
         'note' => 'version >= 0.7',
     ],
-    'functions.tags.delete' => [
-        'description' => 'This event triggers when a function tag is deleted.',
+    'functions.deployments.delete' => [
+        'description' => 'This event triggers when a function delpoyment is deleted.',
         'model' => Response::MODEL_ANY,
         'note' => 'version >= 0.7',
     ],

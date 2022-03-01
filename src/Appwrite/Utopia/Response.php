@@ -31,6 +31,7 @@ use Appwrite\Utopia\Response\Model\Domain;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
+use Appwrite\Utopia\Response\Model\Build;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Bucket;
 use Appwrite\Utopia\Response\Model\Func;
@@ -50,7 +51,7 @@ use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Rule;
-use Appwrite\Utopia\Response\Model\Tag;
+use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
@@ -151,12 +152,14 @@ class Response extends SwooleResponse
     const MODEL_FUNCTION_LIST = 'functionList';
     const MODEL_RUNTIME = 'runtime';
     const MODEL_RUNTIME_LIST = 'runtimeList';
-    const MODEL_TAG = 'tag';
-    const MODEL_TAG_LIST = 'tagList';
+    const MODEL_DEPLOYMENT = 'deployment';
+    const MODEL_DEPLOYMENT_LIST = 'deploymentList';
     const MODEL_EXECUTION = 'execution';
     const MODEL_EXECUTION_LIST = 'executionList';
+    const MODEL_BUILD = 'build';
+    const MODEL_BUILD_LIST = 'buildList';
     const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
-    
+ 
     // Project
     const MODEL_PROJECT = 'project';
     const MODEL_PROJECT_LIST = 'projectList';
@@ -220,8 +223,9 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
             ->setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
-            ->setModel(new BaseList('Tags List', self::MODEL_TAG_LIST, 'tags', self::MODEL_TAG))
+            ->setModel(new BaseList('Deployments List', self::MODEL_DEPLOYMENT_LIST, 'deployments', self::MODEL_DEPLOYMENT))
             ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
+            ->setModel(new BaseList('Builds List', self::MODEL_BUILD_LIST, 'builds', self::MODEL_BUILD))
             ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
             ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
@@ -260,8 +264,9 @@ class Response extends SwooleResponse
             ->setModel(new Membership())
             ->setModel(new Func())
             ->setModel(new Runtime())
-            ->setModel(new Tag())
+            ->setModel(new Deployment())
             ->setModel(new Execution())
+            ->setModel(new Build())
             ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())

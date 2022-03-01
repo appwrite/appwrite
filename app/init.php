@@ -50,6 +50,7 @@ use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
 use Utopia\Database\Query;
+use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
@@ -80,6 +81,7 @@ const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
 const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1073741824; // 2^32 bits / 4 bits per char
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
+const APP_STORAGE_BUILDS = '/storage/builds';
 const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
@@ -103,11 +105,15 @@ const DATABASE_TYPE_CREATE_ATTRIBUTE = 'createAttribute';
 const DATABASE_TYPE_CREATE_INDEX = 'createIndex';
 const DATABASE_TYPE_DELETE_ATTRIBUTE = 'deleteAttribute';
 const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
+// Build Worker Types
+const BUILD_TYPE_DEPLOYMENT = 'deployment';
+const BUILD_TYPE_RETRY = 'retry';
 // Deletion Types
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_COLLECTIONS = 'collections';
 const DELETE_TYPE_PROJECTS = 'projects';
 const DELETE_TYPE_FUNCTIONS = 'functions';
+const DELETE_TYPE_DEPLOYMENTS = 'deployments';
 const DELETE_TYPE_USERS = 'users';
 const DELETE_TYPE_TEAMS= 'teams';
 const DELETE_TYPE_EXECUTIONS = 'executions';
@@ -780,7 +786,7 @@ App::setResource('dbForProject', function($db, $cache, $project) {
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace('_project_'.$project->getId());
+    $database->setNamespace("_{$project->getId()}");
 
     return $database;
 }, ['db', 'cache', 'project']);
@@ -790,7 +796,7 @@ App::setResource('dbForConsole', function($db, $cache) {
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace('_project_console');
+    $database->setNamespace('_console');
 
     return $database;
 }, ['db', 'cache']);
@@ -801,46 +807,37 @@ App::setResource('deviceLocal', function() {
 });
 
 App::setResource('deviceFiles', function($project) {
-    switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
-        case Storage::DEVICE_LOCAL:default:
-            return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-        case Storage::DEVICE_S3:
-            $s3AccessKey = App::getEnv('_APP_STORAGE_DEVICE_S3_ACCESS_KEY', '');
-            $s3SecretKey = App::getEnv('_APP_STORAGE_DEVICE_S3_SECRET', '');
-            $s3Region = App::getEnv('_APP_STORAGE_DEVICE_S3_REGION', '');
-            $s3Bucket = App::getEnv('_APP_STORAGE_DEVICE_S3_BUCKET', '');
-            $s3Acl = 'private';
-            return new S3(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
-        case Storage::DEVICE_DO_SPACES:
-            $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_ACCESS_KEY', '');
-            $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_SECRET', '');
-            $doSpacesRegion = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_REGION', '');
-            $doSpacesBucket = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_BUCKET', '');
-            $doSpacesAcl = 'private';
-            return new DOSpaces(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
-    }
+    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
 App::setResource('deviceFunctions', function($project) {
+    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+}, ['project']);
+
+App::setResource('deviceBuilds', function($project) {
+    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+}, ['project']);
+
+function getDevice($root): Device {
     switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
         case Storage::DEVICE_LOCAL:default:
-            return new Local(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+            return new Local($root);
         case Storage::DEVICE_S3:
-            $s3AccessKey = App::getEnv('_APP_STORAGE_DEVICE_S3_ACCESS_KEY', '');
-            $s3SecretKey = App::getEnv('_APP_STORAGE_DEVICE_S3_SECRET', '');
-            $s3Region = App::getEnv('_APP_STORAGE_DEVICE_S3_REGION', '');
-            $s3Bucket = App::getEnv('_APP_STORAGE_DEVICE_S3_BUCKET', '');
+            $s3AccessKey = App::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
+            $s3SecretKey = App::getEnv('_APP_STORAGE_S3_SECRET', '');
+            $s3Region = App::getEnv('_APP_STORAGE_S3_REGION', '');
+            $s3Bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
             $s3Acl = 'private';
-            return new S3(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
+            return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
         case Storage::DEVICE_DO_SPACES:
-            $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_ACCESS_KEY', '');
-            $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_SECRET', '');
-            $doSpacesRegion = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_REGION', '');
-            $doSpacesBucket = App::getEnv('_APP_STORAGE_DEVICE_DO_SPACES_BUCKET', '');
+            $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
+            $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
+            $doSpacesRegion = App::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
+            $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
             $doSpacesAcl = 'private';
-            return new DOSpaces(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+            return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
     }
-}, ['project']);
+}
 
 App::setResource('mode', function($request) {
     /** @var Appwrite\Utopia\Request $request */

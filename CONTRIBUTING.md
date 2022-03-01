@@ -282,7 +282,7 @@ docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7
 ```
 **Build Functions Runtimes**
 
-The Runtimes for all supported cloud functions (multicore builds) can be found at the [appwrite/php-runtimes](https://github.com/appwrite/php-runtimes) repository.
+The Runtimes for all supported cloud functions (multicore builds) can be found at the [open-runtimes/open-runtimes](https://github.com/open-runtimes/open-runtimes) repository.
 
 ## Generate SDK
 
