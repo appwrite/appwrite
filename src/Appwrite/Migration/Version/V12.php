@@ -3,9 +3,11 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
+use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 
 class V12 extends Migration
 {
@@ -35,6 +37,7 @@ class V12 extends Migration
         Console::info('Migrating Permissions');
         $this->fixPermissions();
         Console::info('Migrating Collections');
+        $this->migrateCustomCollections();
         $this->fixCollections();
         Console::info('Migrating Documents');
         $this->forEachDocument([$this, 'fixDocument']);
@@ -54,7 +57,7 @@ class V12 extends Migration
          * Remove empty generated Console Project.
          */
         if ($this->consoleDB->getNamespace() === '_project_console' && $projectId === 'console') {
-            $all = [];
+            $all = ['_console_bucket_1', '_console_bucket_1_perms'];
             foreach ($this->collections as $collection) {
                 $all[] = "_{$projectId}_{$collection['$id']}";
                 $all[] = "_{$projectId}_{$collection['$id']}_perms";
@@ -69,6 +72,9 @@ class V12 extends Migration
          */
         foreach ($this->collections as $collection) {
             $id = $collection['$id'];
+            if (in_array($id, ['buckets', 'deployments', 'builds'])) {
+                continue;
+            }
 
             $this->pdo->prepare("ALTER TABLE IF EXISTS _project_{$projectId}_{$id} RENAME TO _{$projectId}_{$id}")->execute();
             $this->pdo->prepare("CREATE TABLE IF NOT EXISTS _{$projectId}_{$id}_perms (
@@ -92,6 +98,10 @@ class V12 extends Migration
     {
         foreach ($this->collections as $collection) {
             $id = $collection['$id'];
+
+            if (in_array($id, ['buckets', 'deployments', 'builds'])) {
+                continue;
+            }
             Console::log("- {$id}");
             switch ($id) {
                 case 'sessions':
@@ -132,11 +142,219 @@ class V12 extends Migration
                         Console::warning("'search' from {$id}: {$th->getMessage()}");
                     }
                     break;
+
+                case 'files':
+                    /**
+                     * Create bucket table if not exists.
+                     */
+                    $this->createCollection('buckets');
+
+                    if (!$this->projectDB->findOne('buckets', [new Query('$id', Query::TYPE_EQUAL, ['default'])])) {
+                        $this->projectDB->createDocument('buckets', new Document([
+                            '$id' => 'default',
+                            '$collection' => 'buckets',
+                            'dateCreated' => \time(),
+                            'dateUpdated' => \time(),
+                            'name' => 'Default',
+                            'permission' => 'file',
+                            'maximumFileSize' => (int) App::getEnv('_APP_STORAGE_LIMIT', 0), // 10MB
+                            'allowedFileExtensions' => [],
+                            'enabled' => true,
+                            'encryption' => true,
+                            'antivirus' => true,
+                            '$read' => ['role:all'],
+                            '$write' => ['role:all'],
+                            'search' => 'buckets Default',
+                        ]));
+                        $this->createCollection('files', 'bucket_1');
+                        $nextDocument = null;
+                        $path = "/storage/uploads/app-{$this->project->getId()}";
+
+                        /**
+                         * Rename folder on volumes.
+                         */
+                        if (is_dir("{$path}/")) {
+                            mkdir("/storage/uploads/app-{$this->project->getId()}/default");
+
+                            foreach (new \DirectoryIterator($path) as $fileinfo) {
+                                if ($fileinfo->isDir() && !$fileinfo->isDot() && $fileinfo->getFilename() !== 'default') {
+                                    rename("{$path}/{$fileinfo->getFilename()}", "{$path}/default/{$fileinfo->getFilename()}");
+                                }
+                            }
+                        }
+
+                        do {
+                            $documents = $this->projectDB->find('files', limit: $this->limit, cursor: $nextDocument);
+                            $count = count($documents);
+                            \Co\run(function (array $documents) {
+                                foreach ($documents as $document) {
+                                    go(function (Document $document) {
+                                        $path = "/storage/uploads/app-{$this->project->getId()}";
+                                        $new = str_replace($path, "{$path}/default", $document->getAttribute('path'));
+                                        $document
+                                            ->setAttribute('bucketId', 'default')
+                                            ->setAttribute('path', $new);
+                                        $this->projectDB->createDocument('bucket_1', $document);
+                                    }, $document);
+                                }
+                            }, $documents);
+
+                            if ($count !== $this->limit) {
+                                $nextDocument = null;
+                            } else {
+                                $nextDocument = end($documents);
+                            }
+                        } while (!is_null($nextDocument));
+                    }
+
+                    break;
+
+                case 'functions':
+                    /**
+                     * Create deployments table if not exists.
+                     */
+                    $this->createCollection('deployments');
+
+                    /**
+                     * Create builds table if not exists.
+                     */
+                    $this->createCollection('builds');
+
+                    break;
             }
             usleep(100000);
         }
     }
 
+    protected function createCollection(string $id, string $name = null)
+    {
+        $name ??= $id;
+
+        if (!$this->projectDB->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
+            $attributes = [];
+            $indexes = [];
+            $collection = $this->collections[$id];
+
+            foreach ($collection['attributes'] as $attribute) {
+                $attributes[] = new Document([
+                    '$id' => $attribute['$id'],
+                    'type' => $attribute['type'],
+                    'size' => $attribute['size'],
+                    'required' => $attribute['required'],
+                    'signed' => $attribute['signed'],
+                    'array' => $attribute['array'],
+                    'filters' => $attribute['filters'],
+                ]);
+            }
+
+            foreach ($collection['indexes'] as $index) {
+                $indexes[] = new Document([
+                    '$id' => $index['$id'],
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]);
+            }
+
+            try {
+                $this->projectDB->createCollection($name, $attributes, $indexes);
+            } catch (\Throwable $th) {
+                throw $th;
+            }
+        }
+    }
+
+    protected function migrateCustomCollections()
+    {
+        $nextCollection = null;
+
+        do {
+            $documents = $this->projectDB->find('collections', limit: $this->limit, cursor: $nextCollection);
+            $count = count($documents);
+
+            \Co\run(function (array $documents) {
+                foreach ($documents as $document) {
+                    go(function (Document $collection) {
+                        $id = $collection->getId();
+                        $projectId = $this->project->getId();
+                        $internalId = $collection->getInternalId();
+                        $this->pdo->prepare("ALTER TABLE IF EXISTS _project_{$projectId}_collection_{$id} RENAME TO _{$projectId}_collection_{$internalId}")->execute();
+                        $this->pdo->prepare("CREATE TABLE IF NOT EXISTS _{$projectId}_collection_{$internalId}_perms (
+                            `_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                            `_type` VARCHAR(12) NOT NULL,
+                            `_permission` VARCHAR(255) NOT NULL,
+                            `_document` VARCHAR(255) NOT NULL,
+                            PRIMARY KEY (`_id`),
+                            UNIQUE INDEX `_index1` (`_type`,`_document`,`_permission`),
+                            INDEX `_index2` (`_permission`)
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;")->execute();
+
+                        $this->pdo->prepare("UPDATE _{$projectId}__metadata
+                            SET
+                                _uid = 'collection_{$internalId}',
+                                name = 'collection_{$internalId}'
+                            WHERE _uid = 'collection_{$id}';
+                        ")->execute();
+
+
+                        $nextDocument = null;
+
+                        do {
+                            $documents = $this->projectDB->find('collection_' . $internalId, limit: $this->limit, cursor: $nextDocument);
+                            $count = count($documents);
+
+                            foreach ($documents as $document) {
+                                go(function (Document $document, string $internalId) {
+                                    $sql = "SELECT _read, _write FROM `{$this->projectDB->getDefaultDatabase()}`.`{$this->projectDB->getNamespace()}_collection_{$internalId}` WHERE _uid = {$this->pdo->quote($document->getid())}";
+                                    $stmt = $this->pdo->prepare($sql);
+                                    $stmt->execute();
+
+                                    $permissions = $stmt->fetch();
+
+                                    $read  = json_decode($permissions['_read'] ?? null) ?? [];
+                                    $write = json_decode($permissions['_write'] ?? null) ?? [];
+
+                                    $permissions = [];
+                                    foreach ($read as $permission) {
+                                        $permissions[] = "('read', '{$permission}', '{$document->getId()}')";
+                                    }
+
+                                    foreach ($write as $permission) {
+                                        $permissions[] = "('write', '{$permission}', '{$document->getId()}')";
+                                    }
+
+                                    if (!empty($permissions)) {
+                                        $queryPermissions = "INSERT IGNORE INTO `{$this->projectDB->getDefaultDatabase()}`.`{$this->projectDB->getNamespace()}_collection_{$internalId}_perms` (_type, _permission, _document) VALUES " . implode(', ', $permissions);
+                                        $stmtPermissions = $this->pdo->prepare($queryPermissions);
+                                        $stmtPermissions->execute();
+                                    }
+                                }, $document, $internalId);
+                            }
+
+                            if ($count !== $this->limit) {
+                                $nextDocument = null;
+                            } else {
+                                $nextDocument = end($documents);
+                            }
+                        } while (!is_null($nextDocument));
+
+                        $this->pdo->prepare("
+                            ALTER TABLE `{$this->projectDB->getDefaultDatabase()}`.`{$this->projectDB->getNamespace()}_collection_{$internalId}`
+                            DROP COLUMN _read,
+                            DROP COLUMN _write
+                        ")->execute();
+                    }, $document);
+                }
+            }, $documents);
+
+            if ($count !== $this->limit) {
+                $nextCollection = null;
+            } else {
+                $nextCollection = end($documents);
+            }
+        } while (!is_null($nextCollection));
+    }
     /**
      * Migrate all Permission to new System with dedicated Table.
      * @return void
@@ -146,6 +364,28 @@ class V12 extends Migration
     {
         foreach ($this->collections as $collection) {
             $id = $collection['$id'];
+
+            if (in_array($id, ['buckets', 'deployments', 'builds'])) {
+                continue;
+            }
+            /**
+             * Check if permissions have already been migrated.
+             */
+            try {
+                $stmtCheck = $this->pdo->prepare("SHOW COLUMNS from `{$this->projectDB->getDefaultDatabase()}`.`{$this->projectDB->getNamespace()}_{$id}` LIKE '_read'");
+                $stmtCheck->execute();
+
+                if (empty($stmtCheck->fetchAll())) {
+                    continue;
+                }
+            } catch (\Throwable $th) {
+                if ($th->getCode() === "42S02") {
+                    continue;
+                }
+                throw $th;
+            }
+
+
             Console::log("- {$collection['$id']}");
             $nextDocument = null;
 
@@ -189,6 +429,12 @@ class V12 extends Migration
                     $nextDocument = end($documents);
                 }
             } while (!is_null($nextDocument));
+
+            $this->pdo->prepare("
+                ALTER TABLE `{$this->projectDB->getDefaultDatabase()}`.`{$this->projectDB->getNamespace()}_{$id}`
+                DROP COLUMN _read,
+                DROP COLUMN _write
+            ")->execute();
         }
 
         /**
