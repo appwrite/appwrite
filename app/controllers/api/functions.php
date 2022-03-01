@@ -558,10 +558,9 @@ App::post('/v1/functions/:functionId/deployments')
             throw new Exception('Failed moving file', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
+        $activate = (bool) filter_var($activate, FILTER_VALIDATE_BOOLEAN);
+
         if($chunksUploaded === $chunks) {
-
-            $activate = (bool) filter_var($activate, FILTER_VALIDATE_BOOLEAN);
-
             if ($activate) {
                 // Remove deploy for all other deployments.
                 $activeDeployments = $dbForProject->find('deployments', [
