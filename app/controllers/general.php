@@ -20,6 +20,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Appwrite\Utopia\Request\Filters\V12 as RequestV12;
+use Appwrite\Utopia\Request\Filters\V13 as RequestV13;
 use Utopia\Validator\Text;
 
 Config::setParam('domainVerification', false);
@@ -48,6 +49,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         switch($requestFormat) {
             case version_compare ($requestFormat , '0.12.0', '<') :
                 Request::setFilter(new RequestV12());
+                break;
+            case version_compare ($requestFormat , '0.13.0', '<') :
+                Request::setFilter(new RequestV13());
                 break;
             default:
                 Request::setFilter(null);
