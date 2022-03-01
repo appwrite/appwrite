@@ -1,7 +1,5 @@
 <?php
-
 namespace Appwrite\Auth\OAuth2;
-
 use Appwrite\Auth\OAuth2;
 
 // Reference Material
@@ -57,7 +55,6 @@ class Box extends OAuth2
                 'redirect_uri' => $this->callback,
                 'state' => \json_encode($this->state),
             ]);
-
         return $url;
     }
 
@@ -84,7 +81,6 @@ class Box extends OAuth2
                 ])
             ), true);
         }
-
         return $this->tokens;
     }
 
@@ -111,7 +107,6 @@ class Box extends OAuth2
         if(empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
-
         return $this->tokens;
     }
 
@@ -127,7 +122,6 @@ class Box extends OAuth2
         if (isset($user['id'])) {
             return $user['id'];
         }
-
         return '';
     }
 
@@ -143,7 +137,6 @@ class Box extends OAuth2
         if (isset($user['login'])) {
             return $user['login'];
         }
-
         return '';
     }
 
@@ -159,7 +152,6 @@ class Box extends OAuth2
         if (isset($user['name'])) {
             return $user['name'];
         }
-
         return '';
     }
 
@@ -181,7 +173,6 @@ class Box extends OAuth2
             );
             $this->user = \json_decode($user, true);
         }
-
         return $this->user;
     }
 }
