@@ -999,7 +999,6 @@ App::get('/v1/functions/:functionId/executions')
 
         $function = Authorization::skip(fn() => $dbForProject->getDocument('functions', $functionId));
 
-        throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
         }
