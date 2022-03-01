@@ -453,8 +453,12 @@ class OpenAPI3 extends Format
 
                 switch ($rule['type']) {
                     case 'string':
-                    case 'json':
                         $type = 'string';
+                        break;
+
+                    case 'json':
+                        $type = 'object';
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['additionalProperties'] = true;
                         break;
 
                     case 'integer':
@@ -516,9 +520,6 @@ class OpenAPI3 extends Format
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['format'] = $format;
                     }
 
-                    if($items) {
-                        $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
-                    }
                 } else {
                     $output['components']['schemas'][$model->getType()]['properties'][$name] = [
                         'type' => $type,
@@ -530,9 +531,9 @@ class OpenAPI3 extends Format
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['format'] = $format;
                     }
 
-                    if($items) {
-                        $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
-                    }
+                }
+                if($items) {
+                    $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
                 }
                 if (!in_array($name, $required)) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['nullable'] = true;
