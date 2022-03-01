@@ -14,7 +14,6 @@ class V12 extends Filter
         $parsedResponse = $content;
 
         switch ($model) {
-            // Update permissions
             case Response::MODEL_ERROR_DEV:
             case Response::MODEL_ERROR:
                 $parsedResponse = $this->parseError($content);
