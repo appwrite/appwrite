@@ -49,7 +49,7 @@
             };
             this.headers = {
                 'x-sdk-version': 'appwrite:web:4.0.4',
-                'X-Appwrite-Response-Format': '0.12.0',
+                'X-Appwrite-Response-Format': '0.13.0',
             };
             this.realtime = {
                 socket: undefined,

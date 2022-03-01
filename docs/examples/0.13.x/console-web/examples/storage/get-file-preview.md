@@ -5,10 +5,6 @@ sdk
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-let promise = sdk.storage.getFilePreview('[BUCKET_ID]', '[FILE_ID]');
+let result = sdk.storage.getFilePreview('[BUCKET_ID]', '[FILE_ID]');
 
-promise.then(function (response) {
-    console.log(response); // Success
-}, function (error) {
-    console.log(error); // Failure
-});
+console.log(result); // Resource URL
