@@ -118,7 +118,7 @@ class V12 extends Filter
     protected function parseFunction(array $content)
     {
         $content['tag'] = $content['deployment'];
-
+        unset($content['deployment']);
         return $content;
     }
 
@@ -180,6 +180,7 @@ class V12 extends Filter
 
     protected function parseExecution($content) {
         $content['exitCode'] = $content['statusCode'];
+        unset($content['statusCode']);
 
         return $content;
     }
