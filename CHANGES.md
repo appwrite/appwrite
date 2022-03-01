@@ -1,17 +1,58 @@
-# Unreleased Version 0.13.0
+# Version 0.13.0
 
-- Added ability to create syncronous function executions
-- Introduced new execution model for functions
-- Improved functions execution times
-- Improved functions execution times
-- Create a new builds worker to handle building of deployments
-- **[ Breaking ]** **Tags** have been renamed to **Deployments**
-  - Rename `tagId` to `deplyomentId` in collections
-  - Rename tags to deployments in the docs
-  - Updated endpoints to reflect the new terminology 
-  - Updated UI with these changes
-  - Updated event names from `function.tags.*` to `function.deployments.*`
- 
+## Features
+### Functions
+- Synchronous function execution
+- Improved functions execution times by alot
+- Added a new worker to build deployments
+- Functions are now executed differently and your functions need to be adapted **Breaking Change**
+- Tags are now called Deployments **Breaking Change**
+- Renamed `tagId` to `deplyomentId` in collections **Breaking Change**
+- Updated event names from `function.tags.*` to `function.deployments.*` **Breaking Change**
+### Storage
+- Added Buckets
+- Buckets allow you to configure following settings:
+  - Maximum File Size
+  - Enabled/Disabled
+  - Encryption
+  - Anti Virus
+  - Allowed file extensions
+  - Permissions
+    - Bucket Level
+    - File Level
+- Support for S3 and Digitalocean Spaces
+- Support for large files
+- Files larger then 5MB will be automatically uploaded in chunks
+- New UI in the console for uploading files with progress indication
+
+### Account
+- Renamed `providerToken` to `providerAccessToken` in sessions **Breaking Change**
+- New endpoint to refresh the OAuth Access Token
+- OAuth sessions now include `providerAccessTokenExpiry` and `providerRefreshToken`
+- Notion and Strip have been added to the OAuth Providers
+- Microsoft OAuth provider now supports custom domains
+
+## Bugs
+- Fixed permission issues and is now more consistent and returns all resources
+- Fixed total amount of documents not being updated
+- Fixed issue with searching though memberships
+- Fixed image preview rotation
+- Fixed Database index names that contain SQL keywords
+- Fixed UI to reveal long e-mail addresses on User list
+- Fixed UI for Attribute default value field to reset after submit
+- Fixed UI to check for new available version of Appwrite
+- Fixed UI default values when creating Integer or Float attributes
+
+
+## Security
+- Remove `appwrite.io` and `appwrite.test` from authorized domains for session verification
+
+## Upgrades
+
+- Upgraded `redis` extenstion to version 5.3.7
+- Upgraded `swoole` extenstion to version 4.8.7
+- Upgraded GEO IP database to version March 2022
+
 # Version 0.12.3
 
 ## Bugs
