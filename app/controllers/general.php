@@ -13,12 +13,14 @@ use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Utopia\Response\Filters\V11;
+use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
+use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Appwrite\Utopia\Request\Filters\V12;
+use Appwrite\Utopia\Request\Filters\V12 as RequestV12;
+use Appwrite\Utopia\Request\Filters\V13 as RequestV13;
 use Utopia\Validator\Text;
 
 Config::setParam('domainVerification', false);
@@ -46,7 +48,10 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     if ($requestFormat) {
         switch($requestFormat) {
             case version_compare ($requestFormat , '0.12.0', '<') :
-                Request::setFilter(new V12());
+                Request::setFilter(new RequestV12());
+                break;
+            case version_compare ($requestFormat , '0.13.0', '<') :
+                Request::setFilter(new RequestV13());
                 break;
             default:
                 Request::setFilter(null);
@@ -128,16 +133,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     $selfDomain = new Domain($request->getHostname());
     $endDomain = new Domain((string)$origin);
 
-    // var_dump('referer', $referrer);
-    // var_dump('origin', $origin);
-    // var_dump('port', $request->getPort());
-    // var_dump('hostname', $request->getHostname());
-    // var_dump('protocol', $request->getProtocol());
-    // var_dump('method', $request->getMethod());
-    // var_dump('ip', $request->getIP());
-    // var_dump('-----------------');
-    // var_dump($request->debug());
-
     Config::setParam('domainVerification',
         ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
             $endDomain->getRegisterable() !== '');
@@ -157,8 +152,11 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
     if ($responseFormat) {
         switch($responseFormat) {
-            case version_compare ($responseFormat , '0.11.0', '<=') :
-                Response::setFilter(new V11());
+            case version_compare ($responseFormat , '0.11.2', '<=') :
+                Response::setFilter(new ResponseV11());
+                break;
+            case version_compare ($responseFormat , '0.12.4', '<='):
+                Response::setFilter(new ResponseV12());
                 break;
             default:
                 Response::setFilter(null);
@@ -376,11 +374,29 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         throw $error;
     }
 
-    
+    $code = $error->getCode();
+    $message = $error->getMessage();
+    $file = $error->getFile();
+    $line = $error->getLine();
+    $trace = $error->getTrace();
+
+    if (php_sapi_name() === 'cli') {
+        Console::error('[Error] Timestamp: '.date('c', time()));
+
+        if($route) {
+            Console::error('[Error] Method: '.$route->getMethod());
+            Console::error('[Error] URL: '.$route->getPath());
+        }
+
+        Console::error('[Error] Type: '.get_class($error));
+        Console::error('[Error] Message: '.$message);
+        Console::error('[Error] File: '.$file);
+        Console::error('[Error] Line: '.$line);
+    }
+
     /** Handle Utopia Errors */
     if ($error instanceof Utopia\Exception) {
-        $code = $error->getCode();
-        $error = new Exception($error->getMessage(), $code, Exception::GENERAL_UNKNOWN, $error);
+        $error = new Exception($message, $code, Exception::GENERAL_UNKNOWN, $error);
         switch($code) {
             case 400:
                 $error->setType(Exception::GENERAL_ARGUMENT_INVALID);
@@ -393,26 +409,10 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
 
     /** Wrap all exceptions inside Appwrite\Extend\Exception */
     if (!($error instanceof Exception)) {
-        $error = new Exception($error->getMessage(), $error->getCode(), Exception::GENERAL_UNKNOWN, $error);
+        $error = new Exception($message, $code, Exception::GENERAL_UNKNOWN, $error);
     }
 
-    $template = ($route) ? $route->getLabel('error', null) : null;
-
-    if (php_sapi_name() === 'cli') {
-        Console::error('[Error] Timestamp: '.date('c', time()));
-
-        if($route) {
-            Console::error('[Error] Method: '.$route->getMethod());
-            Console::error('[Error] URL: '.$route->getPath());
-        }
-
-        Console::error('[Error] Type: '.get_class($error));
-        Console::error('[Error] Message: '.$error->getMessage());
-        Console::error('[Error] File: '.$error->getFile());
-        Console::error('[Error] Line: '.$error->getLine());
-    }
-
-    switch ($error->getCode()) { // Don't show 500 errors!
+    switch ($code) { // Don't show 500 errors!
         case 400: // Error allowed publicly
         case 401: // Error allowed publicly
         case 402: // Error allowed publicly
@@ -424,8 +424,6 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         case 429: // Error allowed publicly
         case 501: // Error allowed publicly
         case 503: // Error allowed publicly
-            $code = $error->getCode();
-            $message = $error->getMessage();
             break;
         default:
             $code = 500; // All other errors get the generic 500 server error status code
@@ -434,19 +432,21 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
 
     //$_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
 
+    $type = $error->getType();
+
     $output = ((App::isDevelopment())) ? [
-        'message' => $error->getMessage(),
-        'code' => $error->getCode(),
-        'file' => $error->getFile(),
-        'line' => $error->getLine(),
-        'trace' => $error->getTrace(),
+        'message' => $message,
+        'code' => $code,
+        'file' => $file,
+        'line' => $line,
+        'trace' => $trace,
         'version' => $version,
-        'type' => $error->getType(),
+        'type' => $type,
     ] : [
         'message' => $message,
         'code' => $code,
         'version' => $version,
-        'type' => $error->getType(),
+        'type' => $type,
     ];
 
     $response
@@ -455,6 +455,8 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         ->addHeader('Pragma', 'no-cache')
         ->setStatusCode($code)
     ;
+
+    $template = ($route) ? $route->getLabel('error', null) : null;
 
     if ($template) {
         $comp = new View($template);
@@ -465,7 +467,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
             ->setParam('projectURL', $project->getAttribute('url'))
             ->setParam('message', $error->getMessage())
             ->setParam('code', $code)
-            ->setParam('trace', $error->getTrace())
+            ->setParam('trace', $trace)
         ;
 
         $layout

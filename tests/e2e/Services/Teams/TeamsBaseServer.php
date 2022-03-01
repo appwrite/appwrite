@@ -22,7 +22,7 @@ trait TeamsBaseServer
         ], $this->getHeaders()));
         
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(0, $response['body']['sum']);
+        $this->assertEquals(0, $response['body']['total']);
 
         /**
          * Test for FAILURE
@@ -201,8 +201,8 @@ trait TeamsBaseServer
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Arsenal', $response['body']['name']);
-        $this->assertEquals(1, $response['body']['sum']);
-        $this->assertIsInt($response['body']['sum']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertIsInt($response['body']['total']);
         $this->assertIsInt($response['body']['dateCreated']);
 
         
@@ -227,8 +227,8 @@ trait TeamsBaseServer
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Arsenal', $response['body']['name']);
-        $this->assertEquals(0, $response['body']['sum']);
-        $this->assertIsInt($response['body']['sum']);
+        $this->assertEquals(0, $response['body']['total']);
+        $this->assertIsInt($response['body']['total']);
         $this->assertIsInt($response['body']['dateCreated']);        
 
     }

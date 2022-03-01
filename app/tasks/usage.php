@@ -487,7 +487,7 @@ $cli
                                 'files' => [
                                     'namespace' => '',
                                     'collectionPrefix' => 'bucket_',
-                                    'sum' => [
+                                    'total' => [
                                         'field' => 'sizeOriginal'
                                     ]
                                 ],
@@ -613,13 +613,13 @@ $cli
                                         }
 
                                         // check if sum calculation is required
-                                        $sum = $subOptions['sum'] ?? [];
-                                        if(empty($sum)) {
+                                        $total = $subOptions['total'] ?? [];
+                                        if(empty($total)) {
                                             continue;
                                         }
 
                                         $dbForProject->setNamespace("_{$projectId}");
-                                        $total = (int) $dbForProject->sum(($subOptions['collectionPrefix'] ?? '') . $parent->getId(), $sum['field']);
+                                        $total = (int) $dbForProject->sum(($subOptions['collectionPrefix'] ?? '') . $parent->getId(), $total['field']);
 
                                         $subCollectionTotals[$subCollection] = ($ssubCollectionTotals[$subCollection] ?? 0) + $total; // Project level sum for sub collections like storage.total
 

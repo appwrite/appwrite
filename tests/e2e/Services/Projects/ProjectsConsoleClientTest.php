@@ -110,7 +110,7 @@ class ProjectsConsoleClientTest extends Scope
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals($response['body']['sum'], 1);
+        $this->assertEquals($response['body']['total'], 1);
         $this->assertIsArray($response['body']['projects']);
         $this->assertCount(1, $response['body']['projects']);
         $this->assertEquals($response['body']['projects'][0]['name'], 'Project Test');
@@ -123,7 +123,7 @@ class ProjectsConsoleClientTest extends Scope
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals($response['body']['sum'], 1);
+        $this->assertEquals($response['body']['total'], 1);
         $this->assertIsArray($response['body']['projects']);
         $this->assertCount(1, $response['body']['projects']);
         $this->assertEquals($response['body']['projects'][0]['$id'], $data['projectId']);
@@ -861,7 +861,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertEquals(1, $response['body']['total']);
         
         /**
          * Test for FAILURE
@@ -1095,7 +1095,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertEquals(1, $response['body']['total']);
         
         /**
          * Test for FAILURE
@@ -1420,7 +1420,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(7, $response['body']['sum']);
+        $this->assertEquals(7, $response['body']['total']);
 
         /**
          * Test for FAILURE
@@ -1926,7 +1926,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertEquals(1, $response['body']['total']);
 
         /**
          * Test for FAILURE

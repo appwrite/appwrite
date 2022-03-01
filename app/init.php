@@ -70,7 +70,7 @@ const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
 const APP_LIMIT_ENCRYPTION = 20000000; //20MB
 const APP_LIMIT_COMPRESSION = 20000000; //20MB
 const APP_LIMIT_PREVIEW = 10000000; //10MB file size limit for preview endpoint
-const APP_CACHE_BUSTER = 201;
+const APP_CACHE_BUSTER = 300;
 const APP_VERSION_STABLE = '0.13.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -469,7 +469,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-12.mmdb');
+    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2022-03.mmdb');
 });
 $register->set('db', function () { // This is usually for our workers or CLI commands scope
     $dbHost = App::getEnv('_APP_DB_HOST', '');
