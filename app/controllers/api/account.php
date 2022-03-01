@@ -80,11 +80,11 @@ App::post('/v1/account')
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
         if ($limit !== 0) {
-            $sum = $dbForProject->count('users', [
+            $total = $dbForProject->count('users', [
                 new Query('deleted', Query::TYPE_EQUAL, [false]),
             ], APP_LIMIT_USERS);
 
-            if ($sum >= $limit) {
+            if ($total >= $limit) {
                 throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
             }
         }
@@ -483,9 +483,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
                 if ($limit !== 0) {
-                    $sum = $dbForProject->count('users', [ new Query('deleted', Query::TYPE_EQUAL, [false]),], APP_LIMIT_USERS);
+                    $total = $dbForProject->count('users', [ new Query('deleted', Query::TYPE_EQUAL, [false]),], APP_LIMIT_USERS);
 
-                    if ($sum >= $limit) {
+                    if ($total >= $limit) {
                         throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
                     }
                 }
@@ -656,11 +656,11 @@ App::post('/v1/account/sessions/magic-url')
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if ($limit !== 0) {
-                $sum = $dbForProject->count('users', [
+                $total = $dbForProject->count('users', [
                     new Query('deleted', Query::TYPE_EQUAL, [false]),
                 ], APP_LIMIT_USERS);
 
-                if ($sum >= $limit) {
+                if ($total >= $limit) {
                     throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
                 }
             }
@@ -928,11 +928,11 @@ App::post('/v1/account/sessions/anonymous')
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
         if ($limit !== 0) {
-            $sum = $dbForProject->count('users', [
+            $total = $dbForProject->count('users', [
                 new Query('deleted', Query::TYPE_EQUAL, [false]),
             ], APP_LIMIT_USERS);
 
-            if ($sum >= $limit) {
+            if ($total >= $limit) {
                 throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
             }
         }
@@ -1163,7 +1163,7 @@ App::get('/v1/account/sessions')
         ;
         $response->dynamic(new Document([
             'sessions' => $sessions,
-            'sum' => count($sessions),
+            'total' => count($sessions),
         ]), Response::MODEL_SESSION_LIST);
     });
 
@@ -1249,7 +1249,7 @@ App::get('/v1/account/logs')
         ;
 
         $response->dynamic(new Document([
-            'sum' => $audit->countLogsByUserAndEvents($user->getId(), $auditEvents),
+            'total' => $audit->countLogsByUserAndEvents($user->getId(), $auditEvents),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -1825,7 +1825,7 @@ App::delete('/v1/account/sessions')
         $events
             ->setParam('eventData', $response->output(new Document([
                 'sessions' => $sessions,
-                'sum' => $numOfSessions,
+                'total' => $numOfSessions,
             ]), Response::MODEL_SESSION_LIST))
         ;
 

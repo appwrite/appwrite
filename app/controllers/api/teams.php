@@ -57,7 +57,7 @@ App::post('/v1/teams')
             '$read' => ['team:'.$teamId],
             '$write' => ['team:'.$teamId .'/owner'],
             'name' => $name,
-            'sum' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
+            'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
             'dateCreated' => \time(),
             'search' => implode(' ', [$teamId, $name]),
         ])));
@@ -131,11 +131,11 @@ App::get('/v1/teams')
         }
 
         $results = $dbForProject->find('teams', $queries, $limit, $offset, [], [$orderType], $cursorTeam ?? null, $cursorDirection);
-        $sum = $dbForProject->count('teams', $queries, APP_LIMIT_COUNT);
+        $total = $dbForProject->count('teams', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'teams' => $results,
-            'sum' => $sum,
+            'total' => $total,
         ]), Response::MODEL_TEAM_LIST);
     });
 
@@ -311,9 +311,9 @@ App::post('/v1/teams/:teamId/memberships')
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if ($limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
-                $sum = $dbForProject->count('users', [], APP_LIMIT_USERS);
+                $total = $dbForProject->count('users', [], APP_LIMIT_USERS);
 
-                if($sum >= $limit) {
+                if($total >= $limit) {
                     throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
                 }
             }
@@ -377,7 +377,7 @@ App::post('/v1/teams/:teamId/memberships')
             } catch (Duplicate $th) {
                 throw new Exception('User has already been invited or is already a member of this team', 409, Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
-            $team->setAttribute('sum', $team->getAttribute('sum', 0) + 1);
+            $team->setAttribute('total', $team->getAttribute('total', 0) + 1);
             $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
 
             // Attach user to team
@@ -479,7 +479,7 @@ App::get('/v1/teams/:teamId/memberships')
             cursorDirection: $cursorDirection
         );
 
-        $sum = $dbForProject->count(
+        $total = $dbForProject->count(
             collection:'memberships',
             queries: $queries,
             max: APP_LIMIT_COUNT
@@ -500,7 +500,7 @@ App::get('/v1/teams/:teamId/memberships')
 
         $response->dynamic(new Document([
             'memberships' => $memberships,
-            'sum' => $sum,
+            'total' => $total,
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
@@ -731,7 +731,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
 
-        $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('sum', $team->getAttribute('sum', 0) + 1)));
+        $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
 
         $audits
             ->setParam('userId', $user->getId())
@@ -825,7 +825,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         Authorization::skip(fn() => $dbForProject->updateDocument('users', $user->getId(), $user));
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
-            $team->setAttribute('sum', \max($team->getAttribute('sum', 0) - 1, 0));
+            $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0));
             Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
         }
 

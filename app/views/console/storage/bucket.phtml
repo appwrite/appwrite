@@ -71,14 +71,14 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                     data-scope="sdk"
                     data-name="project-files">
 
-                    <div data-ls-if="0 == {{project-files.sum}}" class="box margin-bottom">
+                    <div data-ls-if="0 == {{project-files.total}}" class="box margin-bottom">
                         <h3 class="margin-bottom-small text-bold">No Files Found</h3>
 
                         <p class="margin-bottom-no">Upload your first file to get started</p>
                     </div>
 
-                    <div data-ls-if="0 != {{project-files.sum}}">
-                        <div class="margin-bottom-small text-align-end text-size-small text-fade"><span data-ls-bind="{{project-files.sum}}"></span> files found</div>
+                    <div data-ls-if="0 != {{project-files.total}}">
+                        <div class="margin-bottom-small text-align-end text-size-small text-fade"><span data-ls-bind="{{project-files.total}}"></span> files found</div>
 
                         <div class="box margin-bottom">
                             <table class="vertical" style="overflow: visible">
@@ -238,10 +238,10 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                             data-name="project-files"
                             data-success="state"
                             data-success-param-state-keys="search,offset">
-                            <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-files.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                            <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-files.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                         </form>
 
-                        <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-files.sum|pageTotal}}"></span>
+                        <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-files.total|pageTotal}}"></span>
 
                         <form
                             data-service="storage.listFiles"
@@ -254,7 +254,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                             data-name="project-files"
                             data-success="state"
                             data-success-param-state-keys="search,offset">
-                            <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-files.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                            <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-files.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                         </form>
                     </div>
 

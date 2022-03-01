@@ -267,7 +267,7 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertCount(2, $response['body']);
-        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertEquals(1, $response['body']['total']);
         $this->assertEquals($sessionId, $response['body']['sessions'][0]['$id']);
         
         $this->assertEquals('Windows', $response['body']['sessions'][0]['osName']);
@@ -325,7 +325,7 @@ trait AccountBase
         $this->assertIsArray($response['body']['logs']);
         $this->assertNotEmpty($response['body']['logs']);
         $this->assertCount(2, $response['body']['logs']);
-        $this->assertIsNumeric($response['body']['sum']);
+        $this->assertIsNumeric($response['body']['total']);
 
         $this->assertContains($response['body']['logs'][0]['event'], ['account.create', 'account.sessions.create']);
         $this->assertEquals($response['body']['logs'][0]['ip'], filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP));
@@ -384,7 +384,7 @@ trait AccountBase
         $this->assertIsArray($responseLimit['body']['logs']);
         $this->assertNotEmpty($responseLimit['body']['logs']);
         $this->assertCount(1, $responseLimit['body']['logs']);
-        $this->assertIsNumeric($responseLimit['body']['sum']);
+        $this->assertIsNumeric($responseLimit['body']['total']);
 
         $this->assertEquals($response['body']['logs'][0], $responseLimit['body']['logs'][0]);
 
@@ -401,7 +401,7 @@ trait AccountBase
         $this->assertIsArray($responseOffset['body']['logs']);
         $this->assertNotEmpty($responseOffset['body']['logs']);
         $this->assertCount(1, $responseOffset['body']['logs']);
-        $this->assertIsNumeric($responseOffset['body']['sum']);
+        $this->assertIsNumeric($responseOffset['body']['total']);
 
         $this->assertEquals($response['body']['logs'][1], $responseOffset['body']['logs'][0]);
 
@@ -419,7 +419,7 @@ trait AccountBase
         $this->assertIsArray($responseLimitOffset['body']['logs']);
         $this->assertNotEmpty($responseLimitOffset['body']['logs']);
         $this->assertCount(1, $responseLimitOffset['body']['logs']);
-        $this->assertIsNumeric($responseLimitOffset['body']['sum']);
+        $this->assertIsNumeric($responseLimitOffset['body']['total']);
 
         $this->assertEquals($response['body']['logs'][1], $responseLimitOffset['body']['logs'][0]);
         /**

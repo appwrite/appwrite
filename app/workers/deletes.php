@@ -227,7 +227,7 @@ class DeletesV1 extends Worker
                 $team = $this->getProjectDB($projectId)->getDocument('teams', $teamId);
                 if (!$team->isEmpty()) {
                     $team = $this->getProjectDB($projectId)->updateDocument('teams', $teamId, new Document(\array_merge($team->getArrayCopy(), [
-                        'sum' => \max($team->getAttribute('sum', 0) - 1, 0), // Ensure that sum >= 0
+                        'total' => \max($team->getAttribute('total', 0) - 1, 0), // Ensure that total >= 0
                     ])));
                 }
             }

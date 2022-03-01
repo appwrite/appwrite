@@ -4472,9 +4472,9 @@
                  * @param {string} background
                  * @param {string} output
                  * @throws {AppwriteException}
-                 * @returns {Promise}
+                 * @returns {URL}
                  */
-                getFilePreview: (bucketId, fileId, width, height, gravity, quality, borderWidth, borderColor, borderRadius, opacity, rotation, background, output) => __awaiter(this, void 0, void 0, function* () {
+                getFilePreview: (bucketId, fileId, width, height, gravity, quality, borderWidth, borderColor, borderRadius, opacity, rotation, background, output) => {
                     if (typeof bucketId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "bucketId"');
                     }
@@ -4517,10 +4517,12 @@
                         payload['output'] = output;
                     }
                     const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('get', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
+                    payload['project'] = this.config.project;
+                    for (const [key, value] of Object.entries(this.flatten(payload))) {
+                        uri.searchParams.append(key, value);
+                    }
+                    return uri;
+                },
                 /**
                  * Get File for View
                  *
