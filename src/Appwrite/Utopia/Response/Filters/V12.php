@@ -61,6 +61,37 @@ class V12 extends Filter
             case Response::MODEL_USAGE_STORAGE:
                 $parsedResponse = $this->parseUsageStorage($content);
                 break;
+
+            case Response::MODEL_TEAM:
+                $parsedResponse = $this->parseTeam($content);
+                break;
+            case Response::MODEL_TEAM_LIST:
+                $parsedResponse = $this->parseTeamList($content);
+                break;
+
+            case Response::MODEL_DOCUMENT_LIST:
+            case Response::MODEL_COLLECTION_LIST:
+            case Response::MODEL_INDEX_LIST:
+            case Response::MODEL_USER_LIST:
+            case Response::MODEL_LOG_LIST:
+            case Response::MODEL_BUCKET_LIST:
+            case Response::MODEL_MEMBERSHIP_LIST:
+            case Response::MODEL_RUNTIME_LIST:
+            case Response::MODEL_BUILD_LIST:
+            case Response::MODEL_PROJECT_LIST:
+            case Response::MODEL_WEBHOOK_LIST:
+            case Response::MODEL_KEY_LIST:
+            case Response::MODEL_PLATFORM_LIST:
+            case Response::MODEL_DOMAIN_LIST:
+            case Response::MODEL_COUNTRY_LIST:
+            case Response::MODEL_CONTINENT_LIST:
+            case Response::MODEL_LANGUAGE_LIST:
+            case Response::MODEL_CURRENCY_LIST:
+            case Response::MODEL_PHONE_LIST:
+            case Response::MODEL_METRIC_LIST:
+            case Response::MODEL_ATTRIBUTE_LIST:
+                $parsedResponse = $this->parseList($content);
+                break;
         }
 
         return $parsedResponse;
@@ -92,6 +123,8 @@ class V12 extends Filter
             $parsedResponse[] = $this->parseSession($document);
         }
         $content['sessions'] = $parsedResponse;
+        $content['sum'] = $content['total'];
+        unset($content['total']);
         return $content;
     }
 
@@ -112,6 +145,8 @@ class V12 extends Filter
             $parsedResponse[] = $this->parseFile($document);
         }
         $content['files'] = $parsedResponse;
+        $content['sum'] = $content['total'];
+        unset($content['total']);
         return $content;
     }
 
@@ -130,6 +165,8 @@ class V12 extends Filter
             $parsedResponse[] = $this->parseFunction($document);
         }
         $content['functions'] = $parsedResponse;
+        $content['sum'] = $content['total'];
+        unset($content['total']);
         return $content;
     }
 
@@ -148,6 +185,8 @@ class V12 extends Filter
             $parsedResponse[] = $this->parseDeployment($document);
         }
         $content['deployments'] = $parsedResponse;
+        $content['sum'] = $content['total'];
+        unset($content['total']);
         return $content;
     }
 
@@ -192,6 +231,32 @@ class V12 extends Filter
             $parsedResponse[] = $this->parseExecution($document);
         }
         $content['executions'] = $parsedResponse;
+        $content['sum'] = $content['total'];
+        unset($content['total']);
+        return $content;
+    }
+
+    protected function parseTeam($content) {
+        $content['sum'] = $content['total'];
+        unset($content['total']);
+        return $content;
+    }
+
+    protected function parseTeamList($content) {
+        $teams = $content['teams'];
+        $parsedResponse = [];
+        foreach ($teams as $document) {
+            $parsedResponse[] = $this->parseTeam($document);
+        }
+        $content['teams'] = $parsedResponse;
+        $content['sum'] = $content['total'];
+        unset($content['total']);
+        return $content;
+    }
+
+    protected function parseList($content) {
+        $content['sum'] = $content['total'];
+        unset($content['total']);
         return $content;
     }
 }
