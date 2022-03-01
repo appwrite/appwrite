@@ -374,6 +374,12 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         throw $error;
     }
 
+    $code = $error->getCode();
+    $message = $error->getMessage();
+    $file = $error->getFile();
+    $line = $error->getLine();
+    $trace = $error->getTrace();
+
     if (php_sapi_name() === 'cli') {
         Console::error('[Error] Timestamp: '.date('c', time()));
 
@@ -383,15 +389,14 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         }
 
         Console::error('[Error] Type: '.get_class($error));
-        Console::error('[Error] Message: '.$error->getMessage());
-        Console::error('[Error] File: '.$error->getFile());
-        Console::error('[Error] Line: '.$error->getLine());
+        Console::error('[Error] Message: '.$message);
+        Console::error('[Error] File: '.$file);
+        Console::error('[Error] Line: '.$line);
     }
 
     /** Handle Utopia Errors */
     if ($error instanceof Utopia\Exception) {
-        $code = $error->getCode();
-        $error = new Exception($error->getMessage(), $code, Exception::GENERAL_UNKNOWN, $error);
+        $error = new Exception($message, $code, Exception::GENERAL_UNKNOWN, $error);
         switch($code) {
             case 400:
                 $error->setType(Exception::GENERAL_ARGUMENT_INVALID);
@@ -404,10 +409,10 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
 
     /** Wrap all exceptions inside Appwrite\Extend\Exception */
     if (!($error instanceof Exception)) {
-        $error = new Exception($error->getMessage(), $error->getCode(), Exception::GENERAL_UNKNOWN, $error);
+        $error = new Exception($message, $code, Exception::GENERAL_UNKNOWN, $error);
     }
 
-    switch ($error->getCode()) { // Don't show 500 errors!
+    switch ($code) { // Don't show 500 errors!
         case 400: // Error allowed publicly
         case 401: // Error allowed publicly
         case 402: // Error allowed publicly
@@ -419,8 +424,6 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         case 429: // Error allowed publicly
         case 501: // Error allowed publicly
         case 503: // Error allowed publicly
-            $code = $error->getCode();
-            $message = $error->getMessage();
             break;
         default:
             $code = 500; // All other errors get the generic 500 server error status code
@@ -429,19 +432,21 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
 
     //$_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
 
+    $type = $error->getType();
+
     $output = ((App::isDevelopment())) ? [
-        'message' => $error->getMessage(),
-        'code' => $error->getCode(),
-        'file' => $error->getFile(),
-        'line' => $error->getLine(),
-        'trace' => $error->getTrace(),
+        'message' => $message,
+        'code' => $code,
+        'file' => $file,
+        'line' => $line,
+        'trace' => $trace,
         'version' => $version,
-        'type' => $error->getType(),
+        'type' => $type,
     ] : [
         'message' => $message,
         'code' => $code,
         'version' => $version,
-        'type' => $error->getType(),
+        'type' => $type,
     ];
 
     $response
@@ -462,7 +467,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
             ->setParam('projectURL', $project->getAttribute('url'))
             ->setParam('message', $error->getMessage())
             ->setParam('code', $code)
-            ->setParam('trace', $error->getTrace())
+            ->setParam('trace', $trace)
         ;
 
         $layout
