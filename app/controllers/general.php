@@ -129,16 +129,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     $selfDomain = new Domain($request->getHostname());
     $endDomain = new Domain((string)$origin);
 
-    // var_dump('referer', $referrer);
-    // var_dump('origin', $origin);
-    // var_dump('port', $request->getPort());
-    // var_dump('hostname', $request->getHostname());
-    // var_dump('protocol', $request->getProtocol());
-    // var_dump('method', $request->getMethod());
-    // var_dump('ip', $request->getIP());
-    // var_dump('-----------------');
-    // var_dump($request->debug());
-
     Config::setParam('domainVerification',
         ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
             $endDomain->getRegisterable() !== '');
@@ -158,11 +148,11 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
     if ($responseFormat) {
         switch($responseFormat) {
+            case version_compare ($responseFormat , '0.11.2', '<=') :
+                Response::setFilter(new ResponseV11());
+                break;
             case version_compare ($responseFormat , '0.12.4', '<='):
                 Response::setFilter(new ResponseV12());
-                break;
-            case version_compare ($responseFormat , '0.11.0', '<=') :
-                Response::setFilter(new ResponseV11());
                 break;
             default:
                 Response::setFilter(null);

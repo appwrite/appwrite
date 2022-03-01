@@ -15,23 +15,44 @@ class V12 extends Filter
 
         switch ($model) {
             // Update permissions
+            case Response::MODEL_ERROR_DEV:
             case Response::MODEL_ERROR:
                 $parsedResponse = $this->parseError($content);
                 break;
+
             case Response::MODEL_SESSION:
                 $parsedResponse = $this->parseSession($content);
+                break;
+            case Response::MODEL_SESSION_LIST:
+                $parsedResponse = $this->parseSessionList($content);
                 break;
 
             case Response::MODEL_FILE:
                 $parsedResponse = $this->parseFile($content);
                 break;
+            case Response::MODEL_FILE_LIST:
+                $parsedResponse = $this->parseFileList($content);
+                break;
 
             case Response::MODEL_FUNCTION:
                 $parsedResponse = $this->parseFunction($content);
                 break;
+            case Response::MODEL_FUNCTION_LIST:
+                $parsedResponse = $this->parseFunctionList($content);
+                break;
+
+            case Response::MODEL_DEPLOYMENT:
+                $parsedResponse = $this->parseDeployment($content);
+                break;
+            case Response::MODEL_DEPLOYMENT_LIST:
+                $parsedResponse = $this->parseDeploymentList($content);
+                break;
 
             case Response::MODEL_EXECUTION:
                 $parsedResponse = $this->parseExecution($content);
+                break;
+            case Response::MODEL_EXECUTION_LIST:
+                $parsedResponse = $this->parseExecutionList($content);
                 break;
 
             case Response::MODEL_USAGE_BUCKETS:
@@ -64,6 +85,17 @@ class V12 extends Filter
         return $content;
     }
 
+    protected function parseSessionList(array $content)
+    {
+        $sessions = $content['sessions'];
+        $parsedResponse = [];
+        foreach ($sessions as $document) {
+            $parsedResponse[] = $this->parseSession($document);
+        }
+        $content['sessions'] = $parsedResponse;
+        return $content;
+    }
+
     protected function parseFile(array $content)
     {
         unset($content['bucketId']);
@@ -73,10 +105,50 @@ class V12 extends Filter
         return $content;
     }
 
+    protected function parseFileList(array $content)
+    {
+        $files = $content['files'];
+        $parsedResponse = [];
+        foreach ($files as $document) {
+            $parsedResponse[] = $this->parseFile($document);
+        }
+        $content['files'] = $parsedResponse;
+        return $content;
+    }
+
     protected function parseFunction(array $content)
     {
         $content['tag'] = $content['deployment'];
 
+        return $content;
+    }
+
+    protected function parseFunctionList(array $content)
+    {
+        $functions = $content['functions'];
+        $parsedResponse = [];
+        foreach ($functions as $document) {
+            $parsedResponse[] = $this->parseFunction($document);
+        }
+        $content['functions'] = $parsedResponse;
+        return $content;
+    }
+
+    protected function parseDeployment(array $content)
+    {
+        $content['functionId'] = $content['resourceId'];
+        $content['command'] = $content['entrypoint'];
+        return $content;
+    }
+
+    protected function parseDeploymentList(array $content)
+    {
+        $deployments = $content['deployments'];
+        $parsedResponse = [];
+        foreach ($deployments as $document) {
+            $parsedResponse[] = $this->parseDeployment($document);
+        }
+        $content['deployments'] = $parsedResponse;
         return $content;
     }
 
@@ -110,6 +182,16 @@ class V12 extends Filter
     protected function parseExecution($content) {
         $content['exitCode'] = $content['statusCode'];
 
+        return $content;
+    }
+
+    protected function parseExecutionList($content) {
+        $executions = $content['executions'];
+        $parsedResponse = [];
+        foreach ($executions as $document) {
+            $parsedResponse[] = $this->parseExecution($document);
+        }
+        $content['executions'] = $parsedResponse;
         return $content;
     }
 }
