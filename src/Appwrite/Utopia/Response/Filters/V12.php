@@ -193,6 +193,7 @@ class V12 extends Filter
     protected function parseUsageBuckets(array $content)
     {
         unset($content['filesStorage']);
+        return $content;
     }
 
     protected function parseUsageStorage(array $content)
@@ -215,6 +216,8 @@ class V12 extends Filter
         unset($content['filesRead']);
         unset($content['filesUpdate']);
         unset($content['filesDelete']);
+
+        return $content;
     }
 
     protected function parseExecution($content) {

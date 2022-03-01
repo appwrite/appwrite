@@ -395,9 +395,9 @@ return [
         'variables' => [
             [
                 'name' => '_APP_STORAGE_LIMIT',
-                'description' => 'Maximum file size allowed for file upload. The default value is 10MB limitation. You should pass your size limit value in bytes.',
+                'description' => 'Maximum file size allowed for file upload. The default value is 30MB. You should pass your size limit value in bytes.',
                 'introduction' => '0.7.0',
-                'default' => '10000000',
+                'default' => '30000000',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
