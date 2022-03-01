@@ -376,7 +376,20 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         throw $error;
     }
 
-    
+    if (php_sapi_name() === 'cli') {
+        Console::error('[Error] Timestamp: '.date('c', time()));
+
+        if($route) {
+            Console::error('[Error] Method: '.$route->getMethod());
+            Console::error('[Error] URL: '.$route->getPath());
+        }
+
+        Console::error('[Error] Type: '.get_class($error));
+        Console::error('[Error] Message: '.$error->getMessage());
+        Console::error('[Error] File: '.$error->getFile());
+        Console::error('[Error] Line: '.$error->getLine());
+    }
+
     /** Handle Utopia Errors */
     if ($error instanceof Utopia\Exception) {
         $code = $error->getCode();
@@ -394,22 +407,6 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
     /** Wrap all exceptions inside Appwrite\Extend\Exception */
     if (!($error instanceof Exception)) {
         $error = new Exception($error->getMessage(), $error->getCode(), Exception::GENERAL_UNKNOWN, $error);
-    }
-
-    $template = ($route) ? $route->getLabel('error', null) : null;
-
-    if (php_sapi_name() === 'cli') {
-        Console::error('[Error] Timestamp: '.date('c', time()));
-
-        if($route) {
-            Console::error('[Error] Method: '.$route->getMethod());
-            Console::error('[Error] URL: '.$route->getPath());
-        }
-
-        Console::error('[Error] Type: '.get_class($error));
-        Console::error('[Error] Message: '.$error->getMessage());
-        Console::error('[Error] File: '.$error->getFile());
-        Console::error('[Error] Line: '.$error->getLine());
     }
 
     switch ($error->getCode()) { // Don't show 500 errors!
@@ -455,6 +452,8 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         ->addHeader('Pragma', 'no-cache')
         ->setStatusCode($code)
     ;
+
+    $template = ($route) ? $route->getLabel('error', null) : null;
 
     if ($template) {
         $comp = new View($template);
