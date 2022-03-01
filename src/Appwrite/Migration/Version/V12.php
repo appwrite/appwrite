@@ -96,19 +96,40 @@ class V12 extends Migration
             switch ($id) {
                 case 'sessions':
                     try {
+                        /**
+                         * Rename providerToken to providerAccessToken
+                         */
                         $this->projectDB->renameAttribute($id, 'providerToken', 'providerAccessToken');
                     } catch (\Throwable $th) {
                         Console::warning("'providerAccessToken' from {$id}: {$th->getMessage()}");
                     }
                     try {
+                        /**
+                         * Create providerRefreshToken
+                         */
                         $this->projectDB->createAttribute(collection: $id, id: 'providerRefreshToken', type: Database::VAR_STRING, size: 16384, signed: true, required: true, filters: ['encrypt']);
                     } catch (\Throwable $th) {
                         Console::warning("'providerRefreshToken' from {$id}: {$th->getMessage()}");
                     }
                     try {
+                        /**
+                         * Create providerAccessTokenExpiry
+                         */
                         $this->projectDB->createAttribute(collection: $id, id: 'providerAccessTokenExpiry', type: Database::VAR_INTEGER, size: 0, required: true);
                     } catch (\Throwable $th) {
                         Console::warning("'providerAccessTokenExpiry' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+
+                case 'memberships':
+                    try {
+                        /**
+                         * Add search attribute and index to memberships.
+                         */
+                        $this->projectDB->createAttribute(collection: $id, id: 'search', type: Database::VAR_STRING, size: 16384, required: false);
+                        $this->projectDB->createIndex(collection: $id, id: '_key_search', type: Database::INDEX_FULLTEXT, attributes: ['search']);
+                    } catch (\Throwable $th) {
+                        Console::warning("'search' from {$id}: {$th->getMessage()}");
                     }
                     break;
             }
@@ -250,6 +271,16 @@ class V12 extends Migration
                  */
                 if (empty($document->getAttribute('search'))) {
                     $document->setAttribute('search', $this->buildSearchAttribute(['$id', 'functionId'], $document));
+                }
+
+                break;
+
+            case 'memberships':
+                /**
+                 * Populate search string.
+                 */
+                if (empty($document->getAttribute('search'))) {
+                    $document->setAttribute('search', $this->buildSearchAttribute(['$id', 'userId'], $document));
                 }
 
                 break;
