@@ -29,6 +29,8 @@
 - Renamed `providerToken` to `providerAccessToken` in sessions **Breaking Change**
 - New endpoint to refresh the OAuth Access Token
 - OAuth sessions now include `providerAccessTokenExpiry` and `providerRefreshToken`
+- Notion and Strip have been added to the OAuth Providers
+- Microsoft OAuth provider now supports custom domains
 
 ## Bugs
 - Fixed permission issues and is now more consistent and returns all resources
