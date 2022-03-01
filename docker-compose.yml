@@ -21,7 +21,7 @@ services:
       - --entrypoints.appwrite_websecure.address=:443
       - --accesslog=true
     ports:
-      - 80:80
+      - 8080:80
       - 443:443
       - 9500:8080
     volumes:
