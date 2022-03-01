@@ -1,7 +1,5 @@
 <?php
-
 namespace Appwrite\Auth\OAuth2;
-
 use Appwrite\Auth\OAuth2;
 
 // Reference Material
@@ -46,7 +44,6 @@ class Amazon extends OAuth2
         return \json_decode(\html_entity_decode($state), true);
     }
 
-
     /**
      * @return string
      */
@@ -83,7 +80,6 @@ class Amazon extends OAuth2
                 ])
             ), true);
         }
-
         return $this->tokens;
     }
 
@@ -110,7 +106,6 @@ class Amazon extends OAuth2
         if(empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
-
         return $this->tokens;
     }
 
@@ -126,7 +121,6 @@ class Amazon extends OAuth2
         if (isset($user['user_id'])) {
             return $user['user_id'];
         }
-
         return '';
     }
 
@@ -142,7 +136,6 @@ class Amazon extends OAuth2
         if (isset($user['email'])) {
             return $user['email'];
         }
-
         return '';
     }
 
@@ -158,7 +151,6 @@ class Amazon extends OAuth2
         if (isset($user['name'])) {
             return $user['name'];
         }
-
         return '';
     }
 
