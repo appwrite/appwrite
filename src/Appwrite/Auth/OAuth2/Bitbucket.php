@@ -1,7 +1,5 @@
 <?php
-
 namespace Appwrite\Auth\OAuth2;
-
 use Appwrite\Auth\OAuth2;
 
 // Reference Material
@@ -67,7 +65,6 @@ class Bitbucket extends OAuth2
                 ])
             ), true);
         }
-
         return $this->tokens;
     }
 
@@ -94,7 +91,6 @@ class Bitbucket extends OAuth2
         if(empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
-
         return $this->tokens;
     }
 
@@ -110,7 +106,6 @@ class Bitbucket extends OAuth2
         if (isset($user['uuid'])) {
             return $user['uuid'];
         }
-
         return '';
     }
 
@@ -126,7 +121,6 @@ class Bitbucket extends OAuth2
         if (isset($user['email'])) {
             return $user['email'];
         }
-
         return '';
     }
 
@@ -142,7 +136,6 @@ class Bitbucket extends OAuth2
         if (isset($user['display_name'])) {
             return $user['display_name'];
         }
-
         return '';
     }
 
