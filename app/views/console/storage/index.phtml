@@ -22,7 +22,7 @@
                 data-scope="sdk"
                 data-name="project-buckets">
 
-                <div data-ls-if="0 == {{project-buckets.total}} || undefined == {{project-buckets.total}}" class="box dashboard margin-bottom">
+                <div data-ls-if="(!{{project-buckets.total}})" class="box dashboard margin-bottom">
                     <div class="margin-bottom-small margin-top-small margin-end margin-start">
                         <h3 class="margin-bottom-small text-bold">No Buckets Found</h3>
 
