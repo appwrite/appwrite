@@ -1,7 +1,5 @@
 <?php
-
 namespace Appwrite\Auth\OAuth2;
-
 use Appwrite\Auth\OAuth2;
 use Utopia\Exception;
 
@@ -10,7 +8,6 @@ use Utopia\Exception;
 
 class Bitly extends OAuth2
 {
-
     /**
      * @var string
      */
@@ -82,7 +79,6 @@ class Bitly extends OAuth2
             \parse_str($response, $output);
             $this->tokens = $output;
         }
-
         return $this->tokens;
     }
 
@@ -112,7 +108,6 @@ class Bitly extends OAuth2
         if(empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
-
         return $this->tokens;
     }
 
@@ -128,7 +123,6 @@ class Bitly extends OAuth2
         if (isset($user['login'])) {
             return $user['login'];
         }
-
         return '';
     }
 
@@ -144,7 +138,6 @@ class Bitly extends OAuth2
         if (isset($user['emails'])) {
             return $user['emails'][0]['email'];
         }
-
         return '';
     }
 
@@ -160,7 +153,6 @@ class Bitly extends OAuth2
         if (isset($user['name'])) {
             return $user['name'];
         }
-
         return '';
     }
 
@@ -179,8 +171,6 @@ class Bitly extends OAuth2
         if (empty($this->user)) {
             $this->user = \json_decode($this->request('GET', $this->resourceEndpoint . "v4/user", $headers), true);
         }
-
-
         return $this->user;
     }
 }
