@@ -81,7 +81,6 @@ class Apple extends OAuth2
             $this->claims = (isset($this->tokens['id_token'])) ? \explode('.', $this->tokens['id_token']) : [0 => '', 1 => ''];
             $this->claims = (isset($this->claims[1])) ? \json_decode(\base64_decode($this->claims[1]), true) : [];
         }
-
         return $this->tokens;
     }
 
@@ -108,10 +107,9 @@ class Apple extends OAuth2
         if(empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
-
+        
         $this->claims = (isset($this->tokens['id_token'])) ? \explode('.', $this->tokens['id_token']) : [0 => '', 1 => ''];
         $this->claims = (isset($this->claims[1])) ? \json_decode(\base64_decode($this->claims[1]), true) : [];
-
         return $this->tokens;
     }
 
@@ -125,7 +123,6 @@ class Apple extends OAuth2
         if (isset($this->claims['sub']) && !empty($this->claims['sub'])) {
             return $this->claims['sub'];
         }
-
         return '';
     }
 
@@ -142,7 +139,6 @@ class Apple extends OAuth2
             $this->claims['email_verified'] === 'true') {
             return $this->claims['email'];
         }
-
         return '';
     }
 
@@ -159,7 +155,6 @@ class Apple extends OAuth2
             $this->claims['email_verified'] === 'true') {
             return $this->claims['email'];
         }
-
         return '';
     }
 
@@ -200,7 +195,6 @@ class Apple extends OAuth2
         if (!$success) {
             return '';
         }
-
         return $payload.'.'.$this->encode($this->fromDER($signature, 64));
     }
 
@@ -222,7 +216,6 @@ class Apple extends OAuth2
         while ('00' === \mb_substr($data, 0, 2, '8bit') && \mb_substr($data, 2, 2, '8bit') > '7f') {
             $data = \mb_substr($data, 2, null, '8bit');
         }
-
         return $data;
     }
 
