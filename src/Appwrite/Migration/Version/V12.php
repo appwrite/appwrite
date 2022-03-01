@@ -72,6 +72,10 @@ class V12 extends Migration
          */
         foreach ($this->collections as $collection) {
             $id = $collection['$id'];
+
+            /**
+             * Skip new tables that don't exists on old schema.
+             */
             if (in_array($id, ['buckets', 'deployments', 'builds'])) {
                 continue;
             }
@@ -99,6 +103,9 @@ class V12 extends Migration
         foreach ($this->collections as $collection) {
             $id = $collection['$id'];
 
+            /**
+             * Skip new tables that don't exists on old schema.
+             */
             if (in_array($id, ['buckets', 'deployments', 'builds'])) {
                 continue;
             }
@@ -260,7 +267,8 @@ class V12 extends Migration
     }
 
     /**
-     * 
+     * Migrates permissions to dedicated table.
+     *
      * @param \Utopia\Database\Document $document 
      * @param string $internalId 
      * @return void 
@@ -329,6 +337,9 @@ class V12 extends Migration
                             INDEX `_index2` (`_permission`)
                         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;")->execute();
 
+                        /**
+                         * Update metadata table.
+                         */
                         $this->pdo->prepare("UPDATE _{$projectId}__metadata
                             SET
                                 _uid = 'collection_{$internalId}',
@@ -387,6 +398,9 @@ class V12 extends Migration
         foreach ($this->collections as $collection) {
             $id = $collection['$id'];
 
+            /**
+             * Skip new tables that don't exists on old schema.
+             */
             if (in_array($id, ['buckets', 'deployments', 'builds'])) {
                 continue;
             }
