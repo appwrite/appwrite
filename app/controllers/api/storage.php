@@ -872,6 +872,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Utopia\Storage\Device $deviceFiles */
+        /** @var Utopia\Storage\Device $deviceLocal */
         /** @var string $mode */
 
         if (!\extension_loaded('imagick')) {
