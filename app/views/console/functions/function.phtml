@@ -645,6 +645,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
             <div class="margin-bottom">
                 <textarea type="hidden" data-ls-bind="appwrite functions createDeployment \
     --functionId={{project-function.$id}} \
+    --activate=true \
     --entrypoint='scriptFile' \
     --code='/myrepo/myfunction'" data-forms-code="bash" data-lang="bash" data-lang-label="Bash"></textarea>
             </div>
@@ -654,6 +655,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
             <div class="margin-bottom">
                 <textarea type="hidden" data-ls-bind="appwrite functions createDeployment `
     --functionId={{project-function.$id}} `
+    --activate=true `
     --entrypoint='scriptFile' `
     --code='/myrepo/myfunction'" data-forms-code="powershell" data-lang="powershell" data-lang-label="PowerShell"></textarea>
             </div>

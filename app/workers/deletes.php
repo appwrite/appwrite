@@ -129,7 +129,7 @@ class DeletesV1 extends Worker
 
         $dbForProject = $this->getProjectDB($projectId);
 
-        $dbForProject->deleteCollection('collection_' . $collectionId);
+        $dbForProject->deleteCollection('collection_' . $document->getInternalId());
 
         $this->deleteByGroup('attributes', [
             new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])

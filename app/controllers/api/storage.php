@@ -864,7 +864,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->inject('usage')
     ->inject('mode')
     ->inject('deviceFiles')
-    ->action(function ($bucketId, $fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForProject, $usage, $mode, $deviceFiles) {
+    ->inject('deviceLocal')
+    ->action(function ($bucketId, $fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForProject, $usage, $mode, $deviceFiles, $deviceLocal) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
@@ -935,6 +936,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
             $key = \md5($path . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
+            $deviceFiles = $deviceLocal;
         }
 
 
