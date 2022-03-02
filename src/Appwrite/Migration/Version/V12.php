@@ -190,8 +190,8 @@ class V12 extends Migration
                                          */
                                         $path = "/storage/uploads/app-{$this->project->getId()}";
                                         $new = str_replace($path, "{$path}/default", $document->getAttribute('path'));
-                                        $document
-                                            ->setAttribute('path', $new);
+                                        $document->setAttribute('path', $new);
+
                                         /**
                                          * Populate search string from Migration to 0.12.
                                          */
