@@ -270,6 +270,15 @@ class V12 extends Migration
                         Console::warning("'deploymentId' from {$id}: {$th->getMessage()}");
                     }
 
+                    try {
+                        /**
+                         * Create statusCode
+                         */
+                        $this->projectDB->createAttribute(collection: $id, id: 'statusCode', type: Database::VAR_INTEGER, size: 0, required: false);
+                    } catch (\Throwable $th) {
+                        Console::warning("'statusCode' from {$id}: {$th->getMessage()}");
+                    }
+
                     break;
 
                 case 'teams':
