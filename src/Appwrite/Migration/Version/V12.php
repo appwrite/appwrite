@@ -379,6 +379,10 @@ class V12 extends Migration
                         $id = $collection->getId();
                         $projectId = $this->project->getId();
                         $internalId = $collection->getInternalId();
+
+                        if ($this->projectDB->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), "collection_{$internalId}")) {
+                            return;
+                        }
                         Console::log("- {$id} ({$collection->getAttribute('name')})");
 
                         /**
