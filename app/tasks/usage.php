@@ -418,7 +418,7 @@ $cli
 
                     // Get total storage
                     $dbForProject->setNamespace('_' . $projectId);
-                    $storageTotal = $dbForProject->sum('tags', 'size');
+                    $storageTotal = $dbForProject->sum('deployments', 'size');
 
                     $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
                     $id = \md5($time . '_30m_storage.deployments.total'); //Construct unique id for each metric using time, period and metric
