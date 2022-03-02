@@ -214,6 +214,18 @@ class V12 extends Migration
                     $this->createCollection('builds');
 
                     break;
+
+                case 'functions':
+                    try {
+                        /**
+                         * Rename tag to deployment
+                         */
+                        $this->projectDB->renameAttribute($id, 'sum', 'total');
+                    } catch (\Throwable $th) {
+                        Console::warning("'total' from {$id}: {$th->getMessage()}");
+                    }
+
+                    break;
             }
             usleep(100000);
         }
@@ -495,13 +507,6 @@ class V12 extends Migration
                 break;
 
             case 'teams':
-                /**
-                 * Rename sum to total
-                 */
-                if (empty($document->getAttribute('total'))) {
-                    $document->setAttribute('total', $document->getAttribute('sum'));
-                }
-
                 /**
                  * Populate search string from Migration to 0.12.
                  */
