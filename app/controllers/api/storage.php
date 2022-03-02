@@ -1580,7 +1580,7 @@ App::get('/v1/storage/usage')
             ];
 
             $metrics = [
-                "storage.tags.total",
+                "storage.deployments.total",
                 "storage.files.total",
                 "storage.files.count",
                 "storage.buckets.count",
@@ -1635,7 +1635,7 @@ App::get('/v1/storage/usage')
             $usage = new Document([
                 'range' => $range,
                 'filesStorage' => $stats['storage.files.total'],
-                'tagsStorage' => $stats['storage.tags.total'],
+                'deploymentsStorage' => $stats['storage.deployments.total'],
                 'filesCount' => $stats['storage.files.count'],
                 'bucketsCount' => $stats['storage.buckets.count'],
                 'bucketsCreate' => $stats['storage.buckets.create'],
