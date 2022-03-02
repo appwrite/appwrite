@@ -260,6 +260,18 @@ class V12 extends Migration
 
                     break;
 
+                case 'executions':
+                    try {
+                        /**
+                         * Rename tag to deployment
+                         */
+                        $this->projectDB->renameAttribute($id, 'tagId', 'deploymentId');
+                    } catch (\Throwable $th) {
+                        Console::warning("'deploymentId' from {$id}: {$th->getMessage()}");
+                    }
+
+                    break;
+
                 case 'teams':
                     try {
                         /**
