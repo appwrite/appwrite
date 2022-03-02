@@ -378,6 +378,7 @@ class V12 extends Migration
                         $id = $collection->getId();
                         $projectId = $this->project->getId();
                         $internalId = $collection->getInternalId();
+                        Console::log("- {$id} ({$collection->getAttribute('name')})");
 
                         /**
                          * Rename user's colletion table schema
