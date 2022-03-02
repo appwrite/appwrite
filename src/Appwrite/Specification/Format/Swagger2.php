@@ -449,7 +449,6 @@ class Swagger2 extends Format
 
                     case 'json':
                         $type = 'object';
-                        $output['definitions'][$model->getType()]['properties'][$name]['additionalProperties'] = true;
                         break;
 
                     case 'integer':
@@ -496,6 +495,16 @@ class Swagger2 extends Format
                             ];
                         }
                         break;
+                }
+
+                if ($rule['type'] == 'json') {
+                    $output['definitions'][$model->getType()]['properties'][$name] = [
+                        'type' => $type,
+                        'additionalProperties' => true,
+                        'description' => $rule['description'] ?? '',
+                        'x-example' => $rule['example'] ?? null,
+                    ];
+                    continue;
                 }
 
                 if($rule['array']) {
