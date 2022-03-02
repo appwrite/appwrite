@@ -215,7 +215,7 @@ class V12 extends Migration
 
                     break;
 
-                case 'functions':
+                case 'teams':
                     try {
                         /**
                          * Rename tag to deployment
