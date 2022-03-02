@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5c49f5a1c672afd4deeead22dc18a06d",
+    "content-hash": "d07537df5229b3a7e0a4c97b79578d43",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3071,11 +3071,17 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "dev-feat-preps-for-0.13",
+            "version": "0.18.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "111fb88713797c58b4e6875c43b2d3f6bd95d1d2"
+                "url": "https://github.com/appwrite/sdk-generator.git",
+                "reference": "0b49ac10b49e655f2b5084757d55f9538ddce588"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/0b49ac10b49e655f2b5084757d55f9538ddce588",
+                "reference": "0b49ac10b49e655f2b5084757d55f9538ddce588",
+                "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
@@ -3095,11 +3101,7 @@
                     "Appwrite\\Spec\\": "src/Spec"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Tests\\": "tests"
-                }
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -3110,7 +3112,11 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2022-03-01T12:45:38+00:00"
+            "support": {
+                "issues": "https://github.com/appwrite/sdk-generator/issues",
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.18.0"
+            },
+            "time": "2022-03-02T11:04:22+00:00"
         },
         {
             "name": "composer/pcre",
@@ -6549,9 +6555,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "appwrite/sdk-generator": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

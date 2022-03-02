@@ -66,16 +66,12 @@
     },
     "repositories": [
         {
-            "type": "git",
-            "url": "https://github.com/appwrite/sdk-generator"
-        },
-        {
             "url": "https://github.com/appwrite/runtimes.git",
             "type": "git"
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "dev-feat-preps-for-0.13",
+        "appwrite/sdk-generator": "0.18.0",
         "phpunit/phpunit": "9.5.10",
         "swoole/ide-helper": "4.8.5",
         "textalk/websocket": "1.5.5",
