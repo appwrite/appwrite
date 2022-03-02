@@ -124,7 +124,7 @@ App::get('/v1/functions')
 
 App::get('/v1/functions/runtimes')
     ->groups(['api', 'functions'])
-    ->desc('List the currently active function runtimes.')
+    ->desc('List runtimes')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')

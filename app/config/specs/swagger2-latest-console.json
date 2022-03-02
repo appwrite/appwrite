@@ -3728,7 +3728,7 @@
         "consumes": ["application/json"],
         "produces": ["application/json"],
         "tags": ["functions"],
-        "description": "Get a list of all runtimes that are currently active in your project.",
+        "description": "Get a list of all runtimes that are currently active on your instance.",
         "responses": {
           "200": {
             "description": "Runtimes List",
