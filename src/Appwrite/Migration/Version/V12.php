@@ -175,6 +175,9 @@ class V12 extends Migration
                         ]));
                         $this->createCollection('files', 'bucket_1');
 
+                        /**
+                         * Migrate all files to default Bucket.
+                         */
                         $nextDocument = null;
                         do {
                             $documents = $this->projectDB->find('files', limit: $this->limit, cursor: $nextDocument);
