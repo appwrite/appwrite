@@ -216,6 +216,7 @@ class V12 extends Migration
                                 $nextDocument = null;
                             } else {
                                 $nextDocument = end($documents);
+                                $nextDocument->setAttribute('$collection', 'files');
                             }
                         } while (!is_null($nextDocument));
 
