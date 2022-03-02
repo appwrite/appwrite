@@ -80,7 +80,7 @@ class V12 extends Migration
                 continue;
             }
 
-            $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_project_{$projectId}_{$id}` RENAME TO `{$this->projectDB->getDefaultDatabase()}`.`_{$projectId}_{$id}`")->execute();
+            $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_project_{$projectId}_{$id}` RENAME TO `_{$projectId}_{$id}`")->execute();
             $this->pdo->prepare("CREATE TABLE IF NOT EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$projectId}_{$id}_perms` (
                 `_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
                 `_type` VARCHAR(12) NOT NULL,
@@ -388,7 +388,7 @@ class V12 extends Migration
                         /**
                          * Rename user's colletion table schema
                          */
-                        $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`._project_{$projectId}_collection_{$id}` RENAME TO `{$this->projectDB->getDefaultDatabase()}`.`_{$projectId}_collection_{$internalId}`")->execute();
+                        $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_project_{$projectId}_collection_{$id}` RENAME TO `_{$projectId}_collection_{$internalId}`")->execute();
                         $this->pdo->prepare("CREATE TABLE IF NOT EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$projectId}_collection_{$internalId}_perms` (
                             `_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
                             `_type` VARCHAR(12) NOT NULL,
