@@ -22,16 +22,18 @@
     - Bucket Level
     - File Level
 - Support for S3 and Digitalocean Spaces
-- Support for large files
-- Files larger then 5MB will be automatically uploaded in chunks
+- Efficiently process large files by loading only chunks
+- Files larger then 5MB needs to be uploaded in chunks using Content-Range header. SDKs handle this internally **Breaking Change**
+- Encryption, Compression is now limited to files smaller or equal to 20MB
 - New UI in the console for uploading files with progress indication
+- Concurrent file uploads
 - Added `buckets.read` and `buckets.write` scope to API keys
 
 ### Account
 - Renamed `providerToken` to `providerAccessToken` in sessions **Breaking Change**
 - New endpoint to refresh the OAuth Access Token
 - OAuth sessions now include `providerAccessTokenExpiry` and `providerRefreshToken`
-- Notion and Strip have been added to the OAuth Providers
+- Notion and Stripe have been added to the OAuth Providers
 - Microsoft OAuth provider now supports custom domains
 
 ### Others
