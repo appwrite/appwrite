@@ -7,7 +7,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Database;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Exception;
+use Exception;
 
 abstract class Migration
 {
@@ -39,6 +39,26 @@ abstract class Migration
     ];
 
     /**
+     * @var array
+     */
+    protected array $collections;
+
+    public function __construct()
+    {
+        $this->collections = array_merge([
+            '_metadata' => [
+                '$id' => '_metadata'
+            ],
+            'audit' => [
+                '$id' => 'audit'
+            ],
+            'abuse' => [
+                '$id' => 'abuse'
+            ]
+        ], Config::getParam('collections', []));
+    }
+
+    /**
      * Set project for migration.
      *
      * @param Document $project
@@ -51,7 +71,7 @@ abstract class Migration
     {
         $this->project = $project;
         $this->projectDB = $projectDB;
-        $this->projectDB->setNamespace('_project_' . $this->project->getId());
+        $this->projectDB->setNamespace('_' . $this->project->getId());
 
         $this->consoleDB = $consoleDB;
 
@@ -67,10 +87,7 @@ abstract class Migration
     {
         Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-        /** @var array $collections */
-        $collections = Config::getParam('collections', []);
-
-        foreach ($collections as $collection) {
+        foreach ($this->collections as $collection) {
             $sum = 0;
             $nextDocument = null;
             $collectionCount = $this->projectDB->count($collection['$id']);

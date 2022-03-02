@@ -2,7 +2,7 @@
 
 namespace Tests\E2E\General;
 
-use Exception;
+use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectNone;
 use Tests\E2E\Scopes\Scope;
@@ -26,7 +26,7 @@ class HTTPTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEquals('Appwrite', $response['headers']['server']);
         $this->assertEquals('GET, POST, PUT, PATCH, DELETE', $response['headers']['access-control-allow-methods']);
-        $this->assertEquals('Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, Cache-Control, Expires, Pragma, X-Fallback-Cookies', $response['headers']['access-control-allow-headers']);
+        $this->assertEquals('Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies', $response['headers']['access-control-allow-headers']);
         $this->assertEquals('X-Fallback-Cookies', $response['headers']['access-control-expose-headers']);
         $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
         $this->assertEquals('true', $response['headers']['access-control-allow-credentials']);
@@ -45,6 +45,7 @@ class HTTPTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertEquals('Not Found', $response['body']['message']);
+        $this->assertEquals(Exception::GENERAL_ROUTE_NOT_FOUND, $response['body']['type']);
         $this->assertEquals(404, $response['body']['code']);
         $this->assertEquals('dev', $response['body']['version']);
     }
@@ -170,7 +171,8 @@ class HTTPTest extends Scope
 
             if(
                 (strpos($file, 'latest') === false) &&
-                (strpos($file, '0.12.x') === false)
+                (strpos($file, '0.12.x') === false) &&
+                (strpos($file, '0.13.x') === false)
              ) {
                 continue;
             }
@@ -183,7 +185,6 @@ class HTTPTest extends Scope
             ], json_decode(file_get_contents($directory.$file), true));
 
             $response['body'] = json_decode($response['body'], true);
-
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertTrue(empty($response['body']));
         }
@@ -208,6 +209,6 @@ class HTTPTest extends Scope
         $this->assertIsString($body['server-php']);
         $this->assertIsString($body['server-python']);
         $this->assertIsString($body['server-ruby']);
-        $this->assertIsString($body['server-cli']);
+        $this->assertIsString($body['console-cli']);
     }
 }

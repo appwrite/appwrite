@@ -20,6 +20,7 @@ error_reporting(E_ALL);
 use Appwrite\Extend\PDO;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
@@ -49,6 +50,11 @@ use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
 use Utopia\Database\Query;
+use Utopia\Storage\Device;
+use Utopia\Storage\Storage;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\S3;
+use Utopia\Storage\Device\DOSpaces;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -60,8 +66,12 @@ const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
-const APP_CACHE_BUSTER = 201;
-const APP_VERSION_STABLE = '0.12.3';
+const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
+const APP_LIMIT_ENCRYPTION = 20000000; //20MB
+const APP_LIMIT_COMPRESSION = 20000000; //20MB
+const APP_LIMIT_PREVIEW = 10000000; //10MB file size limit for preview endpoint
+const APP_CACHE_BUSTER = 300;
+const APP_VERSION_STABLE = '0.13.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -71,9 +81,11 @@ const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
 const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1073741824; // 2^32 bits / 4 bits per char
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
+const APP_STORAGE_BUILDS = '/storage/builds';
 const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
+const APP_STORAGE_READ_BUFFER = 20 * (1000 * 1000); //20MB other names `APP_STORAGE_MEMORY_LIMIT`, `APP_STORAGE_MEMORY_BUFFER`, `APP_STORAGE_READ_LIMIT`, `APP_STORAGE_BUFFER_LIMIT`
 const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite';
 const APP_SOCIAL_TWITTER_HANDLE = 'appwrite';
 const APP_SOCIAL_FACEBOOK = 'https://www.facebook.com/appwrite.io';
@@ -93,11 +105,15 @@ const DATABASE_TYPE_CREATE_ATTRIBUTE = 'createAttribute';
 const DATABASE_TYPE_CREATE_INDEX = 'createIndex';
 const DATABASE_TYPE_DELETE_ATTRIBUTE = 'deleteAttribute';
 const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
+// Build Worker Types
+const BUILD_TYPE_DEPLOYMENT = 'deployment';
+const BUILD_TYPE_RETRY = 'retry';
 // Deletion Types
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_COLLECTIONS = 'collections';
 const DELETE_TYPE_PROJECTS = 'projects';
 const DELETE_TYPE_FUNCTIONS = 'functions';
+const DELETE_TYPE_DEPLOYMENTS = 'deployments';
 const DELETE_TYPE_USERS = 'users';
 const DELETE_TYPE_TEAMS= 'teams';
 const DELETE_TYPE_EXECUTIONS = 'executions';
@@ -106,6 +122,7 @@ const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_CERTIFICATES = 'certificates';
 const DELETE_TYPE_USAGE = 'usage';
 const DELETE_TYPE_REALTIME = 'realtime';
+const DELETE_TYPE_BUCKETS = 'buckets';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -116,6 +133,8 @@ const APP_AUTH_TYPE_SESSION = 'Session';
 const APP_AUTH_TYPE_JWT = 'JWT';
 const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
+// Response related
+const MAX_OUTPUT_CHUNK_SIZE = 2*1024*1024; // 2MB
 
 $register = new Registry();
 
@@ -126,6 +145,7 @@ App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
  */
 Config::load('events', __DIR__.'/config/events.php');
 Config::load('auth', __DIR__.'/config/auth.php');
+Config::load('errors', __DIR__.'/config/errors.php');
 Config::load('providers', __DIR__.'/config/providers.php');
 Config::load('platforms', __DIR__.'/config/platforms.php');
 Config::load('collections', __DIR__.'/config/collections.php');
@@ -350,7 +370,7 @@ $register->set('logger', function () { // Register error logger
     }
 
     if(!Logger::hasProvider($providerName)) {
-        throw new Exception("Logging provider not supported. Logging disabled.");
+        throw new Exception("Logging provider not supported. Logging disabled.", 500, Exception::GENERAL_SERVER_ERROR);
     }
 
     $classname = '\\Utopia\\Logger\\Adapter\\'.\ucfirst($providerName);
@@ -449,7 +469,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-12.mmdb');
+    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2022-03.mmdb');
 });
 $register->set('db', function () { // This is usually for our workers or CLI commands scope
     $dbHost = App::getEnv('_APP_DB_HOST', '');
@@ -695,7 +715,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         try {
             $payload = $jwt->decode($authJWT);
         } catch (JWTException $error) {
-            throw new Exception('Failed to verify JWT. '.$error->getMessage(), 401);
+            throw new Exception('Failed to verify JWT. '.$error->getMessage(), 401, Exception::USER_JWT_INVALID);
         }
 
         $jwtUserId = $payload['userId'] ?? '';
@@ -766,7 +786,7 @@ App::setResource('dbForProject', function($db, $cache, $project) {
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace('_project_'.$project->getId());
+    $database->setNamespace("_{$project->getId()}");
 
     return $database;
 }, ['db', 'cache', 'project']);
@@ -776,10 +796,48 @@ App::setResource('dbForConsole', function($db, $cache) {
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace('_project_console');
+    $database->setNamespace('_console');
 
     return $database;
 }, ['db', 'cache']);
+
+
+App::setResource('deviceLocal', function() {
+    return new Local();
+});
+
+App::setResource('deviceFiles', function($project) {
+    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+}, ['project']);
+
+App::setResource('deviceFunctions', function($project) {
+    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+}, ['project']);
+
+App::setResource('deviceBuilds', function($project) {
+    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+}, ['project']);
+
+function getDevice($root): Device {
+    switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
+        case Storage::DEVICE_LOCAL:default:
+            return new Local($root);
+        case Storage::DEVICE_S3:
+            $s3AccessKey = App::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
+            $s3SecretKey = App::getEnv('_APP_STORAGE_S3_SECRET', '');
+            $s3Region = App::getEnv('_APP_STORAGE_S3_REGION', '');
+            $s3Bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
+            $s3Acl = 'private';
+            return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
+        case Storage::DEVICE_DO_SPACES:
+            $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
+            $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
+            $doSpacesRegion = App::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
+            $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
+            $doSpacesAcl = 'private';
+            return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+    }
+}
 
 App::setResource('mode', function($request) {
     /** @var Appwrite\Utopia\Request $request */

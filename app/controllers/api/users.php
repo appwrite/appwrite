@@ -9,7 +9,7 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
-use Utopia\Exception;
+use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Validator\UID;
@@ -70,7 +70,7 @@ App::post('/v1/users')
                 'deleted' => false
             ]));
         } catch (Duplicate $th) {
-            throw new Exception('Account already exists', 409);
+            throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
         }
 
         $usage
@@ -110,7 +110,7 @@ App::get('/v1/users')
             $cursorUser = $dbForProject->getDocument('users', $cursor);
 
             if ($cursorUser->isEmpty()) {
-                throw new Exception("User '{$cursor}' for the 'cursor' value not found.", 400);
+                throw new Exception("User '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
 
@@ -128,7 +128,7 @@ App::get('/v1/users')
 
         $response->dynamic(new Document([
             'users' => $dbForProject->find('users', $queries, $limit, $offset, [], [$orderType], $cursorUser ?? null, $cursorDirection),
-            'sum' => $dbForProject->count('users', $queries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('users', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_USER_LIST);
     });
 
@@ -155,7 +155,7 @@ App::get('/v1/users/:userId')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
-            throw new Exception('User not found', 404);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $usage
@@ -187,7 +187,7 @@ App::get('/v1/users/:userId/prefs')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
-            throw new Exception('User not found', 404);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $prefs = $user->getAttribute('prefs', new \stdClass());
@@ -223,7 +223,7 @@ App::get('/v1/users/:userId/sessions')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
-            throw new Exception('User not found', 404);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $sessions = $user->getAttribute('sessions', []);
@@ -243,7 +243,7 @@ App::get('/v1/users/:userId/sessions')
         ;
         $response->dynamic(new Document([
             'sessions' => $sessions,
-            'sum' => count($sessions),
+            'total' => count($sessions),
         ]), Response::MODEL_SESSION_LIST);
     });
 
@@ -277,7 +277,7 @@ App::get('/v1/users/:userId/logs')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
-            throw new Exception('User not found', 404);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $audit = new Audit($dbForProject);
@@ -348,7 +348,7 @@ App::get('/v1/users/:userId/logs')
         ;
 
         $response->dynamic(new Document([
-            'sum' => $audit->countLogsByUserAndEvents($user->getId(), $auditEvents),
+            'total' => $audit->countLogsByUserAndEvents($user->getId(), $auditEvents),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -378,7 +378,7 @@ App::patch('/v1/users/:userId/status')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
-            throw new Exception('User not found', 404);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
@@ -414,7 +414,7 @@ App::patch('/v1/users/:userId/verification')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
-            throw new Exception('User not found', 404);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
@@ -450,7 +450,7 @@ App::patch('/v1/users/:userId/name')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
-            throw new Exception('User not found', 404);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('name', $name));
@@ -489,7 +489,7 @@ App::patch('/v1/users/:userId/password')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
-            throw new Exception('User not found', 404);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $user
@@ -532,7 +532,7 @@ App::patch('/v1/users/:userId/email')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
-            throw new Exception('User not found', 404);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
@@ -545,7 +545,7 @@ App::patch('/v1/users/:userId/email')
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('email', $email));
         } catch(Duplicate $th) {
-            throw new Exception('Email already exists', 409);
+            throw new Exception('Email already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
         $audits
@@ -582,7 +582,7 @@ App::patch('/v1/users/:userId/prefs')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
-            throw new Exception('User not found', 404);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
@@ -619,7 +619,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
-            throw new Exception('User not found', 404);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $sessions = $user->getAttribute('sessions', []);
@@ -674,7 +674,7 @@ App::delete('/v1/users/:userId/sessions')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
-            throw new Exception('User not found', 404);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         $sessions = $user->getAttribute('sessions', []);
@@ -723,7 +723,7 @@ App::delete('/v1/users/:userId')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
-            throw new Exception('User not found', 404);
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
         /**

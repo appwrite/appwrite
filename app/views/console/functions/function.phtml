@@ -8,7 +8,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 <div
     data-service="functions.get"
     data-name="project-function"
-    data-event="load,functions.update,functions.createTag,functions.updateTag,functions.deleteTag"
+    data-event="load,functions.update,functions.createDeployment,functions.updateDeployment,functions.deleteDeployment,functions.retryBuild"
     data-param-function-id="{{router.params.id}}"
     data-success="trigger"
     data-success-param-trigger-events="functions.get">
@@ -50,77 +50,124 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 
                                 <p class="text-fade margin-bottom-small" data-ls-bind="{{project-function.runtime|runtimeName}} {{project-function.runtime|runtimeVersion}}">
                                 </p>
-                                <div data-ls-if="{{project-function.tag}} !== ''" class="margin-top">
+                                <div data-ls-if="{{project-function.deployment}} !== ''" class="margin-top">
                                     <button data-ls-ui-trigger="execute-now">Execute Now</button> &nbsp; <a data-ls-attrs="href=/console/functions/function/logs?id={{router.params.id}}&project={{router.params.project}}" class="button reverse" style="vertical-align: top;">View Logs</a>
                                 </div>
                             </div>
                         </div>
 
                         <div class="margin-bottom"
-                            data-service="functions.listTags"
+                            data-service="functions.listDeployments"
                             data-scope="sdk"
-                            data-event="load,functions.createTag,functions.deleteTag,functions.updateTag"
-                            data-name="project-function-tags"
+                            data-event="load,functions.createDeployment,functions.deleteDeployment,functions.updateDeployment,functions.retryBuild"
+                            data-name="project-function-deployments"
                             data-param-function-id="{{router.params.id}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                             data-param-offset=""
                             data-param-order-type="DESC"
                             data-success="trigger"
-                            data-success-param-trigger-events="functions.listTags">
+                            data-success-param-trigger-events="functions.listDeployments">
 
-                            <h3>Tags <span class="text-fade text-size-small pull-end margin-top-small" data-ls-bind="{{project-function-tags.sum}} tags found"></span></h3>
+                            <h3>Deployments <span class="text-fade text-size-small pull-end margin-top-small" data-ls-bind="{{project-function-deployments.total}} deployments found"></span></h3>
 
-                            <div data-ls-if="0 == {{project-function-tags.tags.length}} || undefined == {{project-function-tags.tags.length}}" class="box margin-top margin-bottom">
-                                <h3 class="margin-bottom-small text-bold">No Tags Found</h3>
+                            <div data-ls-if="0 == {{project-function-deployments.deployments.length}} || undefined == {{project-function-deployments.deployments.length}}" class="box margin-top margin-bottom">
+                                <h3 class="margin-bottom-small text-bold">No Deployments Found</h3>
 
-                                <p class="margin-bottom-no">You haven't deployed any tags for your function yet.</p>
+                                <p class="margin-bottom-no">You haven't deployed any deployments for your function yet.</p>
                             </div>
 
-                            <div data-ls-if="(0 != {{project-function-tags.tags.length}}) && (undefined !== {{project-function-tags.tags.length}})">
+                            <div data-ls-if="(0 != {{project-function-deployments.deployments.length}}) && (undefined !== {{project-function-deployments.deployments.length}})">
                                 <div class="box margin-bottom">
-                                    <ul data-ls-loop="project-function-tags.tags" data-ls-as="tag" class="list">
+                                    <ul data-ls-loop="project-function-deployments.deployments" data-ls-as="deployment" class="list">
                                         <li class="clear">
-                                            <form data-ls-if="{{tag.$id}} !== {{project-function.tag}}" name="functions.updateTag" class="pull-end"
+                                            <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-stderr-{{deployment.$id}}">
+                                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                                <h2>Build Error Log</h2>
+
+                                                <div class="margin-bottom">
+                                                    <input type="hidden" data-ls-bind="{{deployment.buildStderr}}" data-forms-code="bash" data-lang="bash" data-lang-label="Bash" />
+                                                </div>
+
+                                                <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                            </div>
+                                            <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-stdout-{{deployment.$id}}">
+                                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                                <h2>Build Log</h2>
+
+                                                <div class="margin-bottom">
+                                                    <input type="hidden" data-ls-bind="{{deployment.buildStdout}}" data-forms-code="bash" data-lang="bash" data-lang-label="Bash" />
+                                                </div>
+
+                                                <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                            </div>
+                                            <form data-ls-if="({{deployment.$id}} !== {{project-function.deployment}} && {{deployment.status}} == 'ready')" name="functions.updateDeployment" class="pull-end"
                                                 data-analytics
                                                 data-analytics-activity
                                                 data-analytics-event="submit"
                                                 data-analytics-category="console"
                                                 data-analytics-label="Create Function Execution"
-                                                data-service="functions.updateTag"
+                                                data-service="functions.updateDeployment"
                                                 data-event="submit"
                                                 data-param-function-id="{{router.params.id}}"
                                                 data-success="alert,trigger"
-                                                data-success-param-alert-text="Tag updated successfully"
-                                                data-success-param-trigger-events="functions.updateTag"
+                                                data-success-param-alert-text="Deployment updated successfully"
+                                                data-success-param-trigger-events="functions.updateDeployment"
                                                 data-failure="alert"
-                                                data-failure-param-alert-text="Failed to update tag"
+                                                data-failure-param-alert-text="Failed to update deployment"
                                                 data-failure-param-alert-classname="error">
-                                                <input type="hidden" name="tag" data-ls-bind="{{tag.$id}}">
+                                                <input type="hidden" name="deploymentId" data-ls-bind="{{deployment.$id}}">
                                                 <button>Activate</button>
                                             </form>
-
-                                            <b data-ls-bind="{{tag.$id}}"></b> &nbsp;
-                                            <span class="text-fade" data-ls-bind="{{tag.command}}"></span>
+                                            <form data-ls-if="({{deployment.$id}} !== {{project-function.deployment}} && {{deployment.status}} == 'failed')" name="functions.retryBuild" class="pull-end"
+                                                data-analytics
+                                                data-analytics-activity
+                                                data-analytics-event="submit"
+                                                data-analytics-category="console"
+                                                data-analytics-label="Retry Build"
+                                                data-service="functions.retryBuild"
+                                                data-event="submit"
+                                                data-success="alert,trigger"
+                                                data-success-param-alert-text="Build started successfully"
+                                                data-success-param-trigger-events="functions.retryBuild"
+                                                data-failure="alert"
+                                                data-failure-param-alert-text="Failed to retry build"
+                                                data-failure-param-alert-classname="error">
+                                                <input type="hidden" name="buildId" data-ls-bind="{{deployment.buildId}}">
+                                                <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}">
+                                                <input type="hidden" name="deploymentId" data-ls-bind="{{deployment.$id}}">
+                                                <button>Retry Build</button>
+                                            </form>
+   
+                                            <b data-ls-bind="{{deployment.$id}}"></b> &nbsp;
+                                            <span class="text-fade" data-ls-bind="{{deployment.entrypoint}}"></span>
                                             <div class="text-size-small margin-top-small clear">
-                                                <span class="pull-start" data-ls-bind="Created {{tag.dateCreated|timeSince}} &nbsp; | &nbsp; {{tag.size|humanFileSize}}{{tag.size|humanFileUnit}}"></span>
+                                                <span data-ls-if="{{deployment.status}} == 'failed'" style="color: var(--config-color-danger)" class="pull-start" data-ls-bind="{{deployment.status}}"></span>
+                                                <span data-ls-if="{{deployment.status}} == 'ready'" style="color: var(--config-color-success)" class="pull-start" data-ls-bind="{{deployment.status}}"></span>
+                                                <span data-ls-if="{{deployment.status}} == 'processing' || {{deployment.status}} == 'building'" style="color: var(--config-color-info)" class="pull-start" data-ls-bind="{{deployment.status}}"></span>
+                                                <span class="pull-start" data-ls-bind="&nbsp; | &nbsp; Created {{deployment.dateCreated|timeSince}} &nbsp; | &nbsp; {{deployment.size|humanFileSize}}{{deployment.size|humanFileUnit}}"></span>
 
-                                                <form data-ls-if="{{tag.$id}} !== {{project-function.tag}}" name="functions.deleteTag" class="pull-start"
+                                                <span data-ls-if="{{deployment.status}} == 'failed'">&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-stderr-{{deployment.$id}}">Logs</button></span>
+                                                <span data-ls-if="{{deployment.status}} == 'ready'">&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-stdout-{{deployment.$id}}">Logs</button></span>
+
+                                                <form data-ls-if="{{deployment.$id}} !== {{project-function.deployment}}" name="functions.deleteDeployment" class="pull-start"
                                                     data-analytics
                                                     data-analytics-activity
                                                     data-analytics-event="submit"
                                                     data-analytics-category="console"
-                                                    data-analytics-label="Delete Function Tag"
-                                                    data-service="functions.deleteTag"
+                                                    data-analytics-label="Delete Function Deployment"
+                                                    data-service="functions.deleteDeployment"
                                                     data-event="submit"
                                                     data-param-function-id="{{router.params.id}}"
-                                                    data-confirm="Are you sure you want to delete this function tag?"
+                                                    data-confirm="Are you sure you want to delete this function deployment?"
                                                     data-success="alert,trigger"
-                                                    data-success-param-alert-text="Function tag deleted successfully"
-                                                    data-success-param-trigger-events="functions.deleteTag"
+                                                    data-success-param-alert-text="Function deployment deleted successfully"
+                                                    data-success-param-trigger-events="functions.deleteDeployment"
                                                     data-failure="alert"
-                                                    data-failure-param-alert-text="Failed to delete function tag"
+                                                    data-failure-param-alert-text="Failed to delete function deployment"
                                                     data-failure-param-alert-classname="error">
-                                                    <input type="hidden" name="tagId" data-ls-bind="{{tag.$id}}" />
+                                                    <input type="hidden" name="deploymentId" data-ls-bind="{{deployment.$id}}" />
 
                                                     &nbsp; | &nbsp;<button type="submit" class="link text-danger text-size-small">Delete</button>
                                                 </form>
@@ -132,38 +179,38 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                         </div>
 
                         <div class="pull-start">
-                            <button data-ls-ui-trigger="deploy-tag">Deploy Tag</button>
+                            <button data-ls-ui-trigger="create-deployment">Create Deployment</button>
                         </div>
 
                         <div class="pull-end paging">
                             <form
-                                data-service="functions.listTags"
+                                data-service="functions.listDeployments"
                                 data-event="submit"
                                 data-param-function-id="{{router.params.id}}"
                                 data-param-search="{{router.params.search}}"
                                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                                 data-param-order-type="DESC"
                                 data-scope="sdk"
-                                data-name="project-function-tags"
+                                data-name="project-function-deployments"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-function-tags.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-function-deployments.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                             </form>
 
-                            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-tags.sum|pageTotal}}"></span>
+                            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-deployments.total|pageTotal}}"></span>
 
                             <form
-                                data-service="functions.listTags"
+                                data-service="functions.listDeployments"
                                 data-event="submit"
                                 data-param-function-id="{{router.params.id}}"
                                 data-param-search="{{router.params.search}}"
                                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                                 data-param-order-type="DESC"
                                 data-scope="sdk"
-                                data-name="project-function-tags"
+                                data-name="project-function-deployments"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-function-tags.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-function-deployments.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                             </form>
                         </div>
                     </div>
@@ -284,7 +331,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
             <?php endif;?>
             <li data-state="/console/functions/function/logs?id={{router.params.id}}&project={{router.params.project}}">
 
-                <div class="text-fade text-size-small pull-end margin-top" data-ls-bind="{{project-function-executions.sum}} executions found"></div>
+                <div class="text-fade text-size-small pull-end margin-top" data-ls-bind="{{project-function-executions.total}} executions found"></div>
 
                 <h2>Logs</h2>
 
@@ -326,7 +373,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                         </td>
                                         <td data-title="Status: ">
                                             <span data-ls-bind="{{execution.status}}"></span>
-                                            <span class="text-fade text-size-small" data-ls-if="{{execution.exitCode}} !== 0" data-ls-bind=" exit code: {{execution.exitCode}}"></span>
+                                            <span class="text-fade text-size-small" data-ls-if="{{execution.statusCode}} < 200 && {{execution.statusCode}} >= 300" data-ls-bind=" exit code: {{execution.statusCode}}"></span>
                                         </td>
                                         <td data-title="Trigger: ">
                                             <span data-ls-bind="{{execution.trigger}}"></span>
@@ -392,10 +439,10 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                 data-name="project-function-executions"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-function-executions.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-function-executions.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                             </form>
 
-                            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-executions.sum|pageTotal}}"></span>
+                            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-executions.total|pageTotal}}"></span>
 
                             <form
                                 data-service="functions.listExecutions"
@@ -408,7 +455,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                 data-name="project-function-executions"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-function-executions.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-function-executions.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                             </form>
                         </div>
                     </div>
@@ -562,7 +609,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 <div data-ui-modal class="modal close box sticky-footer" data-button-hide="on" data-open-event="execute-now">
     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
     <h1 class="margin-bottom">Execute Function</h1>
-    <form data-ls-if="{{project-function.tag}} !== ''" name="functions.createExecution" class="margin-top"
+    <form data-ls-if="{{project-function.deployment}} !== ''" name="functions.createExecution" class="margin-top"
         data-analytics
         data-analytics-activity
         data-analytics-event="submit"
@@ -584,10 +631,10 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
         <button type="submit" style="vertical-align: top;">Execute Now</button>
      </form>
 </div>
-<div data-ui-modal class="modal close box sticky-footer" data-button-hide="on" data-open-event="deploy-tag">
+<div data-ui-modal class="modal close box sticky-footer" data-button-hide="on" data-open-event="create-deployment">
     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-    <h1 class="margin-bottom-xl">Deploy a New Tag</h1>
+    <h1 class="margin-bottom-xl">Create a New Deployment</h1>
 
     <ul class="phases padding margin-top-negative-small" data-ui-phases>
         <li>
@@ -596,22 +643,24 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
             <p><b>Unix</b></p>
 
             <div class="margin-bottom">
-                <textarea type="hidden" data-ls-bind="appwrite functions createTag \
+                <textarea type="hidden" data-ls-bind="appwrite functions createDeployment \
     --functionId={{project-function.$id}} \
-    --command='mycommand' \
+    --activate=true \
+    --entrypoint='scriptFile' \
     --code='/myrepo/myfunction'" data-forms-code="bash" data-lang="bash" data-lang-label="Bash"></textarea>
             </div>
 
             <p><b>PowerShell</b></p>
 
             <div class="margin-bottom">
-                <textarea type="hidden" data-ls-bind="appwrite functions createTag `
+                <textarea type="hidden" data-ls-bind="appwrite functions createDeployment `
     --functionId={{project-function.$id}} `
-    --command='mycommand' `
+    --activate=true `
+    --entrypoint='scriptFile' `
     --code='/myrepo/myfunction'" data-forms-code="powershell" data-lang="powershell" data-lang-label="PowerShell"></textarea>
             </div>
 
-            <p>Learn more about <a href="https://appwrite.io/docs/server/functions#functionsCreateTag" target="_blank">creating tags</a>, installing and using the <a href="https://appwrite.io/docs/command-line" target="_blank">Appwrite CLI</a>.</p>
+            <p>Learn more about <a href="https://appwrite.io/docs/server/functions#functionsCreateDeployment" target="_blank">creating deployments</a>, installing and using the <a href="https://appwrite.io/docs/command-line" target="_blank">Appwrite CLI</a>.</p>
         </li>
         <li>
             <h2 style="display: none">Manual</h2>
@@ -620,25 +669,27 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                 data-analytics-activity
                 data-analytics-event="submit"
                 data-analytics-category="console"
-                data-analytics-label="Create Function Tag"
-                data-service="functions.createTag"
+                data-analytics-label="Create Function Deployment"
+                data-service="functions.createDeployment"
                 data-scope="sdk"
                 data-event="submit"
                 data-success="alert,trigger,reset"
-                data-success-param-alert-text="Created function tag successfully"
-                data-success-param-trigger-events="functions.createTag"
+                data-success-param-alert-text="Created function deployment successfully"
+                data-success-param-trigger-events="functions.createDeployment"
                 data-failure="alert"
-                data-failure-param-alert-text="Failed to create function tag"
+                data-failure-param-alert-text="Failed to create function deployment"
                 data-failure-param-alert-classname="error">
 
                 <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}" />
 
-                <label for="tag-command">Command</label>
-                <input type="text" id="tag-command" name="command" required autocomplete="off" class="margin-bottom" placeholder="node main.js" />
+                <label for="deployment-entrypoint">Entrypoint</label>
+                <input type="text" id="deployment-entrypoint" name="entrypoint" required autocomplete="off" class="margin-bottom" placeholder="main.js" />
 
-                <label for="tag-code">Gzipped Code (tar.gz file)</label>
-                <input type="file" name="code" id="tag-code" size="1" required accept="application/x-gzip,.gz">
-                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom-large">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
+                <label for="deployment-code">Gzipped Code (tar.gz file)</label>
+                <input type="file" name="code" id="deployment-code" size="1" required accept="application/x-gzip,.gz">
+                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
+
+                <label for="deployment-activate" class="margin-bottom-large"><input type="checkbox" class="margin-start-small" id="deployment-activate" name="activate" /> Activate Deployment after build</label>
 
                 <footer>
                     <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>

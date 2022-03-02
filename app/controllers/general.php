@@ -8,17 +8,19 @@ use Utopia\Logger\Log\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
-use Utopia\Exception;
+use Appwrite\Extend\Exception;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Utopia\Response\Filters\V11;
+use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
+use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Appwrite\Utopia\Request\Filters\V12;
+use Appwrite\Utopia\Request\Filters\V12 as RequestV12;
+use Appwrite\Utopia\Request\Filters\V13 as RequestV13;
 use Utopia\Validator\Text;
 
 Config::setParam('domainVerification', false);
@@ -46,7 +48,10 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     if ($requestFormat) {
         switch($requestFormat) {
             case version_compare ($requestFormat , '0.12.0', '<') :
-                Request::setFilter(new V12());
+                Request::setFilter(new RequestV12());
+                break;
+            case version_compare ($requestFormat , '0.13.0', '<') :
+                Request::setFilter(new RequestV13());
                 break;
             default:
                 Request::setFilter(null);
@@ -106,11 +111,11 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     }
 
     if ($project->isEmpty()) {
-        throw new Exception('Project not found', 404);
+        throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
     }
 
     if (!empty($route->getLabel('sdk.auth', [])) && $project->isEmpty() && ($route->getLabel('scope', '') !== 'public')) {
-        throw new Exception('Missing or unknown project ID', 400);
+        throw new Exception('Missing or unknown project ID', 400, Exception::PROJECT_UNKNOWN);
     }
 
     $referrer = $request->getReferer();
@@ -127,16 +132,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
 
     $selfDomain = new Domain($request->getHostname());
     $endDomain = new Domain((string)$origin);
-
-    // var_dump('referer', $referrer);
-    // var_dump('origin', $origin);
-    // var_dump('port', $request->getPort());
-    // var_dump('hostname', $request->getHostname());
-    // var_dump('protocol', $request->getProtocol());
-    // var_dump('method', $request->getMethod());
-    // var_dump('ip', $request->getIP());
-    // var_dump('-----------------');
-    // var_dump($request->debug());
 
     Config::setParam('domainVerification',
         ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
@@ -157,8 +152,11 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
     if ($responseFormat) {
         switch($responseFormat) {
-            case version_compare ($responseFormat , '0.11.0', '<=') :
-                Response::setFilter(new V11());
+            case version_compare ($responseFormat , '0.11.2', '<=') :
+                Response::setFilter(new ResponseV11());
+                break;
+            case version_compare ($responseFormat , '0.12.4', '<='):
+                Response::setFilter(new ResponseV12());
                 break;
             default:
                 Response::setFilter(null);
@@ -185,7 +183,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         ->addHeader('Server', 'Appwrite')
         ->addHeader('X-Content-Type-Options', 'nosniff')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, Cache-Control, Expires, Pragma')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma')
         ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
         ->addHeader('Access-Control-Allow-Origin', $refDomain)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -203,7 +201,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
         && $route->getLabel('origin', false) !== '*'
         && empty($request->getHeader('x-appwrite-key', ''))) {
-        throw new Exception($originValidator->getDescription(), 403);
+        throw new Exception($originValidator->getDescription(), 403, Exception::GENERAL_UNKNOWN_ORIGIN);
     }
 
     /*
@@ -272,24 +270,24 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         if(array_key_exists($service, $project->getAttribute('services',[]))
             && !$project->getAttribute('services',[])[$service]
             && !Auth::isPrivilegedUser(Authorization::getRoles())) {
-            throw new Exception('Service is disabled', 503);
+            throw new Exception('Service is disabled', 503, Exception::GENERAL_SERVICE_DISABLED);
         }
     }
 
     if (!\in_array($scope, $scopes)) {
         if ($project->isEmpty()) { // Check if permission is denied because project is missing
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
-        throw new Exception($user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401);
+        throw new Exception($user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401, Exception::GENERAL_UNAUTHORIZED_SCOPE);
     }
 
     if (false === $user->getAttribute('status')) { // Account is blocked
-        throw new Exception('Invalid credentials. User is blocked', 401);
+        throw new Exception('Invalid credentials. User is blocked', 401, Exception::USER_BLOCKED);
     }
 
     if ($user->getAttribute('reset')) {
-        throw new Exception('Password reset is required', 412);
+        throw new Exception('Password reset is required', 412, Exception::USER_PASSWORD_RESET_REQUIRED);
     }
 
 }, ['utopia', 'request', 'response', 'console', 'project', 'dbForConsole', 'user', 'locale', 'clients']);
@@ -303,7 +301,7 @@ App::options(function ($request, $response) {
     $response
         ->addHeader('Server', 'Appwrite')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
         ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
         ->addHeader('Access-Control-Allow-Origin', $origin)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -376,7 +374,11 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         throw $error;
     }
 
-    $template = ($route) ? $route->getLabel('error', null) : null;
+    $code = $error->getCode();
+    $message = $error->getMessage();
+    $file = $error->getFile();
+    $line = $error->getLine();
+    $trace = $error->getTrace();
 
     if (php_sapi_name() === 'cli') {
         Console::error('[Error] Timestamp: '.date('c', time()));
@@ -387,12 +389,30 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         }
 
         Console::error('[Error] Type: '.get_class($error));
-        Console::error('[Error] Message: '.$error->getMessage());
-        Console::error('[Error] File: '.$error->getFile());
-        Console::error('[Error] Line: '.$error->getLine());
+        Console::error('[Error] Message: '.$message);
+        Console::error('[Error] File: '.$file);
+        Console::error('[Error] Line: '.$line);
     }
 
-    switch ($error->getCode()) { // Don't show 500 errors!
+    /** Handle Utopia Errors */
+    if ($error instanceof Utopia\Exception) {
+        $error = new Exception($message, $code, Exception::GENERAL_UNKNOWN, $error);
+        switch($code) {
+            case 400:
+                $error->setType(Exception::GENERAL_ARGUMENT_INVALID);
+                break;
+            case 404:
+                $error->setType(Exception::GENERAL_ROUTE_NOT_FOUND);
+                break;
+        }
+    }
+
+    /** Wrap all exceptions inside Appwrite\Extend\Exception */
+    if (!($error instanceof Exception)) {
+        $error = new Exception($message, $code, Exception::GENERAL_UNKNOWN, $error);
+    }
+
+    switch ($code) { // Don't show 500 errors!
         case 400: // Error allowed publicly
         case 401: // Error allowed publicly
         case 402: // Error allowed publicly
@@ -400,11 +420,10 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         case 404: // Error allowed publicly
         case 409: // Error allowed publicly
         case 412: // Error allowed publicly
+        case 416: // Error allowed publicly
         case 429: // Error allowed publicly
         case 501: // Error allowed publicly
         case 503: // Error allowed publicly
-            $code = $error->getCode();
-            $message = $error->getMessage();
             break;
         default:
             $code = 500; // All other errors get the generic 500 server error status code
@@ -413,17 +432,21 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
 
     //$_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
 
+    $type = $error->getType();
+
     $output = ((App::isDevelopment())) ? [
-        'message' => $error->getMessage(),
-        'code' => $error->getCode(),
-        'file' => $error->getFile(),
-        'line' => $error->getLine(),
-        'trace' => $error->getTrace(),
+        'message' => $message,
+        'code' => $code,
+        'file' => $file,
+        'line' => $line,
+        'trace' => $trace,
         'version' => $version,
+        'type' => $type,
     ] : [
         'message' => $message,
         'code' => $code,
         'version' => $version,
+        'type' => $type,
     ];
 
     $response
@@ -432,6 +455,8 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         ->addHeader('Pragma', 'no-cache')
         ->setStatusCode($code)
     ;
+
+    $template = ($route) ? $route->getLabel('error', null) : null;
 
     if ($template) {
         $comp = new View($template);
@@ -442,7 +467,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
             ->setParam('projectURL', $project->getAttribute('url'))
             ->setParam('message', $error->getMessage())
             ->setParam('code', $code)
-            ->setParam('trace', $error->getTrace())
+            ->setParam('trace', $trace)
         ;
 
         $layout
@@ -533,7 +558,7 @@ App::get('/.well-known/acme-challenge')
         $absolute = \realpath($base.'/.well-known/acme-challenge/'.$token);
 
         if (!$base) {
-            throw new Exception('Storage error', 500);
+            throw new Exception('Storage error', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         if (!$absolute) {
@@ -551,7 +576,7 @@ App::get('/.well-known/acme-challenge')
         $content = @\file_get_contents($absolute);
 
         if (!$content) {
-            throw new Exception('Failed to get contents', 500);
+            throw new Exception('Failed to get contents', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $response->text($content);

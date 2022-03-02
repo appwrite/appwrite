@@ -46,9 +46,12 @@ $stats->create();
 
 $containerId = uniqid();
 $statsDocument = null;
+$workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
 
 $adapter = new Adapter\Swoole(port: App::getEnv('PORT', 80));
-$adapter->setPackageMaxLength(64000); // Default maximum Package Size (64kb)
+$adapter
+    ->setPackageMaxLength(64000) // Default maximum Package Size (64kb)
+    ->setWorkerNumber($workerNumber);
 
 $server = new Server($adapter);
 
@@ -137,7 +140,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
      */
     go(function () use ($register, $containerId, &$statsDocument, $logError) {
         try {
-            [$database, $returnDatabase] = getDatabase($register, '_project_console');
+            [$database, $returnDatabase] = getDatabase($register, '_console');
             $document = new Document([
                 '$id' => $database->getId(),
                 '$collection' => 'realtime',
@@ -190,7 +193,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
         }
 
         try {
-            [$database, $returnDatabase] = getDatabase($register, '_project_console');
+            [$database, $returnDatabase] = getDatabase($register, '_console');
 
             $statsDocument
                 ->setAttribute('timestamp', time())
@@ -217,7 +220,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
          */
         if ($realtime->hasSubscriber('console', 'role:member', 'project')) {
 
-            [$database, $returnDatabase] = getDatabase($register, '_project_console');
+            [$database, $returnDatabase] = getDatabase($register, '_console');
 
             $payload = [];
 
@@ -321,7 +324,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         return;
                     }
 
-                    [$database, $returnDatabase] = getDatabase($register, '_project_' . $projectId);
+                    [$database, $returnDatabase] = getDatabase($register, "_{$projectId}");
 
                     $user = $database->getDocument('users', $userId);
 
@@ -397,7 +400,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace('_project_' . $project->getId());
+        $database->setNamespace("_{$project->getId()}");
 
         /*
          *  Project Check
@@ -504,7 +507,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace('_project_' . $realtime->connections[$connection]['projectId']);
+        $database->setNamespace("_{$realtime->connections[$connection]['projectId']}");
 
         /*
          * Abuse Check

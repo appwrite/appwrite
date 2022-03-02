@@ -394,7 +394,7 @@
                                     <td data-title="Client: ">
                                         <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{log.clientCode|lowercase}} !== 'cli'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.clientCode|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
                                         
-                                        <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{log.clientCode|lowercase}} === 'cli'" data-ls-attrs="src=/images/clients/terminal.png?buster=<?php echo APP_CACHE_BUSTER; ?>,,title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
+                                        <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{log.clientCode|lowercase}} === 'cli'" data-ls-attrs="src=/images/clients/terminal.png?buster=<?php echo APP_CACHE_BUSTER; ?>,title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
                                         
                                         <span data-ls-if="({{log.clientName}})" data-ls-bind="{{log.clientName}} {{log.clientVersion}} on {{log.model}} {{log.osName}} {{log.osVersion}}"></span>
                                         <div data-ls-if="(!{{log.clientName}})" class="text-align-center text-fade">Unknown</div>

@@ -18,14 +18,21 @@ body > footer {
   }
 
   a {
+    display: inline-flex;
     color: var(--config-color-fade);
     font-size: 13px;
     &:hover {
       border-bottom-color: var(--config-color-fade);
     }
+
+    i {
+      margin-right: .2rem;
+    }
   }
 
   ul {
+    display: flex;
+    justify-content: center;
     .clear;
 
     li {

@@ -17,7 +17,7 @@
     "gulp-less": "^5.0.0"
   },
   "dependencies": {
-    "chart.js": "^3.7.0",
+    "chart.js": "^3.7.1",
     "markdown-it": "^12.3.2",
     "pell": "^1.0.6",
     "prismjs": "^1.27.0",

@@ -53,17 +53,6 @@ class MigrationV12Test extends MigrationTest
         $this->assertEquals($document->getAttribute('search'), 'team Appwrite');
     }
 
-    public function testMigrationFiles()
-    {
-        $document = $this->fixDocument(new Document([
-            '$id' => 'file',
-            '$collection' => 'files',
-            'name' => 'Dog.jpeg'
-        ]));
-
-        $this->assertEquals($document->getAttribute('search'), 'file Dog.jpeg');
-    }
-
     public function testMigrationFunctions()
     {
         $document = $this->fixDocument(new Document([
@@ -74,17 +63,6 @@ class MigrationV12Test extends MigrationTest
         ]));
 
         $this->assertEquals($document->getAttribute('search'), 'function My Function php-8.0');
-    }
-
-    public function testMigrationTags()
-    {
-        $document = $this->fixDocument(new Document([
-            '$id' => 'tag',
-            '$collection' => 'tags',
-            'command' => 'php main.php'
-        ]));
-
-        $this->assertEquals($document->getAttribute('search'), 'tag php main.php');
     }
 
     public function testMigrationExecutions()

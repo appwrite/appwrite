@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\CLI\Console;
 use WebSocket\ConnectionException;
 
 
@@ -225,6 +226,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('error', $payload['type']);
         $this->assertEquals(1008, $payload['data']['code']);
         $this->assertEquals('Invalid Origin. Register your new client (appwrite.unknown) as a new Web platform on your project console dashboard', $payload['data']['message']);
+        \usleep(250000); // 250ms
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
     }
@@ -867,9 +869,25 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals($user['$id'], $response['data']['user']['$id']);
 
         /**
+         * Test Bucket Create
+         */
+        $bucket1 = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'bucketId' => 'unique()',
+            'name' => 'Bucket 1',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+            'permission' => 'bucket'
+        ]);
+
+        $data = ['bucketId' => $bucket1['body']['$id']];
+        /**
          * Test File Create
          */
-        $file = $this->client->call(Client::METHOD_POST, '/storage/files', array_merge([
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -877,7 +895,6 @@ class RealtimeCustomClientTest extends Scope
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'read' => ['role:all'],
             'write' => ['role:all'],
-            'folderId' => 'xyz',
         ]);
 
         $response = json_decode($client->receive(), true);
@@ -887,18 +904,19 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
-        $this->assertContains('files.' . $file['body']['$id'], $response['data']['channels']);
+        $this->assertContains('buckets.' . $data['bucketId'] . '.files.' . $file['body']['$id'], $response['data']['channels']);
+        $this->assertContains('buckets.' . $data['bucketId'] . '.files', $response['data']['channels']);
         $this->assertEquals('storage.files.create', $response['data']['event']);
         $this->assertNotEmpty($response['data']['payload']);
 
-        $data = ['fileId' => $file['body']['$id']];
+        $data['fileId'] = $file['body']['$id'];
 
         /**
          * Test File Update
          */
-        $this->client->call(Client::METHOD_PUT, '/storage/files/' . $data['fileId'], array_merge([
+        $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -913,16 +931,17 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
-        $this->assertContains('files.' . $file['body']['$id'], $response['data']['channels']);
+        $this->assertContains('buckets.' . $data['bucketId'] . '.files.' . $file['body']['$id'], $response['data']['channels']);
+        $this->assertContains('buckets.' . $data['bucketId'] . '.files', $response['data']['channels']);
         $this->assertEquals('storage.files.update', $response['data']['event']);
         $this->assertNotEmpty($response['data']['payload']);
 
         /**
          * Test File Delete
          */
-        $this->client->call(Client::METHOD_DELETE, '/storage/files/' . $data['fileId'], array_merge([
+        $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -934,9 +953,10 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
-        $this->assertContains('files.' . $file['body']['$id'], $response['data']['channels']);
+        $this->assertContains('buckets.' . $data['bucketId'] . '.files.' . $file['body']['$id'], $response['data']['channels']);
+        $this->assertContains('buckets.' . $data['bucketId'] . '.files', $response['data']['channels']);
         $this->assertEquals('storage.files.delete', $response['data']['event']);
         $this->assertNotEmpty($response['data']['payload']);
 
@@ -985,27 +1005,34 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals($function['headers']['status-code'], 201);
         $this->assertNotEmpty($function['body']['$id']);
 
-        $tag = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/tags', array_merge([
+        $folder = 'timeout';
+        $stderr = '';
+        $stdout= '';
+        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        Console::execute('cd '.realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
+        
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'command' => 'php index.php',
-            'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/timeout.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
+            'entrypoint' => 'index.php',
+            'code' => new CURLFile($code, 'application/x-gzip', basename($code))
         ]);
 
-        $tagId = $tag['body']['$id'] ?? '';
+        $deploymentId = $deployment['body']['$id'] ?? '';
 
-        $this->assertEquals($tag['headers']['status-code'], 201);
-        $this->assertNotEmpty($tag['body']['$id']);
+        $this->assertEquals($deployment['headers']['status-code'], 201);
+        $this->assertNotEmpty($deployment['body']['$id']);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/tag', array_merge([
+        // Wait for deployment to be built.
+        sleep(5);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployments/'.$deploymentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'tag' => $tagId,
-        ]);
+        ]), []);
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']['$id']);
@@ -1026,7 +1053,8 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(4, $response['data']['channels']);
+        $this->assertContains('console', $response['data']['channels']);
         $this->assertContains('executions', $response['data']['channels']);
         $this->assertContains('executions.' . $execution['body']['$id'], $response['data']['channels']);
         $this->assertContains('functions.' . $execution['body']['functionId'], $response['data']['channels']);
@@ -1038,7 +1066,8 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $responseUpdate['type']);
         $this->assertNotEmpty($responseUpdate['data']);
         $this->assertArrayHasKey('timestamp', $responseUpdate['data']);
-        $this->assertCount(3, $responseUpdate['data']['channels']);
+        $this->assertCount(4, $responseUpdate['data']['channels']);
+        $this->assertContains('console', $responseUpdate['data']['channels']);
         $this->assertContains('executions', $responseUpdate['data']['channels']);
         $this->assertContains('executions.' . $execution['body']['$id'], $responseUpdate['data']['channels']);
         $this->assertContains('functions.' . $execution['body']['functionId'], $responseUpdate['data']['channels']);
@@ -1046,6 +1075,15 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($responseUpdate['data']['payload']);
 
         $client->close();
+
+        // Cleanup : Delete function 
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 
     public function testChannelTeams(): array
