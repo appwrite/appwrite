@@ -80,8 +80,8 @@ class V12 extends Migration
                 continue;
             }
 
-            $this->pdo->prepare("ALTER TABLE IF EXISTS _project_{$projectId}_{$id} RENAME TO _{$projectId}_{$id}")->execute();
-            $this->pdo->prepare("CREATE TABLE IF NOT EXISTS _{$projectId}_{$id}_perms (
+            $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_project_{$projectId}_{$id}` RENAME TO `{$this->projectDB->getDefaultDatabase()}`.`_{$projectId}_{$id}`")->execute();
+            $this->pdo->prepare("CREATE TABLE IF NOT EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$projectId}_{$id}_perms` (
                 `_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
                 `_type` VARCHAR(12) NOT NULL,
                 `_permission` VARCHAR(255) NOT NULL,
@@ -388,8 +388,8 @@ class V12 extends Migration
                         /**
                          * Rename user's colletion table schema
                          */
-                        $this->pdo->prepare("ALTER TABLE IF EXISTS _project_{$projectId}_collection_{$id} RENAME TO _{$projectId}_collection_{$internalId}")->execute();
-                        $this->pdo->prepare("CREATE TABLE IF NOT EXISTS _{$projectId}_collection_{$internalId}_perms (
+                        $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`._project_{$projectId}_collection_{$id}` RENAME TO `{$this->projectDB->getDefaultDatabase()}`._{$projectId}_collection_{$internalId}`")->execute();
+                        $this->pdo->prepare("CREATE TABLE IF NOT EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$projectId}_collection_{$internalId}_perms` (
                             `_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
                             `_type` VARCHAR(12) NOT NULL,
                             `_permission` VARCHAR(255) NOT NULL,
@@ -402,7 +402,7 @@ class V12 extends Migration
                         /**
                          * Update metadata table.
                          */
-                        $this->pdo->prepare("UPDATE _{$projectId}__metadata
+                        $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$projectId}__metadata`
                             SET
                                 _uid = 'collection_{$internalId}',
                                 name = 'collection_{$internalId}'
