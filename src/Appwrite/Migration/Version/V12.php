@@ -175,6 +175,29 @@ class V12 extends Migration
                         ]));
                         $this->createCollection('files', 'bucket_1');
 
+                        $nextDocument = null;
+                        do {
+                            $documents = $this->projectDB->find('files', limit: $this->limit, cursor: $nextDocument);
+                            $count = count($documents);
+                            \Co\run(function (array $documents) {
+                                foreach ($documents as $document) {
+                                    go(function (Document $document) {
+                                        $document
+                                            ->setAttribute('bucketId', 'default')
+                                            ->setAttribute('chunksTotal', 1)
+                                            ->setAttribute('chunksUploaded', 1);
+                                        $this->projectDB->createDocument('bucket_1', $document);
+                                    }, $document);
+                                }
+                            }, $documents);
+
+                            if ($count !== $this->limit) {
+                                $nextDocument = null;
+                            } else {
+                                $nextDocument = end($documents);
+                            }
+                        } while (!is_null($nextDocument));
+
                         /**
                          * Rename folder on volumes.
                          */
