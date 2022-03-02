@@ -388,7 +388,7 @@ class V12 extends Migration
                         /**
                          * Rename user's colletion table schema
                          */
-                        $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`._project_{$projectId}_collection_{$id}` RENAME TO `{$this->projectDB->getDefaultDatabase()}`._{$projectId}_collection_{$internalId}`")->execute();
+                        $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`._project_{$projectId}_collection_{$id}` RENAME TO `{$this->projectDB->getDefaultDatabase()}`.`_{$projectId}_collection_{$internalId}`")->execute();
                         $this->pdo->prepare("CREATE TABLE IF NOT EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$projectId}_collection_{$internalId}_perms` (
                             `_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
                             `_type` VARCHAR(12) NOT NULL,
