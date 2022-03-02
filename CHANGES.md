@@ -9,6 +9,7 @@
 - Tags are now called Deployments **Breaking Change**
 - Renamed `tagId` to `deplyomentId` in collections **Breaking Change**
 - Updated event names from `function.tags.*` to `function.deployments.*` **Breaking Change**
+- Java runtimes are currently not supported **Breaking Change**
 ### Storage
 - Added Buckets
 - Buckets allow you to configure following settings:
@@ -24,6 +25,7 @@
 - Support for large files
 - Files larger then 5MB will be automatically uploaded in chunks
 - New UI in the console for uploading files with progress indication
+- Added `buckets.read` and `buckets.write` scope to API keys
 
 ### Account
 - Renamed `providerToken` to `providerAccessToken` in sessions **Breaking Change**
@@ -32,7 +34,12 @@
 - Notion and Strip have been added to the OAuth Providers
 - Microsoft OAuth provider now supports custom domains
 
+### Others
+- Renamed `sum` to `total` on multiple endpoints returning a list of resource **Breaking Change**
+- Added new `_APP_WORKER_PER_CORE` environment variable to configure the amount of internal workers per core for performance optimization
+
 ## Bugs
+- Fixed issue with 36 character long custom IDs
 - Fixed permission issues and is now more consistent and returns all resources
 - Fixed total amount of documents not being updated
 - Fixed issue with searching though memberships
@@ -42,7 +49,8 @@
 - Fixed UI for Attribute default value field to reset after submit
 - Fixed UI to check for new available version of Appwrite
 - Fixed UI default values when creating Integer or Float attributes
-
+- Removed `_project` prepend from internal Database Schema
+- Added dedicated internal permissions table for each Collection
 
 ## Security
 - Remove `appwrite.io` and `appwrite.test` from authorized domains for session verification
