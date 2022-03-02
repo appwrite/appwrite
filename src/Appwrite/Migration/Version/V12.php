@@ -124,7 +124,7 @@ class V12 extends Migration
                         /**
                          * Create providerRefreshToken
                          */
-                        $this->projectDB->createAttribute(collection: $id, id: 'providerRefreshToken', type: Database::VAR_STRING, size: 16384, signed: true, required: true, filters: ['encrypt']);
+                        $this->projectDB->createAttribute(collection: $id, id: 'providerRefreshToken', type: Database::VAR_STRING, size: 16384, signed: true, required: false, filters: ['encrypt']);
                     } catch (\Throwable $th) {
                         Console::warning("'providerRefreshToken' from {$id}: {$th->getMessage()}");
                     }
@@ -132,7 +132,7 @@ class V12 extends Migration
                         /**
                          * Create providerAccessTokenExpiry
                          */
-                        $this->projectDB->createAttribute(collection: $id, id: 'providerAccessTokenExpiry', type: Database::VAR_INTEGER, size: 0, required: true);
+                        $this->projectDB->createAttribute(collection: $id, id: 'providerAccessTokenExpiry', type: Database::VAR_INTEGER, size: 0, required: false);
                     } catch (\Throwable $th) {
                         Console::warning("'providerAccessTokenExpiry' from {$id}: {$th->getMessage()}");
                     }
@@ -185,10 +185,28 @@ class V12 extends Migration
                             \Co\run(function (array $documents) {
                                 foreach ($documents as $document) {
                                     go(function (Document $document) {
+                                        /**
+                                         * Update File Path
+                                         */
+                                        $path = "/storage/uploads/app-{$this->project->getId()}";
+                                        $new = str_replace($path, "{$path}/default", $document->getAttribute('path'));
+                                        $document
+                                            ->setAttribute('path', $new);
+                                        /**
+                                         * Populate search string from Migration to 0.12.
+                                         */
+                                        if (empty($document->getAttribute('search'))) {
+                                            $document->setAttribute('search', $this->buildSearchAttribute(['$id', 'name'], $document));
+                                        }
+
+                                        /**
+                                         * Set new values.
+                                         */
                                         $document
                                             ->setAttribute('bucketId', 'default')
                                             ->setAttribute('chunksTotal', 1)
                                             ->setAttribute('chunksUploaded', 1);
+
                                         $this->projectDB->createDocument('bucket_1', $document);
                                     }, $document);
                                 }
@@ -533,24 +551,6 @@ class V12 extends Migration
                 break;
 
             case 'teams':
-                /**
-                 * Populate search string from Migration to 0.12.
-                 */
-                if (empty($document->getAttribute('search'))) {
-                    $document->setAttribute('search', $this->buildSearchAttribute(['$id', 'name'], $document));
-                }
-
-                break;
-
-            case 'files':
-                /**
-                 * Update File Path
-                 */
-                $path = "/storage/uploads/app-{$this->project->getId()}";
-                $new = str_replace($path, "{$path}/default", $document->getAttribute('path'));
-                $document
-                    ->setAttribute('bucketId', 'default')
-                    ->setAttribute('path', $new);
                 /**
                  * Populate search string from Migration to 0.12.
                  */
