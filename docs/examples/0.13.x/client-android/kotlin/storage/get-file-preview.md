@@ -17,11 +17,11 @@ class MainActivity : AppCompatActivity() {
         val storage = Storage(client)
 
         GlobalScope.launch {
-            val response = storage.getFilePreview(
+            val result = storage.getFilePreview(
                 bucketId = "[BUCKET_ID]",
                 fileId = "[FILE_ID]",
             )
-            val json = response.body?.string()        
+            println(result); // Resource URL        
         }
     }
 }
