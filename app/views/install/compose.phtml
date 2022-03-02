@@ -205,6 +205,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -227,6 +228,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -238,7 +240,6 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_EXECUTOR_SECRET
 
   appwrite-worker-audits:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -252,6 +253,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -274,6 +276,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -296,6 +299,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -321,6 +325,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -346,6 +351,7 @@ services:
       - appwrite-executor
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -370,6 +376,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_REDIS_HOST
@@ -394,6 +401,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -415,6 +423,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
