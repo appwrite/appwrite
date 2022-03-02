@@ -45,7 +45,7 @@ Appwrite 可以提供给开发者用户验证，外部授权，用户数据读�
 - [安全](#安全)
 - [订阅我们](#订阅我们)
 - [版权说明](#版权说明)
-      
+
 ## 安装
 
 Appwrite 的容器化服务器只需要一行指令就可以运行。您可以使用 docker-compose 在本地主机上运行 Appwrite，也可以在任何其他容器化工具（如 Kubernetes、Docker Swarm 或 Rancher）上运行 Appwrite。
@@ -59,7 +59,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:0.12.3
+    appwrite/appwrite:0.13.0
 ```
 
 ### Windows
@@ -71,7 +71,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:0.12.3
+    appwrite/appwrite:0.13.0
 ```
 
 #### PowerShell
@@ -81,7 +81,7 @@ docker run -it --rm ,
     --volume /var/run/docker.sock:/var/run/docker.sock ,
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw ,
     --entrypoint="install" ,
-    appwrite/appwrite:0.12.3
+    appwrite/appwrite:0.13.0
 ```
 
 运行后，可以在浏览器上访问 http://localhost 找到 Appwrite 控制台。在非 Linux 的本机主机上完成安装后，服务器可能需要几分钟才能启动。
