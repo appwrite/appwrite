@@ -689,6 +689,10 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401, Exception::TEAM_INVITE_MISMATCH);
         }
 
+        if ($membership->getAttribute('confirm') === true) {
+            throw new Exception('Membership already confirmed', 409);
+        }
+
         $membership // Attach user to team
             ->setAttribute('joined', \time())
             ->setAttribute('confirm', true)
