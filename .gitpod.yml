@@ -1,14 +1,5 @@
 tasks:
-  - init: docker pull mariadb:10.7 &&
-      docker pull redis:6.2-alpine &&
-      docker pull appwrite/influxdb:1.4.0 &&
-      docker pull appwrite/telegraf:1.3.0 &&
-      docker pull appwrite/mailcatcher:1.0.0 &&
-      docker pull appwrite/requestcatcher:1.0.0 &&
-      docker pull adminer &&
-      docker pull composer:2.0 &&
-      docker pull node:16.13.2-alpine3.15 &&
-      docker pull php:8.0.14-cli-alpine3.15 &&
+  - init: docker-compose pull
       docker-compose build
     command: |
       docker-compose up -d
