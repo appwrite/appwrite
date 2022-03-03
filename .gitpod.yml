@@ -1,0 +1,18 @@
+tasks:
+  - init: docker-compose pull --include-deps mariadb redis appwrite/influxdb appwrite/telegraf appwrite/mailcatcher appwrite/requestcatcher
+    command: |
+      docker-compose up -d
+ports:
+  - port: 8080
+    onOpen: open-preview
+    visibility: public
+  - port: 443
+    onOpen: ignore
+    visibility: public
+  - port: 3001
+    onOpen: ignore
+    visibility: public
+
+vscode:
+  extensions:
+    - ms-azuretools.vscode-docker
