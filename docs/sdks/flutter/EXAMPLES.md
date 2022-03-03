@@ -37,10 +37,17 @@ Upload File:
 ```dart
 Storage storage = Storage(client);
 
-MultipartFile file = MultipartFile.fromFile('./path-to-file/image.jpg', filename: 'image.jpg');
+late InputFile file;
+
+if(kIsWeb) {
+    file = InputFile(file: MultipartFile.fromFile('./path-to-file/image.jpg', filename: 'image.jpg'));
+} else {
+    file = InputFile(path: './path-to-file/image.jpg', fileName: 'image.jpg');
+}
 
 storage.createFile(
-    fileId: '[FILE_ID]',
+    bucketId: '[BUCKET_ID]',
+    fileId: '[FILE_ID]', // use 'unique()' to automatically generate a unique ID
     file: file,
     read: ['role:all'],
     write: []
