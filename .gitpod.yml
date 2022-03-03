@@ -1,5 +1,6 @@
 tasks:
-  - init: docker-compose pull --include-deps mariadb redis appwrite/influxdb appwrite/telegraf appwrite/mailcatcher appwrite/requestcatcher
+  - init: docker-compose pull --include-deps mariadb redis 
+# appwrite/influxdb appwrite/telegraf appwrite/mailcatcher appwrite/requestcatcher
     command: |
       docker-compose up -d
 ports:
