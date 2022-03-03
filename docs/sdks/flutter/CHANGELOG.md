@@ -1,3 +1,15 @@
+## 4.0.0
+* Support for Appwrite 0.13
+* **BREAKING** **Tags** have been renamed to **Deployments**
+* **BREAKING** `createFile` function expects Bucket ID as the first parameter
+* **BREAKING** `createDeployment` and `createFile` functions expect an instance **InputFile** rather than the instance of **MultipartFile**
+* **BREAKING** `list<Entity>` endpoints now contain a `total` attribute instead of `sum`
+* `onProgress()` callback function for endpoints supporting file uploads
+* Support for synchronous function executions
+* Bug fixes and Improvements
+
+**Full Changelog for Appwrite 0.13 can be found here**: https://github.com/appwrite/appwrite/blob/master/CHANGES.md#version-0130
+
 ## 3.0.1
 - Export Query Builder
 
