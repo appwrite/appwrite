@@ -1,3 +1,8 @@
+# Version 0.13.1 (NOT RELEASED)
+## Bugs
+- Fixed the Console UI redirect breaking the header and navigation
+- Fixed team invite to be invalid after successful use by @Malte2036 in https://github.com/appwrite/appwrite/issues/2593
+
 # Version 0.13.0
 
 ## Features
