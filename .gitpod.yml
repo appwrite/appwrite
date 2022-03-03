@@ -1,9 +1,13 @@
 tasks:
-  - init: docker-compose pull --include-deps mariadb:10.7 redis:6.2-alpine \
-      appwrite/influxdb:1.4.0 appwrite/telegraf:1.3.0 appwrite/mailcatcher:1.0.0 \
-      appwrite/requestcatcher:1.0.0 adminer
+  - init: docker pull mariadb:10.7 && \
+      docker pull redis:6.2-alpine && \
+      docker pull appwrite/influxdb:1.4.0 && \
+      docker pull appwrite/telegraf:1.3.0 && \
+      docker pull appwrite/mailcatcher:1.0.0 && \
+      docker pull appwrite/requestcatcher:1.0.0 &&
+      docker pull adminer
     command: |
-      docker-compose up -d
+      docker-compose up
 ports:
   - port: 8080
     onOpen: open-preview
