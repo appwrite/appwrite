@@ -41,7 +41,7 @@ Upload File:
 ```dart
 Storage storage = Storage(client);
 
-InputFile file = InputFile(path: './path-to-file/image.jpg', fileName: 'image.jpg');
+InputFile file = InputFile(path: './path-to-file/image.jpg', filename: 'image.jpg');
 
 storage.createFile(
     bucketId: '[BUCKET_ID]',
