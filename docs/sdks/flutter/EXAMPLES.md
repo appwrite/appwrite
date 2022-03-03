@@ -40,9 +40,9 @@ Storage storage = Storage(client);
 late InputFile file;
 
 if(kIsWeb) {
-    file = InputFile(file: MultipartFile.fromFile('./path-to-file/image.jpg', filename: 'image.jpg'));
+    file = InputFile(file: await MultipartFile.fromFile('file', './path-to-file/image.jpg', filename: 'image.jpg'));
 } else {
-    file = InputFile(path: './path-to-file/image.jpg', fileName: 'image.jpg');
+    file = InputFile(path: './path-to-file/image.jpg', filename: 'image.jpg');
 }
 
 storage.createFile(
