@@ -5,12 +5,15 @@ tasks:
       docker pull appwrite/telegraf:1.3.0 &&
       docker pull appwrite/mailcatcher:1.0.0 &&
       docker pull appwrite/requestcatcher:1.0.0 &&
-      docker pull adminer
+      docker pull adminer &&
+      docker pull composer:2.0 &&
+      docker pull node:16.13.2-alpine3.15 &&
+      docker pull php:8.0.14-cli-alpine3.15
     command: |
       docker-compose up -d
 ports:
   - port: 8080
-    onOpen: open-preview
+    onOpen: ignore
     visibility: public
   - port: 443
     onOpen: ignore
