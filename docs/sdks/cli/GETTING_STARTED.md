@@ -69,11 +69,10 @@ $ appwrite deploy function
 
 ? Which functions would you like to deploy? My Awesome Function (61d1a4c81dfcd95bc834)
 ℹ Info Deploying function My Awesome Function ( 61d1a4c81dfcd95bc834 )
-? Enter the entrypoint command node index.js
 ✓ Success Deployed My Awesome Function ( 61d1a4c81dfcd95bc834 )
 ```
 
-Your function is now ready to be executed on your Appwrite server!
+Your function has now been deployed on your Appwrite server! As soon as the build process is finished, you can start executing the function.
 
 * ### Deploying Collections
 
