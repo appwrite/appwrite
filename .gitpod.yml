@@ -4,7 +4,7 @@ tasks:
       docker pull appwrite/influxdb:1.4.0 && \
       docker pull appwrite/telegraf:1.3.0 && \
       docker pull appwrite/mailcatcher:1.0.0 && \
-      docker pull appwrite/requestcatcher:1.0.0 &&
+      docker pull appwrite/requestcatcher:1.0.0 && \
       docker pull adminer
     command: |
       docker-compose up
