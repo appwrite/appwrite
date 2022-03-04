@@ -294,16 +294,12 @@ App::post('/v1/mock/tests/general/upload')
             $file['name'] = (\is_array($file['name'])) ? $file['name'][0] : $file['name'];
             $file['size'] = (\is_array($file['size'])) ? $file['size'][0] : $file['size'];
     
-            foreach ($file['name'] as $i => $name) {
-                if ($name !== 'file.png') {
-                    throw new Exception('Wrong file name', 400, Exception::GENERAL_MOCK);
-                }
+            if ($file['name'] !== 'file.png') {
+                throw new Exception('Wrong file name', 400, Exception::GENERAL_MOCK);
             }
     
-            foreach ($file['size'] as $i => $size) {
-                if ($size !== 38756) {
+            if ($file['size'] !== 38756) {
                     throw new Exception('Wrong file size', 400, Exception::GENERAL_MOCK);
-                }
             }
 
             if (\md5(\file_get_contents($file['tmp_name'])) !== 'd80e7e6999a3eb2ae0d631a96fe135a4') {
