@@ -25,14 +25,14 @@ use Utopia\Swoole\Response;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Range as ValidatorRange;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
 
 Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
 
 /** Constants */
-const MAINTENANCE_INTERVAL = 1200; // 20 minutes
+const MAINTENANCE_INTERVAL = 3600; // 3600 seconds = 1 hour
 
 /**
 * Create a Swoole table to store runtime information 
@@ -395,9 +395,9 @@ App::delete('/v1/runtimes/:runtimeId')
 App::post('/v1/execution')
     ->desc('Create an execution')
     ->param('runtimeId', '', new Text(64), 'The runtimeID to execute')
-    ->param('vars', [], new Assoc(), 'Environment variables required for the build', false)
-    ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
-    ->param('timeout', 15, new ValidatorRange(1, 900), 'Function maximum execution time in seconds.', true)
+    ->param('vars', [], new Assoc(), 'Environment variables required for the build')
+    ->param('data', '{}', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
+    ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.')
     ->inject('activeRuntimes')
     ->inject('response')
     ->action(
@@ -423,17 +423,19 @@ App::post('/v1/execution')
             $errNo = -1;
             $executorResponse = '';
 
+            $timeout ??= (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900);
+
             $ch = \curl_init();
             $body = \json_encode([
                 'env' => $vars,
                 'payload' => $data,
-                'timeout' => $timeout ?? (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)
+                'timeout' => $timeout
             ]);
             \curl_setopt($ch, CURLOPT_URL, "http://" . $runtimeId . ":3000/");
             \curl_setopt($ch, CURLOPT_POST, true);
             \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
             \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            \curl_setopt($ch, CURLOPT_TIMEOUT, $timeout ?? (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900));
+            \curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
             \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
     
             \curl_setopt($ch, CURLOPT_HTTPHEADER, [
