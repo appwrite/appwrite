@@ -172,7 +172,7 @@ class Executor
                 switch (true) {
                     case $status < 400:
                         return $response['body'];
-                    case $status == 404:
+                    case $status === 404:
                         $response = $this->createRuntime(
                             deploymentId: $deploymentId,
                             projectId: $projectId,
@@ -186,7 +186,7 @@ class Executor
                         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
                         $status = $response['headers']['status-code'];
                         break;
-                    case $status == 406:
+                    case $status === 406:
                         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
                         $status = $response['headers']['status-code'];
                         break;
