@@ -252,7 +252,7 @@ App::post('/v1/mock/tests/general/upload')
             $end = $request->getContentRangeEnd();
             $size = $request->getContentRangeSize();
             $id = $request->getHeader('x-appwrite-id', '');
-            $file['size'] = (\is_array($file['size'])) ? $file['size'] : [$file['size']];
+            $file['size'] = (\is_array($file['size'])) ? $file['size'][0] : $file['size'];
 
             if(is_null($start) || is_null($end) || is_null($size)) {
                 throw new Exception('Invalid content-range header', 400, Exception::GENERAL_MOCK);
@@ -274,15 +274,14 @@ App::post('/v1/mock/tests/general/upload')
                 throw new Exception('Chunk size must be 5MB (except last chunk)', 400, Exception::GENERAL_MOCK);
             }
 
-            foreach ($file['size'] as $i => $sz) {
-                if ($end !== $size && $sz !== $chunkSize) {
-                    throw new Exception('Wrong chunk size', 400, Exception::GENERAL_MOCK);
-                }
-                
-                if($sz > $chunkSize) {
-                    throw new Exception('Chunk size must be 5MB or less', 400, Exception::GENERAL_MOCK);
-                }
+            if ($end !== $size && $file['size'] !== $chunkSize) {
+                throw new Exception('Wrong chunk size', 400, Exception::GENERAL_MOCK);
             }
+            
+            if($file['size'] > $chunkSize) {
+                throw new Exception('Chunk size must be 5MB or less', 400, Exception::GENERAL_MOCK);
+            }
+
             if($end !== $size) {
                 $response->json([
                     '$id'=> 'newfileid',
