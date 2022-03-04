@@ -1,3 +1,7 @@
+## 4.0.1
+* Fix InputFile filename param
+* Fix examples
+
 ## 4.0.0
 * Support for Appwrite 0.13
 * **BREAKING** **Tags** have been renamed to **Deployments**
