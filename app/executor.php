@@ -423,7 +423,7 @@ App::post('/v1/execution')
             $errNo = -1;
             $executorResponse = '';
 
-            $timeout = $timeout ?? (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900);
+            $timeout ??= (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900);
 
             $ch = \curl_init();
             $body = \json_encode([
