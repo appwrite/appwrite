@@ -290,9 +290,9 @@ App::post('/v1/mock/tests/general/upload')
                 ]);
             }
         } else {
-            $file['tmp_name'] = (\is_array($file['tmp_name'])) ? $file['tmp_name'] : [$file['tmp_name']];
-            $file['name'] = (\is_array($file['name'])) ? $file['name'] : [$file['name']];
-            $file['size'] = (\is_array($file['size'])) ? $file['size'] : [$file['size']];
+            $file['tmp_name'] = (\is_array($file['tmp_name'])) ? $file['tmp_name'][0] : $file['tmp_name'];
+            $file['name'] = (\is_array($file['name'])) ? $file['name'][0] : $file['name'];
+            $file['size'] = (\is_array($file['size'])) ? $file['size'][0] : $file['size'];
     
             foreach ($file['name'] as $i => $name) {
                 if ($name !== 'file.png') {
@@ -305,11 +305,9 @@ App::post('/v1/mock/tests/general/upload')
                     throw new Exception('Wrong file size', 400, Exception::GENERAL_MOCK);
                 }
             }
-    
-            foreach ($file['tmp_name'] as $i => $tmpName) {
-                if (\md5(\file_get_contents($tmpName)) !== 'd80e7e6999a3eb2ae0d631a96fe135a4') {
-                    throw new Exception('Wrong file uploaded', 400, Exception::GENERAL_MOCK);
-                }
+
+            if (\md5(\file_get_contents($file['tmp_name'])) !== 'd80e7e6999a3eb2ae0d631a96fe135a4') {
+                throw new Exception('Wrong file uploaded', 400, Exception::GENERAL_MOCK);
             }
         }
     });
