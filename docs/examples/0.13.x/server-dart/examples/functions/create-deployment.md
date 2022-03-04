@@ -13,7 +13,7 @@ void main() { // Init SDK
   Future result = functions.createDeployment(
     functionId: '[FUNCTION_ID]',
     entrypoint: '[ENTRYPOINT]',
-    code: await MultipartFile.fromPath('code', './path-to-files/image.jpg', 'image.jpg'),
+    code: InputFile(path: './path-to-files/image.jpg', filename: 'image.jpg'),
     activate: false,
   );
 
