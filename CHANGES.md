@@ -1,6 +1,7 @@
 # Version 0.13.2
 ## Bugs
-- Fixed global issue for wirte permissions
+- Fixed global issue for write permissions
+- Fixed missing `_APP_EXECUTOR_SECRET` environment variable for deletes worker
 
 # Version 0.13.1
 ## Bugs
