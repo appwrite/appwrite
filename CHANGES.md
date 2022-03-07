@@ -1,11 +1,18 @@
-# Version 0.13.1 (NOT RELEASED)
+# Version 0.13.2
+## Bugs
+- Fixed global issue with write permissions
+- Added missing `_APP_EXECUTOR_SECRET` environment variable for deletes worker
+- Increased execution `stdout` and `stderr` from 8000 to 16384 character limit
+- Increased maximum file size for image preview to 20mb
+- Fixed iOS platforms for origin validation by @stnguyen90 in https://github.com/appwrite/appwrite/pull/2907
+
+# Version 0.13.1
 ## Bugs
 - Fixed the Console UI redirect breaking the header and navigation
 - Fixed timeout in Functions API to respect the environment variable `_APP_FUNCTIONS_TIMEOUT`
 - Fixed team invite to be invalid after successful use by @Malte2036 in https://github.com/appwrite/appwrite/issues/2593
 
 # Version 0.13.0
-
 ## Features
 ### Functions
 - Synchronous function execution

@@ -1646,7 +1646,7 @@
         },
         {
             "name": "symfony/polyfill-ctype",
-            "version": "v1.24.0",
+            "version": "v1.25.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-ctype.git",
@@ -1708,7 +1708,7 @@
                 "portable"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.24.0"
+                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.25.0"
             },
             "funding": [
                 {
@@ -1728,16 +1728,16 @@
         },
         {
             "name": "symfony/polyfill-php80",
-            "version": "v1.24.0",
+            "version": "v1.25.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php80.git",
-                "reference": "57b712b08eddb97c762a8caa32c84e037892d2e9"
+                "reference": "4407588e0d3f1f52efb65fbe92babe41f37fe50c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php80/zipball/57b712b08eddb97c762a8caa32c84e037892d2e9",
-                "reference": "57b712b08eddb97c762a8caa32c84e037892d2e9",
+                "url": "https://api.github.com/repos/symfony/polyfill-php80/zipball/4407588e0d3f1f52efb65fbe92babe41f37fe50c",
+                "reference": "4407588e0d3f1f52efb65fbe92babe41f37fe50c",
                 "shasum": ""
             },
             "require": {
@@ -1791,7 +1791,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php80/tree/v1.24.0"
+                "source": "https://github.com/symfony/polyfill-php80/tree/v1.25.0"
             },
             "funding": [
                 {
@@ -1807,7 +1807,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-09-13T13:58:33+00:00"
+            "time": "2022-03-04T08:16:47+00:00"
         },
         {
             "name": "utopia-php/abuse",
@@ -2129,16 +2129,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.15.2",
+            "version": "0.15.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "4ae9f1162d6640ccfe28afa0bbc60b907a7ad1c0"
+                "reference": "726e3b04fb1f1b3b654bc1d3114deaf1481cb008"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/4ae9f1162d6640ccfe28afa0bbc60b907a7ad1c0",
-                "reference": "4ae9f1162d6640ccfe28afa0bbc60b907a7ad1c0",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/726e3b04fb1f1b3b654bc1d3114deaf1481cb008",
+                "reference": "726e3b04fb1f1b3b654bc1d3114deaf1481cb008",
                 "shasum": ""
             },
             "require": {
@@ -2186,9 +2186,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.15.2"
+                "source": "https://github.com/utopia-php/database/tree/0.15.3"
             },
-            "time": "2022-02-28T15:53:37+00:00"
+            "time": "2022-03-07T11:59:51+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3677,16 +3677,16 @@
         },
         {
             "name": "myclabs/deep-copy",
-            "version": "1.10.3",
+            "version": "1.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "c6a951b75d684fd43fbbd69617488e1e2e8924ba"
+                "reference": "14daed4296fae74d9e3201d2c4925d1acb7aa614"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/c6a951b75d684fd43fbbd69617488e1e2e8924ba",
-                "reference": "c6a951b75d684fd43fbbd69617488e1e2e8924ba",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/14daed4296fae74d9e3201d2c4925d1acb7aa614",
+                "reference": "14daed4296fae74d9e3201d2c4925d1acb7aa614",
                 "shasum": ""
             },
             "require": {
@@ -3724,7 +3724,7 @@
             ],
             "support": {
                 "issues": "https://github.com/myclabs/DeepCopy/issues",
-                "source": "https://github.com/myclabs/DeepCopy/tree/1.10.3"
+                "source": "https://github.com/myclabs/DeepCopy/tree/1.11.0"
             },
             "funding": [
                 {
@@ -3732,7 +3732,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-03-02T14:16:47+00:00"
+            "time": "2022-03-03T13:19:32+00:00"
         },
         {
             "name": "netresearch/jsonmapper",
@@ -4234,16 +4234,16 @@
         },
         {
             "name": "phpunit/php-code-coverage",
-            "version": "9.2.14",
+            "version": "9.2.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "9f4d60b6afe5546421462b76cd4e633ebc364ab4"
+                "reference": "2e9da11878c4202f97915c1cb4bb1ca318a63f5f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/9f4d60b6afe5546421462b76cd4e633ebc364ab4",
-                "reference": "9f4d60b6afe5546421462b76cd4e633ebc364ab4",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/2e9da11878c4202f97915c1cb4bb1ca318a63f5f",
+                "reference": "2e9da11878c4202f97915c1cb4bb1ca318a63f5f",
                 "shasum": ""
             },
             "require": {
@@ -4299,7 +4299,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/php-code-coverage/issues",
-                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.14"
+                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.15"
             },
             "funding": [
                 {
@@ -4307,7 +4307,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-02-28T12:38:02+00:00"
+            "time": "2022-03-07T09:28:20+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",
@@ -5809,7 +5809,7 @@
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
-            "version": "v1.24.0",
+            "version": "v1.25.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-intl-grapheme.git",
@@ -5870,7 +5870,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-intl-grapheme/tree/v1.24.0"
+                "source": "https://github.com/symfony/polyfill-intl-grapheme/tree/v1.25.0"
             },
             "funding": [
                 {
@@ -5890,7 +5890,7 @@
         },
         {
             "name": "symfony/polyfill-intl-normalizer",
-            "version": "v1.24.0",
+            "version": "v1.25.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-intl-normalizer.git",
@@ -5954,7 +5954,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-intl-normalizer/tree/v1.24.0"
+                "source": "https://github.com/symfony/polyfill-intl-normalizer/tree/v1.25.0"
             },
             "funding": [
                 {
@@ -5974,7 +5974,7 @@
         },
         {
             "name": "symfony/polyfill-mbstring",
-            "version": "v1.24.0",
+            "version": "v1.25.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
@@ -6037,7 +6037,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.24.0"
+                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.25.0"
             },
             "funding": [
                 {
