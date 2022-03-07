@@ -2,6 +2,7 @@
 ## Bugs
 - Fixed global issue for write permissions
 - Fixed missing `_APP_EXECUTOR_SECRET` environment variable for deletes worker
+- Increase execution `stdout` and `stderr` from 8000 to 16384 character limit
 - Fixed iOS platforms for origin validation by @stnguyen90 in https://github.com/appwrite/appwrite/pull/2907
 
 # Version 0.13.1
