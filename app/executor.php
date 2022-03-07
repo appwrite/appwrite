@@ -500,8 +500,8 @@ App::post('/v1/execution')
             $execution = [
                 'status' => $functionStatus,
                 'statusCode' => $statusCode,
-                'stdout' => \utf8_encode(\mb_substr($stdout, -8000)),
-                'stderr' => \utf8_encode(\mb_substr($stderr, -8000)),
+                'stdout' => \utf8_encode(\mb_substr($stdout, -16384)),
+                'stderr' => \utf8_encode(\mb_substr($stderr, -16384)),
                 'time' => $executionTime,
             ];
 
