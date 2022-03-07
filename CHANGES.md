@@ -1,4 +1,8 @@
-# Version 0.13.1 (NOT RELEASED)
+# Version 0.13.2
+## Bugs
+- Fixed global issue for wirte permissions
+
+# Version 0.13.1
 ## Bugs
 - Fixed the Console UI redirect breaking the header and navigation
 - Fixed timeout in Functions API to respect the environment variable `_APP_FUNCTIONS_TIMEOUT`
