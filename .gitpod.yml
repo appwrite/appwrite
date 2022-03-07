@@ -1,12 +1,9 @@
 tasks:
   - init: docker-compose pull &&
-      docker-compose build
+      docker-compose build &&
+      docker run --rm --interactive --tty --volume $PWD:/app composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts --prefer-dist
     command: |
-      docker-compose up -d      
-  - init: docker-compose pull &&docker run --rm --interactive --tty \
-      --volume $PWD:/app \
-      composer update --ignore-platform-reqs \
-      --optimize-autoloader --no-plugins --no-scripts --prefer-dist
+      docker-compose up -d
 
 ports:
   - port: 8080
