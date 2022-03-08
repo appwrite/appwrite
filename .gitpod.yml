@@ -9,12 +9,6 @@ ports:
   - port: 8080
     onOpen: ignore
     visibility: public
-  - port: 443
-    onOpen: ignore
-    visibility: public
-  - port: 3001
-    onOpen: ignore
-    visibility: public
 
 vscode:
   extensions:
