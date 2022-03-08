@@ -5,4 +5,4 @@ RUN /home/gitpod/.deno/bin/deno completions bash > /home/gitpod/.bashrc.d/90-den
 
 RUN sudo apt install software-properties-common && sudo add-apt-repository ppa:ondrej/php -y
 RUN sudo apt update
-RUN sudo apt upgrade -q -y --force-yes
+RUN sudo DEBIAN_FRONTEND=noninteractive apt-get -y install php8.0
