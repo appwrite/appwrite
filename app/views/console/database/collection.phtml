@@ -762,21 +762,21 @@ $logs = $this->getParam('logs', null);
         <div class="row responsive thin">
             <div class="col span-6 margin-bottom-small">
                 <label for="float-min">Min</label>
-                <input id="float-min" type="number" class="full-width" name="min" step="0.01" autocomplete="off" data-cast-to="float" />
+                <input id="float-min" type="number" class="full-width" name="min" step="any" autocomplete="off" data-cast-to="float" />
             </div>
             <div class="col span-6 margin-bottom-small">
                 <label for="float-max">Max</label>
-                <input id="float-max" type="number" class="full-width" name="max" step="0.01" autocomplete="off" data-cast-to="float" />
+                <input id="float-max" type="number" class="full-width" name="max" step="any" autocomplete="off" data-cast-to="float" />
             </div>
         </div>
 
         <label for="float-default">Default Value</label>
 
         <template x-if="!(array || required)">
-            <input name="xdefault" type="number" step="0.01" class="margin-bottom-large" autocomplete="off" data-cast-to="float">
+            <input name="xdefault" type="number" step="any" class="margin-bottom-large" autocomplete="off" data-cast-to="float">
         </template>
         <template x-if="(array || required)">
-            <input name="xdefault" type="number" step="0.01" class="margin-bottom-large" autocomplete="off" data-cast-to="float" disabled>
+            <input name="xdefault" type="number" step="any" class="margin-bottom-large" autocomplete="off" data-cast-to="float" disabled>
         </template>
 
         <footer>
