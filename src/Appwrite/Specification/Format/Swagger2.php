@@ -4,6 +4,7 @@ namespace Appwrite\Specification\Format;
 
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
+use Appwrite\Utopia\Response\Model;
 use Utopia\Validator;
 
 class Swagger2 extends Format
@@ -186,7 +187,6 @@ class Swagger2 extends Format
                     ],
                 ];
             } else {
-
                 if(\is_array($model)) {
                     $modelDescription = \join(', or ', \array_map(function ($m) {
                         return $m->getName();
@@ -402,14 +402,7 @@ class Swagger2 extends Format
         }
 
         foreach ($this->models as $model) {
-            foreach ($model->getRules() as $rule) {
-                if (
-                    in_array($model->getType(), $usedModels)
-                    && !in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])
-                ) {
-                    $usedModels[] = $rule['type'];
-                }
-            }
+            $this->addNestedModels($model, $usedModels);
         }
 
         foreach ($this->models as $model) {
@@ -545,5 +538,34 @@ class Swagger2 extends Format
         \ksort($output['paths']);
 
         return $output;
+    }
+
+    protected function addNestedModels(Model $model, array &$usedModels): void 
+    {
+        foreach ($model->getRules() as $rule) {
+            if (
+                in_array($model->getType(), $usedModels)
+                && !in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])
+            ) {
+                $type = $rule['type'];
+                if (is_array($type)) {
+                    $usedModels = [
+                        ...$usedModels,
+                        ...$type
+                    ];
+                    foreach ($type as $t) {
+                        if (array_key_exists($t, $this->models)) {
+                            $this->addNestedModels($this->models[$t], $usedModels);
+                        }
+                    }
+                } else {
+                    $usedModels[] = $type;
+                    if (array_key_exists($type, $this->models)) {
+                        $this->addNestedModels($this->models[$type], $usedModels);
+                    }
+                }
+
+            }
+        }
     }
 }
