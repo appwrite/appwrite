@@ -68,7 +68,7 @@ class Notion extends OAuth2
      */
     public function getName():string
     {
-        return 'notion';
+        return 'etsy';
     }
 
     /**
@@ -96,7 +96,7 @@ class Notion extends OAuth2
     {
         if(empty($this->tokens)) {
             $headers = ['Content-Type: application/x-www-form-urlencoded'];
-            
+
             $this->tokens = \json_decode($this->request(
                 'POST',
                 $this->endpoint . '/oauth/token',
