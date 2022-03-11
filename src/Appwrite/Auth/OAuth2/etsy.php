@@ -164,12 +164,6 @@ class Notion extends OAuth2
      */
     public function getUserEmail(string $accessToken):string
     {
-        $response = $this->getUser($accessToken);
-
-        if(isset($response['bot']['owner']['user']['person']['email'])){
-            return $response['bot']['owner']['user']['person']['email'];
-        }
-
         return '';
     }
 
@@ -180,12 +174,6 @@ class Notion extends OAuth2
      */
     public function getUserName(string $accessToken):string
     {
-        $response = $this->getUser($accessToken);
-
-        if (isset($response['bot']['owner']['user']['name'])) {
-            return $response['bot']['owner']['user']['name'];
-        }
-
         return '';
     }
 
@@ -196,15 +184,6 @@ class Notion extends OAuth2
      */
     protected function getUser(string $accessToken)
     {
-        $headers = [
-            'Notion-Version: ' . $this->version,
-            'Authorization: Bearer '.\urlencode($accessToken)
-        ];
-
-        if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', $this->endpoint . '/users/me', $headers), true);
-        }
-
         return $this->user;
     }
 }
