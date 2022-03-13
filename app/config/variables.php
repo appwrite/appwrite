@@ -403,6 +403,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_STORAGE_PREVIEW_LIMIT',
+                'description' => 'Maximum file size allowed for file image preview. The default value is 20MB. You should pass your size limit value in bytes.',
+                'introduction' => '0.14.0',
+                'default' => '20000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_STORAGE_ANTIVIRUS',
                 'description' => 'This variable allows you to disable the internal anti-virus scans. This value is set to \'disabled\' by default, to enable the scans set the value to \'enabled\'. Before enabling, you must add the ClamAV service and depend on it on main Appwrite service.',
                 'introduction' => '',
