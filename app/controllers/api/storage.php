@@ -951,7 +951,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
 
         if ($data) {
-            $output = (empty($output)) ? $type : $output;
+            $output = (empty($output)) ? ( empty($type) ? 'jpg' : $type ) : $output;
 
             return $response
                 ->setContentType((\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
