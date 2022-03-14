@@ -16,7 +16,7 @@ class AttributeFloat extends Attribute
                 'type' => self::TYPE_STRING,
                 'description' => 'Attribute Key.',
                 'default' => '',
-                'example' => 'percentCompleted',
+                'example' => 'percentageCompleted',
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
