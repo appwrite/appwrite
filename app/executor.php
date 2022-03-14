@@ -247,7 +247,7 @@ App::post('/v1/runtimes')
                     command: $commands,
                     stdout: $stdout,
                     stderr: $stderr,
-                    timeout: App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)
+                    timeout: App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900)
                 );
 
                 if (!$status) {
