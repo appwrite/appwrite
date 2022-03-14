@@ -173,6 +173,7 @@ services:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: executor
     container_name: appwrite-executor
+    restart: unless-stopped
     stop_signal: SIGINT
     networks:
       appwrite:
