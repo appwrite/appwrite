@@ -1346,7 +1346,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwirte\Event\Event $events */
+        /** @var Appwrite\Event\Event $events */
         /** @var string $mode */
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));

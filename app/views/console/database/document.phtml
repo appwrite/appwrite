@@ -110,7 +110,7 @@ $logs = $this->getParam('logs', null);
                                                             <template x-if="attr.type === 'double'">
                                                                 <input
                                                                     type="number"
-                                                                    step="0.01"
+                                                                    step="any"
                                                                     :placeholder="attr.default"
                                                                     :name="attr.key"
                                                                     :required="attr.required"
@@ -203,7 +203,7 @@ $logs = $this->getParam('logs', null);
                                                                         <template x-if="attr.type === 'double'">
                                                                             <input
                                                                                 type="number"
-                                                                                step="0.01"
+                                                                                step="any"
                                                                                 :placeholder="attr.default"
                                                                                 :name="attr.key"
                                                                                 :required="attr.required"
