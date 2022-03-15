@@ -457,7 +457,8 @@ App::post('/v1/execution')
 
             switch (true) {
                 /** No Error. */
-                case $errNo === 0: break;
+                case $errNo === 0: 
+                    break;
                 /** Runtime not ready for requests yet. 111 is the swoole error code for Connection Refused - see https://openswoole.com/docs/swoole-error-code */
                 case $errNo === 111:
                     throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 406);

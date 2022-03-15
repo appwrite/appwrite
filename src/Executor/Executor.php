@@ -161,12 +161,14 @@ class Executor
             'timeout' => $timeout,
         ];
 
-        /* Add 2 seconds as a buffer to the actual timeout value since there can be a slight variance*/
-        $requestTimeout  = $timeout + 2;
+        /* Add 1 second as a buffer to the actual timeout value since there can be a slight variance*/
+        $requestTimeout  = $timeout + 1;
 
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
         $status = $response['headers']['status-code'];
 
+        var_dump($response);
+        var_dump($status);
         for ($attempts = 0; $attempts < 10; $attempts++) {
             try {
                 switch (true) {

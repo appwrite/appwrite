@@ -960,7 +960,7 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('stderr', $executionResponse['stderr']);
             $execution->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
-            $endtime = \time();
+            $endtime = \microtime(true);
             $time = $endtime - $execution->getAttribute('dateCreated');
             $execution->setAttribute('time', $time);
             $execution->setAttribute('status', 'failed');

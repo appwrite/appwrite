@@ -287,6 +287,7 @@ class FunctionsV1 extends Worker
         $vars = \array_merge($function->getAttribute('vars', []), $vars);
 
         /** Execute function */
+        $startTime = microtime(true);
         try {
             $executionResponse = $this->executor->createExecution(
                 projectId: $projectId,
@@ -307,7 +308,7 @@ class FunctionsV1 extends Worker
             $execution->setAttribute('stderr', $executionResponse['stderr']);
             $execution->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
-            $endtime = \time();
+            $endtime = \microtime(true);
             $time = $endtime - $execution->getAttribute('dateCreated');
             $execution->setAttribute('time', $time);
             $execution->setAttribute('status', 'failed');
