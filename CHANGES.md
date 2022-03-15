@@ -1,3 +1,8 @@
+# Version 0.13.3
+## Bugs
+- Fixed search for terms that inlcude `@` characters
+- Fixed Bucket permissions
+
 # Version 0.13.2
 ## Bugs
 - Fixed global issue with write permissions
