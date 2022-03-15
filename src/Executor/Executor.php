@@ -167,8 +167,6 @@ class Executor
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
         $status = $response['headers']['status-code'];
 
-        var_dump($response);
-        var_dump($status);
         for ($attempts = 0; $attempts < 10; $attempts++) {
             try {
                 switch (true) {
