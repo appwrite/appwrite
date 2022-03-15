@@ -287,7 +287,6 @@ class FunctionsV1 extends Worker
         $vars = \array_merge($function->getAttribute('vars', []), $vars);
 
         /** Execute function */
-        $startTime = microtime(true);
         try {
             $executionResponse = $this->executor->createExecution(
                 projectId: $projectId,
