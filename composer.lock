@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2695da3a984ff1564f1c9798167f522b",
+    "content-hash": "5cd14aa6bc140bd313ea096bc610bcee",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2130,16 +2130,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-fix-mariadb-at-search",
+            "version": "0.15.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "fd35885b57c5ac5a68f55f1e09daf01bf3a9e304"
+                "reference": "166365d9c39c4d70b1267af4562f4327e8930f79"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/fd35885b57c5ac5a68f55f1e09daf01bf3a9e304",
-                "reference": "fd35885b57c5ac5a68f55f1e09daf01bf3a9e304",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/166365d9c39c4d70b1267af4562f4327e8930f79",
+                "reference": "166365d9c39c4d70b1267af4562f4327e8930f79",
                 "shasum": ""
             },
             "require": {
@@ -2187,9 +2187,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/fix-mariadb-at-search"
+                "source": "https://github.com/utopia-php/database/tree/0.15.4"
             },
-            "time": "2022-03-15T11:52:37+00:00"
+            "time": "2022-03-15T17:20:14+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -6556,18 +6556,9 @@
             "time": "2015-12-17T08:42:14+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-fix-mariadb-at-search",
-            "alias": "0.15.99",
-            "alias_normalized": "0.15.99.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
