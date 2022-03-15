@@ -17,6 +17,96 @@ class StorageCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
+    public function testBucketPermissions(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => 'unique()',
+            'name' => 'Test Bucket',
+            'permission' => 'bucket',
+            'read' => ['role:all'],
+            'write' => ['role:member'],
+        ]);
+
+        $bucketId = $bucket['body']['$id'];
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertNotEmpty($bucketId);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/'. $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => 'unique()',
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
+        ]);
+
+        $fileId = $file['body']['$id'];
+        $this->assertEquals($file['headers']['status-code'], 201);
+        $this->assertNotEmpty($fileId);
+        $this->assertIsInt($file['body']['dateCreated']);
+        $this->assertEquals('permissions.png', $file['body']['name']);
+        $this->assertEquals('image/png', $file['body']['mimeType']);
+        $this->assertEquals(47218, $file['body']['sizeOriginal']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/view', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $file['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/'. $bucketId . '/files', [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'fileId' => 'unique()',
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
+        ]);
+
+        $this->assertEquals($file['headers']['status-code'], 401);
+
+        /**
+         * Test for SUCCESS
+         */
+        $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $file['headers']['status-code']);
+        $this->assertEmpty($file['body']);
+    }
+
     public function testCreateFileDefaultPermissions(): array
     {
         /**
