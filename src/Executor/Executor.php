@@ -161,8 +161,8 @@ class Executor
             'timeout' => $timeout,
         ];
 
-        /* Add 1 second as a buffer to the actual timeout value since there can be a slight variance*/
-        $requestTimeout  = $timeout + 1;
+        /* Add 2 seconds as a buffer to the actual timeout value since there can be a slight variance*/
+        $requestTimeout  = $timeout + 2;
 
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
         $status = $response['headers']['status-code'];
