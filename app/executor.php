@@ -470,7 +470,7 @@ App::post('/v1/execution')
                 case $statusCode >= 500:
                     $stderr = $executorResponse ?? 'Internal Runtime error.';
                     break;
-                case $statusCode >= 200:
+                case $statusCode >= 100:
                     $stdout = $executorResponse;
                     break;
                 default:
