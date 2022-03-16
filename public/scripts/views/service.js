@@ -40,6 +40,13 @@
 
         redirect: function(url) {
           return function(router) {
+            /**
+             * Force page reload to /console to render the layout.
+             */
+            if (url === "/console") {
+              window.location = url;
+              return;
+            }
             router.change(url || "/");
           };
         },

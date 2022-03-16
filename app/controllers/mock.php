@@ -244,12 +244,15 @@ App::post('/v1/mock/tests/general/upload')
         $file = $request->getFiles('file');
         
         $contentRange = $request->getHeader('content-range');
+
+        $chunkSize = 5*1024*1024; // 5MB
+
         if(!empty($contentRange)) {
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
             $size = $request->getContentRangeSize();
             $id = $request->getHeader('x-appwrite-id', '');
-            $file['size'] = (\is_array($file['size'])) ? $file['size'] : [$file['size']];
+            $file['size'] = (\is_array($file['size'])) ? $file['size'][0] : $file['size'];
 
             if(is_null($start) || is_null($end) || is_null($size)) {
                 throw new Exception('Invalid content-range header', 400, Exception::GENERAL_MOCK);
@@ -267,43 +270,40 @@ App::post('/v1/mock/tests/general/upload')
                 throw new Exception('All chunked request must have id header (except first)', 400, Exception::GENERAL_MOCK);
             }
 
-            if($end !== $size && $end-$start+1 !== 5*1024*1024) {
+            if($end !== $size && $end-$start+1 !== $chunkSize) {
                 throw new Exception('Chunk size must be 5MB (except last chunk)', 400, Exception::GENERAL_MOCK);
             }
 
-            foreach ($file['size'] as $i => $sz) {
-                if ($end !== $size && $sz !== 5*1024*1024) {
-                    throw new Exception('Wrong chunk size', 400, Exception::GENERAL_MOCK);
-                }
-                
-                if($sz > 5*1024*1024) {
-                    throw new Exception('Chunk size must be 5MB or less', 400, Exception::GENERAL_MOCK);
-                }
+            if ($end !== $size && $file['size'] !== $chunkSize) {
+                throw new Exception('Wrong chunk size', 400, Exception::GENERAL_MOCK);
             }
+            
+            if($file['size'] > $chunkSize) {
+                throw new Exception('Chunk size must be 5MB or less', 400, Exception::GENERAL_MOCK);
+            }
+
             if($end !== $size) {
-                $response->json(['$id'=> 'newfileid']);
+                $response->json([
+                    '$id'=> 'newfileid',
+                    'chunksTotal' => $file['size'] / $chunkSize,
+                    'chunksUploaded' => $start / $chunkSize
+                ]);
             }
         } else {
-            $file['tmp_name'] = (\is_array($file['tmp_name'])) ? $file['tmp_name'] : [$file['tmp_name']];
-            $file['name'] = (\is_array($file['name'])) ? $file['name'] : [$file['name']];
-            $file['size'] = (\is_array($file['size'])) ? $file['size'] : [$file['size']];
+            $file['tmp_name'] = (\is_array($file['tmp_name'])) ? $file['tmp_name'][0] : $file['tmp_name'];
+            $file['name'] = (\is_array($file['name'])) ? $file['name'][0] : $file['name'];
+            $file['size'] = (\is_array($file['size'])) ? $file['size'][0] : $file['size'];
     
-            foreach ($file['name'] as $i => $name) {
-                if ($name !== 'file.png') {
-                    throw new Exception('Wrong file name', 400, Exception::GENERAL_MOCK);
-                }
+            if ($file['name'] !== 'file.png') {
+                throw new Exception('Wrong file name', 400, Exception::GENERAL_MOCK);
             }
     
-            foreach ($file['size'] as $i => $size) {
-                if ($size !== 38756) {
+            if ($file['size'] !== 38756) {
                     throw new Exception('Wrong file size', 400, Exception::GENERAL_MOCK);
-                }
             }
-    
-            foreach ($file['tmp_name'] as $i => $tmpName) {
-                if (\md5(\file_get_contents($tmpName)) !== 'd80e7e6999a3eb2ae0d631a96fe135a4') {
-                    throw new Exception('Wrong file uploaded', 400, Exception::GENERAL_MOCK);
-                }
+
+            if (\md5(\file_get_contents($file['tmp_name'])) !== 'd80e7e6999a3eb2ae0d631a96fe135a4') {
+                throw new Exception('Wrong file uploaded', 400, Exception::GENERAL_MOCK);
             }
         }
     });

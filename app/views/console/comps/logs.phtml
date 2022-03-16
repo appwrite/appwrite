@@ -20,7 +20,7 @@ $params = $this->getParam('params', []);
         </div>
     </div>
 
-    <div data-ls-if="0 != {{logs.sum}}">
+    <div data-ls-if="0 != {{logs.total}}">
         <div class="margin-bottom-small margin-top-negative text-align-end text-size-small text-fade">Showing logs from the last <?php echo $this->escape($interval); ?> days</div>
 
         <div class="box margin-bottom">
@@ -71,10 +71,10 @@ $params = $this->getParam('params', []);
                 data-name="logs"
                 data-success="state"
                 data-success-param-state-keys="search,offset">
-                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{logs.sum}}" class="margin-end-small round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{logs.total}}" class="margin-end-small round small" aria-label="Back"><i class="icon-left-open"></i></button>
             </form>
 
-            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{logs.sum|pageTotal}}"></span>
+            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{logs.total|pageTotal}}"></span>
 
             <form
                 data-service="<?php echo $method; ?>"
@@ -89,7 +89,7 @@ $params = $this->getParam('params', []);
                 data-name="logs"
                 data-success="state"
                 data-success-param-state-keys="search,offset">
-                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{logs.sum}}" class="margin-start-small round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{logs.total}}" class="margin-start-small round small" aria-label="Next"><i class="icon-right-open"></i></button>
             </form>
         </div>
     </div>

@@ -65,7 +65,7 @@ trait StorageBase
         ]);
         $this->assertEquals(201, $bucket2['headers']['status-code']);
         $this->assertNotEmpty($bucket2['body']['$id']);
-        
+
         /**
          * Chunked Upload
          */
@@ -99,7 +99,7 @@ trait StorageBase
             $id = $largeFile['body']['$id'];
         }
         @fclose($handle);
-        
+
         $this->assertEquals(201, $largeFile['headers']['status-code']);
         $this->assertNotEmpty($largeFile['body']['$id']);
         $this->assertIsInt($largeFile['body']['dateCreated']);
@@ -107,7 +107,7 @@ trait StorageBase
         $this->assertEquals('video/mp4', $largeFile['body']['mimeType']);
         $this->assertEquals($totalSize, $largeFile['body']['sizeOriginal']);
         $this->assertEquals(md5_file(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4')), $largeFile['body']['signature']); // should validate that the file is not encrypted
-        
+
         /**
          * Failure
          * Test for Chunk above 5MB
@@ -134,9 +134,9 @@ trait StorageBase
             'write' => ['role:all'],
         ]);
         @fclose($handle);
-        
+
         $this->assertEquals(413, $res['headers']['status-code']);
-        
+
 
         /**
          * Test for FAILURE unknown Bucket
@@ -203,7 +203,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(200, $files['headers']['status-code']);
-        $this->assertGreaterThan(0, $files['body']['sum']);
+        $this->assertGreaterThan(0, $files['body']['total']);
         $this->assertGreaterThan(0, count($files['body']['files']));
 
         /**

@@ -4,6 +4,7 @@ use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
+use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
@@ -186,11 +187,11 @@ App::get('/v1/projects')
         }
 
         $results = $dbForConsole->find('projects', $queries, $limit, $offset, [], [$orderType], $cursorProject ?? null, $cursorDirection);
-        $sum = $dbForConsole->count('projects', $queries, APP_LIMIT_COUNT);
+        $total = $dbForConsole->count('projects', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'projects' => $results,
-            'sum' => $sum,
+            'total' => $total,
         ]), Response::MODEL_PROJECT_LIST);
     });
 
@@ -649,11 +650,11 @@ App::get('/v1/projects/:projectId/webhooks')
 
         $webhooks = $dbForConsole->find('webhooks', [
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
-        ]);
+        ], 5000);
 
         $response->dynamic(new Document([
             'webhooks' => $webhooks,
-            'sum' => count($webhooks),
+            'total' => count($webhooks),
         ]), Response::MODEL_WEBHOOK_LIST);
     });
 
@@ -863,7 +864,7 @@ App::get('/v1/projects/:projectId/keys')
 
         $response->dynamic(new Document([
             'keys' => $keys,
-            'sum' => count($keys),
+            'total' => count($keys),
         ]), Response::MODEL_KEY_LIST);
     });
 
@@ -1002,7 +1003,7 @@ App::post('/v1/projects/:projectId/platforms')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PLATFORM)
     ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('type', null, new WhiteList(['web', 'flutter-ios', 'flutter-android', 'flutter-linux', 'flutter-macos', 'flutter-windows', 'apple-ios', 'apple-macos', 'apple-watchos', 'apple-tvos', 'android', 'unity'], true), 'Platform type.')
+    ->param('type', null, new WhiteList([Origin::CLIENT_TYPE_WEB, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_LINUX, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_APPLE_IOS, Origin::CLIENT_TYPE_APPLE_MACOS,  Origin::CLIENT_TYPE_APPLE_WATCHOS, Origin::CLIENT_TYPE_APPLE_TVOS, Origin::CLIENT_TYPE_ANDROID, Origin::CLIENT_TYPE_UNITY], true), 'Platform type.')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
@@ -1070,7 +1071,7 @@ App::get('/v1/projects/:projectId/platforms')
 
         $response->dynamic(new Document([
             'platforms' => $platforms,
-            'sum' => count($platforms),
+            'total' => count($platforms),
         ]), Response::MODEL_PLATFORM_LIST);
     });
 
@@ -1294,7 +1295,7 @@ App::get('/v1/projects/:projectId/domains')
 
         $response->dynamic(new Document([
             'domains' => $domains,
-            'sum' => count($domains),
+            'total' => count($domains),
         ]), Response::MODEL_DOMAIN_LIST);
     });
 

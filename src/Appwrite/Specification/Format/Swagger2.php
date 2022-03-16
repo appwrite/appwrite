@@ -444,8 +444,11 @@ class Swagger2 extends Format
 
                 switch ($rule['type']) {
                     case 'string':
-                    case 'json':
                         $type = 'string';
+                        break;
+
+                    case 'json':
+                        $type = 'object';
                         break;
 
                     case 'integer':
@@ -469,7 +472,7 @@ class Swagger2 extends Format
 
                     default:
                         $type = 'object';
-                        $rule['type'] = ($rule['type']) ? $rule['type'] : 'none';
+                        $rule['type'] = ($rule['type']) ?: 'none';
 
                         if(\is_array($rule['type'])) {
                             if($rule['array']) {
@@ -494,6 +497,16 @@ class Swagger2 extends Format
                         break;
                 }
 
+                if ($rule['type'] == 'json') {
+                    $output['definitions'][$model->getType()]['properties'][$name] = [
+                        'type' => $type,
+                        'additionalProperties' => true,
+                        'description' => $rule['description'] ?? '',
+                        'x-example' => $rule['example'] ?? null,
+                    ];
+                    continue;
+                }
+
                 if($rule['array']) {
                     $output['definitions'][$model->getType()]['properties'][$name] = [
                         'type' => 'array',
@@ -508,14 +521,10 @@ class Swagger2 extends Format
                         $output['definitions'][$model->getType()]['properties'][$name]['items']['format'] = $format;
                     }
 
-                    if($items) {
-                        $output['definitions'][$model->getType()]['properties'][$name]['items'] = $items;
-                    }
                 } else {
                     $output['definitions'][$model->getType()]['properties'][$name] = [
                         'type' => $type,
                         'description' => $rule['description'] ?? '',
-                        //'default' => $rule['default'] ?? null,
                         'x-example' => $rule['example'] ?? null,
                     ];
 
@@ -523,9 +532,9 @@ class Swagger2 extends Format
                         $output['definitions'][$model->getType()]['properties'][$name]['format'] = $format;
                     }
 
-                    if($items) {
-                        $output['definitions'][$model->getType()]['properties'][$name]['items'] = $items;
-                    }
+                }
+                if($items) {
+                    $output['definitions'][$model->getType()]['properties'][$name]['items'] = $items;
                 }
                 if (!in_array($name, $required)) {
                     $output['definitions'][$model->getType()]['properties'][$name]['x-nullable'] = true;

@@ -36,6 +36,9 @@ abstract class Migration
      */
     public static array $versions = [
         '0.13.0' => 'V12',
+        '0.13.1' => 'V12',
+        '0.13.2' => 'V12',
+        '0.13.3' => 'V12',
     ];
 
     /**

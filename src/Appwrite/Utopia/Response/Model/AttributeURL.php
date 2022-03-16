@@ -12,6 +12,18 @@ class AttributeURL extends Attribute
         parent::__construct();
 
         $this
+            ->addRule('key', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Attribute Key.',
+                'default' => '',
+                'example' => 'githubUrl',
+            ])
+            ->addRule('type', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Attribute type.',
+                'default' => '',
+                'example' => 'string',
+            ])
             ->addRule('format', [
                 'type' => self::TYPE_STRING,
                 'description' => 'String format.',

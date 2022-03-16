@@ -1426,7 +1426,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'sum',
+                '$id' => 'total',
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
