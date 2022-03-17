@@ -287,6 +287,5 @@ abstract class Worker
             $backblazeAcl = 'private';
             return new BackBlaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
         }
-        
     }
 }
