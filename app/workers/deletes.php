@@ -10,6 +10,7 @@ use Executor\Executor;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Device\BackBlaze;
 use Utopia\Storage\Storage;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -562,6 +563,14 @@ class DeletesV1 extends Worker
                 $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
                 $doSpacesAcl = 'private';
                 $device = new DOSpaces(APP_STORAGE_UPLOADS . '/app-' . $projectId, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+                break;
+            case Storage::DEVICE_BACKBLAZE:
+                $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
+                $backblazeSecretKey = App::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
+                $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
+                $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
+                $backblazeAcl = 'private';
+                $device= new BackBlaze(APP_STORAGE_UPLOADS . '/app-' . $projectId, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
                 break;
         }
         

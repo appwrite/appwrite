@@ -55,6 +55,7 @@ use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Device\BackBlaze;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -836,6 +837,13 @@ function getDevice($root): Device {
             $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
             $doSpacesAcl = 'private';
             return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+        case Storage::DEVICE_BACKBLAZE:
+            $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
+            $backblazeSecretKey = App::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
+            $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
+            $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
+            $backblazeAcl = 'private';
+            return new BackBlaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
     }
 }
 
