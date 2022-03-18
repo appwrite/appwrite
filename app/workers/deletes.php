@@ -579,7 +579,7 @@ class DeletesV1 extends Worker
                 $wasabiRegion = App::getEnv('_APP_STORAGE_WASABI_REGION', '');
                 $wasabiBucket = App::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
                 $wasabiAcl = 'private';
-                return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
+                $device = new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
                 break;
         }
         
