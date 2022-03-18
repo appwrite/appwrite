@@ -947,13 +947,17 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         
         $contentType = in_array($mime, $outputs) ? $mime : $outputs['jpg'];
 
-        if(!empty($output) && \array_key_exists($output, $outputs)) {
-            $contentType = $outputs[$output];
+        if(empty($output)) {
+            if(empty($type)) {
+                $output = array_search($mime, $outputs) ?? 'jpg';
+            } else {
+                $output = $type;
+            }
         }
 
         if ($data) {
             return $response
-                ->setContentType($contentType)
+                ->setContentType((\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
                 ->addHeader('Expires', $date)
                 ->addHeader('X-Appwrite-Cache', 'hit')
                 ->send($data)
@@ -1011,7 +1015,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         ;
 
         $response
-            ->setContentType($outputs[$output])
+            ->setContentType((\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
             ->addHeader('Expires', $date)
             ->addHeader('X-Appwrite-Cache', 'miss')
             ->send($data)
