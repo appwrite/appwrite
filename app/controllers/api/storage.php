@@ -944,9 +944,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId() . DIRECTORY_SEPARATOR . $bucketId . DIRECTORY_SEPARATOR . $fileId)); // Limit file number or size
         $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
 
-        
-        $contentType = in_array($mime, $outputs) ? $mime : $outputs['jpg'];
-
         if(empty($output)) {
             if(empty($type)) {
                 $output = array_search($mime, $outputs) ?? 'jpg';
