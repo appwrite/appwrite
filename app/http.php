@@ -285,6 +285,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $log->addExtra('file', $th->getFile());
             $log->addExtra('line', $th->getLine());
             $log->addExtra('trace', $th->getTraceAsString());
+            $log->addExtra('detailedTrace', $th->getTrace());
             $log->addExtra('roles', Authorization::$roles);
 
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");

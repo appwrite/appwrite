@@ -95,6 +95,7 @@ function logError(Throwable $error, string $action, Utopia\Route $route = null)
         $log->addExtra('file', $error->getFile());
         $log->addExtra('line', $error->getLine());
         $log->addExtra('trace', $error->getTraceAsString());
+        $log->addExtra('detailedTrace', $error->getTrace());
 
         $log->setAction($action);
 
