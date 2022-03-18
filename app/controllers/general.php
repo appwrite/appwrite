@@ -321,6 +321,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
     $route = $utopia->match($request);
 
+    /** Rethrow PDO exceptions so the database connection can be returned to the pool correctly */
     if ($error instanceof PDOException) {
         throw $error;
     }
