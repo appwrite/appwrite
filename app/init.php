@@ -55,6 +55,7 @@ use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Device\Linode;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -836,6 +837,13 @@ function getDevice($root): Device {
             $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
             $doSpacesAcl = 'private';
             return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+        case Storage::DEVICE_LINODE:
+            $linodeAccessKey = App::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
+            $linodeSecretKey = App::getEnv('_APP_STORAGE_LINODE_SECRET', '');
+            $linodeRegion = App::getEnv('_APP_STORAGE_LINODE_REGION', '');
+            $linodeBucket = App::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
+            $linodeAcl = 'private';
+            return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
     }
 }
 

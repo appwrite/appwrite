@@ -1,3 +1,8 @@
+# Latest
+## Features
+### Storage
+- Support for Linode object storage
+
 # Version 0.13.3
 ## Bugs
 - Fixed search for terms that inlcude `@` characters

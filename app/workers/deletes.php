@@ -10,6 +10,7 @@ use Executor\Executor;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Storage;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -563,6 +564,13 @@ class DeletesV1 extends Worker
                 $doSpacesAcl = 'private';
                 $device = new DOSpaces(APP_STORAGE_UPLOADS . '/app-' . $projectId, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
                 break;
+            case Storage::DEVICE_LINODE:
+                $linodeAccessKey = App::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
+                $linodeSecretKey = App::getEnv('_APP_STORAGE_LINODE_SECRET', '');
+                $linodeRegion = App::getEnv('_APP_STORAGE_LINODE_REGION', '');
+                $linodeBucket = App::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
+                $linodeAcl = 'private';
+                return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
         }
         
         $device->deletePath($document->getId());
