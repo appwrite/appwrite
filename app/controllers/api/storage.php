@@ -944,10 +944,16 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId() . DIRECTORY_SEPARATOR . $bucketId . DIRECTORY_SEPARATOR . $fileId)); // Limit file number or size
         $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
 
-        $output = (empty($output)) ? ( empty($type) ? 'jpg' : $type ) : $output;
+        
+        $contentType = in_array($mime, $outputs) ? $mime : $outputs['jpg'];
+
+        if(!empty($output) && \array_key_exists($output, $outputs)) {
+            $contentType = $outputs[$output];
+        }
+
         if ($data) {
             return $response
-                ->setContentType((\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
+                ->setContentType($contentType)
                 ->addHeader('Expires', $date)
                 ->addHeader('X-Appwrite-Cache', 'hit')
                 ->send($data)
