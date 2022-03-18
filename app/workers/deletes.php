@@ -570,7 +570,7 @@ class DeletesV1 extends Worker
                 $linodeRegion = App::getEnv('_APP_STORAGE_LINODE_REGION', '');
                 $linodeBucket = App::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
                 $linodeAcl = 'private';
-                return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
+                $device= new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
                 break;
         }
         
