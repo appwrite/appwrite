@@ -519,7 +519,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_LINODE_REGION',
-                'description' => 'Linode object storage region. Required when storage adapter is set to Linode. You can find your region info for your space from Linode console.',
+                'description' => 'Linode object storage region. Required when storage adapter is set to Linode. You can find your region info from your Linode console.',
                 'introduction' => '0.13.0',
                 'default' => 'us-eas-1',
                 'required' => false,
