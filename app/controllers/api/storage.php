@@ -715,7 +715,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
         /** @var Appwrite\Stats\Stats $usage */
         /** @var string $mode */
 
-        $bucket = $dbForProject->getDocument('buckets', $bucketId);
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty()
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
@@ -738,9 +738,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
 
         if (!empty($cursor)) {
             if ($bucket->getAttribute('permission') === 'bucket') {
-                $cursorFile = Authorization::skip(function () use ($dbForProject, $bucket, $cursor) {
-                    return $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor);
-                });
+                $cursorFile = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor));
             } else {
                 $cursorFile = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor);
             }
@@ -757,9 +755,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
         }
 
         if ($bucket->getAttribute('permission') === 'bucket') {
-            $files = Authorization::skip(function () use ($dbForProject, $bucket, $queries, $limit, $offset, $cursor, $cursorDirection, $orderType) {
-                return $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection);
-            });
+            $files = Authorization::skip(fn () => $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection));
         } else {
             $files = $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection);
         }
@@ -799,7 +795,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
         /** @var Appwrite\Stats\Stats $usage */
         /** @var string $mode */
 
-        $bucket = $dbForProject->getDocument('buckets', $bucketId);
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty()
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
@@ -815,9 +811,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function () use ($dbForProject, $bucket, $fileId) {
-                return $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-            });
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         } else {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         }
@@ -825,10 +819,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
         if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
             throw new Exception('File not found', 404, Exception::STORAGE_FILE_NOT_FOUND);
         }
+
         $usage
             ->setParam('storage.files.read', 1)
             ->setParam('bucketId', $bucketId)
         ;
+
         $response->dynamic($file, Response::MODEL_FILE);
     });
 
@@ -879,7 +875,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception('Imagick extension is missing', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
-        $bucket = $dbForProject->getDocument('buckets', $bucketId);
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty()
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
@@ -907,9 +903,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         if ($bucket->getAttribute('permission') === 'bucket') {
             // skip authorization
-            $file = Authorization::skip(function () use ($dbForProject, $bucket, $fileId) {
-                return $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-            });
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         } else {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         }
@@ -1048,7 +1042,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         /** @var Utopia\Storage\Device $deviceFiles */
         /** @var string $mode */
 
-        $bucket = $dbForProject->getDocument('buckets', $bucketId);
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty()
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
@@ -1064,9 +1058,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         }
 
         if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucket) {
-                return $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-            });
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         } else {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         }
@@ -1193,7 +1185,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         /** @var Utopia\Storage\Device $deviceFiles */
         /** @var string $mode */
 
-        $bucket = $dbForProject->getDocument('buckets', $bucketId);
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty()
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
@@ -1209,9 +1201,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         }
 
         if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucket) {
-                return $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-            });
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         } else {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         }
@@ -1356,7 +1346,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         /** @var Appwrite\Event\Event $events */
         /** @var string $mode */
 
-        $bucket = $dbForProject->getDocument('buckets', $bucketId);
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
         $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; // By default set read permissions for user
         $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
 
@@ -1390,9 +1380,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucket) {
-                return $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-            });
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         } else {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         }
@@ -1401,18 +1389,15 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception('File not found', 404, Exception::STORAGE_FILE_NOT_FOUND);
         }
 
+        $file
+            ->setAttribute('$read', $read)
+            ->setAttribute('$write', $write)
+        ;
+
         if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucket, $file, $read, $write) {
-                return $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file
-                        ->setAttribute('$read', $read)
-                        ->setAttribute('$write', $write)
-                );
-            });
+            $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
         } else {
-            $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file
-                    ->setAttribute('$read', $read)
-                    ->setAttribute('$write', $write)
-            );
+            $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
         }
 
         $events->setParam('bucket', $bucket->getArrayCopy());
@@ -1462,7 +1447,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         /** @var Utopia\Storage\Device $deviceFiles */
         /** @var string $mode */
 
-        $bucket = $dbForProject->getDocument('buckets', $bucketId);
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty()
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
@@ -1478,9 +1463,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(function () use ($dbForProject, $fileId, $bucket) {
-                return $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-            });
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         } else {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         }
@@ -1506,9 +1489,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             $deviceLocal->delete($cacheDir, true);
 
             if ($bucket->getAttribute('permission') === 'bucket') {
-                $deleted = Authorization::skip(function () use ($dbForProject, $fileId, $bucket) {
-                    return $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
-                });
+                $deleted = Authorization::skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId));
             } else {
                 $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
             }

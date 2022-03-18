@@ -5,14 +5,20 @@ tasks:
   - init: docker-compose pull &&
       docker-compose build &&
       docker run --rm --interactive --tty --volume $PWD:/app composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts --prefer-dist
-    command: |
-      docker-compose up -d
 
 ports:
   - port: 8080
-    onOpen: ignore
+    onOpen: open-preview
     visibility: public
 
 vscode:
   extensions:
     - ms-azuretools.vscode-docker
+
+github:
+  # https://www.gitpod.io/docs/prebuilds#github-specific-configuration
+  prebuilds:
+    # enable for pull requests coming from forks (defaults to false)
+    pullRequestsFromForks: true
+    # add a check to pull requests (defaults to true)
+    addCheck: false

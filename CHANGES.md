@@ -1,3 +1,11 @@
+# Version 0.13.3
+## Bugs
+- Fixed search for terms that inlcude `@` characters
+- Fixed Bucket permissions
+- Fixed file upload error in UI
+- Fixed input field for float attributes in UI
+- Fixed `appwrite-executor` restart behavior in docker-compose.yml
+
 # Version 0.13.2
 ## Bugs
 - Fixed global issue with write permissions
