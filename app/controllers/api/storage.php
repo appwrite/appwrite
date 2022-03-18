@@ -945,11 +945,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
 
         if(empty($output)) {
-            if(empty($type)) {
-                $output = array_search($mime, $outputs) ?? 'jpg';
-            } else {
-                $output = $type;
-            }
+            $output = empty($type) ? (array_search($mime, $outputs) ?? 'jpg') : $type;
         }
 
         if ($data) {
