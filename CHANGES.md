@@ -1,7 +1,7 @@
 # Latest
 ## Features
 ### Storage
-- Support for Linode object storage
+- Support for Linode object storage and Wasabi
 
 # Version 0.13.3
 ## Bugs

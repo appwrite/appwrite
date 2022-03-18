@@ -56,6 +56,7 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Linode;
+use Utopia\Storage\Device\Wasabi;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -844,6 +845,13 @@ function getDevice($root): Device {
             $linodeBucket = App::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
             $linodeAcl = 'private';
             return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
+        case Storage::DEVICE_WASABI:
+            $wasabiAccessKey = App::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
+            $wasabiSecretKey = App::getEnv('_APP_STORAGE_WASABI_SECRET', '');
+            $wasabiRegion = App::getEnv('_APP_STORAGE_WASABI_REGION', '');
+            $wasabiBucket = App::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
+            $wasabiAcl = 'private';
+            return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
     }
 }
 

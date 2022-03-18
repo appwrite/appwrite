@@ -11,6 +11,7 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Linode;
+use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Storage;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -571,6 +572,14 @@ class DeletesV1 extends Worker
                 $linodeBucket = App::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
                 $linodeAcl = 'private';
                 return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
+           case Storage::DEVICE_WASABI:
+                $wasabiAccessKey = App::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
+                $wasabiSecretKey = App::getEnv('_APP_STORAGE_WASABI_SECRET', '');
+                $wasabiRegion = App::getEnv('_APP_STORAGE_WASABI_REGION', '');
+                $wasabiBucket = App::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
+                $wasabiAcl = 'private';
+                return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
+                break;
         }
         
         $device->deletePath($document->getId());
