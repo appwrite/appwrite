@@ -1,0 +1,534 @@
+---
+version: v1beta11
+
+vars:
+  - name: BUILD_TESTING
+    default: false
+    source: env
+  - name: BUILD_DEBUG
+    default: false
+    source: env
+  - name: BUILD_VERSION
+    default: dev
+    source: env
+  - name: NAMESPACE
+    question: What namespace is the project located in ?
+    default: appwrite
+  - name: IMAGE_REPOSITORY
+    question: Where is the image repository located ?
+    source: env
+  - name: IMAGE_NAME
+    default: devspace/${NAMESPACE}
+    source: env
+  - name: _APP_ENV
+    source: env
+  - name: _APP_LOCALE
+    source: env
+  - name: _APP_WORKER_PER_CORE
+    source: env
+  - name: _APP_CONSOLE_WHITELIST_ROOT
+    source: env
+  - name: _APP_CONSOLE_WHITELIST_EMAILS
+    source: env
+  - name: _APP_CONSOLE_WHITELIST_IPS
+    source: env
+  - name: _APP_SYSTEM_EMAIL_NAME
+    source: env
+  - name: _APP_SYSTEM_EMAIL_ADDRESS
+    source: env
+  - name: _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+    source: env
+  - name: _APP_SYSTEM_RESPONSE_FORMAT
+    source: env
+  - name: _APP_OPTIONS_ABUSE
+    source: env
+  - name: _APP_OPTIONS_FORCE_HTTPS
+    source: env
+  - name: _APP_OPENSSL_KEY_V1
+    source: env
+  - name: _APP_DOMAIN
+    source: env
+  - name: _APP_DOMAIN_TARGET
+    source: env
+  - name: _APP_REDIS_HOST
+    default: redis.${NAMESPACE}.svc.cluster.local
+    source: env
+  - name: _APP_REDIS_PORT
+    default: "6379"
+    source: env
+  - name: _APP_REDIS_USER
+    default: ""
+    source: env
+  - name: _APP_REDIS_PASS
+    default: ""
+    source: env
+  - name: _APP_DB_HOST
+    default: mysql.${NAMESPACE}.svc.cluster.local
+    source: env
+  - name: _APP_DB_PORT
+    default: "3306"
+    source: env
+  - name: _APP_DB_SCHEMA
+    source: env
+  - name: _APP_DB_USER
+    source: env
+  - name: _APP_DB_PASS
+    source: env
+  - name: _APP_STORAGE_ANTIVIRUS
+    source: env
+  - name: _APP_STORAGE_ANTIVIRUS_HOST
+    source: env
+  - name: _APP_STORAGE_ANTIVIRUS_PORT
+    source: env
+  - name: _APP_STORAGE_DEVICE
+    source: env
+  - name: _APP_STORAGE_S3_ACCESS_KEY
+    source: env
+  - name: _APP_STORAGE_S3_SECRET
+    source: env
+  - name: _APP_STORAGE_S3_REGION
+    source: env
+  - name: _APP_STORAGE_S3_BUCKET
+    source: env
+  - name: _APP_STORAGE_DO_SPACES_ACCESS_KEY
+    source: env
+  - name: _APP_STORAGE_DO_SPACES_SECRET
+    source: env
+  - name: _APP_STORAGE_DO_SPACES_REGION
+    source: env
+  - name: _APP_STORAGE_DO_SPACES_BUCKET
+    source: env
+  - name: _APP_SMTP_HOST
+    source: env
+  - name: _APP_SMTP_PORT
+    source: env
+  - name: _APP_SMTP_SECURE
+    source: env
+  - name: _APP_SMTP_USERNAME
+    source: env
+  - name: _APP_SMTP_PASSWORD
+    source: env
+  - name: _APP_USAGE_STATS
+    source: env
+  - name: _APP_STORAGE_LIMIT
+    source: env
+  - name: _APP_FUNCTIONS_SIZE_LIMIT
+    source: env
+  - name: _APP_FUNCTIONS_TIMEOUT
+    source: env
+  - name: _APP_FUNCTIONS_BUILD_TIMEOUT
+    source: env
+  - name: _APP_FUNCTIONS_CONTAINERS
+    source: env
+  - name: _APP_FUNCTIONS_CPUS
+    source: env
+  - name: _APP_FUNCTIONS_MEMORY
+    source: env
+  - name: _APP_FUNCTIONS_MEMORY_SWAP
+    source: env
+  - name: _APP_FUNCTIONS_RUNTIMES
+    source: env
+  - name: _APP_EXECUTOR_SECRET
+    source: env
+  - name: _APP_LOGGING_PROVIDER
+    source: env
+  - name: _APP_LOGGING_CONFIG
+    source: env
+  - name: _APP_INFLUXDB_HOST
+    default: influxdb.${NAMESPACE}.svc.cluster.local
+    source: env
+  - name: _APP_INFLUXDB_PORT
+    default: "8086"
+    source: env
+
+images:
+  php:
+    image: ${IMAGE_REPOSITORY}/${IMAGE_NAME}
+    dockerfile: ./Dockerfile
+    context: ./
+    injectRestartHelper: true
+    rebuildStrategy: ignoreContextChanges
+    build:
+      kaniko:
+        cache: false
+        options:
+          buildArgs:
+            TESTING: ${BUILD_TESTING}
+            DEBUG: ${BUILD_DEBUG}
+            VERSION: ${BUILD_VERSION}
+
+deployments:
+  - name: appwrite
+    helm:
+      componentChart: true
+      values:
+        replicas: 1
+        service:
+          ports:
+            - port: 80
+        containers:
+          - image: ${IMAGE_REPOSITORY}/${IMAGE_NAME}
+            entryPoint:
+              - php
+              - -e
+              - app/http.php
+              - -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
+            env:
+              - name: _APP_ENV
+                value: ${_APP_ENV}
+              - name: _APP_DB_HOST
+                value: ${_APP_DB_HOST}
+              - name: _APP_DB_PORT
+                value: ${_APP_DB_PORT}
+              - name: _APP_DB_SCHEMA
+                value: ${_APP_DB_SCHEMA}
+              - name: _APP_DB_USER
+                value: ${_APP_DB_USER}
+              - name: _APP_DB_PASS
+                value: ${_APP_DB_PASS}
+              - name: _APP_INFLUXDB_HOST
+                value: ${_APP_INFLUXDB_HOST}
+              - name: _APP_INFLUXDB_PORT
+                value: ${_APP_INFLUXDB_PORT}
+              - name: _APP_USAGE_SYNC_INTERVAL
+                value: ${_APP_USAGE_SYNC_INTERVAL}
+            volumeMounts:
+              - containerPath: /usr/src/code/app
+                volume:
+                  name: appwrite-app
+                  subPath: /app
+                  readOnly: false
+              - containerPath: /usr/src/code/src
+                volume:
+                  name: appwrite-src
+                  subPath: /src
+                  readOnly: false
+              - containerPath: /usr/local/dev
+                volume:
+                  name: appwrite-dev
+                  subPath: /dev
+                  readOnly: false
+              - containerPath: /usr/src/code/public
+                volume:
+                  name: appwrite-public
+                  subPath: /public
+                  readOnly: false
+              - containerPath: /usr/src/code/docs
+                volume:
+                  name: appwrite-docs
+                  subPath: /docs
+                  readOnly: false
+              - containerPath: /usr/src/code/tests
+                volume:
+                  name: appwrite-tests
+                  subPath: /tests
+                  readOnly: false
+              - containerPath: /storage/functions
+                volume:
+                  name: appwrite-functions
+                  subPath: /functions
+                  readOnly: false
+              - containerPath: /storage/certificates
+                volume:
+                  name: appwrite-certificates
+                  subPath: /certificates
+                  readOnly: false
+              - containerPath: /storage/config
+                volume:
+                  name: appwrite-config
+                  subPath: /config
+                  readOnly: false
+              - containerPath: /storage/cache
+                volume:
+                  name: appwrite-cache
+                  subPath: /cache
+                  readOnly: false
+              - containerPath: /storage/uploads
+                volume:
+                  name: appwrite-uploads
+                  subPath: /uploads
+                  readOnly: false
+        volumes:
+          - name: appwrite-app
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+          - name: appwrite-src
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+          - name: appwrite-dev
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+          - name: appwrite-public
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+          - name: appwrite-docs
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+          - name: appwrite-tests
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+          - name: appwrite-functions
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+          - name: appwrite-certificates
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+          - name: appwrite-config
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+          - name: appwrite-cache
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+          - name: appwrite-upload
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+
+
+  - name: appwrite-realtime
+  - name: appwrite-worker-audits
+  - name: appwrite-worker-webhooks
+  - name: appwrite-worker-deletes
+  - name: appwrite-worker-database
+  - name: appwrite-worker-builds
+  - name: appwrite-worker-certificates
+  - name: appwrite-worker-functions
+  - name: appwrite-executor
+  - name: appwrite-worker-mails
+  - name: appwrite-maintenance
+    helm:
+      componentChart: true
+      values:
+        replicas: 1
+        containers:
+          - image: ${IMAGE_REPOSITORY}/${IMAGE_NAME}
+            env:
+              - name: _APP_ENV
+                value: ${_APP_ENV}
+              - name: _APP_DB_HOST
+                value: ${_APP_DB_HOST}
+              - name: _APP_DB_PORT
+                value: ${_APP_DB_PORT}
+              - name: _APP_DB_SCHEMA
+                value: ${_APP_DB_SCHEMA}
+              - name: _APP_DB_USER
+                value: ${_APP_DB_USER}
+              - name: _APP_DB_PASS
+                value: ${_APP_DB_PASS}
+              - name: _APP_INFLUXDB_HOST
+                value: ${_APP_INFLUXDB_HOST}
+              - name: _APP_INFLUXDB_PORT
+                value: ${_APP_INFLUXDB_PORT}
+              - name: _APP_USAGE_SYNC_INTERVAL
+                value: ${_APP_USAGE_SYNC_INTERVAL}
+            volumeMounts:
+              - containerPath: /usr/src/code/app
+                volume:
+                  name: appwrite-app
+                  subPath: /app
+                  readOnly: false
+              - containerPath: /usr/src/code/src
+                volume:
+                  name: appwrite-src
+                  subPath: /src
+                  readOnly: false
+        volumes:
+          - name: appwrite-app
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+          - name: appwrite-src
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+
+  - name: appwrite-usage
+    helm:
+      componentChart: true
+      values:
+        replicas: 1
+        containers:
+          - image: ${IMAGE_REPOSITORY}/${IMAGE_NAME}
+            env:
+              - name: _APP_ENV
+                value: ${_APP_ENV}
+              - name: _APP_DB_HOST
+                value: ${_APP_DB_HOST}
+              - name: _APP_DB_PORT
+                value: ${_APP_DB_PORT}
+              - name: _APP_DB_SCHEMA
+                value: ${_APP_DB_SCHEMA}
+              - name: _APP_DB_USER
+                value: ${_APP_DB_USER}
+              - name: _APP_DB_PASS
+                value: ${_APP_DB_PASS}
+              - name: _APP_INFLUXDB_HOST
+                value: ${_APP_INFLUXDB_HOST}
+              - name: _APP_INFLUXDB_PORT
+                value: ${_APP_INFLUXDB_PORT}
+              - name: _APP_USAGE_SYNC_INTERVAL
+                value: ${_APP_USAGE_SYNC_INTERVAL}
+            volumeMounts:
+              - containerPath: /usr/src/code/app
+                volume:
+                  name: appwrite-app
+                  subPath: /app
+                  readOnly: false
+              - containerPath: /usr/src/code/src
+                volume:
+                  name: appwrite-src
+                  subPath: /src
+                  readOnly: false
+              - containerPath: /usr/local/dev
+                volume:
+                  name: appwrite-dev
+                  subPath: /dev
+                  readOnly: false
+        volumes:
+          - name: appwrite-app
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+          - name: appwrite-src
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+          - name: appwrite-dev
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+
+  - name: appwrite-schedule
+    helm:
+      componentChart: true
+      values:
+        replicas: 1
+        containers:
+          - image: ${IMAGE_REPOSITORY}/${IMAGE_NAME}
+            env:
+              - name: _APP_ENV
+                value: ${_APP_ENV}
+              - name: _APP_REDIS_HOST
+                value: ${APP_REDIS_HOST}
+              - name: _APP_REDIS_PORT
+                value: ${APP_REDIS_PORT}
+              - name: _APP_REDIS_USER
+                value: ${APP_REDIS_USER}
+              - name: _APP_REDIS_PASS
+                value: ${APP_REDIS_PASS}
+            volumeMounts:
+              - containerPath: /usr/src/code/app
+                volume:
+                  name: appwrite-app
+                  subPath: /app
+                  readOnly: false
+              - containerPath: /usr/src/code/src
+                volume:
+                  name: appwrite-src
+                  subPath: /src
+                  readOnly: false
+        volumes:
+          - name: appwrite-app
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+          - name: appwrite-src
+            size: 20Gi
+            accessModes: [ ReadWriteMany ]
+
+  - name: mariadb
+    helm:
+      chart:
+        repo: https://charts.bitnami.com/bitnami
+        name: mariadb-galera
+      values:
+        replicaCount: 1
+        rootUser:
+          user: root
+          password: ${_APP_DB_PASS}
+        db:
+          user: ${_APP_DB_USER}
+          password: ${_APP_DB_PASS}
+          name: appwrite
+        persistence:
+          size: 20Gi
+        service:
+          ports:
+            - port: 3306
+
+
+  - name: redis
+    namespace: ${NAMESPACE}
+    helm:
+      chart:
+        repo: https://charts.bitnami.com/bitnami
+        name: redis
+      values:
+        auth:
+          enabled: false
+          sentinel: false
+          password: ${_APP_REDIS_PASS}
+        architecture: replication
+        replica:
+          replicaCount: 2
+        service:
+          ports:
+          - port: 6379
+        persistence:
+          size: 10Gi
+        master:
+          disableCommands: []
+        sentinel:
+          enabled: true
+          masterSet: 'appwrite'
+      wait: true
+
+
+  - name: influxdb
+    helm:
+      componentChart: true
+      values:
+        replicas: 1
+        service:
+          ports:
+            - port: 8086
+        containers:
+          - image: appwrite/influxdb:1.4.0
+            volumeMounts:
+              - containerPath: /var/lib/influxdb
+                volume:
+                  name: influxdb-data
+                  subPath: /influxdb
+                  readOnly: false
+        volumes:
+          - name: influxdb-data
+            size: 20Gi
+
+  - name: telegraf
+    helm:
+      componentChart: true
+      values:
+        replicas: 1
+        containers:
+          - image: appwrite/telegraf:1.3.0
+            env:
+              - name: _APP_INFLUXDB_HOST
+                value: ${_APP_INFLUXDB_HOST}
+              - name: _APP_INFLUXDB_PORT
+                value: ${_APP_INFLUXDB_PORT}
+    # appwrite/mailcatcher:1.0.0
+  - name: maildev
+    helm:
+      componentChart: true
+      values:
+        replicas: 1
+        service:
+          ports:
+            - port: 1080
+        containers:
+          - image: appwrite/maildev:1.0.0
+
+    # appwrite/requestcatcher:1.0.0
+  - name: request-catcher
+    helm:
+      componentChart: true
+      values:
+        replicas: 1
+        service:
+          ports:
+            - port: 5000
+        containers:
+          - image: appwrite/requestcatcher:1.0.0

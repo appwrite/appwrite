@@ -10,3 +10,7 @@
 debug/
 app/sdks
 dev/yasd_init.php
+
+
+# Ignore DevSpace cache and log folder
+.devspace/
