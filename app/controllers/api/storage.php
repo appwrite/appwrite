@@ -945,6 +945,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
 
         if(empty($output)) {
+            // when file extension is not provided and the mime type is not one of our supported outputs
+            // we fallback to `jpg` output format
             $output = empty($type) ? (array_search($mime, $outputs) ?? 'jpg') : $type;
         }
 
