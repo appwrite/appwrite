@@ -80,19 +80,14 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                 <div class="box margin-bottom">
                                     <ul data-ls-loop="project-function-deployments.deployments" data-ls-as="deployment" class="list">
                                         <li class="clear">
-                                            <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-stderr-{{deployment.$id}}">
+                                            <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-{{deployment.$id}}">
                                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                                <h2>Build Error Log</h2>
+                                                <h2 data-ls-if="{{deployment.status}} == 'failed'">Build Error Log</h2>
 
-                                                <div class="margin-bottom">
+                                                <div class="margin-bottom" data-ls-if="{{deployment.status}} == 'failed'">
                                                     <input type="hidden" data-ls-bind="{{deployment.buildStderr}}" data-forms-code="bash" data-lang="bash" data-lang-label="Bash" />
                                                 </div>
-
-                                                <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                                            </div>
-                                            <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-stdout-{{deployment.$id}}">
-                                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                                                 <h2>Build Log</h2>
 
@@ -148,8 +143,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                                 <span data-ls-if="{{deployment.status}} == 'processing' || {{deployment.status}} == 'building'" style="color: var(--config-color-info)" class="pull-start" data-ls-bind="{{deployment.status}}"></span>
                                                 <span class="pull-start" data-ls-bind="&nbsp; | &nbsp; Created {{deployment.dateCreated|timeSince}} &nbsp; | &nbsp; {{deployment.size|humanFileSize}}{{deployment.size|humanFileUnit}}"></span>
 
-                                                <span data-ls-if="{{deployment.status}} == 'failed'">&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-stderr-{{deployment.$id}}">Logs</button></span>
-                                                <span data-ls-if="{{deployment.status}} == 'ready'">&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-stdout-{{deployment.$id}}">Logs</button></span>
+                                                <span>&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-{{deployment.$id}}"> Logs</button></span>
 
                                                 <form data-ls-if="{{deployment.$id}} !== {{project-function.deployment}}" name="functions.deleteDeployment" class="pull-start"
                                                     data-analytics
