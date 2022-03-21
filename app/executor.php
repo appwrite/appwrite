@@ -283,8 +283,8 @@ App::post('/v1/runtimes')
             $endTime = \time();
             $container = array_merge($container, [
                 'status' => 'ready',
-                'stdout' => \utf8_encode($stdout),
-                'stderr' => \utf8_encode($stderr),
+                'stdout' => \mb_substr(\utf8_encode($stdout), 0, 1048576), // Limit to 1MB
+                'stderr' => \mb_substr(\utf8_encode($stderr), 0, 1048576), // Limit to 1MB
                 'startTime' => $startTime,
                 'endTime' => $endTime,
                 'duration' => $endTime - $startTime,
@@ -501,8 +501,8 @@ App::post('/v1/execution')
             $execution = [
                 'status' => $functionStatus,
                 'statusCode' => $statusCode,
-                'stdout' => \utf8_encode(\mb_substr($stdout, -16384)),
-                'stderr' => \utf8_encode(\mb_substr($stderr, -16384)),
+                'stdout' => \mb_substr(\utf8_encode($stdout), 0, 1048576), // Limit to 1MB
+                'stderr' => \mb_substr(\utf8_encode($stderr), 0, 1048576), // Limit to 1MB
                 'time' => $executionTime,
             ];
 
