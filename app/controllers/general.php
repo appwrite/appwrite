@@ -173,6 +173,10 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
      */
     if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
         if ($request->getProtocol() !== 'https') {
+            if($request->getMethod() !== Request::METHOD_GET) {
+                throw new Exception('HTTPS communication required.', 500, Exception::GENERAL_FORCED_HTTPS_IGNORED);
+            }
+
             return $response->redirect('https://'.$request->getHostname().$request->getURI());
         }
 

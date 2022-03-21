@@ -78,6 +78,11 @@ return [
         'description' => 'An internal server error occurred.',
         'code' => 500,
     ],
+    Exception::GENERAL_FORCED_HTTPS_IGNORED => [
+        'name' => Exception::GENERAL_FORCED_HTTPS_IGNORED,
+        'description' => 'Appwrite instance forces secure communication. Switch to HTTPS protocol in your endpoint.',
+        'code' => 500, 
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
