@@ -34,7 +34,7 @@ services:
     networks:
       - gateway
       - appwrite
-  
+
   appwrite:
     container_name: appwrite
     build:
@@ -88,8 +88,8 @@ services:
       - -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
     environment:
       - _APP_ENV
-      - _APP_LOCALE
       - _APP_WORKER_PER_CORE
+      - _APP_LOCALE
       - _APP_CONSOLE_WHITELIST_ROOT
       - _APP_CONSOLE_WHITELIST_EMAILS
       - _APP_CONSOLE_WHITELIST_IPS
@@ -111,6 +111,15 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_SMTP_HOST
+      - _APP_SMTP_PORT
+      - _APP_SMTP_SECURE
+      - _APP_SMTP_USERNAME
+      - _APP_SMTP_PASSWORD
+      - _APP_USAGE_STATS
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
+      - _APP_STORAGE_LIMIT
       - _APP_STORAGE_ANTIVIRUS
       - _APP_STORAGE_ANTIVIRUS_HOST
       - _APP_STORAGE_ANTIVIRUS_PORT
@@ -123,13 +132,6 @@ services:
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
       - _APP_STORAGE_DO_SPACES_BUCKET
-      - _APP_SMTP_HOST
-      - _APP_SMTP_PORT
-      - _APP_SMTP_SECURE
-      - _APP_SMTP_USERNAME
-      - _APP_SMTP_PASSWORD
-      - _APP_USAGE_STATS
-      - _APP_STORAGE_LIMIT
       - _APP_FUNCTIONS_SIZE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_BUILD_TIMEOUT
@@ -141,6 +143,12 @@ services:
       - _APP_EXECUTOR_SECRET
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_STATSD_HOST
+      - _APP_STATSD_PORT
+      - _APP_MAINTENANCE_INTERVAL
+      - _APP_MAINTENANCE_RETENTION_EXECUTION
+      - _APP_MAINTENANCE_RETENTION_ABUSE
+      - _APP_MAINTENANCE_RETENTION_AUDIT
 
   appwrite-realtime:
     entrypoint: realtime
@@ -205,6 +213,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -233,6 +242,7 @@ services:
       - request-catcher
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -248,6 +258,9 @@ services:
       context: .
     networks:
       - appwrite
+    depends_on:
+      - redis
+      - mariadb
     volumes: 
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -256,11 +269,9 @@ services:
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - mariadb
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -299,6 +310,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -310,7 +322,7 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-  
+
   appwrite-worker-builds:
     entrypoint: worker-builds
     container_name: appwrite-worker-builds
@@ -326,6 +338,8 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
+      - _APP_EXECUTOR_SECRET
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -337,7 +351,6 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_EXECUTOR_SECRET
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates
@@ -346,16 +359,17 @@ services:
       context: .
     networks:
       - appwrite
+    depends_on:
+      - redis
+      - mariadb
     volumes: 
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - mariadb
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN_TARGET
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
@@ -386,6 +400,7 @@ services:
       - appwrite-executor
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -423,8 +438,13 @@ services:
       - appwrite-functions:/storage/functions:rw
       - appwrite-builds:/storage/builds:rw
       - /tmp:/tmp:rw
+    depends_on:
+      - redis
+      - mariadb
+      - appwrite
     environment:
       - _APP_ENV
+      - _APP_VERSION
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_BUILD_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
@@ -465,6 +485,7 @@ services:
       # - smtp
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_REDIS_HOST
@@ -493,6 +514,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -520,6 +542,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -527,7 +550,11 @@ services:
       - _APP_DB_PASS
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
-      - _APP_USAGE_SYNC_INTERVAL
+      - _APP_USAGE_AGGREGATION_INTERVAL
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
 
   appwrite-schedule:
     entrypoint: schedule
@@ -558,9 +585,9 @@ services:
     ports:
       - "3306:3306"
     environment:
-      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
-      - MYSQL_USER=user
+      - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
     command: 'mysqld --innodb-flush-method=fsync' # add ' --query_cache_size=0' for DB tests
     # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
@@ -594,9 +621,9 @@ services:
   #     - appwrite
   #   volumes:
   #     - appwrite-uploads:/storage/uploads
-      
+
   influxdb:
-    image: appwrite/influxdb:1.4.0
+    image: appwrite/influxdb:1.5.0
     container_name: appwrite-influxdb
     networks:
       - appwrite
@@ -604,7 +631,7 @@ services:
       - appwrite-influxdb:/var/lib/influxdb:rw
 
   telegraf:
-    image: appwrite/telegraf:1.3.0
+    image: appwrite/telegraf:1.4.0
     container_name: appwrite-telegraf
     networks:
       - appwrite
@@ -674,7 +701,7 @@ services:
   #     - RESQUE_WEB_HTTP_BASIC_AUTH_PASSWORD=password
 
   # chronograf:
-  #   image: chronograf:1.5
+  #   image: chronograf:1.6
   #   container_name: appwrite-chronograf
   #   restart: unless-stopped
   #   networks:
