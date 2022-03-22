@@ -918,7 +918,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
 
-        if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > APP_LIMIT_PREVIEW) {
+        if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) App::getEnv('_APP_STORAGE_PREVIEW_LIMIT', 20000000)) {
             if(!\in_array($mime, $inputs)) {
                 $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
             } else {
@@ -944,9 +944,13 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId() . DIRECTORY_SEPARATOR . $bucketId . DIRECTORY_SEPARATOR . $fileId)); // Limit file number or size
         $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
 
-        if ($data) {
-            $output = (empty($output)) ? $type : $output;
+        if(empty($output)) {
+            // when file extension is not provided and the mime type is not one of our supported outputs
+            // we fallback to `jpg` output format
+            $output = empty($type) ? (array_search($mime, $outputs) ?? 'jpg') : $type;
+        }
 
+        if ($data) {
             return $response
                 ->setContentType((\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
                 ->addHeader('Expires', $date)
@@ -996,8 +1000,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             $image->setRotation(($rotation + 360) % 360);
         }
 
-        $output = (empty($output)) ? $type : $output;
-
         $data = $image->output($output, $quality);
 
         $cache->save($key, $data);
@@ -1008,7 +1010,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         ;
 
         $response
-            ->setContentType($outputs[$output])
+            ->setContentType((\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
             ->addHeader('Expires', $date)
             ->addHeader('X-Appwrite-Cache', 'miss')
             ->send($data)
