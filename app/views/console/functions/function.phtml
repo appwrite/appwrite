@@ -86,13 +86,15 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                                 <h2 data-ls-if="{{deployment.status}} == 'failed'">Build Error Log</h2>
 
                                                 <div class="margin-bottom" data-ls-if="{{deployment.status}} == 'failed'">
-                                                    <input type="hidden" data-ls-bind="{{deployment.buildStderr}}" data-forms-code="bash" data-lang="bash" data-lang-label="Bash" />
+                                                    <input type="hidden"  data-ls-if="({{deployment.buildStderr.length}})" data-ls-bind="{{deployment.buildStderr}}" data-forms-code="bash" data-lang="bash" data-lang-label="Bash" />
+                                                    <input type="hidden"  data-ls-if="(!{{deployment.buildStderr.length}})" value="No output was logged." data-forms-code="bash" data-lang="bash" data-lang-label="Bash" />
                                                 </div>
 
                                                 <h2>Build Log</h2>
 
                                                 <div class="margin-bottom">
-                                                    <input type="hidden" data-ls-bind="{{deployment.buildStdout}}" data-forms-code="bash" data-lang="bash" data-lang-label="Bash" />
+                                                    <input type="hidden" data-ls-if="({{deployment.buildStdout.length}})" data-ls-bind="{{deployment.buildStdout}}" data-forms-code="bash" data-lang="bash" data-lang-label="Bash" />
+                                                    <input type="hidden" data-ls-if="(!{{deployment.buildStdout.length}})" data-forms-code="bash" data-lang="bash" data-lang-label="Bash" value="No output was logged." />
                                                 </div>
 
                                                 <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
