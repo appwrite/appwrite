@@ -119,6 +119,40 @@
         </form>
     </div>
 
+    <div data-ui-modal class="modal width-medium box close" data-button-hide="on" data-open-event="open-update-verification">
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
+        
+        <h2>Update Verification Status</h2>
+
+        <form name="users.updateVerification"
+            data-analytics
+            data-analytics-activity
+            data-analytics-event="submit"
+            data-analytics-category="console"
+            data-analytics-label="Update Verification Status"
+            data-service="users.updateVerification"
+            data-scope="sdk"
+            data-event="submit"
+            data-success="trigger,alert"
+            data-success-param-alert-text="User verification status was updated successfully"
+            data-success-param-trigger-events="users.update"
+            data-failure="alert"
+            data-failure-param-alert-text="Failed to update user verification status"
+            data-failure-param-alert-classname="error"
+            data-ls-attrs="x-init=verificationStatus = {{user.emailVerification}}" x-data="{verificationStatus: false}">
+            
+            <input type="hidden" disabled name="userId" data-ls-bind="{{user.$id}}">
+
+            <input x-bind:checked="verificationStatus" name="emailVerification" id="emailVerification" class="button switch" type="checkbox" /> &nbsp; Verification status <span class="tooltip" data-tooltip="Mark whether this user is verified or not."><i class="icon-info-circled"></i></span>
+
+            <hr />
+
+            <footer>
+                <button type="submit" class="">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+            </footer>
+        </form>
+    </div>
+
     <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-json">
         <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
         
@@ -236,6 +270,7 @@
                         </div>
 
                         <ul class="margin-bottom-large text-fade text-size-small">
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-update-verification" class="link text-size-small">Update Verification Status</button></li>
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-update-name" class="link text-size-small">Update name</button></li>
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-update-email" class="link text-size-small">Update Email</button></li>
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-update-password" class="link text-size-small">Update Password</button></li>
