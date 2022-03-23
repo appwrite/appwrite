@@ -2,6 +2,7 @@
 
 ## Features
 - Added `detailedTrace` to Logger events
+- Added new `_APP_STORAGE_PREVIEW_LIMIT` environment variable to configure maximum preview file size
 
 ## Bugs
 - Fixed missing volume mount in Docker Compose
@@ -11,6 +12,7 @@
 - Fixed GitHub issue URL in Console
 - Fixed double PDOException logging
 - Fixed functions cleanup when container is already initialized
+- Fixed float input precision in Console
 
 # Version 0.13.3
 ## Bugs
