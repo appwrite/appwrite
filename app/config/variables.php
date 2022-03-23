@@ -405,7 +405,7 @@ return [
             [
                 'name' => '_APP_STORAGE_PREVIEW_LIMIT',
                 'description' => 'Maximum file size allowed for file image preview. The default value is 20MB. You should pass your size limit value in bytes.',
-                'introduction' => '0.14.0',
+                'introduction' => '0.13.4',
                 'default' => '20000000',
                 'required' => false,
                 'question' => '',
