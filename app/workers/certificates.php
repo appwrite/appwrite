@@ -11,6 +11,8 @@ use Utopia\Domains\Domain;
 
 require_once __DIR__.'/../init.php';
 
+Authorization::disable();
+
 Console::title('Certificates V1 Worker');
 Console::success(APP_NAME . ' certificates worker v1 has started');
 
@@ -39,8 +41,6 @@ class CertificatesV1 extends Worker
          *  3.4. Set retry on failure
          *  3.5. Schedule to renew certificate in 60 days
          */
-
-        Authorization::disable();
 
         // Args
         $document = $this->args['document'];
@@ -206,8 +206,6 @@ class CertificatesV1 extends Worker
             'validateTarget' => $validateTarget,
             'validateCNAME' => $validateCNAME,
         ]);  // Async task rescheduale
-
-        Authorization::reset();
     }
 
     public function shutdown(): void
