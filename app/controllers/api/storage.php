@@ -376,7 +376,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         /** @var Utopia\Storage\Device $deviceLocal */
         /** @var string $mode */
 
-        $bucket = $dbForProject->getDocument('buckets', $bucketId);
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty()
             || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
