@@ -307,9 +307,24 @@ App::post('/v1/runtimes')
             Console::error('Build failed: ' . $th->getMessage() . $stdout);
             throw new Exception($th->getMessage() . $stdout, 500);
         } finally {
-            if (!empty($containerId) && $remove) {
-                $orchestration->remove($containerId, true);
+            // Container cleanup
+            if($remove) {
+                if (!empty($containerId)) {
+                    // If container properly created
+                    $orchestration->remove($containerId, true);
+                } else {
+                    // If whole creation failed, but container might have been initialized
+                    try {
+                        // Try to remove with contaier name instead of ID
+                        $orchestration->remove($runtimeId, true);
+                    } catch (Throwable $th) {
+                        // If fails, means initialization also failed.
+                        // Contianer is not there, no need to remove
+                    }
+                }
             }
+
+            // Release orchestration back to pool, we are done with it
             $orchestrationPool->put($orchestration);
         }
 
