@@ -18,8 +18,6 @@ use Utopia\Audit\Audit;
 
 require_once __DIR__ . '/../init.php';
 
-Authorization::disable();
-
 Console::title('Deletes V1 Worker');
 Console::success(APP_NAME . ' deletes worker v1 has started' . "\n");
 
@@ -40,6 +38,8 @@ class DeletesV1 extends Worker
 
     public function run(): void
     {
+        Authorization::disable();
+
         $projectId = $this->args['projectId'] ?? '';
         $type = $this->args['type'] ?? '';
 
@@ -113,6 +113,8 @@ class DeletesV1 extends Worker
                 Console::error('No delete operation for type: ' . $type);
                 break;
         }
+
+        Authorization::reset();
     }
 
     public function shutdown(): void
@@ -531,6 +533,13 @@ class DeletesV1 extends Worker
         $checkTraversal = realpath($directory) === $directory;
 
         if ($domain && $checkTraversal && is_dir($directory)) {
+            // Delete certificate document, so Appwrite is aware of change
+            if(isset($document['certificateId'])) {
+                $consoleDB = $this->getConsoleDB();
+                $consoleDB->deleteDocument('certificates', $document['certificateId']);
+            }
+
+            // Delete files, so Traefik is aware of change
             array_map('unlink', glob($directory . '/*.*'));
             rmdir($directory);
             Console::info("Deleted certificate files for {$domain}");
