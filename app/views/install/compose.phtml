@@ -36,6 +36,11 @@ services:
   appwrite:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     container_name: appwrite
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     restart: unless-stopped
     networks:
       - appwrite
@@ -132,6 +137,11 @@ services:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: realtime
     container_name: appwrite-realtime
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
@@ -172,6 +182,11 @@ services:
   appwrite-worker-audits:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-audits
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     container_name: appwrite-worker-audits
     restart: unless-stopped
     networks:
@@ -197,6 +212,11 @@ services:
   appwrite-worker-webhooks:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-webhooks
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     container_name: appwrite-worker-webhooks
     restart: unless-stopped
     networks:
@@ -218,6 +238,11 @@ services:
   appwrite-worker-deletes:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-deletes
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     container_name: appwrite-worker-deletes
     restart: unless-stopped
     networks:
@@ -259,6 +284,11 @@ services:
   appwrite-worker-database:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-database
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     container_name: appwrite-worker-database
     restart: unless-stopped
     networks:
@@ -284,6 +314,11 @@ services:
   appwrite-worker-builds:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-builds
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     container_name: appwrite-worker-builds
     restart: unless-stopped
     networks:
@@ -310,6 +345,11 @@ services:
   appwrite-worker-certificates:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-certificates
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     container_name: appwrite-worker-certificates
     restart: unless-stopped
     networks:
@@ -340,6 +380,11 @@ services:
   appwrite-worker-functions:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-functions
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     container_name: appwrite-worker-functions
     restart: unless-stopped
     networks:
@@ -369,6 +414,11 @@ services:
   appwrite-executor:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: executor
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     container_name: appwrite-executor
     restart: unless-stopped
     stop_signal: SIGINT
@@ -414,6 +464,11 @@ services:
   appwrite-worker-mails:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-mails
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     container_name: appwrite-worker-mails
     restart: unless-stopped
     networks:
@@ -440,6 +495,11 @@ services:
   appwrite-maintenance:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: maintenance
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     container_name: appwrite-maintenance
     restart: unless-stopped
     networks:
@@ -462,6 +522,11 @@ services:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: usage
     container_name: appwrite-usage
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     restart: unless-stopped
     networks:
       - appwrite
@@ -488,6 +553,11 @@ services:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: schedule
     container_name: appwrite-schedule
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     restart: unless-stopped
     networks:
       - appwrite
@@ -503,6 +573,11 @@ services:
   mariadb:
     image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     restart: unless-stopped
     networks:
       - appwrite
@@ -518,6 +593,11 @@ services:
   redis:
     image: redis:6.2-alpine
     container_name: appwrite-redis
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     restart: unless-stopped
     networks:
       - appwrite
@@ -536,6 +616,11 @@ services:
   influxdb:
     image: appwrite/influxdb:1.5.0
     container_name: appwrite-influxdb
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     restart: unless-stopped
     networks:
       - appwrite
@@ -545,6 +630,11 @@ services:
   telegraf:
     image: appwrite/telegraf:1.4.0
     container_name: appwrite-telegraf
+    logging:
+      driver: 'json-file'
+      options:
+            max-file: 5
+            max-size: 10m
     restart: unless-stopped
     networks:
       - appwrite
