@@ -59,7 +59,6 @@ class Executor
         string $entrypoint = '',
         string $workdir = '',
         string $destination = '',
-        string $network = '',
         array $vars = [],
         array $commands = []
     ) {
@@ -76,7 +75,6 @@ class Executor
             'baseImage' => $baseImage,
             'entrypoint' => $entrypoint,
             'workdir' => $workdir,
-            'network' => empty($network) ? App::getEnv('_APP_EXECUTOR_RUNTIME_NETWORK', 'appwrite_runtimes') : $network,
             'vars' => $vars,
             'remove' => $remove,
             'commands' => $commands
