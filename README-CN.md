@@ -20,7 +20,7 @@
 
 Appwrite是一个基于Docker的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，以及后端。Appwrite 通过视觉化界面极简了从零编写 API 的繁琐过程，在保证软件安全的前提下为开发者创造了一个高效的开发环境。
 
-Appwrite 可以提供给开发者用户验证，外部授权，用户数据读写检索，文件储存, 图像处理，云函数计算，[等多种服务]（https：/ /appwrite.io/docs）。
+Appwrite 可以提供给开发者用户验证，外部授权，用户数据读写检索，文件储存, 图像处理，云函数计算，[等多种服务](https://appwrite.io/docs).
 
 ![Appwrite](public/images/github.png)
 
@@ -34,13 +34,13 @@ Appwrite 可以提供给开发者用户验证，外部授权，用户数据读�
     - [CMD](#cmd)
     - [PowerShell](#powershell)
   - [从旧版本升级](#从旧版本升级)
-- [快速入门](#入门)
+- [入门](#入门)
   - [软件服务](#软件服务)
   - [开发套件](#开发套件)
     - [客户端](#客户端)
     - [服务器](#服务器)
     - [开发者社区](#开发者社区)
-- [软件架构]](#软件架构)
+- [软件架构](#软件架构)
 - [贡献代码](#贡献代码)
 - [安全](#安全)
 - [订阅我们](#订阅我们)
@@ -118,7 +118,7 @@ docker run -it --rm ,
 
 ### 开发套件
 
-以下是当前支持的平台和语言列表。如果您想帮助我们为您选择的平台添加支持，您可以访问我们的 [SDK 生成器](https://github.com/appwrite/sdk-generator) 项目并查看我们的 [贡献指南]( https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md）。
+以下是当前支持的平台和语言列表。如果您想帮助我们为您选择的平台添加支持，您可以访问我们的 [SDK 生成器](https://github.com/appwrite/sdk-generator) 项目并查看我们的 [贡献指南](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md)。
 
 #### 客户端
 * ✅  &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (由 Appwrite 团队维护)
