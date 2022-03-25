@@ -5,6 +5,7 @@ namespace Appwrite\Messaging\Adapter;
 use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter;
 use Utopia\App;
+use Utopia\CLI\Console;
 
 class Realtime extends Adapter
 {
@@ -129,6 +130,8 @@ class Realtime extends Adapter
      */
     public static function send(string $projectId, array $payload, string $event, array $channels, array $roles, array $options = []): void
     {
+        // Console::success('REALTIME');
+        // var_dump($projectId, $payload, $event, $channels, $roles, $options);
         if (empty($channels) || empty($roles) || empty($projectId)) return;
 
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
@@ -242,6 +245,7 @@ class Realtime extends Adapter
      */
     public static function fromPayload(string $event, Document $payload, Document $project = null, Document $collection = null, Document $bucket = null): array
     {
+        Console::success("FROM PAYLOAD - $event");
         $channels = [];
         $roles = [];
         $permissionsChanged = false;
@@ -251,6 +255,7 @@ class Realtime extends Adapter
             case strpos($event, 'account.recovery.') === 0:
             case strpos($event, 'account.sessions.') === 0:
             case strpos($event, 'account.verification.') === 0:
+                var_dump($payload);
                 $channels[] = 'account';
                 $channels[] = 'account.' . $payload->getAttribute('userId');
                 $roles = ['user:' . $payload->getAttribute('userId')];
@@ -320,6 +325,7 @@ class Realtime extends Adapter
                 break;
         }
 
+        var_dump($channels, $roles, $permissionsChanged, $projectId);
         return [
             'channels' => $channels,
             'roles' => $roles,
