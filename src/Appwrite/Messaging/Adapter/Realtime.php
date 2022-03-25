@@ -253,12 +253,22 @@ class Realtime extends Adapter
 
         switch (true) {
             case strpos($event, 'account.recovery.') === 0:
-            case strpos($event, 'account.sessions.') === 0:
             case strpos($event, 'account.verification.') === 0:
-                var_dump($payload);
                 $channels[] = 'account';
                 $channels[] = 'account.' . $payload->getAttribute('userId');
                 $roles = ['user:' . $payload->getAttribute('userId')];
+
+                break;
+            case strpos($event, 'account.sessions.') === 0:
+                var_dump($payload);
+                $channels[] = 'account';
+                $userId = $payload->getAttribute('userId');
+                if (empty($userId)) {
+                    $sessions = $payload->getAttribute('sessions', []);
+                    $userId = isset($sessions[0]) ? $sessions[0]->getAttribute('userId') : '';
+                }
+                $channels[] = 'account.' . $userId;
+                $roles = ['user:' . $userId];
 
                 break;
             case strpos($event, 'account.') === 0:

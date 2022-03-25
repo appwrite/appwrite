@@ -1789,7 +1789,6 @@ App::delete('/v1/account/sessions')
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
 
-        $currentSession = [];
         foreach ($sessions as $session) {/** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
 
@@ -1816,7 +1815,6 @@ App::delete('/v1/account/sessions')
                     ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
                     ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
                 ;
-                $currentSession = $session;
             }
         }
 
@@ -1825,7 +1823,10 @@ App::delete('/v1/account/sessions')
         $numOfSessions = count($sessions);
 
         $events
-            ->setParam('eventData', $response->output($currentSession, Response::MODEL_SESSION))
+            ->setParam('eventData', $response->output(new Document([
+                'sessions' => $sessions,
+                'total' => $numOfSessions,
+            ]), Response::MODEL_SESSION_LIST))
         ;
 
         $usage
