@@ -29,7 +29,9 @@ class Zoom extends OAuth2
     /**
      * @var array
      */
-    protected $scopes = [];
+    protected $scopes = [
+        'user_profile'
+    ];
 
     /**
      * @return string
@@ -48,6 +50,7 @@ class Zoom extends OAuth2
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'response_type' => 'code',
+            'scope' => \implode(' ', $this->getScopes()),
             'state' => \json_encode($this->state),
         ]);
     }
