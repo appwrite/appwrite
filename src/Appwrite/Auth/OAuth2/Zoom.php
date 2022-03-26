@@ -134,7 +134,7 @@ class Zoom extends OAuth2
     public function getUserName(string $accessToken):string
     {
         $response = $this->getUser($accessToken);
-        return $response['first_name'] ?? '' . ' ' . $response['last_name'] ?? '';
+        return ($response['first_name'] ?? '') . ' ' . ($response['last_name'] ?? '');
     }
 
     /**
