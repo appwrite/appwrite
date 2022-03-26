@@ -130,9 +130,10 @@ class Realtime extends Adapter
      */
     public static function send(string $projectId, array $payload, string $event, array $channels, array $roles, array $options = []): void
     {
-        // Console::success('REALTIME');
-        // var_dump($projectId, $payload, $event, $channels, $roles, $options);
         if (empty($channels) || empty($roles) || empty($projectId)) return;
+
+        // Console::success('REALTIME SEND');
+        // var_dump($projectId, $payload, $event, $channels, $roles, $options);
 
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
@@ -260,7 +261,6 @@ class Realtime extends Adapter
 
                 break;
             case strpos($event, 'account.sessions.') === 0:
-                var_dump($payload);
                 $channels[] = 'account';
                 $userId = $payload->getAttribute('userId');
                 if (empty($userId)) {
@@ -335,7 +335,7 @@ class Realtime extends Adapter
                 break;
         }
 
-        var_dump($channels, $roles, $permissionsChanged, $projectId);
+        // var_dump($channels, $roles, $permissionsChanged, $projectId);
         return [
             'channels' => $channels,
             'roles' => $roles,

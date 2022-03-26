@@ -315,6 +315,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             $redis->subscribe(['realtime'], function (Redis $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime) {
                 $event = json_decode($payload, true);
 
+                Console::success('Event received: ' . json_encode($event));
+
                 if ($event['permissionsChanged'] && isset($event['userId'])) {
                     $projectId = $event['project'];
                     $userId = $event['userId'];
