@@ -86,6 +86,8 @@ App::post('/v1/storage/buckets')
                     'signed' => $attribute['signed'],
                     'array' => $attribute['array'],
                     'filters' => $attribute['filters'],
+                    'default' => $attribute['default'] ?? null,
+                    'format' => $attribute['format'] ?? ''
                 ]);
             }
 
