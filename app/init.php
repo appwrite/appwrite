@@ -24,6 +24,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
+use Appwrite\Network\Validator\Timestamp;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
@@ -76,6 +77,7 @@ const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
 const APP_DATABASE_ATTRIBUTE_URL = 'url';
 const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
+const APP_DATABASE_ATTRIBUTE_TIMESTAMP = 'timestamp';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
 const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1073741824; // 2^32 bits / 4 bits per char
 const APP_STORAGE_UPLOADS = '/storage/uploads';
@@ -344,6 +346,10 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_IP, function() {
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_URL, function() {
     return new URL();
 }, Database::VAR_STRING);
+
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_TIMESTAMP, function($attribute) {
+    return new Timestamp();
+}, Database::VAR_INTEGER);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_INT_RANGE, function($attribute) {
     $min = $attribute['formatOptions']['min'] ?? -INF;

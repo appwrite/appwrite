@@ -34,6 +34,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
+use Appwrite\Network\Validator\Timestamp;
 use Appwrite\Stats\Stats;
 
 /**
@@ -1002,6 +1003,50 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
         }
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
+    });
+
+App::post('/v1/database/collections/:collectionId/attributes/timestamp')
+    ->desc('Create Timestamp Attribute')
+    ->groups(['api', 'database'])
+    ->label('event', 'database.attributes.create')
+    ->label('scope', 'collections.write')
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.method', 'createTimestampAttribute')
+    ->label('sdk.description', '/docs/references/database/create-timestamp-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_INTEGER)
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('min', null, new Timestamp(), 'Minimum value to enforce on new documents', true)
+    ->param('max', null, new Timestamp(), 'Maximum value to enforce on new documents', true)
+    ->param('default', null, new Timestamp(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('database')
+    ->inject('audits')
+    ->inject('usage')
+    ->action(function ($collectionId, $key, $required, $min, $max, $default, $array, $response, $dbForProject, $database, $audits, $usage) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForProject*/
+        /** @var Appwrite\Event\Event $database */
+        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Stats\Stats $usage */
+
+        $attribute = createAttribute($collectionId, new Document([
+            'key' => $key,
+            'type' => Database::VAR_INTEGER,
+            'size' => 0,
+            'required' => true,
+            'default' => null,
+            'array' => false,
+            'format' => APP_DATABASE_ATTRIBUTE_TIMESTAMP,
+        ]), $response, $dbForProject, $database, $audits, $usage);
+
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_TIMESTAMP);
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/float')

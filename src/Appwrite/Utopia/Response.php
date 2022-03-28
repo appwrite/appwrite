@@ -106,6 +106,7 @@ class Response extends SwooleResponse
     const MODEL_ATTRIBUTE_LIST = 'attributeList';
     const MODEL_ATTRIBUTE_STRING = 'attributeString';
     const MODEL_ATTRIBUTE_INTEGER = 'attributeInteger';
+    const MODEL_ATTRIBUTE_TIMESTAMP = 'attributeTimestamp';
     const MODEL_ATTRIBUTE_FLOAT = 'attributeFloat';
     const MODEL_ATTRIBUTE_BOOLEAN = 'attributeBoolean';
     const MODEL_ATTRIBUTE_EMAIL = 'attributeEmail';
