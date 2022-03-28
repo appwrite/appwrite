@@ -4,6 +4,7 @@ use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
@@ -93,6 +94,68 @@ $logError = function(Throwable $error, string $action) use ($register) {
 
 $server->error($logError);
 
+
+function getFilters($project) {
+    $secrets = $project->getAttribute('databaseSecrets');
+    $displacement = $project->getAttribute('databaseSecretsDisplacement', 0);
+    $version = $displacement + \count($secrets);
+    
+    $filters['encrypt'] = [
+        'encode' => function($value) use($version, $secrets) {
+
+            $key = $secrets[\count($secrets)-1];
+            $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+            $tag = null;
+            $value = json_encode([
+                'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+                'method' => OpenSSL::CIPHER_AES_128_GCM,
+                'iv' => \bin2hex($iv),
+                'tag' => \bin2hex($tag ?? ''),
+                'version' => $version,
+            ]);
+
+            $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+            $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+            $tag = null;
+            return json_encode([
+                'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+                'method' => OpenSSL::CIPHER_AES_128_GCM,
+                'iv' => \bin2hex($iv),
+                'tag' => \bin2hex($tag ?? ''),
+                'version' => '1',
+            ]);
+        },
+        'decode' => function($value) use($secrets, $displacement) {
+            if(is_null($value)) {
+                return null;
+            }
+            
+            $value = json_decode($value, true);
+            $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
+    
+            $value = OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+
+            $value = json_decode($value, true);
+            $version = ($value['version'] ?? 1) - $displacement;
+            $key = $secrets[$version];
+    
+            return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+        }
+    ];
+    return $filters;
+}
+
+function getFiltersFromProjectId($database, $projectId) {
+    /** @var \Utopia\Database\Database $database */
+    $database->setNamespace('_console');
+    $project = $database->getDocument('projects', $projectId);
+    if($project->isEmpty()) {
+        throw new Exception("Project not found: {$projectId}");
+    }
+
+    return getFilters($project);
+}
+
 function getDatabase(Registry &$register, string $namespace)
 {
     $attempts = 0;
@@ -106,6 +169,12 @@ function getDatabase(Registry &$register, string $namespace)
 
             $cache = new Cache(new RedisCache($redis));
             $database = new Database(new MariaDB($db), $cache);
+
+            $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            if(substr($namespace, 1) !== 'console') {
+                $filters = getFiltersFromProjectId($database, substr($namespace, 1));
+                $database = new Database(new MariaDB($db), $cache, $filters);
+            }
             $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
             $database->setNamespace($namespace);
 
@@ -399,7 +468,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $console = $app->getResource('console');
 
         $cache = new Cache(new RedisCache($redis));
-        $database = new Database(new MariaDB($db), $cache);
+        $database = new Database(new MariaDB($db), $cache, getFilters($project));
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $database->setNamespace("_{$project->getId()}");
 
@@ -507,6 +576,9 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
+        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $filters = getFiltersFromProjectId($database, $realtime->connections[$connection]['projectId']);
+        $database = new Database(new MariaDB($db), $cache, $filters);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $database->setNamespace("_{$realtime->connections[$connection]['projectId']}");
 
