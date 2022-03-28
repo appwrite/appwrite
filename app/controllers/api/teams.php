@@ -417,7 +417,6 @@ App::post('/v1/teams/:teamId/memberships')
             ->setParam('event', 'teams.memberships.create')
             ->setParam('resource', 'team/'.$teamId)
         ;
-        var_dump($audits);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($membership
@@ -743,7 +742,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             ->setParam('event', 'teams.memberships.update.status')
             ->setParam('resource', 'team/'.$teamId)
         ;
-        var_dump($audits);
 
         if (!Config::getParam('domainVerification')) {
             $response
