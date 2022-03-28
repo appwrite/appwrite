@@ -1036,14 +1036,35 @@ App::post('/v1/database/collections/:collectionId/attributes/timestamp')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
+        // Ensure attribute default is within range
+        $min = (is_null($min)) ? 0 : \intval($min);
+        $max = (is_null($max)) ? PHP_INT_MAX : \intval($max);
+
+        if ($min > $max) {
+            throw new Exception('Minimum value must be lesser than maximum value', 400, Exception::ATTRIBUTE_VALUE_INVALID);
+        }
+
+        $validator = new Range($min, $max, Database::VAR_INTEGER);
+
+        if (!is_null($default) && !$validator->isValid($default)) {
+            throw new Exception($validator->getDescription(), 400, Exception::ATTRIBUTE_VALUE_INVALID);
+        }
+
+        $size = $max > 2147483647 ? 8 : 4; // Automatically create BigInt depending on max value
+
+
         $attribute = createAttribute($collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_INTEGER,
-            'size' => 0,
-            'required' => true,
-            'default' => null,
-            'array' => false,
+            'size' => $size,
+            'required' => $required,
+            'default' => $default,
+            'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_TIMESTAMP,
+            'formatOptions' => [
+                'min' => $min,
+                'max' => $max,
+            ],
         ]), $response, $dbForProject, $database, $audits, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_TIMESTAMP);
