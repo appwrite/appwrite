@@ -3,6 +3,7 @@
 namespace Appwrite\Network\Validator;
 
 use Utopia\Validator;
+use Utopia\Validator\Hostname;
 
 class Origin extends Validator
 {
@@ -41,8 +42,7 @@ class Origin extends Validator
     /**
      * @var array
      */
-    protected $clients = [
-    ];
+    protected $clients = [];
 
     /**
      * @var string
@@ -90,8 +90,8 @@ class Origin extends Validator
             return 'Unsupported platform';
         }
 
-        return 'Invalid Origin. Register your new client ('.$this->host.') as a new '
-            .$this->platforms[$this->client].' platform on your project console dashboard';
+        return 'Invalid Origin. Register your new client (' . $this->host . ') as a new '
+            . $this->platforms[$this->client] . ' platform on your project console dashboard';
     }
 
     /**
@@ -118,39 +118,8 @@ class Origin extends Validator
             return true;
         }
 
-        $valueHostname = $host;
-
-        // Checkout Host.php to see description of this block
-        foreach ($this->clients as $allowedHostname) {
-            if($valueHostname === $allowedHostname) {
-                return true;
-            }
-
-            if(\str_contains($allowedHostname, '*')) {
-                $allowedSections = \explode('.', $allowedHostname);
-                $valueSections = \explode('.', $valueHostname);
-
-                if(\count($allowedSections) === \count($valueSections)) {
-                    $matchesAmount = 0;
-
-                    for ($sectionIndex = 0; $sectionIndex < \count($allowedSections); $sectionIndex++) {
-                        $allowedSection = $allowedSections[$sectionIndex];
-
-                        if($allowedSection === '*' || $allowedSection === $valueSections[$sectionIndex]) {
-                            $matchesAmount++;
-                        } else {
-                            break;
-                        }
-                    }
-
-                    if($matchesAmount === \count($allowedSections)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
+        $validator = new Hostname($this->clients);
+        return $validator->isValid($host);
     }
 
     /**

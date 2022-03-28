@@ -3,6 +3,7 @@
 namespace Appwrite\Network\Validator;
 
 use Utopia\Validator;
+use Utopia\Validator\Hostname;
 
 /**
  * Host
@@ -52,49 +53,9 @@ class Host extends Validator
             return false;
         }
 
-        // Extract hostname from value
-        $valueHostname = \parse_url($value, PHP_URL_HOST);
-
-        // Loop through all allowed hostnames until match is found
-        foreach ($this->whitelist as $allowedHostname) {
-            // If exact math; allow
-            if($valueHostname === $allowedHostname) {
-                return true;
-            }
-
-            // If wildcard symbol used
-            if(\str_contains($allowedHostname, '*')) {
-                // Split hostnames into sections (subdomains)
-                $allowedSections = \explode('.', $allowedHostname);
-                $valueSections = \explode('.', $valueHostname);
-
-                // Only if amount of sections matches
-                if(\count($allowedSections) === \count($valueSections)) {
-                    $matchesAmount = 0;
-
-                    // Loop through all sections
-                    for ($sectionIndex = 0; $sectionIndex < \count($allowedSections); $sectionIndex++) {
-                        $allowedSection = $allowedSections[$sectionIndex];
-
-                        // If section matches, or wildcard symbol is used, increment match count
-                        if($allowedSection === '*' || $allowedSection === $valueSections[$sectionIndex]) {
-                            $matchesAmount++;
-                        } else {
-                            // If one fails, the whole check always fails; we can skip iterations
-                            break;
-                        }
-                    }
-
-                    // If every section matched; allow
-                    if($matchesAmount === \count($allowedSections)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        // If finished loop above without result, match is not found
-        return false;
+        $hostname = \parse_url($value, PHP_URL_HOST);
+        $hostnameValudator = new Hostname($this->whitelist);
+        return $hostnameValudator->isValid($hostname);
     }
 
     /**

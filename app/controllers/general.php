@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__ . '/../init.php';
 
 use Utopia\App;
 use Utopia\Logger\Log;
@@ -22,6 +22,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Appwrite\Utopia\Request\Filters\V12;
+use Utopia\Validator\Hostname;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
@@ -46,8 +47,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
 
     $requestFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
     if ($requestFormat) {
-        switch($requestFormat) {
-            case version_compare ($requestFormat , '0.12.0', '<') :
+        switch ($requestFormat) {
+            case version_compare($requestFormat, '0.12.0', '<'):
                 Request::setFilter(new V12());
                 break;
             default:
@@ -65,7 +66,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
             $domains[$domain->get()] = false;
             Console::warning($domain->get() . ' is not a publicly accessible domain. Skipping SSL certificate generation.');
-        } elseif(str_starts_with($request->getURI(), '/.well-known/acme-challenge')) {
+        } elseif (str_starts_with($request->getURI(), '/.well-known/acme-challenge')) {
             Console::warning('Skipping SSL certificates generation on ACME challenge.');
         } else {
             Authorization::disable();
@@ -120,45 +121,17 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);
     $port = \parse_url($request->getOrigin($referrer), PHP_URL_PORT);
 
-    $valueHostname = $origin;
     $refDomainOrigin = 'localhost';
-    // Checkout Host.php to see description of this block
-    foreach ($clients as $allowedHostname) {
-        if($valueHostname === $allowedHostname) {
-            $refDomainOrigin = $valueHostname;
-            break;
-        }
-
-        if(\str_contains($allowedHostname, '*')) {
-            $allowedSections = \explode('.', $allowedHostname);
-            $valueSections = \explode('.', $valueHostname);
-
-            if(\count($allowedSections) === \count($valueSections)) {
-                $matchesAmount = 0;
-
-                for ($sectionIndex = 0; $sectionIndex < \count($allowedSections); $sectionIndex++) {
-                    $allowedSection = $allowedSections[$sectionIndex];
-
-                    if($allowedSection === '*' || $allowedSection === $valueSections[$sectionIndex]) {
-                        $matchesAmount++;
-                    } else {
-                        break;
-                    }
-                }
-
-                if($matchesAmount === \count($allowedSections)) {
-                    $refDomainOrigin = $valueHostname;
-                    break;
-                }
-            }
-        }
+    $validator = new Hostname($clients);
+    if ($validator->isValid($origin)) {
+        $refDomainOrigin = $origin;
     }
 
-    $refDomain = (!empty($protocol) ? $protocol : $request->getProtocol()).'://'.$refDomainOrigin.(!empty($port) ? ':'.$port : '');
+    $refDomain = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $refDomainOrigin . (!empty($port) ? ':' . $port : '');
 
     $refDomain = (!$route->getLabel('origin', false))  // This route is publicly accessible
         ? $refDomain
-        : (!empty($protocol) ? $protocol : $request->getProtocol()).'://'.$origin.(!empty($port) ? ':'.$port : '');
+        : (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
 
     $selfDomain = new Domain($request->getHostname());
     $endDomain = new Domain((string)$origin);
@@ -173,17 +146,20 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     // var_dump('-----------------');
     // var_dump($request->debug());
 
-    Config::setParam('domainVerification',
+    Config::setParam(
+        'domainVerification',
         ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
-            $endDomain->getRegisterable() !== '');
+            $endDomain->getRegisterable() !== ''
+    );
 
-    Config::setParam('cookieDomain', (
-        $request->getHostname() === 'localhost' ||
-        $request->getHostname() === 'localhost:'.$request->getPort() ||
-        (\filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false)
-    )
-        ? null
-        : '.'.$request->getHostname()
+    Config::setParam(
+        'cookieDomain',
+        ($request->getHostname() === 'localhost' ||
+            $request->getHostname() === 'localhost:' . $request->getPort() ||
+            (\filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false)
+        )
+            ? null
+            : '.' . $request->getHostname()
     );
 
     /* 
@@ -191,17 +167,17 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
      */
     $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
     if ($responseFormat) {
-        switch($responseFormat) {
-            case version_compare ($responseFormat , '0.6.2', '<=') :
+        switch ($responseFormat) {
+            case version_compare($responseFormat, '0.6.2', '<='):
                 Response::setFilter(new V06());
                 break;
-            case version_compare ($responseFormat , '0.7.2', '<=') :
+            case version_compare($responseFormat, '0.7.2', '<='):
                 Response::setFilter(new V07());
                 break;
-            case version_compare ($responseFormat , '0.8.0', '<=') :
+            case version_compare($responseFormat, '0.8.0', '<='):
                 Response::setFilter(new V08());
                 break;
-            case version_compare ($responseFormat , '0.11.0', '<=') :
+            case version_compare($responseFormat, '0.11.0', '<='):
                 Response::setFilter(new V11());
                 break;
             default:
@@ -219,10 +195,10 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
      */
     if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
         if ($request->getProtocol() !== 'https') {
-            return $response->redirect('https://'.$request->getHostname().$request->getURI());
+            return $response->redirect('https://' . $request->getHostname() . $request->getURI());
         }
 
-        $response->addHeader('Strict-Transport-Security', 'max-age='.(60 * 60 * 24 * 126)); // 126 days
+        $response->addHeader('Strict-Transport-Security', 'max-age=' . (60 * 60 * 24 * 126)); // 126 days
     }
 
     $response
@@ -232,8 +208,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, Cache-Control, Expires, Pragma')
         ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
         ->addHeader('Access-Control-Allow-Origin', $refDomain)
-        ->addHeader('Access-Control-Allow-Credentials', 'true')
-    ;
+        ->addHeader('Access-Control-Allow-Credentials', 'true');
 
     /*
      * Validate Client Domain - Check to avoid CSRF attack
@@ -243,10 +218,12 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     $origin = $request->getOrigin($request->getReferer(''));
     $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
 
-    if (!$originValidator->isValid($origin)
+    if (
+        !$originValidator->isValid($origin)
         && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
         && $route->getLabel('origin', false) !== '*'
-        && empty($request->getHeader('x-appwrite-key', ''))) {
+        && empty($request->getHeader('x-appwrite-key', ''))
+    ) {
         throw new Exception($originValidator->getDescription(), 403);
     }
 
@@ -292,7 +269,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
             $user = new Document([
                 '$id' => '',
                 'status' => true,
-                'email' => 'app.'.$project->getId().'@service.'.$request->getHostname(),
+                'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                 'password' => '',
                 'name' => $project->getAttribute('name', 'Untitled'),
             ]);
@@ -300,22 +277,24 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
             $role = Auth::USER_ROLE_APP;
             $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
-            Authorization::setRole('role:'.Auth::USER_ROLE_APP);
+            Authorization::setRole('role:' . Auth::USER_ROLE_APP);
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
         }
     }
 
-    Authorization::setRole('role:'.$role);
+    Authorization::setRole('role:' . $role);
 
     foreach (Auth::getRoles($user) as $authRole) {
         Authorization::setRole($authRole);
     }
 
-    $service = $route->getLabel('sdk.namespace','');
-    if(!empty($service)) {
-        if(array_key_exists($service, $project->getAttribute('services',[]))
-            && !$project->getAttribute('services',[])[$service]
-            && !Auth::isPrivilegedUser(Authorization::getRoles())) {
+    $service = $route->getLabel('sdk.namespace', '');
+    if (!empty($service)) {
+        if (
+            array_key_exists($service, $project->getAttribute('services', []))
+            && !$project->getAttribute('services', [])[$service]
+            && !Auth::isPrivilegedUser(Authorization::getRoles())
+        ) {
             throw new Exception('Service is disabled', 503);
         }
     }
@@ -325,7 +304,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
             throw new Exception('Project not found', 404);
         }
 
-        throw new Exception($user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401);
+        throw new Exception($user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')', 401);
     }
 
     if (false === $user->getAttribute('status')) { // Account is blocked
@@ -335,7 +314,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     if ($user->getAttribute('reset')) {
         throw new Exception('Password reset is required', 412);
     }
-
 }, ['utopia', 'request', 'response', 'console', 'project', 'dbForConsole', 'user', 'locale', 'clients']);
 
 App::options(function ($request, $response) {
@@ -367,18 +345,18 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
     $route = $utopia->match($request);
 
-    if($logger) {
-        if($error->getCode() >= 500 || $error->getCode() === 0) {
+    if ($logger) {
+        if ($error->getCode() >= 500 || $error->getCode() === 0) {
             try {
                 $user = $utopia->getResource('user');
                 /** @var Appwrite\Database\Document $user */
-            } catch(\Throwable $th) {
+            } catch (\Throwable $th) {
                 // All good, user is optional information for logger
             }
 
             $log = new Utopia\Logger\Log();
 
-            if(isset($user) && !$user->isEmpty()) {
+            if (isset($user) && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
             }
 
@@ -407,12 +385,12 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
             $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            foreach($loggerBreadcrumbs as $loggerBreadcrumb) {
+            foreach ($loggerBreadcrumbs as $loggerBreadcrumb) {
                 $log->addBreadcrumb($loggerBreadcrumb);
             }
 
             $responseCode = $logger->addLog($log);
-            Console::info('Log pushed with status code: '.$responseCode);
+            Console::info('Log pushed with status code: ' . $responseCode);
         }
     }
 
@@ -423,17 +401,17 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
     $template = ($route) ? $route->getLabel('error', null) : null;
 
     if (php_sapi_name() === 'cli') {
-        Console::error('[Error] Timestamp: '.date('c', time()));
+        Console::error('[Error] Timestamp: ' . date('c', time()));
 
-        if($route) {
-            Console::error('[Error] Method: '.$route->getMethod());
-            Console::error('[Error] URL: '.$route->getPath());
+        if ($route) {
+            Console::error('[Error] Method: ' . $route->getMethod());
+            Console::error('[Error] URL: ' . $route->getPath());
         }
 
-        Console::error('[Error] Type: '.get_class($error));
-        Console::error('[Error] Message: '.$error->getMessage());
-        Console::error('[Error] File: '.$error->getFile());
-        Console::error('[Error] Line: '.$error->getLine());
+        Console::error('[Error] Type: ' . get_class($error));
+        Console::error('[Error] Message: ' . $error->getMessage());
+        Console::error('[Error] File: ' . $error->getFile());
+        Console::error('[Error] Line: ' . $error->getLine());
     }
 
     switch ($error->getCode()) { // Don't show 500 errors!
@@ -474,8 +452,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
         ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
         ->addHeader('Expires', '0')
         ->addHeader('Pragma', 'no-cache')
-        ->setStatusCode($code)
-    ;
+        ->setStatusCode($code);
 
     if ($template) {
         $comp = new View($template);
@@ -486,22 +463,22 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
             ->setParam('projectURL', $project->getAttribute('url'))
             ->setParam('message', $error->getMessage())
             ->setParam('code', $code)
-            ->setParam('trace', $error->getTrace())
-        ;
+            ->setParam('trace', $error->getTrace());
 
         $layout
-            ->setParam('title', $project->getAttribute('name').' - Error')
+            ->setParam('title', $project->getAttribute('name') . ' - Error')
             ->setParam('description', 'No Description')
             ->setParam('body', $comp)
             ->setParam('version', $version)
-            ->setParam('litespeed', false)
-        ;
+            ->setParam('litespeed', false);
 
         $response->html($layout->render());
     }
 
-    $response->dynamic(new Document($output),
-        $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR);
+    $response->dynamic(
+        new Document($output),
+        $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR
+    );
 }, ['error', 'utopia', 'request', 'response', 'layout', 'project', 'logger', 'loggerBreadcrumbs']);
 
 App::get('/manifest.json')
@@ -537,7 +514,7 @@ App::get('/robots.txt')
     ->label('docs', false)
     ->inject('response')
     ->action(function ($response) {
-        $template = new View(__DIR__.'/../views/general/robots.phtml');
+        $template = new View(__DIR__ . '/../views/general/robots.phtml');
         $response->text($template->render(false));
     });
 
@@ -547,7 +524,7 @@ App::get('/humans.txt')
     ->label('docs', false)
     ->inject('response')
     ->action(function ($response) {
-        $template = new View(__DIR__.'/../views/general/humans.phtml');
+        $template = new View(__DIR__ . '/../views/general/humans.phtml');
         $response->text($template->render(false));
     });
 
@@ -560,7 +537,7 @@ App::get('/.well-known/acme-challenge')
     ->action(function ($request, $response) {
         $base = \realpath(APP_STORAGE_CERTIFICATES);
         $path = \str_replace('/.well-known/acme-challenge/', '', $request->getURI());
-        $absolute = \realpath($base.'/.well-known/acme-challenge/'.$path);
+        $absolute = \realpath($base . '/.well-known/acme-challenge/' . $path);
 
         if (!$base) {
             throw new Exception('Storage error', 500);
