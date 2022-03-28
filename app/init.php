@@ -783,7 +783,9 @@ App::setResource('console', function() {
 App::setResource('dbForProject', function($db, $cache, $project) {
     $cache = new Cache(new RedisCache($cache));
 
-    
+    $secrets = $project->getAttribute('databaseSecrets');
+    $displacement = $project->getAttribute('databaseSecretsDisplacement', 0);
+    $version = $displacement + \count($secrets);
     
     $filters['encrypt'] = [
         'encode' => function($value) use($version, $secrets) {
