@@ -183,6 +183,7 @@ class Realtime extends Adapter
                  * Iterate through each channel.
                  */
                 foreach ($event['data']['channels'] as $channel) {
+                    
                     /**
                      * Check if channel has subscriber. Also taking care of the role in the event and the wildcard role.
                      */
@@ -282,6 +283,7 @@ class Realtime extends Adapter
                 $channels[] = 'memberships';
                 $channels[] = 'memberships.' . $payload->getId();
                 $roles = ['team:' . $payload->getAttribute('teamId')];
+                var_dump($roles, $channels);
 
                 break;
             case strpos($event, 'teams.') === 0:

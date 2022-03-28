@@ -323,19 +323,17 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
-                    } else {
-                        return;
+                        
+                        [$database, $returnDatabase] = getDatabase($register, "_{$projectId}");
+
+                        $user = $database->getDocument('users', $userId);
+    
+                        $roles = Auth::getRoles($user);
+    
+                        $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
+    
+                        call_user_func($returnDatabase);
                     }
-
-                    [$database, $returnDatabase] = getDatabase($register, "_{$projectId}");
-
-                    $user = $database->getDocument('users', $userId);
-
-                    $roles = Auth::getRoles($user);
-
-                    $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
-
-                    call_user_func($returnDatabase);
                 }
 
                 $receivers = $realtime->getSubscribers($event);
