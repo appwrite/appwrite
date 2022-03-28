@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3ef20ad6919a1844f207e06719ad8929",
+    "content-hash": "4b92731277f6cc86d055d76c21e67cab",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -300,20 +300,23 @@
         },
         {
             "name": "colinmollenhour/credis",
-            "version": "v1.12.1",
+            "version": "v1.12.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/colinmollenhour/credis.git",
-                "reference": "c27faa11724229986335c23f4b6d0f1d8d6547fb"
+                "reference": "77e6ede2e01c4cfaade114fe1e07d2f9756949f1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/colinmollenhour/credis/zipball/c27faa11724229986335c23f4b6d0f1d8d6547fb",
-                "reference": "c27faa11724229986335c23f4b6d0f1d8d6547fb",
+                "url": "https://api.github.com/repos/colinmollenhour/credis/zipball/77e6ede2e01c4cfaade114fe1e07d2f9756949f1",
+                "reference": "77e6ede2e01c4cfaade114fe1e07d2f9756949f1",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.4.0"
+                "php": ">=5.6.0"
+            },
+            "suggest": {
+                "ext-redis": "Improved performance for communicating with redis"
             },
             "type": "library",
             "autoload": {
@@ -338,9 +341,9 @@
             "homepage": "https://github.com/colinmollenhour/credis",
             "support": {
                 "issues": "https://github.com/colinmollenhour/credis/issues",
-                "source": "https://github.com/colinmollenhour/credis/tree/v1.12.1"
+                "source": "https://github.com/colinmollenhour/credis/tree/v1.12.2"
             },
-            "time": "2020-11-06T16:09:14+00:00"
+            "time": "2022-03-08T18:12:43+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
@@ -2130,17 +2133,11 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.15.4",
+            "version": "dev-feat-filters-upgrade",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/database.git",
-                "reference": "166365d9c39c4d70b1267af4562f4327e8930f79"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/166365d9c39c4d70b1267af4562f4327e8930f79",
-                "reference": "166365d9c39c4d70b1267af4562f4327e8930f79",
-                "shasum": ""
+                "url": "https://github.com/utopia-php/database",
+                "reference": "41e28acb10a5185441826b5c5fc96af989219736"
             },
             "require": {
                 "ext-mongodb": "*",
@@ -2163,7 +2160,11 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Database"
+                }
+            },
             "license": [
                 "MIT"
             ],
@@ -2185,11 +2186,7 @@
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.15.4"
-            },
-            "time": "2022-03-15T17:20:14+00:00"
+            "time": "2022-03-27T08:47:46+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -6324,16 +6321,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.3.8",
+            "version": "v3.3.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "972d8604a92b7054828b539f2febb0211dd5945c"
+                "reference": "6ff9b0e440fa66f97f207e181c41340ddfa5683d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/972d8604a92b7054828b539f2febb0211dd5945c",
-                "reference": "972d8604a92b7054828b539f2febb0211dd5945c",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/6ff9b0e440fa66f97f207e181c41340ddfa5683d",
+                "reference": "6ff9b0e440fa66f97f207e181c41340ddfa5683d",
                 "shasum": ""
             },
             "require": {
@@ -6384,7 +6381,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.3.8"
+                "source": "https://github.com/twigphp/Twig/tree/v3.3.9"
             },
             "funding": [
                 {
@@ -6396,7 +6393,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-02-04T06:59:48+00:00"
+            "time": "2022-03-25T09:37:52+00:00"
         },
         {
             "name": "vimeo/psalm",
@@ -6556,9 +6553,18 @@
             "time": "2015-12-17T08:42:14+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-filters-upgrade",
+            "alias": "0.15.4",
+            "alias_normalized": "0.15.4.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
