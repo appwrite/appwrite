@@ -27,11 +27,12 @@
     }
 
     class AppwriteException extends Error {
-        constructor(message, code = 0, response = '') {
+        constructor(message, code = 0, type = '', response = '') {
             super(message);
             this.name = 'AppwriteException';
             this.message = message;
             this.code = code;
+            this.type = type;
             this.response = response;
         }
     }
@@ -48,7 +49,7 @@
             };
             this.headers = {
                 'x-sdk-version': 'appwrite:web:4.0.4',
-                'X-Appwrite-Response-Format': '0.12.0',
+                'X-Appwrite-Response-Format': '0.13.0',
             };
             this.realtime = {
                 socket: undefined,
@@ -413,8 +414,9 @@
                 /**
                  * Update Account Preferences
                  *
-                 * Update currently logged in user account preferences. You can pass only the
-                 * specific settings you wish to update.
+                 * Update currently logged in user account preferences. The object you pass is
+                 * stored as is, and replaces any previous value. The maximum allowed prefs
+                 * size is 64kB and throws error if exceeded.
                  *
                  * @param {object} prefs
                  * @throws {AppwriteException}
@@ -764,11 +766,31 @@
                     }, payload);
                 }),
                 /**
+                 * Update Session (Refresh Tokens)
+                 *
+                 *
+                 * @param {string} sessionId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateSession: (sessionId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof sessionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "sessionId"');
+                    }
+                    let path = '/account/sessions/{sessionId}'.replace('{sessionId}', sessionId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Delete Account Session
                  *
                  * Use this endpoint to log out the currently logged in user from all their
                  * account sessions across all of their different devices. When using the
-                 * option id argument, only the session unique ID provider will be deleted.
+                 * Session ID argument, only the unique session ID provided is deleted.
+                 *
                  *
                  * @param {string} sessionId
                  * @throws {AppwriteException}
@@ -1461,9 +1483,9 @@
                  * @param {string} collectionId
                  * @param {string} key
                  * @param {boolean} required
-                 * @param {string} min
-                 * @param {string} max
-                 * @param {string} xdefault
+                 * @param {number} min
+                 * @param {number} max
+                 * @param {number} xdefault
                  * @param {boolean} array
                  * @throws {AppwriteException}
                  * @returns {Promise}
@@ -1601,7 +1623,7 @@
                 /**
                  * Create String Attribute
                  *
-                 * Create a new string attribute.
+                 * Create a string attribute.
                  *
                  *
                  * @param {string} collectionId
@@ -2243,7 +2265,7 @@
                 /**
                  * List the currently active function runtimes.
                  *
-                 * Get a list of all runtimes that are currently active in your project.
+                 * Get a list of all runtimes that are currently active on your instance.
                  *
                  * @throws {AppwriteException}
                  * @returns {Promise}
@@ -2347,6 +2369,236 @@
                     }, payload);
                 }),
                 /**
+                 * List Deployments
+                 *
+                 * Get a list of all the project's code deployments. You can use the query
+                 * params to filter your results.
+                 *
+                 * @param {string} functionId
+                 * @param {string} search
+                 * @param {number} limit
+                 * @param {number} offset
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
+                 * @param {string} orderType
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                listDeployments: (functionId, search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    let path = '/functions/{functionId}/deployments'.replace('{functionId}', functionId);
+                    let payload = {};
+                    if (typeof search !== 'undefined') {
+                        payload['search'] = search;
+                    }
+                    if (typeof limit !== 'undefined') {
+                        payload['limit'] = limit;
+                    }
+                    if (typeof offset !== 'undefined') {
+                        payload['offset'] = offset;
+                    }
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
+                    }
+                    if (typeof orderType !== 'undefined') {
+                        payload['orderType'] = orderType;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Deployment
+                 *
+                 * Create a new function code deployment. Use this endpoint to upload a new
+                 * version of your code function. To execute your newly uploaded code, you'll
+                 * need to update the function's deployment to use your new deployment UID.
+                 *
+                 * This endpoint accepts a tar.gz file compressed with your code. Make sure to
+                 * include any dependencies your code has within the compressed file. You can
+                 * learn more about code packaging in the [Appwrite Cloud Functions
+                 * tutorial](/docs/functions).
+                 *
+                 * Use the "command" param to set the entry point used to execute your code.
+                 *
+                 * @param {string} functionId
+                 * @param {string} entrypoint
+                 * @param {File} code
+                 * @param {boolean} activate
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createDeployment: (functionId, entrypoint, code, activate, onProgress = (progress) => { }) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    if (typeof entrypoint === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "entrypoint"');
+                    }
+                    if (typeof code === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "code"');
+                    }
+                    if (typeof activate === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "activate"');
+                    }
+                    let path = '/functions/{functionId}/deployments'.replace('{functionId}', functionId);
+                    let payload = {};
+                    if (typeof entrypoint !== 'undefined') {
+                        payload['entrypoint'] = entrypoint;
+                    }
+                    if (typeof code !== 'undefined') {
+                        payload['code'] = code;
+                    }
+                    if (typeof activate !== 'undefined') {
+                        payload['activate'] = activate;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    const size = code.size;
+                    if (size <= Appwrite.CHUNK_SIZE) {
+                        return yield this.call('post', uri, {
+                            'content-type': 'multipart/form-data',
+                        }, payload);
+                    }
+                    let id = undefined;
+                    let response = undefined;
+                    const headers = {
+                        'content-type': 'multipart/form-data',
+                    };
+                    let counter = 0;
+                    const totalCounters = Math.ceil(size / Appwrite.CHUNK_SIZE);
+                    for (counter; counter < totalCounters; counter++) {
+                        const start = (counter * Appwrite.CHUNK_SIZE);
+                        const end = Math.min((((counter * Appwrite.CHUNK_SIZE) + Appwrite.CHUNK_SIZE) - 1), size);
+                        headers['content-range'] = 'bytes ' + start + '-' + end + '/' + size;
+                        if (id) {
+                            headers['x-appwrite-id'] = id;
+                        }
+                        const stream = code.slice(start, end + 1);
+                        payload['code'] = new File([stream], code.name);
+                        response = yield this.call('post', uri, headers, payload);
+                        if (!id) {
+                            id = response['$id'];
+                        }
+                        if (onProgress) {
+                            onProgress({
+                                $id: response.$id,
+                                progress: Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100,
+                                sizeUploaded: end + 1,
+                                chunksTotal: response.chunksTotal,
+                                chunksUploaded: response.chunksUploaded
+                            });
+                        }
+                    }
+                    return response;
+                }),
+                /**
+                 * Get Deployment
+                 *
+                 * Get a code deployment by its unique ID.
+                 *
+                 * @param {string} functionId
+                 * @param {string} deploymentId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getDeployment: (functionId, deploymentId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    if (typeof deploymentId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "deploymentId"');
+                    }
+                    let path = '/functions/{functionId}/deployments/{deploymentId}'.replace('{functionId}', functionId).replace('{deploymentId}', deploymentId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Function Deployment
+                 *
+                 * Update the function code deployment ID using the unique function ID. Use
+                 * this endpoint to switch the code deployment that should be executed by the
+                 * execution endpoint.
+                 *
+                 * @param {string} functionId
+                 * @param {string} deploymentId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateDeployment: (functionId, deploymentId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    if (typeof deploymentId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "deploymentId"');
+                    }
+                    let path = '/functions/{functionId}/deployments/{deploymentId}'.replace('{functionId}', functionId).replace('{deploymentId}', deploymentId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Delete Deployment
+                 *
+                 * Delete a code deployment by its unique ID.
+                 *
+                 * @param {string} functionId
+                 * @param {string} deploymentId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                deleteDeployment: (functionId, deploymentId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    if (typeof deploymentId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "deploymentId"');
+                    }
+                    let path = '/functions/{functionId}/deployments/{deploymentId}'.replace('{functionId}', functionId).replace('{deploymentId}', deploymentId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('delete', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Retry Build
+                 *
+                 *
+                 * @param {string} functionId
+                 * @param {string} deploymentId
+                 * @param {string} buildId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                retryBuild: (functionId, deploymentId, buildId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    if (typeof deploymentId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "deploymentId"');
+                    }
+                    if (typeof buildId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "buildId"');
+                    }
+                    let path = '/functions/{functionId}/deployments/{deploymentId}/builds/{buildId}'.replace('{functionId}', functionId).replace('{deploymentId}', deploymentId).replace('{buildId}', buildId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * List Executions
                  *
                  * Get a list of all the current user function execution logs. You can use the
@@ -2399,10 +2651,11 @@
                  *
                  * @param {string} functionId
                  * @param {string} data
+                 * @param {boolean} async
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createExecution: (functionId, data) => __awaiter(this, void 0, void 0, function* () {
+                createExecution: (functionId, data, async) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -2410,6 +2663,9 @@
                     let payload = {};
                     if (typeof data !== 'undefined') {
                         payload['data'] = data;
+                    }
+                    if (typeof async !== 'undefined') {
+                        payload['async'] = async;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
@@ -2437,171 +2693,6 @@
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Update Function Tag
-                 *
-                 * Update the function code tag ID using the unique function ID. Use this
-                 * endpoint to switch the code tag that should be executed by the execution
-                 * endpoint.
-                 *
-                 * @param {string} functionId
-                 * @param {string} tag
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                updateTag: (functionId, tag) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof functionId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "functionId"');
-                    }
-                    if (typeof tag === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "tag"');
-                    }
-                    let path = '/functions/{functionId}/tag'.replace('{functionId}', functionId);
-                    let payload = {};
-                    if (typeof tag !== 'undefined') {
-                        payload['tag'] = tag;
-                    }
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('patch', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * List Tags
-                 *
-                 * Get a list of all the project's code tags. You can use the query params to
-                 * filter your results.
-                 *
-                 * @param {string} functionId
-                 * @param {string} search
-                 * @param {number} limit
-                 * @param {number} offset
-                 * @param {string} cursor
-                 * @param {string} cursorDirection
-                 * @param {string} orderType
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                listTags: (functionId, search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof functionId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "functionId"');
-                    }
-                    let path = '/functions/{functionId}/tags'.replace('{functionId}', functionId);
-                    let payload = {};
-                    if (typeof search !== 'undefined') {
-                        payload['search'] = search;
-                    }
-                    if (typeof limit !== 'undefined') {
-                        payload['limit'] = limit;
-                    }
-                    if (typeof offset !== 'undefined') {
-                        payload['offset'] = offset;
-                    }
-                    if (typeof cursor !== 'undefined') {
-                        payload['cursor'] = cursor;
-                    }
-                    if (typeof cursorDirection !== 'undefined') {
-                        payload['cursorDirection'] = cursorDirection;
-                    }
-                    if (typeof orderType !== 'undefined') {
-                        payload['orderType'] = orderType;
-                    }
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('get', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Create Tag
-                 *
-                 * Create a new function code tag. Use this endpoint to upload a new version
-                 * of your code function. To execute your newly uploaded code, you'll need to
-                 * update the function's tag to use your new tag UID.
-                 *
-                 * This endpoint accepts a tar.gz file compressed with your code. Make sure to
-                 * include any dependencies your code has within the compressed file. You can
-                 * learn more about code packaging in the [Appwrite Cloud Functions
-                 * tutorial](/docs/functions).
-                 *
-                 * Use the "command" param to set the entry point used to execute your code.
-                 *
-                 * @param {string} functionId
-                 * @param {string} command
-                 * @param {File} code
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                createTag: (functionId, command, code) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof functionId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "functionId"');
-                    }
-                    if (typeof command === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "command"');
-                    }
-                    if (typeof code === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "code"');
-                    }
-                    let path = '/functions/{functionId}/tags'.replace('{functionId}', functionId);
-                    let payload = {};
-                    if (typeof command !== 'undefined') {
-                        payload['command'] = command;
-                    }
-                    if (typeof code !== 'undefined') {
-                        payload['code'] = code;
-                    }
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('post', uri, {
-                        'content-type': 'multipart/form-data',
-                    }, payload);
-                }),
-                /**
-                 * Get Tag
-                 *
-                 * Get a code tag by its unique ID.
-                 *
-                 * @param {string} functionId
-                 * @param {string} tagId
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                getTag: (functionId, tagId) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof functionId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "functionId"');
-                    }
-                    if (typeof tagId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "tagId"');
-                    }
-                    let path = '/functions/{functionId}/tags/{tagId}'.replace('{functionId}', functionId).replace('{tagId}', tagId);
-                    let payload = {};
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('get', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Delete Tag
-                 *
-                 * Delete a code tag by its unique ID.
-                 *
-                 * @param {string} functionId
-                 * @param {string} tagId
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                deleteTag: (functionId, tagId) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof functionId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "functionId"');
-                    }
-                    if (typeof tagId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "tagId"');
-                    }
-                    let path = '/functions/{functionId}/tags/{tagId}'.replace('{functionId}', functionId).replace('{tagId}', tagId);
-                    let payload = {};
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('delete', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
@@ -3892,11 +3983,10 @@
             };
             this.storage = {
                 /**
-                 * List Files
+                 * List buckets
                  *
-                 * Get a list of all the user files. You can use the query params to filter
-                 * your results. On admin mode, this endpoint will return a list of all of the
-                 * project's files. [Learn more about different API modes](/docs/admin).
+                 * Get a list of all the storage buckets. You can use the query params to
+                 * filter your results.
                  *
                  * @param {string} search
                  * @param {number} limit
@@ -3907,8 +3997,222 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listFiles: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
-                    let path = '/storage/files';
+                listBuckets: (search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/storage/buckets';
+                    let payload = {};
+                    if (typeof search !== 'undefined') {
+                        payload['search'] = search;
+                    }
+                    if (typeof limit !== 'undefined') {
+                        payload['limit'] = limit;
+                    }
+                    if (typeof offset !== 'undefined') {
+                        payload['offset'] = offset;
+                    }
+                    if (typeof cursor !== 'undefined') {
+                        payload['cursor'] = cursor;
+                    }
+                    if (typeof cursorDirection !== 'undefined') {
+                        payload['cursorDirection'] = cursorDirection;
+                    }
+                    if (typeof orderType !== 'undefined') {
+                        payload['orderType'] = orderType;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create bucket
+                 *
+                 * Create a new storage bucket.
+                 *
+                 * @param {string} bucketId
+                 * @param {string} name
+                 * @param {string} permission
+                 * @param {string[]} read
+                 * @param {string[]} write
+                 * @param {boolean} enabled
+                 * @param {number} maximumFileSize
+                 * @param {string[]} allowedFileExtensions
+                 * @param {boolean} encryption
+                 * @param {boolean} antivirus
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createBucket: (bucketId, name, permission, read, write, enabled, maximumFileSize, allowedFileExtensions, encryption, antivirus) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof bucketId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "bucketId"');
+                    }
+                    if (typeof name === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "name"');
+                    }
+                    if (typeof permission === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "permission"');
+                    }
+                    let path = '/storage/buckets';
+                    let payload = {};
+                    if (typeof bucketId !== 'undefined') {
+                        payload['bucketId'] = bucketId;
+                    }
+                    if (typeof name !== 'undefined') {
+                        payload['name'] = name;
+                    }
+                    if (typeof permission !== 'undefined') {
+                        payload['permission'] = permission;
+                    }
+                    if (typeof read !== 'undefined') {
+                        payload['read'] = read;
+                    }
+                    if (typeof write !== 'undefined') {
+                        payload['write'] = write;
+                    }
+                    if (typeof enabled !== 'undefined') {
+                        payload['enabled'] = enabled;
+                    }
+                    if (typeof maximumFileSize !== 'undefined') {
+                        payload['maximumFileSize'] = maximumFileSize;
+                    }
+                    if (typeof allowedFileExtensions !== 'undefined') {
+                        payload['allowedFileExtensions'] = allowedFileExtensions;
+                    }
+                    if (typeof encryption !== 'undefined') {
+                        payload['encryption'] = encryption;
+                    }
+                    if (typeof antivirus !== 'undefined') {
+                        payload['antivirus'] = antivirus;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Get Bucket
+                 *
+                 * Get a storage bucket by its unique ID. This endpoint response returns a
+                 * JSON object with the storage bucket metadata.
+                 *
+                 * @param {string} bucketId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getBucket: (bucketId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof bucketId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "bucketId"');
+                    }
+                    let path = '/storage/buckets/{bucketId}'.replace('{bucketId}', bucketId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Bucket
+                 *
+                 * Update a storage bucket by its unique ID.
+                 *
+                 * @param {string} bucketId
+                 * @param {string} name
+                 * @param {string} permission
+                 * @param {string[]} read
+                 * @param {string[]} write
+                 * @param {boolean} enabled
+                 * @param {number} maximumFileSize
+                 * @param {string[]} allowedFileExtensions
+                 * @param {boolean} encryption
+                 * @param {boolean} antivirus
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateBucket: (bucketId, name, permission, read, write, enabled, maximumFileSize, allowedFileExtensions, encryption, antivirus) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof bucketId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "bucketId"');
+                    }
+                    if (typeof name === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "name"');
+                    }
+                    if (typeof permission === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "permission"');
+                    }
+                    let path = '/storage/buckets/{bucketId}'.replace('{bucketId}', bucketId);
+                    let payload = {};
+                    if (typeof name !== 'undefined') {
+                        payload['name'] = name;
+                    }
+                    if (typeof permission !== 'undefined') {
+                        payload['permission'] = permission;
+                    }
+                    if (typeof read !== 'undefined') {
+                        payload['read'] = read;
+                    }
+                    if (typeof write !== 'undefined') {
+                        payload['write'] = write;
+                    }
+                    if (typeof enabled !== 'undefined') {
+                        payload['enabled'] = enabled;
+                    }
+                    if (typeof maximumFileSize !== 'undefined') {
+                        payload['maximumFileSize'] = maximumFileSize;
+                    }
+                    if (typeof allowedFileExtensions !== 'undefined') {
+                        payload['allowedFileExtensions'] = allowedFileExtensions;
+                    }
+                    if (typeof encryption !== 'undefined') {
+                        payload['encryption'] = encryption;
+                    }
+                    if (typeof antivirus !== 'undefined') {
+                        payload['antivirus'] = antivirus;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('put', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Delete Bucket
+                 *
+                 * Delete a storage bucket by its unique ID.
+                 *
+                 * @param {string} bucketId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                deleteBucket: (bucketId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof bucketId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "bucketId"');
+                    }
+                    let path = '/storage/buckets/{bucketId}'.replace('{bucketId}', bucketId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('delete', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * List Files
+                 *
+                 * Get a list of all the user files. You can use the query params to filter
+                 * your results. On admin mode, this endpoint will return a list of all of the
+                 * project's files. [Learn more about different API modes](/docs/admin).
+                 *
+                 * @param {string} bucketId
+                 * @param {string} search
+                 * @param {number} limit
+                 * @param {number} offset
+                 * @param {string} cursor
+                 * @param {string} cursorDirection
+                 * @param {string} orderType
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                listFiles: (bucketId, search, limit, offset, cursor, cursorDirection, orderType) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof bucketId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "bucketId"');
+                    }
+                    let path = '/storage/buckets/{bucketId}/files'.replace('{bucketId}', bucketId);
                     let payload = {};
                     if (typeof search !== 'undefined') {
                         payload['search'] = search;
@@ -3936,10 +4240,26 @@
                 /**
                  * Create File
                  *
-                 * Create a new file. The user who creates the file will automatically be
-                 * assigned to read and write access unless he has passed custom values for
-                 * read and write arguments.
+                 * Create a new file. Before using this route, you should create a new bucket
+                 * resource using either a [server
+                 * integration](/docs/server/database#storageCreateBucket) API or directly
+                 * from your Appwrite console.
                  *
+                 * Larger files should be uploaded using multiple requests with the
+                 * [content-range](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range)
+                 * header to send a partial request with a maximum supported chunk of `5MB`.
+                 * The `content-range` header values should always be in bytes.
+                 *
+                 * When the first request is sent, the server will return the **File** object,
+                 * and the subsequent part request must include the file's **id** in
+                 * `x-appwrite-id` header to allow the server to know that the partial upload
+                 * is for the existing file and not for a new one.
+                 *
+                 * If you're creating a new file using one of the Appwrite SDKs, all the
+                 * chunking logic will be managed by the SDK internally.
+                 *
+                 *
+                 * @param {string} bucketId
                  * @param {string} fileId
                  * @param {File} file
                  * @param {string[]} read
@@ -3947,14 +4267,17 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createFile: (fileId, file, read, write) => __awaiter(this, void 0, void 0, function* () {
+                createFile: (bucketId, fileId, file, read, write, onProgress = (progress) => { }) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof bucketId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "bucketId"');
+                    }
                     if (typeof fileId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "fileId"');
                     }
                     if (typeof file === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "file"');
                     }
-                    let path = '/storage/files';
+                    let path = '/storage/buckets/{bucketId}/files'.replace('{bucketId}', bucketId);
                     let payload = {};
                     if (typeof fileId !== 'undefined') {
                         payload['fileId'] = fileId;
@@ -3969,9 +4292,51 @@
                         payload['write'] = write;
                     }
                     const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('post', uri, {
+                    const size = file.size;
+                    if (size <= Appwrite.CHUNK_SIZE) {
+                        return yield this.call('post', uri, {
+                            'content-type': 'multipart/form-data',
+                        }, payload);
+                    }
+                    let id = undefined;
+                    let response = undefined;
+                    const headers = {
                         'content-type': 'multipart/form-data',
-                    }, payload);
+                    };
+                    let counter = 0;
+                    const totalCounters = Math.ceil(size / Appwrite.CHUNK_SIZE);
+                    if (fileId != 'unique()') {
+                        try {
+                            response = yield this.call('GET', new URL(this.config.endpoint + path + '/' + fileId), headers);
+                            counter = response.chunksUploaded;
+                        }
+                        catch (e) {
+                        }
+                    }
+                    for (counter; counter < totalCounters; counter++) {
+                        const start = (counter * Appwrite.CHUNK_SIZE);
+                        const end = Math.min((((counter * Appwrite.CHUNK_SIZE) + Appwrite.CHUNK_SIZE) - 1), size);
+                        headers['content-range'] = 'bytes ' + start + '-' + end + '/' + size;
+                        if (id) {
+                            headers['x-appwrite-id'] = id;
+                        }
+                        const stream = file.slice(start, end + 1);
+                        payload['file'] = new File([stream], file.name);
+                        response = yield this.call('post', uri, headers, payload);
+                        if (!id) {
+                            id = response['$id'];
+                        }
+                        if (onProgress) {
+                            onProgress({
+                                $id: response.$id,
+                                progress: Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100,
+                                sizeUploaded: end + 1,
+                                chunksTotal: response.chunksTotal,
+                                chunksUploaded: response.chunksUploaded
+                            });
+                        }
+                    }
+                    return response;
                 }),
                 /**
                  * Get File
@@ -3979,15 +4344,19 @@
                  * Get a file by its unique ID. This endpoint response returns a JSON object
                  * with the file metadata.
                  *
+                 * @param {string} bucketId
                  * @param {string} fileId
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getFile: (fileId) => __awaiter(this, void 0, void 0, function* () {
+                getFile: (bucketId, fileId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof bucketId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "bucketId"');
+                    }
                     if (typeof fileId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "fileId"');
                     }
-                    let path = '/storage/files/{fileId}'.replace('{fileId}', fileId);
+                    let path = '/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
@@ -4000,23 +4369,21 @@
                  * Update a file by its unique ID. Only users with write permissions have
                  * access to update this resource.
                  *
+                 * @param {string} bucketId
                  * @param {string} fileId
                  * @param {string[]} read
                  * @param {string[]} write
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateFile: (fileId, read, write) => __awaiter(this, void 0, void 0, function* () {
+                updateFile: (bucketId, fileId, read, write) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof bucketId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "bucketId"');
+                    }
                     if (typeof fileId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "fileId"');
                     }
-                    if (typeof read === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "read"');
-                    }
-                    if (typeof write === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "write"');
-                    }
-                    let path = '/storage/files/{fileId}'.replace('{fileId}', fileId);
+                    let path = '/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
                     let payload = {};
                     if (typeof read !== 'undefined') {
                         payload['read'] = read;
@@ -4035,15 +4402,19 @@
                  * Delete a file by its unique ID. Only users with write permissions have
                  * access to delete this resource.
                  *
+                 * @param {string} bucketId
                  * @param {string} fileId
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                deleteFile: (fileId) => __awaiter(this, void 0, void 0, function* () {
+                deleteFile: (bucketId, fileId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof bucketId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "bucketId"');
+                    }
                     if (typeof fileId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "fileId"');
                     }
-                    let path = '/storage/files/{fileId}'.replace('{fileId}', fileId);
+                    let path = '/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('delete', uri, {
@@ -4057,15 +4428,19 @@
                  * 'Content-Disposition: attachment' header that tells the browser to start
                  * downloading the file to user downloads directory.
                  *
+                 * @param {string} bucketId
                  * @param {string} fileId
                  * @throws {AppwriteException}
                  * @returns {URL}
                  */
-                getFileDownload: (fileId) => {
+                getFileDownload: (bucketId, fileId) => {
+                    if (typeof bucketId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "bucketId"');
+                    }
                     if (typeof fileId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "fileId"');
                     }
-                    let path = '/storage/files/{fileId}/download'.replace('{fileId}', fileId);
+                    let path = '/storage/buckets/{bucketId}/files/{fileId}/download'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     payload['project'] = this.config.project;
@@ -4080,8 +4455,10 @@
                  * Get a file preview image. Currently, this method supports preview for image
                  * files (jpg, png, and gif), other supported formats, like pdf, docs, slides,
                  * and spreadsheets, will return the file icon image. You can also pass query
-                 * string arguments for cutting and resizing your preview image.
+                 * string arguments for cutting and resizing your preview image. Preview is
+                 * supported only for image files smaller than 10MB.
                  *
+                 * @param {string} bucketId
                  * @param {string} fileId
                  * @param {number} width
                  * @param {number} height
@@ -4097,11 +4474,14 @@
                  * @throws {AppwriteException}
                  * @returns {URL}
                  */
-                getFilePreview: (fileId, width, height, gravity, quality, borderWidth, borderColor, borderRadius, opacity, rotation, background, output) => {
+                getFilePreview: (bucketId, fileId, width, height, gravity, quality, borderWidth, borderColor, borderRadius, opacity, rotation, background, output) => {
+                    if (typeof bucketId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "bucketId"');
+                    }
                     if (typeof fileId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "fileId"');
                     }
-                    let path = '/storage/files/{fileId}/preview'.replace('{fileId}', fileId);
+                    let path = '/storage/buckets/{bucketId}/files/{fileId}/preview'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
                     let payload = {};
                     if (typeof width !== 'undefined') {
                         payload['width'] = width;
@@ -4150,15 +4530,19 @@
                  * download method but returns with no  'Content-Disposition: attachment'
                  * header.
                  *
+                 * @param {string} bucketId
                  * @param {string} fileId
                  * @throws {AppwriteException}
                  * @returns {URL}
                  */
-                getFileView: (fileId) => {
+                getFileView: (bucketId, fileId) => {
+                    if (typeof bucketId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "bucketId"');
+                    }
                     if (typeof fileId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "fileId"');
                     }
-                    let path = '/storage/files/{fileId}/view'.replace('{fileId}', fileId);
+                    let path = '/storage/buckets/{bucketId}/files/{fileId}/view'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     payload['project'] = this.config.project;
@@ -4555,6 +4939,10 @@
                  * after being redirected back to your app from the invitation email received
                  * by the user.
                  *
+                 * If the request is successful, a session for the user is automatically
+                 * created.
+                 *
+                 *
                  * @param {string} teamId
                  * @param {string} membershipId
                  * @param {string} userId
@@ -4867,8 +5255,9 @@
                 /**
                  * Update User Preferences
                  *
-                 * Update the user preferences by its unique ID. You can pass only the
-                 * specific settings you wish to update.
+                 * Update the user preferences by its unique ID. The object you pass is stored
+                 * as is, and replaces any previous value. The maximum allowed prefs size is
+                 * 64kB and throws error if exceeded.
                  *
                  * @param {string} userId
                  * @param {object} prefs
@@ -5195,7 +5584,7 @@
                         };
                     }
                     if (400 <= response.status) {
-                        throw new AppwriteException(data === null || data === void 0 ? void 0 : data.message, response.status, data);
+                        throw new AppwriteException(data === null || data === void 0 ? void 0 : data.message, response.status, data === null || data === void 0 ? void 0 : data.type, data);
                     }
                     const cookieFallback = response.headers.get('X-Fallback-Cookies');
                     if (typeof window !== 'undefined' && window.localStorage && cookieFallback) {
@@ -5227,8 +5616,27 @@
             return output;
         }
     }
+    Appwrite.CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
+    class Query {
+    }
+    Query.equal = (attribute, value) => Query.addQuery(attribute, "equal", value);
+    Query.notEqual = (attribute, value) => Query.addQuery(attribute, "notEqual", value);
+    Query.lesser = (attribute, value) => Query.addQuery(attribute, "lesser", value);
+    Query.lesserEqual = (attribute, value) => Query.addQuery(attribute, "lesserEqual", value);
+    Query.greater = (attribute, value) => Query.addQuery(attribute, "greater", value);
+    Query.greaterEqual = (attribute, value) => Query.addQuery(attribute, "greaterEqual", value);
+    Query.search = (attribute, value) => Query.addQuery(attribute, "search", value);
+    Query.addQuery = (attribute, oper, value) => value instanceof Array
+        ? `${attribute}.${oper}(${value
+        .map((v) => Query.parseValues(v))
+        .join(",")})`
+        : `${attribute}.${oper}(${Query.parseValues(value)})`;
+    Query.parseValues = (value) => typeof value === "string" || value instanceof String
+        ? `"${value}"`
+        : `${value}`;
 
     exports.Appwrite = Appwrite;
+    exports.Query = Query;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 

@@ -3,10 +3,16 @@
 namespace Tests\E2E\Services\Functions;
 
 use Tests\E2E\Client;
+use Utopia\CLI\Console;
 
 trait FunctionsBase
 {
-    
+    protected string $stdout = '';
+    protected string $stderr = '';
+
+    protected function packageCode($folder) {
+        Console::execute('cd '.realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+    }
 
     // /**
     //  * @depends testCreateTeam
@@ -26,8 +32,8 @@ trait FunctionsBase
     //     $this->assertEquals(200, $response['headers']['status-code']);
     //     $this->assertNotEmpty($response['body']['$id']);
     //     $this->assertEquals('Arsenal', $response['body']['name']);
-    //     $this->assertGreaterThan(-1, $response['body']['sum']);
-    //     $this->assertIsInt($response['body']['sum']);
+    //     $this->assertGreaterThan(-1, $response['body']['total']);
+    //     $this->assertIsInt($response['body']['total']);
     //     $this->assertIsInt($response['body']['dateCreated']);
 
     //     /**
@@ -51,8 +57,8 @@ trait FunctionsBase
     //     ], $this->getHeaders()));
 
     //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertGreaterThan(0, $response['body']['sum']);
-    //     $this->assertIsInt($response['body']['sum']);
+    //     $this->assertGreaterThan(0, $response['body']['total']);
+    //     $this->assertIsInt($response['body']['total']);
     //     $this->assertCount(3, $response['body']['teams']);
 
     //     $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
@@ -63,8 +69,8 @@ trait FunctionsBase
     //     ]);
 
     //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertGreaterThan(0, $response['body']['sum']);
-    //     $this->assertIsInt($response['body']['sum']);
+    //     $this->assertGreaterThan(0, $response['body']['total']);
+    //     $this->assertIsInt($response['body']['total']);
     //     $this->assertCount(2, $response['body']['teams']);
         
     //     $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
@@ -75,8 +81,8 @@ trait FunctionsBase
     //     ]);
 
     //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertGreaterThan(0, $response['body']['sum']);
-    //     $this->assertIsInt($response['body']['sum']);
+    //     $this->assertGreaterThan(0, $response['body']['total']);
+    //     $this->assertIsInt($response['body']['total']);
     //     $this->assertCount(2, $response['body']['teams']);
         
     //     $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
@@ -87,8 +93,8 @@ trait FunctionsBase
     //     ]);
 
     //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertGreaterThan(0, $response['body']['sum']);
-    //     $this->assertIsInt($response['body']['sum']);
+    //     $this->assertGreaterThan(0, $response['body']['total']);
+    //     $this->assertIsInt($response['body']['total']);
     //     $this->assertCount(1, $response['body']['teams']);
     //     $this->assertEquals('Manchester United', $response['body']['teams'][0]['name']);
         
@@ -100,8 +106,8 @@ trait FunctionsBase
     //     ]);
 
     //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertGreaterThan(0, $response['body']['sum']);
-    //     $this->assertIsInt($response['body']['sum']);
+    //     $this->assertGreaterThan(0, $response['body']['total']);
+    //     $this->assertIsInt($response['body']['total']);
     //     $this->assertCount(1, $response['body']['teams']);
     //     $this->assertEquals('Manchester United', $response['body']['teams'][0]['name']);
 
@@ -127,8 +133,8 @@ trait FunctionsBase
     //     $this->assertEquals(201, $response['headers']['status-code']);
     //     $this->assertNotEmpty($response['body']['$id']);
     //     $this->assertEquals('Demo', $response['body']['name']);
-    //     $this->assertGreaterThan(-1, $response['body']['sum']);
-    //     $this->assertIsInt($response['body']['sum']);
+    //     $this->assertGreaterThan(-1, $response['body']['total']);
+    //     $this->assertIsInt($response['body']['total']);
     //     $this->assertIsInt($response['body']['dateCreated']);
 
     //     $response = $this->client->call(Client::METHOD_PUT, '/teams/'.$response['body']['$id'], array_merge([
@@ -141,8 +147,8 @@ trait FunctionsBase
     //     $this->assertEquals(200, $response['headers']['status-code']);
     //     $this->assertNotEmpty($response['body']['$id']);
     //     $this->assertEquals('Demo New', $response['body']['name']);
-    //     $this->assertGreaterThan(-1, $response['body']['sum']);
-    //     $this->assertIsInt($response['body']['sum']);
+    //     $this->assertGreaterThan(-1, $response['body']['total']);
+    //     $this->assertIsInt($response['body']['total']);
     //     $this->assertIsInt($response['body']['dateCreated']);
 
     //     /**
@@ -176,8 +182,8 @@ trait FunctionsBase
     //     $this->assertEquals(201, $response['headers']['status-code']);
     //     $this->assertNotEmpty($response['body']['$id']);
     //     $this->assertEquals('Demo', $response['body']['name']);
-    //     $this->assertGreaterThan(-1, $response['body']['sum']);
-    //     $this->assertIsInt($response['body']['sum']);
+    //     $this->assertGreaterThan(-1, $response['body']['total']);
+    //     $this->assertIsInt($response['body']['total']);
     //     $this->assertIsInt($response['body']['dateCreated']);
 
     //     $response = $this->client->call(Client::METHOD_DELETE, '/teams/'.$teamUid, array_merge([

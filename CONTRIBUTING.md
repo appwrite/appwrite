@@ -48,9 +48,9 @@ $ git checkout -b [name_of_your_new_branch]
 $ git push origin [name_of_your_new_branch]
 ```
 
-5. Submit your changes for review
+5. Submit your changes for review  
 If you go to your repository on GitHub, you'll see a `Compare & pull request` button. Click on that button.
-6. Start a Pull Request
+6. Start a Pull Request  
 Now submit the pull request and click on `Create pull request`.
 7. Get a code review approval/reject
 8. After approval, merge your PR
@@ -282,7 +282,7 @@ docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7
 ```
 **Build Functions Runtimes**
 
-The Runtimes for all supported cloud functions (multicore builds) can be found at the [appwrite/php-runtimes](https://github.com/appwrite/php-runtimes) repository.
+The Runtimes for all supported cloud functions (multicore builds) can be found at the [open-runtimes/open-runtimes](https://github.com/open-runtimes/open-runtimes) repository.
 
 ## Generate SDK
 

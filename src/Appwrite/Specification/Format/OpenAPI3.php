@@ -275,7 +275,13 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = false;
                         break;
                     case 'Utopia\Database\Validator\UID':
-                    case 'Appwrite\Database\Validator\CustomId':
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
+                        break;
+                    case 'Appwrite\Utopia\Database\Validator\CustomId':
+                        if($route->getLabel('sdk.methodType', '') === 'upload') {
+                            $node['schema']['x-upload-id'] = true;
+                        }
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
@@ -325,8 +331,13 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = $validator->getMin();
                         break;
                     case 'Utopia\Validator\Numeric':
+                    case 'Utopia\Validator\Integer':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'int32';
+                        break;
+                    case 'Utopia\Validator\FloatValidator':
+                        $node['schema']['type'] = 'number';
+                        $node['schema']['format'] = 'float';
                         break;
                     case 'Utopia\Validator\Length':
                         $node['schema']['type'] = $validator->getType();
@@ -367,8 +378,12 @@ class OpenAPI3 extends Format
                     $body['content'][$consumes[0]]['schema']['properties'][$name] = [
                         'type' => $node['schema']['type'],
                         'description' => $node['description'],
-                        'x-example' => $node['x-example'] ?? null,
+                        'x-example' => $node['schema']['x-example'] ?? null
                     ];
+
+                    if($node['schema']['x-upload-id'] ?? false) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-upload-id'] = $node['schema']['x-upload-id'];
+                    }
 
                     if(isset($node['default'])) {
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['default'] = $node['default'];
@@ -438,8 +453,12 @@ class OpenAPI3 extends Format
 
                 switch ($rule['type']) {
                     case 'string':
-                    case 'json':
                         $type = 'string';
+                        break;
+
+                    case 'json':
+                        $type = 'object';
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['additionalProperties'] = true;
                         break;
 
                     case 'integer':
@@ -501,9 +520,6 @@ class OpenAPI3 extends Format
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['format'] = $format;
                     }
 
-                    if($items) {
-                        $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
-                    }
                 } else {
                     $output['components']['schemas'][$model->getType()]['properties'][$name] = [
                         'type' => $type,
@@ -515,9 +531,9 @@ class OpenAPI3 extends Format
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['format'] = $format;
                     }
 
-                    if($items) {
-                        $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
-                    }
+                }
+                if($items) {
+                    $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
                 }
                 if (!in_array($name, $required)) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['nullable'] = true;

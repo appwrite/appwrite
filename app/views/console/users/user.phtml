@@ -295,8 +295,8 @@
                     data-param-user-id="{{router.params.id}}"
                     data-event="load,users.update">
 
-                    <div data-ls-if="{{sessions.sessions.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
-                        No sessions available.
+                    <div class="box margin-top margin-bottom" data-ls-if="{{sessions.sessions.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
+                        <h3 class="text-bold margin-bottom-no">No sessions available.</h3>
                     </div>
 
                     <div data-ls-if="{{sessions.sessions.length}} !== 0" style="display: none">
@@ -372,8 +372,8 @@
                     data-param-user-id="{{router.params.id}}"
                     data-event="load,logs-load">
 
-                    <div data-ls-if="{{logs.logs.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
-                        No logs available.
+                    <div class="box margin-top margin-bottom" data-ls-if="{{logs.logs.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
+                        <h3 class="text-bold margin-bottom-no">No logs available.</h3>
                     </div>
 
                     <div class="box" data-ls-if="{{logs.logs.length}} !== 0" style="display: none">
@@ -394,7 +394,7 @@
                                     <td data-title="Client: ">
                                         <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{log.clientCode|lowercase}} !== 'cli'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.clientCode|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
                                         
-                                        <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{log.clientCode|lowercase}} === 'cli'" data-ls-attrs="src=/images/clients/terminal.png?buster=<?php echo APP_CACHE_BUSTER; ?>,,title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
+                                        <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{log.clientCode|lowercase}} === 'cli'" data-ls-attrs="src=/images/clients/terminal.png?buster=<?php echo APP_CACHE_BUSTER; ?>,title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
                                         
                                         <span data-ls-if="({{log.clientName}})" data-ls-bind="{{log.clientName}} {{log.clientVersion}} on {{log.model}} {{log.osName}} {{log.osVersion}}"></span>
                                         <div data-ls-if="(!{{log.clientName}})" class="text-align-center text-fade">Unknown</div>

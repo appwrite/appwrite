@@ -47,7 +47,7 @@ class Detector
      */
     public function getClient(): array
     {
-        if (strpos($this->userAgent, 'Appwrite CLI') !== false) {
+        if (strpos($this->userAgent, 'AppwriteCLI') !== false) {
             $version = explode(' ', $this->userAgent)[0];
             $version = explode('/', $version)[1];
             $client = [

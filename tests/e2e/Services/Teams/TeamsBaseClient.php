@@ -22,11 +22,53 @@ trait TeamsBaseClient
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsInt($response['body']['sum']);
+        $this->assertIsInt($response['body']['total']);
         $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
         $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['name']);
         $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['email']);
         $this->assertEquals('owner', $response['body']['memberships'][0]['roles'][0]);
+
+        $membershipId = $response['body']['memberships'][0]['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid.'/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $this->getUser()['$id']
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertNotEmpty($response['body']['memberships'][0]);
+        $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['name']);
+        $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['email']);
+        $this->assertEquals('owner', $response['body']['memberships'][0]['roles'][0]);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid.'/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $membershipId
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertNotEmpty($response['body']['memberships'][0]);
+        $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['name']);
+        $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['email']);
+        $this->assertEquals('owner', $response['body']['memberships'][0]['roles'][0]);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid.'/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'unknown'
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertEmpty($response['body']['memberships']);
+        $this->assertEquals(0, $response['body']['total']);
 
         /**
          * Test for FAILURE
@@ -149,7 +191,7 @@ trait TeamsBaseClient
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $memberships['headers']['status-code']);
-        $this->assertIsInt($memberships['body']['sum']);
+        $this->assertIsInt($memberships['body']['total']);
         $this->assertNotEmpty($memberships['body']['memberships']);
         $this->assertCount(2, $memberships['body']['memberships']);
 
@@ -161,7 +203,7 @@ trait TeamsBaseClient
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsInt($response['body']['sum']);
+        $this->assertIsInt($response['body']['total']);
         $this->assertNotEmpty($response['body']['memberships']);
         $this->assertCount(1, $response['body']['memberships']);
         $this->assertEquals($memberships['body']['memberships'][1]['$id'], $response['body']['memberships'][0]['$id']);
@@ -306,6 +348,17 @@ trait TeamsBaseClient
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.$membershipUid.'/status', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'secret' => $secret,
+            'userId' => $userUid,
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+
         return $data;
     }
 
@@ -399,7 +452,7 @@ trait TeamsBaseClient
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, $response['body']['sum']);
+        $this->assertEquals(2, $response['body']['total']);
         
         $ownerMembershipUid = $response['body']['memberships'][0]['$id'];
 
@@ -454,7 +507,7 @@ trait TeamsBaseClient
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertEquals(1, $response['body']['total']);
 
         /**
          * Test for when the owner tries to delete their membership

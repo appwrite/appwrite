@@ -6,6 +6,7 @@ use Appwrite\Resque\Worker;
 use Appwrite\Stats\Stats;
 use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
+use Executor\Executor;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -13,89 +14,19 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Orchestration\Orchestration;
-use Utopia\Orchestration\Adapter\DockerAPI;
-use Utopia\Orchestration\Container;
-use Utopia\Orchestration\Exception\Orchestration as OrchestrationException;
-use Utopia\Orchestration\Exception\Timeout as TimeoutException;
 
 require_once __DIR__.'/../init.php';
-
-Runtime::enableCoroutine(0);
 
 Console::title('Functions V1 Worker');
 Console::success(APP_NAME . ' functions worker v1 has started');
 
-$runtimes = Config::getParam('runtimes');
-
-$dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
-$dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
-$dockerEmail = App::getEnv('DOCKERHUB_PULL_EMAIL', null);
-$orchestration = new Orchestration(new DockerAPI($dockerUser, $dockerPass, $dockerEmail));
-
-/**
- * Warmup Docker Images
- */
-$warmupStart = \microtime(true);
-
-Co\run(function () use ($runtimes, $orchestration) {  // Warmup: make sure images are ready to run fast 🚀
-    foreach ($runtimes as $runtime) {
-        go(function () use ($runtime, $orchestration) {
-            Console::info('Warming up ' . $runtime['name'] . ' ' . $runtime['version'] . ' environment...');
-
-            $response = $orchestration->pull($runtime['image']);
-
-            if ($response) {
-                Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
-            } else {
-                Console::error("Failed to Warmup {$runtime['name']} {$runtime['version']}!");
-            }
-        });
-    }
-});
-
-$warmupEnd = \microtime(true);
-$warmupTime = $warmupEnd - $warmupStart;
-
-Console::success('Finished warmup in ' . $warmupTime . ' seconds');
-
-/**
- * List function servers
- */
-$stdout = '';
-$stderr = '';
-
-$executionStart = \microtime(true);
-
-$response = $orchestration->list(['label' => 'appwrite-type=function']);
-/** @var Container[] $list */
-$list = [];
-
-foreach ($response as $value) {
-    $list[$value->getName()] = $value;
-}
-
-$executionEnd = \microtime(true);
-
-Console::info(count($list) . ' functions listed in ' . ($executionEnd - $executionStart) . ' seconds');
-
-/**
- * 1. Get event args - DONE
- * 2. Unpackage code in the isolated container - DONE
- * 3. Execute in container with timeout
- *      + messure execution time - DONE
- *      + pass env vars - DONE
- *      + pass one-time api key
- * 4. Update execution status - DONE
- * 5. Update execution stdout & stderr - DONE
- * 6. Trigger audit log - DONE
- * 7. Trigger usage log - DONE
- */
-
-// TODO avoid scheduled execution if delay is bigger than X offest
-
 class FunctionsV1 extends Worker
 {
+    /**
+     * @var Executor
+     */
+    private $executor = null;
+
     public array $args = [];
 
     public array $allowed = [];
@@ -106,6 +37,7 @@ class FunctionsV1 extends Worker
 
     public function init(): void
     {
+        $this->executor = new Executor();
     }
 
     public function run(): void
@@ -133,13 +65,7 @@ class FunctionsV1 extends Worker
                 /** @var Document[] $functions */
 
                 while ($sum >= $limit) {
-
-                    Authorization::disable();
-
-                    $functions = $database->find('functions', [], $limit, $offset, ['name'], [Database::ORDER_ASC]);
-
-                    Authorization::reset();
-
+                    $functions = Authorization::skip(fn() => $database->find('functions', [], $limit, $offset, ['name'], [Database::ORDER_ASC]));
                     $sum = \count($functions);
                     $offset = $offset + $limit;
 
@@ -147,31 +73,31 @@ class FunctionsV1 extends Worker
 
                     foreach ($functions as $function) {
                         $events =  $function->getAttribute('events', []);
-                        $tag =  $function->getAttribute('tag', []);
 
-                        Console::success('Itterating function: ' . $function->getAttribute('name'));
-
-                        if (!\in_array($event, $events) || empty($tag)) {
+                        if (!\in_array($event, $events)) {
                             continue;
                         }
 
-                        Console::success('Triggered function: ' . $event);
+                        Console::success('Iterating function: ' . $function->getAttribute('name'));
 
                         $this->execute(
-                            trigger: 'event',
                             projectId: $projectId,
-                            executionId: '',
-                            database: $database,
                             function: $function,
+                            dbForProject: $database,
+                            executionId: $executionId,
+                            webhooks: $webhooks,
+                            trigger: $trigger,
                             event: $event,
                             eventData: $eventData,
                             data: $data,
-                            webhooks: $webhooks,
                             userId: $userId,
                             jwt: $jwt
                         );
+
+                        Console::success('Triggered function: ' . $event);
                     }
                 }
+
                 break;
 
             case 'schedule':
@@ -189,9 +115,7 @@ class FunctionsV1 extends Worker
                  */
 
                 // Reschedule
-                Authorization::disable();
-                $function = $database->getDocument('functions', $functionId);
-                Authorization::reset();
+                $function = Authorization::skip(fn() => $database->getDocument('functions', $functionId));
 
                 if (empty($function->getId())) {
                     throw new Exception('Function not found ('.$functionId.')');
@@ -208,306 +132,209 @@ class FunctionsV1 extends Worker
                     ->setAttribute('scheduleNext', $next)
                     ->setAttribute('schedulePrevious', \time());
 
-                Authorization::disable();
+                $function = Authorization::skip(function()  use ($database, $function, $next, $functionId) {
+                    $function = $database->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
+                        'scheduleNext' => (int)$next,
+                    ])));
+    
+                    if ($function === false) {
+                        throw new Exception('Function update failed (' . $functionId . ')');
+                    }
+                    return $function;
+                });
 
-                $function = $database->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
-                    'scheduleNext' => (int)$next,
-                ])));
-
-                if ($function === false) {
-                    throw new Exception('Function update failed (' . $functionId . ')');
-                }
-
-                Authorization::reset();
-
-                ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
+                ResqueScheduler::enqueueAt($next, Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME, [
                     'projectId' => $projectId,
                     'webhooks' => $webhooks,
                     'functionId' => $function->getId(),
+                    'userId' => $userId,
                     'executionId' => null,
                     'trigger' => 'schedule',
                     'scheduleOriginal' => $function->getAttribute('schedule', ''),
-                ]);  // Async task rescheduale
+                ]);  // Async task reschedule
 
                 $this->execute(
-                    trigger: $trigger,
                     projectId: $projectId,
-                    executionId: $executionId,
-                    database: $database,
                     function: $function,
-                    data: $data,
+                    dbForProject: $database,
+                    executionId: $executionId,
                     webhooks: $webhooks,
+                    trigger: $trigger,
+                    event: $event,
+                    eventData: $eventData,
+                    data: $data,
                     userId: $userId,
                     jwt: $jwt
                 );
                 break;
 
             case 'http':
-                Authorization::disable();
-                $function = $database->getDocument('functions', $functionId);
-                Authorization::reset();
+                $function = Authorization::skip(fn() => $database->getDocument('functions', $functionId));
 
                 if (empty($function->getId())) {
                     throw new Exception('Function not found ('.$functionId.')');
                 }
 
                 $this->execute(
-                    trigger: $trigger,
                     projectId: $projectId,
-                    executionId: $executionId,
-                    database: $database,
                     function: $function,
-                    data: $data,
+                    dbForProject: $database,
+                    executionId: $executionId,
                     webhooks: $webhooks,
+                    trigger: $trigger,
+                    event: $event,
+                    eventData: $eventData,
+                    data: $data,
                     userId: $userId,
                     jwt: $jwt
                 );
+
                 break;
         }
     }
 
-    /**
-     * Execute function tag
-     * 
-     * @param string $trigger
-     * @param string $projectId
-     * @param string $executionId
-     * @param Database $database
-     * @param Document $function
-     * @param string $event
-     * @param string $eventData
-     * @param string $data
-     * @param array $webhooks
-     * @param string $userId
-     * @param string $jwt
-     * 
-     * @return void
-     */
-    public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $eventData = '', string $data = '', array $webhooks = [], string $userId = '', string $jwt = ''): void
-    {
-        global $list, $register, $orchestration;
+    private function execute(
+        string $projectId,
+        Document $function,
+        Database $dbForProject,
+        string $executionId,
+        array $webhooks,
+        string $trigger,
+        string $event, 
+        string $eventData,
+        string $data,
+        string $userId,
+        string $jwt
+    ) {
 
-        $runtimes = Config::getParam('runtimes');
+        $functionId = $function->getId();
+        $deploymentId = $function->getAttribute('deployment', '');
 
-        Authorization::disable();
-        $tag = $database->getDocument('tags', $function->getAttribute('tag', ''));
-        Authorization::reset();
+        /** Check if deployment exists */
+        $deployment = Authorization::skip(fn() => $dbForProject->getDocument('deployments', $deploymentId));
 
-        if ($tag->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception('Tag not found', 404);
+        if ($deployment->getAttribute('resourceId') !== $functionId) {
+            throw new Exception('Deployment not found. Create deployment before trying to execute a function', 404);
         }
 
-        Authorization::disable();
-
-        $execution = (!empty($executionId)) ? $database->getDocument('executions', $executionId) : $database->createDocument('executions', new Document([
-            '$read' => [],
-            '$write' => [],
-            'dateCreated' => time(),
-            'functionId' => $function->getId(),
-            'trigger' => $trigger, // http / schedule / event
-            'status' => 'processing', // waiting / processing / completed / failed
-            'exitCode' => 0,
-            'stdout' => '',
-            'stderr' => '',
-            'time' => 0,
-        ]));
-
-        if ($execution->isEmpty()) {
-            throw new Exception('Failed to create or read execution');
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found. Create deployment before trying to execute a function', 404);
         }
 
-        Authorization::reset();
+        /** Check if build has exists */
+        $build = Authorization::skip(fn() => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+        if ($build->isEmpty()) {
+            throw new Exception('Build not found', 404);
+        }
 
-        $runtime = (isset($runtimes[$function->getAttribute('runtime', '')]))
-            ? $runtimes[$function->getAttribute('runtime', '')]
-            : null;
+        if ($build->getAttribute('status') !== 'ready') {
+            throw new Exception('Build not ready', 400);
+        }
+
+        /** Check if  runtime is supported */
+        $runtimes = Config::getParam('runtimes', []);
+        $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
         if (\is_null($runtime)) {
-            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
+            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported', 400);
         }
 
-        $vars = \array_merge($function->getAttribute('vars', []), [
-            'APPWRITE_FUNCTION_ID' => $function->getId(),
+        /** Create execution or update execution status */
+        $execution = Authorization::skip(function() use ($dbForProject, &$executionId, $functionId, $deploymentId, $trigger, $userId) {
+            $execution = $dbForProject->getDocument('executions', $executionId);
+            if ($execution->isEmpty()) {
+                $executionId = $dbForProject->getId();
+                $execution = $dbForProject->createDocument('executions', new Document([
+                    '$id' => $executionId,
+                    '$read' => $userId ? ['user:' . $userId] : [],
+                    '$write' => [],
+                    'dateCreated' => time(),
+                    'functionId' => $functionId,
+                    'deploymentId' => $deploymentId,
+                    'trigger' => $trigger,
+                    'status' => 'waiting',
+                    'statusCode' => 0,
+                    'stdout' => '',
+                    'stderr' => '',
+                    'time' => 0.0,
+                    'search' => implode(' ', [$functionId, $executionId]),
+                ]));
+                
+                if ($execution->isEmpty()) {
+                    throw new Exception('Failed to create or read execution');
+                }
+            }
+            $execution->setAttribute('status', 'processing');
+            $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+            return $execution;
+        });
+
+        /** Collect environment variables */
+        $vars = [
+            'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-            'APPWRITE_FUNCTION_TAG' => $tag->getId(),
-            'APPWRITE_FUNCTION_TRIGGER' => $trigger,
+            'APPWRITE_FUNCTION_DEPLOYMENT' => $deploymentId,
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
+            'APPWRITE_FUNCTION_TRIGGER' => $trigger,
             'APPWRITE_FUNCTION_EVENT' => $event,
             'APPWRITE_FUNCTION_EVENT_DATA' => $eventData,
             'APPWRITE_FUNCTION_DATA' => $data,
+            'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
             'APPWRITE_FUNCTION_USER_ID' => $userId,
             'APPWRITE_FUNCTION_JWT' => $jwt,
-            'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
-        ]);
-        $tagId = $tag->getId() ?? '';
-        $tagPath = $tag->getAttribute('path', '');
-        $tagPathTarget = '/tmp/project-' . $projectId . '/' . $tagId . '/code.tar.gz';
-        $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
-        $container = 'appwrite-function-' . $tagId;
-        $command = \escapeshellcmd($tag->getAttribute('command', ''));
+        ];
+        $vars = \array_merge($function->getAttribute('vars', []), $vars);
 
-        if (!\is_readable($tagPath)) {
-            throw new Exception('Code is not readable: ' . $tag->getAttribute('path', ''));
-        }
-
-        if (!\file_exists($tagPathTargetDir)) {
-            if (!\mkdir($tagPathTargetDir, 0755, true)) {
-                throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
-            }
-        }
-
-        if (!\file_exists($tagPathTarget)) {
-            if (!\copy($tagPath, $tagPathTarget)) {
-                throw new Exception('Can\'t create temporary code file ' . $tagPathTarget);
-            }
-        }
-
-        if (isset($list[$container]) && !(\substr($list[$container]->getStatus(), 0, 2) === 'Up')) { // Remove container if not online
-            $stdout = '';
-            $stderr = '';
-
-            try {
-                $orchestration->remove($container);
-            } catch (Exception $e) {
-                Console::warning('Failed to remove container: ' . $e->getMessage());
-            }
-
-            unset($list[$container]);
-        }
-
-        /**
-         * Limit CPU Usage - DONE
-         * Limit Memory Usage - DONE
-         * Limit Network Usage
-         * Limit Storage Usage (//--storage-opt size=120m \)
-         * Make sure no access to redis, mariadb, influxdb or other system services
-         * Make sure no access to NFS server / storage volumes
-         * Access Appwrite REST from internal network for improved performance
-         */
-        if (!isset($list[$container])) { // Create container if not ready
-            $stdout = '';
-            $stderr = '';
-
-            $executionStart = \microtime(true);
-            $executionTime = \time();
-
-            $orchestration->setCpus((int) App::getEnv('_APP_FUNCTIONS_CPUS', 0));
-            $orchestration->setMemory((int) App::getEnv('_APP_FUNCTIONS_MEMORY', 256));
-            $orchestration->setSwap((int) App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
-
-            foreach ($vars as $key => $value) {
-                $vars[$key] = strval($value);
-            }
-
-            $id = $orchestration->run(
-                image: $runtime['image'],
-                name: $container,
-                command: [
-                    'tail',
-                    '-f',
-                    '/dev/null'
-                ],
-                entrypoint: '',
-                workdir: '/usr/local/src',
-                volumes: [],
-                vars: $vars,
-                mountFolder: $tagPathTargetDir,
-                labels: [
-                    'appwrite-type' => 'function',
-                    'appwrite-created' => strval($executionTime)
-                ]
-            );
-
-            $untarStdout = '';
-            $untarStderr = '';
-
-            $untarSuccess = $orchestration->execute(
-                name: $container,
-                command: [
-                    'sh',
-                    '-c',
-                    'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz'
-                ],
-                stdout: $untarStdout,
-                stderr: $untarStderr,
-                vars: $vars,
-                timeout: 60
-            );
-
-            if (!$untarSuccess) {
-                throw new Exception('Failed to extract tar: ' . $untarStderr);
-            }
-
-            $executionEnd = \microtime(true);
-
-            $list[$container] = new Container(
-                $container,
-                $id,
-                'Up',
-                [
-                    'appwrite-type' => 'function',
-                    'appwrite-created' => strval($executionTime),
-                ]
-            );
-
-            Console::info('Function created in ' . ($executionEnd - $executionStart) . ' seconds');
-        } else {
-            Console::info('Container is ready to run');
-        }
-
-        $stdout = '';
-        $stderr = '';
-
-        $executionStart = \microtime(true);
-
-        $exitCode = 0;
-
+        /** Execute function */
         try {
-            $exitCode = (int) !$orchestration->execute(
-                name: $container,
-                command: $orchestration->parseCommandString($command),
-                stdout: $stdout,
-                stderr: $stderr,
+            $executionResponse = $this->executor->createExecution(
+                projectId: $projectId,
+                deploymentId: $deploymentId,
+                path: $build->getAttribute('outputPath', ''),
                 vars: $vars,
-                timeout: $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900))
+                entrypoint: $deployment->getAttribute('entrypoint', ''),
+                data: $vars['APPWRITE_FUNCTION_DATA'],
+                runtime: $function->getAttribute('runtime', ''),
+                timeout: $function->getAttribute('timeout', 0),
+                baseImage: $runtime['image']
             );
-        } catch (TimeoutException $e) {
-            $exitCode = 124;
-        } catch (OrchestrationException $e) {
-            $stderr = $e->getMessage();
-            $exitCode = 1;
+
+            /** Update execution status */
+            $execution->setAttribute('status', $executionResponse['status']);
+            $execution->setAttribute('statusCode', $executionResponse['statusCode']);
+            $execution->setAttribute('stdout', $executionResponse['stdout']);
+            $execution->setAttribute('stderr', $executionResponse['stderr']);
+            $execution->setAttribute('time', $executionResponse['time']);
+        } catch (\Throwable $th) {
+            $execution->setAttribute('status', 'failed');
+            $execution->setAttribute('statusCode', $th->getCode());
+            $execution->setAttribute('stderr', $th->getMessage());
+            Console::error($th->getMessage());
         }
 
-        $executionEnd = \microtime(true);
-        $executionTime = ($executionEnd - $executionStart);
-        $functionStatus = ($exitCode === 0) ? 'completed' : 'failed';
+        $execution = Authorization::skip(fn() => $dbForProject->updateDocument('executions', $executionId, $execution));
 
-        Console::info('Function executed in ' . ($executionEnd - $executionStart) . ' seconds, status: ' . $functionStatus);
-
-        $execution = Authorization::skip(fn() => $database->updateDocument('executions', $execution->getId(), new Document(array_merge($execution->getArrayCopy(), [
-                'tagId' => $tag->getId(),
-                'status' => $functionStatus,
-                'exitCode' => $exitCode,
-                'stdout' => \utf8_encode(\mb_substr($stdout, -8000)), // log last 8000 chars output
-                'stderr' => \utf8_encode(\mb_substr($stderr, -8000)), // log last 8000 chars output
-                'time' => (float)$executionTime,
-            ]))));
-
+        /** Trigger Webhook */
         $executionModel = new Execution();
-        $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
-
+        $executionUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
         $executionUpdate
             ->setParam('projectId', $projectId)
             ->setParam('userId', $userId)
             ->setParam('webhooks', $webhooks)
             ->setParam('event', 'functions.executions.update')
             ->setParam('eventData', $execution->getArrayCopy(array_keys($executionModel->getRules())));
-
         $executionUpdate->trigger();
 
+        /** Trigger realtime event */
         $target = Realtime::fromPayload('functions.executions.update', $execution);
-
+        Realtime::send(
+            projectId: 'console',
+            payload: $execution->getArrayCopy(),
+            event: 'functions.executions.update',
+            channels: $target['channels'],
+            roles: $target['roles']
+        );
         Realtime::send(
             projectId: $projectId,
             payload: $execution->getArrayCopy(),
@@ -516,87 +343,22 @@ class FunctionsV1 extends Worker
             roles: $target['roles']
         );
 
-        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        /** Update usage stats */
+        global $register;
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
             $statsd = $register->get('statsd');
-
             $usage = new Stats($statsd);
-
             $usage
                 ->setParam('projectId', $projectId)
                 ->setParam('functionId', $function->getId())
                 ->setParam('functionExecution', 1)
-                ->setParam('functionStatus', $functionStatus)
-                ->setParam('functionExecutionTime', $executionTime * 1000) // ms
+                ->setParam('functionStatus', $execution->getAttribute('status', ''))
+                ->setParam('functionExecutionTime', $execution->getAttribute('time') * 1000) // ms
                 ->setParam('networkRequestSize', 0)
                 ->setParam('networkResponseSize', 0)
-                ->submit()
-            ;
-
+                ->submit();
             $usage->submit();
         }
-
-        $this->cleanup();
-    }
-
-    /**
-     * Cleanup any hanging containers above the allowed max containers.
-     * 
-     * @return void
-     */
-    public function cleanup(): void
-    {
-        /** @var Container[] $list */
-        global $list;
-        /** @var Orchestration $orchestration */
-        global $orchestration;
-
-        Console::success(count($list) . ' running containers counted');
-
-        $max = (int) App::getEnv('_APP_FUNCTIONS_CONTAINERS');
-
-        if (\count($list) > $max) {
-            Console::info('Starting containers cleanup');
-
-            \uasort($list, function (Container $item1, Container $item2) {
-                return (int)($item1->getLabels['appwrite-created'] ?? 0) <=> (int)($item2->getLabels['appwrite-created'] ?? 0);
-            });
-
-            while (\count($list) > $max) {
-                $first = \array_shift($list);
-
-                try {
-                    $orchestration->remove($first->getName(), true);
-                    Console::info('Removed container: ' . $first->getName());
-                } catch (Exception $e) {
-                    Console::error('Failed to remove container: ' . $e);
-                }
-            }
-        }
-    }
-
-    /**
-     * Filter ENV vars
-     * 
-     * @param string $string
-     * 
-     * @return string
-     */
-    public function filterEnvKey(string $string): string
-    {
-        if (empty($this->allowed)) {
-            $this->allowed = array_fill_keys(\str_split('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_'), true);
-        }
-
-        $string     = \str_split($string);
-        $output     = '';
-
-        foreach ($string as $char) {
-            if (\array_key_exists($char, $this->allowed)) {
-                $output .= $char;
-            }
-        }
-
-        return $output;
     }
 
     public function shutdown(): void
