@@ -6,7 +6,6 @@ use Utopia\App;
 use Appwrite\Extend\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Database\Validator\Authorization;
@@ -91,7 +90,6 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
     $events
         ->setParam('projectId', $project->getId())
         ->setParam('webhooks', $project->getAttribute('webhooks', []))
-        // When membership status update happens here, the userId is empty since there is no cookie
         ->setParam('userId', $user->getId())
         ->setParam('event', $route->getLabel('event', ''))
         ->setParam('eventData', [])
@@ -228,14 +226,6 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
                 collection: $collection,
                 bucket: $bucket,
             );
-
-            // Console::success('API.PHP');
-            var_dump($events);
-
-            // The problem with solving point number 2 of issue #2626 is that we dont have
-            // a way to send events to multiple user IDs here. 
-            // When a membership status updates, we need to send a message to atlease 
-            // The team owner and the member who updated the membership status.
 
             Realtime::send(
                 $target['projectId'] ?? $project->getId(),
