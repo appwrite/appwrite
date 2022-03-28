@@ -48,7 +48,7 @@
                 mode: '',
             };
             this.headers = {
-                'x-sdk-version': 'appwrite:web:4.0.4',
+                'x-sdk-version': 'appwrite:web:5.0.0',
                 'X-Appwrite-Response-Format': '0.13.0',
             };
             this.realtime = {
@@ -1671,6 +1671,56 @@
                     }, payload);
                 }),
                 /**
+                 * Create Timestamp Attribute
+                 *
+                 * Create a timestamp attribute.
+                 *
+                 * @param {string} collectionId
+                 * @param {string} key
+                 * @param {boolean} required
+                 * @param {string} min
+                 * @param {string} max
+                 * @param {string} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createTimestampAttribute: (collectionId, key, required, min, max, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/timestamp'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof min !== 'undefined') {
+                        payload['min'] = min;
+                    }
+                    if (typeof max !== 'undefined') {
+                        payload['max'] = max;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['default'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Create URL Attribute
                  *
                  * Create a URL attribute.
@@ -1923,9 +1973,7 @@
                 /**
                  * Delete Document
                  *
-                 * Delete a document by its unique ID. This endpoint deletes only the parent
-                 * documents, its attributes and relations to other documents. Child documents
-                 * **will not** be deleted.
+                 * Delete a document by its unique ID.
                  *
                  * @param {string} collectionId
                  * @param {string} documentId
@@ -2263,7 +2311,7 @@
                     }, payload);
                 }),
                 /**
-                 * List the currently active function runtimes.
+                 * List runtimes
                  *
                  * Get a list of all runtimes that are currently active on your instance.
                  *
@@ -5536,7 +5584,7 @@
             var _a, _b;
             return __awaiter(this, void 0, void 0, function* () {
                 method = method.toUpperCase();
-                headers = Object.assign(Object.assign({}, headers), this.headers);
+                headers = Object.assign({}, this.headers, headers);
                 let options = {
                     method,
                     headers,
