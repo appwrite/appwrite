@@ -22,7 +22,15 @@ class AttributeTimestamp extends Attribute
                 'type' => self::TYPE_STRING,
                 'description' => 'Attribute type.',
                 'default' => '',
-                'example' => 'timestamp',
+                'example' => 'integer',
+            ])
+            ->addRule('format', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Integer format.',
+                'default' => APP_DATABASE_ATTRIBUTE_TIMESTAMP,
+                'example' => APP_DATABASE_ATTRIBUTE_TIMESTAMP,
+                'array' => false,
+                'require' => true,
             ])
             ->addRule('min', [
                 'type' => self::TYPE_INTEGER,

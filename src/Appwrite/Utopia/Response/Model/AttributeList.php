@@ -20,6 +20,7 @@ class AttributeList extends Model
             ->addRule('attributes', [
                 'type' => [
                     Response::MODEL_ATTRIBUTE_BOOLEAN,
+                    Response::MODEL_ATTRIBUTE_TIMESTAMP,
                     Response::MODEL_ATTRIBUTE_INTEGER,
                     Response::MODEL_ATTRIBUTE_FLOAT,
                     Response::MODEL_ATTRIBUTE_EMAIL,

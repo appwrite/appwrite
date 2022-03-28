@@ -306,6 +306,9 @@ $logs = $this->getParam('logs', null);
                             <div class="link new-attribute-boolean"><i class="avatar icon-boolean"></i> New Boolean Attribute</div>
                         </li>
                         <li>
+                            <div class="link new-attribute-timestamp"><i class="avatar icon-timestamp"></i> New timestamp Attribute</div>
+                        </li>
+                        <li>
                             <div class="link new-attribute-url"><i class="avatar icon-link"></i> New URL Attribute</div>
                         </li>
                         <li>
@@ -706,6 +709,71 @@ $logs = $this->getParam('logs', null);
         </div>
 
         <label for="integer-default">Default Value</label>
+
+        <template x-if="!(array || required)">
+            <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off" data-cast-to="integer">
+        </template>
+        <template x-if="(array || required)">
+            <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off" data-cast-to="integer" disabled>
+        </template>
+
+        <footer>
+            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        </footer>
+    </form>
+</div>
+
+<div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-timestamp">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1>Add Timestamp Attribute</h1>
+
+    <form
+        id="add-timestamp-attribute"
+        data-analytics
+        data-analytics-activity
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Create Collection Attribute (timestamp)"
+        data-service="database.createTimestampAttribute"
+        data-scope="sdk"
+        data-event="submit"
+        data-success="alert,trigger,reset"
+        data-success-param-alert-text="Created new attribute successfully"
+        data-success-param-trigger-events="database.createAttribute"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to create attribute"
+        data-failure-param-alert-classname="error"
+        @reset="array = required = false"
+        x-data="{ array: false, required: false }">
+
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+
+        <label for="timestamp-key">Attribute ID</label>
+        <input id="timestamp-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{0,35}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
+
+        <div class="margin-bottom">
+            <input x-model="required" name="required" class="button switch" type="checkbox" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+        </div>
+
+        <div class="margin-bottom">
+            <input x-model="array" name="array" class="button switch" type="checkbox" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+        </div>
+
+        <div class="row responsive thin">
+            <div class="col span-6 margin-bottom-small">
+                <label for="timestamp-min">Min</label>
+                <input id="timestamp-min" type="number" step="1" class="full-width" name="min" autocomplete="off" data-cast-to="integer" />
+            </div>
+            <div class="col span-6 margin-bottom-small">
+                <label for="timestamp-max">Max</label>
+                <input id="timestamp-max" type="number" step="1" class="full-width" name="max" autocomplete="off" data-cast-to="integer" />
+            </div>
+        </div>
+
+        <label for="timestamp-default">Default Value</label>
 
         <template x-if="!(array || required)">
             <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off" data-cast-to="integer">

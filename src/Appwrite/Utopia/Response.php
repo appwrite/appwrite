@@ -19,6 +19,7 @@ use Appwrite\Utopia\Response\Model\AttributeBoolean;
 use Appwrite\Utopia\Response\Model\AttributeEmail;
 use Appwrite\Utopia\Response\Model\AttributeEnum;
 use Appwrite\Utopia\Response\Model\AttributeIP;
+use Appwrite\Utopia\Response\Model\AttributeTimestamp;
 use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Collection;
@@ -244,6 +245,7 @@ class Response extends SwooleResponse
             ->setModel(new AttributeList())
             ->setModel(new AttributeString())
             ->setModel(new AttributeInteger())
+            ->setModel(new AttributeTimestamp())
             ->setModel(new AttributeFloat())
             ->setModel(new AttributeBoolean())
             ->setModel(new AttributeEmail())

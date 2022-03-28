@@ -1211,6 +1211,7 @@ App::get('/v1/database/collections/:collectionId/attributes/:key')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', [
         Response::MODEL_ATTRIBUTE_BOOLEAN,
+        Response::MODEL_ATTRIBUTE_TIMESTAMP,
         Response::MODEL_ATTRIBUTE_INTEGER,
         Response::MODEL_ATTRIBUTE_FLOAT,
         Response::MODEL_ATTRIBUTE_EMAIL,
@@ -1245,7 +1246,10 @@ App::get('/v1/database/collections/:collectionId/attributes/:key')
 
         $model = match($type) {
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
-            Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
+            Database::VAR_INTEGER => match($format) {
+                APP_DATABASE_ATTRIBUTE_TIMESTAMP => Response::MODEL_ATTRIBUTE_TIMESTAMP,
+                APP_DATABASE_ATTRIBUTE_INT_RANGE => Response::MODEL_ATTRIBUTE_INTEGER,
+            },
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
             Database::VAR_STRING => match($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,
@@ -1323,7 +1327,10 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
 
         $model = match($type) {
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
-            Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
+            Database::VAR_INTEGER => match($format) {
+                APP_DATABASE_ATTRIBUTE_TIMESTAMP => Response::MODEL_ATTRIBUTE_TIMESTAMP,
+                APP_DATABASE_ATTRIBUTE_INT_RANGE => Response::MODEL_ATTRIBUTE_INTEGER,
+            },
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
             Database::VAR_STRING => match($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,
