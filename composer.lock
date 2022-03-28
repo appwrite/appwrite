@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3ef20ad6919a1844f207e06719ad8929",
+    "content-hash": "c19a39ae608eb47967e0a67bafca674a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2250,16 +2250,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.19.7",
+            "version": "dev-improve-hostname-validaotr",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "f17afe77a21873b9be18ebc05283813468b4283a"
+                "reference": "881985f7a92de1c5613b9c9fedcf0682facc8877"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/f17afe77a21873b9be18ebc05283813468b4283a",
-                "reference": "f17afe77a21873b9be18ebc05283813468b4283a",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/881985f7a92de1c5613b9c9fedcf0682facc8877",
+                "reference": "881985f7a92de1c5613b9c9fedcf0682facc8877",
                 "shasum": ""
             },
             "require": {
@@ -2293,9 +2293,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.19.7"
+                "source": "https://github.com/utopia-php/framework/tree/improve-hostname-validaotr"
             },
-            "time": "2022-02-18T00:04:49+00:00"
+            "time": "2022-03-28T09:38:29+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -6559,9 +6559,18 @@
             "time": "2015-12-17T08:42:14+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/framework",
+            "version": "dev-improve-hostname-validaotr",
+            "alias": "0.19.1",
+            "alias_normalized": "0.19.1.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/framework": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
