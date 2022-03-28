@@ -496,12 +496,12 @@ trait DatabaseBase
         ])); 
 
         $this->assertEquals(200, $attributes['headers']['status-code']);
-        $this->assertEquals(8, $attributes['body']['total']);
+        $this->assertEquals(9, $attributes['body']['total']);
 
         $attributes = $attributes['body']['attributes'];
 
         $this->assertIsArray($attributes);
-        $this->assertCount(8, $attributes);
+        $this->assertCount(9, $attributes);
 
         $this->assertEquals($stringResponse['body']['key'], $attributes[0]['key']);
         $this->assertEquals($stringResponse['body']['type'], $attributes[0]['type']);
