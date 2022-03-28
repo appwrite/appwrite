@@ -251,6 +251,21 @@ trait DatabaseBase
             'default' => 3
         ]);
 
+        $timeMin = \time() - 1000;
+        $timeMax = \time() + 1000;
+        $timeDefault = \time();
+        $timestamp = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/timestamp', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'timestamp',
+            'required' => false,
+            'min' => $timeMin,
+            'max' => $timeMax,
+            'default' => $timeDefault
+        ]);
+
         $float = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/float', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -323,6 +338,15 @@ trait DatabaseBase
         $this->assertEquals(1, $integer['body']['min']);
         $this->assertEquals(5, $integer['body']['max']);
         $this->assertEquals(3, $integer['body']['default']);
+
+        $this->assertEquals(201, $timestamp['headers']['status-code']);
+        $this->assertEquals('timestamp', $timestamp['body']['key']);
+        $this->assertEquals('integer', $integer['body']['type']);
+        $this->assertEquals(false, $timestamp['body']['required']);
+        $this->assertEquals(false, $timestamp['body']['array']);
+        $this->assertEquals($timeMin, $timestamp['body']['min']);
+        $this->assertEquals($timeMax, $timestamp['body']['max']);
+        $this->assertEquals($timeDefault, $timestamp['body']['default']);
 
         $this->assertEquals(201, $float['headers']['status-code']);
         $this->assertEquals('float', $float['body']['key']);
