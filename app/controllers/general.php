@@ -73,33 +73,44 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         } else {
             Authorization::disable();
 
-            $domainDocument = $dbForConsole->findOne('domains', [
-                new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
-            ]);
+            $mainDomain = null;
+            if(!empty(App::getEnv('_APP_DOMAIN_TARGET', ''))) {
+                $mainDomain = App::getEnv('_APP_DOMAIN_TARGET', '');
+            } else {
+                $domainDocument = $dbForConsole->findOne('domains', [], 0, ['_id'], ['ASC']);
+                $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();
+            }
 
-            if (!$domainDocument) {
-                $domainDocument = new Document([
-                    'domain' => $domain->get(),
-                    'tld' => $domain->getSuffix(),
-                    'registerable' => $domain->getRegisterable(),
-                    'verification' => false,
-                    'certificateId' => null,
+            if($mainDomain !== $domain->get()) {
+                Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
+            } else {
+                $domainDocument = $dbForConsole->findOne('domains', [
+                    new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
                 ]);
 
-                $domainDocument = $dbForConsole->createDocument('domains', $domainDocument);
-
-                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...');
-
-                Resque::enqueue('v1-certificates', 'CertificatesV1', [
-                    'document' => $domainDocument,
-                    'domain' => $domain->get(),
-                    'validateTarget' => false,
-                    'validateCNAME' => false,
-                ]);
+                if (!$domainDocument) {
+                    $domainDocument = new Document([
+                        'domain' => $domain->get(),
+                        'tld' => $domain->getSuffix(),
+                        'registerable' => $domain->getRegisterable(),
+                        'verification' => false,
+                        'certificateId' => null,
+                    ]);
+    
+                    $domainDocument = $dbForConsole->createDocument('domains', $domainDocument);
+    
+                    Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
+    
+                    Resque::enqueue('v1-certificates', 'CertificatesV1', [
+                        'document' => $domainDocument,
+                        'domain' => $domain->get(),
+                        'validateTarget' => false,
+                        'validateCNAME' => false,
+                    ]);
+                }
             }
 
             $domains[$domain->get()] = true;
-
             Authorization::reset(); // ensure authorization is re-enabled
         }
         Config::setParam('domains', $domains);
