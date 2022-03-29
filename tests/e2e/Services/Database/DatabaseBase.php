@@ -403,6 +403,12 @@ trait DatabaseBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
+        $timestampResponse = $this->client->call(Client::METHOD_GET, "/database/collections/{$collectionId}/attributes/{$timestamp['body']['key']}",array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
         $floatResponse = $this->client->call(Client::METHOD_GET, "/database/collections/{$collectionId}/attributes/{$float['body']['key']}",array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -553,21 +559,30 @@ trait DatabaseBase
         $this->assertEquals($integerResponse['body']['min'], $attributes[5]['min']);
         $this->assertEquals($integerResponse['body']['max'], $attributes[5]['max']);
 
-        $this->assertEquals($floatResponse['body']['key'], $attributes[6]['key']);
-        $this->assertEquals($floatResponse['body']['type'], $attributes[6]['type']);
-        $this->assertEquals($floatResponse['body']['status'], $attributes[6]['status']);
-        $this->assertEquals($floatResponse['body']['required'], $attributes[6]['required']);
-        $this->assertEquals($floatResponse['body']['array'], $attributes[6]['array']);
-        $this->assertEquals($floatResponse['body']['default'], $attributes[6]['default']);
-        $this->assertEquals($floatResponse['body']['min'], $attributes[6]['min']);
-        $this->assertEquals($floatResponse['body']['max'], $attributes[6]['max']);
+        $this->assertEquals($timestampResponse['body']['key'], $attributes[6]['key']);
+        $this->assertEquals($timestampResponse['body']['type'], $attributes[6]['type']);
+        $this->assertEquals($timestampResponse['body']['status'], $attributes[6]['status']);
+        $this->assertEquals($timestampResponse['body']['required'], $attributes[6]['required']);
+        $this->assertEquals($timestampResponse['body']['array'], $attributes[6]['array']);
+        $this->assertEquals($timestampResponse['body']['default'], $attributes[6]['default']);
+        $this->assertEquals($timestampResponse['body']['min'], $attributes[6]['min']);
+        $this->assertEquals($timestampResponse['body']['max'], $attributes[6]['max']);
 
-        $this->assertEquals($booleanResponse['body']['key'], $attributes[7]['key']);
-        $this->assertEquals($booleanResponse['body']['type'], $attributes[7]['type']);
-        $this->assertEquals($booleanResponse['body']['status'], $attributes[7]['status']);
-        $this->assertEquals($booleanResponse['body']['required'], $attributes[7]['required']);
-        $this->assertEquals($booleanResponse['body']['array'], $attributes[7]['array']);
-        $this->assertEquals($booleanResponse['body']['default'], $attributes[7]['default']);
+        $this->assertEquals($floatResponse['body']['key'], $attributes[7]['key']);
+        $this->assertEquals($floatResponse['body']['type'], $attributes[7]['type']);
+        $this->assertEquals($floatResponse['body']['status'], $attributes[7]['status']);
+        $this->assertEquals($floatResponse['body']['required'], $attributes[7]['required']);
+        $this->assertEquals($floatResponse['body']['array'], $attributes[7]['array']);
+        $this->assertEquals($floatResponse['body']['default'], $attributes[7]['default']);
+        $this->assertEquals($floatResponse['body']['min'], $attributes[7]['min']);
+        $this->assertEquals($floatResponse['body']['max'], $attributes[7]['max']);
+
+        $this->assertEquals($booleanResponse['body']['key'], $attributes[8]['key']);
+        $this->assertEquals($booleanResponse['body']['type'], $attributes[8]['type']);
+        $this->assertEquals($booleanResponse['body']['status'], $attributes[8]['status']);
+        $this->assertEquals($booleanResponse['body']['required'], $attributes[8]['required']);
+        $this->assertEquals($booleanResponse['body']['array'], $attributes[8]['array']);
+        $this->assertEquals($booleanResponse['body']['default'], $attributes[8]['default']);
 
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -580,7 +595,7 @@ trait DatabaseBase
         $attributes = $collection['body']['attributes'];
 
         $this->assertIsArray($attributes);
-        $this->assertCount(8, $attributes);
+        $this->assertCount(9, $attributes);
 
         $this->assertEquals($stringResponse['body']['key'], $attributes[0]['key']);
         $this->assertEquals($stringResponse['body']['type'], $attributes[0]['type']);
@@ -632,21 +647,30 @@ trait DatabaseBase
         $this->assertEquals($integerResponse['body']['min'], $attributes[5]['min']);
         $this->assertEquals($integerResponse['body']['max'], $attributes[5]['max']);
 
-        $this->assertEquals($floatResponse['body']['key'], $attributes[6]['key']);
-        $this->assertEquals($floatResponse['body']['type'], $attributes[6]['type']);
-        $this->assertEquals($floatResponse['body']['status'], $attributes[6]['status']);
-        $this->assertEquals($floatResponse['body']['required'], $attributes[6]['required']);
-        $this->assertEquals($floatResponse['body']['array'], $attributes[6]['array']);
-        $this->assertEquals($floatResponse['body']['default'], $attributes[6]['default']);
-        $this->assertEquals($floatResponse['body']['min'], $attributes[6]['min']);
-        $this->assertEquals($floatResponse['body']['max'], $attributes[6]['max']);
+        $this->assertEquals($timestampResponse['body']['key'], $attributes[6]['key']);
+        $this->assertEquals($timestampResponse['body']['type'], $attributes[6]['type']);
+        $this->assertEquals($timestampResponse['body']['status'], $attributes[6]['status']);
+        $this->assertEquals($timestampResponse['body']['required'], $attributes[6]['required']);
+        $this->assertEquals($timestampResponse['body']['array'], $attributes[6]['array']);
+        $this->assertEquals($timestampResponse['body']['default'], $attributes[6]['default']);
+        $this->assertEquals($timestampResponse['body']['min'], $attributes[6]['min']);
+        $this->assertEquals($timestampResponse['body']['max'], $attributes[6]['max']);
 
-        $this->assertEquals($booleanResponse['body']['key'], $attributes[7]['key']);
-        $this->assertEquals($booleanResponse['body']['type'], $attributes[7]['type']);
-        $this->assertEquals($booleanResponse['body']['status'], $attributes[7]['status']);
-        $this->assertEquals($booleanResponse['body']['required'], $attributes[7]['required']);
-        $this->assertEquals($booleanResponse['body']['array'], $attributes[7]['array']);
-        $this->assertEquals($booleanResponse['body']['default'], $attributes[7]['default']);
+        $this->assertEquals($floatResponse['body']['key'], $attributes[7]['key']);
+        $this->assertEquals($floatResponse['body']['type'], $attributes[7]['type']);
+        $this->assertEquals($floatResponse['body']['status'], $attributes[7]['status']);
+        $this->assertEquals($floatResponse['body']['required'], $attributes[7]['required']);
+        $this->assertEquals($floatResponse['body']['array'], $attributes[7]['array']);
+        $this->assertEquals($floatResponse['body']['default'], $attributes[7]['default']);
+        $this->assertEquals($floatResponse['body']['min'], $attributes[7]['min']);
+        $this->assertEquals($floatResponse['body']['max'], $attributes[7]['max']);
+
+        $this->assertEquals($booleanResponse['body']['key'], $attributes[8]['key']);
+        $this->assertEquals($booleanResponse['body']['type'], $attributes[8]['type']);
+        $this->assertEquals($booleanResponse['body']['status'], $attributes[8]['status']);
+        $this->assertEquals($booleanResponse['body']['required'], $attributes[8]['required']);
+        $this->assertEquals($booleanResponse['body']['array'], $attributes[8]['array']);
+        $this->assertEquals($booleanResponse['body']['default'], $attributes[8]['default']);
 
         /**
          * Test for FAILURE
