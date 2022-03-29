@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4b92731277f6cc86d055d76c21e67cab",
+    "content-hash": "1683c39fa4db599b0a6d6762bd12ec49",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2136,8 +2136,14 @@
             "version": "dev-feat-filters-upgrade",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/database",
+                "url": "https://github.com/utopia-php/database.git",
                 "reference": "41e28acb10a5185441826b5c5fc96af989219736"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/41e28acb10a5185441826b5c5fc96af989219736",
+                "reference": "41e28acb10a5185441826b5c5fc96af989219736",
+                "shasum": ""
             },
             "require": {
                 "ext-mongodb": "*",
@@ -2160,11 +2166,7 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/Database"
-                }
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2186,6 +2188,10 @@
                 "upf",
                 "utopia"
             ],
+            "support": {
+                "issues": "https://github.com/utopia-php/database/issues",
+                "source": "https://github.com/utopia-php/database/tree/feat-filters-upgrade"
+            },
             "time": "2022-03-27T08:47:46+00:00"
         },
         {
