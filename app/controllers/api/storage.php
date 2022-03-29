@@ -988,10 +988,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
             $secrets = $project->getAttribute('storageSecrets');
             $displacement = $project->getAttribute('storageSecretsDisplacement', 0);
-            $version = $displacement + \count($secrets);
             $data = json_decode($data, true);
             $version = ($data['version'] ?? 1) - $displacement;
-            $key = $secrets[$version];
+            $key = $secrets[$version - 1];
     
             $source = OpenSSL::decrypt($data['data'], $data['method'], $key, 0, hex2bin($data['iv']), hex2bin($data['tag']));
 
@@ -1154,10 +1153,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
 
             $secrets = $project->getAttribute('storageSecrets');
             $displacement = $project->getAttribute('storageSecretsDisplacement', 0);
-            $version = $displacement + \count($secrets);
             $data = json_decode($data, true);
             $version = ($data['version'] ?? 1) - $displacement;
-            $key = $secrets[$version];
+            $key = $secrets[$version - 1];
     
             $source = OpenSSL::decrypt($data['data'], $data['method'], $key, 0, hex2bin($data['iv']), hex2bin($data['tag']));
         }
@@ -1315,10 +1313,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
 
             $secrets = $project->getAttribute('storageSecrets');
             $displacement = $project->getAttribute('storageSecretsDisplacement', 0);
-            $version = $displacement + \count($secrets);
             $data = json_decode($data, true);
             $version = ($data['version'] ?? 1) - $displacement;
-            $key = $secrets[$version];
+            $key = $secrets[$version - 1];
     
             $source = OpenSSL::decrypt($data['data'], $data['method'], $key, 0, hex2bin($data['iv']), hex2bin($data['tag']));
         }

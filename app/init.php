@@ -825,7 +825,7 @@ App::setResource('dbForProject', function($db, $cache, $project) {
     
                 $value = json_decode($value, true);
                 $version = ($value['version'] ?? 1) - $displacement;
-                $key = $secrets[$version];
+                $key = $secrets[$version - 1];
         
                 return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
             }
