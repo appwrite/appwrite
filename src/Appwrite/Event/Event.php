@@ -2,12 +2,13 @@
 
 namespace Appwrite\Event;
 
+use Exception;
+use InvalidArgumentException;
 use Resque;
 
 class Event
 {
-
-    const DATABASE_QUEUE_NAME= 'v1-database';
+    const DATABASE_QUEUE_NAME = 'v1-database';
     const DATABASE_CLASS_NAME = 'DatabaseV1';
 
     const DELETE_QUEUE_NAME = 'v1-deletes';
@@ -33,27 +34,15 @@ class Event
 
     const BUILDS_QUEUE_NAME = 'v1-builds';
     const BUILDS_CLASS_NAME = 'BuildsV1';
-    
-    /**
-     * @var string
-     */
-    protected $queue = '';
+
+    protected string $queue = '';
+    protected string $class = '';
+    protected array $params = [];
 
     /**
-     * @var string
-     */
-    protected $class = '';
-
-    /**
-     * @var array
-     */
-    protected $params = [];
-
-    /**
-     * Event constructor.
-     *
      * @param string $queue
      * @param string $class
+     * @return void
      */
     public function __construct(string $queue, string $class)
     {
@@ -62,8 +51,10 @@ class Event
     }
 
     /**
+     * Set queue used for this event.
+     *
      * @param string $queue
-     * return $this
+     * @return Event
      */
     public function setQueue(string $queue): self
     {
@@ -72,16 +63,19 @@ class Event
     }
 
     /**
+     * Get queue used for this event.
+     *
      * @return string
      */
-    public function getQueue()
+    public function getQueue(): string
     {
         return $this->queue;
     }
 
     /**
+     * Set class used for this event.
      * @param string $class
-     * return $this
+     * @return Event
      */
     public function setClass(string $class): self
     {
@@ -90,20 +84,23 @@ class Event
     }
 
     /**
+     * Get class used for this event.
+     *
      * @return string
      */
-    public function getClass()
+    public function getClass(): string
     {
         return $this->class;
     }
 
     /**
-     * @param string $key
-     * @param mixed  $value
+     * Set param of event.
      *
-     * @return $this
+     * @param string $key
+     * @param mixed $value
+     * @return Event
      */
-    public function setParam(string $key, $value): self
+    public function setParam(string $key, mixed $value): self
     {
         $this->params[$key] = $value;
 
@@ -111,29 +108,143 @@ class Event
     }
 
     /**
-     * @param string $key
+     * Get param of event.
      *
-     * @return mixed|null
+     * @param string $key
+     * @return mixed
      */
-    public function getParam(string $key)
+    public function getParam(string $key): mixed
     {
-        return (isset($this->params[$key])) ? $this->params[$key] : null;
+        return $this->params[$key] ?? null;
     }
 
     /**
      * Execute Event.
+     *
+     * @return Event
+     * @throws InvalidArgumentException
      */
-    public function trigger(): void
+    public function trigger(): self
     {
         Resque::enqueue($this->queue, $this->class, $this->params);
 
-        $this->reset();
+        return $this->reset();
     }
 
+    /**
+     * Resets event.
+     *
+     * @return Event 
+     */
     public function reset(): self
     {
         $this->params = [];
 
         return $this;
+    }
+
+    static function generateEvents(string $pattern, array $params = []): array
+    {
+        $parts = \explode('.', $pattern);
+        $count = \count($parts);
+
+        if ($count < 2 || $count > 6) {
+            throw new Exception("Patten incorrect.");
+        }
+
+        /**
+         * Identify all sestions of the pattern.
+         */
+        $type = $parts[0];
+        $action = match ($count) {
+            2 => $parts[1],
+            3, 4 => $parts[2],
+            5, 6 => $parts[4]
+        };
+
+        if ($count > 4) {
+            $subType = $parts[2];
+            $subResource = $parts[3];
+            if ($count === 6) {
+                $attribute = $parts[5];
+            }
+        }
+        if ($count > 2) {
+            $resource = $parts[1];
+            if ($count === 4) {
+                $attribute = $parts[3];
+            }
+        }
+
+        $paramKeys = \array_keys($params);
+        $paramValues = \array_values($params);
+
+        $patterns = [];
+        $resource ??= false;
+        $subResource ??= false;
+        $attribute ??= false;
+
+        if (empty($params) && ($type ?? false) && !$resource) {
+            return [$pattern];
+        }
+
+        if ($resource && !\in_array(\trim($resource, '[]'), $paramKeys)) {
+            throw new InvalidArgumentException("{$resource} is missing from the params.");
+        }
+
+        if ($subResource && !\in_array(\trim($subResource, '[]'), $paramKeys)) {
+            throw new InvalidArgumentException("{$subResource} is missing from the params.");
+        }
+
+        /**
+         * Create all possible patterns including placeholders.
+         */
+        if ($action) {
+            if ($subResource) {
+                if ($attribute) {
+                    $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $action, $attribute]);
+                }
+                $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $action]);
+                $patterns[] = \implode('.', [$type, $resource, $subType, $subResource]);
+            } else {
+                if ($attribute) {
+                    $patterns[] = \implode('.', [$type, $resource, $action, $attribute]);
+                }
+                $patterns[] = \implode('.', [$type, $resource, $action]);
+                $patterns[] = \implode('.', [$type, $resource]);
+            }
+        }
+        if ($subResource) {
+            $patterns[] = \implode('.', [$type, $resource, $subType, $subResource]);
+        }
+
+        /**
+         * Removes all duplicates.
+         */
+        $patterns = \array_unique($patterns);
+
+        /**
+         * Set all possible values of the patterns and replace placeholders.
+         */
+        $events = [];
+        foreach ($patterns as $eventPattern) {
+            $events[] = \str_replace($paramKeys, $paramValues, $eventPattern);
+            $events[] = \str_replace($paramKeys, '*', $eventPattern);
+            foreach ($paramKeys as $key) {
+                foreach ($paramKeys as $current) {
+                    if ($current === $key) continue;
+
+                    $filtered = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                    $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered, '*', $eventPattern));
+                }
+            }
+        }
+
+        /**
+         * Remove [] from the events.
+         */
+        $events = \array_map(fn (string $event) => \str_replace(['[', ']'], '', $event), $events);
+
+        return $events;
     }
 }
