@@ -101,11 +101,11 @@ App::post('/v1/projects')
             'keys' => null,
             'domains' => null,
             'auths' => $auths,
-            'storageSecrets' => [OpenSSL::randomPseudoBytes(128)],
+            'storageSecrets' => [\bin2hex(OpenSSL::randomPseudoBytes(128))],
             'storageSecretsDisplacement' => 0,
-            'databaseSecrets' => [OpenSSL::randomPseudoBytes(128)],
+            'databaseSecrets' => [\bin2hex(OpenSSL::randomPseudoBytes(128))],
             'databaseSecretsDisplacement' => 0,
-            'jwtSecret' => OpenSSL::randomPseudoBytes(128),
+            'jwtSecret' => \bin2hex(OpenSSL::randomPseudoBytes(128)),
             'search' => implode(' ', [$projectId, $name]),
         ]));
         /** @var array $collections */
