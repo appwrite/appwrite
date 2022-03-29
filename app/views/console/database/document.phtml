@@ -97,7 +97,7 @@ $logs = $this->getParam('logs', null);
                                                     </label>
                                                     <template x-if="!attr.array">
                                                         <div>
-                                                            <template x-if="attr.type === 'integer'">
+                                                            <template x-if="attr.type === 'integer' && attr.format == 'intRange'">
                                                                 <input
                                                                     type="number"
                                                                     step="1"
@@ -106,6 +106,16 @@ $logs = $this->getParam('logs', null);
                                                                     :required="attr.required"
                                                                     x-model="doc[attr.key]"
                                                                     data-cast-to="integer" />
+                                                            </template>
+                                                            <template x-if="attr.format === 'timestamp'">
+                                                                <input
+                                                                    type="date"
+                                                                    :placeholder="attr.default"
+                                                                    :name="attr.key"
+                                                                    :required="attr.required"
+                                                                    x-effect="doc[attr.key] = doc[attr.key] ? new Date(doc[attr.key]*1000).toISOString().substring(0,10) : doc[attr.key];"
+                                                                    x-model="doc[attr.key]"
+                                                                    data-cast-to="timestamp" />
                                                             </template>
                                                             <template x-if="attr.type === 'double'">
                                                                 <input
@@ -190,7 +200,7 @@ $logs = $this->getParam('logs', null);
                                                             <template x-for="(node, index) in doc[attr.key]">
                                                                 <div class="row responsive thin margin-bottom-tiny">
                                                                     <div class="col span-11 margin-bottom-small">
-                                                                        <template x-if="attr.type === 'integer'">
+                                                                        <template x-if="attr.type === 'integer' && attr.format === 'intRange'">
                                                                             <input
                                                                                 type="number"
                                                                                 step="1"
@@ -199,6 +209,16 @@ $logs = $this->getParam('logs', null);
                                                                                 :required="attr.required"
                                                                                 x-model="doc[attr.key][index]"
                                                                                 data-cast-to="integer" />
+                                                                        </template>
+                                                                        <template x-if="attr.format === 'timestamp'">
+                                                                            <input
+                                                                                type="date"
+                                                                                :placeholder="attr.default"
+                                                                                :name="attr.key"
+                                                                                :required="attr.required"
+                                                                                x-model="doc[attr.key][index]"
+                                                                                x-effect="doc[attr.key][index] = doc[attr.key][index] ? new Date(doc[attr.key][index]*1000).toISOString().substring(0,10) : doc[attr.key][index];"
+                                                                                data-cast-to="timestamp" />
                                                                         </template>
                                                                         <template x-if="attr.type === 'double'">
                                                                             <input

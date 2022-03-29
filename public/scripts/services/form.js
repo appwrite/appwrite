@@ -13,6 +13,9 @@
                 case 'integer':
                     value = parseInt(value);
                     break;
+                case 'timestamp':
+                    value = new Date(value).getTime() / 1000;
+                    break;
                 case 'numeric':
                     value = Number(value);
                     break;

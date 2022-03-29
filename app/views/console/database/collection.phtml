@@ -765,21 +765,21 @@ $logs = $this->getParam('logs', null);
         <div class="row responsive thin">
             <div class="col span-6 margin-bottom-small">
                 <label for="timestamp-min">Min</label>
-                <input id="timestamp-min" type="number" step="1" class="full-width" name="min" autocomplete="off" data-cast-to="integer" />
+                <input id="timestamp-min" type="date" step="1" class="full-width" name="min" autocomplete="off" data-cast-to="timestamp" />
             </div>
             <div class="col span-6 margin-bottom-small">
                 <label for="timestamp-max">Max</label>
-                <input id="timestamp-max" type="number" step="1" class="full-width" name="max" autocomplete="off" data-cast-to="integer" />
+                <input id="timestamp-max" type="date" step="1" class="full-width" name="max" autocomplete="off" data-cast-to="timestamp" />
             </div>
         </div>
 
         <label for="timestamp-default">Default Value</label>
 
         <template x-if="!(array || required)">
-            <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off" data-cast-to="integer">
+            <input name="xdefault" type="date" class="margin-bottom-large" autocomplete="off" data-cast-to="timestamp">
         </template>
         <template x-if="(array || required)">
-            <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off" data-cast-to="integer" disabled>
+            <input name="xdefault" type="date" class="margin-bottom-large" autocomplete="off" data-cast-to="timestamp" disabled>
         </template>
 
         <footer>

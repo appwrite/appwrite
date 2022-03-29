@@ -348,7 +348,9 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_URL, function() {
 }, Database::VAR_STRING);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_TIMESTAMP, function($attribute) {
-    return new Timestamp();
+    $min = $attribute['formatOptions']['min'] ?? 0;
+    $max = $attribute['formatOptions']['max'] ?? (int)2147483647;
+    return new Timestamp($min, $max);
 }, Database::VAR_INTEGER);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_INT_RANGE, function($attribute) {

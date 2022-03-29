@@ -22,7 +22,17 @@ class Timestamp extends Validator
      */
     public function getDescription(): string
     {
-        return 'Value must be a valid unix timestamp';
+        return 'Value must be a valid unix timestamp between '  . $this->min . ' and ' . $this->max;
+    }
+
+     /**
+     * @param int|float $min
+     * @param int|float $max
+     */
+    public function __construct(int $min = 0, int $max = 2147483647)
+    {
+        $this->min = $min;
+        $this->max = $max;
     }
 
     /**
@@ -37,7 +47,7 @@ class Timestamp extends Validator
      */
     public function isValid($value): bool
     {
-        if (!\filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => (int)0, 'max_range' => (int)2147483647]])) {
+        if (!\filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => $this->min, 'max_range' => $this->max]])) {
             return false;
         }
 
