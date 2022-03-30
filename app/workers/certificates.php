@@ -57,7 +57,8 @@ class CertificatesV1 extends Worker
         // Refference: https://letsencrypt.org/docs/faq/
         // "Our certificates are valid for 90 days. We recommend automatically renewing your certificates every 60 days."
         $certificateForRenewal = $dbForConsole->findOne("certificates", [
-            new Query('result', Query::TYPE_EQUAL, ['done', 'apiLimit']),
+            new Query('attempts', Query::TYPE_LESSER, [540]), // 3 API limit reset cycles
+            new Query('result', Query::TYPE_EQUAL, ['done', 'letsEncryptError']),
             new Query('updated', Query::TYPE_LESSEREQUAL, [ \time() - 5184000 ]), // - 60 days
         ]);
 
@@ -243,7 +244,9 @@ class CertificatesV1 extends Worker
         } catch(Exception $err) {
             $errorType = 'error';
 
-            // TODO: set errorType to apiLimit, if it is apiLimit
+            if(\str_starts_with($err->getMessage(), 'Failed to issue a certificate with message')) {
+                $errorType = 'letsEncryptError';
+            }
 
             if(empty($certificate)) {
                 $certificate = new Document([
