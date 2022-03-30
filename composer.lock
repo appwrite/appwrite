@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3ef20ad6919a1844f207e06719ad8929",
+    "content-hash": "620799bd853e7891fbd5484a09d70dff",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -300,20 +300,23 @@
         },
         {
             "name": "colinmollenhour/credis",
-            "version": "v1.12.1",
+            "version": "v1.12.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/colinmollenhour/credis.git",
-                "reference": "c27faa11724229986335c23f4b6d0f1d8d6547fb"
+                "reference": "77e6ede2e01c4cfaade114fe1e07d2f9756949f1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/colinmollenhour/credis/zipball/c27faa11724229986335c23f4b6d0f1d8d6547fb",
-                "reference": "c27faa11724229986335c23f4b6d0f1d8d6547fb",
+                "url": "https://api.github.com/repos/colinmollenhour/credis/zipball/77e6ede2e01c4cfaade114fe1e07d2f9756949f1",
+                "reference": "77e6ede2e01c4cfaade114fe1e07d2f9756949f1",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.4.0"
+                "php": ">=5.6.0"
+            },
+            "suggest": {
+                "ext-redis": "Improved performance for communicating with redis"
             },
             "type": "library",
             "autoload": {
@@ -338,9 +341,9 @@
             "homepage": "https://github.com/colinmollenhour/credis",
             "support": {
                 "issues": "https://github.com/colinmollenhour/credis/issues",
-                "source": "https://github.com/colinmollenhour/credis/tree/v1.12.1"
+                "source": "https://github.com/colinmollenhour/credis/tree/v1.12.2"
             },
-            "time": "2020-11-06T16:09:14+00:00"
+            "time": "2022-03-08T18:12:43+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
@@ -1973,22 +1976,22 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "0.4.2",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "7334c5b182c6ccf66b21ca61808d7c6c899e2bcb"
+                "reference": "02ffbe165f9632e05519eb75a2ce32deb19638a0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/7334c5b182c6ccf66b21ca61808d7c6c899e2bcb",
-                "reference": "7334c5b182c6ccf66b21ca61808d7c6c899e2bcb",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/02ffbe165f9632e05519eb75a2ce32deb19638a0",
+                "reference": "02ffbe165f9632e05519eb75a2ce32deb19638a0",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "ext-redis": "*",
-                "php": ">=7.4"
+                "php": ">=8.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -2020,9 +2023,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/0.4.2"
+                "source": "https://github.com/utopia-php/cache/tree/0.5.0"
             },
-            "time": "2021-11-25T16:41:35+00:00"
+            "time": "2022-03-29T14:44:15+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -2130,16 +2133,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.15.4",
+            "version": "dev-feat-cache-upgrate",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "166365d9c39c4d70b1267af4562f4327e8930f79"
+                "reference": "7700aab6d22d08f62d666db07495466314e6c8a9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/166365d9c39c4d70b1267af4562f4327e8930f79",
-                "reference": "166365d9c39c4d70b1267af4562f4327e8930f79",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/7700aab6d22d08f62d666db07495466314e6c8a9",
+                "reference": "7700aab6d22d08f62d666db07495466314e6c8a9",
                 "shasum": ""
             },
             "require": {
@@ -2148,7 +2151,7 @@
                 "ext-redis": "*",
                 "mongodb/mongodb": "1.8.0",
                 "php": ">=8.0",
-                "utopia-php/cache": "0.4.*",
+                "utopia-php/cache": "0.5.*",
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
@@ -2187,9 +2190,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.15.4"
+                "source": "https://github.com/utopia-php/database/tree/feat-cache-upgrate"
             },
-            "time": "2022-03-15T17:20:14+00:00"
+            "time": "2022-03-30T17:34:29+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -4118,16 +4121,16 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.6.0",
+            "version": "1.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "93ebd0014cab80c4ea9f5e297ea48672f1b87706"
+                "reference": "77a32518733312af16a44300404e945338981de3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/93ebd0014cab80c4ea9f5e297ea48672f1b87706",
-                "reference": "93ebd0014cab80c4ea9f5e297ea48672f1b87706",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/77a32518733312af16a44300404e945338981de3",
+                "reference": "77a32518733312af16a44300404e945338981de3",
                 "shasum": ""
             },
             "require": {
@@ -4162,9 +4165,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.6.0"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.6.1"
             },
-            "time": "2022-01-04T19:58:01+00:00"
+            "time": "2022-03-15T21:29:03+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -6324,16 +6327,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.3.8",
+            "version": "v3.3.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "972d8604a92b7054828b539f2febb0211dd5945c"
+                "reference": "6ff9b0e440fa66f97f207e181c41340ddfa5683d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/972d8604a92b7054828b539f2febb0211dd5945c",
-                "reference": "972d8604a92b7054828b539f2febb0211dd5945c",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/6ff9b0e440fa66f97f207e181c41340ddfa5683d",
+                "reference": "6ff9b0e440fa66f97f207e181c41340ddfa5683d",
                 "shasum": ""
             },
             "require": {
@@ -6384,7 +6387,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.3.8"
+                "source": "https://github.com/twigphp/Twig/tree/v3.3.9"
             },
             "funding": [
                 {
@@ -6396,7 +6399,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-02-04T06:59:48+00:00"
+            "time": "2022-03-25T09:37:52+00:00"
         },
         {
             "name": "vimeo/psalm",
@@ -6556,9 +6559,18 @@
             "time": "2015-12-17T08:42:14+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-cache-upgrate",
+            "alias": "0.15.1",
+            "alias_normalized": "0.15.1.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
