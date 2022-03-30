@@ -783,7 +783,7 @@ App::setResource('console', function() {
 App::setResource('dbForProject', function($db, $cache, $project) {
 
     $filters = [];
-    if($project->getId() != 'console') {
+    if($project->getId() != 'console' && !$project->isEmpty()) {
         $secrets = $project->getAttribute('databaseSecrets');
         $displacement = $project->getAttribute('databaseSecretsDisplacement', 0);
         $version = $displacement + \count($secrets);
