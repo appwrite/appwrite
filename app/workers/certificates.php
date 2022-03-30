@@ -53,19 +53,28 @@ class CertificatesV1 extends Worker
     protected function renewCertificate() {
         $dbForConsole = $this->getConsoleDB();
 
-        // We will renew all certs older than 60 days
-        // Refference: https://letsencrypt.org/docs/faq/
-        // "Our certificates are valid for 90 days. We recommend automatically renewing your certificates every 60 days."
-        $certificateForRenewal = $dbForConsole->findOne("certificates", [
-            new Query('attempts', Query::TYPE_LESSER, [540]), // 3 API limit reset cycles
-            new Query('result', Query::TYPE_EQUAL, ['done', 'letsEncryptError']),
-            new Query('updated', Query::TYPE_LESSEREQUAL, [ \time() - 5184000 ]), // - 60 days
-        ]);
+        // Check if we hit API limit
+        $certificatesCreated = $dbForConsole->sum('certificates', 'attempts', [
+            new Query('updated', Query::TYPE_LESSEREQUAL, [ \time() - 10800 ]) // 3 hours
+        ], 250);
 
-        if($certificateForRenewal) {
-            $this->issueCertificate([
-                'domain' => $certificateForRenewal->getAttribute('domain'),
+        if($certificatesCreated >= 250) { // Limit is 300, but we keep 50 to stay safe with new cert generation
+            Console::log('Renew cycle skipped due to potentialy exceeded API limits.');
+        } else {
+            // We will renew all certs older than 60 days
+            // Refference: https://letsencrypt.org/docs/faq/
+            // "Our certificates are valid for 90 days. We recommend automatically renewing your certificates every 60 days."
+            $certificateForRenewal = $dbForConsole->findOne("certificates", [
+                new Query('attempts', Query::TYPE_LESSER, [540]), // 3 API limit reset cycles
+                new Query('result', Query::TYPE_EQUAL, ['done', 'letsEncryptError']),
+                new Query('updated', Query::TYPE_LESSEREQUAL, [ \time() - 5184000 ]), // - 60 days
             ]);
+
+            if($certificateForRenewal) {
+                $this->issueCertificate([
+                    'domain' => $certificateForRenewal->getAttribute('domain'),
+                ]);
+            }
         }
 
         // When done, schedule again in 1 minute. This creates makes the function recursive.
