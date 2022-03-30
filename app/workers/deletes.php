@@ -536,6 +536,13 @@ class DeletesV1 extends Worker
                 new Query('certificateId', Query::TYPE_EQUAL, [$document['certificateId']])
             ]);
 
+            if(!$domainUsingCertificate) {
+                $mainDomain = App::getEnv('_APP_DOMAIN_TARGET', '');
+                if($mainDomain === $document->getAttribute('domain')) {
+                    $domainUsingCertificate = $mainDomain;
+                }
+            }
+
             // If certificate is still used by some domain, mark we can't delete.
             // Current domain should not be found, because we only have copy. Original domain is already deleted from database.
             if($domainUsingCertificate) {
