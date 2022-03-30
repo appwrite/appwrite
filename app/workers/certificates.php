@@ -18,6 +18,8 @@ Console::success(APP_NAME . ' certificates worker v1 has started');
 
 class CertificatesV1 extends Worker
 {
+    protected static $lastRenewCycle = null;
+
     // Refference: https://letsencrypt.org/docs/rate-limits/
     const LETSENCRYPT_API_LIMIT = 300; // 30 orders
     const LETSENCRYPT_API_LIMIT_INTERVAL = 10800; // 3 hours
@@ -49,6 +51,13 @@ class CertificatesV1 extends Worker
 
     // This is recursive function
     protected function renewCertificate() {
+        // If this occurs faster than cycle interval, it's left-over from previous container after restart. We ignore such an instance.
+        if(isset(self::$lastRenewCycle) && self::$lastRenewCycle + 60 > \time()) {
+            Console::log('Received left-over renew cycle event; Ignoring.');
+            return;
+        }
+        self::$lastRenewCycle = \time();
+
         $dbForConsole = $this->getConsoleDB();
 
         // Check if we hit API limit
