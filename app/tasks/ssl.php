@@ -15,6 +15,7 @@ $cli
             Make sure your domain points to your server or restart to try again.');
 
         ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
+            'type' => 'issue',
             'document' => [],
             'domain' => $domain,
             'validateTarget' => false,

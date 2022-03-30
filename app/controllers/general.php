@@ -103,6 +103,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
                     Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
     
                     Resque::enqueue(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME, [
+                        'type' => CERTIFICATE_TYPE_ISSUE,
                         'document' => $domainDocument,
                         'domain' => $domain->get(),
                         'validateTarget' => false,

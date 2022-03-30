@@ -28,8 +28,6 @@ class CertificatesV1 extends Worker
 
     public function init(): void
     {
-        // We trigger once, to start recursive renewal loop
-        $this->renewCertificate();
     }
 
     public function run(): void
@@ -78,7 +76,7 @@ class CertificatesV1 extends Worker
         }
 
         // When done, schedule again in 1 minute. This creates makes the function recursive.
-        ResqueScheduler::enqueueAt(\time() + 60, Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME, [
+        ResqueScheduler::enqueueIn(60, Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME, [
             'type' => CERTIFICATE_TYPE_RENEW
         ]);
     }
@@ -296,3 +294,8 @@ class CertificatesV1 extends Worker
     {
     }
 }
+
+// We trigger once, to start recursive renewal loop. 5 second delay to stay safe with startup
+ResqueScheduler::enqueueIn(5, Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME, [
+    'type' => CERTIFICATE_TYPE_RENEW
+]);
