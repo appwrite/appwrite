@@ -514,57 +514,57 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         if($projectId != 'console') {
             $database->setNamespace('_console');
             $project = $database->getDocument('projects', $projectId);
-            if($project->isEmpty()) {
-                throw new Exception("Project not found: {$projectId}");
-            }
-            $secrets = $project->getAttribute('databaseSecrets');
-            $displacement = $project->getAttribute('databaseSecretsDisplacement', 0);
-            $version = $displacement + \count($secrets);
-            
-            $filters['encrypt'] = [
-                'encode' => function($value) use($version, $secrets) {
-    
-                    $key = $secrets[\count($secrets)-1];
-                    $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-                    $tag = null;
-                    $value = json_encode([
-                        'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-                        'method' => OpenSSL::CIPHER_AES_128_GCM,
-                        'iv' => \bin2hex($iv),
-                        'tag' => \bin2hex($tag ?? ''),
-                        'version' => $version,
-                    ]);
-    
-                    $key = App::getEnv('_APP_OPENSSL_KEY_V1');
-                    $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-                    $tag = null;
-                    return json_encode([
-                        'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-                        'method' => OpenSSL::CIPHER_AES_128_GCM,
-                        'iv' => \bin2hex($iv),
-                        'tag' => \bin2hex($tag ?? ''),
-                        'version' => '1',
-                    ]);
-                },
-                'decode' => function($value) use($secrets, $displacement) {
-                    if(is_null($value)) {
-                        return null;
+            if(!$project->isEmpty()) {
+
+                $secrets = $project->getAttribute('databaseSecrets');
+                $displacement = $project->getAttribute('databaseSecretsDisplacement', 0);
+                $version = $displacement + \count($secrets);
+                
+                $filters['encrypt'] = [
+                    'encode' => function($value) use($version, $secrets) {
+        
+                        $key = $secrets[\count($secrets)-1];
+                        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+                        $tag = null;
+                        $value = json_encode([
+                            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+                            'method' => OpenSSL::CIPHER_AES_128_GCM,
+                            'iv' => \bin2hex($iv),
+                            'tag' => \bin2hex($tag ?? ''),
+                            'version' => $version,
+                        ]);
+        
+                        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+                        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+                        $tag = null;
+                        return json_encode([
+                            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+                            'method' => OpenSSL::CIPHER_AES_128_GCM,
+                            'iv' => \bin2hex($iv),
+                            'tag' => \bin2hex($tag ?? ''),
+                            'version' => '1',
+                        ]);
+                    },
+                    'decode' => function($value) use($secrets, $displacement) {
+                        if(is_null($value)) {
+                            return null;
+                        }
+                        
+                        $value = json_decode($value, true);
+                        $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
+                
+                        $value = OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+        
+                        $value = json_decode($value, true);
+                        $version = ($value['version'] ?? 1) - $displacement;
+                        $key = $secrets[$version - 1];
+                
+                        return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
                     }
-                    
-                    $value = json_decode($value, true);
-                    $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
-            
-                    $value = OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
-    
-                    $value = json_decode($value, true);
-                    $version = ($value['version'] ?? 1) - $displacement;
-                    $key = $secrets[$version - 1];
-            
-                    return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
-                }
-            ];
-            
-            $database = new Database(new MariaDB($db), $cache, $filters);
+                ];
+                
+                $database = new Database(new MariaDB($db), $cache, $filters);
+            }
         }
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $database->setNamespace("_{$projectId}");
