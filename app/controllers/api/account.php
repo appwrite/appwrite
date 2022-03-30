@@ -1041,9 +1041,11 @@ App::post('/v1/account/jwt')
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->inject('response')
     ->inject('user')
-    ->action(function ($response, $user) {
+    ->inject('project')
+    ->action(function ($response, $user, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
+        /** @var Utopia\Database\Document $project */
 
         $sessions = $user->getAttribute('sessions', []);
         $current = new Document();
@@ -1060,7 +1062,7 @@ App::post('/v1/account/jwt')
             throw new Exception('No valid session found', 404, Exception::USER_SESSION_NOT_FOUND);
         }
 
-        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT($project->getId() == 'console' ? App::getEnv('_APP_OPENSSL_KEY_V1') : $project->getAttribute('jwtSecret'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic(new Document(['jwt' => $jwt->encode([

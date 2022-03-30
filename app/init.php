@@ -709,7 +709,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
     if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
-        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT($project->getId() == 'console' ? App::getEnv('_APP_OPENSSL_KEY_V1') : $project->getAttribute('jwtSecret'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
         try {
             $payload = $jwt->decode($authJWT);
