@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
+use Appwrite\Event\Event;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\Origin;
@@ -1389,7 +1390,8 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         // Issue a TLS certificate when domain is verified
-        Resque::enqueue('v1-certificates', 'CertificatesV1', [
+        Resque::enqueue(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME, [
+            'type' => CERTIFICATE_TYPE_ISSUE,
             'document' => $domain->getArrayCopy(),
             'domain' => $domain->getAttribute('domain'),
         ]);

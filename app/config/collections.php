@@ -2268,6 +2268,17 @@ $collections = [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => 'result',
+                'type' => Database::VAR_STRING, 
+                'format' => '',
+                'size' => 256,
+                'signed' => true,
+                'required' => true,
+                'default' => '',
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
