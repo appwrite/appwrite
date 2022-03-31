@@ -27,6 +27,11 @@ return [
         'model' => Response::MODEL_USER,
         'note' => '',
     ],
+    'account.update.status' => [
+        'description' => 'This event triggers when the account status is changed from client-side (blocked).',
+        'model' => Response::MODEL_USER,
+        'note' => '',
+    ],
     'users.update.email' => [
         'description' => 'This event triggers when the user email address is updated.',
         'model' => Response::MODEL_USER,

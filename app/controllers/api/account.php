@@ -1198,7 +1198,7 @@ App::get('/v1/account/logs')
         $audit = new Audit($dbForProject);
         $auditEvents = [
             'account.create',
-            'account.block',
+            'account.update.status',
             'account.update.name',
             'account.update.email',
             'account.update.password',
@@ -1501,9 +1501,9 @@ App::patch('/v1/account/prefs')
     });
 
 App::patch('/v1/account')
-    ->desc('Block Account')
+    ->desc('Update Status (Block)')
     ->groups(['api', 'account'])
-    ->label('event', 'account.block')
+    ->label('event', 'account.updateStatus')
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
@@ -1512,6 +1512,7 @@ App::patch('/v1/account')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('block', null, new Boolean(), 'Is account blocked?')
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1519,7 +1520,7 @@ App::patch('/v1/account')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($request, $response, $user, $dbForProject, $audits, $events, $usage) {
+    ->action(function ($block, $request, $response, $user, $dbForProject, $audits, $events, $usage) {
         /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
@@ -1528,12 +1529,16 @@ App::patch('/v1/account')
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
 
+        if(!$block) {
+            throw new Exception('You cannot unblock your own account.', 400, Exception::ATTRIBUTE_VALUE_INVALID);
+        }
+
         $protocol = $request->getProtocol();
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', false));
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'account.block')
+            ->setParam('event', 'account.update.status')
             ->setParam('resource', 'user/' . $user->getId())
             ->setParam('data', $user->getArrayCopy())
         ;
