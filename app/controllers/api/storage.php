@@ -241,6 +241,11 @@ App::put('/v1/storage/buckets/:bucketId')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
+        // Maximum allowed size validation
+        if ($maximumFileSize > (int) App::getEnv('_APP_STORAGE_LIMIT', 0)) {
+            throw new Exception('Bucket maximum file size is larger than _APP_STORAGE_LIMIT.', 400, Exception::ATTRIBUTE_VALUE_INVALID);
+        }
+
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
