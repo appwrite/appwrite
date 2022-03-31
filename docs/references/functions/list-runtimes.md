@@ -1,1 +1,1 @@
-Get a list of all runtimes that are currently active in your project.
+Get a list of all runtimes that are currently active on your instance.

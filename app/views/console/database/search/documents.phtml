@@ -36,13 +36,13 @@ $rules = $collection->getAttribute('rules', []);
         data-scope="sdk"
         data-name="project-documents">
 
-        <div data-ls-if="0 == {{project-documents.sum}}" class="margin-bottom">
+        <div data-ls-if="0 == {{project-documents.total}}" class="margin-bottom">
             <h3 class="margin-bottom-small text-bold">No Documents Found</h3>
 
             <p class="margin-bottom-no">Try a different search term.</p>
         </div>
 
-        <div data-ls-if="({{project-documents.sum}})">
+        <div data-ls-if="({{project-documents.total}})">
             <form class="scroll">
                 <table class="margin-top-no margin-bottom-no">
                     <thead>
@@ -107,10 +107,10 @@ $rules = $collection->getAttribute('rules', []);
                 data-name="project-documents"
                 data-success="state"
                 data-success-param-state-keys="search,offset">
-                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-documents.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-documents.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
             </form>
 
-            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-documents.sum|pageTotal}}"></span>
+            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-documents.total|pageTotal}}"></span>
 
             <form
                 data-service="database.listDocuments"
@@ -123,7 +123,7 @@ $rules = $collection->getAttribute('rules', []);
                 data-name="project-documents"
                 data-success="state"
                 data-success-param-state-keys="search,offset">
-                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-documents.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-documents.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
             </form>
         </div>
 

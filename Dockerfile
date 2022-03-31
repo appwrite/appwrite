@@ -29,9 +29,9 @@ FROM php:8.0.14-cli-alpine3.15 as compile
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
 
-ENV PHP_REDIS_VERSION=5.3.5 \
+ENV PHP_REDIS_VERSION=5.3.7 \
     PHP_MONGODB_VERSION=1.9.1 \
-    PHP_SWOOLE_VERSION=v4.8.5 \
+    PHP_SWOOLE_VERSION=v4.8.7 \
     PHP_IMAGICK_VERSION=3.7.0 \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0
@@ -134,6 +134,7 @@ ENV DEBUG=$DEBUG
 ENV _APP_SERVER=swoole \
     _APP_ENV=production \
     _APP_LOCALE=en \
+    _APP_WORKER_PER_CORE= \
     _APP_DOMAIN=localhost \
     _APP_DOMAIN_TARGET=localhost \
     _APP_HOME=https://appwrite.io \
@@ -152,6 +153,15 @@ ENV _APP_SERVER=swoole \
     _APP_STORAGE_ANTIVIRUS=enabled \
     _APP_STORAGE_ANTIVIRUS_HOST=clamav \
     _APP_STORAGE_ANTIVIRUS_PORT=3310 \
+    _APP_STORAGE_DEVICE=Local \
+    _APP_STORAGE_S3_ACCESS_KEY= \
+    _APP_STORAGE_S3_SECRET= \
+    _APP_STORAGE_S3_REGION= \
+    _APP_STORAGE_S3_BUCKET= \
+    _APP_STORAGE_DO_SPACES_ACCESS_KEY= \
+    _APP_STORAGE_DO_SPACES_SECRET= \
+    _APP_STORAGE_DO_SPACES_REGION= \
+    _APP_STORAGE_DO_SPACES_BUCKET= \
     _APP_REDIS_HOST=redis \
     _APP_REDIS_PORT=6379 \
     _APP_DB_HOST=mariadb \
@@ -168,11 +178,14 @@ ENV _APP_SERVER=swoole \
     _APP_SMTP_SECURE= \
     _APP_SMTP_USERNAME= \
     _APP_SMTP_PASSWORD= \
+    _APP_FUNCTIONS_SIZE_LIMIT=30000000 \
     _APP_FUNCTIONS_TIMEOUT=900 \
     _APP_FUNCTIONS_CONTAINERS=10 \
     _APP_FUNCTIONS_CPUS=1 \
     _APP_FUNCTIONS_MEMORY=128 \
     _APP_FUNCTIONS_MEMORY_SWAP=128 \
+    _APP_EXECUTOR_SECRET=a-random-secret \
+    _APP_EXECUTOR_RUNTIME_NETWORK=appwrite_runtimes \
     _APP_SETUP=self-hosted \
     _APP_VERSION=$VERSION \
     _APP_USAGE_STATS=enabled \
@@ -257,6 +270,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/realtime && \
+    chmod +x /usr/local/bin/executor && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \
@@ -268,6 +282,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-database && \
     chmod +x /usr/local/bin/worker-deletes && \
     chmod +x /usr/local/bin/worker-functions && \
+    chmod +x /usr/local/bin/worker-builds && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-webhooks
 

@@ -12,6 +12,18 @@ class AttributeInteger extends Attribute
         parent::__construct();
 
         $this
+            ->addRule('key', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Attribute Key.',
+                'default' => '',
+                'example' => 'count',
+            ])
+            ->addRule('type', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Attribute type.',
+                'default' => '',
+                'example' => 'integer',
+            ])
             ->addRule('min', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Minimum value to enforce for new documents.',

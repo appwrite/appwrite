@@ -13,8 +13,12 @@ class Origin extends Validator
     public const CLIENT_TYPE_FLUTTER_MACOS = 'flutter-macos';
     public const CLIENT_TYPE_FLUTTER_WINDOWS = 'flutter-windows';
     public const CLIENT_TYPE_FLUTTER_LINUX = 'flutter-linux';
+    public const CLIENT_TYPE_APPLE_IOS = 'apple-ios';
+    public const CLIENT_TYPE_APPLE_MACOS = 'apple-macos';
+    public const CLIENT_TYPE_APPLE_WATCHOS = 'apple-watchos';
+    public const CLIENT_TYPE_APPLE_TVOS = 'apple-tvos';
     public const CLIENT_TYPE_ANDROID = 'android';
-    public const CLIENT_TYPE_IOS = 'ios';
+    public const CLIENT_TYPE_UNITY = 'unity';
 
 
     public const SCHEME_TYPE_HTTP = 'http';
@@ -73,7 +77,7 @@ class Origin extends Validator
                 case self::CLIENT_TYPE_FLUTTER_WINDOWS:
                 case self::CLIENT_TYPE_FLUTTER_LINUX:
                 case self::CLIENT_TYPE_ANDROID:
-                case self::CLIENT_TYPE_IOS:
+                case self::CLIENT_TYPE_APPLE_IOS:
                     $this->clients[] = (isset($platform['key'])) ? $platform['key'] : '';
                     break;
 

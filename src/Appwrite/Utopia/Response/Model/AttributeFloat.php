@@ -12,6 +12,18 @@ class AttributeFloat extends Attribute
         parent::__construct();
 
         $this
+            ->addRule('key', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Attribute Key.',
+                'default' => '',
+                'example' => 'percentageCompleted',
+            ])
+            ->addRule('type', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Attribute type.',
+                'default' => '',
+                'example' => 'double',
+            ])
             ->addRule('min', [
                 'type' => self::TYPE_FLOAT,
                 'description' => 'Minimum value to enforce for new documents.',
