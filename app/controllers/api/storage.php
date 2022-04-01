@@ -67,6 +67,11 @@ App::post('/v1/storage/buckets')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
+        // Maximum allowed size validation
+        if ($maximumFileSize > (int) App::getEnv('_APP_STORAGE_LIMIT', 0)) {
+            throw new Exception('Bucket maximum file size is larger than _APP_STORAGE_LIMIT.', 400, Exception::ATTRIBUTE_VALUE_INVALID);
+        }
+
         $bucketId = $bucketId === 'unique()' ? $dbForProject->getId() : $bucketId;
         try {
             $files = Config::getParam('collections', [])['files'] ?? [];
@@ -243,7 +248,7 @@ App::put('/v1/storage/buckets/:bucketId')
 
         // Maximum allowed size validation
         if ($maximumFileSize > (int) App::getEnv('_APP_STORAGE_LIMIT', 0)) {
-            throw new Exception('Bucket maximum file size is larger than _APP_STORAGE_LIMIT.', 400, Exception::ATTRIBUTE_VALUE_INVALID);
+            throw new Exception('Bucket maximum file size allowed is larger than _APP_STORAGE_LIMIT.', 400, Exception::ATTRIBUTE_VALUE_INVALID);
         }
 
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
@@ -426,7 +431,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $maximumFileSize = $bucket->getAttribute('maximumFileSize', 0);
         if ($maximumFileSize > (int) App::getEnv('_APP_STORAGE_LIMIT', 0)) {
-            throw new Exception('Error bucket maximum file size is larger than _APP_STORAGE_LIMIT', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception('Error bucket maximum file size is larger than _APP_STORAGE_LIMIT', 400, Exception::STORAGE_INVALID_FILE_SIZE);
         }
 
         $file = $request->getFiles('file');
