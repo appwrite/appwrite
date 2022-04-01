@@ -15,7 +15,8 @@ class Auth0 extends OAuth2
     protected $scopes = [
         'openid',
         'profile',
-        'email'
+        'email',
+        'offline_access'
     ];
     
     /**
