@@ -84,7 +84,7 @@ class Auth0 extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $headers = ['Content-Type: application/x-www-form-urlencoded'];
         $this->tokens = \json_decode($this->request(
