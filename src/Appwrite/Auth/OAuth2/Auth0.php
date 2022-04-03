@@ -198,7 +198,7 @@ class Auth0 extends OAuth2
     protected function getAppSecret(): array
     {    
         try {
-            $secret = \json_decode($this->appSecret, true);
+            $secret = \json_decode($this->appSecret, true, 512, JSON_THROW_ON_ERROR);
         } catch (\Throwable $th) {
             throw new \Exception('Invalid secret');
         }
