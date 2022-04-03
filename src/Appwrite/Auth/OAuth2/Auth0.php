@@ -172,27 +172,30 @@ class Auth0 extends OAuth2
 
     /**
      * Extracts the Client Secret from the JSON stored in appSecret
+     * 
      * @return string
      */
     protected function getClientSecret(): string
     {
-        $secret = $this->decodeJson();
+        $secret = $this->getAppSecret();
 
         return (isset($secret['clientSecret'])) ? $secret['clientSecret'] : ''; 
     }
 
      /**
-     * Extracts the Auth0 Domain from the JSON stored in appSecret. Defaults to 'common' as a fallback
+     * Extracts the Auth0 Domain from the JSON stored in appSecret
+     * 
      * @return string
      */
     protected function getAuth0Domain(): string
     {
-        $secret = $this->decodeJson();
+        $secret = $this->getAppSecret();
         return (isset($secret['auth0Domain'])) ? $secret['auth0Domain'] : ''; 
     }
 
     /**
      * Decode the JSON stored in appSecret
+     * 
      * @return array
      */
     protected function getAppSecret(): array
