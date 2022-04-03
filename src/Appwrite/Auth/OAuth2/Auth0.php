@@ -200,7 +200,7 @@ class Auth0 extends OAuth2
         try {
             $secret = \json_decode($this->appSecret, true);
         } catch (\Throwable $th) {
-            throw new Exception('Invalid secret');
+            throw new \Exception('Invalid secret');
         }
         return $secret;
     }
