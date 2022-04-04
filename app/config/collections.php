@@ -1056,7 +1056,7 @@ $collections = [
                 'required' => false,
                 'default' => [],
                 'array' => true,
-                'filters' => ['json'],
+                'filters' => ['subQuerySessions'],
             ],
             [
                 '$id' => 'tokens',

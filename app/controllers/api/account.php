@@ -28,6 +28,8 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
+use function PHPUnit\Framework\isEmpty;
+
 $oauthDefaultSuccess = '/v1/auth/oauth2/success';
 $oauthDefaultFailure = '/v1/auth/oauth2/failure';
 
@@ -208,8 +210,7 @@ App::post('/v1/account/sessions')
             ->setAttribute('$write', ['user:' . $profile->getId()])
         );
 
-        $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile);
+        $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $audits
             ->setParam('userId', $profile->getId())
@@ -458,13 +459,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
         if ($current) { // Delete current session of new one.
-            foreach ($sessions as $key => $session) {/** @var Document $session */
-                if ($current === $session['$id']) {
-                    unset($sessions[$key]);
-
-                    $dbForProject->deleteDocument('sessions', $session->getId());
-                    $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
-                }
+            $currentDocument = $dbForProject->getDocument('sessions', $current);
+            if(!$currentDocument->isEmpty()) {
+                $dbForProject->deleteDocument('sessions', $currentDocument->getId());
+                $dbForProject->deleteCachedDocument('users', $user->getId());
             }
         }
 
@@ -553,7 +551,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $user
             ->setAttribute('status', true)
-            ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND)
         ;
 
         Authorization::setRole('user:' . $user->getId());
@@ -563,7 +560,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->setAttribute('$write', ['user:' . $user->getId()])
         );
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $audits
             ->setParam('userId', $user->getId())
@@ -825,6 +822,8 @@ App::put('/v1/account/sessions/magic-url')
                 ->setAttribute('$write', ['user:' . $user->getId()])
         );
 
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
         $tokens = $user->getAttribute('tokens', []);
 
         /**
@@ -838,9 +837,7 @@ App::put('/v1/account/sessions/magic-url')
         }
 
         $user
-            ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND)
             ->setAttribute('tokens', $tokens);
-
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -987,8 +984,7 @@ App::post('/v1/account/sessions/anonymous')
                 ->setAttribute('$write', ['user:' . $user->getId()])
         );
 
-        $user = $dbForProject->updateDocument('users', $user->getId(),
-            $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND));
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $audits
             ->setParam('userId', $user->getId())
@@ -1041,22 +1037,17 @@ App::post('/v1/account/jwt')
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->inject('response')
     ->inject('user')
-    ->action(function ($response, $user) {
+    ->inject('dbForProject')
+    ->action(function ($response, $user, $dbForProject) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForProject */
 
-        $sessions = $user->getAttribute('sessions', []);
-        $current = new Document();
+        $current = $dbForProject->findOne('sessions', [
+            new Query('secret', Query::TYPE_EQUAL, [Auth::hash(Auth::$secret)])
+        ]);
 
-        foreach ($sessions as $session) {
-            /** @var Utopia\Database\Document $session */
-
-            if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
-                $current = $session;
-            }
-        }
-
-        if ($current->isEmpty()) {
+        if (!$current) {
             throw new Exception('No valid session found', 404, Exception::USER_SESSION_NOT_FOUND);
         }
 
@@ -1278,6 +1269,7 @@ App::get('/v1/account/sessions/:sessionId')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
+        // TODO: Matej refactor
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
         ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
@@ -1603,6 +1595,7 @@ App::delete('/v1/account/sessions/:sessionId')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
             : $sessionId;
 
+        // TODO: Matej refactor
         $sessions = $user->getAttribute('sessions', []);
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
@@ -1693,6 +1686,7 @@ App::patch('/v1/account/sessions/:sessionId')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
             : $sessionId;
 
+        // TODO: Matej refactor
         $sessions = $user->getAttribute('sessions', []);
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
@@ -1788,6 +1782,7 @@ App::delete('/v1/account/sessions')
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
+        // TODO: Matej refactor
 
         foreach ($sessions as $session) {/** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());

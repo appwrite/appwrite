@@ -301,6 +301,18 @@ Database::addFilter('subQueryWebhooks',
     }
 );
 
+Database::addFilter('subQuerySessions',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('sessions', [
+                new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []);
+    }
+);
+
 Database::addFilter('encrypt',
     function($value) {
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
@@ -692,6 +704,8 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     else {
         $user = $dbForConsole->getDocument('users', Auth::$unique);
     }
+
+    \var_dump($user);
 
     if ($user->isEmpty() // Check a document has been found in the DB
         || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)) { // Validate user has valid login token
