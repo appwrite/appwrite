@@ -1501,18 +1501,17 @@ App::patch('/v1/account/prefs')
     });
 
 App::patch('/v1/account')
-    ->desc('Update Status (Block)')
+    ->desc('Update Account Status')
     ->groups(['api', 'account'])
     ->label('event', 'account.updateStatus')
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'block')
-    ->label('sdk.description', '/docs/references/account/block.md')
+    ->label('sdk.method', 'updateStatus')
+    ->label('sdk.description', '/docs/references/account/update-status.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('block', null, new Boolean(), 'Is account blocked?')
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1520,7 +1519,7 @@ App::patch('/v1/account')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($block, $request, $response, $user, $dbForProject, $audits, $events, $usage) {
+    ->action(function ($request, $response, $user, $dbForProject, $audits, $events, $usage) {
         /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
@@ -1528,10 +1527,6 @@ App::patch('/v1/account')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
-
-        if(!$block) {
-            throw new Exception('You cannot unblock your own account.', 400, Exception::ATTRIBUTE_VALUE_INVALID);
-        }
 
         $protocol = $request->getProtocol();
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', false));

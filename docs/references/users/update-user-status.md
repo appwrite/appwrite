@@ -1,1 +1,1 @@
-Update the user status by its unique ID.
+Update the user status by its unique ID. Use this endpoint as alternative to deleting an user if you want to keep user's ID reserved.
