@@ -74,8 +74,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
             Authorization::disable();
 
             $mainDomain = null;
-            if(!empty(App::getEnv('_APP_DOMAIN_TARGET', ''))) {
-                $mainDomain = App::getEnv('_APP_DOMAIN_TARGET', '');
+            if(!empty(App::getEnv('_APP_DOMAIN', ''))) {
+                $mainDomain = App::getEnv('_APP_DOMAIN', '');
             } else {
                 $domainDocument = $dbForConsole->findOne('domains', [], 0, ['_id'], ['ASC']);
                 $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();
