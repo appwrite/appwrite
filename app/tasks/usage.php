@@ -11,8 +11,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
-Cache::setCaseSensitivity(false);
-
 /**
  * Metrics We collect
  *

@@ -16,8 +16,6 @@ use Utopia\Storage\Device\S3;
 
 use Exception;
 
-Cache::setCaseSensitivity(false);
-
 abstract class Worker
 {
     /**

@@ -31,8 +31,6 @@ require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-Cache::setCaseSensitivity(false);
-
 $realtime = new Realtime();
 
 /**

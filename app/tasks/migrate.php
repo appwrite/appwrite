@@ -12,8 +12,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Text;
 
-Cache::setCaseSensitivity(false);
-
 $cli
     ->task('migrate')
     ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
