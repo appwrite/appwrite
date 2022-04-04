@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
+use Appwrite\Event\Validator\Event;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\Origin;
@@ -585,7 +586,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->label('sdk.response.model', Response::MODEL_WEBHOOK)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
-    ->param('events', null, new ArrayList(new WhiteList(array_keys(Config::getParam('events'), true), true)), 'Events list.')
+    ->param('events', null, new ArrayList(new Event()), 'Events list.')
     ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
@@ -707,7 +708,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('webhookId', null, new UID(), 'Webhook unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
-    ->param('events', null, new ArrayList(new WhiteList(array_keys(Config::getParam('events'), true), true)), 'Events list.')
+    ->param('events', null, new ArrayList(new Event()), 'Events list.')
     ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)

@@ -23,7 +23,6 @@ use Utopia\Database\Validator\UID;
 use Appwrite\Extend\Exception;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
-use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -34,7 +33,7 @@ $oauthDefaultFailure = '/v1/auth/oauth2/failure';
 App::post('/v1/account')
     ->desc('Create Account')
     ->groups(['api', 'account', 'auth'])
-    ->label('event', 'account.create')
+    ->label('event', 'users.[userId].create')
     ->label('scope', 'public')
     ->label('auth.type', 'emailPassword')
     ->label('sdk.auth', [])
@@ -55,13 +54,15 @@ App::post('/v1/account')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($userId, $email, $password, $name, $request, $response, $project, $dbForProject, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($userId, $email, $password, $name, $request, $response, $project, $dbForProject, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -120,12 +121,18 @@ App::post('/v1/account')
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'account.create')
-            ->setParam('resource', 'user/' . $user->getId())
+            ->setUser($user)
+            ->setPayload(array_merge($audits->getPayload(), [
+                'resource' => 'user/'.$user->getId()
+            ]))
         ;
 
         $usage
             ->setParam('users.create', 1)
+        ;
+
+        $events
+            ->setParam('userId', $user->getId())
         ;
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);
@@ -134,7 +141,7 @@ App::post('/v1/account')
 App::post('/v1/account/sessions')
     ->desc('Create Account Session')
     ->groups(['api', 'account', 'auth'])
-    ->label('event', 'account.sessions.create')
+    ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', 'public')
     ->label('auth.type', 'emailPassword')
     ->label('sdk.auth', [])
@@ -155,7 +162,8 @@ App::post('/v1/account/sessions')
     ->inject('geodb')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($email, $password, $request, $response, $dbForProject, $locale, $geodb, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($email, $password, $request, $response, $dbForProject, $locale, $geodb, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
@@ -163,6 +171,7 @@ App::post('/v1/account/sessions')
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
@@ -170,12 +179,6 @@ App::post('/v1/account/sessions')
         $profile = $dbForProject->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
         if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
-            $audits
-                //->setParam('userId', $profile->getId())
-                ->setParam('event', 'account.sessions.failed')
-                ->setParam('resource', 'user/'.($profile ? $profile->getId() : ''))
-            ;
-
             throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS); // Wrong password or username
         }
 
@@ -213,10 +216,11 @@ App::post('/v1/account/sessions')
 
         $audits
             ->setParam('userId', $profile->getId())
-            ->setParam('event', 'account.sessions.create')
-            ->setParam('resource', 'user/' . $profile->getId())
-            ->setParam('userEmail', $profile->getAttribute('email', ''))
-            ->setParam('userName', $profile->getAttribute('name', ''))
+            ->setParam('sessionId', $session->getId())
+            ->setUser($profile)
+            ->setPayload(array_merge($audits->getPayload(), [
+                'resource' => 'user/'.$profile->getId()
+            ]))
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -243,6 +247,12 @@ App::post('/v1/account/sessions')
             ->setParam('users.sessions.create', 1)
             ->setParam('provider', 'email')
         ;
+
+        $events
+            ->setParam('userId', $profile->getId())
+            ->setParam('sessionId', $session->getId())
+        ;
+
         $response->dynamic($session, Response::MODEL_SESSION);
     });
 
@@ -365,7 +375,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->desc('OAuth2 Redirect')
     ->groups(['api', 'account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
-    ->label('event', 'account.sessions.create')
+    ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', 'public')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
@@ -390,6 +400,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
 
         $protocol = $request->getProtocol();
@@ -567,18 +578,25 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'account.sessions.create')
-            ->setParam('resource', 'user/' . $user->getId())
-            ->setParam('data', ['provider' => $provider])
+            ->setParam('sessionId', $session->getId())
+            ->setUser($user)
+            ->setPayload(array_merge($audits->getPayload(), [
+                'resource' => 'user/'.$user->getId()
+            ]))
         ;
-
-        $events->setParam('eventData', $response->output($session, Response::MODEL_SESSION));
 
         $usage
             ->setParam('users.sessions.create', 1)
             ->setParam('projectId', $project->getId())
             ->setParam('provider', 'oauth2-'.$provider)
         ;
+
+        $events
+            ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $session->getId())
+            ->setPayload($response->output($session, Response::MODEL_SESSION))
+        ;
+
         if (!Config::getParam('domainVerification')) {
             $response
                 ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
@@ -687,7 +705,6 @@ App::post('/v1/account/sessions/magic-url')
             ])));
 
             $mails->setParam('event', 'users.create');
-            $audits->setParam('event', 'users.create');
         }
 
         $loginSecret = Auth::tokenGenerator();
@@ -723,12 +740,14 @@ App::post('/v1/account/sessions/magic-url')
         $url = Template::unParseURL($url);
 
         $mails
-            ->setParam('from', $project->getId())
-            ->setParam('recipient', $user->getAttribute('email'))
-            ->setParam('url', $url)
-            ->setParam('locale', $locale->default)
-            ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))
-            ->setParam('type', MAIL_TYPE_MAGIC_SESSION)
+            ->setPayload([
+                'from' => $project->getId(),
+                'recipient' => $user->getAttribute('email'),
+                'url' => $url,
+                'locale' => $locale->default,
+                'project' => $project->getAttribute('name', ['[APP-NAME]']),
+                'type' => MAIL_TYPE_MAGIC_SESSION
+            ])
             ->trigger()
         ;
 
@@ -744,8 +763,10 @@ App::post('/v1/account/sessions/magic-url')
                 ($isPrivilegedUser || $isAppUser) ? $loginSecret : '');
 
         $audits
-            ->setParam('userId', $user->getId())
-            ->setParam('resource', 'users/'.$user->getId())
+            ->setUser($user)
+            ->setPayload(array_merge($audits->getPayload(), [
+                'resource' => 'user/'.$user->getId()
+            ]))
         ;
 
         $response
@@ -758,7 +779,7 @@ App::put('/v1/account/sessions/magic-url')
     ->desc('Create Magic URL session (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
-    ->label('event', 'account.sessions.create')
+    ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateMagicURLSession')
@@ -776,7 +797,8 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('locale')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($userId, $secret, $request, $response, $dbForProject, $locale, $geodb, $audits) {
+    ->inject('events')
+    ->action(function ($userId, $secret, $request, $response, $dbForProject, $locale, $geodb, $audits, $events) {
         /** @var string $userId */
         /** @var string $secret */
         /** @var Appwrite\Utopia\Request $request */
@@ -785,6 +807,7 @@ App::put('/v1/account/sessions/magic-url')
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $events */
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -850,8 +873,15 @@ App::put('/v1/account/sessions/magic-url')
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'account.sessions.create')
-            ->setParam('resource', 'users/'.$user->getId())
+            ->setParam('sessionId', $session->getId())
+            ->setPayload(array_merge($audits->getPayload(), [
+                'resource' => 'user/'.$user->getId()
+            ]))
+        ;
+
+        $events
+            ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $session->getId())
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -883,7 +913,7 @@ App::put('/v1/account/sessions/magic-url')
 App::post('/v1/account/sessions/anonymous')
     ->desc('Create Anonymous Session')
     ->groups(['api', 'account', 'auth'])
-    ->label('event', 'account.sessions.create')
+    ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', 'public')
     ->label('auth.type', 'anonymous')
     ->label('sdk.auth', [])
@@ -904,7 +934,8 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('geodb')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($request, $response, $locale, $user, $project, $dbForProject, $geodb, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($request, $response, $locale, $user, $project, $dbForProject, $geodb, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
@@ -914,6 +945,7 @@ App::post('/v1/account/sessions/anonymous')
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Stats\Stats $events */
 
         $protocol = $request->getProtocol();
 
@@ -992,13 +1024,20 @@ App::post('/v1/account/sessions/anonymous')
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'account.sessions.create')
-            ->setParam('resource', 'user/' . $user->getId())
+            ->setParam('sessionId', $session->getId())
+            ->setPayload(array_merge($audits->getPayload(), [
+                'resource' => 'user/'.$user->getId()
+            ]))
         ;
 
         $usage
             ->setParam('users.sessions.create', 1)
             ->setParam('provider', 'anonymous')
+        ;
+
+        $events
+            ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $session->getId())
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -1196,26 +1235,8 @@ App::get('/v1/account/logs')
         /** @var Appwrite\Stats\Stats $usage */
 
         $audit = new Audit($dbForProject);
-        $auditEvents = [
-            'account.create',
-            'account.delete',
-            'account.update.name',
-            'account.update.email',
-            'account.update.password',
-            'account.update.prefs',
-            'account.sessions.create',
-            'account.sessions.update',
-            'account.sessions.delete',
-            'account.recovery.create',
-            'account.recovery.update',
-            'account.verification.create',
-            'account.verification.update',
-            'teams.membership.create',
-            'teams.membership.update',
-            'teams.membership.delete',
-        ];
 
-        $logs = $audit->getLogsByUserAndEvents($user->getId(), $auditEvents, $limit, $offset);
+        $logs = $audit->getLogsByUser($user->getId(), $limit, $offset);
 
         $output = [];
 
@@ -1249,7 +1270,7 @@ App::get('/v1/account/logs')
         ;
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUserAndEvents($user->getId(), $auditEvents),
+            'total' => $audit->countLogsByUser($user->getId()),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -1309,7 +1330,7 @@ App::get('/v1/account/sessions/:sessionId')
 App::patch('/v1/account/name')
     ->desc('Update Account Name')
     ->groups(['api', 'account'])
-    ->label('event', 'account.update.name')
+    ->label('event', 'users.[userId].update.name')
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
@@ -1324,12 +1345,14 @@ App::patch('/v1/account/name')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($name, $response, $user, $dbForProject, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($name, $response, $user, $dbForProject, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Stats\Stats $events */
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user
             ->setAttribute('name', $name)
@@ -1338,12 +1361,18 @@ App::patch('/v1/account/name')
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'account.update.name')
-            ->setParam('resource', 'user/' . $user->getId())
+            ->setUser($user)
+            ->setPayload(array_merge($audits->getPayload(), [
+                'resource' => 'user/'.$user->getId()
+            ]))
         ;
 
         $usage
             ->setParam('users.update', 1)
+        ;
+
+        $events
+            ->setParam('userId', $user->getId())
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -1352,7 +1381,7 @@ App::patch('/v1/account/name')
 App::patch('/v1/account/password')
     ->desc('Update Account Password')
     ->groups(['api', 'account'])
-    ->label('event', 'account.update.password')
+    ->label('event', 'users.[userId].update.password')
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
@@ -1368,12 +1397,14 @@ App::patch('/v1/account/password')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($password, $oldPassword, $response, $user, $dbForProject, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($password, $oldPassword, $response, $user, $dbForProject, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Stats\Stats $events */
 
         // Check old password only if its an existing user.
         if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
@@ -1387,20 +1418,27 @@ App::patch('/v1/account/password')
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'account.update.password')
-            ->setParam('resource', 'user/' . $user->getId())
+            ->setUser($user)
+            ->setPayload(array_merge($audits->getPayload(), [
+                'resource' => 'user/'.$user->getId()
+            ]))
         ;
 
         $usage
             ->setParam('users.update', 1)
         ;
+
+        $events
+            ->setParam('userId', $user->getId())
+        ;
+
         $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::patch('/v1/account/email')
     ->desc('Update Account Email')
     ->groups(['api', 'account'])
-    ->label('event', 'account.update.email')
+    ->label('event', 'users.[userId].update.email')
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
@@ -1416,12 +1454,14 @@ App::patch('/v1/account/email')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($email, $password, $response, $user, $dbForProject, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($email, $password, $response, $user, $dbForProject, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Stats\Stats $events */
 
         $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
 
@@ -1452,20 +1492,27 @@ App::patch('/v1/account/email')
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'account.update.email')
-            ->setParam('resource', 'user/' . $user->getId())
+            ->setUser($user)
+            ->setPayload(array_merge($audits->getPayload(), [
+                'resource' => 'user/'.$user->getId()
+            ]))
         ;
 
         $usage
             ->setParam('users.update', 1)
         ;
+
+        $events
+            ->setParam('userId', $user->getId())
+        ;
+
         $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::patch('/v1/account/prefs')
     ->desc('Update Account Preferences')
     ->groups(['api', 'account'])
-    ->label('event', 'account.update.prefs')
+    ->label('event', 'users.[userId].update.prefs')
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
@@ -1480,30 +1527,39 @@ App::patch('/v1/account/prefs')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($prefs, $response, $user, $dbForProject, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($prefs, $response, $user, $dbForProject, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
 
         $audits
-            ->setParam('event', 'account.update.prefs')
-            ->setParam('resource', 'user/' . $user->getId())
+            ->setParam('userId', $user->getId())
+            ->setPayload(array_merge($audits->getPayload(), [
+                'resource' => 'user/'.$user->getId()
+            ]))
         ;
 
         $usage
             ->setParam('users.update', 1)
         ;
+
+        $events
+            ->setParam('userId', $user->getId())
+        ;
+
         $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::delete('/v1/account')
     ->desc('Delete Account')
     ->groups(['api', 'account'])
-    ->label('event', 'account.delete')
+    ->label('event', 'users.[userId].delete')
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
@@ -1534,11 +1590,11 @@ App::delete('/v1/account')
 
         // TODO delete all tokens or only current session?
         // TODO delete all user data according to GDPR. Make sure everything is backed up and backups are deleted later
-        /*
-     * Data to delete
-     * * Tokens
-     * * Memberships
-     */
+        /**
+        * Data to delete
+        * * Tokens
+        * * Memberships
+        */
 
         $audits
             ->setParam('userId', $user->getId())
@@ -1548,7 +1604,8 @@ App::delete('/v1/account')
         ;
 
         $events
-            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER))
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -1571,7 +1628,7 @@ App::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete Account Session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
-    ->label('event', 'account.sessions.delete')
+    ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'deleteSession')
@@ -1640,7 +1697,9 @@ App::delete('/v1/account/sessions/:sessionId')
                 $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
 
                 $events
-                    ->setParam('eventData', $response->output($session, Response::MODEL_SESSION))
+                    ->setPayload($response->output($session, Response::MODEL_SESSION))
+                    ->setParam('userId', $user->getId())
+                    ->setParam('sessionId', $session->getId())
                 ;
 
                 $usage
@@ -1658,7 +1717,7 @@ App::patch('/v1/account/sessions/:sessionId')
     ->desc('Update Session (Refresh Tokens)')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
-    ->label('event', 'account.sessions.update')
+    ->label('event', 'users.[userId].sessions.[sessionId].update')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateSession')
@@ -1741,7 +1800,9 @@ App::patch('/v1/account/sessions/:sessionId')
                 ;
 
                 $events
-                    ->setParam('eventData', $response->output($session, Response::MODEL_SESSION))
+                    ->setPayload($response->output($session, Response::MODEL_SESSION))
+                    ->setParam('userId', $user->getId())
+                    ->setParam('sessionId', $session->getId())
                 ;
 
                 $usage
@@ -1760,7 +1821,7 @@ App::delete('/v1/account/sessions')
     ->desc('Delete All Account Sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
-    ->label('event', 'account.sessions.delete')
+    ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'deleteSessions')
@@ -1823,10 +1884,12 @@ App::delete('/v1/account/sessions')
         $numOfSessions = count($sessions);
 
         $events
-            ->setParam('eventData', $response->output(new Document([
+            ->setPayload($response->output(new Document([
                 'sessions' => $sessions,
                 'total' => $numOfSessions,
             ]), Response::MODEL_SESSION_LIST))
+            ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $session->getId())
         ;
 
         $usage
@@ -1840,7 +1903,7 @@ App::post('/v1/account/recovery')
     ->desc('Create Password Recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
-    ->label('event', 'account.recovery.create')
+    ->label('event', 'users.[userId].recovery.[tokenId].create')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createRecovery')
@@ -1915,14 +1978,15 @@ App::post('/v1/account/recovery')
         $url = Template::unParseURL($url);
 
         $mails
-            ->setParam('event', 'account.recovery.create')
-            ->setParam('from', $project->getId())
-            ->setParam('recipient', $profile->getAttribute('email', ''))
-            ->setParam('name', $profile->getAttribute('name', ''))
-            ->setParam('url', $url)
-            ->setParam('locale', $locale->default)
-            ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))
-            ->setParam('type', MAIL_TYPE_RECOVERY)
+            ->setPayload([
+                'from' => $project->getId(),
+                'recipient' => $profile->getAttribute('email', ''),
+                'name' => $profile->getAttribute('name', ''),
+                'url' => $url,
+                'locale' => $locale->default,
+                'project' => $project->getAttribute('name', ['[APP-NAME]']),
+                'type' => MAIL_TYPE_RECOVERY
+            ])
             ->trigger();
         ;
 
@@ -1931,6 +1995,8 @@ App::post('/v1/account/recovery')
                 $response->output($recovery->setAttribute('secret', $secret),
                     Response::MODEL_TOKEN
                 ))
+                ->setParam('userId', $profile->getId())
+                ->setParam('tokenId', $recovery->getId())
         ;
 
         $recovery // Hide secret for clients, sp
@@ -1954,7 +2020,7 @@ App::put('/v1/account/recovery')
     ->desc('Create Password Recovery (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
-    ->label('event', 'account.recovery.update')
+    ->label('event', 'users.[userId].recovery.[tokenId].update')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateRecovery')
@@ -1972,11 +2038,13 @@ App::put('/v1/account/recovery')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($userId, $secret, $password, $passwordAgain, $response, $dbForProject, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($userId, $secret, $password, $passwordAgain, $response, $dbForProject, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         if ($password !== $passwordAgain) {
             throw new Exception('Passwords must match', 400, Exception::USER_PASSWORD_MISMATCH);
@@ -2025,6 +2093,11 @@ App::put('/v1/account/recovery')
         $usage
             ->setParam('users.update', 1)
         ;
+
+        $events
+            ->setParam('userId', $profile->getId())
+            ->setParam('tokenId', $recovery->getId())
+        ;
         $response->dynamic($recovery, Response::MODEL_TOKEN);
     });
 
@@ -2032,7 +2105,7 @@ App::post('/v1/account/verification')
     ->desc('Create Email Verification')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
-    ->label('event', 'account.verification.create')
+    ->label('event', 'users.[userId].verification.[tokenId].create')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createVerification')
@@ -2098,14 +2171,15 @@ App::post('/v1/account/verification')
         $url = Template::unParseURL($url);
 
         $mails
-            ->setParam('event', 'account.verification.create')
-            ->setParam('from', $project->getId())
-            ->setParam('recipient', $user->getAttribute('email'))
-            ->setParam('name', $user->getAttribute('name'))
-            ->setParam('url', $url)
-            ->setParam('locale', $locale->default)
-            ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))
-            ->setParam('type', MAIL_TYPE_VERIFICATION)
+            ->setPayload([
+                'from' => $project->getId(),
+                'recipient' => $user->getAttribute('email'),
+                'name' => $user->getAttribute('name'),
+                'url' => $url,
+                'locale' => $locale->default,
+                'project' => $project->getAttribute('name', ['[APP-NAME]']),
+                'type' => MAIL_TYPE_VERIFICATION
+            ])
             ->trigger()
         ;
 
@@ -2114,6 +2188,8 @@ App::post('/v1/account/verification')
                 $response->output($verification->setAttribute('secret', $verificationSecret),
                     Response::MODEL_TOKEN
                 ))
+            ->setParam('userId', $user->getId())
+            ->setParam('tokenId', $verification->getId())
         ;
 
         $verification // Hide secret for clients, sp
@@ -2137,7 +2213,7 @@ App::put('/v1/account/verification')
     ->desc('Create Email Verification (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
-    ->label('event', 'account.verification.update')
+    ->label('event', 'users.[userId].verification.[tokenId].update')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateVerification')
@@ -2154,12 +2230,14 @@ App::put('/v1/account/verification')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($userId, $secret, $response, $user, $dbForProject, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($userId, $secret, $response, $user, $dbForProject, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         $profile = $dbForProject->getDocument('users', $userId);
 
@@ -2200,5 +2278,11 @@ App::put('/v1/account/verification')
         $usage
             ->setParam('users.update', 1)
         ;
+
+        $events
+            ->setParam('userId', $user->getId())
+            ->setParam('tokenId', $verification->getId())
+        ;
+
         $response->dynamic($verification, Response::MODEL_TOKEN);
     });

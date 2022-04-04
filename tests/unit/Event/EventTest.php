@@ -87,9 +87,14 @@ class EventTest extends TestCase
 
     public function testGenerateEvents()
     {
-        $event = Event::generateEvents('users.create');
-        $this->assertCount(1, $event);
-        $this->assertContains('users.create', $event);
+        $event = Event::generateEvents('users.[userId].create', [
+            'userId' => 'torsten'
+        ]);
+        $this->assertCount(4, $event);
+        $this->assertContains('users.torsten.create', $event);
+        $this->assertContains('users.torsten', $event);
+        $this->assertContains('users.*.create', $event);
+        $this->assertContains('users.*', $event);
 
         $event = Event::generateEvents('users.[userId].update.email', [
             'userId' => 'torsten'

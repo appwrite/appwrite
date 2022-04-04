@@ -362,10 +362,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             Console::error('Pub/sub error: ' . $th->getMessage());
             $register->get('redisPool')->put($redis);
             $attempts++;
+            sleep(DATABASE_RECONNECT_SLEEP);
             continue;
         }
-
-        $attempts++;
     }
 
     Console::error('Failed to restart pub/sub...');

@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Utopia\App;
 use Appwrite\Extend\Exception;
@@ -88,27 +89,33 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
      * Background Jobs
      */
     $events
+        ->setEvent($route->getLabel('event', ''))
+        ->setProject($project)
+        ->setUser($user)
+    ;
+
+    $events
         ->setParam('projectId', $project->getId())
         ->setParam('webhooks', $project->getAttribute('webhooks', []))
         ->setParam('userId', $user->getId())
         ->setParam('event', $route->getLabel('event', ''))
         ->setParam('eventData', [])
-        ->setParam('functionId', null)	
-        ->setParam('executionId', null)	
+        ->setParam('functionId', null)
+        ->setParam('executionId', null)
         ->setParam('trigger', 'event')
     ;
 
     $audits
-        ->setParam('projectId', $project->getId())
-        ->setParam('userId', $user->getId())
-        ->setParam('userEmail', $user->getAttribute('email'))
-        ->setParam('userName', $user->getAttribute('name'))
-        ->setParam('mode', $mode)
-        ->setParam('event', '')
-        ->setParam('resource', '')
-        ->setParam('userAgent', $request->getUserAgent(''))
-        ->setParam('ip', $request->getIP())
-        ->setParam('data', [])
+        ->setEvent($route->getLabel('event', ''))
+        ->setProject($project)
+        ->setUser($user)
+        ->setPayload([
+            'mode' => $mode,
+            'userAgent' => $request->getUserAgent(''),
+            'ip' => $request->getIP(),
+            'data' => [],
+            'resource' => ''
+        ])
     ;
 
     $usage
@@ -196,18 +203,29 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     /** @var Appwrite\Event\Event $database */
     /** @var bool $mode */
 
+    if (!empty($events->getEvent())) {
+        $allEvents = Event::generateEvents($events->getEvent(), $events->getParams());
+        var_dump($request->getRoute()->getPath(), $events->getEvent(), $allEvents);
+        foreach ($project->getAttribute('webhooks', []) as $webhook) {
+            /**
+             * @var Document $webhook
+             */
+            if (array_intersect($webhook->getAttribute('events', []), $allEvents)) {
+                $events
+                    ->setClass(Event::WEBHOOK_CLASS_NAME)
+                    ->setQueue(Event::WEBHOOK_QUEUE_NAME)
+                    ->setTrigger($webhook)
+                    ->setPayload($response->getPayload())
+                    ->trigger();
+            }
+        }
+    }
     if (!empty($events->getParam('event'))) {
         if (empty($events->getParam('eventData'))) {
             $events->setParam('eventData', $response->getPayload());
         }
 
-        $webhooks = clone $events;
         $functions = clone $events;
-
-        $webhooks
-            ->setQueue('v1-webhooks')
-            ->setClass('WebhooksV1')
-            ->trigger();
 
         $functions
             ->setQueue('v1-functions')
@@ -241,7 +259,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         }
     }
 
-    if (!empty($audits->getParam('event'))) {
+    if (!empty($audits->getEvent())) {
         $audits->trigger();
     }
 

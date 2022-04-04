@@ -4,6 +4,7 @@ use Appwrite\Resque\Worker;
 use Appwrite\Template\Template;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\Document;
 use Utopia\Locale\Locale;
 
 require_once __DIR__ . '/../init.php';
@@ -30,26 +31,28 @@ class MailsV1 extends Worker
             return;
         }
 
-        $recipient = $this->args['recipient'];
-        $name = $this->args['name'];
-        $url = $this->args['url'];
-        $project = $this->args['project'];
-        $type = $this->args['type'];
+        $payload = $this->args['payload'];
+
+        $recipient = $payload['recipient'];
+        $url = $payload['url'];
+        $project = $payload['project'];
+        $type = $payload['type'];
+        $name = $payload['name'] ?? $recipient;
         $prefix = $this->getPrefix($type);
-        $locale = new Locale($this->args['locale']);
+        $locale = new Locale($payload['locale']);
 
         if (!$this->doesLocaleExist($locale, $prefix)) {
             $locale->setDefault('en');
         }
 
-        $from = $this->args['from'] === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $project);
+        $from = $payload['from'] === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $project);
         $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
         $subject = '';
         switch ($type) {
             case MAIL_TYPE_INVITATION:
-                $subject = \sprintf($locale->getText("$prefix.subject"), $this->args['team'], $project);
-                $body->setParam('{{owner}}', $this->args['owner']);
-                $body->setParam('{{team}}', $this->args['team']);
+                $subject = \sprintf($locale->getText("$prefix.subject"), $payload['team'], $project);
+                $body->setParam('{{owner}}', $payload['owner']);
+                $body->setParam('{{team}}', $payload['team']);
                 break;
             case MAIL_TYPE_RECOVERY:
             case MAIL_TYPE_VERIFICATION:

@@ -5,6 +5,7 @@ namespace Appwrite\Event;
 use Exception;
 use InvalidArgumentException;
 use Resque;
+use Utopia\Database\Document;
 
 class Event
 {
@@ -37,7 +38,12 @@ class Event
 
     protected string $queue = '';
     protected string $class = '';
+    protected string $event = '';
     protected array $params = [];
+    protected array $payload = [];
+    protected ?Document $project = null;
+    protected ?Document $user = null;
+    protected ?Document $trigger = null;
 
     /**
      * @param string $queue
@@ -59,6 +65,7 @@ class Event
     public function setQueue(string $queue): self
     {
         $this->queue = $queue;
+
         return $this;
     }
 
@@ -73,6 +80,76 @@ class Event
     }
 
     /**
+     * Set event name used for this event.
+     * @param string $event
+     * @return Event
+     */
+    public function setEvent(string $event): self
+    {
+        $this->event = $event;
+
+        return $this;
+    }
+
+    /**
+     * Get event name used for this event.
+     *
+     * @return string
+     */
+    public function getEvent(): string
+    {
+        return $this->event;
+    }
+
+    public function setProject(Document $project): self
+    {
+        $this->projectId = $project;
+
+        return $this;
+    }
+
+    public function getProjectId(): Document
+    {
+        return $this->projectId;
+    }
+
+    public function setUser(Document $user): self
+    {
+        $this->userId = $user;
+
+        return $this;
+    }
+
+    public function getUserId(): Document
+    {
+        return $this->userId;
+    }
+
+    public function setPayload(array $payload): self
+    {
+        $this->payload = $payload;
+
+        return $this;
+    }
+
+    public function getPayload(): array
+    {
+        return $this->payload;
+    }
+
+    public function setTrigger(Document $trigger): self
+    {
+        $this->trigger = $trigger;
+
+        return $this;
+    }
+
+    public function getTrigger(): Document
+    {
+        return $this->trigger;
+    }
+
+    /**
      * Set class used for this event.
      * @param string $class
      * @return Event
@@ -80,6 +157,7 @@ class Event
     public function setClass(string $class): self
     {
         $this->class = $class;
+
         return $this;
     }
 
@@ -119,16 +197,30 @@ class Event
     }
 
     /**
+     * Get all params of the event.
+     *
+     * @return array
+     */
+    public function getParams(): array
+    {
+        return $this->params;
+    }
+
+    /**
      * Execute Event.
      *
-     * @return Event
+     * @return string|bool
      * @throws InvalidArgumentException
      */
-    public function trigger(): self
+    public function trigger(): string|bool
     {
-        Resque::enqueue($this->queue, $this->class, $this->params);
-
-        return $this->reset();
+        return Resque::enqueue($this->queue, $this->class, [
+            'project' => $this->projectId,
+            'user' => $this->userId,
+            'payload' => $this->payload,
+            'trigger' => $this->trigger,
+            'events' => Event::generateEvents($this->getEvent(), $this->getParams())
+        ]);
     }
 
     /**
@@ -143,50 +235,64 @@ class Event
         return $this;
     }
 
-    static function generateEvents(string $pattern, array $params = []): array
+    public static function parseEventPattern(string $pattern): array
     {
         $parts = \explode('.', $pattern);
         $count = \count($parts);
 
-        if ($count < 2 || $count > 6) {
-            throw new Exception("Patten incorrect.");
-        }
-
         /**
          * Identify all sestions of the pattern.
          */
-        $type = $parts[0];
-        $action = match ($count) {
-            2 => $parts[1],
-            3, 4 => $parts[2],
-            5, 6 => $parts[4]
-        };
+        $type = $parts[0] ?? false;
+        $resource = $parts[1] ?? false;
+        $hasSubResource = $count > 3 && \str_starts_with($parts[3], '[');
 
-        if ($count > 4) {
+        if ($hasSubResource) {
             $subType = $parts[2];
             $subResource = $parts[3];
             if ($count === 6) {
                 $attribute = $parts[5];
             }
-        }
-        if ($count > 2) {
-            $resource = $parts[1];
+        } else {
             if ($count === 4) {
                 $attribute = $parts[3];
             }
         }
 
+        $subType ??= false;
+        $subResource ??= false;
+        $attribute ??= false;
+        $action = match (true) {
+            !$hasSubResource && $count > 2 => $parts[2],
+            $hasSubResource && $count > 4 => $parts[4],
+            default => false
+        };
+
+        return [
+            'type' => $type,
+            'resource' => $resource,
+            'subType' => $subType,
+            'subResource' => $subResource,
+            'action' => $action,
+            'attribute' => $attribute,
+        ];
+    }
+
+    static function generateEvents(string $pattern, array $params = []): array
+    {
+        $params = \array_filter($params, fn($param) => !\is_array($param));
         $paramKeys = \array_keys($params);
         $paramValues = \array_values($params);
 
         $patterns = [];
-        $resource ??= false;
-        $subResource ??= false;
-        $attribute ??= false;
 
-        if (empty($params) && ($type ?? false) && !$resource) {
-            return [$pattern];
-        }
+        $parsed = self::parseEventPattern($pattern);
+        $type = $parsed['type'];
+        $resource = $parsed['resource'];
+        $subType = $parsed['subType'];
+        $subResource = $parsed['subResource'];
+        $action = $parsed['action'];
+        $attribute = $parsed['attribute'];
 
         if ($resource && !\in_array(\trim($resource, '[]'), $paramKeys)) {
             throw new InvalidArgumentException("{$resource} is missing from the params.");
@@ -244,6 +350,7 @@ class Event
          * Remove [] from the events.
          */
         $events = \array_map(fn (string $event) => \str_replace(['[', ']'], '', $event), $events);
+        $events = \array_unique($events);
 
         return $events;
     }

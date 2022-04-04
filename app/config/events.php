@@ -282,4 +282,10 @@ return [
         'model' => Response::MODEL_MEMBERSHIP,
         'note' => 'version >= 0.7',
     ],
+
+    'users.*' => [
+        'description' => 'This event triggers when a team memberships is deleted.',
+        'model' => Response::MODEL_MEMBERSHIP,
+        'note' => 'version >= 0.7',
+    ],
 ];
