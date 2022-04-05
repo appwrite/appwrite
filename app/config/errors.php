@@ -78,9 +78,9 @@ return [
         'description' => 'An internal server error occurred.',
         'code' => 500,
     ],
-    Exception::GENERAL_FORCED_HTTPS_IGNORED => [
-        'name' => Exception::GENERAL_FORCED_HTTPS_IGNORED,
-        'description' => 'Appwrite instance forces secure communication. Switch to HTTPS protocol in your endpoint.',
+    Exception::GENERAL_METHOD_UNSUPPORTED => [
+        'name' => Exception::GENERAL_METHOD_UNSUPPORTED,
+        'description' => 'The HTTP method is unsupported by the current protocol or resource.',
         'code' => 500, 
     ],
 
