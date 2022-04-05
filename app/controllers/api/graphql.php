@@ -1,12 +1,11 @@
 <?php
 
-use Appwrite\GraphQL\Builder;
-use GraphQL\GraphQL;
-use GraphQL\Type;
-use GraphQL\Type\Definition\ObjectType;
-use GraphQL\Utils\SchemaExtender;
+use Appwrite\GraphQL\GraphQLPromiseAdapter;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
+use GraphQL\Executor\ExecutionResult;
+use GraphQL\GraphQL;
+use GraphQL\Type;
 use Utopia\App;
 
 App::post('/v1/graphql')
@@ -17,67 +16,37 @@ App::post('/v1/graphql')
     ->inject('schema')
     ->inject('utopia')
     ->inject('register')
-    ->middleware(true) 
-    ->action(function ($request, $response, $schema, $utopia, $register) {
+    ->inject('dbForProject')
+    ->inject('promiseAdapter')
+    ->middleware(true)
+    ->action(function ($request, $response, $schema, $utopia, $register, $dbForProject, $promiseAdapter) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Type\Schema $schema */
         /** @var Utopia\App $utopia */
         /** @var Utopia\Registry\Registry $register */
-
-        $queryType = new ObjectType([
-            'name' => 'Query',
-            'description' => 'The root of all your queries',
-            'fields' => [
-                'accountGet' => [
-                    'type' => Type\Definition\Type::string(),
-                    'description' => 'Extension description',
-                    'args' => [],
-                    'resolve' => fn() => "Replacing account get response"
-                ],
-                'testQuery' => [
-                    'type' => Type\Definition\Type::string(),
-                    'description' => 'Extension description 2',
-                    'args' => [],
-                    'resolve' => fn() => "Test query response"
-                ]
-            ]
-        ]);
-
-        $extendedSchema = SchemaExtender::extend($schema, $queryType->astNode);
+        /** @var \Utopia\Database\Database $dbForProject */
 
         $query = $request->getPayload('query', '');
-        $variables = $request->getPayload('variables', null);
+        $variables = $request->getPayload('variables');
+
         $response->setContentType(Response::CONTENT_TYPE_NULL);
-        $register->set('__app', function() use ($utopia) {
-            return $utopia;
-        });
-        $register->set('__response', function() use ($response) {
-            return $response;
-        });
 
         $isDevelopment = App::isDevelopment();
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
-        try {
-            $debug = $isDevelopment ? ( DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE ) : DebugFlag::NONE;
-            $rootValue = [];
-            $result = GraphQL::executeQuery($extendedSchema, $query, $rootValue, null, $variables)
-                                ->setErrorFormatter(Builder::getErrorFormatter($isDevelopment, $version));
-            $output = $result->toArray($debug);
-        } catch (\Exception $error) {
-            $output = [
-                'errors' => [
-                    [
-                        'message' => $error->getMessage().'xxx',
-                        'code' => $error->getCode(),
-                        'file' => $error->getFile(),
-                        'line' => $error->getLine(),
-                        'trace' => $error->getTrace(),
-                    ]
-                ]
-            ];
-        }
-        $response->json($output);
-    }
-);
+        $debugFlags = $isDevelopment
+            ? DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE
+            : DebugFlag::NONE;
+        $rootValue = [];
+
+        GraphQL::promiseToExecute(
+            $promiseAdapter,
+            $schema,
+            $query,
+            $rootValue,
+            null,
+            $variables
+        )->then(function (ExecutionResult $result) use ($response, $debugFlags) {
+            $response->json($result->toArray($debugFlags));
+        });
+    });

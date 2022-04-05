@@ -5,28 +5,25 @@ namespace Appwrite\GraphQL;
 use Appwrite\GraphQL\Types\JsonType;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use GraphQL\Error\Error;
+use GraphQL\Error\FormattedError;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
-use Appwrite\GraphQL\Exception;
-use GraphQL\Error\Error;
-use GraphQL\Error\FormattedError;
 use Utopia\CLI\Console;
 
-class Builder {
+class Builder
+{
+    protected static ?JsonType $jsonParser = null;
 
-    /** @var JsonType $jsonParser */
-    protected static $jsonParser = null;
-
-    /** @var array $typeMapping */
-    protected static $typeMapping = null;
+    protected static array $typeMapping = [];
 
     /**
-    * Function to initialise the typeMapping array with the base cases of the recursion
-    *
-    * @return   void
-    */
-    public static function init() 
+     * Function to initialise the typeMapping array with the base cases of the recursion
+     *
+     * @return   void
+     */
+    public static function init()
     {
         self::$typeMapping = [
             Model::TYPE_BOOLEAN => Type::boolean(),
@@ -40,11 +37,11 @@ class Builder {
     }
 
     /**
-    * Function to create a singleton for $jsonParser
-    *
-    * @return JsonType
-    */
-    public static function json() 
+     * Function to create a singleton for $jsonParser
+     *
+     * @return JsonType
+     */
+    public static function json()
     {
         if (is_null(self::$jsonParser)) {
             self::$jsonParser = new JsonType();
@@ -53,31 +50,31 @@ class Builder {
     }
 
     /**
-    * If the map already contains the type, end the recursion and return.
-    * Iterate through all the rules in the response model. Each rule is of the form 
-    *        [
-    *            [KEY 1] => [
-    *                'type' => A string from Appwrite/Utopia/Response
-    *                'description' => A description of the type 
-    *                'default' => A default value for this type 
-    *                'example' => An example of this type
-    *                'require' => a boolean representing whether this field is required 
-    *                'array' => a boolean representing whether this field is an array 
-    *            ],
-    *            [KEY 2] => [
-    *            ],
-    *            [KEY 3] => [
-    *            ] .....
-    *        ]
-    *   If there are any field names containing characters other than a-z, A-Z, 0-9, _ , 
-    *   we need to remove all those characters. Currently Appwrite's Response model has only the 
-    *   $ sign which is prohibited by the GraphQL spec. So we're only replacing that. We need to replace this with a regex
-    *   based approach.
-    *
-    * @param Model $model
-    * @param Response $response
-    * @return Type
-    */
+     * If the map already contains the type, end the recursion and return.
+     * Iterate through all the rules in the response model. Each rule is of the form
+     *        [
+     *            [KEY 1] => [
+     *                'type' => A string from Appwrite/Utopia/Response
+     *                'description' => A description of the type
+     *                'default' => A default value for this type
+     *                'example' => An example of this type
+     *                'require' => a boolean representing whether this field is required
+     *                'array' => a boolean representing whether this field is an array
+     *            ],
+     *            [KEY 2] => [
+     *            ],
+     *            [KEY 3] => [
+     *            ] .....
+     *        ]
+     *   If there are any field names containing characters other than a-z, A-Z, 0-9, _ ,
+     *   we need to remove all those characters. Currently Appwrite's Response model has only the
+     *   $ sign which is prohibited by the GraphQL spec. So we're only replacing that. We need to replace this with a regex
+     *   based approach.
+     *
+     * @param Model $model
+     * @param Response $response
+     * @return Type
+     */
     static function getTypeMapping(Model $model, Response $response): Type
     {
         if (isset(self::$typeMapping[$model->getType()])) {
@@ -88,6 +85,7 @@ class Builder {
         $name = $model->getType();
         $fields = [];
         $type = null;
+
         foreach ($rules as $key => $props) {
             $keyWithoutSpecialChars = str_replace('$', '_', $key);
             if (isset(self::$typeMapping[$props['type']])) {
@@ -96,7 +94,7 @@ class Builder {
                 try {
                     $complexModel = $response->getModel($props['type']);
                     $type = self::getTypeMapping($complexModel, $response);
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     Console::error("Could Not find model for : {$props['type']}");
                 }
             }
@@ -112,80 +110,202 @@ class Builder {
             ];
         }
         $objectType = [
-            'name' => $name, 
+            'name' => $name,
             'fields' => $fields
         ];
-        self::$typeMapping[$name] = new ObjectType($objectType); 
+        self::$typeMapping[$name] = new ObjectType($objectType);
+
         return self::$typeMapping[$name];
     }
 
-    /** 
-    * Function to map a Utopia\Validator to a valid GraphQL Type 
-    *
-    * @param $validator
-    * @param bool $required
-    * @param $utopia
-    * @param $injections
-    * @return GraphQL\Type\Definition\Type
-    */
-    protected static function getArgType($validator, bool $required, $utopia, $injections): Type 
+    /**
+     * Function to map a Utopia\Validator to a valid GraphQL Type
+     *
+     * @param $validator
+     * @param bool $required
+     * @param $utopia
+     * @param $injections
+     * @return GraphQL\Type\Definition\Type
+     */
+    protected static function getArgType($validator, bool $required, $utopia, $injections): Type
     {
         $validator = (\is_callable($validator)) ? call_user_func_array($validator, $utopia->getResources($injections)) : $validator;
         $type = [];
         switch ((!empty($validator)) ? \get_class($validator) : '') {
+            case 'Utopia\Validator\Email':
+            case 'Utopia\Validator\Host':
+            case 'Utopia\Validator\Length':
+            case 'Appwrite\Auth\Validator\Password':
+            case 'Utopia\Validator\URL':
+            case 'Appwrite\Database\Validator\UID':
+            case 'Appwrite\Storage\Validator\File':
+            case 'Utopia\Validator\WhiteList':
             case 'Utopia\Validator\Text':
                 $type = Type::string();
                 break;
             case 'Utopia\Validator\Boolean':
                 $type = Type::boolean();
                 break;
-            case 'Appwrite\Database\Validator\UID':
-                $type = Type::string();
-                break;
-            case 'Utopia\Validator\Email':
-                $type = Type::string();
-                break;
-            case 'Utopia\Validator\URL':
-                $type = Type::string();
-                break;
-            case 'Utopia\Validator\JSON':
-            case 'Utopia\Validator\Mock':
-            case 'Utopia\Validator\Assoc':
-                $type = self::json();
-                break;
-            case 'Appwrite\Storage\Validator\File':
-                $type = Type::string();
             case 'Utopia\Validator\ArrayList':
                 $type = Type::listOf(self::json());
                 break;
-            case 'Appwrite\Auth\Validator\Password':
-                $type = Type::string();
-                break;
-            case 'Utopia\Validator\Range': /* @var $validator \Utopia\Validator\Range */
-                $type = Type::int();
-                break;
             case 'Utopia\Validator\Numeric':
+            case 'Utopia\Validator\Range':
                 $type = Type::int();
                 break;
-            case 'Utopia\Validator\Length':
-                $type = Type::string();
-                break;
-            case 'Utopia\Validator\Host':
-                $type = Type::string();
-                break;
-            case 'Utopia\Validator\WhiteList': /* @var $validator \Utopia\Validator\WhiteList */
-                $type = Type::string();
-                break;
+            case 'Utopia\Validator\Assoc':
             default:
                 $type = self::json();
                 break;
         }
-    
+
         if ($required) {
             $type = Type::nonNull($type);
         }
-    
+
         return $type;
+    }
+
+    public static function appendSchema($schema, $dbForProject): Schema
+    {
+        Console::log("[INFO] Appending GraphQL Database Schema...");
+        $start = microtime(true);
+
+        $db = self::buildDatabaseSchema($dbForProject);
+
+        $queryFields = $schema->getQueryType()?->getFields() ?? [];
+        $mutationFields = $schema->getMutationType()?->getFields() ?? [];
+
+        $queryFields = \array_merge($queryFields, $db['query']);
+        $mutationFields = \array_merge($mutationFields, $db['mutation']);
+
+        ksort($queryFields);
+        ksort($mutationFields);
+
+        $schema = new Schema([
+            'query' => new ObjectType([
+                'name' => 'Query',
+                'description' => 'The root of all queries',
+                'fields' => $queryFields
+            ]),
+            'mutation' => new ObjectType([
+                'name' => 'Mutation',
+                'description' => 'The root of all mutations',
+                'fields' => $mutationFields
+            ])
+        ]);
+
+        $time_elapsed_secs = microtime(true) - $start;
+        Console::log("[INFO] Time Taken To Append Database to API Schema : ${time_elapsed_secs}s");
+
+        return $schema;
+    }
+
+    public static function buildSchema($utopia, $response, $register, $dbForProject): Schema
+    {
+        $db = self::buildDatabaseSchema($dbForProject);
+        $api = self::buildAPISchema($utopia, $response, $register, $dbForProject);
+
+        $queryFields = \array_merge($api['query'], $db['query']);
+        $mutationFields = \array_merge($api['mutation'], $db['mutation']);
+
+        ksort($queryFields);
+        ksort($mutationFields);
+
+        return new Schema([
+            'query' => new ObjectType([
+                'name' => 'Query',
+                'description' => 'The root of all your queries',
+                'fields' => $queryFields
+            ]),
+            'mutation' => new ObjectType([
+                'name' => 'Mutation',
+                'description' => 'The root of all your mutations',
+                'fields' => $mutationFields
+            ])
+        ]);
+    }
+
+    /**
+     * This function goes through all the project attributes and builds a
+     * GraphQL schema for all the collections they make up.
+     *
+     * @param $dbForProject
+     * @return array
+     */
+    public static function buildDatabaseSchema($dbForProject): array
+    {
+        Console::log("[INFO] Building GraphQL Database Schema...");
+        $start = microtime(true);
+
+        $attrs = $dbForProject->getCollection('attributes');
+
+        $queryFields = [];
+        $mutationFields = [];
+        $collections = [];
+
+        foreach ($attrs as $attr) {
+            $collectionId = $attr->getAttribute('collectionId');
+
+            if (isset(self::$typeMapping[$collectionId])) {
+                continue;
+            }
+
+            $key = $attr->getAttribute('key');
+            $type = $attr->getAttribute('type');
+            $keyWithoutSpecialChars = str_replace('$', '_', $key);
+
+            $collections[$collectionId][$keyWithoutSpecialChars] = [
+                'type' => $type,
+                'resolve' => function ($object, $args, $context, $info) use ($key) {
+                    return $object->getAttribute($key);
+                }
+            ];
+        }
+
+        $args = [];
+
+        foreach ($collections as $id => $fields) {
+            $objectType = new ObjectType([
+                'name' => $id,
+                'fields' => $fields
+            ]);
+
+            self::$typeMapping[$id] = $objectType;
+
+            foreach ($fields as $field => $fieldInfo) {
+                $args[$field] = [
+                    'type' => $fieldInfo['type']
+                ];
+            }
+
+            $resolve = function ($type, $args, $context, $info) use (&$register, $dbForProject) {
+                return SwoolePromise::create(function (callable $resolve, callable $reject) use ($type, $args, $dbForProject) {
+                    try {
+                        $resolve($dbForProject->getCollection($type));
+                    } catch (\Throwable $e) {
+                        $reject($e);
+                    }
+                });
+            };
+
+            $field = [
+                'type' => $type,
+                'args' => $args,
+                'resolve' => $resolve
+            ];
+
+            $queryFields[$id] = $field;
+            $mutationFields[$id] = $field;
+        }
+
+        $time_elapsed_secs = microtime(true) - $start;
+        Console::log("[INFO] Time Taken To Build Database Schema : ${time_elapsed_secs}s");
+
+        return [
+            'query' => $queryFields,
+            'mutation' => $mutationFields
+        ];
     }
 
     /**
@@ -195,46 +315,23 @@ class Builder {
      * @param $utopia
      * @param $response
      * @param $register
-     * @return Schema
+     * @param $dbForProject
+     * @return array
      */
-    public static function buildDatabaseSchema($utopia, $response, $register)
+    public static function buildAPISchema($utopia, $response, $register, $dbForProject): array
     {
-        /** @var Model\Collection[] $collections */
-
-        Console::log("[INFO] Building GraphQL Database Schema...");
+        Console::log("[INFO] Building GraphQL API Schema...");
         $start = microtime(true);
-        $collections = [];
 
-        foreach($collections as $collection) {
-            foreach ($collection->getRules() as $rule) {
-                /** @var Model\Rule $rule */
-                $modelName = $rule->getName();
-            }
-        }
-    }
-
-    /**
-    * This function goes through all the REST endpoints in the API and builds a 
-    * GraphQL schema for all those routes whose response model is neither empty nor NONE
-    *
-    * @param $utopia
-    * @param $response
-    * @param $register
-    * @return Schema
-    */
-    public static function buildModelSchema($utopia, $response, $register) {
-        Console::log("[INFO] Building GraphQL Schema...");
-        $start = microtime(true);
-        
         self::init();
         $queryFields = [];
         $mutationFields = [];
 
-        foreach($utopia->getRoutes() as $method => $routes ){
-            foreach($routes as $route) {
+        foreach ($utopia->getRoutes() as $method => $routes) {
+            foreach ($routes as $route) {
 
                 $namespace = $route->getLabel('sdk.namespace', '');
-                $methodName = $namespace.'_'.$route->getLabel('sdk.method', '');
+                $methodName = $namespace . '_' . $route->getLabel('sdk.method', '');
                 $responseModelName = $route->getLabel('sdk.response.model', "");
 
                 if ($responseModelName !== "") {
@@ -248,28 +345,33 @@ class Builder {
                     $args = [];
                     foreach ($route->getParams() as $key => $value) {
                         $args[$key] = [
-                            'type' => self::getArgType($value['validator'],!$value['optional'], $utopia, $value['injections']),
+                            'type' => self::getArgType($value['validator'], !$value['optional'], $utopia, $value['injections']),
                             'description' => $value['description'],
                             'defaultValue' => $value['default']
                         ];
                     }
                     /* Define a resolve function that defines how to fetch data for this type */
-                    $resolve = function ($type, $args, $context, $info) use (&$register, $route) {
-                        $utopia = $register->get('__app');
-                        $utopia->setRoute($route)->execute($route, $args);
-                        $response = $register->get('__response');
-                        $result = $response->getPayload();
-                        if ( $response->getCurrentModel() == Response::MODEL_ERROR_DEV ) {
-                            throw new ExceptionDev($result['message'], $result['code'], $result['version'], $result['file'], $result['line'], $result['trace']);
-                        } else if ( $response->getCurrentModel() == Response::MODEL_ERROR ) {
-                            throw new Exception($result['message'], $result['code']);
-                        }
-                        return $result;
+                    $resolve = function ($type, $args, $context, $info) use (&$register, $route, $dbForProject) {
+                        return SwoolePromise::create(function (callable $resolve, callable $reject) use (&$register, $route, $dbForProject, $args) {
+                            $utopia = $register->get('__app');
+                            $utopia->setRoute($route)->execute($route, $args);
+
+                            $response = $register->get('__response');
+                            $result = $response->getPayload();
+
+                            if ($response->getCurrentModel() == Response::MODEL_ERROR_DEV) {
+                                $reject(new ExceptionDev($result['message'], $result['code'], $result['version'], $result['file'], $result['line'], $result['trace']));
+                            } else if ($response->getCurrentModel() == Response::MODEL_ERROR) {
+                                $reject(new \Exception($result['message'], $result['code']));
+                            }
+
+                            $resolve($result);
+                        });
                     };
 
                     $field = [
                         'type' => $type,
-                        'description' => $description, 
+                        'description' => $description,
                         'args' => $args,
                         'resolve' => $resolve
                     ];
@@ -283,41 +385,28 @@ class Builder {
             }
         }
 
-        ksort($queryFields);
-        ksort($mutationFields);
-        
-        $queryType = new ObjectType([
-            'name' => 'Query',
-            'description' => 'The root of all your queries',
-            'fields' => $queryFields
-        ]);
-        $mutationType = new ObjectType([
-            'name' => 'Mutation',
-            'description' => 'The root of all your mutations',
-            'fields' => $mutationFields
-        ]);
-        $schema = new Schema([
-            'query' => $queryType,
-            'mutation' => $mutationType
-        ]);
-
         $time_elapsed_secs = microtime(true) - $start;
-        Console::log("[INFO] Time Taken To Build Schema : ${time_elapsed_secs}s");
-        return $schema; 
+        Console::log("[INFO] Time Taken To Build API Schema : ${time_elapsed_secs}s");
+
+        return [
+            'query' => $queryFields,
+            'mutation' => $mutationFields
+        ];
     }
 
     /**
      * Function to create an appropriate GraphQL Error Formatter
      * Based on whether we're on a development build or production
-     * build of Appwrite. 
-     * 
+     * build of Appwrite.
+     *
      * @param bool $isDevelopment
-     * @param string $version 
+     * @param string $version
      * @return callable
      */
-    public static function getErrorFormatter(bool $isDevelopment, string $version): callable 
+    public
+    static function getErrorFormatter(bool $isDevelopment, string $version): callable
     {
-        $errorFormatter = function(Error $error) use ($isDevelopment, $version) {
+        $errorFormatter = function (Error $error) use ($isDevelopment, $version) {
             $formattedError = FormattedError::createFromException($error);
             /**  Previous error represents the actual error thrown by Appwrite server */
             $previousError = $error->getPrevious() ?? $error;

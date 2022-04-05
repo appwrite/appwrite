@@ -23,6 +23,7 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
+use Appwrite\GraphQL\Builder;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
@@ -855,22 +856,20 @@ App::setResource('geodb', function($register) {
     return $register->get('geodb');
 }, ['register']);
 
-App::setResource('schema', function($utopia, $response, $request, $register) {
-    $schema = null;
+App::setResource('schema', function($utopia, $response, $request, $register, $dbForProject) {
     try {
-        /* 
-        * Try to get the schema from the register. 
-        * If there is no schema catch the exception and generate it.
-        */
+        // Try to get the schema from the register.
+        // If there is no base schema catch the exception and generate it.
+        // If the base schema exists, extend it with the current project schema.
         Console::log('Getting Schema from register...');
         $schema = $register->get('_schema');
+        $schema = Builder::appendSchema($schema, $dbForProject);
     } catch (Exception $e) {
         Console::error('Schema not present. Generating Schema...');
-        $schema = Builder::buildModelSchema($utopia, $response, $register);
+        $schema = Builder::buildSchema($utopia, $response, $register, $dbForProject);
         $register->set('_schema', function () use ($schema){
             return $schema;
         });
     }
-
     return $schema;
-}, ['utopia', 'response', 'request', 'register']);
+}, ['utopia', 'response', 'request', 'register', 'dbForProject']);
