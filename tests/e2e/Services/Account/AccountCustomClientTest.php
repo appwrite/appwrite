@@ -6,7 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\App;
+use function sleep;
 
 class AccountCustomClientTest extends Scope
 {
@@ -14,6 +14,9 @@ class AccountCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
+    /**
+     * @depends testCreateAccountSession
+     */
     public function testCreateOAuth2AccountSession():array
     {
         $provider = 'mock';
@@ -65,6 +68,7 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -102,7 +106,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'status' => 2,
+            'status' => false,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -144,6 +148,7 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -243,7 +248,6 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertNotEmpty($response['body']['userId']);
 
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
@@ -323,6 +327,7 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password
         ]);
@@ -337,7 +342,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals($response['headers']['status-code'], 409);
 
         /**
          * Test for SUCCESS
@@ -385,6 +390,17 @@ class AccountCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+
+        $userId = $response['body']['$id'] ?? '';
+        
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$this->getProject()['$id'].'/oauth2', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -408,6 +424,8 @@ class AccountCustomClientTest extends Scope
             'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
         ]);
 
+        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('success', $response['body']['result']);
         
@@ -419,8 +437,41 @@ class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['$id'], $userId);
         $this->assertEquals($response['body']['name'], 'User Name');
-        $this->assertEquals($response['body']['email'], 'user@localhost.test');
+        $this->assertEquals($response['body']['email'], 'useroauth@localhost.test');
+
+        // Since we only support one oauth user, let's also check updateSession here
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('123456', $response['body']['providerAccessToken']);
+        $this->assertEquals('tuvwxyz', $response['body']['providerRefreshToken']);
+        $this->assertGreaterThan(\time() + 14400 - 5, $response['body']['providerAccessTokenExpiry']); // 5 seconds allowed networking delay
+
+        $initialExpiry = $response['body']['providerAccessTokenExpiry'];
+        
+        sleep(3);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/sessions/current', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('123456', $response['body']['providerAccessToken']);
+        $this->assertEquals('tuvwxyz', $response['body']['providerRefreshToken']);
+        $this->assertNotEquals($initialExpiry, $response['body']['providerAccessTokenExpiry']);
 
         return [];
     }

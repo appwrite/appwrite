@@ -594,11 +594,6 @@ return [
         "nativeName" => "Norsk nynorsk"
     ],
     [
-        "code" => "no",
-        "name" => "Norwegian",
-        "nativeName" => "Norsk"
-    ],
-    [
         "code" => "nr",
         "name" => "South Ndebele",
         "nativeName" => "isiNdebele"

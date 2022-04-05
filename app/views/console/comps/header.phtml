@@ -58,7 +58,7 @@
                                 <i class="icon-sun-inv force-light"></i>
                                 <i class="icon-moon-inv force-dark"></i>
                             </button>
-                        </div>    
+                        </div>
                     </span>
                 </li>
             </ul>
@@ -143,16 +143,6 @@
 
             <ul class="links">
                 <li>
-                    <a data-ls-attrs="href=/console/tasks?project={{router.params.project}}"
-                        data-analytics
-                        data-analytics-event="click"
-                        data-analytics-category="console/navigation"
-                        data-analytics-label="Tasks Link">
-                        <i class="icon-clock"></i>
-                        Tasks
-                    </a>
-                </li>
-                <li>
                     <a data-ls-attrs="href=/console/webhooks?project={{router.params.project}}"
                         data-analytics
                         data-analytics-event="click"
@@ -212,6 +202,18 @@
         data-analytics-label="Create Project">
         <p>Appwrite projects are containers for your resources and apps across different platforms.</p>
 
+        <label>Project ID</label>
+        <input
+            type="hidden"
+            data-custom-id
+            data-id-type="auto"
+            data-validator="projects.get"
+            required
+            maxlength="36"
+            class=""
+            pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{0,35}$"
+            name="projectId" />
+
         <label>Name</label>
         <input type="text" class="full-width margin-bottom-xl" name="name" required autocomplete="off" maxlength="128" />
 
@@ -220,3 +222,38 @@
         </footer>
     </form>
 </div>
+
+<section class="upload-box" x-data x-show="$store.uploader.files().length > 0">
+    <div class="upload-box-header">
+        <h4 class="upload-box-title">
+            <span class="text">Uploading files</span>
+            <span class="amount" x-text="$store.uploader.files().length"></span>
+        </h4>
+        <button class="icon-button" :class="$store.uploader.isOpen ? '' : 'is-open'" aria-label="toggle upload box" @click="$store.uploader.toggle()"><span class="icon-chevron-down" aria-hidden="true"></span></button>
+        <button class="icon-button" @click="$store.uploader.cancelAll()" aria-label="close upload box"><span class="icon-x" aria-hidden="true"></span></button>
+    </div>
+    <div class="upload-box-content" :class="$store.uploader.isOpen ? 'is-open' : ''">
+        <ul class="upload-box-list">
+            <template x-if="$store.uploader.files().length > 0">
+                <template x-for="file in $store.uploader.files()" :key="file.id">
+                    <li x-show="!file.cancelled" class="upload-box-item">
+                        <div class="upload-image u-margin-inline-end-16" :class="file.completed ? 'is-finished' : ''">
+                            <div class="progress"
+                                :style="'--progress-value:' + file.progress"
+                                :aria-valuenow="file.progress"
+                                role="progressbar"
+                                aria-valuemin="0"
+                                aria-valuemax="100"></div>
+                            <span x-show="!file.completed" class="icon" x-text="file.progress + '%'"></span>
+                            <span x-show="file.completed" class="icon icon-file"></span>
+                        </div>
+                        <label for="file1" class="file-name trim-inner-text" x-text="file.name" :title="file.name"></label>
+                        <span class="pill is-failed" x-show="file.failed" :title="file.error">failed</span>
+                        <button x-show="file.completed" class="icon-button is-success" aria-label="Uploading"><span class="icon-check"></span></button>
+                        <button x-show="!file.completed" class="icon-button" aria-label="Uploading" @click="$store.uploader.removeFile(file.id)"><span class="icon-x"></span></button>
+                    </li>
+                </template>
+            </template>
+        </ul>
+    </div>
+</section>

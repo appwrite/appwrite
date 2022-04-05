@@ -72,7 +72,7 @@ return [
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_ROOT',
-                'description' => 'This option allows you to disable the creation of new users on the Appwrite console. When enabled only 1 user will be able to use the registration form. New users can be added by invting them to your project. By default this option is enabled.',
+                'description' => 'This option allows you to disable the creation of new users on the Appwrite console. When enabled only 1 user will be able to use the registration form. New users can be added by inviting them to your project. By default this option is enabled.',
                 'introduction' => '0.8.0',
                 'default' => 'enabled',
                 'required' => false,
@@ -146,6 +146,42 @@ return [
                 'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage, Influxdb and Telegraf containers for better resource usage.',
                 'introduction' => '0.7.0',
                 'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LOGGING_PROVIDER',
+                'description' => 'This variable allows you to enable logging errors to 3rd party providers. This value is empty by default, to enable the logger set the value to one of \'sentry\', \'raygun\', \'appsignal\', \'logowl\'',
+                'introduction' => '0.12.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LOGGING_CONFIG',
+                'description' => 'This variable configures authentication to 3rd party error logging providers. If using Sentry, this should be \'SENTRY_API_KEY;SENTRY_APP_ID\'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key. If using LogOwl, this should be LogOwl Service Ticket.',
+                'introduction' => '0.12.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_USAGE_AGGREGATION_INTERVAL',
+                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to mariadb from InfluxDB. The default value is 30 seconds.',
+                'introduction' => '0.10.0',
+                'default' => '30',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_WORKER_PER_CORE',
+                'description' => 'Internal Worker per core for the API, Realtime and Executor containers. Can be configured to optimize performance.',
+                'introduction' => '0.13.0',
+                'default' => 6,
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -359,9 +395,18 @@ return [
         'variables' => [
             [
                 'name' => '_APP_STORAGE_LIMIT',
-                'description' => 'Maximun file size allowed for file upload. The default value is 10MB limitation. You should pass your size limit value in bytes.',
+                'description' => 'Maximum file size allowed for file upload. The default value is 30MB. You should pass your size limit value in bytes.',
                 'introduction' => '0.7.0',
-                'default' => '10000000',
+                'default' => '30000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_STORAGE_PREVIEW_LIMIT',
+                'description' => 'Maximum file size allowed for file image preview. The default value is 20MB. You should pass your size limit value in bytes.',
+                'introduction' => '0.13.4',
+                'default' => '20000000',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -393,6 +438,78 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_STORAGE_DEVICE',
+                'description' => 'Select default storage device. The default value is \'Local\'. List of supported adapters are \'Local\', \'S3\' and \'DOSpaces\'.',
+                'introduction' => '0.13.0',
+                'default' => 'Local',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_S3_ACCESS_KEY',
+                'description' => 'AWS S3 storage access key. Required when the storage adapter is set to S3. You can get your access key from your AWS console',
+                'introduction' => '0.13.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_S3_SECRET',
+                'description' => 'AWS S3 storage secret key. Required when the storage adapter is set to S3. You can get your secret key from your AWS console.',
+                'introduction' => '0.13.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_S3_REGION',
+                'description' => 'AWS S3 storage region. Required when storage adapter is set to S3. You can find your region info for your bucket from AWS console.',
+                'introduction' => '0.13.0',
+                'default' => 'us-eas-1',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_S3_BUCKET',
+                'description' => 'AWS S3 storage bucket. Required when storage adapter is set to S3. You can create buckets in your AWS console.',
+                'introduction' => '0.13.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_DO_SPACES_ACCESS_KEY',
+                'description' => 'DigitalOcean spaces access key. Required when the storage adapter is set to DOSpaces. You can get your access key from your DigitalOcean console.',
+                'introduction' => '0.13.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_DO_SPACES_SECRET',
+                'description' => 'DigitalOcean spaces secret key. Required when the storage adapter is set to DOSpaces. You can get your secret key from your DigitalOcean console.',
+                'introduction' => '0.13.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_DO_SPACES_REGION',
+                'description' => 'DigitalOcean spaces region. Required when storage adapter is set to DOSpaces. You can find your region info for your space from DigitalOcean console.',
+                'introduction' => '0.13.0',
+                'default' => 'us-eas-1',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_DO_SPACES_BUCKET',
+                'description' => 'DigitalOcean spaces bucket. Required when storage adapter is set to DOSpaces. You can create spaces in your DigitalOcean console.',
+                'introduction' => '0.13.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
         ],
     ],
     [
@@ -400,9 +517,27 @@ return [
         'description' => '',
         'variables' => [
             [
+                'name' => '_APP_FUNCTIONS_SIZE_LIMIT',
+                'description' => 'The maximum size deployment in bytes. The default value is 30MB.',
+                'introduction' => '0.13.0',
+                'default' => '30000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_FUNCTIONS_TIMEOUT',
                 'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds.',
                 'introduction' => '0.7.0',
+                'default' => '900',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_BUILD_TIMEOUT',
+                'description' => 'The maximum number of seconds allowed as a timeout value when building a new function. The default value is 900 seconds.',
+                'introduction' => '0.13.0',
                 'default' => '900',
                 'required' => false,
                 'question' => '',
@@ -421,7 +556,7 @@ return [
                 'name' => '_APP_FUNCTIONS_CPUS',
                 'description' => 'The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty, CPU limit will be disabled.',
                 'introduction' => '0.7.0',
-                'default' => '',
+                'default' => '0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -430,7 +565,7 @@ return [
                 'name' => '_APP_FUNCTIONS_MEMORY',
                 'description' => 'The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, memory limit will be disabled.',
                 'introduction' => '0.7.0',
-                'default' => '256',
+                'default' => '0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -439,7 +574,7 @@ return [
                 'name' => '_APP_FUNCTIONS_MEMORY_SWAP',
                 'description' => 'The maximum amount of swap memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, swap memory limit will be disabled.',
                 'introduction' => '0.7.0',
-                'default' => '256',
+                'default' => '0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -448,16 +583,43 @@ return [
                 'name' => '_APP_FUNCTIONS_RUNTIMES',
                 'description' => "This option allows you to limit the available environments for cloud functions. This option is very useful for low-cost servers to safe disk space.\n\nTo enable/activate this option, pass a list of allowed environments separated by a comma.\n\nCurrently, supported environments are: " . \implode(', ', \array_keys(Config::getParam('runtimes'))),
                 'introduction' => '0.8.0',
-                'default' => 'node-16.0,php-8.0,python-3.9,ruby-3.0,java-16.0',
+                'default' => 'node-16.0,php-8.0,python-3.9,ruby-3.0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EXECUTOR_SECRET',
+                'description' => 'The secret key used by Appwrite to communicate with the function executor. Make sure to change this!',
+                'introduction' => '0.13.0',
+                'default' => 'your-secret-key',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EXECUTOR_RUNTIME_NETWORK',
+                'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
+                'introduction' => '0.13.0',
+                'default' => 'appwrite_runtimes',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
             ],
             [
                 'name' => '_APP_FUNCTIONS_ENVS',
-                'description' => 'Deprectated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead!',
+                'description' => 'Deprecated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead!',
                 'introduction' => '0.7.0',
-                'default' => 'node-16.0,php-7.4,python-3.9,ruby-3.0,java-16.0',
+                'default' => 'node-16.0,php-7.4,python-3.9,ruby-3.0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_INACTIVE_THRESHOLD',
+                'description' => 'The minimum time a function can be inactive before it\'s container is shutdown and put to sleep. The default value is 60 seconds',
+                'introduction' => '0.13.0',
+                'default' => '60',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

@@ -68,8 +68,10 @@
 
         image.src = image.src =
           env.API +
-          "/storage/files/" +
-          result +
+          "/storage/buckets/" +
+          result.bucketId +
+          "/files/" +
+          result.fileId +
           "/preview?width=" +
           previewWidth +
           "&height=" +
@@ -108,11 +110,11 @@
           expression.parse(element.dataset["write"] || "[]")
         );
 
-        sdk.storage.createFile(files[0], read, write, 1).then(
+        sdk.storage.createFile('default', 'unique()', files[0], read, write).then(
           function(response) {
             onComplete(message);
 
-            render(response.$id);
+            render({bucketId: response.bucketId, fileId: response.$id});
           },
           function(error) {
             alerts.add({ text: "An error occurred!", class: "" }, 3000); // File(s) uploaded.
@@ -160,7 +162,7 @@
           search.path = path;
 
           document.dispatchEvent(
-            new CustomEvent("open-file-serach", {
+            new CustomEvent("open-file-search", {
               bubbles: false,
               cancelable: true
             }));

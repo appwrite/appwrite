@@ -17,8 +17,8 @@
     </div>
 
     <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-json">
-        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
-        
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
         <h2>JSON View</h2>
 
         <div class="margin-bottom">
@@ -32,7 +32,7 @@
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/users/teams/team?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Overview</h2>
-                
+
                 <div class="row responsive margin-top-negative">
                     <div class="col span-8 margin-bottom-large">
                         <label>&nbsp;</label>
@@ -77,14 +77,14 @@
                             data-scope="sdk"
                             data-name="project-members">
 
-                            <div data-ls-if="0 == {{project-members.sum}}" class="box margin-bottom">
+                            <div data-ls-if="0 == {{project-members.total}}" class="box margin-bottom">
                                 <h3 class="margin-bottom-small text-bold">No Memberships Found</h3>
 
                                 <p class="margin-bottom-no">Add your first team member to get started</p>
                             </div>
 
-                            <div data-ls-if="0 != {{project-members.sum}}">
-                                <div class="margin-bottom-small margin-end-small text-align-end text-size-small margin-top-negative"><span data-ls-bind="{{project-members.sum}}"></span> memberships found</div>
+                            <div data-ls-if="0 != {{project-members.total}}">
+                                <div class="margin-bottom-small margin-end-small text-align-end text-size-small margin-top-negative text-fade"><span data-ls-bind="{{project-members.total}}"></span> memberships found</div>
 
                                 <div class="box margin-bottom">
                                     <ul data-ls-loop="project-members.memberships" data-ls-as="member" class="list">
@@ -98,6 +98,7 @@
                                                 data-service="teams.deleteMembership"
                                                 data-event="submit"
                                                 data-success="alert,trigger"
+                                                data-confirm="Are you sure you want to remove that user from the team?"
                                                 data-success-param-alert-text="Member Removed Successfully"
                                                 data-success-param-trigger-events="teams.deleteMembership"
                                                 data-failure="alert"
@@ -146,10 +147,10 @@
 
                                     <input name="teamId" id="team-teamId" type="hidden" data-ls-bind="{{team.$id}}">
                                     <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}" />
-                                    
+
                                     <label for="email">Email</label>
                                     <input name="email" id="email" type="email" autocomplete="email" required>
-                                    
+
                                     <label for="team-name">Name <small>(optional)</small></label>
                                     <input name="name" id="team-name" type="text" autocomplete="name" maxlength="128" />
 
@@ -177,10 +178,10 @@
                                     data-name="project-members"
                                     data-success="state"
                                     data-success-param-state-keys="search,offset">
-                                    <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-members.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                                    <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-members.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                                 </form>
 
-                                <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-members.sum|pageTotal}}"></span>
+                                <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-members.total|pageTotal}}"></span>
 
                                 <form
                                     data-service="teams.getMemberships"
@@ -193,7 +194,7 @@
                                     data-name="project-members"
                                     data-success="state"
                                     data-success-param-state-keys="search,offset">
-                                    <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-members.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                                    <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-members.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                                 </form>
                             </div>
                         </div>
@@ -232,7 +233,7 @@
                     </div>
                 </div>
             </li>
-            
+
         </ul>
     </div>
 </div>

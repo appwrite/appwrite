@@ -35,6 +35,7 @@
     --config-color-chart-fade: #d4f0f7;
     --config-border-color: #f3f3f3;
     --config-border-fade: #e0e3e4;
+    --config-border-fade-super: #f7f7f7;
     --config-border-radius: 10px;
     --config-prism-background: #373738;
     --config-prism-numbers: #39393c;
@@ -91,6 +92,13 @@
     --config-console-nav-switch-background: #ececec;
     --config-console-nav-switch-color: #868686;
     --config-console-nav-switch-arrow: url("data:image/svg+xml;utf8,<svg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='24' height='24' viewBox='0 0 24 24'><path fill='%23868686' d='M7.406 7.828l4.594 4.594 4.594-4.594 1.406 1.406-6 6-6-6z'></path></svg>");
+
+    // HSL colors for flexibility with opacity
+    // States colors - HSL colors (used by - pills)
+    --config-defalut-color-hsl: 0 0% 62%;
+    --config-disabled-color-hsl: 0 0% 62%;
+    --config-pending-color-hsl: 36 100% 47%;
+    --config-failed-color-hsl: 0 74% 42%;
   
     .theme-dark {
         --config-color-primary: #f02e65;
@@ -123,6 +131,7 @@
         --config-color-chart-fade: #c7d8eb;
         --config-border-color: #262D50;
         --config-border-fade: #19203a;
+        --config-border-fade-super: #262D50;
         --config-prism-background: #1F253F;
         --config-prism-numbers: #1F253F;
         --config-note-background: #171e33;

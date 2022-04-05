@@ -1,6 +1,6 @@
 <?php
 
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -21,7 +21,7 @@ App::get('/v1/locale')
     ->inject('locale')
     ->inject('geodb')
     ->action(function ($request, $response, $locale, $geodb) {
-        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
@@ -100,7 +100,7 @@ App::get('/v1/locale/countries')
             return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
         });
 
-        $response->dynamic(new Document(['countries' => $output, 'sum' => \count($output)]), Response::MODEL_COUNTRY_LIST);
+        $response->dynamic(new Document(['countries' => $output, 'total' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     });
 
 App::get('/v1/locale/countries/eu')
@@ -136,7 +136,7 @@ App::get('/v1/locale/countries/eu')
             return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
         });
 
-        $response->dynamic(new Document(['countries' => $output, 'sum' => \count($output)]), Response::MODEL_COUNTRY_LIST);
+        $response->dynamic(new Document(['countries' => $output, 'total' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     });
 
 App::get('/v1/locale/countries/phones')
@@ -171,7 +171,7 @@ App::get('/v1/locale/countries/phones')
             }
         }
 
-        $response->dynamic(new Document(['phones' => $output, 'sum' => \count($output)]), Response::MODEL_PHONE_LIST);
+        $response->dynamic(new Document(['phones' => $output, 'total' => \count($output)]), Response::MODEL_PHONE_LIST);
     });
 
 App::get('/v1/locale/continents')
@@ -204,7 +204,7 @@ App::get('/v1/locale/continents')
             return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
         });
 
-        $response->dynamic(new Document(['continents' => $output, 'sum' => \count($output)]), Response::MODEL_CONTINENT_LIST);
+        $response->dynamic(new Document(['continents' => $output, 'total' => \count($output)]), Response::MODEL_CONTINENT_LIST);
     });
 
 App::get('/v1/locale/currencies')
@@ -224,11 +224,9 @@ App::get('/v1/locale/currencies')
 
         $list = Config::getParam('locale-currencies');
 
-        $list = array_map(function($node) {
-            return new Document($node);
-        }, $list);
+        $list = array_map(fn($node) => new Document($node), $list);
 
-        $response->dynamic(new Document(['currencies' => $list, 'sum' => \count($list)]), Response::MODEL_CURRENCY_LIST);
+        $response->dynamic(new Document(['currencies' => $list, 'total' => \count($list)]), Response::MODEL_CURRENCY_LIST);
     });
 
 
@@ -249,9 +247,7 @@ App::get('/v1/locale/languages')
 
         $list = Config::getParam('locale-languages');
 
-        $list = array_map(function($node) {
-            return new Document($node);
-        }, $list);
+        $list = array_map(fn ($node) => new Document($node), $list);
 
-        $response->dynamic(new Document(['languages' => $list, 'sum' => \count($list)]), Response::MODEL_LANGUAGE_LIST);
+        $response->dynamic(new Document(['languages' => $list, 'total' => \count($list)]), Response::MODEL_LANGUAGE_LIST);
     });

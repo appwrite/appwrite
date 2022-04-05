@@ -2,9 +2,8 @@
 
 namespace Appwrite\Messaging\Adapter;
 
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter;
-use Redis;
 use Utopia\App;
 
 class Realtime extends Adapter
@@ -185,7 +184,7 @@ class Realtime extends Adapter
                      */
                     if (
                         \array_key_exists($channel, $this->subscriptions[$event['project']][$role])
-                        && (\in_array($role, $event['roles']) || \in_array('*', $event['roles']))
+                        && (\in_array($role, $event['roles']) || \in_array('role:all', $event['roles']))
                     ) {
                         /**
                          * Saving all connections that are allowed to receive this event.
@@ -235,16 +234,18 @@ class Realtime extends Adapter
 
     /**
      * Create channels array based on the event name and payload.
-     * 
+     *
      * @param string $event 
      * @param Document $payload 
+     * @param Document|null $project 
      * @return array 
      */
-    public static function fromPayload(string $event, Document $payload): array
+    public static function fromPayload(string $event, Document $payload, Document $project = null, Document $collection = null, Document $bucket = null): array
     {
         $channels = [];
         $roles = [];
         $permissionsChanged = false;
+        $projectId = null;
 
         switch (true) {
             case strpos($event, 'account.recovery.') === 0:
@@ -275,39 +276,55 @@ class Realtime extends Adapter
                 $roles = ['team:' . $payload->getId()];
 
                 break;
-            case strpos($event, 'database.collections.') === 0:
-                $channels[] = 'collections';
-                $channels[] = 'collections.' . $payload->getId();
-                $roles = $payload->getAttribute('$permissions.read');
+            case strpos($event, 'database.attributes.') === 0:
+            case strpos($event, 'database.indexes.') === 0:
+                $channels[] = 'console';
+                $projectId = 'console';
+                $roles = ['team:' . $project->getAttribute('teamId')];
 
                 break;
             case strpos($event, 'database.documents.') === 0:
+                if ($collection->isEmpty()) {
+                    throw new \Exception('Collection needs to be passed to Realtime for Document events in the Database.');
+                }
+
                 $channels[] = 'documents';
                 $channels[] = 'collections.' . $payload->getAttribute('$collection') . '.documents';
-                $channels[] = 'documents.' . $payload->getId();
-                $roles = $payload->getAttribute('$permissions.read');
+                $channels[] = 'collections.' . $payload->getAttribute('$collection') . '.documents.' . $payload->getId();
+
+                $roles = ($collection->getAttribute('permission') === 'collection') ? $collection->getRead() : $payload->getRead();
 
                 break;
-            case strpos($event, 'storage.') === 0:
+            case strpos($event, 'storage.files') === 0:
+                if($bucket->isEmpty()) {
+                    throw new \Exception('Bucket needs to be pased to Realtime for File events in the Storage.');
+                }
                 $channels[] = 'files';
-                $channels[] = 'files.' . $payload->getId();
-                $roles = $payload->getAttribute('$permissions.read');
+                $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files';
+                $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files.' . $payload->getId();
+                $roles = $payload->getRead();
 
                 break;
             case strpos($event, 'functions.executions.') === 0:
-                if (!empty($payload->getAttribute('$permissions.read'))) {
+                if (!empty($payload->getRead())) {
+                    $channels[] = 'console';
                     $channels[] = 'executions';
                     $channels[] = 'executions.' . $payload->getId();
                     $channels[] = 'functions.' . $payload->getAttribute('functionId');
-                    $roles = $payload->getAttribute('$permissions.read');
+                    $roles = $payload->getRead();
                 }
+                break;
+            case strpos($event, 'functions.deployments.') === 0:
+                $channels[] = 'console';
+                $roles = ['team:' . $project->getAttribute('teamId')];
                 break;
         }
 
         return [
             'channels' => $channels,
             'roles' => $roles,
-            'permissionsChanged' => $permissionsChanged
+            'permissionsChanged' => $permissionsChanged,
+            'projectId' => $projectId
         ];
     }
 }
