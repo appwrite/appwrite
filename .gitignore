@@ -5,6 +5,8 @@
 /tests/resources/functions/**/code.tar.gz
 /app/sdks/*
 /.idea/
+!/.idea/workspace.xml
+!/.idea/php.xml
 .DS_Store
 .php_cs.cache
 debug/

@@ -149,6 +149,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+      - PHP_IDE_CONFIG=serverName=swoole-http
 
   appwrite-realtime:
     entrypoint: realtime
