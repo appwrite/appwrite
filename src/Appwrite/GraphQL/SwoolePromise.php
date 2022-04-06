@@ -2,8 +2,8 @@
 
 namespace Appwrite\GraphQL;
 
-use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
+use function Co\go;
 
 /**
  * Class SwoolePromise
@@ -40,7 +40,8 @@ class SwoolePromise
                 $this->setState(self::STATE_REJECTED);
             }
         };
-        Coroutine::create(function (callable $executor, callable $resolve, callable $reject) {
+
+        go(function (callable $executor, callable $resolve, callable $reject) {
             try {
                 $executor($resolve, $reject);
             } catch (\Throwable $exception) {

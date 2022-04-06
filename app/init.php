@@ -789,6 +789,8 @@ App::setResource('dbForProject', function($db, $cache, $project) {
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace("_{$project->getId()}");
 
+    Console::info("Getting dbForProject with ID: {$project->getId()}");
+
     return $database;
 }, ['db', 'cache', 'project']);
 
@@ -858,16 +860,14 @@ App::setResource('geodb', function($register) {
 
 App::setResource('schema', function($utopia, $response, $request, $register, $dbForProject) {
     try {
-        // Try to get the schema from the register.
-        // If there is no base schema catch the exception and generate it.
-        // If the base schema exists, extend it with the current project schema.
-        Console::log('Getting Schema from register...');
+        Console::log('Getting GraphQL schema from register...');
         $schema = $register->get('_schema');
         $schema = Builder::appendSchema($schema, $dbForProject);
-    } catch (Exception $e) {
-        Console::error('Schema not present. Generating Schema...');
+    } catch (\Exception $e) {
+        Console::error('Base GraphQL schema not present. Generating...');
         $schema = Builder::buildSchema($utopia, $response, $register, $dbForProject);
-        $register->set('_schema', function () use ($schema){
+        Console::error('Built GraphQL schema: ' . \json_encode($schema));
+        $register->set('_schema', function () use ($schema) {
             return $schema;
         });
     }

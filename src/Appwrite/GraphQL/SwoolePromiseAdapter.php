@@ -6,17 +6,19 @@ use GraphQL\Error\InvariantViolation;
 use GraphQL\Executor\Promise\Promise;
 use GraphQL\Executor\Promise\PromiseAdapter;
 use GraphQL\Utils\Utils;
+use function Co\go;
+use function Co\run;
 
-class GraphQLPromiseAdapter implements PromiseAdapter
+class SwoolePromiseAdapter implements PromiseAdapter
 {
     public function isThenable($value): bool
     {
-        return $value instanceof SwoolePromise;
+        return $value instanceof Promise;
     }
 
     public function convertThenable($thenable): Promise
     {
-        if (!$thenable instanceof SwoolePromise) {
+        if (!$thenable instanceof Promise) {
             throw new InvariantViolation('Expected instance of SwoolePromise, got ' . Utils::printSafe($thenable));
         }
         return new Promise($thenable, $this);
@@ -66,25 +68,30 @@ class GraphQLPromiseAdapter implements PromiseAdapter
         $count = 0;
         $result = [];
 
-        foreach ($promisesOrValues as $index => $promiseOrValue) {
-            if ($promiseOrValue instanceof Promise) {
-                $result[$index] = null;
-                $promiseOrValue->then(
-                    static function ($value) use ($index, &$count, $total, &$result, $all): void {
-                        $result[$index] = $value;
+        run(function ($promisesOrValues, $all, $total, &$count, $result) {
+            foreach ($promisesOrValues as $index => $promiseOrValue) {
+                go(function ($index, $promiseOrValue, $all, $total, &$count, $result) {
+                    if (!($promiseOrValue instanceof SwoolePromise)) {
+                        $result[$index] = $promiseOrValue;
                         $count++;
-                        if ($count < $total) {
-                            return;
-                        }
-                        $all->resolve($result);
-                    },
-                    [$all, 'reject']
-                );
-            } else {
-                $result[$index] = $promiseOrValue;
-                $count++;
+                        return;
+                    }
+                    $result[$index] = null;
+                    $promiseOrValue->then(
+                        static function ($value) use ($index, &$count, $total, &$result, $all): void {
+                            $result[$index] = $value;
+                            $count++;
+                            if ($count < $total) {
+                                return;
+                            }
+                            $all->resolve($result);
+                        },
+                        [$all, 'reject']
+                    );
+                }, $index, $promiseOrValue, $all, $total, $count, $result);
             }
-        }
+        }, $promisesOrValues, $all, $total, $count, $result);
+
         if ($count === $total) {
             $all->resolve($result);
         }

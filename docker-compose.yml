@@ -727,13 +727,13 @@ services:
   #     - '3001:80'
   
   graphql-explorer:
-    container_name: graphql-explorer
+    container_name: appwrite-graphql-explorer
     image: appwrite/altair:0.1.0
     restart: unless-stopped
     networks:
       - appwrite
     ports:
-      - 9509:3000
+      - "9509:3000"
     environment:
       - SERVER_URL=http://localhost/v1/graphql
 

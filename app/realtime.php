@@ -29,7 +29,7 @@ use Utopia\WebSocket\Adapter;
 
 require_once __DIR__ . '/init.php';
 
-Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+Runtime::enableCoroutine(true,SWOOLE_HOOK_ALL);
 
 $realtime = new Realtime();
 

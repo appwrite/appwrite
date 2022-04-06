@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\GraphQL\GraphQLPromiseAdapter;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
 use GraphQL\Executor\ExecutionResult;
@@ -29,8 +28,14 @@ App::post('/v1/graphql')
 
         $query = $request->getPayload('query', '');
         $variables = $request->getPayload('variables');
-
         $response->setContentType(Response::CONTENT_TYPE_NULL);
+
+        $register->set('__app', function () use ($utopia) {
+            return $utopia;
+        });
+        $register->set('__response', function () use ($response) {
+            return $response;
+        });
 
         $isDevelopment = App::isDevelopment();
 

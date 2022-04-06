@@ -89,7 +89,7 @@ abstract class Migration
      */
     public function forEachDocument(callable $callback): void
     {
-        Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+        Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
 
         foreach ($this->collections as $collection) {
             $sum = 0;
