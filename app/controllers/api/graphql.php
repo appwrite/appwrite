@@ -65,7 +65,7 @@ App::post('/v1/graphql')
             $apiSchema,
             $register,
             $dbForProject
-        );;
+        );
 
         $promise = GraphQL::promiseToExecute(
             $promiseAdapter,
@@ -76,18 +76,18 @@ App::post('/v1/graphql')
             validationRules: $validations
         );
 
-        // Blocking wait while queries resolve asynchronously.
+        // Blocking wait while queries resolve asynchronously
         $wg = new WaitGroup();
         $wg->add();
         $promise->then(
             function ($result) use ($response, $debugFlags, $wg) {
-                $response->json(['data' => $result->toArray($debugFlags)]);
+                $response->json($result->toArray($debugFlags));
                 $wg->done();
             },
             function ($error) use ($response, $wg) {
-                $response->json(['errors' => [\json_encode($error)]]);
+                $response->text(\json_encode(['errors' => [\json_encode($error)]]));
                 $wg->done();
             }
         );
-        $wg->wait();
+        $wg->wait(App::getEnv('_APP_GRAPHQL_REQUEST_TIMEOUT', 30));
     });

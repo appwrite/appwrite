@@ -3,6 +3,7 @@
 namespace Appwrite\GraphQL;
 
 use Appwrite\GraphQL\Types\JsonType;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use GraphQL\Error\Error;
@@ -14,7 +15,6 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 
@@ -95,28 +95,34 @@ class Builder
         foreach ($rules as $key => $props) {
             $escapedKey = str_replace('$', '_', $key);
 
-            if (isset(self::$typeMapping[$props['type']])) {
-                $type = self::$typeMapping[$props['type']];
-            } else {
-                try {
-                    $complexModel = $response->getModel($props['type']);
-                    $type = self::getTypeMapping($complexModel, $response);
-                } catch (\Exception $e) {
-                    Console::error("Could Not find model for : {$props['type']}");
-                }
-            }
+            $types = \is_array($props['type'])
+                ? $props['type']
+                : [$props['type']];
 
-            if ($props['array']) {
-                $type = Type::listOf($type);
-            }
-
-            $fields[$escapedKey] = [
-                'type' => $type,
-                'description' => $props['description'],
-                'resolve' => function ($object, $args, $context, $info) use ($key) {
-                    return $object[$key];
+            foreach ($types as $type) {
+                if (isset(self::$typeMapping[$type])) {
+                    $type = self::$typeMapping[$type];
+                } else {
+                    try {
+                        $complexModel = $response->getModel($type);
+                        $type = self::getTypeMapping($complexModel, $response);
+                    } catch (\Exception $e) {
+                        Console::error("Could not find model for : {$type}");
+                    }
                 }
-            ];
+
+                if ($props['array']) {
+                    $type = Type::listOf($type);
+                }
+
+                $fields[$escapedKey] = [
+                    'type' => $type,
+                    'description' => $props['description'],
+                    'resolve' => function ($object, $args, $context, $info) use ($key) {
+                        return $object[$key];
+                    }
+                ];
+            }
         }
         $objectType = [
             'name' => $name,
@@ -135,8 +141,9 @@ class Builder
      * @param $utopia
      * @param $injections
      * @return Type
+     * @throws \Exception
      */
-    protected static function getArgType($validator, bool $required, $utopia, $injections): Type
+    private static function getParameterArgType($validator, bool $required, $utopia, $injections): Type
     {
         $validator = \is_callable($validator)
             ? \call_user_func_array($validator, $utopia->getResources($injections))
@@ -158,17 +165,48 @@ class Builder
                 $type = Type::boolean();
                 break;
             case 'Utopia\Validator\ArrayList':
-                $type = Type::listOf(self::json());
+                $nested = (fn() => $this->validator)->bindTo($validator, $validator)();
+                $type = Type::listOf(self::getParameterArgType($nested, $required, $utopia, $injections));
                 break;
             case 'Utopia\Validator\Numeric':
             case 'Utopia\Validator\Range':
                 $type = Type::int();
                 break;
             case 'Utopia\Validator\Assoc':
+            case 'Utopia\Validator\JSON':
             default:
                 $type = self::json();
                 break;
         }
+
+        if ($required) {
+            $type = Type::nonNull($type);
+        }
+
+        return $type;
+    }
+
+    /**
+     * Function to map an attribute type to a valid GraphQL Type
+     *
+     * @param $validator
+     * @param bool $required
+     * @param $utopia
+     * @param $injections
+     * @return Type
+     * @throws \Exception
+     */
+    private static function getAttributeArgType($type, $array, $required): Type
+    {
+        if ($array) {
+            return Type::listOf(self::getAttributeArgType($type, false, $required));
+        }
+        $type = match ($type) {
+            'boolean' => Type::boolean(),
+            'integer' => Type::int(),
+            'double' => Type::float(),
+            default => Type::string(),
+        };
 
         if ($required) {
             $type = Type::nonNull($type);
@@ -186,7 +224,8 @@ class Builder
         Database $dbForProject
     ): Schema
     {
-        Console::info("[INFO] Appending GraphQL Database Schema...");
+        Console::info("[INFO] Merging Schema...");
+
         $start = microtime(true);
 
         $db = self::buildCollectionsSchema($register, $dbForProject);
@@ -211,37 +250,10 @@ class Builder
         ]);
 
         $time_elapsed_secs = microtime(true) - $start;
-        Console::info("[INFO] Time Taken To Append Database to API Schema : ${time_elapsed_secs}s");
+
+        Console::info("[INFO] Time Taken To Merge Schema : ${time_elapsed_secs}s");
 
         return $schema;
-    }
-
-    /**
-     * @throws \Exception
-     */
-    public static function buildSchema($utopia, $response, $register, $dbForProject): Schema
-    {
-        $db = self::buildCollectionsSchema($register, $dbForProject);
-        $api = self::buildAPISchema($utopia, $response, $register);
-
-        $queryFields = \array_merge($api['query'], $db['query']);
-        $mutationFields = \array_merge($api['mutation'], $db['mutation']);
-
-        ksort($queryFields);
-        ksort($mutationFields);
-
-        return new Schema([
-            'query' => new ObjectType([
-                'name' => 'Query',
-                'description' => 'The root of all queries',
-                'fields' => $queryFields
-            ]),
-            'mutation' => new ObjectType([
-                'name' => 'Mutation',
-                'description' => 'The root of all mutations',
-                'fields' => $mutationFields
-            ])
-        ]);
     }
 
     /**
@@ -255,116 +267,91 @@ class Builder
      */
     public static function buildCollectionsSchema(Registry &$register, Database $dbForProject): array
     {
-        Console::log("[INFO] Building GraphQL Database Schema...");
+        Console::info("[INFO] Building GraphQL Project Collection Schema...");
         $start = microtime(true);
 
         $collections = [];
         $queryFields = [];
         $mutationFields = [];
+        $limit = 50;
         $offset = 0;
 
-        $attrs = Authorization::skip(static fn() => $dbForProject->find('attributes', [new Query('collectionId', Query::TYPE_EQUAL, ['movies'])]));
-
-        Authorization::skip(function () use ($mutationFields, $queryFields, $collections, $register, $offset, $dbForProject) {
+        Authorization::skip(function () use (&$mutationFields, &$queryFields, &$collections, $register, $limit, $offset, $dbForProject) {
             while (!empty($attrs = $dbForProject->find(
                 'attributes',
-                limit: $dbForProject->getAttributeLimit(),
+                limit: $limit,
                 offset: $offset
             ))) {
-                go(function ($attrs, $dbForProject, $register, $collections, $queryFields, $mutationFields) {
-                    foreach ($attrs as $attr) {
-                        go(function ($attr, &$collections) {
-                            /** @var Document $attr */
+                foreach ($attrs as $attr) {
+                    $collectionId = $attr->getAttribute('collectionId');
 
-                            $collectionId = $attr->getAttribute('collectionId');
-
-                            if (isset(self::$typeMapping[$collectionId])) {
-                                return;
-                            }
-                            if ($attr->getAttribute('status') !== 'available') {
-                                return;
-                            }
-
-                            $key = $attr->getAttribute('key');
-                            $type = $attr->getAttribute('type');
-
-                            $escapedKey = str_replace('$', '_', $key);
-
-                            $collections[$collectionId][$escapedKey] = [
-                                'type' => $type,
-                                'resolve' => function ($object, $args, $context, $info) use ($key) {
-                                    return $object->getAttribute($key);
-                                }
-                            ];
-
-                        }, $attr, $collections);
+                    if ($attr->getAttribute('status') !== 'available') {
+                        return;
                     }
 
-                    foreach ($collections as $collectionId => $attributes) {
-                        go(function ($collectionId, $attributes, $dbForProject, $register, &$queryFields, &$mutationFields) {
-                            if (isset(self::$typeMapping[$collectionId])) {
-                                return;
-                            }
+                    $key = $attr->getAttribute('key');
+                    $type = $attr->getAttribute('type');
+                    $array = $attr->getAttribute('array');
+                    $required = $attr->getAttribute('required');
 
-                            $objectType = new ObjectType([
-                                'name' => \ucfirst($collectionId),
-                                'fields' => $attributes
-                            ]);
+                    $escapedKey = str_replace('$', '_', $key);
 
-                            self::$typeMapping[$collectionId] = $objectType;
+                    $collections[$collectionId][$escapedKey] = [
+                        'type' => self::getAttributeArgType($type, $array, $required),
+                        'resolve' => function ($object, $args, $context, $info) use ($key) {
+                            return $object->getAttribute($key);
+                        }
+                    ];
+                }
 
-                            $mutateArgs = [];
+                foreach ($collections as $collectionId => $attributes) {
+                    $objectType = new ObjectType([
+                        'name' => $collectionId,
+                        'fields' => $attributes
+                    ]);
 
-                            foreach ($attributes as $name => $attribute) {
-                                $mutateArgs[$name] = [
-                                    'type' => $attribute['type']
-                                ];
-                            }
+                    $idArgs = [
+                        'id' => [
+                            'type' => Type::string()
+                        ]
+                    ];
 
-                            $idArgs = [
-                                'id' => [
-                                    'type' => Type::string()
-                                ]
-                            ];
+                    $listArgs = [
+                        'limit' => [
+                            'type' => Type::int(),
+                            'defaultValue' => $limit,
+                        ],
+                        'offset' => [
+                            'type' => Type::int(),
+                            'defaultValue' => 0,
+                        ],
+                        'cursor' => [
+                            'type' => Type::string(),
+                            'defaultValue' => null,
+                        ],
+                        'orderAttributes' => [
+                            'type' => Type::listOf(Type::string()),
+                            'defaultValue' => [],
+                        ],
+                        'orderType' => [
+                            'types' => Type::listOf(Type::string()),
+                            'defaultValue' => [],
+                        ]
+                    ];
 
-                            $listArgs = [
-                                'limit' => [
-                                    'type' => Type::int()
-                                ],
-                                'offset' => [
-                                    'type' => Type::int()
-                                ],
-                                'cursor' => [
-                                    'type' => Type::string()
-                                ],
-                                'orderAttributes' => [
-                                    'type' => Type::listOf(Type::string())
-                                ],
-                                'orderType' => [
-                                    'types' => Type::listOf(Type::string())
-                                ]
-                            ];
+                    self::createCollectionGetQuery($collectionId, $register, $dbForProject, $idArgs, $queryFields, $objectType);
+                    self::createCollectionListQuery($collectionId, $register, $dbForProject, $listArgs, $queryFields, $objectType);
+                    self::createCollectionCreateMutation($collectionId, $register, $dbForProject, $attributes, $mutationFields, $objectType);
+                    self::createCollectionUpdateMutation($collectionId, $register, $dbForProject, $attributes, $mutationFields, $objectType);
+                    self::createCollectionDeleteMutation($collectionId, $register, $dbForProject, $idArgs, $mutationFields, $objectType);
+                }
 
-                            self::createCollectionGetQuery($collectionId, $register, $dbForProject, $idArgs, $queryFields);
-                            self::createCollectionListQuery($collectionId, $register, $dbForProject, $listArgs, $queryFields);
-                            self::createCollectionCreateMutation($collectionId, $register, $dbForProject, $mutateArgs, $mutationFields);
-                            self::createCollectionUpdateMutation($collectionId, $register, $dbForProject, $mutateArgs, $mutationFields);
-                            self::createCollectionDeleteMutation($collectionId, $register, $dbForProject, $idArgs, $mutationFields);
-
-                        }, $collectionId, $attributes, $dbForProject, $register, $queryFields, $mutationFields);
-                    }
-                }, $attrs, $dbForProject, $register, $collections, $queryFields, $mutationFields);
-
-                $offset += $dbForProject->getAttributeLimit();
+                $offset += $limit;
             }
         });
 
         $time_elapsed_secs = microtime(true) - $start;
-        Console::log("[INFO] Time Taken To Build Database Schema : ${time_elapsed_secs}s");
-        Console::info('[INFO] Schema : ' . json_encode([
-                'query' => $queryFields,
-                'mutation' => $mutationFields
-            ]));
+        Console::info("[INFO] Time Taken To Build Project Collection Schema : ${time_elapsed_secs}s");
 
         return [
             'query' => $queryFields,
@@ -372,102 +359,103 @@ class Builder
         ];
     }
 
-    private static function createCollectionGetQuery($collectionId, $register, $dbForProject, $args, &$queryFields)
+    private static function createCollectionGetQuery($collectionId, $register, $dbForProject, $args, &$queryFields, $objectType)
     {
-        $resolve = function ($type, $args, $context, $info) use ($collectionId, &$register, $dbForProject) {
-            return SwoolePromise::create(function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
+        $resolve = fn($type, $args, $context, $info) => new SwoolePromise(
+            function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
                 try {
                     $resolve($dbForProject->getDocument($collectionId, $args['id']));
                 } catch (\Throwable $e) {
                     $reject($e);
                 }
-            });
-        };
+            }
+        );
         $get = [
-            'type' => \ucfirst($collectionId),
+            'type' => $objectType,
             'args' => $args,
             'resolve' => $resolve
         ];
-        $queryFields['get' . \ucfirst($collectionId)] = $get;
+        $queryFields[$collectionId . 'Get'] = $get;
     }
 
-    private static function createCollectionListQuery($collectionId, $register, $dbForProject, $args, &$queryFields)
+    private static function createCollectionListQuery($collectionId, $register, $dbForProject, $args, &$queryFields, $objectType)
     {
-        $resolve = function ($type, $args, $context, $info) use ($collectionId, &$register, $dbForProject) {
-            return SwoolePromise::create(function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
+        $resolve = fn($type, $args, $context, $info) => new SwoolePromise(
+            function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
                 try {
                     $resolve($dbForProject->getCollection($collectionId));
                 } catch (\Throwable $e) {
                     $reject($e);
                 }
-            });
-        };
+            }
+        );
+
         $list = [
-            'type' => \ucfirst($collectionId),
+            'type' => $objectType,
             'args' => $args,
             'resolve' => $resolve
         ];
-        $queryFields['list' . \ucfirst($collectionId)] = $list;
+        $queryFields[$collectionId . 'List'] = $list;
     }
 
-    private static function createCollectionCreateMutation($collectionId, $register, $dbForProject, $args, &$mutationFields)
+    private static function createCollectionCreateMutation($collectionId, $register, $dbForProject, $args, &$mutationFields, $objectType)
     {
-        $resolve = function ($type, $args, $context, $info) use ($collectionId, &$register, $dbForProject) {
-            return SwoolePromise::create(function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
+        $resolve = fn($type, $args, $context, $info) => new SwoolePromise(
+            function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
                 try {
                     $resolve($dbForProject->createDocument($collectionId, new Document($args)));
                 } catch (\Throwable $e) {
                     $reject($e);
                 }
-            });
-        };
+            }
+        );
         $create = [
-            'type' => \ucfirst($collectionId),
+            'type' => $objectType,
             'args' => $args,
             'resolve' => $resolve
         ];
-        $mutationFields['create' . \ucfirst($collectionId)] = $create;
+        $mutationFields[$collectionId . 'Create'] = $create;
     }
 
-    private static function createCollectionUpdateMutation($collectionId, $register, $dbForProject, $args, &$mutationFields)
+    private static function createCollectionUpdateMutation($collectionId, $register, $dbForProject, $args, &$mutationFields, $objectType)
     {
-        $resolve = function ($type, $args, $context, $info) use ($collectionId, &$register, $dbForProject) {
-            return SwoolePromise::create(function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
+        $resolve = fn($type, $args, $context, $info) => new SwoolePromise(
+            function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
                 try {
                     $resolve($dbForProject->updateDocument($collectionId, $args['id'], new Document($args)));
                 } catch (\Throwable $e) {
                     $reject($e);
                 }
-            });
-        };
+            }
+        );
 
         $update = [
-            'type' => \ucfirst($collectionId),
+            'type' => $objectType,
             'args' => $args,
             'resolve' => $resolve
         ];
 
-        $mutationFields['update' . \ucfirst($collectionId)] = $update;
+        $mutationFields[$collectionId . 'Update'] = $update;
     }
 
 
-    private static function createCollectionDeleteMutation($collectionId, $register, $dbForProject, $args, &$mutationFields)
+    private static function createCollectionDeleteMutation($collectionId, $register, $dbForProject, $args, &$mutationFields, $objectType)
     {
-        $resolve = function ($type, $args, $context, $info) use ($collectionId, &$register, $dbForProject) {
-            return SwoolePromise::create(function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
+        $resolve = fn($type, $args, $context, $info) => new SwoolePromise(
+            function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
                 try {
                     $resolve($dbForProject->deleteDocument($collectionId, $args['id']));
                 } catch (\Throwable $e) {
                     $reject($e);
                 }
-            });
-        };
+            }
+        );
         $delete = [
-            'type' => \ucfirst($collectionId),
+            'type' => $objectType,
             'args' => $args,
             'resolve' => $resolve
         ];
-        $mutationFields['delete' . \ucfirst($collectionId)] = $delete;
+        $mutationFields[$collectionId . 'Delete'] = $delete;
     }
 
     /**
@@ -475,14 +463,15 @@ class Builder
      * GraphQL schema for all those routes whose response model is neither empty nor NONE
      *
      * @param App $utopia
+     * @param Request $request
      * @param Response $response
      * @param Registry $register
      * @return array
      * @throws \Exception
      */
-    public static function buildAPISchema(App $utopia, Response $response, Registry $register): array
+    public static function buildAPISchema(App $utopia, Request $request, Response $response, Registry $register): array
     {
-        Console::log("[INFO] Building GraphQL API Schema...");
+        Console::info("[INFO] Building GraphQL REST API Schema...");
         $start = microtime(true);
 
         self::init();
@@ -491,66 +480,73 @@ class Builder
 
         foreach ($utopia->getRoutes() as $method => $routes) {
             foreach ($routes as $route) {
+                if (str_starts_with($route->getPath(), '/v1/mock/')) {
+                    continue;
+                }
                 $namespace = $route->getLabel('sdk.namespace', '');
                 $methodName = $namespace . \ucfirst($route->getLabel('sdk.method', ''));
-                $responseModelName = $route->getLabel('sdk.response.model', "none");
+                $responseModelNames = $route->getLabel('sdk.response.model', "none");
 
-                Console::info("Namespace: $namespace");
-                Console::info("Method: $methodName");
-                Console::info("Response Model: $responseModelName");
-                Console::info("Raw routes: " . \json_encode($routes));
-                Console::info("Raw route: " . \json_encode($route));
+                if ($responseModelNames !== "none") {
+                    $responseModels = \is_array($responseModelNames)
+                        ? \array_map(static fn($m) => $response->getModel($m), $responseModelNames)
+                        : [$response->getModel($responseModelNames)];
 
-                if ($responseModelName !== "none") {
-                    $responseModel = $response->getModel($responseModelName);
+                    foreach ($responseModels as $responseModel) {
+                        $type = self::getTypeMapping($responseModel, $response);
+                        $description = $route->getDesc();
+                        $args = [];
 
-                    /* Create a GraphQL type for the current response model */
-                    $type = self::getTypeMapping($responseModel, $response);
-                    /* Get a description for this type */
-                    $description = $route->getDesc();
-                    /* Create the args required for this type */
-                    $args = [];
-                    foreach ($route->getParams() as $key => $value) {
-                        $args[$key] = [
-                            'type' => self::getArgType($value['validator'], !$value['optional'], $utopia, $value['injections']),
-                            'description' => $value['description'],
-                            'defaultValue' => $value['default']
-                        ];
-                    }
-                    /* Define a resolve function that defines how to fetch data for this type */
-                    $resolve = function ($type, $args, $context, $info) use ($utopia, $response, &$register, $route) {
-                        return SwoolePromise::create(function (callable $resolve, callable $reject) use ($utopia, $response, &$register, $route, $args) {
-                            $utopia->setRoute($route)->execute($route, $args);
-                            $result = $response->getPayload();
+                        foreach ($route->getParams() as $key => $value) {
+                            $args[$key] = [
+                                'type' => self::getParameterArgType(
+                                    $value['validator'],
+                                    !$value['optional'],
+                                    $utopia,
+                                    $value['injections']
+                                ),
+                                'description' => $value['description'],
+                                'defaultValue' => $value['default']
+                            ];
+                        }
 
-                            if ($response->getCurrentModel() == Response::MODEL_ERROR_DEV) {
-                                $reject(new ExceptionDev($result['message'], $result['code'], $result['version'], $result['file'], $result['line'], $result['trace']));
-                            } else if ($response->getCurrentModel() == Response::MODEL_ERROR) {
-                                $reject(new \Exception($result['message'], $result['code']));
+                        /* Define a resolve function that defines how to fetch data for this type */
+                        $resolve = fn($type, $args, $context, $info) => new SwoolePromise(
+                            function (callable $resolve, callable $reject) use ($utopia, $request, $response, &$register, $route, $args) {
+                                $utopia
+                                    ->setRoute($route)
+                                    ->execute($route, $request);
+
+                                $result = $response->getPayload();
+
+                                if ($response->getCurrentModel() == Response::MODEL_ERROR_DEV) {
+                                    $reject(new ExceptionDev($result['message'], $result['code'], $result['version'], $result['file'], $result['line'], $result['trace']));
+                                } else if ($response->getCurrentModel() == Response::MODEL_ERROR) {
+                                    $reject(new \Exception($result['message'], $result['code']));
+                                }
+                                $resolve($result);
                             }
+                        );
 
-                            $resolve($result);
-                        });
-                    };
+                        $field = [
+                            'type' => $type,
+                            'description' => $description,
+                            'args' => $args,
+                            'resolve' => $resolve
+                        ];
 
-                    $field = [
-                        'type' => $type,
-                        'description' => $description,
-                        'args' => $args,
-                        'resolve' => $resolve
-                    ];
-
-                    if ($method == 'GET') {
-                        $queryFields[$methodName] = $field;
-                    } else if ($method == 'POST' || $method == 'PUT' || $method == 'PATCH' || $method == 'DELETE') {
-                        $mutationFields[$methodName] = $field;
+                        if ($method == 'GET') {
+                            $queryFields[$methodName] = $field;
+                        } else if ($method == 'POST' || $method == 'PUT' || $method == 'PATCH' || $method == 'DELETE') {
+                            $mutationFields[$methodName] = $field;
+                        }
                     }
                 }
             }
         }
 
         $time_elapsed_secs = microtime(true) - $start;
-        Console::log("[INFO] Time Taken To Build API Schema : ${time_elapsed_secs}s");
+        Console::info("[INFO] Time Taken To Build REST API Schema : ${time_elapsed_secs}s");
 
         return [
             'query' => $queryFields,

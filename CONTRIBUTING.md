@@ -309,7 +309,7 @@ Things to remember when releasing SDKs
 
 Appwrite uses [yasd](https://github.com/swoole/yasd) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension or if you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection.
 
-First, you need to create an init file. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php** and there change the IP address to your development machine's IP. Without the proper IP address debugger wont connect. And you also need to set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
+First, you need to create an init file. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php** and there change the IP address to your development machine's IP. Without the proper IP address debugger will not connect. You will also need to set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
 
 ### VS Code Launch Configuration
 
@@ -321,13 +321,13 @@ First, you need to create an init file. Duplicate **dev/yasd_init.php.stub** fil
     "port": 9005,
     "pathMappings": {
         "/usr/src/code": "${workspaceRoot}"
-    },
+    }
 }
 ```
 
 ### PHPStorm Setup
 
-In settings, go to **Languages & Frameworks** > **PHP** > **Debug**, there under **Xdebug** set the debug port to **9005** and enable **can accept external connections** checkbox.
+In settings, go to **Languages & Frameworks** > **PHP** > **Debug**, there under **Xdebug** set the debug port to **9005** and enable the **can accept external connection** checkbox.
 
 ## Tests
 
@@ -349,7 +349,7 @@ To run end-2-end tests use:
 docker-compose exec appwrite test /usr/src/code/tests/e2e
 ```
 
-To run end-2-end tests for a spcific service use:
+To run end-2-end tests for a specific service use:
 
 ```bash
 docker-compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName]
@@ -406,9 +406,11 @@ docker-compose exec appwrite /usr/src/code/vendor/bin/psalm
 From time to time, our team will add tutorials that will help contributors find their way in the Appwrite source code. Below is a list of currently available tutorials:
 
 * [Adding Support for a New OAuth2 Provider](./docs/tutorials/add-oauth2-provider.md)
-* [Appwrite Environment Variables](./docs/tutorials/environment-variables.md)
-* [Running in Production](./docs/tutorials/running-in-production.md)
+* [Appwrite Environment Variables](./docs/tutorials/add-environment-variable.md)
+* [Adding Support for a New Runtime](./docs/tutorials/add-runtime.md)
 * [Adding Storage Adapter](./docs/tutorials/add-storage-adapter.md)
+* [Adding Translations](./docs/tutorials/add-translations.md)
+* [Multi-Architecture Support](./docs/tutorials/multi-architecture-support.md)
 
 ## Other Ways to Help
 
@@ -416,7 +418,7 @@ Pull requests are great, but there are many other areas where you can help Appwr
 
 ### Blogging & Speaking
 
-Blogging, speaking about, or creating tutorials about one of Appwrite’s many features. Mention [@appwrite](https://twitter.com/appwrite) on Twitter and/or [email team@appwrite.io](mailto:team@appwrite.io) so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) repo on GitHub.
+Blogging, speaking about, or creating tutorials about one of Appwrite’s many features. Mention [@appwrite](https://twitter.com/appwrite) on Twitter and/or [email team@appwrite.io](mailto:team@appwrite.io), so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) repo on GitHub.
 
 ### Presenting at Meetups
 
@@ -437,4 +439,3 @@ Submitting documentation updates, enhancements, designs, or bug fixes. Spelling 
 ### Helping Someone
 
 Searching for Appwrite on Discord, GitHub, or StackOverflow and helping someone else who needs help. You can also help by teaching others how to contribute to Appwrite's repo!
-
