@@ -10,9 +10,11 @@ use GraphQL\Error\FormattedError;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
+use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 
@@ -45,7 +47,7 @@ class Builder
      *
      * @return JsonType
      */
-    public static function json()
+    public static function json(): JsonType
     {
         if (is_null(self::$jsonParser)) {
             self::$jsonParser = new JsonType();
@@ -91,7 +93,8 @@ class Builder
         $type = null;
 
         foreach ($rules as $key => $props) {
-            $keyWithoutSpecialChars = str_replace('$', '_', $key);
+            $escapedKey = str_replace('$', '_', $key);
+
             if (isset(self::$typeMapping[$props['type']])) {
                 $type = self::$typeMapping[$props['type']];
             } else {
@@ -102,10 +105,12 @@ class Builder
                     Console::error("Could Not find model for : {$props['type']}");
                 }
             }
+
             if ($props['array']) {
                 $type = Type::listOf($type);
             }
-            $fields[$keyWithoutSpecialChars] = [
+
+            $fields[$escapedKey] = [
                 'type' => $type,
                 'description' => $props['description'],
                 'resolve' => function ($object, $args, $context, $info) use ($key) {
@@ -129,12 +134,14 @@ class Builder
      * @param bool $required
      * @param $utopia
      * @param $injections
-     * @return GraphQL\Type\Definition\Type
+     * @return Type
      */
     protected static function getArgType($validator, bool $required, $utopia, $injections): Type
     {
-        $validator = (\is_callable($validator)) ? call_user_func_array($validator, $utopia->getResources($injections)) : $validator;
-        $type = [];
+        $validator = \is_callable($validator)
+            ? \call_user_func_array($validator, $utopia->getResources($injections))
+            : $validator;
+
         switch ((!empty($validator)) ? \get_class($validator) : '') {
             case 'Utopia\Validator\Email':
             case 'Utopia\Validator\Host':
@@ -170,18 +177,22 @@ class Builder
         return $type;
     }
 
-    public static function appendSchema($schema, $dbForProject): Schema
+    /**
+     * @throws \Exception
+     */
+    public static function appendProjectSchema(
+        array    $apiSchema,
+        Registry $register,
+        Database $dbForProject
+    ): Schema
     {
-        Console::log("[INFO] Appending GraphQL Database Schema...");
+        Console::info("[INFO] Appending GraphQL Database Schema...");
         $start = microtime(true);
 
-        $db = self::buildCollectionsSchema($dbForProject);
+        $db = self::buildCollectionsSchema($register, $dbForProject);
 
-        $queryFields = $schema->getQueryType()?->getFields() ?? [];
-        $mutationFields = $schema->getMutationType()?->getFields() ?? [];
-
-        $queryFields = \array_merge($queryFields, $db['query']);
-        $mutationFields = \array_merge($mutationFields, $db['mutation']);
+        $queryFields = \array_merge($apiSchema['query'], $db['query']);
+        $mutationFields = \array_merge($apiSchema['mutation'], $db['mutation']);
 
         ksort($queryFields);
         ksort($mutationFields);
@@ -200,7 +211,7 @@ class Builder
         ]);
 
         $time_elapsed_secs = microtime(true) - $start;
-        Console::log("[INFO] Time Taken To Append Database to API Schema : ${time_elapsed_secs}s");
+        Console::info("[INFO] Time Taken To Append Database to API Schema : ${time_elapsed_secs}s");
 
         return $schema;
     }
@@ -210,7 +221,7 @@ class Builder
      */
     public static function buildSchema($utopia, $response, $register, $dbForProject): Schema
     {
-        $db = self::buildCollectionsSchema($dbForProject, $register);
+        $db = self::buildCollectionsSchema($register, $dbForProject);
         $api = self::buildAPISchema($utopia, $response, $register);
 
         $queryFields = \array_merge($api['query'], $db['query']);
@@ -237,11 +248,12 @@ class Builder
      * This function goes through all the project attributes and builds a
      * GraphQL schema for all the collections they make up.
      *
+     * @param Registry $register
      * @param Database $dbForProject
      * @return array
      * @throws \Exception
      */
-    public static function buildCollectionsSchema(Database $dbForProject, Registry &$register): array
+    public static function buildCollectionsSchema(Registry &$register, Database $dbForProject): array
     {
         Console::log("[INFO] Building GraphQL Database Schema...");
         $start = microtime(true);
@@ -250,6 +262,8 @@ class Builder
         $queryFields = [];
         $mutationFields = [];
         $offset = 0;
+
+        $attrs = Authorization::skip(static fn() => $dbForProject->find('attributes', [new Query('collectionId', Query::TYPE_EQUAL, ['movies'])]));
 
         Authorization::skip(function () use ($mutationFields, $queryFields, $collections, $register, $offset, $dbForProject) {
             while (!empty($attrs = $dbForProject->find(
@@ -460,12 +474,13 @@ class Builder
      * This function goes through all the REST endpoints in the API and builds a
      * GraphQL schema for all those routes whose response model is neither empty nor NONE
      *
-     * @param $utopia
-     * @param $response
-     * @param $register
+     * @param App $utopia
+     * @param Response $response
+     * @param Registry $register
      * @return array
+     * @throws \Exception
      */
-    public static function buildAPISchema($utopia, $response, $register): array
+    public static function buildAPISchema(App $utopia, Response $response, Registry $register): array
     {
         Console::log("[INFO] Building GraphQL API Schema...");
         $start = microtime(true);
@@ -503,12 +518,9 @@ class Builder
                         ];
                     }
                     /* Define a resolve function that defines how to fetch data for this type */
-                    $resolve = function ($type, $args, $context, $info) use (&$register, $route) {
-                        return SwoolePromise::create(function (callable $resolve, callable $reject) use (&$register, $route, $args) {
-                            $utopia = $register->get('__app');
+                    $resolve = function ($type, $args, $context, $info) use ($utopia, $response, &$register, $route) {
+                        return SwoolePromise::create(function (callable $resolve, callable $reject) use ($utopia, $response, &$register, $route, $args) {
                             $utopia->setRoute($route)->execute($route, $args);
-
-                            $response = $register->get('__response');
                             $result = $response->getPayload();
 
                             if ($response->getCurrentModel() == Response::MODEL_ERROR_DEV) {
