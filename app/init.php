@@ -865,18 +865,12 @@ App::setResource('promiseAdapter', function ($register) {
     return $register->get('promiseAdapter');
 }, ['register']);
 
-App::setResource('apiSchema', function ($utopia, $response, $register) {
-    /** @var Utopia\App $utopia */
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\Registry\Registry $register */
-
+App::setResource('apiSchema', function ($utopia, $request, $response, $register) {
     if ($register->has('apiSchema')) {
         return $register->get('apiSchema');
     }
-
-    $schema = Builder::buildAPISchema($utopia, $response, $register);
+    $schema = Builder::buildAPISchema($utopia, $request, $response, $register);
     $register->set('apiSchema', static fn() => $schema);
-
     return $schema;
-}, ['utopia', 'response', 'register']);
+}, ['utopia', 'request', 'response', 'register']);
 
