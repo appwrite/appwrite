@@ -45,6 +45,14 @@ App::post('/v1/graphql')
         $rootValue = [];
 
         GraphQL::promiseToExecute(
+        $validations = array_merge(
+            GraphQL::getStandardValidationRules(),
+            [
+                new QueryComplexity(App::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 200)),
+                new QueryDepth(App::getEnv('_APP_GRAPHQL_MAX_QUERY_DEPTH', 3)),
+                new DisableIntrospection(),
+            ]
+        );
             $promiseAdapter,
             $schema,
             $query,
@@ -54,4 +62,5 @@ App::post('/v1/graphql')
         )->then(function (ExecutionResult $result) use ($response, $debugFlags) {
             $response->json($result->toArray($debugFlags));
         });
+            validationRules: $validations
     });
