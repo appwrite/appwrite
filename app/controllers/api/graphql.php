@@ -1,11 +1,17 @@
 <?php
 
+use Appwrite\GraphQL\Builder;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
-use GraphQL\Executor\ExecutionResult;
 use GraphQL\GraphQL;
 use GraphQL\Type;
+use GraphQL\Validator\Rules\DisableIntrospection;
+use GraphQL\Validator\Rules\QueryComplexity;
+use GraphQL\Validator\Rules\QueryDepth;
+use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
+use Utopia\Validator\JSON;
+use Utopia\Validator\Text;
 
 App::post('/v1/graphql')
     ->desc('GraphQL Endpoint')
@@ -25,13 +31,12 @@ App::post('/v1/graphql')
     ->param('variables', [], new JSON(), 'Variables to use in the operation', true)
     ->inject('request')
     ->inject('response')
-    ->inject('schema')
     ->inject('utopia')
     ->inject('register')
     ->inject('dbForProject')
     ->inject('promiseAdapter')
-    ->middleware(true)
-    ->action(function ($request, $response, $schema, $utopia, $register, $dbForProject, $promiseAdapter) {
+    ->inject('apiSchema')
+    ->action(function ($query, $operationName, $variables, $request, $response, $utopia, $register, $dbForProject, $promiseAdapter, $apiSchema) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Type\Schema $schema */
@@ -39,25 +44,14 @@ App::post('/v1/graphql')
         /** @var Utopia\Registry\Registry $register */
         /** @var \Utopia\Database\Database $dbForProject */
 
-        $query = $request->getPayload('query', '');
-        $variables = $request->getPayload('variables');
-        $response->setContentType(Response::CONTENT_TYPE_NULL);
+        if ($request->getHeader('content-type') === 'application/graphql') {
+            $query = \implode("\r\n", $request->getParams());
+        }
 
-        $register->set('__app', function () use ($utopia) {
-            return $utopia;
-        });
-        $register->set('__response', function () use ($response) {
-            return $response;
-        });
-
-        $isDevelopment = App::isDevelopment();
-
-        $debugFlags = $isDevelopment
+        $debugFlags = App::isDevelopment()
             ? DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE
             : DebugFlag::NONE;
-        $rootValue = [];
 
-        GraphQL::promiseToExecute(
         $validations = array_merge(
             GraphQL::getStandardValidationRules(),
             [
@@ -66,14 +60,28 @@ App::post('/v1/graphql')
                 new DisableIntrospection(),
             ]
         );
+
+        $promise = GraphQL::promiseToExecute(
             $promiseAdapter,
             $schema,
             $query,
-            $rootValue,
-            null,
-            $variables
-        )->then(function (ExecutionResult $result) use ($response, $debugFlags) {
-            $response->json($result->toArray($debugFlags));
-        });
+            variableValues: $variables,
+            operationName: $operationName,
             validationRules: $validations
+        );
+
+        // Blocking wait while queries resolve asynchronously.
+        $wg = new WaitGroup();
+        $wg->add();
+        $promise->then(
+            function ($result) use ($response, $debugFlags, $wg) {
+                $response->json(['data' => $result->toArray($debugFlags)]);
+                $wg->done();
+            },
+            function ($error) use ($response, $wg) {
+                $response->json(['errors' => [\json_encode($error)]]);
+                $wg->done();
+            }
+        );
+        $wg->wait();
     });
