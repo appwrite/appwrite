@@ -11,6 +11,19 @@
       if(doNotTrack == '1') {
         return;
       }
+
+      fetch('http://localhost:8080/v1/analytics', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          destination: 'GA',
+          event: activity,
+          eventData: null,
+          eventUrl: window.location.href
+        })
+      });
       
       element.addEventListener(action, function() {
         let account = container.get('account');

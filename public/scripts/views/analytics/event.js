@@ -20,11 +20,18 @@
           console.error("Google Analytics ga object is not available");
         }
 
-        ga("send", {
-          hitType: "event",
-          eventCategory: category,
-          eventAction: action,
-          eventLabel: label
+        fetch('http://localhost:2000/v1/analytics', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            destination: 'GA',
+            event: activity,
+            category: category,
+            eventData: null,
+            eventUrl: window.location.href
+          })
         });
       });
     }

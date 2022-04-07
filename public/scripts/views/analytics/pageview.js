@@ -16,13 +16,18 @@
 
       let project = router.params["project"] || 'None';
 
-      ga("set", "page", window.location.pathname);
-
-      ga("set", "dimension1", project);
-      ga('set', 'dimension2', env.VERSION);
-      ga('set', 'dimension3', env.SETUP);
-
-      ga("send", "pageview");
+      fetch('http://localhost:8080/v1/analytics', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          destination: 'GA',
+          event: 'pageview',
+          eventData: JSON.stringify({'dimention1': project, 'dimension2': env.VERSION, 'dimension3': env.SETUP}),
+          eventUrl: window.location.href
+        })
+      });
     }
   });
 })(window);
