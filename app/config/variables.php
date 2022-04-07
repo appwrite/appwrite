@@ -694,5 +694,38 @@ return [
                 ]
             ],
         ],
+        [
+            'category' => 'GraphQL',
+            'description' => '',
+            'variables' => [
+                [
+                    'name' => '_APP_GRAPHQL_MAX_COMPLEXITY',
+                    'description' => 'Maximum complexity of a GraphQL query. The default value is 200.',
+                    'introduction' => '0.15.0',
+                    'default' => '200',
+                    'required' => false,
+                    'question' => '',
+                    'filter' => ''
+                ],
+                [
+                    'name' => '_APP_GRAPHQL_MAX_DEPTH',
+                    'description' => 'Maximum depth of a GraphQL query. The default value is 3.',
+                    'introduction' => '0.15.0',
+                    'default' => '3',
+                    'required' => false,
+                    'question' => '',
+                    'filter' => ''
+                ],
+                [
+                    'name' => '_APP_GRAPHQL_REQUEST_TIMEOUT',
+                    'description' => 'Maximum time (in seconds) to wait for a GraphQL request to complete. The default value is 30.',
+                    'introduction' => '0.15.0',
+                    'default' => '30',
+                    'required' => false,
+                    'question' => '',
+                    'filter' => ''
+                ],
+            ],
+        ],
     ],
 ];
