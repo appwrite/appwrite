@@ -26,11 +26,11 @@
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            destination: 'GA',
+            provider: 'GA',
             event: activity,
             category: category,
-            eventData: null,
-            eventUrl: window.location.href
+            additionalData: null,
+            url: window.location.href
           })
         });
       });

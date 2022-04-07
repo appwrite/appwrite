@@ -12,16 +12,16 @@
         return;
       }
 
-      fetch('http://localhost:8080/v1/analytics', {
+      fetch('http://localhost:2000/v1/analytics', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          destination: 'GA',
+          provider: 'GA',
           event: activity,
-          eventData: null,
-          eventUrl: window.location.href
+          additionalData: null,
+          url: window.location.href
         })
       });
       

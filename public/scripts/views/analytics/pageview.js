@@ -16,16 +16,16 @@
 
       let project = router.params["project"] || 'None';
 
-      fetch('http://localhost:8080/v1/analytics', {
+      fetch('http://localhost:2000/v1/analytics', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          destination: 'GA',
+          provider: 'GA',
           event: 'pageview',
-          eventData: JSON.stringify({'dimention1': project, 'dimension2': env.VERSION, 'dimension3': env.SETUP}),
-          eventUrl: window.location.href
+          additionalData: JSON.stringify({'dimention1': project, 'dimension2': env.VERSION, 'dimension3': env.SETUP}),
+          url: window.location.href
         })
       });
     }
