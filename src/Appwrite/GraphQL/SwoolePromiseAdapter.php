@@ -6,8 +6,6 @@ use GraphQL\Error\InvariantViolation;
 use GraphQL\Executor\Promise\Promise;
 use GraphQL\Executor\Promise\PromiseAdapter;
 use GraphQL\Utils\Utils;
-use function Co\go;
-use function Co\run;
 
 class SwoolePromiseAdapter implements PromiseAdapter
 {
@@ -68,7 +66,7 @@ class SwoolePromiseAdapter implements PromiseAdapter
         $count = 0;
         $result = [];
 
-        run(function ($promisesOrValues, $all, $total, &$count, $result) {
+        \Co\run(function ($promisesOrValues, $all, $total, &$count, $result) {
             foreach ($promisesOrValues as $index => $promiseOrValue) {
                 go(function ($index, $promiseOrValue, $all, $total, &$count, $result) {
                     if (!($promiseOrValue instanceof SwoolePromise)) {
@@ -81,10 +79,9 @@ class SwoolePromiseAdapter implements PromiseAdapter
                         static function ($value) use ($index, &$count, $total, &$result, $all): void {
                             $result[$index] = $value;
                             $count++;
-                            if ($count < $total) {
-                                return;
+                            if ($count === $total) {
+                                $all->resolve($result);
                             }
-                            $all->resolve($result);
                         },
                         [$all, 'reject']
                     );
