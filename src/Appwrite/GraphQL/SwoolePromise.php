@@ -181,8 +181,10 @@ class SwoolePromise
     private function setResult(mixed $value): void
     {
         if (!$value instanceof SwoolePromise) {
-            throw new \RuntimeException('Supported only Appwrite\GraphQL\SwoolePromise instance');
+            $this->result = $value;
+            return;
         }
+
         $resolved = false;
         $callable = function ($value) use (&$resolved) {
             $this->setResult($value);
@@ -193,8 +195,6 @@ class SwoolePromise
         while (!$resolved) {
             usleep(25000);
         }
-
-        $this->result = $value;
     }
 
     /**
