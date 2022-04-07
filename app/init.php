@@ -24,6 +24,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\GraphQL\Builder;
+use Appwrite\GraphQL\SwoolePromiseAdapter;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
@@ -496,6 +497,9 @@ $register->set('cache', function () { // This is usually for our workers or CLI 
 
     return $redis;
 });
+$register->set('promiseAdapter', function () {
+    return new SwoolePromiseAdapter();
+});
 
 /*
  * Localization
@@ -789,8 +793,6 @@ App::setResource('dbForProject', function($db, $cache, $project) {
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace("_{$project->getId()}");
 
-    Console::info("Getting dbForProject with ID: {$project->getId()}");
-
     return $database;
 }, ['db', 'cache', 'project']);
 
@@ -858,18 +860,23 @@ App::setResource('geodb', function($register) {
     return $register->get('geodb');
 }, ['register']);
 
-App::setResource('schema', function($utopia, $response, $request, $register, $dbForProject) {
-    try {
-        Console::log('Getting GraphQL schema from register...');
-        $schema = $register->get('_schema');
-        $schema = Builder::appendSchema($schema, $dbForProject);
-    } catch (\Exception $e) {
-        Console::error('Base GraphQL schema not present. Generating...');
-        $schema = Builder::buildSchema($utopia, $response, $register, $dbForProject);
-        Console::error('Built GraphQL schema: ' . \json_encode($schema));
-        $register->set('_schema', function () use ($schema) {
-            return $schema;
-        });
+App::setResource('promiseAdapter', function ($register) {
+    /** @var Utopia\Registry\Registry $register */
+    return $register->get('promiseAdapter');
+}, ['register']);
+
+App::setResource('apiSchema', function ($utopia, $response, $register) {
+    /** @var Utopia\App $utopia */
+    /** @var Appwrite\Utopia\Response $response */
+    /** @var Utopia\Registry\Registry $register */
+
+    if ($register->has('apiSchema')) {
+        return $register->get('apiSchema');
     }
+
+    $schema = Builder::buildAPISchema($utopia, $response, $register);
+    $register->set('apiSchema', static fn() => $schema);
+
     return $schema;
-}, ['utopia', 'response', 'request', 'register', 'dbForProject']);
+}, ['utopia', 'response', 'register']);
+

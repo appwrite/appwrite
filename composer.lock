@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "de0b7c4c493217f3e9575af0e09277f2",
+    "content-hash": "39297e719edd93815a08c042decd55be",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2576,16 +2576,16 @@
         },
         {
             "name": "utopia-php/registry",
-            "version": "0.5.0",
+            "version": "dev-feat-allow-querying",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/registry.git",
-                "reference": "bedc4ed54527b2803e6dfdccc39449f98522b70d"
+                "reference": "3cd3c13ba906af820b02dd717d92e2a1bad3eb7b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/registry/zipball/bedc4ed54527b2803e6dfdccc39449f98522b70d",
-                "reference": "bedc4ed54527b2803e6dfdccc39449f98522b70d",
+                "url": "https://api.github.com/repos/utopia-php/registry/zipball/3cd3c13ba906af820b02dd717d92e2a1bad3eb7b",
+                "reference": "3cd3c13ba906af820b02dd717d92e2a1bad3eb7b",
                 "shasum": ""
             },
             "require": {
@@ -2622,9 +2622,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/registry/issues",
-                "source": "https://github.com/utopia-php/registry/tree/0.5.0"
+                "source": "https://github.com/utopia-php/registry/tree/feat-allow-querying"
             },
-            "time": "2021-03-10T10:45:22+00:00"
+            "time": "2022-04-06T03:43:58+00:00"
         },
         {
             "name": "utopia-php/storage",
@@ -6393,16 +6393,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.3.9",
+            "version": "v3.3.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "6ff9b0e440fa66f97f207e181c41340ddfa5683d"
+                "reference": "8442df056c51b706793adf80a9fd363406dd3674"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/6ff9b0e440fa66f97f207e181c41340ddfa5683d",
-                "reference": "6ff9b0e440fa66f97f207e181c41340ddfa5683d",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/8442df056c51b706793adf80a9fd363406dd3674",
+                "reference": "8442df056c51b706793adf80a9fd363406dd3674",
                 "shasum": ""
             },
             "require": {
@@ -6453,7 +6453,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.3.9"
+                "source": "https://github.com/twigphp/Twig/tree/v3.3.10"
             },
             "funding": [
                 {
@@ -6465,7 +6465,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-03-25T09:37:52+00:00"
+            "time": "2022-04-06T06:47:41+00:00"
         },
         {
             "name": "vimeo/psalm",
@@ -6627,7 +6627,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/registry": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

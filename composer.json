@@ -47,7 +47,7 @@
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.15.*",
         "utopia-php/locale": "0.4.*",
-        "utopia-php/registry": "0.5.*",
+        "utopia-php/registry": "dev-feat-allow-querying",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
         "utopia-php/swoole": "0.3.*",
