@@ -61,6 +61,12 @@ App::post('/v1/graphql')
             ]
         );
 
+        $schema = Builder::appendProjectSchema(
+            $apiSchema,
+            $register,
+            $dbForProject
+        );;
+
         $promise = GraphQL::promiseToExecute(
             $promiseAdapter,
             $schema,
