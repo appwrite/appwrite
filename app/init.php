@@ -24,7 +24,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\GraphQL\Builder;
-use Appwrite\GraphQL\SwoolePromiseAdapter;
+use Appwrite\GraphQL\CoroutinePromiseAdapter;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
@@ -498,7 +498,7 @@ $register->set('cache', function () { // This is usually for our workers or CLI 
     return $redis;
 });
 $register->set('promiseAdapter', function () {
-    return new SwoolePromiseAdapter();
+    return new CoroutinePromiseAdapter();
 });
 
 /*
