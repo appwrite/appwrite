@@ -28,6 +28,11 @@ class Request extends UtopiaRequest
         parent::__construct($request);
     }
 
+    public function getSwoole(): SwooleRequest
+    {
+        return $this->swoole;
+    }
+
     /**
      * Get Params
      *

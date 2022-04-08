@@ -385,7 +385,7 @@ class Builder
         $wg->wait();
 
         $time_elapsed_secs = (microtime(true) - $start) * 1000;
-        Console::info("[INFO] Time Taken To Build REST API Schema : ${time_elapsed_secs}ms");
+        Console::info("Built GraphQL Project Collection Schema in ${time_elapsed_secs}ms");
 
         return [
             'query' => $queryFields,
@@ -511,13 +511,11 @@ class Builder
                             ];
                         }
 
-                        /* Define a resolve function that defines how to fetch data for this type */
                         $resolve = fn($type, $args, $context, $info) => new CoroutinePromise(
                             function (callable $resolve, callable $reject) use ($utopia, $request, $response, &$register, $route, $args) {
                                 // Mutate the original request object to include the query variables at the top level
-                                $swooleRq = (fn() => $this->swoole)->bindTo($request, $request)();
+                                $swooleRq = $request->getSwoole();
                                 $swooleRq->post = $args;
-
                                 // Drop json content type so post args are used directly
                                 if ($swooleRq->header['content-type'] === 'application/json') {
                                     unset($swooleRq->header['content-type']);
@@ -557,7 +555,7 @@ class Builder
         }
 
         $time_elapsed_secs = (microtime(true) - $start) * 1000;
-        Console::info("[INFO] Time Taken To Build REST API Schema : ${time_elapsed_secs}ms");
+        Console::info("[INFO] Built GraphQL REST API Schema in ${time_elapsed_secs}ms");
 
         return [
             'query' => $queryFields,
