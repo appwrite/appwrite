@@ -498,7 +498,8 @@ class Builder
                                 $swooleRq = $request->getSwoole();
                                 $swooleRq->post = $args;
                                 // Drop json content type so post args are used directly
-                                if ($swooleRq->header['content-type'] === 'application/json') {
+                                if (\array_key_exists('content-type', $swooleRq->header)
+                                    && $swooleRq->header['content-type'] === 'application/json') {
                                     unset($swooleRq->header['content-type']);
                                 }
                                 $request = new Request($swooleRq);
