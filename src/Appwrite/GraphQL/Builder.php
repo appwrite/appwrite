@@ -6,6 +6,7 @@ use Appwrite\GraphQL\Types\JsonType;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Co\WaitGroup;
 use GraphQL\Error\Error;
 use GraphQL\Error\FormattedError;
 use GraphQL\Type\Definition\ObjectType;
@@ -17,6 +18,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
+use Utopia\Validator;
 
 class Builder
 {
@@ -25,7 +27,7 @@ class Builder
     protected static array $typeMapping = [];
 
     /**
-     * Function to initialise the typeMapping array with the base cases of the recursion
+     * Initialise the typeMapping array with the base cases of the recursion
      *
      * @return   void
      */
@@ -43,7 +45,7 @@ class Builder
     }
 
     /**
-     * Function to create a singleton for $jsonParser
+     * Create a singleton for $jsonParser
      *
      * @return JsonType
      */
@@ -56,32 +58,13 @@ class Builder
     }
 
     /**
-     * If the map already contains the type, end the recursion and return.
-     * Iterate through all the rules in the response model. Each rule is of the form
-     *        [
-     *            [KEY 1] => [
-     *                'type' => A string from Appwrite/Utopia/Response
-     *                'description' => A description of the type
-     *                'default' => A default value for this type
-     *                'example' => An example of this type
-     *                'require' => a boolean representing whether this field is required
-     *                'array' => a boolean representing whether this field is an array
-     *            ],
-     *            [KEY 2] => [
-     *            ],
-     *            [KEY 3] => [
-     *            ] .....
-     *        ]
-     *   If there are any field names containing characters other than a-z, A-Z, 0-9, _ ,
-     *   we need to remove all those characters. Currently Appwrite's Response model has only the
-     *   $ sign which is prohibited by the GraphQL spec. So we're only replacing that. We need to replace this with a regex
-     *   based approach.
+     * Create a GraphQL type from a Utopia Model
      *
      * @param Model $model
      * @param Response $response
      * @return Type
      */
-    static function getTypeMapping(Model $model, Response $response): Type
+    private static function getModelTypeMapping(Model $model, Response $response): Type
     {
         if (isset(self::$typeMapping[$model->getType()])) {
             return self::$typeMapping[$model->getType()];
@@ -90,7 +73,6 @@ class Builder
         $rules = $model->getRules();
         $name = $model->getType();
         $fields = [];
-        $type = null;
 
         foreach ($rules as $key => $props) {
             $escapedKey = str_replace('$', '_', $key);
@@ -105,7 +87,7 @@ class Builder
                 } else {
                     try {
                         $complexModel = $response->getModel($type);
-                        $type = self::getTypeMapping($complexModel, $response);
+                        $type = self::getModelTypeMapping($complexModel, $response);
                     } catch (\Exception $e) {
                         Console::error("Could not find model for : {$type}");
                     }
@@ -134,31 +116,47 @@ class Builder
     }
 
     /**
-     * Function to map a Utopia\Validator to a valid GraphQL Type
+     * Map a Utopia\Validator to a valid GraphQL Type
      *
-     * @param $validator
+     * @param Validator $validator
      * @param bool $required
-     * @param $utopia
-     * @param $injections
+     * @param App $utopia
+     * @param array $injections
      * @return Type
      * @throws \Exception
      */
-    private static function getParameterArgType($validator, bool $required, $utopia, $injections): Type
+    private static function getParameterArgType(
+        App                $utopia,
+        Validator|callable $validator,
+        bool               $required,
+        array              $injections
+    ): Type
     {
         $validator = \is_callable($validator)
             ? \call_user_func_array($validator, $utopia->getResources($injections))
             : $validator;
 
         switch ((!empty($validator)) ? \get_class($validator) : '') {
-            case 'Utopia\Validator\Email':
-            case 'Utopia\Validator\Host':
-            case 'Utopia\Validator\Length':
             case 'Appwrite\Auth\Validator\Password':
-            case 'Utopia\Validator\URL':
-            case 'Appwrite\Database\Validator\UID':
+            case 'Appwrite\Network\Validator\CNAME':
+            case 'Appwrite\Network\Validator\Domain':
+            case 'Appwrite\Network\Validator\Email':
+            case 'Appwrite\Network\Validator\Host':
+            case 'Appwrite\Network\Validator\IP':
+            case 'Appwrite\Network\Validator\Origin':
+            case 'Appwrite\Network\Validator\URL':
+            case 'Appwrite\Task\Validator\Cron':
+            case 'Appwrite\Utopia\Database\Validator\CustomId':
             case 'Appwrite\Storage\Validator\File':
-            case 'Utopia\Validator\WhiteList':
+            case 'Utopia\Database\Validator\Key':
+            case 'Utopia\Database\Validator\CustomId':
+            case 'Utopia\Database\Validator\UID':
+            case 'Utopia\Storage\Validator\File':
+            case 'Utopia\Validator\File':
+            case 'Utopia\Validator\HexColor':
+            case 'Utopia\Validator\Length':
             case 'Utopia\Validator\Text':
+            case 'Utopia\Validator\WhiteList':
                 $type = Type::string();
                 break;
             case 'Utopia\Validator\Boolean':
@@ -166,11 +164,19 @@ class Builder
                 break;
             case 'Utopia\Validator\ArrayList':
                 $nested = (fn() => $this->validator)->bindTo($validator, $validator)();
-                $type = Type::listOf(self::getParameterArgType($nested, $required, $utopia, $injections));
+                $type = Type::listOf(self::getParameterArgType($utopia, $nested, $required, $injections));
                 break;
             case 'Utopia\Validator\Numeric':
+            case 'Utopia\Validator\Integer':
             case 'Utopia\Validator\Range':
                 $type = Type::int();
+                break;
+            case 'Utopia\Validator\FloatValidator':
+                $type = Type::float();
+                break;
+            case 'Utopia\Database\Validator\Authorization':
+            case 'Utopia\Database\Validator\Permissions':
+                $type = Type::listOf(Type::string());
                 break;
             case 'Utopia\Validator\Assoc':
             case 'Utopia\Validator\JSON':
@@ -187,16 +193,15 @@ class Builder
     }
 
     /**
-     * Function to map an attribute type to a valid GraphQL Type
+     * Map an Attribute type to a valid GraphQL Type
      *
-     * @param $validator
+     * @param string $type
+     * @param bool $array
      * @param bool $required
-     * @param $utopia
-     * @param $injections
      * @return Type
      * @throws \Exception
      */
-    private static function getAttributeArgType($type, $array, $required): Type
+    private static function getAttributeArgType(string $type, bool $array, bool $required): Type
     {
         if ($array) {
             return Type::listOf(self::getAttributeArgType($type, false, $required));
@@ -216,6 +221,13 @@ class Builder
     }
 
     /**
+     * Appends queries and mutations for the currently requested
+     * projects collections to the base API GraphQL schema.
+     *
+     * @param array $apiSchema
+     * @param Registry $register
+     * @param Database $dbForProject
+     * @return Schema
      * @throws \Exception
      */
     public static function appendProjectSchema(
@@ -224,48 +236,39 @@ class Builder
         Database $dbForProject
     ): Schema
     {
-        Console::info("[INFO] Merging Schema...");
-
-        $start = microtime(true);
-
         $db = self::buildCollectionsSchema($register, $dbForProject);
 
-        $queryFields = \array_merge($apiSchema['query'], $db['query']);
-        $mutationFields = \array_merge($apiSchema['mutation'], $db['mutation']);
+        $queryFields = \array_merge_recursive($apiSchema['query'], $db['query']);
+        $mutationFields = \array_merge_recursive($apiSchema['mutation'], $db['mutation']);
 
         ksort($queryFields);
         ksort($mutationFields);
 
-        $schema = new Schema([
+        return new Schema([
             'query' => new ObjectType([
                 'name' => 'Query',
-                'description' => 'The root of all queries',
                 'fields' => $queryFields
             ]),
             'mutation' => new ObjectType([
                 'name' => 'Mutation',
-                'description' => 'The root of all mutations',
                 'fields' => $mutationFields
             ])
         ]);
-
-        $time_elapsed_secs = microtime(true) - $start;
-
-        Console::info("[INFO] Time Taken To Merge Schema : ${time_elapsed_secs}s");
-
-        return $schema;
     }
 
     /**
-     * This function goes through all the project attributes and builds a
-     * GraphQL schema for all the collections they make up.
+     * This function iterates all a projects attributes and builds
+     * GraphQL queries and mutations for the collections they make up.
      *
      * @param Registry $register
      * @param Database $dbForProject
      * @return array
      * @throws \Exception
      */
-    public static function buildCollectionsSchema(Registry &$register, Database $dbForProject): array
+    public static function buildCollectionsSchema(
+        Registry $register,
+        Database $dbForProject
+    ): array
     {
         Console::info("[INFO] Building GraphQL Project Collection Schema...");
         $start = microtime(true);
@@ -275,83 +278,114 @@ class Builder
         $mutationFields = [];
         $limit = 50;
         $offset = 0;
+        $wg = new WaitGroup();
 
-        Authorization::skip(function () use (&$mutationFields, &$queryFields, &$collections, $register, $limit, $offset, $dbForProject) {
+        Authorization::skip(function () use (&$mutationFields, &$queryFields, &$collections, $register, $limit, &$offset, $dbForProject, $wg) {
             while (!empty($attrs = $dbForProject->find(
                 'attributes',
                 limit: $limit,
                 offset: $offset
             ))) {
-                foreach ($attrs as $attr) {
-                    $collectionId = $attr->getAttribute('collectionId');
-
-                    if ($attr->getAttribute('status') !== 'available') {
-                        return;
-                    }
-
-                    $key = $attr->getAttribute('key');
-                    $type = $attr->getAttribute('type');
-                    $array = $attr->getAttribute('array');
-                    $required = $attr->getAttribute('required');
-
-                    $escapedKey = str_replace('$', '_', $key);
-
-                    $collections[$collectionId][$escapedKey] = [
-                        'type' => self::getAttributeArgType($type, $array, $required),
-                        'resolve' => function ($object, $args, $context, $info) use ($key) {
-                            return $object->getAttribute($key);
-                        }
-                    ];
-                }
-
-                foreach ($collections as $collectionId => $attributes) {
-                    $objectType = new ObjectType([
-                        'name' => $collectionId,
-                        'fields' => $attributes
-                    ]);
-
-                    $idArgs = [
-                        'id' => [
-                            'type' => Type::string()
-                        ]
-                    ];
-
-                    $listArgs = [
-                        'limit' => [
-                            'type' => Type::int(),
-                            'defaultValue' => $limit,
-                        ],
-                        'offset' => [
-                            'type' => Type::int(),
-                            'defaultValue' => 0,
-                        ],
-                        'cursor' => [
-                            'type' => Type::string(),
-                            'defaultValue' => null,
-                        ],
-                        'orderAttributes' => [
-                            'type' => Type::listOf(Type::string()),
-                            'defaultValue' => [],
-                        ],
-                        'orderType' => [
-                            'types' => Type::listOf(Type::string()),
-                            'defaultValue' => [],
-                        ]
-                    ];
-
-                    self::createCollectionGetQuery($collectionId, $register, $dbForProject, $idArgs, $queryFields, $objectType);
-                    self::createCollectionListQuery($collectionId, $register, $dbForProject, $listArgs, $queryFields, $objectType);
-                    self::createCollectionCreateMutation($collectionId, $register, $dbForProject, $attributes, $mutationFields, $objectType);
-                    self::createCollectionUpdateMutation($collectionId, $register, $dbForProject, $attributes, $mutationFields, $objectType);
-                    self::createCollectionDeleteMutation($collectionId, $register, $dbForProject, $idArgs, $mutationFields, $objectType);
-                }
-
                 $offset += $limit;
+                go(function () use ($attrs, &$mutationFields, &$queryFields, &$collections, $register, $limit, &$offset, $dbForProject, $wg) {
+                    $wg->add();
+                    $nested = new WaitGroup();
+                    foreach ($attrs as $attr) {
+                        go(function () use ($attr, &$mutationFields, &$queryFields, &$collections, $register, $limit, &$offset, $dbForProject, $nested) {
+                            $nested->add();
+                            $collectionId = $attr->getAttribute('collectionId');
+                            if ($attr->getAttribute('status') !== 'available') {
+                                $nested->done();
+                                return;
+                            }
+                            $key = $attr->getAttribute('key');
+                            $type = $attr->getAttribute('type');
+                            $array = $attr->getAttribute('array');
+                            $required = $attr->getAttribute('required');
+                            $escapedKey = str_replace('$', '_', $key);
+                            $collections[$collectionId][$escapedKey] = [
+                                'type' => self::getAttributeArgType($type, $array, $required),
+                                'resolve' => function ($object, $args, $context, $info) use ($key) {
+                                    return $object->getAttribute($key);
+                                }
+                            ];
+                            $nested->done();
+                        });
+                    }
+                    $nested->wait();
+
+                    foreach ($collections as $collectionId => $attributes) {
+                        go(function () use ($collectionId, $attributes, &$mutationFields, &$queryFields, &$collections, $register, $limit, &$offset, $dbForProject, $wg) {
+                            $wg->add();
+
+                            $objectType = new ObjectType([
+                                'name' => $collectionId,
+                                'fields' => $attributes
+                            ]);
+                            $idArgs = [
+                                'id' => [
+                                    'type' => Type::string()
+                                ]
+                            ];
+                            $listArgs = [
+                                'limit' => [
+                                    'type' => Type::int(),
+                                    'defaultValue' => $limit,
+                                ],
+                                'offset' => [
+                                    'type' => Type::int(),
+                                    'defaultValue' => 0,
+                                ],
+                                'cursor' => [
+                                    'type' => Type::string(),
+                                    'defaultValue' => null,
+                                ],
+                                'orderAttributes' => [
+                                    'type' => Type::listOf(Type::string()),
+                                    'defaultValue' => [],
+                                ],
+                                'orderType' => [
+                                    'type' => Type::listOf(Type::string()),
+                                    'defaultValue' => [],
+                                ]
+                            ];
+
+                            $queryFields[$collectionId . 'Get'] = [
+                                'type' => $objectType,
+                                'args' => $idArgs,
+                                'resolve' => self::queryGet($collectionId, $dbForProject)
+                            ];
+                            $queryFields[$collectionId . 'List'] = [
+                                'type' => $objectType,
+                                'args' => $listArgs,
+                                'resolve' => self::queryList($collectionId, $dbForProject)
+                            ];
+                            $mutationFields[$collectionId . 'Create'] = [
+                                'type' => $objectType,
+                                'args' => $attributes,
+                                'resolve' => self::mutateCreate($collectionId, $dbForProject)
+                            ];
+                            $mutationFields[$collectionId . 'Update'] = [
+                                'type' => $objectType,
+                                'args' => $attributes,
+                                'resolve' => self::mutateUpdate($collectionId, $dbForProject)
+                            ];
+                            $mutationFields[$collectionId . 'Delete'] = [
+                                'type' => $objectType,
+                                'args' => $idArgs,
+                                'resolve' => self::mutateDelete($collectionId, $dbForProject)
+                            ];
+                            $wg->done();
+                        });
+                    }
+                    $wg->done();
+                });
             }
         });
+        $wg->wait();
 
-        $time_elapsed_secs = microtime(true) - $start;
-        Console::info("[INFO] Time Taken To Build Project Collection Schema : ${time_elapsed_secs}s");
+        $time_elapsed_secs = (microtime(true) - $start) * 1000;
+        Console::info("[INFO] Time Taken To Build REST API Schema : ${time_elapsed_secs}ms");
 
         return [
             'query' => $queryFields,
@@ -359,9 +393,9 @@ class Builder
         ];
     }
 
-    private static function createCollectionGetQuery($collectionId, $register, $dbForProject, $args, &$queryFields, $objectType)
+    private static function queryGet(string $collectionId, Database $dbForProject): callable
     {
-        $resolve = fn($type, $args, $context, $info) => new SwoolePromise(
+        return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
                 try {
                     $resolve($dbForProject->getDocument($collectionId, $args['id']));
@@ -370,17 +404,11 @@ class Builder
                 }
             }
         );
-        $get = [
-            'type' => $objectType,
-            'args' => $args,
-            'resolve' => $resolve
-        ];
-        $queryFields[$collectionId . 'Get'] = $get;
     }
 
-    private static function createCollectionListQuery($collectionId, $register, $dbForProject, $args, &$queryFields, $objectType)
+    private static function queryList(string $collectionId, Database $dbForProject): callable
     {
-        $resolve = fn($type, $args, $context, $info) => new SwoolePromise(
+        return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
                 try {
                     $resolve($dbForProject->getCollection($collectionId));
@@ -389,18 +417,11 @@ class Builder
                 }
             }
         );
-
-        $list = [
-            'type' => $objectType,
-            'args' => $args,
-            'resolve' => $resolve
-        ];
-        $queryFields[$collectionId . 'List'] = $list;
     }
 
-    private static function createCollectionCreateMutation($collectionId, $register, $dbForProject, $args, &$mutationFields, $objectType)
+    private static function mutateCreate(string $collectionId, Database $dbForProject): callable
     {
-        $resolve = fn($type, $args, $context, $info) => new SwoolePromise(
+        return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
                 try {
                     $resolve($dbForProject->createDocument($collectionId, new Document($args)));
@@ -409,17 +430,11 @@ class Builder
                 }
             }
         );
-        $create = [
-            'type' => $objectType,
-            'args' => $args,
-            'resolve' => $resolve
-        ];
-        $mutationFields[$collectionId . 'Create'] = $create;
     }
 
-    private static function createCollectionUpdateMutation($collectionId, $register, $dbForProject, $args, &$mutationFields, $objectType)
+    private static function mutateUpdate(string $collectionId, Database $dbForProject): callable
     {
-        $resolve = fn($type, $args, $context, $info) => new SwoolePromise(
+        return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
                 try {
                     $resolve($dbForProject->updateDocument($collectionId, $args['id'], new Document($args)));
@@ -428,20 +443,11 @@ class Builder
                 }
             }
         );
-
-        $update = [
-            'type' => $objectType,
-            'args' => $args,
-            'resolve' => $resolve
-        ];
-
-        $mutationFields[$collectionId . 'Update'] = $update;
     }
 
-
-    private static function createCollectionDeleteMutation($collectionId, $register, $dbForProject, $args, &$mutationFields, $objectType)
+    private static function mutateDelete(string $collectionId, Database $dbForProject): callable
     {
-        $resolve = fn($type, $args, $context, $info) => new SwoolePromise(
+        return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
                 try {
                     $resolve($dbForProject->deleteDocument($collectionId, $args['id']));
@@ -450,12 +456,6 @@ class Builder
                 }
             }
         );
-        $delete = [
-            'type' => $objectType,
-            'args' => $args,
-            'resolve' => $resolve
-        ];
-        $mutationFields[$collectionId . 'Delete'] = $delete;
     }
 
     /**
@@ -493,25 +493,26 @@ class Builder
                         : [$response->getModel($responseModelNames)];
 
                     foreach ($responseModels as $responseModel) {
-                        $type = self::getTypeMapping($responseModel, $response);
+                        $type = self::getModelTypeMapping($responseModel, $response);
                         $description = $route->getDesc();
                         $args = [];
 
                         foreach ($route->getParams() as $key => $value) {
+                            $argType = self::getParameterArgType(
+                                $utopia,
+                                $value['validator'],
+                                !$value['optional'],
+                                $value['injections']
+                            );
                             $args[$key] = [
-                                'type' => self::getParameterArgType(
-                                    $value['validator'],
-                                    !$value['optional'],
-                                    $utopia,
-                                    $value['injections']
-                                ),
+                                'type' => $argType,
                                 'description' => $value['description'],
                                 'defaultValue' => $value['default']
                             ];
                         }
 
                         /* Define a resolve function that defines how to fetch data for this type */
-                        $resolve = fn($type, $args, $context, $info) => new SwoolePromise(
+                        $resolve = fn($type, $args, $context, $info) => new CoroutinePromise(
                             function (callable $resolve, callable $reject) use ($utopia, $request, $response, &$register, $route, $args) {
                                 $utopia
                                     ->setRoute($route)
@@ -520,9 +521,9 @@ class Builder
                                 $result = $response->getPayload();
 
                                 if ($response->getCurrentModel() == Response::MODEL_ERROR_DEV) {
-                                    $reject(new ExceptionDev($result['message'], $result['code'], $result['version'], $result['file'], $result['line'], $result['trace']));
+                                    $reject(new GQLExceptionDev($result['message'], $result['code'], $result['version'], $result['file'], $result['line'], $result['trace']));
                                 } else if ($response->getCurrentModel() == Response::MODEL_ERROR) {
-                                    $reject(new \Exception($result['message'], $result['code']));
+                                    $reject(new GQLException($result['message'], $result['code']));
                                 }
                                 $resolve($result);
                             }
@@ -545,8 +546,8 @@ class Builder
             }
         }
 
-        $time_elapsed_secs = microtime(true) - $start;
-        Console::info("[INFO] Time Taken To Build REST API Schema : ${time_elapsed_secs}s");
+        $time_elapsed_secs = (microtime(true) - $start) * 1000;
+        Console::info("[INFO] Time Taken To Build REST API Schema : ${time_elapsed_secs}ms");
 
         return [
             'query' => $queryFields,

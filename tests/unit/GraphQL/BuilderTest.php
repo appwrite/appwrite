@@ -28,7 +28,7 @@ class BuilderTest extends TestCase
     public function testCreateTypeMapping() 
     {
         $model = $this->response->getModel(Response::MODEL_COLLECTION);
-        $typeMapping = Builder::getTypeMapping($model, $this->response);
+        $typeMapping = Builder::getModelTypeMapping($model, $this->response);
     }
 
 }

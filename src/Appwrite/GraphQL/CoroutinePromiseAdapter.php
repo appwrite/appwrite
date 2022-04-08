@@ -7,7 +7,7 @@ use GraphQL\Executor\Promise\Promise;
 use GraphQL\Executor\Promise\PromiseAdapter;
 use GraphQL\Utils\Utils;
 
-class SwoolePromiseAdapter implements PromiseAdapter
+class CoroutinePromiseAdapter implements PromiseAdapter
 {
     public function isThenable($value): bool
     {
@@ -24,7 +24,7 @@ class SwoolePromiseAdapter implements PromiseAdapter
 
     public function then(Promise $promise, ?callable $onFulfilled = null, ?callable $onRejected = null): Promise
     {
-        /** @var SwoolePromise $adoptedPromise */
+        /** @var CoroutinePromise $adoptedPromise */
         $adoptedPromise = $promise->adoptedPromise;
 
         return new Promise($adoptedPromise->then($onFulfilled, $onRejected), $this);
@@ -32,7 +32,7 @@ class SwoolePromiseAdapter implements PromiseAdapter
 
     public function create(callable $resolver): Promise
     {
-        $promise = new SwoolePromise();
+        $promise = new CoroutinePromise();
         try {
             $resolver(
                 [$promise, 'resolve'],
@@ -46,21 +46,21 @@ class SwoolePromiseAdapter implements PromiseAdapter
 
     public function createFulfilled($value = null): Promise
     {
-        $promise = new SwoolePromise();
+        $promise = new CoroutinePromise();
 
         return new Promise($promise->resolve($value), $this);
     }
 
     public function createRejected($reason): Promise
     {
-        $promise = new SwoolePromise();
+        $promise = new CoroutinePromise();
 
         return new Promise($promise->reject($reason), $this);
     }
 
     public function all(array $promisesOrValues): Promise
     {
-        $all = new SwoolePromise();
+        $all = new CoroutinePromise();
 
         $total = count($promisesOrValues);
         $count = 0;
@@ -69,7 +69,7 @@ class SwoolePromiseAdapter implements PromiseAdapter
         \Co\run(function ($promisesOrValues, $all, $total, &$count, $result) {
             foreach ($promisesOrValues as $index => $promiseOrValue) {
                 go(function ($index, $promiseOrValue, $all, $total, &$count, $result) {
-                    if (!($promiseOrValue instanceof SwoolePromise)) {
+                    if (!($promiseOrValue instanceof CoroutinePromise)) {
                         $result[$index] = $promiseOrValue;
                         $count++;
                         return;

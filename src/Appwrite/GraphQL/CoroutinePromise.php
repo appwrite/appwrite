@@ -6,13 +6,11 @@ use Swoole\Coroutine\Channel;
 use function Co\go;
 
 /**
- * Class SwoolePromise
- *
  * Inspired by https://github.com/streamcommon/promise/blob/master/lib/ExtSwoolePromise.php
  *
  * @package Appwrite\GraphQL
  */
-class SwoolePromise
+class CoroutinePromise
 {
     const STATE_PENDING = 1;
     const STATE_FULFILLED = 0;
@@ -54,9 +52,9 @@ class SwoolePromise
      * Create a new promise from the given callable.
      *
      * @param callable $promise
-     * @return SwoolePromise
+     * @return CoroutinePromise
      */
-    final public static function create(callable $promise): SwoolePromise
+    final public static function create(callable $promise): CoroutinePromise
     {
         return new static($promise);
     }
@@ -65,9 +63,9 @@ class SwoolePromise
      * Resolve promise with given value.
      *
      * @param mixed $value
-     * @return SwoolePromise
+     * @return CoroutinePromise
      */
-    final public static function resolve(mixed $value): SwoolePromise
+    final public static function resolve(mixed $value): CoroutinePromise
     {
         return new static(function (callable $resolve) use ($value) {
             $resolve($value);
@@ -78,9 +76,9 @@ class SwoolePromise
      * Rejects the promise with the given reason.
      *
      * @param mixed $value
-     * @return SwoolePromise
+     * @return CoroutinePromise
      */
-    final public static function reject(mixed $value): SwoolePromise
+    final public static function reject(mixed $value): CoroutinePromise
     {
         return new static(function (callable $resolve, callable $reject) use ($value) {
             $reject($value);
@@ -91,9 +89,9 @@ class SwoolePromise
      * Catch any exception thrown by the executor.
      *
      * @param callable $onRejected
-     * @return SwoolePromise
+     * @return CoroutinePromise
      */
-    final public function catch(callable $onRejected): SwoolePromise
+    final public function catch(callable $onRejected): CoroutinePromise
     {
         return $this->then(null, $onRejected);
     }
@@ -103,9 +101,9 @@ class SwoolePromise
      *
      * @param callable|null $onFulfilled
      * @param callable|null $onRejected
-     * @return SwoolePromise
+     * @return CoroutinePromise
      */
-    public function then(?callable $onFulfilled = null, ?callable $onRejected = null): SwoolePromise
+    public function then(?callable $onFulfilled = null, ?callable $onRejected = null): CoroutinePromise
     {
         return self::create(function (callable $resolve, callable $reject) use ($onFulfilled, $onRejected) {
             while ($this->isPending()) {
@@ -127,10 +125,10 @@ class SwoolePromise
     /**
      * Returns a promise that completes when all passed in promises complete.
      *
-     * @param iterable|SwoolePromise[] $promises
-     * @return SwoolePromise
+     * @param iterable|CoroutinePromise[] $promises
+     * @return CoroutinePromise
      */
-    public static function all(iterable $promises): SwoolePromise
+    public static function all(iterable $promises): CoroutinePromise
     {
         return self::create(function (callable $resolve, callable $reject) use ($promises) {
             $ticks = count($promises);
@@ -141,7 +139,7 @@ class SwoolePromise
             $key = 0;
 
             foreach ($promises as $promise) {
-                if (!$promise instanceof SwoolePromise) {
+                if (!$promise instanceof CoroutinePromise) {
                     $channel->close();
                     throw new \RuntimeException(
                         'Supported only Appwrite\GraphQL\SwoolePromise instance'
@@ -180,7 +178,7 @@ class SwoolePromise
      */
     private function setResult(mixed $value): void
     {
-        if (!$value instanceof SwoolePromise) {
+        if (!$value instanceof CoroutinePromise) {
             $this->result = $value;
             return;
         }
