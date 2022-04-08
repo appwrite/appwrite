@@ -514,6 +514,16 @@ class Builder
                         /* Define a resolve function that defines how to fetch data for this type */
                         $resolve = fn($type, $args, $context, $info) => new CoroutinePromise(
                             function (callable $resolve, callable $reject) use ($utopia, $request, $response, &$register, $route, $args) {
+                                // Mutate the original request object to include the query variables at the top level
+                                $swooleRq = (fn() => $this->swoole)->bindTo($request, $request)();
+                                $swooleRq->post = $args;
+
+                                // Drop json content type so post args are used directly
+                                if ($swooleRq->header['content-type'] === 'application/json') {
+                                    unset($swooleRq->header['content-type']);
+                                }
+                                $request = new Request($swooleRq);
+
                                 $utopia
                                     ->setRoute($route)
                                     ->execute($route, $request);

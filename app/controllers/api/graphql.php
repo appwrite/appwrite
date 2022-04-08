@@ -5,11 +5,11 @@ use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
 use GraphQL\GraphQL;
 use GraphQL\Type;
-use GraphQL\Validator\Rules\DisableIntrospection;
 use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 
@@ -44,12 +44,15 @@ App::post('/v1/graphql')
         /** @var Utopia\Registry\Registry $register */
         /** @var \Utopia\Database\Database $dbForProject */
 
+        $start = microtime(true);
+
+        // Should allow accepting entire body as query if content-type is application/graphql
         if ($request->getHeader('content-type') === 'application/graphql') {
             $query = \implode("\r\n", $request->getParams());
         }
 
         $debugFlags = App::isDevelopment()
-            ? DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE
+            ? DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE | DebugFlag::RETHROW_INTERNAL_EXCEPTIONS
             : DebugFlag::NONE;
 
         $validations = array_merge(
@@ -57,7 +60,7 @@ App::post('/v1/graphql')
             [
                 new QueryComplexity(App::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 200)),
                 new QueryDepth(App::getEnv('_APP_GRAPHQL_MAX_QUERY_DEPTH', 3)),
-                new DisableIntrospection(),
+                //new DisableIntrospection(),
             ]
         );
 
@@ -90,4 +93,7 @@ App::post('/v1/graphql')
             }
         );
         $wg->wait(App::getEnv('_APP_GRAPHQL_REQUEST_TIMEOUT', 30));
+
+        $time_elapsed_secs = (microtime(true) - $start) * 1000;
+        Console::info("[DEBUG] GraphQL Action Time: {$time_elapsed_secs}ms");
     });
