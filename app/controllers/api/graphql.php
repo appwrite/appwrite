@@ -84,7 +84,7 @@ App::post('/v1/graphql')
         $wg->add();
         $promise->then(
             function ($result) use ($response, $debugFlags, $wg) {
-                $response->json($result->toArray($debugFlags));
+                $response->json(['data' => $result->toArray($debugFlags)]);
                 $wg->done();
             },
             function ($error) use ($response, $wg) {

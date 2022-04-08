@@ -335,6 +335,18 @@ class Builder
                     ]
                 ];
 
+                $attributes['read'] = [
+                    'type' => Type::listOf(Type::string()),
+                    'resolve' => function ($object, $args, $context, $info) use ($collectionId) {
+                        return $object->getAttribute('$read');
+                    }
+                ];
+                $attributes['write'] = [
+                    'type' => Type::listOf(Type::string()),
+                    'resolve' => function ($object, $args, $context, $info) use ($collectionId) {
+                        return $object->getAttribute('$write');
+                    }
+                ];
                 $queryFields[$collectionId . 'Get'] = [
                     'type' => $objectType,
                     'args' => $idArgs,
