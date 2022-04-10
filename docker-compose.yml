@@ -1,13 +1,14 @@
+# WARNING!
+# This is a development version of THE Appwrite docker-compose.yml file.
+# Avoid using this file in your production environment.
+# We're exposing here sensitive ports and mounting code volumes for rapid development and debugging of the server stack.
+
 x-logging: &x-logging
   logging:
     driver: 'json-file'
     options:
       max-file: 5
       max-size: 10m
-# WARNING!
-# This is a development version of THE Appwrite docker-compose.yml file.
-# Avoid using this file in your production environment.
-# We're exposing here sensitive ports and mounting code volumes for rapid development and debugging of the server stack.
 
 version: '3'
 
