@@ -42,7 +42,7 @@
         "utopia-php/abuse": "0.7.*",
         "utopia-php/analytics": "0.2.*",
         "utopia-php/audit": "0.8.*",
-        "utopia-php/cache": "0.4.*",
+        "utopia-php/cache": "0.6.*",
         "utopia-php/cli": "0.12.*",
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.15.*",
