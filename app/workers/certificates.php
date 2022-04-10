@@ -1,7 +1,9 @@
 <?php
 
+use Appwrite\Event\Event;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Resque\Worker;
+use Appwrite\Exception\Certificate as ExceptionCertificate;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
@@ -26,169 +28,224 @@ class CertificatesV1 extends Worker
 
     public function run(): void
     {
-        $dbForConsole = $this->getConsoleDB();
-
-        /**
-         * 1. Get new domain document - DONE
-         *  1.1. Validate domain is valid, public suffix is known and CNAME records are verified - DONE
-         * 2. Check if a certificate already exists - DONE
-         * 3. Check if certificate is about to expire, if not - skip it
-         *  3.1. Create / renew certificate
-         *  3.2. Update loadblancer
-         *  3.3. Update database (domains, change date, expiry)
-         *  3.4. Set retry on failure
-         *  3.5. Schedule to renew certificate in 60 days
-         */
-
         Authorization::disable();
 
-        // Args
-        $document = $this->args['document'];
-        $domain = $this->args['domain'];
+        $dbForConsole = $this->getConsoleDB();
 
-        // Validation Args
-        $validateTarget = $this->args['validateTarget'] ?? true;
-        $validateCNAME = $this->args['validateCNAME'] ?? true;
+        $certificate = new Document();
 
-        // Options
-        $domain = new Domain((!empty($domain)) ? $domain : '');
-        $expiry = 60 * 60 * 24 * 30 * 2; // 60 days
-        $safety = 60 * 60; // 1 hour
-        $renew  = (\time() + $expiry);
+        try {
+            /**
+             * TODO: Update
+             * 1. Get new domain document - DONE
+             *  1.1. Validate domain is valid, public suffix is known and CNAME records are verified - DONE
+             * 2. Check if a certificate already exists - DONE
+             * 3. Check if certificate is about to expire, if not - skip it
+             *  3.1. Create / renew certificate
+             *  3.2. Update loadblancer
+             *  3.3. Update database (domains, change date, expiry)
+             *  3.4. Set retry on failure
+             *  3.5. Schedule to renew certificate in 60 days
+             */
+    
+    
+            // Get attributes
+            $domain = $this->args['domain']; // String of domain (hostname)
+            $domain = new Domain((!empty($domain)) ? $domain : '');
 
-        if (empty($domain->get())) {
-            throw new Exception('Missing domain');
-        }
-
-        if (!$domain->isKnown() || $domain->isTest()) {
-            throw new Exception('Unknown public suffix for domain');
-        }
-
-        if ($validateTarget) {
-            $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
-
-            if(!$target->isKnown() || $target->isTest()) {
-                throw new Exception('Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.');
+            $certificate->setAttribute('domain', $domain->get());
+    
+            $skipRenewCheck = $this->args['skipRenewCheck'] ?? false; // If true, we won't double-check expiry from cert file
+    
+            $mainDomain = null; // ENV or first ever visited domain
+            if (!empty(App::getEnv('_APP_DOMAIN', ''))) {
+                $mainDomain = App::getEnv('_APP_DOMAIN', '');
+            } else {
+                $domainDocument = $dbForConsole->findOne('domains', [], 0, ['_id'], ['ASC']);
+                $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();
             }
-        }
-
-        if ($validateCNAME) {
-            $validator = new CNAME($target->get()); // Verify Domain with DNS records
-
-            if(!$validator->isValid($domain->get())) {
-                throw new Exception('Failed to verify domain DNS records');
+    
+            // If not main domain, we will check CNAME record
+            $validateCNAME = false;
+            if ($domain->get() !== $mainDomain) {
+                $validateCNAME = true;
             }
-        }
-
-        $certificate = $dbForConsole->findOne('certificates', [
-            new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
-        ]);
-
-        // $condition = ($certificate
-        //     && $certificate instanceof Document
-        //     && isset($certificate['issueDate'])
-        //     && (($certificate['issueDate'] + ($expiry)) > time())) ? 'true' : 'false';
-
-        // throw new Exception('cert issued at'.date('d.m.Y H:i', $certificate['issueDate']).' | renew date is: '.date('d.m.Y H:i', ($certificate['issueDate'] + ($expiry))).' | condition is '.$condition);
-
-        $certificate = (!empty($certificate) && $certificate instanceof $certificate) ? $certificate->getArrayCopy() : [];
-
-        if (
-            !empty($certificate)
-            && isset($certificate['issueDate'])
-            && (($certificate['issueDate'] + ($expiry)) > \time())
-        ) { // Check last issue time
-            throw new Exception('Renew isn\'t required');
-        }
-
-        $staging = (App::isProduction()) ? '' : ' --dry-run';
-        $email = App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
-
-        if (empty($email)) {
-            throw new Exception('You must set a valid security email address (_APP_SYSTEM_SECURITY_EMAIL_ADDRESS) to issue an SSL certificate');
-        }
-
-        $stdout = '';
-        $stderr = '';
-
-        $exit = Console::execute("certbot certonly --webroot --noninteractive --agree-tos{$staging}"
-            . " --email " . $email
-            . " -w " . APP_STORAGE_CERTIFICATES
-            . " -d {$domain->get()}", '', $stdout, $stderr);
-
-        if ($exit !== 0) {
-            throw new Exception('Failed to issue a certificate with message: ' . $stderr);
-        }
-
-        $path = APP_STORAGE_CERTIFICATES . '/' . $domain->get();
-
-        if (!\is_readable($path)) {
-            if (!\mkdir($path, 0755, true)) {
-                throw new Exception('Failed to create path...');
+    
+            if (empty($domain->get())) {
+                throw new ExceptionCertificate('Missing certificate domain.');
             }
-        }
+    
+            if (!$domain->isKnown() || $domain->isTest()) {
+                throw new ExceptionCertificate('Unknown public suffix for domain.');
+            }
+    
+            if ($validateCNAME) {
+                // TODO: Would be awesome to also support A/AAAA records here. Maybe dry run?
+    
+                // Validate if domain target is properly configured
+                $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
+    
+                if (!$target->isKnown() || $target->isTest()) {
+                    throw new ExceptionCertificate('Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.');
+                }
+    
+                // Verify domain with DNS records
+                $validator = new CNAME($target->get());
+                if (!$validator->isValid($domain->get())) {
+                    throw new ExceptionCertificate('Failed to verify domain DNS records.');
+                }
+            } else {
+                // Main domain validation
+                // TODO: Would be awesome to check A/AAAA record here. Maybe dry run?
+            }
 
-        if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/cert.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/cert.pem')) {
-            throw new Exception('Failed to rename certificate cert.pem: '.\json_encode($stdout));
-        }
+            // If certificate exists already, double-check expiry date
+            // If asked to skip, we won't
+            $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain->get() . '/cert.pem';
+            if (!$skipRenewCheck && \file_exists($certPath)) {
+                $validTo = null;
 
-        if (!@\rename('/etc/letsencrypt/live/' . $domain->get() . '/chain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain->get() . '/chain.pem')) {
-            throw new Exception('Failed to rename certificate chain.pem: ' . \json_encode($stdout));
-        }
+                try {
+                    $certData = openssl_x509_parse(file_get_contents($certPath));
+    
+                    $validTo = $certData['validTo_time_t'];
+    
+                    if (empty($validTo)) {
+                        throw new Exception('Invalid expiry date.');
+                    }
+                } catch(\Throwable $th) {
+                    throw new ExceptionCertificate('Unable to read certificate file (cert.pem).');
+                }
 
-        if (!@\rename('/etc/letsencrypt/live/' . $domain->get() . '/fullchain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain->get() . '/fullchain.pem')) {
-            throw new Exception('Failed to rename certificate fullchain.pem: ' . \json_encode($stdout));
-        }
+                // LetsEncrypt allows renewal 30 days before expiry
+                $expiryInAdvance = (60*60*24*30);
+                if ($validTo - $expiryInAdvance > \time()) {
+                    $validToVerbose = date('d-m-Y H:i:s', $validTo);
+                    throw new ExceptionCertificate('Renew isn\'t required. Next renew at ' . $validToVerbose);
+                }
+            }
+    
+            // Email for alerts is required by LetsEncrypt
+            $email = App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
+            if (empty($email)) {
+                throw new ExceptionCertificate('You must set a valid security email address (_APP_SYSTEM_SECURITY_EMAIL_ADDRESS) to issue an SSL certificate.');
+            }
 
-        if (!@\rename('/etc/letsencrypt/live/' . $domain->get() . '/privkey.pem', APP_STORAGE_CERTIFICATES . '/' . $domain->get() . '/privkey.pem')) {
-            throw new Exception('Failed to rename certificate privkey.pem: ' . \json_encode($stdout));
-        }
+            // LetsEncrypt communication to issue certificate (using certbot CLI)
+            $stdout = '';
+            $stderr = '';
+    
+            $staging = (App::isProduction()) ? '' : ' --dry-run';
+            $exit = Console::execute("certbot certonly --webroot --noninteractive --agree-tos{$staging}"
+                . " --email " . $email
+                . " -w " . APP_STORAGE_CERTIFICATES
+                . " -d {$domain->get()}", '', $stdout, $stderr);
+            
+            // All exceptions from now on will be marked to increment attempts count. This allows us to only limit attempts for domains that failed on LectEncrypt side.
+            // Such attempts count allows us to prevent API limit abuse with always failing domains
+    
+            // Unexpected error, usually 5XX, API limits, ...
+            if ($exit !== 0) {
+                throw new ExceptionCertificate('Failed to issue a certificate with message: ' . $stderr, true);
+            }
 
-        $certificate = new Document(\array_merge($certificate, [
-            'domain' => $domain->get(),
-            'issueDate' => \time(),
-            'renewDate' => $renew,
-            'attempts' => 0,
-            'log' => \json_encode($stdout),
-        ]));
-
-        $certificate = $dbForConsole->createDocument('certificates', $certificate);
-
-        if (!$certificate) {
-            throw new Exception('Failed saving certificate to DB');
-        }
-
-        if(!empty($document)) {
-            $certificate = new Document(\array_merge($document, [
-                'updated' => \time(),
-                'certificateId' => $certificate->getId(),
+            // Command succeeded, store all data into document
+            // We store stderr too, because it may include warnings
+            // This is only stored if everytng below passes too. Otherwise, it will be overwritten by error message
+            $certificate->setAttribute('log', \json_encode([
+                'stdout' => $stdout,
+                'stderr' => $stderr,
             ]));
-
-            $certificate = $dbForConsole->updateDocument('domains', $certificate->getId(), $certificate);
-
-            if(!$certificate) {
-                throw new Exception('Failed saving domain to DB');
+    
+            // Prepare folder in storage for domain
+            $path = APP_STORAGE_CERTIFICATES . '/' . $domain->get();
+            if (!\is_readable($path)) {
+                if (!\mkdir($path, 0755, true)) {
+                    throw new ExceptionCertificate('Failed to create path for certificate.', true);
+                }
             }
+    
+            // Move generated files from certbot into our storage
+            if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/cert.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/cert.pem')) {
+                throw new ExceptionCertificate('Failed to rename certificate cert.pem: '.\json_encode($stdout), true);
+            }
+    
+            if (!@\rename('/etc/letsencrypt/live/' . $domain->get() . '/chain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain->get() . '/chain.pem')) {
+                throw new ExceptionCertificate('Failed to rename certificate chain.pem: ' . \json_encode($stdout), true);
+            }
+    
+            if (!@\rename('/etc/letsencrypt/live/' . $domain->get() . '/fullchain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain->get() . '/fullchain.pem')) {
+                throw new ExceptionCertificate('Failed to rename certificate fullchain.pem: ' . \json_encode($stdout), true);
+            }
+    
+            if (!@\rename('/etc/letsencrypt/live/' . $domain->get() . '/privkey.pem', APP_STORAGE_CERTIFICATES . '/' . $domain->get() . '/privkey.pem')) {
+                throw new ExceptionCertificate('Failed to rename certificate privkey.pem: ' . \json_encode($stdout), true);
+            }
+
+            // This multi-line syntax helps IDE
+            $config =
+                "tls:" .
+                "  certificates:" . 
+                "    - certFile: /storage/certificates/{$domain->get()}/fullchain.pem" . 
+                "      keyFile: /storage/certificates/{$domain->get()}/privkey.pem";
+            
+            // Save configuration into Traefik using our new cert files
+            if (!\file_put_contents(APP_STORAGE_CONFIG . '/' . $domain->get() . '.yml', $config)) {
+                throw new ExceptionCertificate('Failed to save Traefik configuration.', true);
+            }
+
+            // Read new renew date from cert file
+            // TODO: This might not be required, we could calculate it. But this feels safer
+            $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain->get() . '/cert.pem';
+            $certData = openssl_x509_parse(file_get_contents($certPath));
+            $validTo = $certData['validTo_time_t'];
+            $expiryInAdvance = (60*60*24*30);
+            $certificate->setAttribute('renewDate', $validTo - $expiryInAdvance);
+
+            // All went well at this point 🥳
+            
+            // Reset attempts count for next renwal
+            $certificate->setAttribute('attempts', 0);
+
+            // Mark issue date
+            $certificate->setAttribute('issueDate', \time());
+        } catch(ExceptionCertificate $e) {
+            // These exceptions are expected if renew shouldn't or can't happen
+
+            // Add exception as log into certificate
+            $certificate->setAttribute('log', $e->getMessage());
+
+            $attempt = $certificate->getAttribute('attempts', 0);
+            $attempt++;
+            
+            // Save increased attempts count if requested by exception
+            if($e->getIncrementAttempts()) {
+                $certificate->setAttribute('attempts', $attempt);
+            }
+
+            Console::warning('Cannot renew domain (' . $domain->get() . ') on attempt no. ' . $attempt . ' certificate: ' . $e->getMessage());
+        } finally {
+            // All actions result in new updatedAt date
+            $certificate->setAttribute('updated', \time());
+
+            // Save certificate data into database
+            // Check if update or insert required
+            $certificateDocument = $dbForConsole->findOne('certificates', [ new Query('domain', Query::TYPE_EQUAL, [$domain->get()]) ]);
+            if (!empty($certificateDocument) && !$certificateDocument->isEmpty()) {
+                // Merge new data with current data
+                $certificate = new Document(\array_merge($certificateDocument->getArrayCopy(), $certificate->getArrayCopy()));
+                
+                $certificate = $dbForConsole->updateDocument('certificates', $certificate->getId(), $certificate);
+            } else {
+                $certificate = $dbForConsole->createDocument('certificates', $certificate);
+            }
+
+            // Update domains with new certificate ID
+            $certificateId = $certificate->getId();
+            // TODO: Add logic for updating domains
+
+            Authorization::reset();
         }
-
-        $config =
-"tls:
-  certificates:
-    - certFile: /storage/certificates/{$domain->get()}/fullchain.pem
-      keyFile: /storage/certificates/{$domain->get()}/privkey.pem";
-
-        if (!\file_put_contents(APP_STORAGE_CONFIG . '/' . $domain->get() . '.yml', $config)) {
-            throw new Exception('Failed to save SSL configuration');
-        }
-
-        ResqueScheduler::enqueueAt($renew + $safety, 'v1-certificates', 'CertificatesV1', [
-            'document' => [],
-            'domain' => $domain->get(),
-            'validateTarget' => $validateTarget,
-            'validateCNAME' => $validateCNAME,
-        ]);  // Async task rescheduale
-
-        Authorization::reset();
     }
 
     public function shutdown(): void

@@ -11,13 +11,15 @@ $cli
     ->action(function () {
         $domain = App::getEnv('_APP_DOMAIN', '');
 
-        Console::log('Issue a TLS certificate for master domain ('.$domain.') in 30 seconds.
+        // TODO: Instead of waiting, let's ping Traefik. If responds, we can schedule instantly
+        // TODO: Add support for argument (domain)
+
+        Console::log('Issue a TLS certificate for master domain ('.$domain.') in 2 seconds.
             Make sure your domain points to your server or restart to try again.');
 
-        ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
-            'document' => [],
+        // Const for types not available here
+        ResqueScheduler::enqueueAt(\time() + 2, 'v1-certificates', 'CertificatesV1', [
             'domain' => $domain,
-            'validateTarget' => false,
-            'validateCNAME' => false,
+            'skipRenewCheck' => true // TODO: Discuss this behabiour. true? false? parameter? How do we document it?
         ]);
     });

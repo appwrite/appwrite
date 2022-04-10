@@ -1,15 +1,58 @@
 <?php
 
 global $cli;
+global $register;
 
 use Appwrite\Event\Event;
 use Utopia\App;
+use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Database;
+use Utopia\Registry\Registry;
+use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Database\Query;
+
+function getDatabase(Registry &$register)
+{
+    $attempts = 0;
+
+    do {
+        try {
+            $attempts++;
+
+            $db = $register->get('dbPool')->get();
+            $redis = $register->get('redisPool')->get();
+
+            $cache = new Cache(new RedisCache($redis));
+            $database = new Database(new MariaDB($db), $cache);
+            $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $database->setNamespace('_console');
+
+            break; // leave loop if successful
+        } catch(\Exception $e) {
+            Console::warning("Database not ready. Retrying connection ({$attempts})...");
+            if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
+                throw new \Exception('Failed to connect to database: '. $e->getMessage());
+            }
+            sleep(DATABASE_RECONNECT_SLEEP);
+        }
+    } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
+
+    return [
+        $database,
+        function () use ($register, $db, $redis) {
+            $register->get('dbPool')->put($db);
+            $register->get('redisPool')->put($redis);
+        }
+    ];
+
+};
 
 $cli
     ->task('maintenance')
     ->desc('Schedules maintenance tasks and publishes them to resque')
-    ->action(function () {
+    ->action(function () use ($register) {
         Console::title('Maintenance V1');
         Console::success(APP_NAME.' maintenance process v1 has started');
 
@@ -54,6 +97,29 @@ $cli
             ]);
         }
 
+        function renewCertificates($dbForConsole)
+        {
+            $time = date('d-m-Y H:i:s', time());
+            /** @var Utopia\Database\Database $dbForConsole */
+
+            $certificates = $dbForConsole->find('certificates', [
+                new Query('attempts', Query::TYPE_LESSER, [5]), // Maximum 5 attempts
+                new Query('renewDate', Query::TYPE_LESSEREQUAL, [\time()]) // includes 60 days cooldown (we have 30 days to renew)
+            ], 300); // Limit 300 comes from LetsEncrypt (orders per 3 hours)
+
+            if(\count($certificates) > 0) {
+                Console::info("[{$time}] Found " . \count($certificates) . " certificates for renewal, scheduling jobs.");
+
+                foreach ($certificates as $certificate) {
+                    Resque::enqueue(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME, [
+                        'domain' => $certificate->getAttribute('domain'),
+                    ]);
+                }
+            } else {
+                Console::info("[{$time}] No certificates for renewal.");
+            }
+        }
+
         // # of days in seconds (1 day = 86400s)
         $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
         $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
@@ -62,13 +128,25 @@ $cli
         $usageStatsRetention30m = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_30M', '129600');//36 hours
         $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
 
-        Console::loop(function() use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) {
-            $time = date('d-m-Y H:i:s', time());
-            Console::info("[{$time}] Notifying deletes workers every {$interval} seconds");
-            notifyDeleteExecutionLogs($executionLogsRetention);
-            notifyDeleteAbuseLogs($abuseLogsRetention);
-            notifyDeleteAuditLogs($auditLogRetention);
-            notifyDeleteUsageStats($usageStatsRetention30m, $usageStatsRetention1d);
-            notifyDeleteConnections();
+        Console::loop(function() use ($register, $interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) { 
+            go(function () use ($register, $interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) {
+                try {
+                    [$database, $returnDatabase] = getDatabase($register, '_console');
+    
+                    $time = date('d-m-Y H:i:s', time());
+                    Console::info("[{$time}] Notifying deletes workers every {$interval} seconds");
+                    notifyDeleteExecutionLogs($executionLogsRetention);
+                    notifyDeleteAbuseLogs($abuseLogsRetention);
+                    notifyDeleteAuditLogs($auditLogRetention);
+                    notifyDeleteUsageStats($usageStatsRetention30m, $usageStatsRetention1d);
+                    notifyDeleteConnections();
+    
+                    renewCertificates($database);
+                } catch (\Throwable $th) {
+                    throw $th;
+                } finally {
+                    call_user_func($returnDatabase);
+                }
+            });
         }, $interval);
     });
