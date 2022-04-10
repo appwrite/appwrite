@@ -599,7 +599,7 @@ return [
             ],
             [
                 'name' => '_APP_EXECUTOR_RUNTIME_NETWORK',
-                'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
+                'description' => 'Deprecated with 0.14.0, use \'OPEN_RUNTIMES_NETWORK\' instead!',
                 'introduction' => '0.13.0',
                 'default' => 'appwrite_runtimes',
                 'required' => false,
@@ -647,6 +647,15 @@ return [
                 'description' => 'The email for hub.docker.com. This variable is used to pull images from hub.docker.com.',
                 'introduction' => '0.10.0',
                 'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => 'OPEN_RUNTIMES_NETWORK',
+                'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
+                'introduction' => '0.13.0',
+                'default' => 'appwrite_runtimes',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
