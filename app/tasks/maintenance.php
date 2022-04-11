@@ -105,7 +105,7 @@ $cli
             $certificates = $dbForConsole->find('certificates', [
                 new Query('attempts', Query::TYPE_LESSER, [5]), // Maximum 5 attempts
                 new Query('renewDate', Query::TYPE_LESSEREQUAL, [\time()]) // includes 60 days cooldown (we have 30 days to renew)
-            ], 300); // Limit 300 comes from LetsEncrypt (orders per 3 hours)
+            ], 200); // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
 
             if(\count($certificates) > 0) {
                 Console::info("[{$time}] Found " . \count($certificates) . " certificates for renewal, scheduling jobs.");
@@ -134,7 +134,7 @@ $cli
                     [$database, $returnDatabase] = getDatabase($register, '_console');
     
                     $time = date('d-m-Y H:i:s', time());
-                    Console::info("[{$time}] Notifying deletes workers every {$interval} seconds");
+                    Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
                     notifyDeleteExecutionLogs($executionLogsRetention);
                     notifyDeleteAbuseLogs($abuseLogsRetention);
                     notifyDeleteAuditLogs($auditLogRetention);

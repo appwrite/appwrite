@@ -34,21 +34,38 @@ class CertificatesV1 extends Worker
 
         $certificate = new Document();
 
+
+        /**
+         * 1. Read arguments and validate domain
+         * 2. Get main domain
+         * 3. Validate CNAME DNS if parameter is not main domain (meaning it's custom domain)
+         * 4. Validate renew date with certificate file, unless requested to skip by parameter
+         * 5. Validate security email. Cannot be empty, required by LetsEncrypt
+         * 6. Issue a certificate using certbot CLI
+         * 7. Update 'log' attribute on certificate document with Certbot message
+         * 8. Create storage folder for certificate, if not ready already
+         * 9. Move certificates from Certbot location to our Storage
+         * 10. Create/Update our Storage with new Traefik config with new certificate paths
+         * 11. Read certificate file and update 'renewDate' on certificate document
+         * 12. Update 'issueDate' and 'attempts' on certificate
+         * 
+         * If at any point unexpected error occurs, program stops without applying changes to document, and error is thrown into worker
+         * 
+         * If code stops with expected error:
+         * 1. 'log' attribute on document is updated with error message
+         * 2. 'attempts' amount is increased
+         * 3. Console log is shown
+         * 4. Email is sent to security email
+         * 
+         * Unless unexpected error occurs, at the end, we:
+         * 1. Update 'updated' attribute on document
+         * 2. Save document to database
+         * 3. Update all domains documents with current certificate ID
+         * 
+         * Note: Renewals are checked and scheduled from maintenence worker
+         */
+
         try {
-            /**
-             * TODO: Update
-             * 1. Get new domain document - DONE
-             *  1.1. Validate domain is valid, public suffix is known and CNAME records are verified - DONE
-             * 2. Check if a certificate already exists - DONE
-             * 3. Check if certificate is about to expire, if not - skip it
-             *  3.1. Create / renew certificate
-             *  3.2. Update loadblancer
-             *  3.3. Update database (domains, change date, expiry)
-             *  3.4. Set retry on failure
-             *  3.5. Schedule to renew certificate in 60 days
-             */
-    
-    
             // Get attributes
             $domain = $this->args['domain']; // String of domain (hostname)
             $domain = new Domain((!empty($domain)) ? $domain : '');
@@ -108,7 +125,7 @@ class CertificatesV1 extends Worker
                 try {
                     $certData = openssl_x509_parse(file_get_contents($certPath));
     
-                    $validTo = $certData['validTo_time_t'];
+                    $validTo = $certData['validTo_time_t'] ?? 0;
     
                     if (empty($validTo)) {
                         throw new Exception('Invalid expiry date.');
@@ -146,7 +163,7 @@ class CertificatesV1 extends Worker
     
             // Unexpected error, usually 5XX, API limits, ...
             if ($exit !== 0) {
-                throw new ExceptionCertificate('Failed to issue a certificate with message: ' . $stderr, true);
+                throw new ExceptionCertificate('Failed to issue a certificate with message: ' . $stderr);
             }
 
             // Command succeeded, store all data into document
@@ -161,25 +178,25 @@ class CertificatesV1 extends Worker
             $path = APP_STORAGE_CERTIFICATES . '/' . $domain->get();
             if (!\is_readable($path)) {
                 if (!\mkdir($path, 0755, true)) {
-                    throw new ExceptionCertificate('Failed to create path for certificate.', true);
+                    throw new ExceptionCertificate('Failed to create path for certificate.');
                 }
             }
     
             // Move generated files from certbot into our storage
             if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/cert.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/cert.pem')) {
-                throw new ExceptionCertificate('Failed to rename certificate cert.pem: '.\json_encode($stdout), true);
+                throw new ExceptionCertificate('Failed to rename certificate cert.pem: '.\json_encode($stdout));
             }
     
             if (!@\rename('/etc/letsencrypt/live/' . $domain->get() . '/chain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain->get() . '/chain.pem')) {
-                throw new ExceptionCertificate('Failed to rename certificate chain.pem: ' . \json_encode($stdout), true);
+                throw new ExceptionCertificate('Failed to rename certificate chain.pem: ' . \json_encode($stdout));
             }
     
             if (!@\rename('/etc/letsencrypt/live/' . $domain->get() . '/fullchain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain->get() . '/fullchain.pem')) {
-                throw new ExceptionCertificate('Failed to rename certificate fullchain.pem: ' . \json_encode($stdout), true);
+                throw new ExceptionCertificate('Failed to rename certificate fullchain.pem: ' . \json_encode($stdout));
             }
     
             if (!@\rename('/etc/letsencrypt/live/' . $domain->get() . '/privkey.pem', APP_STORAGE_CERTIFICATES . '/' . $domain->get() . '/privkey.pem')) {
-                throw new ExceptionCertificate('Failed to rename certificate privkey.pem: ' . \json_encode($stdout), true);
+                throw new ExceptionCertificate('Failed to rename certificate privkey.pem: ' . \json_encode($stdout));
             }
 
             // This multi-line syntax helps IDE
@@ -191,14 +208,14 @@ class CertificatesV1 extends Worker
             
             // Save configuration into Traefik using our new cert files
             if (!\file_put_contents(APP_STORAGE_CONFIG . '/' . $domain->get() . '.yml', $config)) {
-                throw new ExceptionCertificate('Failed to save Traefik configuration.', true);
+                throw new ExceptionCertificate('Failed to save Traefik configuration.');
             }
 
             // Read new renew date from cert file
             // TODO: This might not be required, we could calculate it. But this feels safer
             $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain->get() . '/cert.pem';
             $certData = openssl_x509_parse(file_get_contents($certPath));
-            $validTo = $certData['validTo_time_t'];
+            $validTo = $certData['validTo_time_t'] ?? 0;
             $expiryInAdvance = (60*60*24*30);
             $certificate->setAttribute('renewDate', $validTo - $expiryInAdvance);
 
@@ -218,10 +235,8 @@ class CertificatesV1 extends Worker
             $attempt = $certificate->getAttribute('attempts', 0);
             $attempt++;
             
-            // Save increased attempts count if requested by exception
-            if($e->getIncrementAttempts()) {
-                $certificate->setAttribute('attempts', $attempt);
-            }
+            // Save increased attempts count
+            $certificate->setAttribute('attempts', $attempt);
 
             Console::warning('Cannot renew domain (' . $domain->get() . ') on attempt no. ' . $attempt . ' certificate: ' . $e->getMessage());
         } finally {
