@@ -10,11 +10,11 @@
       let providers = {
         "Microsoft": {
           "clientSecret": "oauth2MicrosoftClientSecret",
-          "tenantId": "oauth2MicrosoftTenantId"
+          "tenantID": "oauth2MicrosoftTenantId"
         },
         "Apple": {
-          "keyId": "oauth2AppleKeyId",
-          "teamId": "oauth2AppleTeamId",
+          "keyID": "oauth2AppleKeyId",
+          "teamID": "oauth2AppleTeamId",
           "p8": "oauth2AppleP8"
         }
       }
