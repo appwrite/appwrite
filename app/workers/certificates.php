@@ -239,6 +239,21 @@ class CertificatesV1 extends Worker
             $certificate->setAttribute('attempts', $attempt);
 
             Console::warning('Cannot renew domain (' . $domain->get() . ') on attempt no. ' . $attempt . ' certificate: ' . $e->getMessage());
+
+            // Send email to security email
+            Resque::enqueue(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME, [
+                'from' => 'console',
+                'project' => 'console',
+                'name' => 'Appwrite Administrator',
+                'recipient' => App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'),
+                'url' => 'https://' . $domain->get(),
+                'locale' => App::getEnv('_APP_LOCALE', 'en'),
+                'type' => MAIL_TYPE_CERTIFICATE,
+
+                'domain' => $domain->get(),
+                'error' => $e->getMessage(),
+                'attempt' => $attempt
+            ]);
         } finally {
             // All actions result in new updatedAt date
             $certificate->setAttribute('updated', \time());
@@ -257,7 +272,18 @@ class CertificatesV1 extends Worker
 
             // Update domains with new certificate ID
             $certificateId = $certificate->getId();
-            // TODO: Add logic for updating domains
+
+            $domains = $dbForConsole->find('domains', [
+                new Query('domain', Query::TYPE_EQUAL, [$domain->get()])
+            ], 1000);
+
+            foreach ($domains as $domainDocument) {
+                $domainDocument->setAttribute('updated', \time());
+                $domainDocument->setAttribute('certificateId', $certificateId);
+
+                $dbForConsole->updateDocument('domains', $domainDocument->getId(), $domainDocument);
+                $dbForConsole->deleteCachedDocument('projects', $domainDocument->getAttribute('projectId'));
+            }
 
             Authorization::reset();
         }
