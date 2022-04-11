@@ -6,7 +6,7 @@ use Exception;
 use Utopia\App;
 use Utopia\CLI\Console;
 
-class Executor 
+class Executor
 {
     const METHOD_GET = 'GET';
     const METHOD_POST = 'POST';
@@ -18,6 +18,8 @@ class Executor
     const METHOD_CONNECT = 'CONNECT';
     const METHOD_TRACE = 'TRACE';
 
+    const DEFAULT_HOST = 'http://appwrite-executor/v1';
+
     private $endpoint;
 
     private $selfSigned = false;
@@ -26,9 +28,14 @@ class Executor
         'content-type' => '',
     ];
 
-    public function __construct(string $endpoint = 'http://appwrite-executor/v1')
-    { 
-        $this->endpoint = $endpoint;
+    public function __construct(string $endpoint = self::DEFAULT_HOST)
+    {
+        if (empty($endpoint)) {
+            Console::warning('Undefined Executor host (fallback to ' . self::DEFAULT_HOST . ')');
+            $this->endpoint = self::DEFAULT_HOST;
+        } else {
+            $this->endpoint = $endpoint;
+        }
     }
 
     /**
