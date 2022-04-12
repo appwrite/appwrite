@@ -91,8 +91,8 @@ App::get('/v1/avatars/credit-cards/:code')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
     ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-credit-cards'))), 'Credit Card Code. Possible values: ' . \implode(', ', \array_keys(Config::getParam('avatar-credit-cards'))) . '.')
-    ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
-    ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('width', 0, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('height', 0, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->inject('response')
     ->action(fn($code, $width, $height, $quality, $response) =>  $avatarCallback('credit-cards', $code, $width, $height, $quality, $response));
@@ -109,8 +109,8 @@ App::get('/v1/avatars/browsers/:code')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
     ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-browsers'))), 'Browser Code.')
-    ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
-    ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('width', 0, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('height', 0, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->inject('response')
     ->action(fn($code, $width, $height, $quality, $response) => $avatarCallback('browsers', $code, $width, $height, $quality, $response));
@@ -127,8 +127,8 @@ App::get('/v1/avatars/flags/:code')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
     ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-flags'))), 'Country Code. ISO Alpha-2 country code format.')
-    ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
-    ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('width', 0, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('height', 0, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->inject('response')
     ->action(fn($code, $width, $height, $quality, $response) => $avatarCallback('flags', $code, $width, $height, $quality, $response));
@@ -145,8 +145,8 @@ App::get('/v1/avatars/image')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE)
     ->param('url', '', new URL(['http', 'https']), 'Image URL which you want to crop.')
-    ->param('width', 400, new Range(0, 2000), 'Resize preview image width, Pass an integer between 0 to 2000.', true)
-    ->param('height', 400, new Range(0, 2000), 'Resize preview image height, Pass an integer between 0 to 2000.', true)
+    ->param('width', 0, new Range(0, 2000), 'Resize preview image width, Pass an integer between 0 to 2000.', true)
+    ->param('height', 0, new Range(0, 2000), 'Resize preview image height, Pass an integer between 0 to 2000.', true)
     ->inject('response')
     ->action(function ($url, $width, $height, $response) {
         /** @var Appwrite\Utopia\Response $response */
@@ -367,7 +367,7 @@ App::get('/v1/avatars/qr')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
     ->param('text', '', new Text(512), 'Plain text to be converted to QR code image.')
-    ->param('size', 400, new Range(0, 1000), 'QR code size. Pass an integer between 0 to 1000. Defaults to 400.', true)
+    ->param('size', 400, new Range(1, 1000), 'QR code size. Pass an integer between 1 to 1000. Defaults to 400.', true)
     ->param('margin', 1, new Range(0, 10), 'Margin from edge. Pass an integer between 0 to 10. Defaults to 1.', true)
     ->param('download', false, new Boolean(true), 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
     ->inject('response')
@@ -410,8 +410,8 @@ App::get('/v1/avatars/initials')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
     ->param('name', '', new Text(128), 'Full Name. When empty, current user name or email will be used. Max length: 128 chars.', true)
-    ->param('width', 500, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
-    ->param('height', 500, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('width', 0, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('height', 0, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('color', '', new HexColor(), 'Changes text color. By default a random color will be picked and stay will persistent to the given name.', true)
     ->param('background', '', new HexColor(), 'Changes background color. By default a random color will be picked and stay will persistent to the given name.', true)
     ->inject('response')
@@ -419,6 +419,16 @@ App::get('/v1/avatars/initials')
     ->action(function ($name, $width, $height, $color, $background, $response, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
+
+        // Default to 100x100 pixels
+        if($width === 0 && $height === 0) {
+            $width = 100;
+            $height = 100;
+        }
+
+        // Default to square
+        $width = $width === 0 ? $height : $width;
+        $height = $height === 0 ? $width : $height;
 
         $themes = [
             ['color' => '#27005e', 'background' => '#e1d2f6'], // VIOLET
