@@ -37,7 +37,7 @@
         "ext-sockets": "*",
         "appwrite/php-clamav": "1.1.*",
         "appwrite/php-runtimes": "0.7.*",
-        "utopia-php/framework": "dev-feat-head-request as 0.19.7",
+        "utopia-php/framework": "0.19.*",
         "utopia-php/logger": "0.3.*",
         "utopia-php/abuse": "0.7.*",
         "utopia-php/analytics": "0.2.*",
