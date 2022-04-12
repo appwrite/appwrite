@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c23ee95a9a573b123ec587734023132e",
+    "content-hash": "bca03b1d0b7dd312bc174e0a2973b015",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3075,16 +3075,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.18.1",
+            "version": "0.18.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "1d5293dd65e014f2067f2bfc9c0c45e5b0de56aa"
+                "reference": "9381507c1526da1c099eb2297e68374dec4e3793"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/1d5293dd65e014f2067f2bfc9c0c45e5b0de56aa",
-                "reference": "1d5293dd65e014f2067f2bfc9c0c45e5b0de56aa",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9381507c1526da1c099eb2297e68374dec4e3793",
+                "reference": "9381507c1526da1c099eb2297e68374dec4e3793",
                 "shasum": ""
             },
             "require": {
@@ -3096,6 +3096,7 @@
                 "twig/twig": "^3.3"
             },
             "require-dev": {
+                "brianium/paratest": "^6.4",
                 "phpunit/phpunit": "^9.5.13"
             },
             "type": "library",
@@ -3118,9 +3119,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.18.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.18.2"
             },
-            "time": "2022-03-03T09:45:38+00:00"
+            "time": "2022-04-10T09:03:18+00:00"
         },
         {
             "name": "composer/pcre",
