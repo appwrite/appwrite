@@ -15,7 +15,7 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 use Utopia\Validator;
 
@@ -99,9 +99,9 @@ class Builder
                 $fields[$escapedKey] = [
                     'type' => $type,
                     'description' => $props['description'],
-                    'resolve' => function ($object, $args, $context, $info) use ($key) {
-                        return $object[$key];
-                    }
+                    'resolve' => fn ($object, $args, $context, $info) => $object->then(function ($obj) use ($object, $key) {
+                        return $obj['result'][$key];
+                    }),
                 ];
             }
         }
@@ -117,9 +117,9 @@ class Builder
     /**
      * Map a Utopia\Validator to a valid GraphQL Type
      *
-     * @param Validator $validator
-     * @param bool $required
      * @param App $utopia
+     * @param Validator|callable $validator
+     * @param bool $required
      * @param array $injections
      * @return Type
      * @throws \Exception
@@ -224,18 +224,22 @@ class Builder
      * projects collections to the base API GraphQL schema.
      *
      * @param array $apiSchema
-     * @param Registry $register
+     * @param App $utopia
+     * @param Request $request
+     * @param Response $response
      * @param Database $dbForProject
      * @return Schema
      * @throws \Exception
      */
     public static function appendProjectSchema(
         array    $apiSchema,
-        Registry $register,
+        App      $utopia,
+        Request  $request,
+        Response $response,
         Database $dbForProject
     ): Schema
     {
-        $db = self::buildCollectionsSchema($register, $dbForProject);
+        $db = self::buildCollectionsSchema($utopia, $request, $response, $dbForProject);
 
         $queryFields = \array_merge_recursive($apiSchema['query'], $db['query']);
         $mutationFields = \array_merge_recursive($apiSchema['mutation'], $db['mutation']);
@@ -259,31 +263,34 @@ class Builder
      * This function iterates all a projects attributes and builds
      * GraphQL queries and mutations for the collections they make up.
      *
-     * @param Registry $register
+     * @param App $utopia
+     * @param Request $request
+     * @param Response $response
      * @param Database $dbForProject
      * @return array
      * @throws \Exception
      */
     public static function buildCollectionsSchema(
-        Registry $register,
+        App      $utopia,
+        Request  $request,
+        Response $response,
         Database $dbForProject
     ): array
     {
-        Console::info("[INFO] Building GraphQL Project Collection Schema...");
         $start = microtime(true);
 
         $collections = [];
         $queryFields = [];
         $mutationFields = [];
-        $limit = 50;
+        $limit = 1000 * swoole_cpu_num();
         $offset = 0;
 
-        while (!empty($attrs = $dbForProject->find(
+        while (!empty($attrs = Authorization::skip(fn() => $dbForProject->find(
             'attributes',
-            [new Query('signed', Query::TYPE_EQUAL, [true]),],
             limit: $limit,
             offset: $offset
-        ))) {
+        )))) {
+            //go(function() use ($utopia, $request, $response, $dbForProject, &$collections, &$queryFields, &$mutationFields, $limit, &$offset, $attrs) {
             foreach ($attrs as $attr) {
                 $collectionId = $attr->getAttribute('collectionId');
                 if ($attr->getAttribute('status') !== 'available') {
@@ -296,9 +303,9 @@ class Builder
                 $escapedKey = str_replace('$', '_', $key);
                 $collections[$collectionId][$escapedKey] = [
                     'type' => self::getAttributeArgType($type, $array, $required),
-                    'resolve' => function ($object, $args, $context, $info) use ($key) {
-                        return $object->getAttribute($key);
-                    }
+                    'resolve' => fn ($object, $args, $context, $info) => $object->then(function ($obj) use ($key) {
+                        return $obj['result'][$key];
+                    }),
                 ];
             }
 
@@ -347,10 +354,11 @@ class Builder
                         return $object->getAttribute('$write');
                     }
                 ];
+
                 $queryFields[$collectionId . 'Get'] = [
                     'type' => $objectType,
                     'args' => $idArgs,
-                    'resolve' => self::queryGet($collectionId, $dbForProject)
+                    'resolve' => self::queryGet($utopia, $request, $response, $dbForProject, $collectionId)
                 ];
                 $queryFields[$collectionId . 'List'] = [
                     'type' => $objectType,
@@ -373,12 +381,13 @@ class Builder
                     'resolve' => self::mutateDelete($collectionId, $dbForProject)
                 ];
             }
+            //});
 
             $offset += $limit;
         }
 
         $time_elapsed_secs = (microtime(true) - $start) * 1000;
-        Console::info("Built GraphQL Project Collection Schema in ${time_elapsed_secs}ms");
+        Console::info("[INFO] Built GraphQL Project Collection Schema in ${time_elapsed_secs}ms");
 
         return [
             'query' => $queryFields,
@@ -386,12 +395,34 @@ class Builder
         ];
     }
 
-    private static function queryGet(string $collectionId, Database $dbForProject): callable
+    private static function queryGet(
+        App      $utopia,
+        Request  $request,
+        Response $response,
+        Database $dbForProject,
+        string   $collectionId
+    ): callable
     {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
-            function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
+            function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $collectionId, $type, $args) {
                 try {
-                    $resolve($dbForProject->getDocument($collectionId, $args['id']));
+                    $swooleRq = $request->getSwoole();
+                    $swooleRq->post = [
+                        'collectionId' => $collectionId,
+                        'documentId' => $args['id'],
+                    ];
+                    // Drop json content type so post args are used directly
+                    if (\array_key_exists('content-type', $swooleRq->header)
+                        && $swooleRq->header['content-type'] === 'application/json') {
+                        unset($swooleRq->header['content-type']);
+                    }
+                    $request = new Request($swooleRq);
+                    $url = '/v1/database/collections/:collectionId/documents/:documentId';
+                    $route = $utopia->getRoutes()['GET'][$url];
+                    $utopia
+                        ->setRoute($route)
+                        ->execute($route, $request);
+                    $resolve($response->getPayload());
                 } catch (\Throwable $e) {
                     $reject($e);
                 }
@@ -404,7 +435,8 @@ class Builder
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
                 try {
-                    $resolve($dbForProject->getCollection($collectionId));
+                    $list = $dbForProject->find($collectionId);
+                    $resolve($list);
                 } catch (\Throwable $e) {
                     $reject($e);
                 }
@@ -464,7 +496,6 @@ class Builder
      */
     public static function buildAPISchema(App $utopia, Request $request, Response $response, Registry $register): array
     {
-        Console::info("[INFO] Building GraphQL REST API Schema...");
         $start = microtime(true);
 
         self::init();
@@ -480,74 +511,77 @@ class Builder
                 $methodName = $namespace . \ucfirst($route->getLabel('sdk.method', ''));
                 $responseModelNames = $route->getLabel('sdk.response.model', "none");
 
-                if ($responseModelNames !== "none") {
-                    $responseModels = \is_array($responseModelNames)
-                        ? \array_map(static fn($m) => $response->getModel($m), $responseModelNames)
-                        : [$response->getModel($responseModelNames)];
+                if ($responseModelNames === "none") {
+                    continue;
+                }
 
-                    foreach ($responseModels as $responseModel) {
-                        $type = self::getModelTypeMapping($responseModel, $response);
-                        $description = $route->getDesc();
-                        $args = [];
+                $responseModels = \is_array($responseModelNames)
+                    ? \array_map(static fn($m) => $response->getModel($m), $responseModelNames)
+                    : [$response->getModel($responseModelNames)];
 
-                        foreach ($route->getParams() as $key => $value) {
-                            $argType = self::getParameterArgType(
-                                $utopia,
-                                $value['validator'],
-                                !$value['optional'],
-                                $value['injections']
-                            );
-                            $args[$key] = [
-                                'type' => $argType,
-                                'description' => $value['description'],
-                                'defaultValue' => $value['default']
-                            ];
-                        }
+                foreach ($responseModels as $responseModel) {
+                    $type = self::getModelTypeMapping($responseModel, $response);
+                    $description = $route->getDesc();
+                    $args = [];
 
-                        $resolve = fn($type, $args, $context, $info) => new CoroutinePromise(
-                            function (callable $resolve, callable $reject) use ($utopia, $request, $response, &$register, $route, $args) {
-                                // Mutate the original request object to include the query variables at the top level
-                                $swooleRq = $request->getSwoole();
-                                $swooleRq->post = $args;
-                                // Drop json content type so post args are used directly
-                                if (\array_key_exists('content-type', $swooleRq->header)
-                                    && $swooleRq->header['content-type'] === 'application/json') {
-                                    unset($swooleRq->header['content-type']);
-                                }
-                                $request = new Request($swooleRq);
-
-                                $utopia
-                                    ->setRoute($route)
-                                    ->execute($route, $request);
-
-                                $result = $response->getPayload();
-
-                                if ($response->getCurrentModel() == Response::MODEL_ERROR_DEV) {
-                                    $reject(new GQLExceptionDev($result['message'], $result['code'], $result['version'], $result['file'], $result['line'], $result['trace']));
-                                } else if ($response->getCurrentModel() == Response::MODEL_ERROR) {
-                                    $reject(new GQLException($result['message'], $result['code']));
-                                }
-                                $resolve($result);
-                            }
+                    foreach ($route->getParams() as $key => $value) {
+                        $argType = self::getParameterArgType(
+                            $utopia,
+                            $value['validator'],
+                            !$value['optional'],
+                            $value['injections']
                         );
-
-                        $field = [
-                            'type' => $type,
-                            'description' => $description,
-                            'args' => $args,
-                            'resolve' => $resolve
+                        $args[$key] = [
+                            'type' => $argType,
+                            'description' => $value['description'],
+                            'defaultValue' => $value['default']
                         ];
+                    }
 
-                        if ($method == 'GET') {
-                            $queryFields[$methodName] = $field;
-                        } else if ($method == 'POST' || $method == 'PUT' || $method == 'PATCH' || $method == 'DELETE') {
-                            $mutationFields[$methodName] = $field;
+                    $resolve = fn($type, $args, $context, $info) => new CoroutinePromise(
+                        function (callable $resolve, callable $reject) use ($utopia, $request, $response, &$register, $route, $args, $context, $info) {
+                            // Mutate the original request object to include the query variables at the top level
+                            $swooleRq = $request->getSwoole();
+                            $swooleRq->post = $args;
+
+                            // Drop json content type so post args are used directly
+                            if (\array_key_exists('content-type', $swooleRq->header)
+                                && $swooleRq->header['content-type'] === 'application/json') {
+                                unset($swooleRq->header['content-type']);
+                            }
+                            $request = new Request($swooleRq);
+
+                            $utopia
+                                ->setRoute($route)
+                                ->execute($route, $request);
+
+                            $result = $response->getPayload();
+
+                            if ($response->getCurrentModel() == Response::MODEL_ERROR_DEV) {
+                                $reject(new GQLExceptionDev($result['message'], $result['code'], $result['version'], $result['file'], $result['line'], $result['trace']));
+                            } else if ($response->getCurrentModel() == Response::MODEL_ERROR) {
+                                $reject(new GQLException($result['message'], $result['code']));
+                            }
+
+                            $resolve($result['result']);
                         }
+                    );
+
+                    $field = [
+                        'type' => $type,
+                        'description' => $description,
+                        'args' => $args,
+                        'resolve' => $resolve
+                    ];
+
+                    if ($method == 'GET') {
+                        $queryFields[$methodName] = $field;
+                    } else if ($method == 'POST' || $method == 'PUT' || $method == 'PATCH' || $method == 'DELETE') {
+                        $mutationFields[$methodName] = $field;
                     }
                 }
             }
         }
-
         $time_elapsed_secs = (microtime(true) - $start) * 1000;
         Console::info("[INFO] Built GraphQL REST API Schema in ${time_elapsed_secs}ms");
 
