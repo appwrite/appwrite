@@ -13,7 +13,7 @@ use Utopia\Registry\Registry;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Database\Query;
 
-function getDatabase(Registry &$register)
+function getConsoleDB(Registry &$register)
 {
     $attempts = 0;
 
@@ -103,7 +103,7 @@ $cli
             /** @var Utopia\Database\Database $dbForConsole */
 
             $certificates = $dbForConsole->find('certificates', [
-                new Query('attempts', Query::TYPE_LESSER, [5]), // Maximum 5 attempts
+                new Query('attempts', Query::TYPE_LESSEREQUAL, [5]), // Maximum 5 attempts
                 new Query('renewDate', Query::TYPE_LESSEREQUAL, [\time()]) // includes 60 days cooldown (we have 30 days to renew)
             ], 200); // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
 
@@ -131,7 +131,8 @@ $cli
         Console::loop(function() use ($register, $interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) { 
             go(function () use ($register, $interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) {
                 try {
-                    [$database, $returnDatabase] = getDatabase($register, '_console');
+                    [$database, $returnDatabase] = getConsoleDB
+                    ($register, '_console');
     
                     $time = date('d-m-Y H:i:s', time());
                     Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");

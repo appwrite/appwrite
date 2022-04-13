@@ -93,7 +93,7 @@ $logError = function(Throwable $error, string $action) use ($register) {
 
 $server->error($logError);
 
-function getDatabase(Registry &$register, string $namespace)
+function getConsoleDB(Registry &$register, string $namespace)
 {
     $attempts = 0;
 
@@ -141,7 +141,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
      */
     go(function () use ($register, $containerId, &$statsDocument, $logError) {
         try {
-            [$database, $returnDatabase] = getDatabase($register, '_console');
+            [$database, $returnDatabase] = getConsoleDB($register, '_console');
             $document = new Document([
                 '$id' => $database->getId(),
                 '$collection' => 'realtime',
@@ -194,7 +194,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
         }
 
         try {
-            [$database, $returnDatabase] = getDatabase($register, '_console');
+            [$database, $returnDatabase] = getConsoleDB($register, '_console');
 
             $statsDocument
                 ->setAttribute('timestamp', time())
@@ -221,7 +221,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
          */
         if ($realtime->hasSubscriber('console', 'role:member', 'project')) {
 
-            [$database, $returnDatabase] = getDatabase($register, '_console');
+            [$database, $returnDatabase] = getConsoleDB($register, '_console');
 
             $payload = [];
 
@@ -325,7 +325,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         return;
                     }
 
-                    [$database, $returnDatabase] = getDatabase($register, "_{$projectId}");
+                    [$database, $returnDatabase] = getConsoleDB($register, "_{$projectId}");
 
                     $user = $database->getDocument('users', $userId);
 
