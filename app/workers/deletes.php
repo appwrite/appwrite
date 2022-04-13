@@ -544,27 +544,25 @@ class DeletesV1 extends Worker
         $dbForProject = $this->getProjectDB($projectId);
         $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
 
-        $device = new Local(APP_STORAGE_UPLOADS.'/app-'.$projectId);
-        
-        switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
+        $device = App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL);
+        $root = APP_STORAGE_UPLOADS . '/app-' . $projectId;
+        switch ($device) {
             case Storage::DEVICE_S3:
-                $s3AccessKey = App::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
-                $s3SecretKey = App::getEnv('_APP_STORAGE_S3_SECRET', '');
-                $s3Region = App::getEnv('_APP_STORAGE_S3_REGION', '');
-                $s3Bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
-                $s3Acl = 'private';
-                $device = new S3(APP_STORAGE_UPLOADS . '/app-' . $projectId, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
-                break;
             case Storage::DEVICE_DO_SPACES:
-                $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
-                $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
-                $doSpacesRegion = App::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
-                $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
-                $doSpacesAcl = 'private';
-                $device = new DOSpaces(APP_STORAGE_UPLOADS . '/app-' . $projectId, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+                $accessKey = App::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
+                $secretKey = App::getEnv('_APP_STORAGE_S3_SECRET', '');
+                $region = App::getEnv('_APP_STORAGE_S3_REGION', '');
+                $bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
+                $acl = 'private';
+                $adapter = 'Utopia\\Storage\\Device' . $device;
+                /**@var $adapter Utopia\Storage\Device* */
+                $storage = new $adapter($root, $accessKey, $secretKey, $region, $bucket, $acl);
+                break;
+            default:
+                $storage = new Local($root);
                 break;
         }
-        
-        $device->deletePath($document->getId());
+
+        $storage->deletePath($document->getId());
     }
 }
