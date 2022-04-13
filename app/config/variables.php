@@ -599,7 +599,7 @@ return [
             ],
             [
                 'name' => '_APP_EXECUTOR_RUNTIME_NETWORK',
-                'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
+                'description' => 'Deprecated with 0.14.0, use \'OPEN_RUNTIMES_NETWORK\' instead!',
                 'introduction' => '0.13.0',
                 'default' => 'appwrite_runtimes',
                 'required' => false,
@@ -651,48 +651,57 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
-        ],
-        [
-            'category' => 'Maintenance',
-            'description' => '',
-            'variables' => [
-                [
-                    'name' => '_APP_MAINTENANCE_INTERVAL',
-                    'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
-                    'introduction' => '0.7.0',
-                    'default' => '86400',
-                    'required' => false,
-                    'question' => '',
-                    'filter' => ''
-                ],
-                [
-                    'name' => '_APP_MAINTENANCE_RETENTION_EXECUTION',
-                    'description' => 'The maximum duration (in seconds) upto which to retain execution logs. The default value is 1209600 seconds (14 days).',
-                    'introduction' => '0.7.0',
-                    'default' => '1209600',
-                    'required' => false,
-                    'question' => '',
-                    'filter' => ''
-                ],
-                [
-                    'name' => '_APP_MAINTENANCE_RETENTION_AUDIT',
-                    'description' => 'IThe maximum duration (in seconds) upto which to retain audit logs. The default value is 1209600 seconds (14 days).',
-                    'introduction' => '0.7.0',
-                    'default' => '1209600',
-                    'required' => false,
-                    'question' => '',
-                    'filter' => ''
-                ],
-                [
-                    'name' => '_APP_MAINTENANCE_RETENTION_ABUSE',
-                    'description' => 'The maximum duration (in seconds) upto which to retain abuse logs. The default value is 86400 seconds (1 day).',
-                    'introduction' => '0.7.0',
-                    'default' => '86400',
-                    'required' => false,
-                    'question' => '',
-                    'filter' => ''
-                ]
+            [
+                'name' => 'OPEN_RUNTIMES_NETWORK',
+                'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
+                'introduction' => '0.13.0',
+                'default' => 'appwrite_runtimes',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ],
+        ],
+    ],
+    [
+        'category' => 'Maintenance',
+        'description' => '',
+        'variables' => [
+            [
+                'name' => '_APP_MAINTENANCE_INTERVAL',
+                'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
+                'introduction' => '0.7.0',
+                'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_EXECUTION',
+                'description' => 'The maximum duration (in seconds) upto which to retain execution logs. The default value is 1209600 seconds (14 days).',
+                'introduction' => '0.7.0',
+                'default' => '1209600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_AUDIT',
+                'description' => 'IThe maximum duration (in seconds) upto which to retain audit logs. The default value is 1209600 seconds (14 days).',
+                'introduction' => '0.7.0',
+                'default' => '1209600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_ABUSE',
+                'description' => 'The maximum duration (in seconds) upto which to retain abuse logs. The default value is 86400 seconds (1 day).',
+                'introduction' => '0.7.0',
+                'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ]
         ],
     ],
 ];

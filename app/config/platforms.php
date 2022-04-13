@@ -63,7 +63,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '4.0.1',
+                'version' => '4.0.2',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -81,7 +81,7 @@ return [
             [
                 'key' => 'apple',
                 'name' => 'Apple',
-                'version' => '0.3.0',
+                'version' => '0.3.1',
                 'url' => 'https://github.com/appwrite/sdk-for-apple',
                 'package' => 'https://github.com/appwrite/sdk-for-apple',
                 'enabled' => true,
@@ -116,7 +116,7 @@ return [
             [
                 'key' => 'android',
                 'name' => 'Android',
-                'version' => '0.4.0',
+                'version' => '0.4.1',
                 'url' => 'https://github.com/appwrite/sdk-for-android',
                 'package' => 'https://search.maven.org/artifact/io.appwrite/sdk-for-android',
                 'enabled' => true,
@@ -352,7 +352,7 @@ return [
             [
                 'key' => 'dart',
                 'name' => 'Dart',
-                'version' => '4.0.1',
+                'version' => '4.0.2',
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
                 'package' => 'https://pub.dev/packages/dart_appwrite',
                 'enabled' => true,
@@ -392,7 +392,7 @@ return [
             [
                 'key' => 'swift',
                 'name' => 'Swift',
-                'version' => '0.3.0',
+                'version' => '0.3.1',
                 'url' => 'https://github.com/appwrite/sdk-for-swift',
                 'package' => 'https://github.com/appwrite/sdk-for-swift',
                 'enabled' => true,
