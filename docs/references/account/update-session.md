@@ -1,0 +1,1 @@
+If session was created using OAuth provider, this method will renew access token.
