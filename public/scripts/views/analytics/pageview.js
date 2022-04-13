@@ -24,7 +24,6 @@
         body: JSON.stringify({
           provider: 'GA',
           event: 'pageview',
-          additionalData: JSON.stringify({'dimention1': project, 'dimension2': env.VERSION, 'dimension3': env.SETUP}),
           url: window.location.href
         })
       });
