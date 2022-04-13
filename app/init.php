@@ -827,7 +827,7 @@ function getDevice($root): Device {
             $region = App::getEnv('_APP_STORAGE_S3_REGION', '');
             $bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
             $acl = 'private';
-            /**@var $adapter Utopia\Storage\Device* */
+            /**@var $adapter Utopia\Storage\Device**/
             $adapter = 'Utopia\\Storage\\Device' . $device;
             return new $adapter($root, $accessKey, $secretKey, $region, $bucket, $acl);
         default:

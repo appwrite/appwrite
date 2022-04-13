@@ -554,8 +554,8 @@ class DeletesV1 extends Worker
                 $region = App::getEnv('_APP_STORAGE_S3_REGION', '');
                 $bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
                 $acl = 'private';
+                /**@var $adapter Utopia\Storage\Device**/
                 $adapter = 'Utopia\\Storage\\Device' . $device;
-                /**@var $adapter Utopia\Storage\Device* */
                 $storage = new $adapter($root, $accessKey, $secretKey, $region, $bucket, $acl);
                 break;
             default:
