@@ -938,7 +938,7 @@ App::post('/v1/functions/:functionId/executions')
         ]);
 
         /** Execute function */
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST', 'http://appwrite-executor/v1'));
+        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
         $executionResponse = [];
         try {
             $executionResponse = $executor->createExecution(

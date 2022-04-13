@@ -18,8 +18,6 @@ class Executor
     const METHOD_CONNECT = 'CONNECT';
     const METHOD_TRACE = 'TRACE';
 
-    const DEFAULT_HOST = 'http://appwrite-executor/v1';
-
     private $endpoint;
 
     private $selfSigned = false;
@@ -28,14 +26,12 @@ class Executor
         'content-type' => '',
     ];
 
-    public function __construct(string $endpoint = self::DEFAULT_HOST)
+    public function __construct(string $endpoint)
     {
-        if (empty($endpoint)) {
-            Console::warning('Undefined Executor host (fallback to ' . self::DEFAULT_HOST . ')');
-            $this->endpoint = self::DEFAULT_HOST;
-        } else {
-            $this->endpoint = $endpoint;
+        if (!filter_var($endpoint, FILTER_VALIDATE_URL)) {
+            throw new Exception('Unsupported endpoint');
         }
+        $this->endpoint = $endpoint;
     }
 
     /**
