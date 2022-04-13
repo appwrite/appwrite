@@ -675,7 +675,7 @@ App::post('/v1/account/sessions/magic-url')
                 'emailVerification' => false,
                 'status' => true,
                 'password' => null,
-                'passwordUpdate' => \time(),
+                'passwordUpdate' => 0,
                 'registration' => \time(),
                 'reset' => false,
                 'prefs' => new \stdClass(),
@@ -946,7 +946,7 @@ App::post('/v1/account/sessions/anonymous')
             'emailVerification' => false,
             'status' => true,
             'password' => null,
-            'passwordUpdate' => \time(),
+            'passwordUpdate' => 0,
             'registration' => \time(),
             'reset' => false,
             'name' => null,
@@ -1376,6 +1376,7 @@ App::patch('/v1/account/password')
         /** @var Appwrite\Stats\Stats $usage */
 
         // Check old password only if its an existing user.
+
         if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
             throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS);
         }
