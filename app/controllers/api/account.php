@@ -1376,7 +1376,6 @@ App::patch('/v1/account/password')
         /** @var Appwrite\Stats\Stats $usage */
 
         // Check old password only if its an existing user.
-
         if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
             throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS);
         }
