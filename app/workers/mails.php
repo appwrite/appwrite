@@ -31,28 +31,30 @@ class MailsV1 extends Worker
             return;
         }
 
-        $payload = $this->args['payload'];
+        $project = new Document($this->args['project']);
+        $user = new Document($this->args['user'] ?? []);
+        $team = new Document($this->args['team'] ?? []);
 
-        $recipient = $payload['recipient'];
-        $url = $payload['url'];
-        $project = $payload['project'];
-        $type = $payload['type'];
-        $name = $payload['name'] ?? $recipient;
+        $recipient = $this->args['recipient'];
+        $url = $this->args['url'];
+        $name = $this->args['name'];
+        $type = $this->args['type'];
         $prefix = $this->getPrefix($type);
-        $locale = new Locale($payload['locale']);
+        $locale = new Locale($this->args['locale']);
+        $projectName = $project->getAttribute('name', ['[APP-NAME]']);
 
         if (!$this->doesLocaleExist($locale, $prefix)) {
             $locale->setDefault('en');
         }
 
-        $from = $payload['from'] === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $project);
+        $from = $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
         $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
         $subject = '';
         switch ($type) {
             case MAIL_TYPE_INVITATION:
-                $subject = \sprintf($locale->getText("$prefix.subject"), $payload['team'], $project);
-                $body->setParam('{{owner}}', $payload['owner']);
-                $body->setParam('{{team}}', $payload['team']);
+                $subject = \sprintf($locale->getText("$prefix.subject"), $team->getAttribute('name'), $projectName);
+                $body->setParam('{{owner}}', $user->getAttribute('name'));
+                $body->setParam('{{team}}', $team->getAttribute('name'));
                 break;
             case MAIL_TYPE_RECOVERY:
             case MAIL_TYPE_VERIFICATION:
@@ -72,7 +74,7 @@ class MailsV1 extends Worker
             ->setParam('{{footer}}', $locale->getText("$prefix.footer"))
             ->setParam('{{thanks}}', $locale->getText("$prefix.thanks"))
             ->setParam('{{signature}}', $locale->getText("$prefix.signature"))
-            ->setParam('{{project}}', $project)
+            ->setParam('{{project}}', $projectName)
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')

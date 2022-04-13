@@ -33,6 +33,8 @@ use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Appwrite\Detector\Detector;
+use Appwrite\Event\Audit as EventAudit;
+use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Appwrite\Stats\Stats;
 
@@ -43,13 +45,13 @@ use Appwrite\Stats\Stats;
  * @param Utopia\Database\Document $attribute
  * @param Appwrite\Utopia\Response $response
  * @param Utopia\Database\Database $dbForProject
- * @param Appwrite\Event\Event $database
- * @param Appwrite\Event\Event $audits
+ * @param Appwrite\Event\Database $database
+ * @param Appwrite\Event\Audit $audits
  * @param Appwrite\Stats\Stats $usage
  *
  * @return Document Newly created attribute document
  */
-function createAttribute(string $collectionId, Document $attribute, Response $response, Database $dbForProject, Event $database, Event $audits, Stats $usage): Document
+function createAttribute(string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Event $events, Stats $usage): Document
 {
     $key = $attribute->getAttribute('key');
     $type = $attribute->getAttribute('type', '');
@@ -113,22 +115,23 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
     $dbForProject->deleteCachedDocument('collections', $collectionId);
     $dbForProject->deleteCachedCollection('collection_' . $collection->getInternalId());
 
-    // Pass clone of $attribute object to workers
-    // so we can later modify Document to fit response model
-    $clone = clone $attribute;
-
-    $database
-        ->setParam('type', DATABASE_TYPE_CREATE_ATTRIBUTE)
-        ->setParam('collection', $collection)
-        ->setParam('document', $clone)
-    ;
-
     $usage->setParam('database.collections.update', 1);
 
+    $database
+        ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
+        ->setCollection($collection)
+        ->setDocument($attribute)
+    ;
+
+    $events
+        ->setTrigger($collection)
+        ->setParam('collectionId', $collection->getId())
+        ->setParam('attributeId', $attribute->getId())
+    ;
+
     $audits
-        ->setParam('event', 'database.attributes.create')
-        ->setParam('resource', 'collection/'.$collectionId)
-        ->setParam('data', $clone)
+        ->setResource('collection/'.$collectionId)
+        ->setPayload($attribute->getArrayCopy())
     ;
 
     $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -139,7 +142,7 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
 App::post('/v1/database/collections')
     ->desc('Create Collection')
     ->groups(['api', 'database'])
-    ->label('event', 'database.collections.create')
+    ->label('event', 'collections.[collectionId].create')
     ->label('scope', 'collections.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
@@ -157,11 +160,13 @@ App::post('/v1/database/collections')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $name, $permission, $read, $write, $response, $dbForProject, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($collectionId, $name, $permission, $read, $write, $response, $dbForProject, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         $collectionId = $collectionId == 'unique()' ? $dbForProject->getId() : $collectionId;
 
@@ -187,11 +192,11 @@ App::post('/v1/database/collections')
         }
 
         $audits
-            ->setParam('event', 'database.collections.create')
-            ->setParam('resource', 'collection/'.$collectionId)
-            ->setParam('data', $collection->getArrayCopy())
+            ->setResource('collection/'.$collectionId)
+            ->setPayload($collection->getArrayCopy())
         ;
 
+        $events->setParam('collectionId', $collection->getId());
         $usage->setParam('database.collections.create', 1);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -581,7 +586,7 @@ App::put('/v1/database/collections/:collectionId')
     ->desc('Update Collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
-    ->label('event', 'database.collections.update')
+    ->label('event', 'collections.[collectionId].update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'updateCollection')
@@ -599,11 +604,13 @@ App::put('/v1/database/collections/:collectionId')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $name, $permission, $read, $write, $enabled, $response, $dbForProject, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($collectionId, $name, $permission, $read, $write, $enabled, $response, $dbForProject, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
@@ -633,13 +640,13 @@ App::put('/v1/database/collections/:collectionId')
             throw new Exception('Bad structure. '.$exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
         }
 
-        $usage->setParam('database.collections.update', 1);
-
         $audits
-            ->setParam('event', 'database.collections.update')
-            ->setParam('resource', 'collection/'.$collectionId)
-            ->setParam('data', $collection->getArrayCopy())
+            ->setResource('collection/'.$collectionId)
+            ->setPayload($collection->getArrayCopy())
         ;
+
+        $usage->setParam('database.collections.update', 1);
+        $events->setParam('collectionId', $collection->getId());
 
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
@@ -648,7 +655,7 @@ App::delete('/v1/database/collections/:collectionId')
     ->desc('Delete Collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
-    ->label('event', 'database.collections.delete')
+    ->label('event', 'collections.[collectionId].delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'deleteCollection')
@@ -666,8 +673,8 @@ App::delete('/v1/database/collections/:collectionId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Stats\Stats $audits */
+        /** @var Appwrite\Event\Audit $audits */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
@@ -682,20 +689,22 @@ App::delete('/v1/database/collections/:collectionId')
         $dbForProject->deleteCachedCollection('collection_' . $collection->getInternalId());
 
         $deletes
-            ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $collection)
+            ->setPayload([
+                'type' => DELETE_TYPE_DOCUMENT,
+                'document' => $collection
+            ])
         ;
 
         $usage->setParam('database.collections.delete', 1);
 
         $events
-            ->setParam('eventData', $response->output($collection, Response::MODEL_COLLECTION))
+            ->setParam('collectionId', $collection->getId())
+            ->setPayload($response->output($collection, Response::MODEL_COLLECTION))
         ;
 
         $audits
-            ->setParam('event', 'database.collections.delete')
-            ->setParam('resource', 'collection/'.$collectionId)
-            ->setParam('data', $collection->getArrayCopy())
+            ->setResource('collection/'.$collectionId)
+            ->setPayload($collection->getArrayCopy())
         ;
 
         $response->noContent();
@@ -704,7 +713,7 @@ App::delete('/v1/database/collections/:collectionId')
 App::post('/v1/database/collections/:collectionId/attributes/string')
     ->desc('Create String Attribute')
     ->groups(['api', 'database'])
-    ->label('event', 'database.attributes.create')
+    ->label('event', 'collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
@@ -724,12 +733,14 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $size, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($collectionId, $key, $size, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Event $database */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Database $database */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         // Ensure attribute default is within required size
         $validator = new Text($size);
@@ -744,7 +755,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-        ]), $response, $dbForProject, $database, $audits, $usage);
+        ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
     });
@@ -752,7 +763,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
 App::post('/v1/database/collections/:collectionId/attributes/email')
     ->desc('Create Email Attribute')
     ->groups(['api', 'database'])
-    ->label('event', 'database.attributes.create')
+    ->label('event', 'collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -771,11 +782,12 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Event $database */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Database $database */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
         $attribute = createAttribute($collectionId, new Document([
@@ -786,7 +798,7 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_EMAIL,
-        ]), $response, $dbForProject, $database, $audits, $usage);
+        ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
     });
@@ -794,7 +806,7 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
 App::post('/v1/database/collections/:collectionId/attributes/enum')
     ->desc('Create Enum Attribute')
     ->groups(['api', 'database'])
-    ->label('event', 'database.attributes.create')
+    ->label('event', 'collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -814,12 +826,14 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $elements, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($collectionId, $key, $elements, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Event $database */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Database $database */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         // use length of longest string as attribute size
         $size = 0;
@@ -845,7 +859,7 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_ENUM,
             'formatOptions' => ['elements' => $elements],
-        ]), $response, $dbForProject, $database, $audits, $usage);
+        ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
     });
@@ -853,7 +867,7 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
 App::post('/v1/database/collections/:collectionId/attributes/ip')
     ->desc('Create IP Address Attribute')
     ->groups(['api', 'database'])
-    ->label('event', 'database.attributes.create')
+    ->label('event', 'collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -872,11 +886,12 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Event $database */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Database $database */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
         $attribute = createAttribute($collectionId, new Document([
@@ -887,7 +902,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_IP,
-        ]), $response, $dbForProject, $database, $audits, $usage);
+        ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
     });
@@ -895,7 +910,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
 App::post('/v1/database/collections/:collectionId/attributes/url')
     ->desc('Create URL Attribute')
     ->groups(['api', 'database'])
-    ->label('event', 'database.attributes.create')
+    ->label('event', 'collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -914,11 +929,13 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Event\Event $database */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Database $database */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         $attribute = createAttribute($collectionId, new Document([
             'key' => $key,
@@ -928,7 +945,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_URL,
-        ]), $response, $dbForProject, $database, $audits, $usage);
+        ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
     });
@@ -936,7 +953,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
 App::post('/v1/database/collections/:collectionId/attributes/integer')
     ->desc('Create Integer Attribute')
     ->groups(['api', 'database'])
-    ->label('event', 'database.attributes.create')
+    ->label('event', 'collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -957,12 +974,14 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $required, $min, $max, $default, $array, $response, $dbForProject, $database, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($collectionId, $key, $required, $min, $max, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Event $database */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Database $database */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? PHP_INT_MIN : \intval($min);
@@ -992,7 +1011,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
                 'min' => $min,
                 'max' => $max,
             ],
-        ]), $response, $dbForProject, $database, $audits, $usage);
+        ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
 
@@ -1007,7 +1026,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
 App::post('/v1/database/collections/:collectionId/attributes/float')
     ->desc('Create Float Attribute')
     ->groups(['api', 'database'])
-    ->label('event', 'database.attributes.create')
+    ->label('event', 'collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -1027,13 +1046,15 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
     ->inject('dbForProject')
     ->inject('database')
     ->inject('audits')
+    ->inject('events')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $required, $min, $max, $default, $array, $response, $dbForProject, $database, $audits, $usage) {
+    ->action(function ($collectionId, $key, $required, $min, $max, $default, $array, $response, $dbForProject, $database, $audits, $events, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Event $database */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Database $database */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? -PHP_FLOAT_MAX : \floatval($min);
@@ -1066,7 +1087,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
                 'min' => $min,
                 'max' => $max,
             ],
-        ]), $response, $dbForProject, $database, $audits, $usage);
+        ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
 
@@ -1081,7 +1102,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
 App::post('/v1/database/collections/:collectionId/attributes/boolean')
     ->desc('Create Boolean Attribute')
     ->groups(['api', 'database'])
-    ->label('event', 'database.attributes.create')
+    ->label('event', 'collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -1100,12 +1121,14 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Event $database */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Database $database */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         $attribute = createAttribute($collectionId, new Document([
             'key' => $key,
@@ -1114,7 +1137,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-        ]), $response, $dbForProject, $database, $audits, $usage);
+        ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
@@ -1221,7 +1244,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
     ->desc('Delete Attribute')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
-    ->label('event', 'database.attributes.delete')
+    ->label('event', 'collections.[collectionId].attributes.[attributeId].delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'deleteAttribute')
@@ -1239,9 +1262,9 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
     ->action(function ($collectionId, $key, $response, $dbForProject, $database, $events, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $database */
+        /** @var Appwrite\Event\Database $database */
         /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
@@ -1265,9 +1288,9 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
         $dbForProject->deleteCachedCollection('collection_' . $collection->getInternalId());
 
         $database
-            ->setParam('type', DATABASE_TYPE_DELETE_ATTRIBUTE)
-            ->setParam('collection', $collection)
-            ->setParam('document', $attribute)
+            ->setType(DATABASE_TYPE_DELETE_ATTRIBUTE)
+            ->setCollection($collection)
+            ->setDocument($attribute)
         ;
 
         $usage->setParam('database.collections.update', 1);
@@ -1291,13 +1314,15 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
         };
 
         $events
-            ->setParam('payload', $response->output($attribute, $model))
+            ->setParam('collectionId', $collection->getId())
+            ->setParam('attributeId', $attribute->getId())
+            ->setTrigger($collection)
+            ->setPayload($response->output($attribute, $model))
         ;
 
         $audits
-            ->setParam('event', 'database.attributes.delete')
-            ->setParam('resource', 'collection/'.$collectionId)
-            ->setParam('data', $attribute->getArrayCopy())
+            ->setResource('collection/'.$collectionId)
+            ->setPayload($attribute->getArrayCopy())
         ;
 
         $response->noContent();
@@ -1306,7 +1331,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
 App::post('/v1/database/collections/:collectionId/indexes')
     ->desc('Create Index')
     ->groups(['api', 'database'])
-    ->label('event', 'database.indexes.create')
+    ->label('event', 'collections.[collectionId].indexes.[indexId].create')
     ->label('scope', 'collections.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
@@ -1325,12 +1350,14 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->inject('database')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $type, $attributes, $orders, $response, $dbForProject, $database, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($collectionId, $key, $type, $attributes, $orders, $response, $dbForProject, $database, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $database */
-        /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Stats\Stats $audits */
+        /** @var Appwrite\Event\Database $database */
+        /** @var Appwrite\Event\Audit $audits */
+        /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
@@ -1393,17 +1420,22 @@ App::post('/v1/database/collections/:collectionId/indexes')
         $dbForProject->deleteCachedDocument('collections', $collectionId);
 
         $database
-            ->setParam('type', DATABASE_TYPE_CREATE_INDEX)
-            ->setParam('collection', $collection)
-            ->setParam('document', $index)
+            ->setType(DATABASE_TYPE_CREATE_INDEX)
+            ->setCollection($collection)
+            ->setDocument($index)
         ;
 
         $usage->setParam('database.collections.update', 1);
 
+        $events
+            ->setParam('collectionId', $collection->getId())
+            ->setParam('indexId', $index->getId())
+            ->setTrigger($collection)
+        ;
+
         $audits
-            ->setParam('event', 'database.indexes.create')
-            ->setParam('resource', 'collection/'.$collectionId)
-            ->setParam('data', $index->getArrayCopy())
+            ->setResource('collection/'.$collection->getId())
+            ->setPayload($index->getArrayCopy())
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -1493,7 +1525,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:key')
     ->desc('Delete Index')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
-    ->label('event', 'database.indexes.delete')
+    ->label('event', 'collections.[collectionId].indexes.[indexId].delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'deleteIndex')
@@ -1511,9 +1543,9 @@ App::delete('/v1/database/collections/:collectionId/indexes/:key')
     ->action(function ($collectionId, $key, $response, $dbForProject, $database, $events, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $database */
+        /** @var Appwrite\Event\Database $database */
         /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
@@ -1536,21 +1568,23 @@ App::delete('/v1/database/collections/:collectionId/indexes/:key')
         $dbForProject->deleteCachedDocument('collections', $collectionId);
 
         $database
-            ->setParam('type', DATABASE_TYPE_DELETE_INDEX)
-            ->setParam('collection', $collection)
-            ->setParam('document', $index)
+            ->setType(DATABASE_TYPE_DELETE_INDEX)
+            ->setCollection($collection)
+            ->setDocument($index)
         ;
 
         $usage->setParam('database.collections.update', 1);
 
         $events
-            ->setParam('payload', $response->output($index, Response::MODEL_INDEX))
+            ->setParam('collectionId', $collection->getId())
+            ->setParam('indexId', $index->getId())
+            ->setTrigger($collection)
+            ->setPayload($response->output($index, Response::MODEL_INDEX))
         ;
 
         $audits
-            ->setParam('event', 'database.indexes.delete')
-            ->setParam('resource', 'collection/'.$collectionId)
-            ->setParam('data', $index->getArrayCopy())
+            ->setResource('collection/'.$collection->getId())
+            ->setPayload($index->getArrayCopy())
         ;
 
         $response->noContent();
@@ -1559,7 +1593,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:key')
 App::post('/v1/database/collections/:collectionId/documents')
     ->desc('Create Document')
     ->groups(['api', 'database'])
-    ->label('event', 'database.documents.create')
+    ->label('event', 'collections.[collectionId].documents.[documentId].create')
     ->label('scope', 'documents.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'database')
@@ -1584,7 +1618,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $user */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Event\Event $events */
         /** @var string $mode */
@@ -1658,7 +1692,11 @@ App::post('/v1/database/collections/:collectionId/documents')
             throw new Exception('Document already exists', 409, Exception::DOCUMENT_ALREADY_EXISTS);
         }
 
-        $events->setParam('collection', $collection->getArrayCopy());
+        $events
+            ->setParam('collectionId', $collection->getId())
+            ->setParam('documentId', $document->getId())
+            ->setTrigger($collection)
+        ;
 
         $usage
             ->setParam('database.documents.create', 1)
@@ -1666,9 +1704,8 @@ App::post('/v1/database/collections/:collectionId/documents')
         ;
 
         $audits
-            ->setParam('event', 'database.documents.create')
-            ->setParam('resource', 'document/'.$document->getId())
-            ->setParam('data', $document->getArrayCopy())
+            ->setResource('document/'.$document->getId())
+            ->setPayload($document->getArrayCopy())
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -1938,7 +1975,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId/logs')
 App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Update Document')
     ->groups(['api', 'database'])
-    ->label('event', 'database.documents.update')
+    ->label('event', 'collections.[collectionId].documents.[documentId].update')
     ->label('scope', 'documents.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'database')
@@ -1961,7 +1998,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->action(function ($collectionId, $documentId, $data, $read, $write, $response, $dbForProject, $audits, $usage, $events, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Event\Event $events */
         /** @var string $mode */
@@ -1999,7 +2036,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         if (empty($data)) {
             throw new Exception('Missing payload', 400, Exception::DOCUMENT_MISSING_PAYLOAD);
         }
- 
+
         if (!\is_array($data)) {
             throw new Exception('Data param should be a valid JSON object', 400, Exception::DOCUMENT_INVALID_STRUCTURE);
         }
@@ -2053,17 +2090,20 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
         }
 
-        $events->setParam('collection', $collection->getArrayCopy());
+        $events
+            ->setParam('collectionId', $collection->getId())
+            ->setParam('documentId', $document->getId())
+            ->setTrigger($collection)
+        ;
 
         $usage
             ->setParam('database.documents.update', 1)
             ->setParam('collectionId', $collectionId)
-            ;
+        ;
 
         $audits
-            ->setParam('event', 'database.documents.update')
-            ->setParam('resource', 'document/'.$document->getId())
-            ->setParam('data', $document->getArrayCopy())
+            ->setResource('document/'.$document->getId())
+            ->setPayload($document->getArrayCopy())
         ;
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
@@ -2073,7 +2113,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Delete Document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.write')
-    ->label('event', 'database.documents.delete')
+    ->label('event', 'collections.[collectionId].documents.[documentId].delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'deleteDocument')
@@ -2093,7 +2133,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Event\Event $deletes */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var string $mode */
@@ -2142,24 +2182,27 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         $document->setAttribute('$collection', $collectionId);
 
         $deletes
-            ->setParam('type', DELETE_TYPE_AUDIT)
-            ->setParam('document', $document)
+            ->setPayload([
+                'type' => DELETE_TYPE_AUDIT,
+                'document' => $document
+            ])
         ;
 
         $usage
             ->setParam('database.documents.delete', 1)
             ->setParam('collectionId', $collectionId)
-            ;
+        ;
 
         $events
-            ->setParam('eventData', $response->output($document, Response::MODEL_DOCUMENT))
-            ->setParam('collection', $collection->getArrayCopy());
+            ->setParam('collectionId', $collection->getId())
+            ->setParam('documentId', $document->getId())
+            ->setTrigger($collection)
+            ->setPayload($response->output($document, Response::MODEL_DOCUMENT))
         ;
 
         $audits
-            ->setParam('event', 'database.documents.delete')
-            ->setParam('resource', 'document/'.$document->getId())
-            ->setParam('data', $document->getArrayCopy()) // Audit document in case of malicious or disastrous action
+            ->setResource('document/'.$document->getId())
+            ->setPayload($document->getArrayCopy())
         ;
 
         $response->noContent();

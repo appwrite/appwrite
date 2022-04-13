@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
+use Appwrite\Event\Certificate;
 use Appwrite\Event\Validator\Event;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
@@ -557,8 +558,10 @@ App::delete('/v1/projects/:projectId')
         }
 
         $deletes
-            ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $project)
+            ->setPayload([
+                'type' => DELETE_TYPE_DOCUMENT,
+                'document' => $project
+            ])
         ;
 
         if (!$dbForConsole->deleteDocument('teams', $project->getAttribute('teamId', null))) {
@@ -1390,10 +1393,12 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         // Issue a TLS certificate when domain is verified
-        Resque::enqueue('v1-certificates', 'CertificatesV1', [
-            'document' => $domain->getArrayCopy(),
-            'domain' => $domain->getAttribute('domain'),
-        ]);
+        $event = new Certificate();
+        $event
+            ->setDomain($domain)
+            ->setValidateCNAME(true)
+            ->setValidateTarget(true)
+            ->trigger();
 
         $response->dynamic($domain, Response::MODEL_DOMAIN);
     });
@@ -1436,8 +1441,10 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $deletes
-            ->setParam('type', DELETE_TYPE_CERTIFICATES)
-            ->setParam('document', $domain)
+            ->setPayload([
+                'type' => DELETE_TYPE_CERTIFICATES,
+                'document' => $domain
+            ])
         ;
 
         $response->noContent();

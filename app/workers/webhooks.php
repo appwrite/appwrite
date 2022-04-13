@@ -12,6 +12,8 @@ Console::success(APP_NAME . ' webhooks worker v1 has started');
 
 class WebhooksV1 extends Worker
 {
+    protected array $errors = [];
+
     public function getName(): string
     {
         return "webhooks";
@@ -23,15 +25,24 @@ class WebhooksV1 extends Worker
 
     public function run(): void
     {
-        $errors = [];
-
-        // Event
         $events = $this->args['events'];
-        $user = new Document($this->args['user']);
+        $payload = json_encode($this->args['payload']);
         $project = new Document($this->args['project']);
-        $webhook = new Document($this->args['trigger'] ?? []);
-        $payload = \json_encode($this->args['payload']);
+        $user = new Document($this->args['user'] ?? []);
 
+        foreach ($project->getAttribute('webhooks', []) as $webhook) {
+            if (array_intersect($webhook->getAttribute('events', []), $events)) {
+                $this->execute($events, $payload, $webhook, $user, $project);
+            }
+        }
+
+        if (!empty($this->errors)) {
+            throw new Exception(\implode(" / \n\n", $this->errors));
+        }
+    }
+
+    protected function execute(array $events, string $payload, Document $webhook, Document $user, Document $project): void
+    {
         $httpUser = $webhook->getAttribute('httpUser');
         $httpPass = $webhook->getAttribute('httpPass');
 
@@ -72,17 +83,14 @@ class WebhooksV1 extends Worker
         }
 
         if (false === \curl_exec($ch)) {
-            $errors[] = \curl_error($ch) . ' in events ' . implode(', ', $events) . ' for webhook ' . $webhook->getAttribute('name');
+            $this->errors[] = \curl_error($ch) . ' in events ' . implode(', ', $events) . ' for webhook ' . $webhook->getAttribute('name');
         }
 
         \curl_close($ch);
-
-        if (!empty($errors)) {
-            throw new Exception(\implode(" / \n\n", $errors));
-        }
     }
 
     public function shutdown(): void
     {
+        $this->errors = [];
     }
 }

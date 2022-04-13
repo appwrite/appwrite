@@ -42,16 +42,12 @@ class CertificatesV1 extends Worker
 
         Authorization::disable();
 
-        // Args
-        $document = $this->args['document'];
-        $domain = $this->args['domain'];
-
-        // Validation Args
+        $document = new Document($this->args['domain'] ?? []);
         $validateTarget = $this->args['validateTarget'] ?? true;
         $validateCNAME = $this->args['validateCNAME'] ?? true;
 
         // Options
-        $domain = new Domain((!empty($domain)) ? $domain : '');
+        $domain = new Domain($document->getAttribute('domain'));
         $expiry = 60 * 60 * 24 * 30 * 2; // 60 days
         $safety = 60 * 60; // 1 hour
         $renew  = (\time() + $expiry);
@@ -158,11 +154,10 @@ class CertificatesV1 extends Worker
             throw new Exception('Failed saving certificate to DB');
         }
 
-        if(!empty($document)) {
-            $certificate = new Document(\array_merge($document, [
-                'updated' => \time(),
-                'certificateId' => $certificate->getId(),
-            ]));
+        if($document->getId()) {
+            $document
+                ->setAttribute('updated', \time())
+                ->setAttribute('certificateId', $certificate->getId());
 
             $certificate = $dbForConsole->updateDocument('domains', $certificate->getId(), $certificate);
 

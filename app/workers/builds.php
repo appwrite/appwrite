@@ -21,7 +21,7 @@ Console::success(APP_NAME.' build worker v1 has started');
 
 // TODO: Executor should return appropriate response codes.
 class BuildsV1 extends Worker
-{ 
+{
     /**
      * @var Executor
      */
@@ -42,7 +42,7 @@ class BuildsV1 extends Worker
         $projectId = $this->args['projectId'] ?? '';
         $functionId = $this->args['resourceId'] ?? '';
         $deploymentId = $this->args['deploymentId'] ?? '';
-        
+
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
@@ -61,7 +61,7 @@ class BuildsV1 extends Worker
         $dbForProject = $this->getProjectDB($projectId);
         $dbForConsole = $this->getConsoleDB();
         $project = $dbForConsole->getDocument('projects', $projectId);
-        
+
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
@@ -177,7 +177,7 @@ class BuildsV1 extends Worker
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             /** 
-             * Send realtime Event 
+             * Send realtime Event
              */
             $target = Realtime::fromPayload('functions.deployments.update', $build, $project);
             Realtime::send(

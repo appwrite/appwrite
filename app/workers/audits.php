@@ -24,19 +24,19 @@ class AuditsV1 extends Worker
     public function run(): void
     {
         $events = $this->args['events'];
+        $payload = $this->args['payload'];
+        $mode = $this->args['mode'];
+        $resource = $this->args['resource'];
+        $userAgent = $this->args['userAgent'];
+        $ip = $this->args['ip'];
+
         $user = new Document($this->args['user']);
         $project = new Document($this->args['project']);
-        $payload = $this->args['payload'];
 
         $userName = $user->getAttribute('name', '');
         $userEmail = $user->getAttribute('email', '');
 
         $event = $events[0];
-        $mode = $payload['mode'];
-        $resource = $payload['resource'];
-        $userAgent = $payload['userAgent'];
-        $ip = $payload['ip'];
-        $data = $payload['data'];
 
         $dbForProject = $this->getProjectDB($project->getId());
         $audit = new Audit($dbForProject);
@@ -44,12 +44,11 @@ class AuditsV1 extends Worker
             'userName' => $userName,
             'userEmail' => $userEmail,
             'mode' => $mode,
-            'data' => $data,
+            'data' => $payload,
         ]);
     }
 
     public function shutdown(): void
     {
-        // ... Remove environment for this job
     }
 }

@@ -12,6 +12,7 @@ use Appwrite\Extend\Exception;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
+use Appwrite\Event\Certificate;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
 use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
@@ -90,12 +91,10 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
 
                 Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...');
 
-                Resque::enqueue('v1-certificates', 'CertificatesV1', [
-                    'document' => $domainDocument,
-                    'domain' => $domain->get(),
-                    'validateTarget' => false,
-                    'validateCNAME' => false,
-                ]);
+                $event = new Certificate();
+                $event
+                    ->setDomain($domainDocument)
+                    ->trigger();
             }
 
             $domains[$domain->get()] = true;

@@ -2,8 +2,10 @@
 
 global $cli;
 
+use Appwrite\Event\Certificate;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\Document;
 
 $cli
     ->task('ssl')
@@ -11,13 +13,13 @@ $cli
     ->action(function () {
         $domain = App::getEnv('_APP_DOMAIN', '');
 
-        Console::log('Issue a TLS certificate for master domain ('.$domain.') in 30 seconds.
+        Console::log('Issue a TLS certificate for master domain (' . $domain . ') in 30 seconds.
             Make sure your domain points to your server or restart to try again.');
 
-        ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
-            'document' => [],
-            'domain' => $domain,
-            'validateTarget' => false,
-            'validateCNAME' => false,
-        ]);
+        $event = new Certificate();
+        $event
+            ->setDomain(new Document([
+                'domain' => $domain
+            ]))
+            ->trigger();
     });

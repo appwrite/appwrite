@@ -19,6 +19,7 @@ use Utopia\Audit\Audit;
 require_once __DIR__ . '/../init.php';
 
 Authorization::disable();
+Authorization::setDefaultStatus(false);
 
 Console::title('Deletes V1 Worker');
 Console::success(APP_NAME . ' deletes worker v1 has started' . "\n");
@@ -40,34 +41,36 @@ class DeletesV1 extends Worker
 
     public function run(): void
     {
-        $projectId = $this->args['projectId'] ?? '';
-        $type = $this->args['type'] ?? '';
+        $project = new Document($this->args['project'] ?? []);
+        $payload = $this->args['payload'] ?? [];
+
+        $type = $payload['type'] ?? '';
 
         switch (strval($type)) {
             case DELETE_TYPE_DOCUMENT:
-                $document = new Document($this->args['document'] ?? []);
+                $document = new Document($payload['document'] ?? []);
 
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_COLLECTIONS:
-                        $this->deleteCollection($document, $projectId);
+                        $this->deleteCollection($document, $project->getId());
                         break;
                     case DELETE_TYPE_PROJECTS:
                         $this->deleteProject($document);
                         break;
                     case DELETE_TYPE_FUNCTIONS:
-                        $this->deleteFunction($document, $projectId);
+                        $this->deleteFunction($document, $project->getId());
                         break;
                     case DELETE_TYPE_DEPLOYMENTS:
-                        $this->deleteDeployment($document, $projectId);
+                        $this->deleteDeployment($document, $project->getId());
                         break;
                     case DELETE_TYPE_USERS:
-                        $this->deleteUser($document, $projectId);
+                        $this->deleteUser($document, $project->getId());
                         break;
                     case DELETE_TYPE_TEAMS:
-                        $this->deleteMemberships($document, $projectId);
+                        $this->deleteMemberships($document, $project->getId());
                         break;
                     case DELETE_TYPE_BUCKETS:
-                        $this->deleteBucket($document, $projectId);
+                        $this->deleteBucket($document, $project->getId());
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
@@ -76,38 +79,38 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_EXECUTIONS:
-                $this->deleteExecutionLogs($this->args['timestamp']);
+                $this->deleteExecutionLogs($payload['timestamp']);
                 break;
 
             case DELETE_TYPE_AUDIT:
-                $timestamp = $this->args['timestamp'] ?? 0;
-                $document = new Document($this->args['document'] ?? []);
+                $timestamp = $payload['timestamp'] ?? 0;
+                $document = new Document($payload['document'] ?? []);
 
                 if (!empty($timestamp)) {
-                    $this->deleteAuditLogs($this->args['timestamp']);
+                    $this->deleteAuditLogs($payload['timestamp']);
                 }
 
                 if (!$document->isEmpty()) {
-                    $this->deleteAuditLogsByResource('document/' . $document->getId(), $projectId);
+                    $this->deleteAuditLogsByResource('document/' . $document->getId(), $project->getId());
                 }
 
                 break;
 
             case DELETE_TYPE_ABUSE:
-                $this->deleteAbuseLogs($this->args['timestamp']);
+                $this->deleteAbuseLogs($payload['timestamp']);
                 break;
 
             case DELETE_TYPE_REALTIME:
-                $this->deleteRealtimeUsage($this->args['timestamp']);
+                $this->deleteRealtimeUsage($payload['timestamp']);
                 break;
 
             case DELETE_TYPE_CERTIFICATES:
-                $document = new Document($this->args['document']);
+                $document = new Document($payload['document']);
                 $this->deleteCertificates($document);
                 break;
 
             case DELETE_TYPE_USAGE:
-                $this->deleteUsageStats($this->args['timestamp1d'], $this->args['timestamp30m']);
+                $this->deleteUsageStats($payload['timestamp1d'], $payload['timestamp30m']);
                 break;
             default:
                 Console::error('No delete operation for type: ' . $type);
@@ -205,7 +208,7 @@ class DeletesV1 extends Worker
          * DO NOT DELETE THE USER RECORD ITSELF. 
          * WE RETAIN THE USER RECORD TO RESERVE THE USER ID AND ENSURE THAT THE USER ID IS NOT REUSED.
          */
-        
+
         $userId = $document->getId();
         $user = $this->getProjectDB($projectId)->getDocument('users', $userId);
 
@@ -213,9 +216,10 @@ class DeletesV1 extends Worker
         $this->deleteByGroup('sessions', [
             new Query('userId', Query::TYPE_EQUAL, [$userId])
         ], $this->getProjectDB($projectId));
-        
+
         $user->setAttribute('sessions', []);
-        $updated = $this->getProjectDB($projectId)->updateDocument('users', $userId, $user);
+
+        $this->getProjectDB($projectId)->updateDocument('users', $userId, $user);
 
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [

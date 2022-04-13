@@ -20,12 +20,11 @@ class DatabaseV1 extends Worker
     public function run(): void
     {
         Authorization::disable();
-        $projectId = $this->args['projectId'] ?? '';
-        $type = $this->args['type'] ?? '';
-        $collection = $this->args['collection'] ?? [];
-        $collection = new Document($collection);
-        $document = $this->args['document'] ?? [];
-        $document = new Document($document);
+
+        $type = $this->args['type'];
+        $project = new Document($this->args['project']);
+        $collection = new Document($this->args['collection'] ?? []);
+        $document = new Document($this->args['document'] ?? []);
 
         if($collection->isEmpty()) {
             throw new Exception('Missing collection');
@@ -37,16 +36,16 @@ class DatabaseV1 extends Worker
 
         switch (strval($type)) {
             case DATABASE_TYPE_CREATE_ATTRIBUTE:
-                $this->createAttribute($collection, $document, $projectId);
+                $this->createAttribute($collection, $document, $project->getId());
                 break;
             case DATABASE_TYPE_DELETE_ATTRIBUTE:
-                $this->deleteAttribute($collection, $document, $projectId);
+                $this->deleteAttribute($collection, $document, $project->getId());
                 break;
             case DATABASE_TYPE_CREATE_INDEX:
-                $this->createIndex($collection, $document, $projectId);
+                $this->createIndex($collection, $document, $project->getId());
                 break;
             case DATABASE_TYPE_DELETE_INDEX:
-                $this->deleteIndex($collection, $document, $projectId);
+                $this->deleteIndex($collection, $document, $project->getId());
                 break;
 
             default:

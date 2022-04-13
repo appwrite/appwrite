@@ -103,26 +103,26 @@ class Event
 
     public function setProject(Document $project): self
     {
-        $this->projectId = $project;
+        $this->project = $project;
 
         return $this;
     }
 
-    public function getProjectId(): Document
+    public function getProject(): Document
     {
-        return $this->projectId;
+        return $this->project;
     }
 
     public function setUser(Document $user): self
     {
-        $this->userId = $user;
+        $this->user = $user;
 
         return $this;
     }
 
-    public function getUserId(): Document
+    public function getUser(): Document
     {
-        return $this->userId;
+        return $this->user;
     }
 
     public function setPayload(array $payload): self
@@ -144,7 +144,7 @@ class Event
         return $this;
     }
 
-    public function getTrigger(): Document
+    public function getTrigger(): ?Document
     {
         return $this->trigger;
     }
@@ -215,8 +215,8 @@ class Event
     public function trigger(): string|bool
     {
         return Resque::enqueue($this->queue, $this->class, [
-            'project' => $this->projectId,
-            'user' => $this->userId,
+            'project' => $this->project,
+            'user' => $this->user,
             'payload' => $this->payload,
             'trigger' => $this->trigger,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
@@ -294,11 +294,11 @@ class Event
         $action = $parsed['action'];
         $attribute = $parsed['attribute'];
 
-        if ($resource && !\in_array(\trim($resource, '[]'), $paramKeys)) {
+        if ($resource && !\in_array(\trim($resource, "\[\]"), $paramKeys)) {
             throw new InvalidArgumentException("{$resource} is missing from the params.");
         }
 
-        if ($subResource && !\in_array(\trim($subResource, '[]'), $paramKeys)) {
+        if ($subResource && !\in_array(\trim($subResource, "\[\]"), $paramKeys)) {
             throw new InvalidArgumentException("{$subResource} is missing from the params.");
         }
 

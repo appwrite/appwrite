@@ -7,14 +7,16 @@ use Utopia\App;
 use Appwrite\Extend\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Storage;
 
-App::init(function ($utopia, $request, $response, $project, $user, $events, $audits, $usage, $deletes, $database, $dbForProject, $mode) {
+App::init(function ($utopia, $request, $response, $project, $user, $events, $audits, $mails, $usage, $deletes, $database, $dbForProject, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
@@ -22,7 +24,8 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
     /** @var Utopia\Database\Document $user */
     /** @var Utopia\Registry\Registry $register */
     /** @var Appwrite\Event\Event $events */
-    /** @var Appwrite\Event\Event $audits */
+    /** @var Appwrite\Event\Audit $audits */
+    /** @var Appwrite\Event\Mail $mails */
     /** @var Appwrite\Stats\Stats $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $database */
@@ -94,28 +97,18 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
         ->setUser($user)
     ;
 
-    $events
-        ->setParam('projectId', $project->getId())
-        ->setParam('webhooks', $project->getAttribute('webhooks', []))
-        ->setParam('userId', $user->getId())
-        ->setParam('event', $route->getLabel('event', ''))
-        ->setParam('eventData', [])
-        ->setParam('functionId', null)
-        ->setParam('executionId', null)
-        ->setParam('trigger', 'event')
+    $mails
+        ->setProject($project)
+        ->setUser($user)
     ;
 
     $audits
+        ->setMode($mode)
+        ->setUserAgent($request->getUserAgent(''))
+        ->setIP($request->getIP())
         ->setEvent($route->getLabel('event', ''))
         ->setProject($project)
         ->setUser($user)
-        ->setPayload([
-            'mode' => $mode,
-            'userAgent' => $request->getUserAgent(''),
-            'ip' => $request->getIP(),
-            'data' => [],
-            'resource' => ''
-        ])
     ;
 
     $usage
@@ -128,15 +121,10 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
         ->setParam('networkResponseSize', 0)
         ->setParam('storage', 0)
     ;
-    
-    $deletes
-        ->setParam('projectId', $project->getId())
-    ;
 
-    $database
-        ->setParam('projectId', $project->getId())
-    ;
-}, ['utopia', 'request', 'response', 'project', 'user', 'events', 'audits', 'usage', 'deletes', 'database', 'dbForProject', 'mode'], 'api');
+    $deletes->setProject($project);
+    $database->setProject($project);
+}, ['utopia', 'request', 'response', 'project', 'user', 'events', 'audits', 'mails', 'usage', 'deletes', 'database', 'dbForProject', 'mode'], 'api');
 
 App::init(function ($utopia, $request, $project) {
     /** @var Utopia\App $utopia */
@@ -191,56 +179,53 @@ App::init(function ($utopia, $request, $project) {
 
 }, ['utopia', 'request', 'project'], 'auth');
 
-App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $database, $mode) {
+App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $database, $mode, $dbForProject) {
     /** @var Utopia\App $utopia */
     /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $project */
     /** @var Appwrite\Event\Event $events */
-    /** @var Appwrite\Event\Event $audits */
+    /** @var Appwrite\Event\Audit $audits */
     /** @var Appwrite\Stats\Stats $usage */
     /** @var Appwrite\Event\Event $deletes */
-    /** @var Appwrite\Event\Event $database */
+    /** @var Appwrite\Event\Database $database */
     /** @var bool $mode */
+    /** @var Utopia\Database\Database $dbForProject */
 
     if (!empty($events->getEvent())) {
-        $allEvents = Event::generateEvents($events->getEvent(), $events->getParams());
-        var_dump($request->getRoute()->getPath(), $events->getEvent(), $allEvents);
-        foreach ($project->getAttribute('webhooks', []) as $webhook) {
-            /**
-             * @var Document $webhook
-             */
-            if (array_intersect($webhook->getAttribute('events', []), $allEvents)) {
-                $events
-                    ->setClass(Event::WEBHOOK_CLASS_NAME)
-                    ->setQueue(Event::WEBHOOK_QUEUE_NAME)
-                    ->setTrigger($webhook)
-                    ->setPayload($response->getPayload())
-                    ->trigger();
-            }
-        }
-    }
-    if (!empty($events->getParam('event'))) {
-        if (empty($events->getParam('eventData'))) {
-            $events->setParam('eventData', $response->getPayload());
-        }
-
-        $functions = clone $events;
-
-        $functions
-            ->setQueue('v1-functions')
-            ->setClass('FunctionsV1')
+        /**
+         * Trigger functions.
+         */
+        $events
+            ->setClass(Event::FUNCTIONS_CLASS_NAME)
+            ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
+            ->setPayload($response->getPayload())
             ->trigger();
 
+        /**
+         * Trigger webhooks.
+         */
+        $events
+            ->setClass(Event::WEBHOOK_CLASS_NAME)
+            ->setQueue(Event::WEBHOOK_QUEUE_NAME)
+            ->setPayload($response->getPayload())
+            ->trigger();
+
+        /**
+         * Trigger realtime.
+         */
         if ($project->getId() !== 'console') {
+            $allEvents = Event::generateEvents($events->getEvent(), $events->getParams());
             $payload = new Document($response->getPayload());
-            $collection = new Document($events->getParam('collection') ?? []);
-            $bucket = new Document($events->getParam('bucket') ?? []);
+            $trigger = $events->getTrigger() ?? false;
+
+            $collection = ($trigger && $trigger->getCollection() === 'collections') ? $trigger : null;
+            $bucket = ($trigger && $trigger->getCollection() === 'buckets') ? $trigger : null;
 
             $target = Realtime::fromPayload(
-                event: $events->getParam('event'), 
-                payload: $payload, 
-                project: $project, 
+                event: $allEvents[0],
+                payload: $payload,
+                project: $project,
                 collection: $collection,
                 bucket: $bucket,
             );
@@ -248,7 +233,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
             Realtime::send(
                 $target['projectId'] ?? $project->getId(),
                 $response->getPayload(),
-                $events->getParam('event'),
+                $allEvents[0],
                 $target['channels'],
                 $target['roles'],
                 [
@@ -259,15 +244,18 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         }
     }
 
-    if (!empty($audits->getEvent())) {
+    if (!empty($audits->getResource())) {
+        foreach ($events->getParams() as $key => $value) {
+            $audits->setParam($key, $value);
+        }
         $audits->trigger();
     }
 
-    if (!empty($deletes->getParam('type')) && !empty($deletes->getParam('document'))) {
+    if (!empty($deletes->getPayload())) {
         $deletes->trigger();
     }
 
-    if (!empty($database->getParam('type')) && !empty($database->getParam('document'))) {
+    if (!empty($database->getType())) {
         $database->trigger();
     }
 
@@ -277,11 +265,11 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
         && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
 
-        $usage
-            ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
-            ->setParam('networkResponseSize', $response->getSize())
-            ->submit()
-        ;
+        // $usage
+        //     ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
+        //     ->setParam('networkResponseSize', $response->getSize())
+        //     ->submit()
+        // ;
     }
 
-}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'database', 'mode'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'database', 'mode', 'dbForProject'], 'api');

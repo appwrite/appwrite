@@ -466,7 +466,7 @@ App::patch('/v1/users/:userId/name')
     ->action(function ($userId, $name, $response, $dbForProject, $audits, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Event\Event $events */
 
         $user = $dbForProject->getDocument('users', $userId);
@@ -478,9 +478,7 @@ App::patch('/v1/users/:userId/name')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('name', $name));
 
         $audits
-            ->setPayload(array_merge($audits->getPayload(), [
-                'resource' => 'user/'.$user->getId()
-            ]))
+            ->setResource('user/'.$user->getId())
         ;
 
         $events
@@ -511,7 +509,7 @@ App::patch('/v1/users/:userId/password')
     ->action(function ($userId, $password, $response, $dbForProject, $audits, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Event\Event $events */
 
         $user = $dbForProject->getDocument('users', $userId);
@@ -527,9 +525,7 @@ App::patch('/v1/users/:userId/password')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $audits
-            ->setPayload(array_merge($audits->getPayload(), [
-                'resource' => 'user/'.$user->getId()
-            ]))
+            ->setResource('user/'.$user->getId())
         ;
 
         $events
@@ -560,7 +556,7 @@ App::patch('/v1/users/:userId/email')
     ->action(function ($userId, $email, $response, $dbForProject, $audits, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Event\Event $events */
 
         $user = $dbForProject->getDocument('users', $userId);
@@ -584,9 +580,7 @@ App::patch('/v1/users/:userId/email')
 
 
         $audits
-            ->setPayload(array_merge($audits->getPayload(), [
-                'resource' => 'user/'.$user->getId()
-            ]))
+            ->setResource('user/'.$user->getId())
         ;
 
         $events
@@ -690,6 +684,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
 
         $events
             ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $sessionId)
         ;
 
         $response->noContent();
@@ -794,8 +789,11 @@ App::delete('/v1/users/:userId')
         $dbForProject->updateDocument('users', $userId, $user);
 
         $deletes
-            ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $clone)
+            ->setParam('userId', $userId)
+            ->setPayload([
+                'type' => DELETE_TYPE_DOCUMENT,
+                'document' => $clone
+            ])
         ;
 
         $events

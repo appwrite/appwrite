@@ -22,7 +22,11 @@ use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
+use Appwrite\Event\Audit;
+use Appwrite\Event\Database as EventDatabase;
+use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Mail;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
@@ -604,10 +608,10 @@ App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')))
 
 // Queues
 App::setResource('events', fn() => new Event('', ''));
-App::setResource('audits', fn() => new Event(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME));
-App::setResource('mails', fn() => new Event(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME));
-App::setResource('deletes', fn() => new Event(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME));
-App::setResource('database', fn() => new Event(Event::DATABASE_QUEUE_NAME, Event::DATABASE_CLASS_NAME));
+App::setResource('audits', fn() => new Audit());
+App::setResource('mails', fn() => new Mail());
+App::setResource('deletes', fn() => new Delete());
+App::setResource('database', fn() => new EventDatabase());
 App::setResource('usage', function($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);

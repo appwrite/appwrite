@@ -33,8 +33,8 @@ class FunctionsCustomClientTest extends Scope
                 'funcKey3' => 'funcValue3',
             ],
             'events' => [
-                'account.create',
-                'account.delete',
+                'users.*.create',
+                'users.*.delete',
             ],
             'schedule' => '0 0 1 1 *',
             'timeout' => 10,
@@ -65,8 +65,8 @@ class FunctionsCustomClientTest extends Scope
                 'funcKey3' => 'funcValue3',
             ],
             'events' => [
-                'account.create',
-                'account.delete',
+                'users.*.create',
+                'users.*.delete',
             ],
             'schedule' => '0 0 1 1 *',
             'timeout' => 10,

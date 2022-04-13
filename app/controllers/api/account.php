@@ -60,7 +60,7 @@ App::post('/v1/account')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Event\Event $events */
 
@@ -120,11 +120,8 @@ App::post('/v1/account')
         Authorization::setRole('role:' . Auth::USER_ROLE_MEMBER);
 
         $audits
-            ->setParam('userId', $user->getId())
+            ->setResource('user/'.$user->getId())
             ->setUser($user)
-            ->setPayload(array_merge($audits->getPayload(), [
-                'resource' => 'user/'.$user->getId()
-            ]))
         ;
 
         $usage
@@ -169,7 +166,7 @@ App::post('/v1/account/sessions')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Event\Event $events */
 
@@ -215,12 +212,8 @@ App::post('/v1/account/sessions')
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile);
 
         $audits
-            ->setParam('userId', $profile->getId())
-            ->setParam('sessionId', $session->getId())
+            ->setResource('user/'.$profile->getId())
             ->setUser($profile)
-            ->setPayload(array_merge($audits->getPayload(), [
-                'resource' => 'user/'.$profile->getId()
-            ]))
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -399,7 +392,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var MaxMind\Db\Reader $geodb */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
 
@@ -577,12 +570,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $audits
-            ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
+            ->setResource('user/'.$user->getId())
             ->setUser($user)
-            ->setPayload(array_merge($audits->getPayload(), [
-                'resource' => 'user/'.$user->getId()
-            ]))
         ;
 
         $usage
@@ -656,9 +645,9 @@ App::post('/v1/account/sessions/magic-url')
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Event $mails */
+        /** @var Appwrite\Event\Mail $mails */
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
@@ -703,8 +692,6 @@ App::post('/v1/account/sessions/magic-url')
                 'search' => implode(' ', [$userId, $email]),
                 'deleted' => false
             ])));
-
-            $mails->setParam('event', 'users.create');
         }
 
         $loginSecret = Auth::tokenGenerator();
@@ -740,14 +727,10 @@ App::post('/v1/account/sessions/magic-url')
         $url = Template::unParseURL($url);
 
         $mails
-            ->setPayload([
-                'from' => $project->getId(),
-                'recipient' => $user->getAttribute('email'),
-                'url' => $url,
-                'locale' => $locale->default,
-                'project' => $project->getAttribute('name', ['[APP-NAME]']),
-                'type' => MAIL_TYPE_MAGIC_SESSION
-            ])
+            ->setType(MAIL_TYPE_MAGIC_SESSION)
+            ->setRecipient($user->getAttribute('email'))
+            ->setUrl($url)
+            ->setLocale($locale->default)
             ->trigger()
         ;
 
@@ -763,10 +746,8 @@ App::post('/v1/account/sessions/magic-url')
                 ($isPrivilegedUser || $isAppUser) ? $loginSecret : '');
 
         $audits
+            ->setResource('user/'.$user->getId())
             ->setUser($user)
-            ->setPayload(array_merge($audits->getPayload(), [
-                'resource' => 'user/'.$user->getId()
-            ]))
         ;
 
         $response
@@ -806,7 +787,7 @@ App::put('/v1/account/sessions/magic-url')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Event\Event $events */
 
         $user = $dbForProject->getDocument('users', $userId);
@@ -871,13 +852,7 @@ App::put('/v1/account/sessions/magic-url')
             throw new Exception('Failed saving user to DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
-        $audits
-            ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-            ->setPayload(array_merge($audits->getPayload(), [
-                'resource' => 'user/'.$user->getId()
-            ]))
-        ;
+        $audits->setResource('user/'.$user->getId());
 
         $events
             ->setParam('userId', $user->getId())
@@ -943,7 +918,7 @@ App::post('/v1/account/sessions/anonymous')
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var MaxMind\Db\Reader $geodb */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Stats\Stats $events */
 
@@ -1022,13 +997,7 @@ App::post('/v1/account/sessions/anonymous')
         $user = $dbForProject->updateDocument('users', $user->getId(),
             $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND));
 
-        $audits
-            ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-            ->setPayload(array_merge($audits->getPayload(), [
-                'resource' => 'user/'.$user->getId()
-            ]))
-        ;
+        $audits->setResource('user/'.$user->getId());
 
         $usage
             ->setParam('users.sessions.create', 1)
@@ -1350,7 +1319,7 @@ App::patch('/v1/account/name')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Stats\Stats $events */
 
@@ -1360,20 +1329,12 @@ App::patch('/v1/account/name')
         );
 
         $audits
-            ->setParam('userId', $user->getId())
+            ->setResource('user/'.$user->getId())
             ->setUser($user)
-            ->setPayload(array_merge($audits->getPayload(), [
-                'resource' => 'user/'.$user->getId()
-            ]))
         ;
 
-        $usage
-            ->setParam('users.update', 1)
-        ;
-
-        $events
-            ->setParam('userId', $user->getId())
-        ;
+        $usage->setParam('users.update', 1);
+        $events->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -1402,7 +1363,7 @@ App::patch('/v1/account/password')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Stats\Stats $events */
 
@@ -1417,20 +1378,12 @@ App::patch('/v1/account/password')
         );
 
         $audits
-            ->setParam('userId', $user->getId())
+            ->setResource('user/'.$user->getId())
             ->setUser($user)
-            ->setPayload(array_merge($audits->getPayload(), [
-                'resource' => 'user/'.$user->getId()
-            ]))
         ;
 
-        $usage
-            ->setParam('users.update', 1)
-        ;
-
-        $events
-            ->setParam('userId', $user->getId())
-        ;
+        $usage->setParam('users.update', 1);
+        $events->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -1459,7 +1412,7 @@ App::patch('/v1/account/email')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Stats\Stats $events */
 
@@ -1491,20 +1444,12 @@ App::patch('/v1/account/email')
         }
 
         $audits
-            ->setParam('userId', $user->getId())
+            ->setResource('user/'.$user->getId())
             ->setUser($user)
-            ->setPayload(array_merge($audits->getPayload(), [
-                'resource' => 'user/'.$user->getId()
-            ]))
         ;
 
-        $usage
-            ->setParam('users.update', 1)
-        ;
-
-        $events
-            ->setParam('userId', $user->getId())
-        ;
+        $usage->setParam('users.update', 1);
+        $events->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -1532,26 +1477,15 @@ App::patch('/v1/account/prefs')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Event\Event $events */
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
 
-        $audits
-            ->setParam('userId', $user->getId())
-            ->setPayload(array_merge($audits->getPayload(), [
-                'resource' => 'user/'.$user->getId()
-            ]))
-        ;
-
-        $usage
-            ->setParam('users.update', 1)
-        ;
-
-        $events
-            ->setParam('userId', $user->getId())
-        ;
+        $audits->setResource('user/'.$user->getId());
+        $usage->setParam('users.update', 1);
+        $events->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -1579,7 +1513,7 @@ App::delete('/v1/account')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
 
@@ -1597,10 +1531,8 @@ App::delete('/v1/account')
         */
 
         $audits
-            ->setParam('userId', $user->getId())
-            ->setParam('event', 'account.delete')
-            ->setParam('resource', 'user/' . $user->getId())
-            ->setParam('data', $user->getArrayCopy())
+            ->setResource('user/' . $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER))
         ;
 
         $events
@@ -1609,14 +1541,11 @@ App::delete('/v1/account')
         ;
 
         if (!Config::getParam('domainVerification')) {
-            $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([]))
-            ;
+            $response->addHeader('X-Fallback-Cookies', \json_encode([]));
         }
 
-        $usage
-            ->setParam('users.delete', 1)
-        ;
+        $usage->setParam('users.delete', 1);
+
         $response
             ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
@@ -1651,7 +1580,7 @@ App::delete('/v1/account/sessions/:sessionId')
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
 
@@ -1668,11 +1597,7 @@ App::delete('/v1/account/sessions/:sessionId')
 
                 $dbForProject->deleteDocument('sessions', $session->getId());
 
-                $audits
-                    ->setParam('userId', $user->getId())
-                    ->setParam('event', 'account.sessions.delete')
-                    ->setParam('resource', 'user/' . $user->getId())
-                ;
+                $audits->setResource('user/' . $user->getId());
 
                 $session->setAttribute('current', false);
 
@@ -1697,9 +1622,9 @@ App::delete('/v1/account/sessions/:sessionId')
                 $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
 
                 $events
-                    ->setPayload($response->output($session, Response::MODEL_SESSION))
                     ->setParam('userId', $user->getId())
                     ->setParam('sessionId', $session->getId())
+                    ->setPayload($response->output($session, Response::MODEL_SESSION))
                 ;
 
                 $usage
@@ -1744,7 +1669,7 @@ App::patch('/v1/account/sessions/:sessionId')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
 
@@ -1773,7 +1698,7 @@ App::patch('/v1/account/sessions/:sessionId')
                 $appSecret = $project->getAttribute('providers', [])[$provider.'Secret'] ?? '{}';
 
                 $className = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
-             
+
                 if (!\class_exists($className)) {
                     throw new Exception('Provider is not supported', 501, Exception::PROJECT_PROVIDER_UNSUPPORTED);
                 }
@@ -1793,16 +1718,12 @@ App::patch('/v1/account/sessions/:sessionId')
                 $user->setAttribute("sessions", $sessions);
                 $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
-                $audits
-                    ->setParam('userId', $user->getId())
-                    ->setParam('event', 'account.sessions.update')
-                    ->setParam('resource', 'user/' . $user->getId())
-                ;
+                $audits->setResource('user/' . $user->getId());
 
                 $events
-                    ->setPayload($response->output($session, Response::MODEL_SESSION))
                     ->setParam('userId', $user->getId())
                     ->setParam('sessionId', $session->getId())
+                    ->setPayload($response->output($session, Response::MODEL_SESSION))
                 ;
 
                 $usage
@@ -1843,7 +1764,7 @@ App::delete('/v1/account/sessions')
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
 
@@ -1853,11 +1774,7 @@ App::delete('/v1/account/sessions')
         foreach ($sessions as $session) {/** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
 
-            $audits
-                ->setParam('userId', $user->getId())
-                ->setParam('event', 'account.sessions.delete')
-                ->setParam('resource', 'user/' . $user->getId())
-            ;
+            $audits->setResource('user/' . $user->getId());
 
             if (!Config::getParam('domainVerification')) {
                 $response
@@ -1884,18 +1801,19 @@ App::delete('/v1/account/sessions')
         $numOfSessions = count($sessions);
 
         $events
+            ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $session->getId())
             ->setPayload($response->output(new Document([
                 'sessions' => $sessions,
                 'total' => $numOfSessions,
             ]), Response::MODEL_SESSION_LIST))
-            ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
         ;
 
         $usage
             ->setParam('users.sessions.delete', $numOfSessions)
             ->setParam('users.update', 1)
         ;
+
         $response->noContent();
     });
 
@@ -1930,8 +1848,8 @@ App::post('/v1/account/recovery')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Event\Event $mails */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Mail $mails */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
 
@@ -1978,40 +1896,33 @@ App::post('/v1/account/recovery')
         $url = Template::unParseURL($url);
 
         $mails
-            ->setPayload([
-                'from' => $project->getId(),
-                'recipient' => $profile->getAttribute('email', ''),
-                'name' => $profile->getAttribute('name', ''),
-                'url' => $url,
-                'locale' => $locale->default,
-                'project' => $project->getAttribute('name', ['[APP-NAME]']),
-                'type' => MAIL_TYPE_RECOVERY
-            ])
+            ->setType(MAIL_TYPE_RECOVERY)
+            ->setRecipient($profile->getAttribute('email', ''))
+            ->setUrl($url)
+            ->setLocale($locale->default)
+            ->setName($profile->getAttribute('name'))
             ->trigger();
         ;
 
         $events
-            ->setParam('eventData',
-                $response->output($recovery->setAttribute('secret', $secret),
-                    Response::MODEL_TOKEN
-                ))
-                ->setParam('userId', $profile->getId())
-                ->setParam('tokenId', $recovery->getId())
+            ->setParam('userId', $profile->getId())
+            ->setParam('tokenId', $recovery->getId())
+            ->setPayload($response->output(
+                $recovery->setAttribute('secret', $secret),
+                Response::MODEL_TOKEN
+            ))
         ;
 
         $recovery // Hide secret for clients, sp
             ->setAttribute('secret',
                 ($isPrivilegedUser || $isAppUser) ? $secret : '');
 
-        $audits
-            ->setParam('userId', $profile->getId())
-            ->setParam('event', 'account.recovery.create')
-            ->setParam('resource', 'user/' . $profile->getId())
-        ;
+        $audits->setResource('user/' . $profile->getId());
 
         $usage
             ->setParam('users.update', 1)
         ;
+
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($recovery, Response::MODEL_TOKEN);
     });
@@ -2042,7 +1953,7 @@ App::put('/v1/account/recovery')
     ->action(function ($userId, $secret, $password, $passwordAgain, $response, $dbForProject, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Event\Event $events */
 
@@ -2084,20 +1995,15 @@ App::put('/v1/account/recovery')
 
         $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('tokens', $tokens));
 
-        $audits
-            ->setParam('userId', $profile->getId())
-            ->setParam('event', 'account.recovery.update')
-            ->setParam('resource', 'user/' . $profile->getId())
-        ;
+        $audits->setResource('user/' . $profile->getId());
 
-        $usage
-            ->setParam('users.update', 1)
-        ;
+        $usage->setParam('users.update', 1);
 
         $events
             ->setParam('userId', $profile->getId())
             ->setParam('tokenId', $recovery->getId())
         ;
+
         $response->dynamic($recovery, Response::MODEL_TOKEN);
     });
 
@@ -2133,9 +2039,9 @@ App::post('/v1/account/verification')
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Event $mails */
+        /** @var Appwrite\Event\Mail $mails */
         /** @var Appwrite\Stats\Stats $usage */
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
@@ -2171,40 +2077,30 @@ App::post('/v1/account/verification')
         $url = Template::unParseURL($url);
 
         $mails
-            ->setPayload([
-                'from' => $project->getId(),
-                'recipient' => $user->getAttribute('email'),
-                'name' => $user->getAttribute('name'),
-                'url' => $url,
-                'locale' => $locale->default,
-                'project' => $project->getAttribute('name', ['[APP-NAME]']),
-                'type' => MAIL_TYPE_VERIFICATION
-            ])
+            ->setType(MAIL_TYPE_VERIFICATION)
+            ->setRecipient($user->getAttribute('email'))
+            ->setUrl($url)
+            ->setLocale($locale->default)
+            ->setName($user->getAttribute('name'))
             ->trigger()
         ;
 
         $events
-            ->setParam('eventData',
-                $response->output($verification->setAttribute('secret', $verificationSecret),
-                    Response::MODEL_TOKEN
-                ))
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verification->getId())
+            ->setPayload($response->output(
+                $verification->setAttribute('secret', $verificationSecret),
+                Response::MODEL_TOKEN
+            ))
         ;
 
         $verification // Hide secret for clients, sp
             ->setAttribute('secret',
                 ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
 
-        $audits
-            ->setParam('userId', $user->getId())
-            ->setParam('event', 'account.verification.create')
-            ->setParam('resource', 'user/' . $user->getId())
-        ;
+        $audits->setResource('user/' . $user->getId());
+        $usage->setParam('users.update', 1);
 
-        $usage
-            ->setParam('users.update', 1)
-        ;
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($verification, Response::MODEL_TOKEN);
     });
@@ -2235,7 +2131,7 @@ App::put('/v1/account/verification')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Event\Event $events */
 
@@ -2269,15 +2165,9 @@ App::put('/v1/account/verification')
 
         $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('tokens', $tokens));
 
-        $audits
-            ->setParam('userId', $profile->getId())
-            ->setParam('event', 'account.verification.update')
-            ->setParam('resource', 'user/' . $user->getId())
-        ;
+        $audits->setResource('user/' . $user->getId());
 
-        $usage
-            ->setParam('users.update', 1)
-        ;
+        $usage->setParam('users.update', 1);
 
         $events
             ->setParam('userId', $user->getId())

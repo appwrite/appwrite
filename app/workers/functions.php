@@ -7,7 +7,6 @@ use Appwrite\Stats\Stats;
 use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
 use Executor\Executor;
-use Swoole\Runtime;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -15,23 +14,19 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__ . '/../init.php';
 
 Console::title('Functions V1 Worker');
 Console::success(APP_NAME . ' functions worker v1 has started');
 
 class FunctionsV1 extends Worker
 {
-    /**
-     * @var Executor
-     */
-    private $executor = null;
-
+    private ?Executor $executor = null;
     public array $args = [];
-
     public array $allowed = [];
 
-    public function getName(): string {
+    public function getName(): string
+    {
         return "functions";
     }
 
@@ -42,19 +37,22 @@ class FunctionsV1 extends Worker
 
     public function run(): void
     {
-        $projectId = $this->args['projectId'] ?? '';
-        $functionId = $this->args['functionId'] ?? '';
-        $webhooks = $this->args['webhooks'] ?? [];
-        $executionId = $this->args['executionId'] ?? '';
-        $trigger = $this->args['trigger'] ?? '';
-        $event = $this->args['event'] ?? '';
-        $scheduleOriginal = $this->args['scheduleOriginal'] ?? '';
-        $eventData = (!empty($this->args['eventData'])) ? json_encode($this->args['eventData']) : '';
-        $data = $this->args['data'] ?? '';
-        $userId = $this->args['userId'] ?? '';
-        $jwt = $this->args['jwt'] ?? '';
+        $events = $this->args['events'];
+        $payload = $this->args['payload'];
+        $user = new Document($this->args['user'] ?? []);
+        $project = new Document($this->args['project'] ?? []);
+        $execution = new Document($this->args['trigger'] ?? []);
 
-        $database = $this->getProjectDB($projectId);
+        $event = $events[0] ?? '';
+        $data = $payload['data'] ?? '';
+        $jwt = $payload['jwt'] ?? '';
+        $webhooks = $project->getAttribute('webhooks', []);
+        $trigger = $execution->getAttribute('trigger', '');
+        $scheduleOriginal = $execution->getAttribute('scheduleOriginal', '');
+        $eventData = !empty($execution->getAttribute('eventData')) ? json_encode($execution->getAttribute('eventData')) : '';
+        $jwt = $execution->getAttribute('jwt', '');
+
+        $database = $this->getProjectDB($project->getId());
 
         switch ($trigger) {
             case 'event':
@@ -72,25 +70,23 @@ class FunctionsV1 extends Worker
                     Console::log('Fetched ' . $sum . ' functions...');
 
                     foreach ($functions as $function) {
-                        $events =  $function->getAttribute('events', []);
-
-                        if (!\in_array($event, $events)) {
+                        if (!array_intersect($events, $function->getAttribute('events', []))) {
                             continue;
                         }
 
                         Console::success('Iterating function: ' . $function->getAttribute('name'));
 
                         $this->execute(
-                            projectId: $projectId,
+                            projectId: $project->getId(),
                             function: $function,
                             dbForProject: $database,
-                            executionId: $executionId,
+                            executionId: $execution->getId(),
                             webhooks: $webhooks,
                             trigger: $trigger,
                             event: $event,
                             eventData: $eventData,
                             data: $data,
-                            userId: $userId,
+                            userId: $user->getId(),
                             jwt: $jwt
                         );
 
@@ -99,8 +95,28 @@ class FunctionsV1 extends Worker
                 }
 
                 break;
+            case 'http':
+                $function = Authorization::skip(fn() => $database->getDocument('functions', $execution->getAttribute('functionId')));
+
+                $this->execute(
+                    projectId: $project->getId(),
+                    function: $function,
+                    dbForProject: $database,
+                    executionId: $execution->getId(),
+                    webhooks: $webhooks,
+                    trigger: $trigger,
+                    event: '',
+                    eventData: '',
+                    data: $data,
+                    userId: $user->getId(),
+                    jwt: $jwt
+                );
+
+                break;
 
             case 'schedule':
+                $function = Authorization::skip(fn() => $database->getDocument('functions', $execution->getAttribute('functionId')));
+
                 /*
                  * 1. Get Original Task
                  * 2. Check for updates
@@ -115,10 +131,8 @@ class FunctionsV1 extends Worker
                  */
 
                 // Reschedule
-                $function = Authorization::skip(fn() => $database->getDocument('functions', $functionId));
-
                 if (empty($function->getId())) {
-                    throw new Exception('Function not found ('.$functionId.')');
+                    throw new Exception('Function not found (' . $function->getId() . ')');
                 }
 
                 if ($scheduleOriginal && $scheduleOriginal !== $function->getAttribute('schedule')) { // Schedule has changed from previous run, ignore this run.
@@ -132,60 +146,39 @@ class FunctionsV1 extends Worker
                     ->setAttribute('scheduleNext', $next)
                     ->setAttribute('schedulePrevious', \time());
 
-                $function = Authorization::skip(function()  use ($database, $function, $next, $functionId) {
-                    $function = $database->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
+                $function = Authorization::skip(fn () => $database->updateDocument(
+                    'functions',
+                    $function->getId(),
+                    new Document(array_merge($function->getArrayCopy(), [
                         'scheduleNext' => (int)$next,
-                    ])));
-    
-                    if ($function === false) {
-                        throw new Exception('Function update failed (' . $functionId . ')');
-                    }
-                    return $function;
-                });
+                    ]))
+                ));
+
+                if ($function === false) {
+                    throw new Exception('Function update failed.');
+                }
 
                 ResqueScheduler::enqueueAt($next, Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME, [
-                    'projectId' => $projectId,
+                    'projectId' => $project->getId(),
                     'webhooks' => $webhooks,
                     'functionId' => $function->getId(),
-                    'userId' => $userId,
+                    'userId' => $user->getId(),
                     'executionId' => null,
                     'trigger' => 'schedule',
                     'scheduleOriginal' => $function->getAttribute('schedule', ''),
                 ]);  // Async task reschedule
 
                 $this->execute(
-                    projectId: $projectId,
+                    projectId: $project->getId(),
                     function: $function,
                     dbForProject: $database,
-                    executionId: $executionId,
+                    executionId: $execution->getId(),
                     webhooks: $webhooks,
                     trigger: $trigger,
                     event: $event,
                     eventData: $eventData,
                     data: $data,
-                    userId: $userId,
-                    jwt: $jwt
-                );
-                break;
-
-            case 'http':
-                $function = Authorization::skip(fn() => $database->getDocument('functions', $functionId));
-
-                if (empty($function->getId())) {
-                    throw new Exception('Function not found ('.$functionId.')');
-                }
-
-                $this->execute(
-                    projectId: $projectId,
-                    function: $function,
-                    dbForProject: $database,
-                    executionId: $executionId,
-                    webhooks: $webhooks,
-                    trigger: $trigger,
-                    event: $event,
-                    eventData: $eventData,
-                    data: $data,
-                    userId: $userId,
+                    userId: $user->getId(),
                     jwt: $jwt
                 );
 
@@ -200,7 +193,7 @@ class FunctionsV1 extends Worker
         string $executionId,
         array $webhooks,
         string $trigger,
-        string $event, 
+        string $event,
         string $eventData,
         string $data,
         string $userId,
@@ -211,7 +204,7 @@ class FunctionsV1 extends Worker
         $deploymentId = $function->getAttribute('deployment', '');
 
         /** Check if deployment exists */
-        $deployment = Authorization::skip(fn() => $dbForProject->getDocument('deployments', $deploymentId));
+        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $deploymentId));
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             throw new Exception('Deployment not found. Create deployment before trying to execute a function', 404);
@@ -222,7 +215,7 @@ class FunctionsV1 extends Worker
         }
 
         /** Check if build has exists */
-        $build = Authorization::skip(fn() => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
         if ($build->isEmpty()) {
             throw new Exception('Build not found', 404);
         }
@@ -233,14 +226,15 @@ class FunctionsV1 extends Worker
 
         /** Check if  runtime is supported */
         $runtimes = Config::getParam('runtimes', []);
-        $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
-        if (\is_null($runtime)) {
+        if (!\array_key_exists($function->getAttribute('runtime'), $runtimes)) {
             throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported', 400);
         }
 
+        $runtime = $runtimes[$function->getAttribute('runtime')];
+
         /** Create execution or update execution status */
-        $execution = Authorization::skip(function() use ($dbForProject, &$executionId, $functionId, $deploymentId, $trigger, $userId) {
+        $execution = Authorization::skip(function () use ($dbForProject, &$executionId, $functionId, $deploymentId, $trigger, $userId) {
             $execution = $dbForProject->getDocument('executions', $executionId);
             if ($execution->isEmpty()) {
                 $executionId = $dbForProject->getId();
@@ -259,13 +253,14 @@ class FunctionsV1 extends Worker
                     'time' => 0.0,
                     'search' => implode(' ', [$functionId, $executionId]),
                 ]));
-                
+
                 if ($execution->isEmpty()) {
                     throw new Exception('Failed to create or read execution');
                 }
             }
             $execution->setAttribute('status', 'processing');
             $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+
             return $execution;
         });
 
@@ -301,19 +296,21 @@ class FunctionsV1 extends Worker
             );
 
             /** Update execution status */
-            $execution->setAttribute('status', $executionResponse['status']);
-            $execution->setAttribute('statusCode', $executionResponse['statusCode']);
-            $execution->setAttribute('stdout', $executionResponse['stdout']);
-            $execution->setAttribute('stderr', $executionResponse['stderr']);
-            $execution->setAttribute('time', $executionResponse['time']);
+            $execution
+                ->setAttribute('status', $executionResponse['status'])
+                ->setAttribute('statusCode', $executionResponse['statusCode'])
+                ->setAttribute('stdout', $executionResponse['stdout'])
+                ->setAttribute('stderr', $executionResponse['stderr'])
+                ->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
-            $execution->setAttribute('status', 'failed');
-            $execution->setAttribute('statusCode', $th->getCode());
-            $execution->setAttribute('stderr', $th->getMessage());
+            $execution
+                ->setAttribute('status', 'failed')
+                ->setAttribute('statusCode', $th->getCode())
+                ->setAttribute('stderr', $th->getMessage());
             Console::error($th->getMessage());
         }
 
-        $execution = Authorization::skip(fn() => $dbForProject->updateDocument('executions', $executionId, $execution));
+        $execution = Authorization::skip(fn () => $dbForProject->updateDocument('executions', $executionId, $execution));
 
         /** Trigger Webhook */
         $executionModel = new Execution();
@@ -323,8 +320,8 @@ class FunctionsV1 extends Worker
             ->setParam('userId', $userId)
             ->setParam('webhooks', $webhooks)
             ->setParam('event', 'functions.executions.update')
-            ->setParam('eventData', $execution->getArrayCopy(array_keys($executionModel->getRules())));
-        $executionUpdate->trigger();
+            ->setParam('eventData', $execution->getArrayCopy(array_keys($executionModel->getRules())))
+            ->trigger();
 
         /** Trigger realtime event */
         $target = Realtime::fromPayload('functions.executions.update', $execution);
@@ -357,7 +354,6 @@ class FunctionsV1 extends Worker
                 ->setParam('networkRequestSize', 0)
                 ->setParam('networkResponseSize', 0)
                 ->submit();
-            $usage->submit();
         }
     }
 

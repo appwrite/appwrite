@@ -3,6 +3,7 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
+use Appwrite\Event\Validator\Event as ValidatorEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Validator\UID;
@@ -34,7 +35,7 @@ App::post('/v1/functions')
     ->groups(['api', 'functions'])
     ->desc('Create Function')
     ->label('scope', 'functions.write')
-    ->label('event', 'functions.create')
+    ->label('event', 'functions.[functionId].create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'create')
@@ -47,14 +48,16 @@ App::post('/v1/functions')
     ->param('execute', [], new ArrayList(new Text(64)), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
-    ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
+    ->param('events', [], new ArrayList(new ValidatorEvent()), 'Events list.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($functionId, $name, $execute, $runtime, $vars, $events, $schedule, $timeout, $response, $dbForProject) {
+    ->inject('events')
+    ->action(function ($functionId, $name, $execute, $runtime, $vars, $events, $schedule, $timeout, $response, $dbForProject, $eventsInstance) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
+        /** @var Appwrite\Event\Event $eventsInstance */
 
         $functionId = ($functionId == 'unique()') ? $dbForProject->getId() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
@@ -74,6 +77,8 @@ App::post('/v1/functions')
             'timeout' => $timeout,
             'search' => implode(' ', [$functionId, $name, $runtime]),
         ]));
+
+        $eventsInstance->setParam('functionId', $function->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($function, Response::MODEL_FUNCTION);
@@ -144,7 +149,7 @@ App::get('/v1/functions/runtimes')
             return $runtimes[$key];
         }, array_keys($runtimes));
 
-        $response->dynamic(new Document([ 
+        $response->dynamic(new Document([
             'total' => count($runtimes),
             'runtimes' => $runtimes
         ]), Response::MODEL_RUNTIME_LIST);
@@ -202,9 +207,9 @@ App::get('/v1/functions/:functionId/usage')
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
         }
-        
+
         $usage = [];
-        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
                     'period' => '30m',
@@ -223,16 +228,16 @@ App::get('/v1/functions/:functionId/usage')
                     'limit' => 90,
                 ],
             ];
-            
+
             $metrics = [
-                "functions.$functionId.executions", 
-                "functions.$functionId.failures", 
+                "functions.$functionId.executions",
+                "functions.$functionId.failures",
                 "functions.$functionId.compute"
             ];
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
+            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
@@ -241,7 +246,7 @@ App::get('/v1/functions/:functionId/usage')
                         new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
                     ], $limit, 0, ['time'], [Database::ORDER_DESC]);
-    
+
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
                         $stats[$metric][] = [
@@ -254,7 +259,7 @@ App::get('/v1/functions/:functionId/usage')
                     $backfill = $limit - \count($requestDocs);
                     while ($backfill > 0) {
                         $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                        $diff = match ($period) { // convert period to seconds for unix timestamp math
                             '30m' => 1800,
                             '1d' => 86400,
                         };
@@ -265,7 +270,7 @@ App::get('/v1/functions/:functionId/usage')
                         $backfill--;
                     }
                     $stats[$metric] = array_reverse($stats[$metric]);
-                }    
+                }
             });
 
             $usage = new Document([
@@ -283,7 +288,7 @@ App::put('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Update Function')
     ->label('scope', 'functions.write')
-    ->label('event', 'functions.update')
+    ->label('event', 'functions.[functionId].update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'update')
@@ -295,18 +300,20 @@ App::put('/v1/functions/:functionId')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('execute', [], new ArrayList(new Text(64)), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
-    ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
+    ->param('events', [], new ArrayList(new ValidatorEvent()), 'Events list.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $dbForProject, $project, $user) {
+    ->inject('events')
+    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $dbForProject, $project, $user, $eventsInstance) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
         /** @var Appwrite\Auth\User $user */
+        /** @var Appwrite\Event\Event $eventsInstance */
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -341,6 +348,8 @@ App::put('/v1/functions/:functionId')
             ]);  // Async task rescheduale
         }
 
+        $eventsInstance->setParam('functionId', $function->getId());
+
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
@@ -348,7 +357,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Update Function Deployment')
     ->label('scope', 'functions.write')
-    ->label('event', 'functions.deployments.update')
+    ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'updateDeployment')
@@ -361,10 +370,12 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $project) {
+    ->inject('events')
+    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $project, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
+        /** @var Appwrite\Event\Event $events */
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -404,6 +415,11 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
                 'trigger' => 'schedule',
             ]);  // Async task rescheduale
         }
+
+        $events
+            ->setParam('functionId', $function->getId())
+            ->setParam('deploymentId', $deployment->getId());
+
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
@@ -411,7 +427,7 @@ App::delete('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Delete Function')
     ->label('scope', 'functions.write')
-    ->label('event', 'functions.delete')
+    ->label('event', 'functions.[functionId].delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'delete')
@@ -422,10 +438,12 @@ App::delete('/v1/functions/:functionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('deletes')
-    ->action(function ($functionId, $response, $dbForProject, $deletes) {
+    ->inject('events')
+    ->action(function ($functionId, $response, $dbForProject, $deletes, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $deletes */
+        /** @var Appwrite\Event\Event $events */
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -437,10 +455,12 @@ App::delete('/v1/functions/:functionId')
             throw new Exception('Failed to remove function from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
-        $deletes
-            ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $function)
-        ;
+        $deletes->setPayload([
+            'type' => DELETE_TYPE_DOCUMENT,
+            'document' => $function
+        ]);
+
+        $events->setParam('functionId', $function->getId());
 
         $response->noContent();
     });
@@ -449,7 +469,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
     ->desc('Create Deployment')
     ->label('scope', 'functions.write')
-    ->label('event', 'functions.deployments.create')
+    ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createDeployment')
@@ -467,16 +487,16 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->inject('user')
+    ->inject('events')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function ($functionId, $entrypoint, $file, $activate, $request, $response, $dbForProject, $usage, $user, $project, $deviceFunctions, $deviceLocal) {
+    ->action(function ($functionId, $entrypoint, $file, $activate, $request, $response, $dbForProject, $usage, $events, $project, $deviceFunctions, $deviceLocal) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
-        /** @var Appwrite\Auth\User $user */
+        /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Database\Document $project */
         /** @var Utopia\Storage\Device $deviceFunctions */
         /** @var Utopia\Storage\Device $deviceLocal */
@@ -515,7 +535,7 @@ App::post('/v1/functions/:functionId/deployments')
             $end = $request->getContentRangeEnd();
             $fileSize = $request->getContentRangeSize();
             $deploymentId = $request->getHeader('x-appwrite-id', $deploymentId);
-            if(is_null($start) || is_null($end) || is_null($fileSize)) {
+            if (is_null($start) || is_null($end) || is_null($fileSize)) {
                 throw new Exception('Invalid content-range header', 400, Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
 
@@ -539,8 +559,8 @@ App::post('/v1/functions/:functionId/deployments')
 
         // Save to storage
         $fileSize ??= $deviceLocal->getFileSize($fileTmpName);
-        $path = $deviceFunctions->getPath($deploymentId.'.'.\pathinfo($fileName, PATHINFO_EXTENSION));
-        
+        $path = $deviceFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
+
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         $metadata = ['content_type' => $deviceLocal->getFileMimeType($fileTmpName)];
@@ -560,7 +580,7 @@ App::post('/v1/functions/:functionId/deployments')
 
         $activate = (bool) filter_var($activate, FILTER_VALIDATE_BOOLEAN);
 
-        if($chunksUploaded === $chunks) {
+        if ($chunksUploaded === $chunks) {
             if ($activate) {
                 // Remove deploy for all other deployments.
                 $activeDeployments = $dbForProject->find('deployments', [
@@ -574,7 +594,7 @@ App::post('/v1/functions/:functionId/deployments')
                     $dbForProject->updateDocument('deployments', $activeDeployment->getId(), $activeDeployment);
                 }
             }
-            
+
             $fileSize = $deviceFunctions->getFileSize($path);
 
             if ($deployment->isEmpty()) {
@@ -604,11 +624,9 @@ App::post('/v1/functions/:functionId/deployments')
                 'type' => BUILD_TYPE_DEPLOYMENT
             ]);
 
-            $usage
-                ->setParam('storage', $deployment->getAttribute('size', 0))
-            ;
+            $usage->setParam('storage', $deployment->getAttribute('size', 0));
         } else {
-            if($deployment->isEmpty()) {
+            if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
                     '$id' => $deploymentId,
                     '$read' => ['role:all'],
@@ -631,6 +649,10 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $metadata = null;
+
+        $events
+            ->setParam('functionId', $function->getId())
+            ->setParam('deploymentId', $deployment->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
@@ -742,7 +764,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Delete Deployment')
     ->label('scope', 'functions.write')
-    ->label('event', 'functions.deployments.delete')
+    ->label('event', 'functions.[functionId].deployments.[deploymentId].delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'deleteDeployment')
@@ -755,19 +777,21 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('deletes')
+    ->inject('events')
     ->inject('deviceFunctions')
-    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $usage, $deletes, $deviceFunctions) {
+    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $usage, $deletes, $events, $deviceFunctions) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
         /** @var Appwrite\Event\Event $deletes */
+        /** @var Appwrite\Event\Event $events */
         /** @var Utopia\Storage\Device $deviceFunctions */
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
         }
-        
+
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
         if ($deployment->isEmpty()) {
             throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
@@ -783,20 +807,24 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
             }
         }
 
-        if($function->getAttribute('deployment') === $deployment->getId()) { // Reset function deployment
+        if ($function->getAttribute('deployment') === $deployment->getId()) { // Reset function deployment
             $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
                 'deployment' => '',
             ])));
         }
 
         $usage
-            ->setParam('storage', $deployment->getAttribute('size', 0) * -1)
-        ;
+            ->setParam('storage', $deployment->getAttribute('size', 0) * -1);
+
+        $events
+            ->setParam('functionId', $function->getId())
+            ->setParam('deploymentId', $deployment->getId());
 
         $deletes
-            ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $deployment)
-        ;
+            ->setPayload([
+                'type' => DELETE_TYPE_DOCUMENT,
+                'document' => $deployment
+            ]);
 
         $response->noContent();
     });
@@ -805,7 +833,7 @@ App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create Execution')
     ->label('scope', 'execution.write')
-    ->label('event', 'functions.executions.create')
+    ->label('event', 'functions.[functionId].executions.[executionId].create')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createExecution')
@@ -822,13 +850,15 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('user')
-    ->action(function ($functionId, $data, $async, $response, $project, $dbForProject, $user) {
+    ->inject('events')
+    ->action(function ($functionId, $data, $async, $response, $project, $dbForProject, $user, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $user */
+        /** @var Appwrite\Event\Event $events */
 
-        $function = Authorization::skip(fn() => $dbForProject->getDocument('functions', $functionId));
+        $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
@@ -842,7 +872,7 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported', 400, Exception::FUNCTION_RUNTIME_UNSUPPORTED);
         }
 
-        $deployment = Authorization::skip(fn() => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
+        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404, Exception::DEPLOYMENT_NOT_FOUND);
@@ -853,7 +883,7 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         /** Check if build has completed */
-        $build = Authorization::skip(fn() => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
         if ($build->isEmpty()) {
             throw new Exception('Build not found', 404, Exception::BUILD_NOT_FOUND);
         }
@@ -870,7 +900,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $executionId = $dbForProject->getId();
 
-        $execution = Authorization::skip(fn() => $dbForProject->createDocument('executions', new Document([
+        $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', new Document([
             '$id' => $executionId,
             '$read' => (!$user->isEmpty()) ? ['user:' . $user->getId()] : [],
             '$write' => [],
@@ -892,13 +922,14 @@ App::post('/v1/functions/:functionId/executions')
             $sessions = $user->getAttribute('sessions', []);
             $current = new Document();
 
-            foreach ($sessions as $session) { /** @var Utopia\Database\Document $session */
+            foreach ($sessions as $session) {
+                /** @var Utopia\Database\Document $session */
                 if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                     $current = $session;
                 }
             }
 
-            if(!$current->isEmpty()) {
+            if (!$current->isEmpty()) {
                 $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
                 $jwt = $jwtObj->encode([
                     'userId' => $user->getId(),
@@ -907,19 +938,30 @@ App::post('/v1/functions/:functionId/executions')
             }
         }
 
-        if ($async) {
-            Resque::enqueue(Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME, [
-                'projectId' => $project->getId(),
-                'functionId' => $function->getId(),
-                'webhooks' => $project->getAttribute('webhooks', []),
-                'executionId' => $execution->getId(),
-                'trigger' => 'http',
+        $events
+            ->setParam('functionId', $function->getId())
+            ->setParam('executionId', $execution->getId())
+            ->setPayload([
                 'data' => $data,
-                'userId' => $user->getId(),
-                'jwt' => $jwt,
-            ]);
+                'jwt' => $jwt
+            ])
+            ->setTrigger($execution);
+
+        if ($async) {
+            $event = new Event(Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME);
+            $event
+                ->setProject($project)
+                ->setUser($user)
+                ->setTrigger($execution)
+                ->setPayload([
+                    'data' => $data,
+                    'jwt' => $jwt
+                ])
+                ->trigger();
+
 
             $response->setStatusCode(Response::STATUS_CODE_CREATED);
+
             return $response->dynamic($execution, Response::MODEL_EXECUTION);
         }
 
@@ -966,7 +1008,7 @@ App::post('/v1/functions/:functionId/executions')
             Console::error($th->getMessage());
         }
 
-        Authorization::skip(fn() => $dbForProject->updateDocument('executions', $executionId, $execution));
+        Authorization::skip(fn () => $dbForProject->updateDocument('executions', $executionId, $execution));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -996,7 +1038,7 @@ App::get('/v1/functions/:functionId/executions')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
 
-        $function = Authorization::skip(fn() => $dbForProject->getDocument('functions', $functionId));
+        $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
@@ -1046,7 +1088,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
 
-        $function = Authorization::skip(fn() => $dbForProject->getDocument('functions', $functionId));
+        $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
@@ -1069,7 +1111,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
     ->desc('Retry Build')
     ->label('scope', 'functions.write')
-    ->label('event', 'functions.deployments.update')
+    ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'retryBuild')
@@ -1082,10 +1124,12 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->action(function ($functionId, $deploymentId, $buildId, $response, $dbForProject, $project) {
+    ->inject('events')
+    ->action(function ($functionId, $deploymentId, $buildId, $response, $dbForProject, $project, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
+        /** @var Appwrite\Event\Event $events */
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -1098,7 +1142,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $build = Authorization::skip(fn() => $dbForProject->getDocument('builds', $buildId));
+        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
 
         if ($build->isEmpty()) {
             throw new Exception('Build not found', 404, Exception::BUILD_NOT_FOUND);
@@ -1107,6 +1151,10 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         if ($build->getAttribute('status') !== 'failed') {
             throw new Exception('Build not failed', 400, Exception::BUILD_IN_PROGRESS);
         }
+
+        $events
+            ->setParam('functionId', $function->getId())
+            ->setParam('deploymentId', $deployment->getId());
 
         // Enqueue a message to start the build
         Resque::enqueue(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, [

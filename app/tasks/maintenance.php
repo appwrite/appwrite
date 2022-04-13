@@ -11,46 +11,56 @@ $cli
     ->desc('Schedules maintenance tasks and publishes them to resque')
     ->action(function () {
         Console::title('Maintenance V1');
-        Console::success(APP_NAME.' maintenance process v1 has started');
+        Console::success(APP_NAME . ' maintenance process v1 has started');
 
         function notifyDeleteExecutionLogs(int $interval)
         {
             Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
-                'type' => DELETE_TYPE_EXECUTIONS,
-                'timestamp' => time() - $interval
+                'payload' => [
+                    'type' => DELETE_TYPE_EXECUTIONS,
+                    'timestamp' => time() - $interval
+                ]
             ]);
         }
 
-        function notifyDeleteAbuseLogs(int $interval) 
+        function notifyDeleteAbuseLogs(int $interval)
         {
             Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
-                'type' =>  DELETE_TYPE_ABUSE,
-                'timestamp' => time() - $interval
+                'payload' => [
+                    'type' =>  DELETE_TYPE_ABUSE,
+                    'timestamp' => time() - $interval
+                ]
             ]);
         }
 
-        function notifyDeleteAuditLogs(int $interval) 
+        function notifyDeleteAuditLogs(int $interval)
         {
             Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
-                'type' => DELETE_TYPE_AUDIT,
-                'timestamp' => time() - $interval
+                'payload' => [
+                    'type' => DELETE_TYPE_AUDIT,
+                    'timestamp' => time() - $interval
+                ]
             ]);
         }
 
-        function notifyDeleteUsageStats(int $interval30m, int $interval1d) 
+        function notifyDeleteUsageStats(int $interval30m, int $interval1d)
         {
             Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
-                'type' => DELETE_TYPE_USAGE,
-                'timestamp1d' => time() - $interval1d,
-                'timestamp30m' => time() - $interval30m,
+                'payload' => [
+                    'type' => DELETE_TYPE_USAGE,
+                    'timestamp1d' => time() - $interval1d,
+                    'timestamp30m' => time() - $interval30m,
+                ]
             ]);
         }
 
-        function notifyDeleteConnections() 
+        function notifyDeleteConnections()
         {
             Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
-                'type' => DELETE_TYPE_REALTIME,
-                'timestamp' => time() - 60
+                'payload' => [
+                    'type' => DELETE_TYPE_REALTIME,
+                    'timestamp' => time() - 60
+                ]
             ]);
         }
 
@@ -59,10 +69,10 @@ $cli
         $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
         $auditLogRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', '1209600');
         $abuseLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', '86400');
-        $usageStatsRetention30m = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_30M', '129600');//36 hours
+        $usageStatsRetention30m = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_30M', '129600'); //36 hours
         $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
 
-        Console::loop(function() use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) {
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) {
             $time = date('d-m-Y H:i:s', time());
             Console::info("[{$time}] Notifying deletes workers every {$interval} seconds");
             notifyDeleteExecutionLogs($executionLogsRetention);

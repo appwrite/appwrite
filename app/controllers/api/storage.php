@@ -39,7 +39,7 @@ App::post('/v1/storage/buckets')
     ->desc('Create bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
-    ->label('event', 'storage.buckets.create')
+    ->label('event', 'buckets.[bucketId].create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'createBucket')
@@ -61,11 +61,13 @@ App::post('/v1/storage/buckets')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($bucketId, $name, $permission, $read, $write, $enabled, $maximumFileSize, $allowedFileExtensions, $encryption, $antivirus, $response, $dbForProject, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($bucketId, $name, $permission, $read, $write, $enabled, $maximumFileSize, $allowedFileExtensions, $encryption, $antivirus, $response, $dbForProject, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         $bucketId = $bucketId === 'unique()' ? $dbForProject->getId() : $bucketId;
         try {
@@ -124,9 +126,12 @@ App::post('/v1/storage/buckets')
         }
 
         $audits
-            ->setParam('event', 'storage.buckets.create')
-            ->setParam('resource', 'storage/buckets/' . $bucket->getId())
-            ->setParam('data', $bucket->getArrayCopy())
+            ->setResource('storage/buckets/' . $bucket->getId())
+            ->setPayload($bucket->getArrayCopy())
+        ;
+
+        $events
+            ->setParam('bucketId', $bucket->getId())
         ;
 
         $usage->setParam('storage.buckets.create', 1);
@@ -213,7 +218,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->desc('Update Bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
-    ->label('event', 'storage.buckets.update')
+    ->label('event', 'buckets.[bucketId].update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'updateBucket')
@@ -235,11 +240,13 @@ App::put('/v1/storage/buckets/:bucketId')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($bucketId, $name, $permission, $read, $write, $enabled, $maximumFileSize, $allowedFileExtensions, $encryption, $antivirus, $response, $dbForProject, $audits, $usage) {
+    ->inject('events')
+    ->action(function ($bucketId, $name, $permission, $read, $write, $enabled, $maximumFileSize, $allowedFileExtensions, $encryption, $antivirus, $response, $dbForProject, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
@@ -247,13 +254,13 @@ App::put('/v1/storage/buckets/:bucketId')
             throw new Exception('Bucket not found', 404, Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $read??=$bucket->getAttribute('$read', []); // By default inherit read permissions
-        $write??=$bucket->getAttribute('$write', []); // By default inherit write permissions
-        $maximumFileSize??=$bucket->getAttribute('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0));
-        $allowedFileExtensions??=$bucket->getAttribute('allowedFileExtensions', []);
-        $enabled??=$bucket->getAttribute('enabled', true);
-        $encryption??=$bucket->getAttribute('encryption', true);
-        $antivirus??=$bucket->getAttribute('antivirus', true);
+        $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
+        $write ??= $bucket->getAttribute('$write', []); // By default inherit write permissions
+        $maximumFileSize ??= $bucket->getAttribute('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0));
+        $allowedFileExtensions ??= $bucket->getAttribute('allowedFileExtensions', []);
+        $enabled ??= $bucket->getAttribute('enabled', true);
+        $encryption ??= $bucket->getAttribute('encryption', true);
+        $antivirus ??= $bucket->getAttribute('antivirus', true);
 
         $bucket = $dbForProject->updateDocument('buckets', $bucket->getId(), $bucket
                 ->setAttribute('name', $name)
@@ -268,9 +275,12 @@ App::put('/v1/storage/buckets/:bucketId')
         );
 
         $audits
-            ->setParam('event', 'storage.buckets.update')
-            ->setParam('resource', 'storage/buckets/' . $bucket->getId())
-            ->setParam('data', $bucket->getArrayCopy())
+            ->setResource('storage/buckets/' . $bucket->getId())
+            ->setPayload($bucket->getArrayCopy())
+        ;
+
+        $events
+            ->setParam('bucketId', $bucket->getId())
         ;
 
         $usage->setParam('storage.buckets.update', 1);
@@ -282,7 +292,7 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->desc('Delete Bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
-    ->label('event', 'storage.buckets.delete')
+    ->label('event', 'buckets.[bucketId].delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'deleteBucket')
@@ -299,7 +309,7 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->action(function ($bucketId, $response, $dbForProject, $audits, $deletes, $events, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Event\Event $deletes */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
@@ -315,18 +325,21 @@ App::delete('/v1/storage/buckets/:bucketId')
         }
 
         $deletes
-            ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $bucket)
+            ->setParam('bucketId', $bucket->getId())
+            ->setPayload([
+                'type' => DELETE_TYPE_DOCUMENT,
+                'document' => $bucket
+            ])
         ;
 
         $events
-            ->setParam('eventData', $response->output($bucket, Response::MODEL_BUCKET))
+            ->setParam('bucketId', $bucket->getId())
+            ->setPayload($response->output($bucket, Response::MODEL_BUCKET))
         ;
 
         $audits
-            ->setParam('event', 'storage.buckets.delete')
-            ->setParam('resource', 'storage/buckets/' . $bucket->getId())
-            ->setParam('data', $bucket->getArrayCopy())
+            ->setResource('storage/buckets/' . $bucket->getId())
+            ->setPayload($bucket->getArrayCopy())
         ;
 
         $usage->setParam('storage.buckets.delete', 1);
@@ -339,7 +352,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->desc('Create File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
-    ->label('event', 'storage.files.create')
+    ->label('event', 'buckets.[bucketId].files.[fileId].create')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'createFile')
@@ -369,7 +382,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $user */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Utopia\Storage\Device $deviceFiles */
@@ -581,9 +594,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'metadata' => $metadata,
                     ]);
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function () use ($dbForProject, $bucket, $doc) {
-                            return $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
-                        });
+                        $file = Authorization::skip(fn () => $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc));
                     } else {
                         $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
                     }
@@ -603,9 +614,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('chunksUploaded', $chunksUploaded);
 
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function () use ($dbForProject, $bucket, $fileId, $file) {
-                            return $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
-                        });
+                        $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
                     } else {
                         $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                     }
@@ -618,8 +627,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             $audits
-                ->setParam('event', 'storage.files.create')
-                ->setParam('resource', 'storage/files/' . $file->getId())
+                ->setResource('storage/files/' . $file->getId())
             ;
 
             $usage
@@ -651,9 +659,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'metadata' => $metadata,
                     ]);
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function () use ($dbForProject, $bucket, $doc) {
-                            return $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
-                        });
+                        $file = Authorization::skip(fn () => $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc));
                     } else {
                         $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
                     }
@@ -663,9 +669,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('metadata', $metadata);
 
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function () use ($dbForProject, $bucket, $fileId, $file) {
-                            return $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
-                        });
+                        $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
                     } else {
                         $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                     }
@@ -677,13 +681,16 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
         }
 
-        $events->setParam('bucket', $bucket->getArrayCopy());
+        $events
+            ->setParam('bucketId', $bucket->getId())
+            ->setParam('fileId', $file->getId())
+            ->setTrigger($bucket)
+        ;
 
         $metadata = null; // was causing leaks as it was passed by reference
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($file, Response::MODEL_FILE);
-        ;
     });
 
 App::get('/v1/storage/buckets/:bucketId/files')
@@ -1323,7 +1330,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->desc('Update File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
-    ->label('event', 'storage.files.update')
+    ->label('event', 'buckets.[bucketId].files.[fileId].update')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'updateFile')
@@ -1346,7 +1353,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $user */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Event\Event $events */
         /** @var string $mode */
@@ -1405,12 +1412,13 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
         }
 
-        $events->setParam('bucket', $bucket->getArrayCopy());
-
-        $audits
-            ->setParam('event', 'storage.files.update')
-            ->setParam('resource', 'file/' . $file->getId())
+        $events
+            ->setParam('bucketId', $bucket->getId())
+            ->setParam('fileId', $file->getId())
+            ->setTrigger($bucket)
         ;
+
+        $audits->setResource('file/' . $file->getId());
 
         $usage
             ->setParam('storage.files.update', 1)
@@ -1425,7 +1433,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->desc('Delete File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
-    ->label('event', 'storage.files.delete')
+    ->label('event', 'buckets.[bucketId].files.[fileId].delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'deleteFile')
@@ -1447,7 +1455,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Utopia\Storage\Device $deviceFiles */
         /** @var string $mode */
@@ -1505,10 +1513,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception('Failed to delete file from device', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
-        $audits
-            ->setParam('event', 'storage.files.delete')
-            ->setParam('resource', 'file/' . $file->getId())
-        ;
+        $audits->setResource('file/' . $file->getId());
 
         $usage
             ->setParam('storage', $file->getAttribute('size', 0) * -1)
@@ -1517,8 +1522,10 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         ;
 
         $events
-            ->setParam('eventData', $response->output($file, Response::MODEL_FILE))
-            ->setParam('bucket', $bucket->getArrayCopy())
+            ->setParam('bucketId', $bucket->getId())
+            ->setParam('fileId', $file->getId())
+            ->setTrigger($bucket)
+            ->setPayload($response->output($file, Response::MODEL_FILE))
         ;
 
         $response->noContent();

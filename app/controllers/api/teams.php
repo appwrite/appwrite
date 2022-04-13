@@ -26,7 +26,7 @@ use Utopia\Validator\WhiteList;
 App::post('/v1/teams')
     ->desc('Create Team')
     ->groups(['api', 'teams'])
-    ->label('event', 'teams.create')
+    ->label('event', 'teams.[teamId].create')
     ->label('scope', 'teams.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
@@ -84,6 +84,8 @@ App::post('/v1/teams')
             $user->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND);
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
         }
+
+        $events->setParam('teamId', $team->getId());
 
         if (!empty($user->getId())) {
             $events->setParam('userId', $user->getId());
@@ -169,7 +171,7 @@ App::get('/v1/teams/:teamId')
 App::put('/v1/teams/:teamId')
     ->desc('Update Team')
     ->groups(['api', 'teams'])
-    ->label('event', 'teams.update')
+    ->label('event', 'teams.[teamId].update')
     ->label('scope', 'teams.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
@@ -182,9 +184,11 @@ App::put('/v1/teams/:teamId')
     ->param('name', null, new Text(128), 'New team name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($teamId, $name, $response, $dbForProject) {
+    ->inject('events')
+    ->action(function ($teamId, $name, $response, $dbForProject, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
+        /** @var Appwrite\Event\Event $events */
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -197,13 +201,15 @@ App::put('/v1/teams/:teamId')
             ->setAttribute('search', implode(' ', [$teamId, $name]))
         );
 
+        $events->setParam('teamId', $team->getId());
+
         $response->dynamic($team, Response::MODEL_TEAM);
     });
 
 App::delete('/v1/teams/:teamId')
     ->desc('Delete Team')
     ->groups(['api', 'teams'])
-    ->label('event', 'teams.delete')
+    ->label('event', 'teams.[teamId].delete')
     ->label('scope', 'teams.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
@@ -244,12 +250,17 @@ App::delete('/v1/teams/:teamId')
         }
 
         $deletes
-            ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $team)
+            ->setParam('teamId', $team->getId())
+            ->setPayload([
+                'type' => DELETE_TYPE_DOCUMENT,
+                'document' => $team
+            ])
+
         ;
 
         $events
-            ->setParam('eventData', $response->output($team, Response::MODEL_TEAM))
+            ->setParam('teamId', $team->getId())
+            ->setPayload($response->output($team, Response::MODEL_TEAM))
         ;
 
         $response->noContent();
@@ -258,7 +269,7 @@ App::delete('/v1/teams/:teamId')
 App::post('/v1/teams/:teamId/memberships')
     ->desc('Create Team Membership')
     ->groups(['api', 'teams', 'auth'])
-    ->label('event', 'teams.memberships.create')
+    ->label('event', 'teams.[teamId].memberships.[membershipId].create')
     ->label('scope', 'teams.write')
     ->label('auth.type', 'invites')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -281,13 +292,15 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('locale')
     ->inject('audits')
     ->inject('mails')
-    ->action(function ($teamId, $email, $roles, $url, $name, $response, $project, $user, $dbForProject, $locale, $audits, $mails) {
+    ->inject('events')
+    ->action(function ($teamId, $email, $roles, $url, $name, $response, $project, $user, $dbForProject, $locale, $audits, $mails, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Event\Event $mails */
+        /** @var Appwrite\Event\Audit $audits */
+        /** @var Appwrite\Event\Mail $mails */
+        /** @var Appwrite\Event\Event $events */
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
@@ -398,24 +411,24 @@ App::post('/v1/teams/:teamId/memberships')
 
         if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
             $mails
-                ->setParam('event', 'teams.memberships.create')
-                ->setParam('from', $project->getId())
-                ->setParam('recipient', $email)
-                ->setParam('name', $name)
-                ->setParam('url', $url)
-                ->setParam('locale', $locale->default)
-                ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))
-                ->setParam('owner', $user->getAttribute('name', ''))
-                ->setParam('team', $team->getAttribute('name', '[TEAM-NAME]'))
-                ->setParam('type', MAIL_TYPE_INVITATION)
+                ->setType(MAIL_TYPE_INVITATION)
+                ->setRecipient($email)
+                ->setUrl($url)
+                ->setName($name)
+                ->setLocale($locale->default)
+                ->setTeam($team)
+                ->setUser($user)
                 ->trigger()
             ;
         }
 
         $audits
-            ->setParam('userId', $invitee->getId())
-            ->setParam('event', 'teams.memberships.create')
-            ->setParam('resource', 'team/'.$teamId)
+            ->setResource('team/'.$teamId)
+        ;
+
+        $events
+            ->setParam('teamId', $team->getId())
+            ->setParam('membershipId', $membership->getId())
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -548,7 +561,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
 App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Update Membership Roles')
     ->groups(['api', 'teams'])
-    ->label('event', 'teams.memberships.update')
+    ->label('event', 'teams.[teamId].memberships.[membershipId].update')
     ->label('scope', 'teams.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
@@ -565,12 +578,14 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('audits')
-    ->action(function ($teamId, $membershipId, $roles, $request, $response, $user, $dbForProject, $audits) {
+    ->inject('events')
+    ->action(function ($teamId, $membershipId, $roles, $request, $response, $user, $dbForProject, $audits, $events) {
         /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
+        /** @var Appwrite\Event\Event $events */
 
         $team = $dbForProject->getDocument('teams', $teamId);
         if ($team->isEmpty()) {
@@ -612,10 +627,11 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
 
         Authorization::skip(fn () => $dbForProject->updateDocument('users', $profile->getId(), $profile));
 
-        $audits
-            ->setParam('userId', $user->getId())
-            ->setParam('event', 'teams.memberships.update')
-            ->setParam('resource', 'team/' . $teamId);
+        $audits->setResource('team/' . $teamId);
+
+        $events
+            ->setParam('teamId', $team->getId())
+            ->setParam('membershipId', $membership->getId());
 
         $response->dynamic(
             $membership
@@ -628,7 +644,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
 App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->desc('Update Team Membership Status')
     ->groups(['api', 'teams'])
-    ->label('event', 'teams.memberships.update.status')
+    ->label('event', 'teams.[teamId].memberships.[membershipId].update.status')
     ->label('scope', 'public')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
@@ -647,13 +663,15 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('dbForProject')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($teamId, $membershipId, $userId, $secret, $request, $response, $user, $dbForProject, $geodb, $audits) {
+    ->inject('events')
+    ->action(function ($teamId, $membershipId, $userId, $secret, $request, $response, $user, $dbForProject, $geodb, $audits, $events) {
         /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var MaxMind\Db\Reader $geodb */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
+        /** @var Appwrite\Event\Event $events */
 
         $protocol = $request->getProtocol();
 
@@ -677,7 +695,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception('Secret key not valid', 401, Exception::TEAM_INVALID_SECRET);
         }
 
-        if ($userId != $membership->getAttribute('userId')) {
+        if ($userId !== $membership->getAttribute('userId')) {
             throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401, Exception::TEAM_INVITE_MISMATCH);
         }
 
@@ -737,10 +755,11 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
 
-        $audits
-            ->setParam('userId', $user->getId())
-            ->setParam('event', 'teams.memberships.update.status')
-            ->setParam('resource', 'team/'.$teamId)
+        $audits->setResource('team/'.$teamId);
+
+        $events
+            ->setParam('teamId', $team->getId())
+            ->setParam('membershipId', $membership->getId())
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -763,7 +782,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Delete Team Membership')
     ->groups(['api', 'teams'])
-    ->label('event', 'teams.memberships.delete')
+    ->label('event', 'teams.[teamId].memberships.[membershipId].delete')
     ->label('scope', 'teams.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
@@ -780,7 +799,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->action(function ($teamId, $membershipId, $response, $dbForProject, $audits, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Event\Event $events */
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
@@ -833,14 +852,12 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
         }
 
-        $audits
-            ->setParam('userId', $membership->getAttribute('userId'))
-            ->setParam('event', 'teams.memberships.delete')
-            ->setParam('resource', 'team/'.$teamId)
-        ;
+        $audits->setResource('team/'.$teamId);
 
         $events
-            ->setParam('eventData', $response->output($membership, Response::MODEL_MEMBERSHIP))
+            ->setParam('teamId', $team->getId())
+            ->setParam('membershipId', $membership->getId())
+            ->setPayload($response->output($membership, Response::MODEL_MEMBERSHIP))
         ;
 
         $response->noContent();
