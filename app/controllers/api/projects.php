@@ -95,7 +95,7 @@ App::post('/v1/projects')
             'legalTaxId' => $legalTaxId,
             'services' => new stdClass(),
             'platforms' => null,
-            'providers' => [],
+            'authProviders' => [],
             'webhooks' => null,
             'keys' => null,
             'domains' => null,
@@ -447,11 +447,11 @@ App::patch('/v1/projects/:projectId/oauth2')
             throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
-        $providers = $project->getAttribute('providers', []);
+        $providers = $project->getAttribute('authProviders', []);
         $providers[$provider . 'Appid'] = $appId;
         $providers[$provider . 'Secret'] = $secret;
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('providers', $providers));
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('authProviders', $providers));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
