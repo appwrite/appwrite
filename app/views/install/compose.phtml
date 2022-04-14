@@ -128,6 +128,7 @@ services:
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_FUNCTIONS_RUNTIMES
       - _APP_EXECUTOR_SECRET
+      - _APP_EXECUTOR_HOST
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_STATSD_HOST
@@ -268,6 +269,7 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_EXECUTOR_SECRET
+      - _APP_EXECUTOR_HOST
 
   appwrite-worker-database:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -310,6 +312,7 @@ services:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
       - _APP_EXECUTOR_SECRET
+      - _APP_EXECUTOR_HOST
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -379,6 +382,7 @@ services:
       - _APP_DB_PASS
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_EXECUTOR_SECRET
+      - _APP_EXECUTOR_HOST
       - _APP_USAGE_STATS
       - DOCKERHUB_PULL_USERNAME
       - DOCKERHUB_PULL_PASSWORD
