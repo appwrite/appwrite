@@ -1,6 +1,8 @@
 name: "Tests"
 
-on: [pull_request]
+on:
+  pull_request:
+    types: [opened, reopened]
 jobs:
   tests:
     name: Unit & E2E
