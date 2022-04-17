@@ -274,8 +274,8 @@ App::get('/v1/account/sessions/oauth2/:provider')
 
         $protocol = $request->getProtocol();
         $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
-        $appId = $project->getAttribute('providers', [])[$provider.'Appid'] ?? '';
-        $appSecret = $project->getAttribute('providers', [])[$provider.'Secret'] ?? '{}';
+        $appId = $project->getAttribute('authProviders', [])[$provider.'Appid'] ?? '';
+        $appSecret = $project->getAttribute('authProviders', [])[$provider.'Secret'] ?? '{}';
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
             $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
@@ -396,8 +396,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $validateURL = new URL();
-        $appId = $project->getAttribute('providers', [])[$provider.'Appid'] ?? '';
-        $appSecret = $project->getAttribute('providers', [])[$provider.'Secret'] ?? '{}';
+        $appId = $project->getAttribute('authProviders', [])[$provider.'Appid'] ?? '';
+        $appSecret = $project->getAttribute('authProviders', [])[$provider.'Secret'] ?? '{}';
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
             $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
@@ -1710,8 +1710,8 @@ App::patch('/v1/account/sessions/:sessionId')
                 $provider = $session->getAttribute('provider');
                 $refreshToken = $session->getAttribute('providerRefreshToken');
 
-                $appId = $project->getAttribute('providers', [])[$provider.'Appid'] ?? '';
-                $appSecret = $project->getAttribute('providers', [])[$provider.'Secret'] ?? '{}';
+                $appId = $project->getAttribute('authProviders', [])[$provider.'Appid'] ?? '';
+                $appSecret = $project->getAttribute('authProviders', [])[$provider.'Secret'] ?? '{}';
 
                 $className = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
              
