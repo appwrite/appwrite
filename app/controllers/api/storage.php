@@ -312,7 +312,7 @@ App::delete('/v1/storage/buckets/:bucketId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Event $deletes */
+        /** @var Appwrite\Event\Delete $deletes */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
 
@@ -327,12 +327,8 @@ App::delete('/v1/storage/buckets/:bucketId')
         }
 
         $deletes
-            ->setParam('bucketId', $bucket->getId())
-            ->setPayload([
-                'type' => DELETE_TYPE_DOCUMENT,
-                'document' => $bucket
-            ])
-        ;
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($bucket);
 
         $events
             ->setParam('bucketId', $bucket->getId())

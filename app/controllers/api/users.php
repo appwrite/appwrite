@@ -760,7 +760,7 @@ App::delete('/v1/users/:userId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Event $deletes */
+        /** @var Appwrite\Event\Delete $deletes */
         /** @var Appwrite\Stats\Stats $usage */
 
         $user = $dbForProject->getDocument('users', $userId);
@@ -789,11 +789,8 @@ App::delete('/v1/users/:userId')
         $dbForProject->updateDocument('users', $userId, $user);
 
         $deletes
-            ->setParam('userId', $userId)
-            ->setPayload([
-                'type' => DELETE_TYPE_DOCUMENT,
-                'document' => $clone
-            ])
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($clone)
         ;
 
         $events

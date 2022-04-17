@@ -674,6 +674,7 @@ App::delete('/v1/database/collections/:collectionId')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Audit $audits */
+        /** @var Appwrite\Event\Delete $deletes */
         /** @var Appwrite\Stats\Stats $usage */
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
@@ -689,10 +690,8 @@ App::delete('/v1/database/collections/:collectionId')
         $dbForProject->deleteCachedCollection('collection_' . $collection->getInternalId());
 
         $deletes
-            ->setPayload([
-                'type' => DELETE_TYPE_DOCUMENT,
-                'document' => $collection
-            ])
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($collection)
         ;
 
         $usage->setParam('database.collections.delete', 1);
@@ -2134,7 +2133,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Event $deletes */
+        /** @var Appwrite\Event\Delete $deletes */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var string $mode */
 
@@ -2182,10 +2181,8 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         $document->setAttribute('$collection', $collectionId);
 
         $deletes
-            ->setPayload([
-                'type' => DELETE_TYPE_AUDIT,
-                'document' => $document
-            ])
+            ->setType(DELETE_TYPE_AUDIT)
+            ->setDocument($document)
         ;
 
         $usage

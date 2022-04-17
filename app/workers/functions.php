@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Appwrite\Stats\Stats;
@@ -37,76 +38,75 @@ class FunctionsV1 extends Worker
 
     public function run(): void
     {
-        $events = $this->args['events'];
-        $payload = $this->args['payload'];
-        $user = new Document($this->args['user'] ?? []);
+        $type = $this->args['type'] ?? '';
+        $events = $this->args['events'] ?? [];
         $project = new Document($this->args['project'] ?? []);
-        $execution = new Document($this->args['trigger'] ?? []);
-
-        $event = $events[0] ?? '';
-        $data = $payload['data'] ?? '';
-        $jwt = $payload['jwt'] ?? '';
-        $webhooks = $project->getAttribute('webhooks', []);
-        $trigger = $execution->getAttribute('trigger', '');
-        $scheduleOriginal = $execution->getAttribute('scheduleOriginal', '');
-        $eventData = !empty($execution->getAttribute('eventData')) ? json_encode($execution->getAttribute('eventData')) : '';
-        $jwt = $execution->getAttribute('jwt', '');
+        $user = new Document($this->args['user'] ?? []);
+        $payload = json_encode($this->args['payload'] ?? []);
 
         $database = $this->getProjectDB($project->getId());
 
-        switch ($trigger) {
-            case 'event':
-                $limit = 30;
-                $sum = 30;
-                $offset = 0;
-                $functions = [];
-                /** @var Document[] $functions */
+        /**
+         * Handle Event execution.
+         */
+        if (!empty($events)) {
+            $limit = 30;
+            $sum = 30;
+            $offset = 0;
+            $functions = [];
+            /** @var Document[] $functions */
 
-                while ($sum >= $limit) {
-                    $functions = Authorization::skip(fn() => $database->find('functions', [], $limit, $offset, ['name'], [Database::ORDER_ASC]));
-                    $sum = \count($functions);
-                    $offset = $offset + $limit;
+            while ($sum >= $limit) {
+                $functions = Authorization::skip(fn () => $database->find('functions', [], $limit, $offset, ['name'], [Database::ORDER_ASC]));
+                $sum = \count($functions);
+                $offset = $offset + $limit;
 
-                    Console::log('Fetched ' . $sum . ' functions...');
+                Console::log('Fetched ' . $sum . ' functions...');
 
-                    foreach ($functions as $function) {
-                        if (!array_intersect($events, $function->getAttribute('events', []))) {
-                            continue;
-                        }
-
-                        Console::success('Iterating function: ' . $function->getAttribute('name'));
-
-                        $this->execute(
-                            projectId: $project->getId(),
-                            function: $function,
-                            dbForProject: $database,
-                            executionId: $execution->getId(),
-                            webhooks: $webhooks,
-                            trigger: $trigger,
-                            event: $event,
-                            eventData: $eventData,
-                            data: $data,
-                            userId: $user->getId(),
-                            jwt: $jwt
-                        );
-
-                        Console::success('Triggered function: ' . $event);
+                foreach ($functions as $function) {
+                    if (!array_intersect($events, $function->getAttribute('events', []))) {
+                        continue;
                     }
-                }
 
-                break;
+                    Console::success('Iterating function: ' . $function->getAttribute('name'));
+
+                    $this->execute(
+                        projectId: $project->getId(),
+                        function: $function,
+                        dbForProject: $database,
+                        trigger: 'event',
+                        event: $events[0],
+                        eventData: $payload,
+                        userId: $user->getId()
+                    );
+
+                    Console::success('Triggered function: ' . $events[0]);
+                }
+            }
+
+            return;
+        }
+
+        /**
+         * Handle Schedule and HTTP execution.
+         */
+        $user = new Document($this->args['user'] ?? []);
+        $project = new Document($this->args['project'] ?? []);
+        $execution = new Document($this->args['execution'] ?? []);
+
+        switch ($type) {
             case 'http':
-                $function = Authorization::skip(fn() => $database->getDocument('functions', $execution->getAttribute('functionId')));
+                $jwt = $this->args['jwt'] ?? '';
+                $data = $this->args['data'] ?? '';
+
+                $function = Authorization::skip(fn () => $database->getDocument('functions', $execution->getAttribute('functionId')));
 
                 $this->execute(
                     projectId: $project->getId(),
                     function: $function,
                     dbForProject: $database,
                     executionId: $execution->getId(),
-                    webhooks: $webhooks,
-                    trigger: $trigger,
-                    event: '',
-                    eventData: '',
+                    trigger: 'http',
                     data: $data,
                     userId: $user->getId(),
                     jwt: $jwt
@@ -115,7 +115,8 @@ class FunctionsV1 extends Worker
                 break;
 
             case 'schedule':
-                $function = Authorization::skip(fn() => $database->getDocument('functions', $execution->getAttribute('functionId')));
+                $scheduleOriginal = $execution->getAttribute('scheduleOriginal', '');
+                $function = Authorization::skip(fn () => $database->getDocument('functions', $execution->getAttribute('functionId')));
 
                 /*
                  * 1. Get Original Task
@@ -158,28 +159,21 @@ class FunctionsV1 extends Worker
                     throw new Exception('Function update failed.');
                 }
 
-                ResqueScheduler::enqueueAt($next, Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME, [
-                    'projectId' => $project->getId(),
-                    'webhooks' => $webhooks,
-                    'functionId' => $function->getId(),
-                    'userId' => $user->getId(),
-                    'executionId' => null,
-                    'trigger' => 'schedule',
-                    'scheduleOriginal' => $function->getAttribute('schedule', ''),
-                ]);  // Async task reschedule
+                $reschedule = new Func();
+                $reschedule
+                    ->setFunction($function)
+                    ->setType('schedule')
+                    ->setUser($user)
+                    ->setProject($project);
+
+                // Async task reschedule
+                $reschedule->schedule($next);
 
                 $this->execute(
                     projectId: $project->getId(),
                     function: $function,
                     dbForProject: $database,
-                    executionId: $execution->getId(),
-                    webhooks: $webhooks,
-                    trigger: $trigger,
-                    event: $event,
-                    eventData: $eventData,
-                    data: $data,
-                    userId: $user->getId(),
-                    jwt: $jwt
+                    trigger: 'schedule'
                 );
 
                 break;
@@ -190,14 +184,13 @@ class FunctionsV1 extends Worker
         string $projectId,
         Document $function,
         Database $dbForProject,
-        string $executionId,
-        array $webhooks,
         string $trigger,
-        string $event,
-        string $eventData,
-        string $data,
-        string $userId,
-        string $jwt
+        string $executionId = null,
+        string $event = null,
+        string $eventData = null,
+        string $data = null,
+        string $userId = null,
+        string $jwt = null
     ) {
 
         $functionId = $function->getId();
@@ -318,7 +311,6 @@ class FunctionsV1 extends Worker
         $executionUpdate
             ->setParam('projectId', $projectId)
             ->setParam('userId', $userId)
-            ->setParam('webhooks', $webhooks)
             ->setParam('event', 'functions.executions.update')
             ->setParam('eventData', $execution->getArrayCopy(array_keys($executionModel->getRules())))
             ->trigger();

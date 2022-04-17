@@ -226,7 +226,7 @@ App::delete('/v1/teams/:teamId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Event $deletes */
+        /** @var Appwrite\Event\Delete $deletes */
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -250,13 +250,8 @@ App::delete('/v1/teams/:teamId')
         }
 
         $deletes
-            ->setParam('teamId', $team->getId())
-            ->setPayload([
-                'type' => DELETE_TYPE_DOCUMENT,
-                'document' => $team
-            ])
-
-        ;
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($team);
 
         $events
             ->setParam('teamId', $team->getId())
@@ -834,7 +829,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         $memberships = $user->getAttribute('memberships', []);
 
-        foreach ($memberships as $key => $child) { 
+        foreach ($memberships as $key => $child) {
             /** @var Document $child */
 
             if ($membershipId == $child->getId()) {

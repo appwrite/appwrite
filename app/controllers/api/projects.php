@@ -547,7 +547,7 @@ App::delete('/v1/projects/:projectId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Appwrite\Event\Event $deletes */
+        /** @var Appwrite\Event\Delete $deletes */
 
         if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
             throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS);
@@ -560,10 +560,8 @@ App::delete('/v1/projects/:projectId')
         }
 
         $deletes
-            ->setPayload([
-                'type' => DELETE_TYPE_DOCUMENT,
-                'document' => $project
-            ])
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($project)
         ;
 
         if (!$dbForConsole->deleteDocument('teams', $project->getAttribute('teamId', null))) {
@@ -1422,6 +1420,7 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
     ->action(function ($projectId, $domainId, $response, $dbForConsole, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
+        /** @var Appwrite\Event\Delete $deletes */
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1443,11 +1442,8 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $deletes
-            ->setPayload([
-                'type' => DELETE_TYPE_CERTIFICATES,
-                'document' => $domain
-            ])
-        ;
+            ->setType(DELETE_TYPE_CERTIFICATES)
+            ->setDocument($domain);
 
         $response->noContent();
     });

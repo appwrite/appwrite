@@ -42,13 +42,11 @@ class DeletesV1 extends Worker
     public function run(): void
     {
         $project = new Document($this->args['project'] ?? []);
-        $payload = $this->args['payload'] ?? [];
-
-        $type = $payload['type'] ?? '';
+        $type = $this->args['type'] ?? '';
 
         switch (strval($type)) {
             case DELETE_TYPE_DOCUMENT:
-                $document = new Document($payload['document'] ?? []);
+                $document = new Document($this->args['document'] ?? []);
 
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_COLLECTIONS:
@@ -79,7 +77,7 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_EXECUTIONS:
-                $this->deleteExecutionLogs($payload['timestamp']);
+                $this->deleteExecutionLogs($this->args['timestamp']);
                 break;
 
             case DELETE_TYPE_AUDIT:
@@ -87,7 +85,7 @@ class DeletesV1 extends Worker
                 $document = new Document($payload['document'] ?? []);
 
                 if (!empty($timestamp)) {
-                    $this->deleteAuditLogs($payload['timestamp']);
+                    $this->deleteAuditLogs($this->args['timestamp']);
                 }
 
                 if (!$document->isEmpty()) {
@@ -97,20 +95,20 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_ABUSE:
-                $this->deleteAbuseLogs($payload['timestamp']);
+                $this->deleteAbuseLogs($this->args['timestamp']);
                 break;
 
             case DELETE_TYPE_REALTIME:
-                $this->deleteRealtimeUsage($payload['timestamp']);
+                $this->deleteRealtimeUsage($this->args['timestamp']);
                 break;
 
             case DELETE_TYPE_CERTIFICATES:
-                $document = new Document($payload['document']);
+                $document = new Document($this->args['document']);
                 $this->deleteCertificates($document);
                 break;
 
             case DELETE_TYPE_USAGE:
-                $this->deleteUsageStats($payload['timestamp1d'], $payload['timestamp30m']);
+                $this->deleteUsageStats($this->args['timestamp1d'], $this->args['timestamp30m']);
                 break;
             default:
                 Console::error('No delete operation for type: ' . $type);

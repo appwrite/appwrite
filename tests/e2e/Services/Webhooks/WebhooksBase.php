@@ -23,7 +23,7 @@ trait WebhooksBase
             'write' => ['role:all'],
             'permission' => 'document',
         ]);
-        
+
         $this->assertEquals($actors['headers']['status-code'], 201);
         $this->assertNotEmpty($actors['body']['$id']);
 

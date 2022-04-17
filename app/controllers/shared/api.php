@@ -187,7 +187,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     /** @var Appwrite\Event\Event $events */
     /** @var Appwrite\Event\Audit $audits */
     /** @var Appwrite\Stats\Stats $usage */
-    /** @var Appwrite\Event\Event $deletes */
+    /** @var Appwrite\Event\Delete $deletes */
     /** @var Appwrite\Event\Database $database */
     /** @var bool $mode */
     /** @var Utopia\Database\Database $dbForProject */
@@ -251,7 +251,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         $audits->trigger();
     }
 
-    if (!empty($deletes->getPayload())) {
+    if (!empty($deletes->getType())) {
         $deletes->trigger();
     }
 
@@ -265,11 +265,10 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
         && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
 
-        // $usage
-        //     ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
-        //     ->setParam('networkResponseSize', $response->getSize())
-        //     ->submit()
-        // ;
+        $usage
+            ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
+            ->setParam('networkResponseSize', $response->getSize())
+            ->submit();
     }
 
 }, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'database', 'mode', 'dbForProject'], 'api');

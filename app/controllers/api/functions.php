@@ -3,6 +3,7 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
+use Appwrite\Event\Func;
 use Appwrite\Event\Validator\Event as ValidatorEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -442,7 +443,7 @@ App::delete('/v1/functions/:functionId')
     ->action(function ($functionId, $response, $dbForProject, $deletes, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $deletes */
+        /** @var Appwrite\Event\Delete $deletes */
         /** @var Appwrite\Event\Event $events */
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -455,10 +456,9 @@ App::delete('/v1/functions/:functionId')
             throw new Exception('Failed to remove function from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
-        $deletes->setPayload([
-            'type' => DELETE_TYPE_DOCUMENT,
-            'document' => $function
-        ]);
+        $deletes
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($function);
 
         $events->setParam('functionId', $function->getId());
 
@@ -783,7 +783,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
-        /** @var Appwrite\Event\Event $deletes */
+        /** @var Appwrite\Event\Delete $deletes */
         /** @var Appwrite\Event\Event $events */
         /** @var Utopia\Storage\Device $deviceFunctions */
 
@@ -821,10 +821,8 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
             ->setParam('deploymentId', $deployment->getId());
 
         $deletes
-            ->setPayload([
-                'type' => DELETE_TYPE_DOCUMENT,
-                'document' => $deployment
-            ]);
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($deployment);
 
         $response->noContent();
     });
@@ -941,24 +939,20 @@ App::post('/v1/functions/:functionId/executions')
         $events
             ->setParam('functionId', $function->getId())
             ->setParam('executionId', $execution->getId())
-            ->setPayload([
-                'data' => $data,
-                'jwt' => $jwt
-            ])
-            ->setTrigger($execution);
+            ->setTrigger($function);
 
         if ($async) {
-            $event = new Event(Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME);
+            $event = new Func();
             $event
+                ->setType('http')
+                ->setExecution($execution)
+                ->setFunction($function)
+                ->setData($data)
+                ->setJWT($jwt)
                 ->setProject($project)
-                ->setUser($user)
-                ->setTrigger($execution)
-                ->setPayload([
-                    'data' => $data,
-                    'jwt' => $jwt
-                ])
-                ->trigger();
+                ->setUser($user);
 
+            $event->trigger();
 
             $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
