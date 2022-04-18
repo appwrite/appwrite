@@ -7,14 +7,8 @@ use Utopia\App;
 use Appwrite\Extend\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
-use Utopia\Storage\Device\DOSpaces;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Storage\Device\Local;
-use Utopia\Storage\Device\S3;
-use Utopia\Storage\Storage;
 
 App::init(function ($utopia, $request, $response, $project, $user, $events, $audits, $mails, $usage, $deletes, $database, $dbForProject, $mode) {
     /** @var Utopia\App $utopia */
@@ -193,13 +187,16 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     /** @var Utopia\Database\Database $dbForProject */
 
     if (!empty($events->getEvent())) {
+        if (empty($events->getPayload())) {
+            $events->setPayload($response->getPayload());
+        }
         /**
          * Trigger functions.
          */
         $events
             ->setClass(Event::FUNCTIONS_CLASS_NAME)
             ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
-            ->setPayload($response->getPayload())
+            ->setPayload($events->getPayload())
             ->trigger();
 
         /**
@@ -208,16 +205,17 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         $events
             ->setClass(Event::WEBHOOK_CLASS_NAME)
             ->setQueue(Event::WEBHOOK_QUEUE_NAME)
-            ->setPayload($response->getPayload())
+            ->setPayload($events->getPayload())
             ->trigger();
+        var_dump($events->getEvent());
 
         /**
          * Trigger realtime.
          */
         if ($project->getId() !== 'console') {
             $allEvents = Event::generateEvents($events->getEvent(), $events->getParams());
-            $payload = new Document($response->getPayload());
-            $trigger = $events->getTrigger() ?? false;
+            $payload = new Document($events->getPayload());
+            $trigger = $events->getContext() ?? false;
 
             $collection = ($trigger && $trigger->getCollection() === 'collections') ? $trigger : null;
             $bucket = ($trigger && $trigger->getCollection() === 'buckets') ? $trigger : null;
@@ -231,12 +229,12 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
             );
 
             Realtime::send(
-                $target['projectId'] ?? $project->getId(),
-                $response->getPayload(),
-                $allEvents[0],
-                $target['channels'],
-                $target['roles'],
-                [
+                projectId: $target['projectId'] ?? $project->getId(),
+                payload: $events->getPayload(),
+                events: $allEvents,
+                channels: $target['channels'],
+                roles: $target['roles'],
+                options: [
                     'permissionsChanged' => $target['permissionsChanged'], 
                     'userId' => $events->getParam('userId')
                 ]

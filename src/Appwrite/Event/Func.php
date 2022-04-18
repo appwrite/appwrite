@@ -9,17 +9,23 @@ use Utopia\Database\Document;
 
 class Func extends Event
 {
-    protected ?Document $function = null;
-    protected ?Document $execution = null;
     protected string $jwt = '';
     protected string $type = '';
     protected string $data = '';
+    protected ?Document $function = null;
+    protected ?Document $execution = null;
 
     public function __construct()
     {
         parent::__construct(Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME);
     }
 
+    /**
+     * Sets function document for the function event.
+     *
+     * @param \Utopia\Database\Document $function
+     * @return self
+     */
     public function setFunction(Document $function): self
     {
         $this->function = $function;
@@ -27,11 +33,22 @@ class Func extends Event
         return $this;
     }
 
+    /**
+     * Returns set function document for the function event.
+     *
+     * @return null|\Utopia\Database\Document 
+     */
     public function getFunction(): ?Document
     {
         return $this->function;
     }
 
+    /**
+     * Sets execution for the function event.
+     *
+     * @param \Utopia\Database\Document $execution
+     * @return self
+     */
     public function setExecution(Document $execution): self
     {
         $this->execution = $execution;
@@ -39,11 +56,22 @@ class Func extends Event
         return $this;
     }
 
+    /**
+     * Returns set execution for the function event.
+     *
+     * @return null|\Utopia\Database\Document
+     */
     public function getExecution(): ?Document
     {
         return $this->execution;
     }
 
+    /**
+     * Sets type for the function event.
+     *
+     * @param string $type Can be `schedule`, `event` or `http`.
+     * @return self
+     */
     public function setType(string $type): self
     {
         $this->type = $type;
@@ -51,11 +79,22 @@ class Func extends Event
         return $this;
     }
 
+    /**
+     * Returns set type for the function event.
+     *
+     * @return string
+     */
     public function getType(): string
     {
         return $this->type;
     }
 
+    /**
+     * Sets custom data for the function event.
+     *
+     * @param string $data
+     * @return self
+     */
     public function setData(string $data): self
     {
         $this->data = $data;
@@ -63,11 +102,22 @@ class Func extends Event
         return $this;
     }
 
+    /**
+     * Returns set custom data for the function event.
+     *
+     * @return string
+     */
     public function getData(): string
     {
         return $this->data;
     }
 
+    /**
+     * Sets JWT for the function event.
+     *
+     * @param string $jwt
+     * @return self
+     */
     public function setJWT(string $jwt): self
     {
         $this->jwt = $jwt;
@@ -75,11 +125,22 @@ class Func extends Event
         return $this;
     }
 
+    /**
+     * Returns set JWT for the function event.
+     *
+     * @return string
+     */
     public function getJWT(): string
     {
         return $this->jwt;
     }
 
+    /**
+     * Executes the function event and sends it to the functions worker.
+     *
+     * @return string|bool
+     * @throws \InvalidArgumentException
+     */
     public function trigger(): string|bool
     {
         return Resque::enqueue($this->queue, $this->class, [
@@ -94,6 +155,14 @@ class Func extends Event
         ]);
     }
 
+    /**
+     * Schedules the function event and schedules it in the functions worker queue.
+     *
+     * @param \DateTime|int $at
+     * @return void
+     * @throws \Resque_Exception
+     * @throws \ResqueScheduler_InvalidTimestampException
+     */
     public function schedule(DateTime|int $at): void
     {
         ResqueScheduler::enqueueAt($at, $this->queue, $this->class, [

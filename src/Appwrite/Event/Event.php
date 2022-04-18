@@ -43,7 +43,7 @@ class Event
     protected array $payload = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
-    protected ?Document $trigger = null;
+    protected ?Document $context = null;
 
     /**
      * @param string $queue
@@ -137,16 +137,16 @@ class Event
         return $this->payload;
     }
 
-    public function setTrigger(Document $trigger): self
+    public function setContext(Document $context): self
     {
-        $this->trigger = $trigger;
+        $this->context = $context;
 
         return $this;
     }
 
-    public function getTrigger(): ?Document
+    public function getContext(): ?Document
     {
-        return $this->trigger;
+        return $this->context;
     }
 
     /**
@@ -218,7 +218,7 @@ class Event
             'project' => $this->project,
             'user' => $this->user,
             'payload' => $this->payload,
-            'trigger' => $this->trigger,
+            'context' => $this->context,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ]);
     }
@@ -235,6 +235,12 @@ class Event
         return $this;
     }
 
+    /**
+     * Parses event pattern and returns the parts in their respective section.
+     *
+     * @param string $pattern
+     * @return array
+     */
     public static function parseEventPattern(string $pattern): array
     {
         $parts = \explode('.', $pattern);
@@ -278,6 +284,14 @@ class Event
         ];
     }
 
+    /**
+     * Generates all possible events from a pattern.
+     *
+     * @param string $pattern
+     * @param array $params
+     * @return array
+     * @throws \InvalidArgumentException
+     */
     static function generateEvents(string $pattern, array $params = []): array
     {
         $params = \array_filter($params, fn($param) => !\is_array($param));
@@ -313,16 +327,16 @@ class Event
                 $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $action]);
                 $patterns[] = \implode('.', [$type, $resource, $subType, $subResource]);
             } else {
-                if ($attribute) {
-                    $patterns[] = \implode('.', [$type, $resource, $action, $attribute]);
-                }
                 $patterns[] = \implode('.', [$type, $resource, $action]);
-                $patterns[] = \implode('.', [$type, $resource]);
+            }
+            if ($attribute) {
+                $patterns[] = \implode('.', [$type, $resource, $action, $attribute]);
             }
         }
         if ($subResource) {
             $patterns[] = \implode('.', [$type, $resource, $subType, $subResource]);
         }
+        $patterns[] = \implode('.', [$type, $resource]);
 
         /**
          * Removes all duplicates.

@@ -63,8 +63,8 @@ class EventTest extends TestCase
 
         $this->object->trigger();
 
-        $this->assertEquals(null, $this->object->getParam('eventKey1'));
-        $this->assertEquals(null, $this->object->getParam('eventKey2'));
+        $this->assertEquals('eventValue1', $this->object->getParam('eventKey1'));
+        $this->assertEquals('eventValue2', $this->object->getParam('eventKey2'));
         $this->assertEquals(null, $this->object->getParam('eventKey3'));
         $this->assertEquals(\Resque::size($this->queue), 1);
     }
@@ -111,15 +111,18 @@ class EventTest extends TestCase
             'collectionId' => 'chapters',
             'documentId' => 'prolog',
         ]);
-        $this->assertCount(8, $event);
+        $this->assertCount(10, $event);
+
         $this->assertContains('collections.chapters.documents.prolog.create', $event);
         $this->assertContains('collections.chapters.documents.prolog', $event);
         $this->assertContains('collections.chapters.documents.*.create', $event);
         $this->assertContains('collections.chapters.documents.*', $event);
+        $this->assertContains('collections.chapters', $event);
         $this->assertContains('collections.*.documents.prolog.create', $event);
         $this->assertContains('collections.*.documents.prolog', $event);
         $this->assertContains('collections.*.documents.*.create', $event);
         $this->assertContains('collections.*.documents.*', $event);
+        $this->assertContains('collections.*', $event);
 
         try {
             $event = Event::generateEvents('collections.[collectionId].documents.[documentId].create', [

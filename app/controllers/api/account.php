@@ -734,16 +734,13 @@ App::post('/v1/account/sessions/magic-url')
             ->trigger()
         ;
 
-        $events
-            ->setParam('eventData',
-                $response->output($token->setAttribute('secret', $loginSecret),
+        $events->setParam('eventData', $response->output(
+                $token->setAttribute('secret', $loginSecret),
                 Response::MODEL_TOKEN
-            ))
-        ;
+        ));
 
-        $token  // Hide secret for clients
-            ->setAttribute('secret',
-                ($isPrivilegedUser || $isAppUser) ? $loginSecret : '');
+        // Hide secret for clients
+        $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $loginSecret : '');
 
         $audits
             ->setResource('user/'.$user->getId())
@@ -1907,21 +1904,18 @@ App::post('/v1/account/recovery')
         $events
             ->setParam('userId', $profile->getId())
             ->setParam('tokenId', $recovery->getId())
+            ->setUser($profile)
             ->setPayload($response->output(
                 $recovery->setAttribute('secret', $secret),
                 Response::MODEL_TOKEN
             ))
         ;
 
-        $recovery // Hide secret for clients, sp
-            ->setAttribute('secret',
-                ($isPrivilegedUser || $isAppUser) ? $secret : '');
+        // Hide secret for clients
+        $recovery->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
 
         $audits->setResource('user/' . $profile->getId());
-
-        $usage
-            ->setParam('users.update', 1)
-        ;
+        $usage->setParam('users.update', 1);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($recovery, Response::MODEL_TOKEN);
@@ -2094,9 +2088,8 @@ App::post('/v1/account/verification')
             ))
         ;
 
-        $verification // Hide secret for clients, sp
-            ->setAttribute('secret',
-                ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
+        // Hide secret for clients
+        $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
 
         $audits->setResource('user/' . $user->getId());
         $usage->setParam('users.update', 1);

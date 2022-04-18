@@ -124,7 +124,7 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
     ;
 
     $events
-        ->setTrigger($collection)
+        ->setContext($collection)
         ->setParam('collectionId', $collection->getId())
         ->setParam('attributeId', $attribute->getId())
     ;
@@ -1315,7 +1315,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
         $events
             ->setParam('collectionId', $collection->getId())
             ->setParam('attributeId', $attribute->getId())
-            ->setTrigger($collection)
+            ->setContext($collection)
             ->setPayload($response->output($attribute, $model))
         ;
 
@@ -1429,7 +1429,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
         $events
             ->setParam('collectionId', $collection->getId())
             ->setParam('indexId', $index->getId())
-            ->setTrigger($collection)
+            ->setContext($collection)
         ;
 
         $audits
@@ -1577,7 +1577,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:key')
         $events
             ->setParam('collectionId', $collection->getId())
             ->setParam('indexId', $index->getId())
-            ->setTrigger($collection)
+            ->setContext($collection)
             ->setPayload($response->output($index, Response::MODEL_INDEX))
         ;
 
@@ -1694,7 +1694,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         $events
             ->setParam('collectionId', $collection->getId())
             ->setParam('documentId', $document->getId())
-            ->setTrigger($collection)
+            ->setContext($collection)
         ;
 
         $usage
@@ -2092,7 +2092,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $events
             ->setParam('collectionId', $collection->getId())
             ->setParam('documentId', $document->getId())
-            ->setTrigger($collection)
+            ->setContext($collection)
         ;
 
         $usage
@@ -2193,7 +2193,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         $events
             ->setParam('collectionId', $collection->getId())
             ->setParam('documentId', $document->getId())
-            ->setTrigger($collection)
+            ->setContext($collection)
             ->setPayload($response->output($document, Response::MODEL_DOCUMENT))
         ;
 

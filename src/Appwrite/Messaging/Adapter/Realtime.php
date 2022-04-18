@@ -127,7 +127,7 @@ class Realtime extends Adapter
      * @param array $options 
      * @return void 
      */
-    public static function send(string $projectId, array $payload, string $event, array $channels, array $roles, array $options = []): void
+    public static function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
     {
         if (empty($channels) || empty($roles) || empty($projectId)) return;
 
@@ -142,7 +142,7 @@ class Realtime extends Adapter
             'permissionsChanged' => $permissionsChanged,
             'userId' => $userId,
             'data' => [
-                'event' => $event,
+                'events' => $events,
                 'channels' => $channels,
                 'timestamp' => time(),
                 'payload' => $payload
@@ -287,13 +287,13 @@ class Realtime extends Adapter
                 break;
             case 'buckets':
                 if ($parts[2] === 'files') {
-                    if($bucket->isEmpty()) {
+                    if ($bucket->isEmpty()) {
                         throw new \Exception('Bucket needs to be pased to Realtime for File events in the Storage.');
                     }
                     $channels[] = 'files';
                     $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files';
                     $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files.' . $payload->getId();
-                    $roles = ($bucket->getAttribute('permission') === 'collection') ? $bucket->getRead() : $payload->getRead();
+                    $roles = ($bucket->getAttribute('permission') === 'bucket') ? $bucket->getRead() : $payload->getRead();
                 }
 
                 break;

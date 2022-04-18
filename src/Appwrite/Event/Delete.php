@@ -15,6 +15,12 @@ class Delete extends Event
         parent::__construct(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME);
     }
 
+    /**
+     * Sets the type for the delete event (use the constants starting with DELETE_TYPE_*).
+     *
+     * @param string $type
+     * @return self
+     */
     public function setType(string $type): self
     {
         $this->type = $type;
@@ -22,11 +28,22 @@ class Delete extends Event
         return $this;
     }
 
+    /**
+     * Returns the set type for the delete event.
+     *
+     * @return string 
+     */
     public function getType(): string
     {
         return $this->type;
     }
 
+    /**
+     * Sets the document for the delete event.
+     *
+     * @param \Utopia\Database\Document $document
+     * @return self
+     */
     public function setDocument(Document $document): self
     {
         $this->document = $document;
@@ -34,11 +51,22 @@ class Delete extends Event
         return $this;
     }
 
-    public function getDocument(): Document
+    /**
+     * Returns the set document for the delete event.
+     *
+     * @return null|\Utopia\Database\Document
+     */
+    public function getDocument(): ?Document
     {
         return $this->document;
     }
 
+    /**
+     * Executes this event and sends it to the deletes worker.
+     *
+     * @return string|bool
+     * @throws \InvalidArgumentException
+     */
     public function trigger(): string|bool
     {
         return Resque::enqueue($this->queue, $this->class, [

@@ -4,11 +4,6 @@ namespace Appwrite\Event\Validator;
 
 use Utopia\Validator;
 
-/**
- * Password.
- *
- * Validates user password string
- */
 class Event extends Validator
 {
     protected array $types = [
@@ -60,6 +55,7 @@ class Event extends Validator
         'update',
         'delete'
     ];
+
     /**
      * Get Description.
      *
@@ -69,7 +65,7 @@ class Event extends Validator
      */
     public function getDescription(): string
     {
-        return 'Password must be at least 8 characters';
+        return 'Event is not valid.';
     }
 
     /**
@@ -89,7 +85,7 @@ class Event extends Validator
         }
 
         /**
-         * Identify all sestions of the pattern.
+         * Identify all sections of the pattern.
          */
         $type = $parts[0] ?? false;
         $resource = $parts[1] ?? false;
@@ -114,6 +110,7 @@ class Event extends Validator
         $subType ??= false;
         $subResource ??= false;
         $attribute ??= false;
+
         $action = match (true) {
             !$hasSubResource && $count > 2 => $parts[2],
             $hasSubResource && $count > 4 => $parts[4],

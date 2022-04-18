@@ -939,7 +939,7 @@ App::post('/v1/functions/:functionId/executions')
         $events
             ->setParam('functionId', $function->getId())
             ->setParam('executionId', $execution->getId())
-            ->setTrigger($function);
+            ->setContext($function);
 
         if ($async) {
             $event = new Func();

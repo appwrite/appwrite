@@ -16,6 +16,12 @@ class Database extends Event
         parent::__construct(Event::DATABASE_QUEUE_NAME, Event::DATABASE_CLASS_NAME);
     }
 
+    /**
+     * Sets the type for this database event (use the constants starting with DATABASE_TYPE_*).
+     *
+     * @param string $type
+     * @return self
+     */
     public function setType(string $type): self
     {
         $this->type = $type;
@@ -23,11 +29,21 @@ class Database extends Event
         return $this;
     }
 
+    /**
+     * Returns the set type for the database event.
+     * @return string 
+     */
     public function getType(): string
     {
         return $this->type;
     }
 
+    /**
+     * Set the collection for this database event.
+     *
+     * @param \Utopia\Database\Document $collection
+     * @return self
+     */
     public function setCollection(Document $collection): self
     {
         $this->collection = $collection;
@@ -35,11 +51,22 @@ class Database extends Event
         return $this;
     }
 
-    public function getCollection(): Document
+    /**
+     * Returns set collection for this event.
+     *
+     * @return null|\Utopia\Database\Document
+     */
+    public function getCollection(): ?Document
     {
         return $this->collection;
     }
 
+    /**
+     * Set the document for this database event.
+     *
+     * @param \Utopia\Database\Document $document
+     * @return self
+     */
     public function setDocument(Document $document): self
     {
         $this->document = $document;
@@ -47,11 +74,21 @@ class Database extends Event
         return $this;
     }
 
-    public function getDocument(): Document
+    /**
+     * Returns set document for this database event.
+     * @return null|\Utopia\Database\Document
+     */
+    public function getDocument(): ?Document
     {
         return $this->document;
     }
 
+    /**
+     * Executes the event and send it to the database worker.
+     *
+     * @return string|bool
+     * @throws \InvalidArgumentException
+     */
     public function trigger(): string|bool
     {
         return Resque::enqueue($this->queue, $this->class, [

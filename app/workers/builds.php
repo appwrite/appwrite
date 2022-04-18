@@ -1,7 +1,9 @@
 <?php
 
+use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
+use Appwrite\Utopia\Response\Model\Deployment;
 use Cron\CronExpression;
 use Executor\Executor;
 use Utopia\Database\Validator\Authorization;
@@ -110,12 +112,33 @@ class BuildsV1 extends Worker
         $build->setAttribute('status', 'building');
         $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
-        /** Send realtime event */
-        $target = Realtime::fromPayload('functions.deployments.update', $build, $project);
+        /** Trigger Webhook */
+        $deploymentModel = new Deployment();
+        $deploymentUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
+        $deploymentUpdate
+            ->setProject($project)
+            ->setEvent('functions.[functionId].deployments.[deploymentId].update')
+            ->setParam('functionId', $function->getId())
+            ->setParam('deploymentId', $deployment->getId())
+            ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())))
+            ->trigger();
+
+        /** Trigger Functions */
+        $deploymentUpdate
+            ->setClass(Event::FUNCTIONS_CLASS_NAME)
+            ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
+            ->trigger();
+
+        /** Trigger Realtime */
+        $allEvents = Event::generateEvents('functions.[functionId].deployments.[deploymentId].update', [
+            'functionId' => $function->getId(),
+            'deploymentId' => $deployment->getId()
+        ]);
+        $target = Realtime::fromPayload($allEvents[0], $build, $project);
         Realtime::send(
             projectId: 'console',
             payload: $build->getArrayCopy(),
-            event: 'functions.deployments.update',
+            events: $allEvents,
             channels: $target['channels'],
             roles: $target['roles']
         );
@@ -179,11 +202,11 @@ class BuildsV1 extends Worker
             /** 
              * Send realtime Event
              */
-            $target = Realtime::fromPayload('functions.deployments.update', $build, $project);
+            $target = Realtime::fromPayload($allEvents[0], $build, $project);
             Realtime::send(
                 projectId: 'console',
                 payload: $build->getArrayCopy(),
-                event: 'functions.deployments.update',
+                events: $allEvents,
                 channels: $target['channels'],
                 roles: $target['roles']
             );

@@ -165,7 +165,7 @@ App::get('/console/webhooks')
         $page
             ->setParam('events', Config::getParam('events', []))
         ;
-        
+
         $layout
             ->setParam('title', APP_NAME.' - Webhooks')
             ->setParam('body', $page);

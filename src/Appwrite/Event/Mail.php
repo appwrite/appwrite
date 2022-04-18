@@ -19,6 +19,12 @@ class Mail extends Event
         parent::__construct(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME);
     }
 
+    /**
+     * Sets team for the mail event.
+     *
+     * @param \Utopia\Database\Document $team
+     * @return self
+     */
     public function setTeam(Document $team): self
     {
         $this->team = $team;
@@ -26,11 +32,22 @@ class Mail extends Event
         return $this;
     }
 
-    public function getTeam(): Document
+    /**
+     * Returns set team for the mail event.
+     *
+     * @return null|\Utopia\Database\Document
+     */
+    public function getTeam(): ?Document
     {
         return $this->team;
     }
 
+    /**
+     * Sets recipient for the mail event.
+     *
+     * @param string $recipient
+     * @return self
+     */
     public function setRecipient(string $recipient): self
     {
         $this->recipient = $recipient;
@@ -38,11 +55,22 @@ class Mail extends Event
         return $this;
     }
 
+    /**
+     * Returns set recipient for mail event.
+     *
+     * @return string
+     */
     public function getRecipient(): string
     {
         return $this->recipient;
     }
 
+    /**
+     * Sets url for the mail event.
+     *
+     * @param string $url
+     * @return self
+     */
     public function setUrl(string $url): self
     {
         $this->url = $url;
@@ -50,11 +78,22 @@ class Mail extends Event
         return $this;
     }
 
+    /**
+     * Returns set url for the mail event.
+     *
+     * @return string
+     */
     public function getURL(): string
     {
         return $this->url;
     }
 
+    /**
+     * Sets type for the mail event (use the constants starting with MAIL_TYPE_*).
+     *
+     * @param string $type
+     * @return self
+     */
     public function setType(string $type): self
     {
         $this->type = $type;
@@ -62,11 +101,22 @@ class Mail extends Event
         return $this;
     }
 
+    /**
+     * Returns set type for the mail event.
+     *
+     * @return string
+     */
     public function getType(): string
     {
         return $this->type;
     }
 
+    /**
+     * Sets name for the mail event.
+     *
+     * @param string $name
+     * @return self
+     */
     public function setName(string $name): self
     {
         $this->name = $name;
@@ -74,11 +124,22 @@ class Mail extends Event
         return $this;
     }
 
+    /**
+     * Returns set name for the mail event.
+     *
+     * @return string
+     */
     public function getName(): string
     {
         return $this->name;
     }
 
+    /**
+     * Sets locale for the mail event.
+     *
+     * @param string $locale
+     * @return self
+     */
     public function setLocale(string $locale): self
     {
         $this->locale = $locale;
@@ -86,18 +147,28 @@ class Mail extends Event
         return $this;
     }
 
+    /**
+     * Returns set locale for the mail event.
+     *
+     * @return string
+     */
     public function getLocale(): string
     {
         return $this->locale;
     }
 
+    /**
+     * Executes the event and sends it to the mails worker.
+     *
+     * @return string|bool
+     * @throws \InvalidArgumentException
+     */
     public function trigger(): string|bool
     {
         return Resque::enqueue($this->queue, $this->class, [
             'project' => $this->project,
             'user' => $this->user,
             'payload' => $this->payload,
-            'trigger' => $this->trigger,
             'recipient' => $this->recipient,
             'url' => $this->url,
             'locale' => $this->locale,

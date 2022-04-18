@@ -71,13 +71,13 @@ class FunctionsV1 extends Worker
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
 
                     $this->execute(
-                        projectId: $project->getId(),
+                        project: $project,
                         function: $function,
                         dbForProject: $database,
                         trigger: 'event',
                         event: $events[0],
                         eventData: $payload,
-                        userId: $user->getId()
+                        user: $user
                     );
 
                     Console::success('Triggered function: ' . $events[0]);
@@ -102,13 +102,13 @@ class FunctionsV1 extends Worker
                 $function = Authorization::skip(fn () => $database->getDocument('functions', $execution->getAttribute('functionId')));
 
                 $this->execute(
-                    projectId: $project->getId(),
+                    project: $project,
                     function: $function,
                     dbForProject: $database,
                     executionId: $execution->getId(),
                     trigger: 'http',
                     data: $data,
-                    userId: $user->getId(),
+                    user: $user,
                     jwt: $jwt
                 );
 
@@ -170,7 +170,7 @@ class FunctionsV1 extends Worker
                 $reschedule->schedule($next);
 
                 $this->execute(
-                    projectId: $project->getId(),
+                    project: $project,
                     function: $function,
                     dbForProject: $database,
                     trigger: 'schedule'
@@ -181,7 +181,7 @@ class FunctionsV1 extends Worker
     }
 
     private function execute(
-        string $projectId,
+        Document $project,
         Document $function,
         Database $dbForProject,
         string $trigger,
@@ -189,7 +189,7 @@ class FunctionsV1 extends Worker
         string $event = null,
         string $eventData = null,
         string $data = null,
-        string $userId = null,
+        ?Document $user = null,
         string $jwt = null
     ) {
 
@@ -227,13 +227,13 @@ class FunctionsV1 extends Worker
         $runtime = $runtimes[$function->getAttribute('runtime')];
 
         /** Create execution or update execution status */
-        $execution = Authorization::skip(function () use ($dbForProject, &$executionId, $functionId, $deploymentId, $trigger, $userId) {
+        $execution = Authorization::skip(function () use ($dbForProject, &$executionId, $functionId, $deploymentId, $trigger, $user) {
             $execution = $dbForProject->getDocument('executions', $executionId);
             if ($execution->isEmpty()) {
                 $executionId = $dbForProject->getId();
                 $execution = $dbForProject->createDocument('executions', new Document([
                     '$id' => $executionId,
-                    '$read' => $userId ? ['user:' . $userId] : [],
+                    '$read' => $user->getId() ? ['user:' . $user->getId()] : [],
                     '$write' => [],
                     'dateCreated' => time(),
                     'functionId' => $functionId,
@@ -268,8 +268,8 @@ class FunctionsV1 extends Worker
             'APPWRITE_FUNCTION_EVENT' => $event,
             'APPWRITE_FUNCTION_EVENT_DATA' => $eventData,
             'APPWRITE_FUNCTION_DATA' => $data,
-            'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
-            'APPWRITE_FUNCTION_USER_ID' => $userId,
+            'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
+            'APPWRITE_FUNCTION_USER_ID' => $user->getId(),
             'APPWRITE_FUNCTION_JWT' => $jwt,
         ];
         $vars = \array_merge($function->getAttribute('vars', []), $vars);
@@ -277,7 +277,7 @@ class FunctionsV1 extends Worker
         /** Execute function */
         try {
             $executionResponse = $this->executor->createExecution(
-                projectId: $projectId,
+                projectId: $project->getId(),
                 deploymentId: $deploymentId,
                 path: $build->getAttribute('outputPath', ''),
                 vars: $vars,
@@ -304,30 +304,43 @@ class FunctionsV1 extends Worker
         }
 
         $execution = Authorization::skip(fn () => $dbForProject->updateDocument('executions', $executionId, $execution));
+        /** @var Document $execution */
 
         /** Trigger Webhook */
         $executionModel = new Execution();
         $executionUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
         $executionUpdate
-            ->setParam('projectId', $projectId)
-            ->setParam('userId', $userId)
-            ->setParam('event', 'functions.executions.update')
-            ->setParam('eventData', $execution->getArrayCopy(array_keys($executionModel->getRules())))
+            ->setProject($project)
+            ->setUser($user)
+            ->setEvent('functions.[functionId].executions.[executionId].update')
+            ->setParam('functionId', $function->getId())
+            ->setParam('executionId', $execution->getId())
+            ->setPayload($execution->getArrayCopy(array_keys($executionModel->getRules())))
+            ->trigger();
+
+        /** Trigger Functions */
+        $executionUpdate
+            ->setClass(Event::FUNCTIONS_CLASS_NAME)
+            ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
             ->trigger();
 
         /** Trigger realtime event */
-        $target = Realtime::fromPayload('functions.executions.update', $execution);
+        $allEvents = Event::generateEvents('functions.[functionId].executions.[executionId].update', [
+            'functionId' => $function->getId(),
+            'executionId' => $execution->getId()
+        ]);
+        $target = Realtime::fromPayload($allEvents[0], $execution);
         Realtime::send(
             projectId: 'console',
             payload: $execution->getArrayCopy(),
-            event: 'functions.executions.update',
+            events: $allEvents,
             channels: $target['channels'],
             roles: $target['roles']
         );
         Realtime::send(
-            projectId: $projectId,
+            projectId: $project->getId(),
             payload: $execution->getArrayCopy(),
-            event: 'functions.executions.update',
+            events: $allEvents,
             channels: $target['channels'],
             roles: $target['roles']
         );
@@ -338,7 +351,7 @@ class FunctionsV1 extends Worker
             $statsd = $register->get('statsd');
             $usage = new Stats($statsd);
             $usage
-                ->setParam('projectId', $projectId)
+                ->setParam('projectId', $project->getId())
                 ->setParam('functionId', $function->getId())
                 ->setParam('functionExecution', 1)
                 ->setParam('functionStatus', $execution->getAttribute('status', ''))

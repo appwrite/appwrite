@@ -682,7 +682,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $events
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
-            ->setTrigger($bucket)
+            ->setContext($bucket)
         ;
 
         $metadata = null; // was causing leaks as it was passed by reference
@@ -1413,7 +1413,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         $events
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
-            ->setTrigger($bucket)
+            ->setContext($bucket)
         ;
 
         $audits->setResource('file/' . $file->getId());
@@ -1522,7 +1522,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         $events
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
-            ->setTrigger($bucket)
+            ->setContext($bucket)
             ->setPayload($response->output($file, Response::MODEL_FILE))
         ;
 
