@@ -218,7 +218,7 @@ App::get('/console/database/collection')
         $logs = new View(__DIR__.'/../../views/console/comps/logs.phtml');
 
         $logs
-            ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 0))
+            ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600))
             ->setParam('method', 'database.listCollectionLogs')
             ->setParam('params', [
                 'collection-id' => '{{router.params.id}}',
@@ -253,7 +253,7 @@ App::get('/console/database/document')
         $logs = new View(__DIR__.'/../../views/console/comps/logs.phtml');
 
         $logs
-            ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 0))
+            ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600))
             ->setParam('method', 'database.listDocumentLogs')
             ->setParam('params', [
                 'collection-id' => '{{router.params.collection}}',
