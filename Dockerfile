@@ -24,7 +24,7 @@ COPY public /usr/local/src/public
 RUN npm ci
 RUN npm run build
 
-FROM php:8.0.17-cli-alpine3.15 as compile
+FROM php:8.0.18-cli-alpine3.15 as compile
 
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
