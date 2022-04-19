@@ -1500,7 +1500,7 @@ App::patch('/v1/account/prefs')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/account')
+App::patch('/v1/account/status')
     ->desc('Update Account Status')
     ->groups(['api', 'account'])
     ->label('event', 'account.updateStatus')
