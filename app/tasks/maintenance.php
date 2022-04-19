@@ -2,7 +2,7 @@
 
 global $cli;
 
-use Appwrite\Event\Event;
+use Appwrite\Event\Delete;
 use Utopia\App;
 use Utopia\CLI\Console;
 
@@ -15,53 +15,43 @@ $cli
 
         function notifyDeleteExecutionLogs(int $interval)
         {
-            Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
-                'payload' => [
-                    'type' => DELETE_TYPE_EXECUTIONS,
-                    'timestamp' => time() - $interval
-                ]
-            ]);
+            (new Delete())
+                ->setType(DELETE_TYPE_EXECUTIONS)
+                ->setTimestamp(time() - $interval)
+                ->trigger();
         }
 
         function notifyDeleteAbuseLogs(int $interval)
         {
-            Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
-                'payload' => [
-                    'type' =>  DELETE_TYPE_ABUSE,
-                    'timestamp' => time() - $interval
-                ]
-            ]);
+            (new Delete())
+                ->setType(DELETE_TYPE_ABUSE)
+                ->setTimestamp(time() - $interval)
+                ->trigger();
         }
 
         function notifyDeleteAuditLogs(int $interval)
         {
-            Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
-                'payload' => [
-                    'type' => DELETE_TYPE_AUDIT,
-                    'timestamp' => time() - $interval
-                ]
-            ]);
+            (new Delete())
+                ->setType(DELETE_TYPE_AUDIT)
+                ->setTimestamp(time() - $interval)
+                ->trigger();
         }
 
         function notifyDeleteUsageStats(int $interval30m, int $interval1d)
         {
-            Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
-                'payload' => [
-                    'type' => DELETE_TYPE_USAGE,
-                    'timestamp1d' => time() - $interval1d,
-                    'timestamp30m' => time() - $interval30m,
-                ]
-            ]);
+            (new Delete())
+                ->setType(DELETE_TYPE_USAGE)
+                ->setTimestamp1d(time() - $interval1d)
+                ->setTimestamp30m(time() - $interval30m)
+                ->trigger();
         }
 
         function notifyDeleteConnections()
         {
-            Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
-                'payload' => [
-                    'type' => DELETE_TYPE_REALTIME,
-                    'timestamp' => time() - 60
-                ]
-            ]);
+            (new Delete())
+                ->setType(DELETE_TYPE_REALTIME)
+                ->setTimestamp(time() - 60)
+                ->trigger();
         }
 
         // # of days in seconds (1 day = 86400s)

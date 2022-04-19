@@ -8,6 +8,9 @@ use Utopia\Database\Document;
 class Delete extends Event
 {
     protected string $type = '';
+    protected ?int $timestamp = null;
+    protected ?int $timestamp1d = null;
+    protected ?int $timestamp30m = null;
     protected ?Document $document = null;
 
     public function __construct()
@@ -36,6 +39,27 @@ class Delete extends Event
     public function getType(): string
     {
         return $this->type;
+    }
+
+    public function setTimestamp(int $timestamp): self
+    {
+        $this->timestamp = $timestamp;
+
+        return $this;
+    }
+
+    public function setTimestamp1d(int $timestamp): self
+    {
+        $this->timestamp1d = $timestamp;
+
+        return $this;
+    }
+
+    public function setTimestamp30m(int $timestamp): self
+    {
+        $this->timestamp30m = $timestamp;
+
+        return $this;
     }
 
     /**
@@ -73,6 +97,9 @@ class Delete extends Event
             'project' => $this->project,
             'type' => $this->type,
             'document' => $this->document,
+            'timestamp' => $this->timestamp,
+            'timestamp1d' => $this->timestamp1d,
+            'timestamp30m' => $this->timestamp30m
         ]);
     }
 }

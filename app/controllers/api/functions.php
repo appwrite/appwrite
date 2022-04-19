@@ -2,7 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
-use Appwrite\Event\Event;
+use Appwrite\Event\Build;
 use Appwrite\Event\Func;
 use Appwrite\Event\Validator\Event as ValidatorEvent;
 use Appwrite\Extend\Exception;
@@ -313,7 +313,7 @@ App::put('/v1/functions/:functionId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $project */
-        /** @var Appwrite\Auth\User $user */
+        /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $eventsInstance */
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -339,14 +339,15 @@ App::put('/v1/functions/:functionId')
         ])));
 
         if ($next && $schedule !== $original) {
-            ResqueScheduler::enqueueAt($next, Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME, [
-                'projectId' => $project->getId(),
-                'webhooks' => $project->getAttribute('webhooks', []),
-                'functionId' => $function->getId(),
-                'userId' => $user->getId(),
-                'executionId' => null,
-                'trigger' => 'schedule',
-            ]);  // Async task rescheduale
+            // Async task reschedule
+            $functionEvent = new Func();
+            $functionEvent
+                ->setFunction($function)
+                ->setType('schedule')
+                ->setUser($user)
+                ->setProject($project);
+
+            $functionEvent->schedule($next);
         }
 
         $eventsInstance->setParam('functionId', $function->getId());
@@ -408,13 +409,12 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
         ])));
 
         if ($next) { // Init first schedule
-            ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
-                'projectId' => $project->getId(),
-                'webhooks' => $project->getAttribute('webhooks', []),
-                'functionId' => $function->getId(),
-                'executionId' => null,
-                'trigger' => 'schedule',
-            ]);  // Async task rescheduale
+            $functionEvent = new Func();
+            $functionEvent
+                ->setType('schedule')
+                ->setFunction($function)
+                ->setProject($project);
+            $functionEvent->schedule($next);
         }
 
         $events
@@ -497,7 +497,7 @@ App::post('/v1/functions/:functionId/deployments')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $usage */
         /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Database\Document $project */
         /** @var Utopia\Storage\Device $deviceFunctions */
         /** @var Utopia\Storage\Device $deviceLocal */
 
@@ -616,13 +616,14 @@ App::post('/v1/functions/:functionId/deployments')
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', $fileSize)->setAttribute('metadata', $metadata));
             }
 
-            // Enqueue a message to start the build
-            Resque::enqueue(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, [
-                'projectId' => $project->getId(),
-                'resourceId' => $function->getId(),
-                'deploymentId' => $deploymentId,
-                'type' => BUILD_TYPE_DEPLOYMENT
-            ]);
+            // Start the build
+            $buildEvent = new Build();
+            $buildEvent
+                ->setType(BUILD_TYPE_DEPLOYMENT)
+                ->setResource($function)
+                ->setDeployment($deployment)
+                ->setProject($project)
+                ->trigger();
 
             $usage->setParam('storage', $deployment->getAttribute('size', 0));
         } else {
@@ -1150,13 +1151,14 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
-        // Enqueue a message to start the build
-        Resque::enqueue(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, [
-            'projectId' => $project->getId(),
-            'resourceId' => $function->getId(),
-            'deploymentId' => $deploymentId,
-            'type' => BUILD_TYPE_RETRY
-        ]);
+        // Retry the build
+        $buildEvent = new Build();
+        $buildEvent
+            ->setType(BUILD_TYPE_RETRY)
+            ->setResource($function)
+            ->setDeployment($deployment)
+            ->setProject($project)
+            ->trigger();
 
         $response->noContent();
     });
