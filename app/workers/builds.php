@@ -31,9 +31,8 @@ class BuildsV1 extends Worker
         return "builds";
     }
 
-    public function init(): void
-    {
-        $this->executor = new Executor();
+    public function init(): void {
+        $this->executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
     }
 
     public function run(): void

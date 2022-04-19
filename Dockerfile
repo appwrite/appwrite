@@ -185,6 +185,7 @@ ENV _APP_SERVER=swoole \
     _APP_FUNCTIONS_MEMORY=128 \
     _APP_FUNCTIONS_MEMORY_SWAP=128 \
     _APP_EXECUTOR_SECRET=a-random-secret \
+    _APP_EXECUTOR_HOST=http://appwrite-executor/v1 \
     _APP_EXECUTOR_RUNTIME_NETWORK=appwrite_runtimes \
     _APP_SETUP=self-hosted \
     _APP_VERSION=$VERSION \
