@@ -694,8 +694,6 @@ App::delete('/v1/database/collections/:collectionId')
             ->setDocument($collection)
         ;
 
-        $usage->setParam('database.collections.delete', 1);
-
         $events
             ->setParam('collectionId', $collection->getId())
             ->setPayload($response->output($collection, Response::MODEL_COLLECTION))
@@ -705,6 +703,8 @@ App::delete('/v1/database/collections/:collectionId')
             ->setResource('collection/'.$collectionId)
             ->setPayload($collection->getArrayCopy())
         ;
+
+        $usage->setParam('database.collections.delete', 1);
 
         $response->noContent();
     });

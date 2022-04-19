@@ -124,13 +124,9 @@ App::post('/v1/account')
             ->setUser($user)
         ;
 
-        $usage
-            ->setParam('users.create', 1)
-        ;
+        $usage->setParam('users.create', 1);
+        $events->setParam('userId', $user->getId());
 
-        $events
-            ->setParam('userId', $user->getId())
-        ;
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -587,9 +583,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         ;
 
         if (!Config::getParam('domainVerification')) {
-            $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
-            ;
+            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
         // Add keys for non-web platforms - TODO - add verification phase to aviod session sniffing
@@ -857,9 +851,7 @@ App::put('/v1/account/sessions/magic-url')
         ;
 
         if (!Config::getParam('domainVerification')) {
-            $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
-            ;
+            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
         $protocol = $request->getProtocol();
@@ -1007,9 +999,7 @@ App::post('/v1/account/sessions/anonymous')
         ;
 
         if (!Config::getParam('domainVerification')) {
-            $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
-            ;
+            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
         $response
@@ -1019,8 +1009,8 @@ App::post('/v1/account/sessions/anonymous')
         ;
 
         $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-        ? $countries[strtoupper($session->getAttribute('countryCode'))]
-        : $locale->getText('locale.country.unknown');
+            ? $countries[strtoupper($session->getAttribute('countryCode'))]
+            : $locale->getText('locale.country.unknown');
 
         $session
             ->setAttribute('current', true)
@@ -1097,9 +1087,8 @@ App::get('/v1/account')
         /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $usage
-            ->setParam('users.read', 1)
-        ;
+        $usage->setParam('users.read', 1);
+
         $response->dynamic($user, Response::MODEL_USER);
     });
 
@@ -1124,9 +1113,8 @@ App::get('/v1/account/prefs')
 
         $prefs = $user->getAttribute('prefs', new \stdClass());
 
-        $usage
-            ->setParam('users.read', 1)
-        ;
+        $usage->setParam('users.read', 1);
+
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
@@ -1163,9 +1151,8 @@ App::get('/v1/account/sessions')
             $sessions[$key] = $session;
         }
 
-        $usage
-            ->setParam('users.read', 1)
-        ;
+        $usage->setParam('users.read', 1);
+
         $response->dynamic(new Document([
             'sessions' => $sessions,
             'total' => count($sessions),
@@ -1231,9 +1218,7 @@ App::get('/v1/account/logs')
 
         }
 
-        $usage
-            ->setParam('users.read', 1)
-        ;
+        $usage->setParam('users.read', 1);
 
         $response->dynamic(new Document([
             'total' => $audit->countLogsByUser($user->getId()),
@@ -1267,24 +1252,22 @@ App::get('/v1/account/sessions/:sessionId')
 
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
-        ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
-        : $sessionId;
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+            : $sessionId;
 
         foreach ($sessions as $session) {/** @var Document $session */
             if ($sessionId == $session->getId()) {
 
                 $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-                ? $countries[strtoupper($session->getAttribute('countryCode'))]
-                : $locale->getText('locale.country.unknown');
+                    ? $countries[strtoupper($session->getAttribute('countryCode'))]
+                    : $locale->getText('locale.country.unknown');
 
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
                 ;
 
-                $usage
-                    ->setParam('users.read', 1)
-                ;
+                $usage->setParam('users.read', 1);
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
             }
@@ -1369,7 +1352,10 @@ App::patch('/v1/account/password')
             throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS);
         }
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user
+        $user = $dbForProject->updateDocument(
+            'users',
+            $user->getId(),
+            $user
                 ->setAttribute('password', Auth::passwordHash($password))
                 ->setAttribute('passwordUpdate', \time())
         );
