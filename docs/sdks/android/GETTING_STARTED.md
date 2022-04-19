@@ -50,7 +50,7 @@ When trying to connect to Appwrite from an emulator or a mobile device, localhos
 ```kotlin
 // Register User
 val account = Account(client)
-val response = account.create(
+val account = account.create(
     "[USER_ID]",
     "email@example.com", 
     "password"
@@ -69,7 +69,7 @@ val client = Client(context)
   .setSelfSigned(true) // Remove in production
 
 val account = Account(client)
-val response = account.create(
+val account = account.create(
     "[USER_ID]",
     "email@example.com", 
     "password"
@@ -81,10 +81,13 @@ The Appwrite Android SDK raises an `AppwriteException` object with `message`, `c
 
 ```kotlin
 try {
-    var response = account.create("[USER_ID]", "email@example.com", "password")
-    Log.d("Appwrite response", response.body?.string())
+    var account = account.create(
+        "[USER_ID]", 
+        "email@example.com", 
+        "password"
+    )
 } catch(e : AppwriteException) {
-    Log.e("AppwriteException",e.message.toString())
+    e.printStackTrace()
 }
 ```
 

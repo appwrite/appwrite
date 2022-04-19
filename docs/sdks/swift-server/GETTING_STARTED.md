@@ -21,13 +21,12 @@ func main() {
 Once your SDK object is set, create any of the Appwrite service objects and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
 
 ```swift
-let users = Users(client: client)
-users.create(userId: "[USER_ID]", email: "email@example.com", password: "password") { result in
-    switch result {
-    case .failure(let error): print(error.message)
-    case .success(let user): print(String(describing: user))
-    }
-}
+let users = Users(client)
+let user = try! await users.create(
+    userId: "[USER_ID]",
+    email: "email@example.com",
+    password: "password"
+)
 ```
 
 ### Full Example
@@ -42,13 +41,12 @@ func main() {
       .setKey("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
       .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
 
-    let users = Users(client: client)
-    users.create(userId: "[USER_ID]", email: "email@example.com", password: "password") { result in
-        switch result {
-        case .failure(let error): print(error.message)
-        case .success(let user): print(String(describing: user))
-        }
-    }
+    let users = Users(client)
+    let user = try await users.create(
+        userId: "[USER_ID]",
+        email: "email@example.com",
+        password: "password"
+    )
 }
 ```
 
@@ -59,16 +57,17 @@ When an error occurs, the Appwrite Swift SDK responds with a result wrapping an 
 ```swift
 import Appwrite
 
-func main() {
-    let users = Users(client: client)
+func main() async throws {
+    let users = Users(client)
     
-    users.create(userId: "[USER_ID]", email: "email@example.com", password: "password") { result in
-        switch result {
-        case .failure(let error): 
-            print(error.message)
-        case .success(var response):
-            ...
-        }
+    do {
+        let user = try await users.create(
+            userId: "[USER_ID]",
+            email: "email@example.com",
+            password: "password"
+        )
+    } catch let error as AppwriteError {
+         print(error.message)
     }
 }
 ```

@@ -12,7 +12,7 @@ suspend fun main() {
     val client = Client(context)
       .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
       .setProject("5df5acd0d48c2") // Your project ID
-      .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
+      .setKey("919c2d18fb5d4...a2ae413da83346ad") // Your secret API key
       .setSelfSigned(true) // Use only on dev mode with a self-signed SSL cert
 }
 ```
@@ -23,12 +23,11 @@ Once your SDK object is set, create any of the Appwrite service objects and choo
 
 ```kotlin
 val users = Users(client)
-val response = users.create(
+val user = users.create(
     user = "[USER_ID]",
     email = "email@example.com",
     password = "password",
 )
-val json = response.body?.string()
 ```
 
 ### Full Example
@@ -45,12 +44,11 @@ suspend fun main() {
       .setSelfSigned(true) // Use only on dev mode with a self-signed SSL cert
 
     val users = Users(client)
-    val response = users.create(
+    val user = users.create(
         user = "[USER_ID]",
         email = "email@example.com",
         password = "password",
     )
-    val json = response.body?.string()
 }
 ```
 
@@ -70,10 +68,8 @@ suspend fun main() {
             email = "email@example.com",
             password = "password",
         )
-        var jsonString = response.body?.string() ?: ""
-
     } catch (e: AppwriteException) {
-        println(e)
+        e.printStackTrace()
     }
 }
 ```
