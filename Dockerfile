@@ -123,7 +123,7 @@ RUN \
   ./configure && \
   make && make install
 
-FROM php:8.0.17-cli-alpine3.15 as final
+FROM php:8.0.18-cli-alpine3.15 as final
 
 LABEL maintainer="team@appwrite.io"
 
