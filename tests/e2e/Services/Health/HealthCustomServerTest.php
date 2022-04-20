@@ -146,27 +146,6 @@ class HealthCustomServerTest extends Scope
         return [];
     }
 
-    public function testUsageSuccess(): array
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/health/queue/usage', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsInt($response['body']['size']);
-        $this->assertLessThan(200, $response['body']['size']);
-
-        /**
-         * Test for FAILURE
-         */
-
-        return [];
-    }
-
     public function testCertificatesSuccess(): array
     {
         /**
