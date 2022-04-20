@@ -124,6 +124,7 @@ class Origin extends Validator
         }
 
         $validator = new Hostname($this->clients);
+        
         return $validator->isValid($host);
     }
 
