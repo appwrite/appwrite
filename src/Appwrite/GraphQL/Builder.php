@@ -17,6 +17,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
+use Utopia\Route;
 use Utopia\Validator;
 
 class Builder
@@ -30,7 +31,7 @@ class Builder
      *
      * @return   void
      */
-    public static function init()
+    public static function init(): void
     {
         self::$typeMapping = [
             Model::TYPE_BOOLEAN => Type::boolean(),
@@ -99,8 +100,8 @@ class Builder
                 $fields[$escapedKey] = [
                     'type' => $type,
                     'description' => $props['description'],
-                    'resolve' => fn ($object, $args, $context, $info) => $object->then(function ($obj) use ($object, $key) {
-                        return $obj['result'][$key];
+                    'resolve' => fn ($object, $args, $context, $info) => $object->then(function ($obj) use ($object, $key, $props) {
+                        return $obj[$key];
                     }),
                 ];
             }
@@ -504,6 +505,8 @@ class Builder
 
         foreach ($utopia->getRoutes() as $method => $routes) {
             foreach ($routes as $route) {
+                /** @var Route $route */
+
                 if (str_starts_with($route->getPath(), '/v1/mock/')) {
                     continue;
                 }
@@ -541,20 +544,18 @@ class Builder
                     $resolve = fn($type, $args, $context, $info) => new CoroutinePromise(
                         function (callable $resolve, callable $reject) use ($utopia, $request, $response, &$register, $route, $args, $context, $info) {
                             // Mutate the original request object to include the query variables at the top level
-                            $swooleRq = $request->getSwoole();
-                            $swooleRq->post = $args;
+                            $swoole = $request->getSwoole();
+                            $swoole->post = $args;
 
                             // Drop json content type so post args are used directly
-                            if (\array_key_exists('content-type', $swooleRq->header)
-                                && $swooleRq->header['content-type'] === 'application/json') {
-                                unset($swooleRq->header['content-type']);
+                            if (\array_key_exists('content-type', $swoole->header)
+                                && $swoole->header['content-type'] === 'application/json') {
+                                unset($swoole->header['content-type']);
                             }
-                            $request = new Request($swooleRq);
+                            $request = new Request($swoole);
 
-                            $utopia
-                                ->setRoute($route)
-                                ->execute($route, $request);
-
+                            $route->getAction();
+                            $utopia->execute($route, $request);
                             $result = $response->getPayload();
 
                             if ($response->getCurrentModel() == Response::MODEL_ERROR_DEV) {
@@ -563,7 +564,7 @@ class Builder
                                 $reject(new GQLException($result['message'], $result['code']));
                             }
 
-                            $resolve($result['result']);
+                            $resolve($result);
                         }
                     );
 
