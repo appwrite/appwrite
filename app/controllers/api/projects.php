@@ -21,7 +21,7 @@ use Utopia\Domains\Domain;
 use Appwrite\Extend\Exception;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Integer;
+use Utopia\Validator\Hostname;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -1016,6 +1016,12 @@ App::post('/v1/projects/:projectId/platforms')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
+        // Ensure hostname has proper structure (no port, protocol..)
+        $validator = new Hostname();
+        if (!is_null($hostname) && !$validator->isValid($hostname)) {
+            throw new Exception($validator->getDescription(), 400, Exception::ATTRIBUTE_VALUE_INVALID);
+        }
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1134,6 +1140,12 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->action(function ($projectId, $platformId, $name, $key, $store, $hostname, $response, $dbForConsole) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
+
+        // Ensure hostname has proper structure (no port, protocol..)
+        $validator = new Hostname();
+        if (!is_null($hostname) && !$validator->isValid($hostname)) {
+            throw new Exception($validator->getDescription(), 400, Exception::ATTRIBUTE_VALUE_INVALID);
+        }
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 

@@ -1,6 +1,7 @@
 <?php
 
 namespace Appwrite\Network\Validator;
+use Utopia\Validator\Hostname;
 
 use Utopia\Validator;
 
@@ -122,11 +123,8 @@ class Origin extends Validator
             return true;
         }
 
-        if (\in_array($host, $this->clients)) {
-            return true;
-        }
-
-        return false;
+        $validator = new Hostname($this->clients);
+        return $validator->isValid($host);
     }
 
     /**
