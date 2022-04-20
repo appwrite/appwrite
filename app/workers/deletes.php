@@ -368,7 +368,7 @@ class DeletesV1 extends Worker
          * Request executor to delete all deployment containers
          */
         Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
-        $executor = new Executor();
+        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
         foreach ($deploymentIds as $deploymentId) {
             try {
                 $executor->deleteRuntime($projectId, $deploymentId);
@@ -420,7 +420,7 @@ class DeletesV1 extends Worker
          */
         Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
         try {
-            $executor = new Executor();
+            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             $executor->deleteRuntime($projectId, $deploymentId);
         } catch (Throwable $th) {
             Console::error($th->getMessage());

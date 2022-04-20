@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "version": "0.13.0",
+    "version": "0.13.4",
     "title": "Appwrite",
     "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)",
     "termsOfService": "https://appwrite.io/policy/terms",
@@ -918,7 +918,7 @@
         "parameters": [
           {
             "name": "provider",
-            "description": "OAuth2 Provider. Currently, supported providers are: amazon, apple, bitbucket, bitly, box, discord, dropbox, facebook, github, gitlab, google, linkedin, microsoft, notion, paypal, paypalSandbox, salesforce, slack, spotify, tradeshift, tradeshiftBox, twitch, vk, yahoo, yammer, yandex, wordpress, stripe.",
+            "description": "OAuth2 Provider. Currently, supported providers are: amazon, apple, bitbucket, bitly, box, discord, dropbox, facebook, github, gitlab, google, linkedin, microsoft, notion, paypal, paypalSandbox, salesforce, slack, spotify, tradeshift, tradeshiftBox, twitch, vk, zoom, yahoo, yammer, yandex, wordpress, stripe.",
             "required": true,
             "type": "string",
             "x-example": "amazon",
@@ -2788,7 +2788,7 @@
           },
           {
             "name": "queries",
-            "description": "Array of query strings.",
+            "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/database#querying-documents).",
             "required": false,
             "type": "array",
             "collectionFormat": "multi",
@@ -3036,7 +3036,7 @@
               "properties": {
                 "data": {
                   "type": "object",
-                  "description": "Document data as JSON object.",
+                  "description": "Document data as JSON object. Include only attribute and value pairs to be updated.",
                   "default": {},
                   "x-example": "{}"
                 },
@@ -3066,7 +3066,7 @@
         "consumes": ["application/json"],
         "produces": [],
         "tags": ["database"],
-        "description": "Delete a document by its unique ID. This endpoint deletes only the parent documents, its attributes and relations to other documents. Child documents **will not** be deleted.",
+        "description": "Delete a document by its unique ID.",
         "responses": { "204": { "description": "No content" } },
         "x-appwrite": {
           "method": "deleteDocument",
@@ -3723,7 +3723,7 @@
     },
     "/functions/runtimes": {
       "get": {
-        "summary": "List the currently active function runtimes.",
+        "summary": "List runtimes",
         "operationId": "functionsListRuntimes",
         "consumes": ["application/json"],
         "produces": ["application/json"],
@@ -10212,12 +10212,12 @@
         "key": {
           "type": "string",
           "description": "Attribute Key.",
-          "x-example": "fullName"
+          "x-example": "count"
         },
         "type": {
           "type": "string",
           "description": "Attribute type.",
-          "x-example": "string"
+          "x-example": "integer"
         },
         "status": {
           "type": "string",
@@ -10266,12 +10266,12 @@
         "key": {
           "type": "string",
           "description": "Attribute Key.",
-          "x-example": "fullName"
+          "x-example": "percentageCompleted"
         },
         "type": {
           "type": "string",
           "description": "Attribute type.",
-          "x-example": "string"
+          "x-example": "double"
         },
         "status": {
           "type": "string",
@@ -10320,12 +10320,12 @@
         "key": {
           "type": "string",
           "description": "Attribute Key.",
-          "x-example": "fullName"
+          "x-example": "isEnabled"
         },
         "type": {
           "type": "string",
           "description": "Attribute type.",
-          "x-example": "string"
+          "x-example": "boolean"
         },
         "status": {
           "type": "string",
@@ -10359,7 +10359,7 @@
         "key": {
           "type": "string",
           "description": "Attribute Key.",
-          "x-example": "fullName"
+          "x-example": "userEmail"
         },
         "type": {
           "type": "string",
@@ -10403,7 +10403,7 @@
         "key": {
           "type": "string",
           "description": "Attribute Key.",
-          "x-example": "fullName"
+          "x-example": "status"
         },
         "type": {
           "type": "string",
@@ -10453,7 +10453,7 @@
         "key": {
           "type": "string",
           "description": "Attribute Key.",
-          "x-example": "fullName"
+          "x-example": "ipAddress"
         },
         "type": {
           "type": "string",
@@ -10497,7 +10497,7 @@
         "key": {
           "type": "string",
           "description": "Attribute Key.",
-          "x-example": "fullName"
+          "x-example": "githubUrl"
         },
         "type": {
           "type": "string",
@@ -11924,6 +11924,16 @@
           "description": "VK OAuth secret ID.",
           "x-example": "djsgudsdsewe43434343dd34..."
         },
+        "providerZoomAppid": {
+          "type": "string",
+          "description": "Zoom OAuth app ID.",
+          "x-example": "123247283472834787438"
+        },
+        "providerZoomSecret": {
+          "type": "string",
+          "description": "Zoom OAuth secret ID.",
+          "x-example": "djsgudsdsewe43434343dd34..."
+        },
         "providerYahooAppid": {
           "type": "string",
           "description": "Yahoo OAuth app ID.",
@@ -12124,6 +12134,8 @@
         "providerTwitchSecret",
         "providerVkAppid",
         "providerVkSecret",
+        "providerZoomAppid",
+        "providerZoomSecret",
         "providerYahooAppid",
         "providerYahooSecret",
         "providerYammerAppid",
