@@ -2,8 +2,11 @@
 
 use Utopia\Database\Document;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Request;
 use Utopia\App;
 use Utopia\Config\Config;
+use Utopia\Locale\Locale;
+use MaxMind\Db\Reader;
 
 App::get('/v1/locale')
     ->desc('Get User Locale')
