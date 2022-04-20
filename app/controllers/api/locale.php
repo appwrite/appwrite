@@ -20,12 +20,8 @@ App::get('/v1/locale')
     ->inject('response')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($request, $response, $locale, $geodb) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
-
+    ->action(function (Request $request, Response $response, Locale $locale, Reader $geodb) {
+        
         $eu = Config::getParam('locale-eu');
         $currencies = Config::getParam('locale-currencies');
         $output = [];
@@ -82,10 +78,8 @@ App::get('/v1/locale/countries')
     ->label('sdk.response.model', Response::MODEL_COUNTRY_LIST)
     ->inject('response')
     ->inject('locale')
-    ->action(function ($response, $locale) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Locale\Locale $locale */
-
+    ->action(function (Response $response, Locale $locale) {
+       
         $list = Config::getParam('locale-countries'); /* @var $list array */
         $output = [];
 
@@ -116,9 +110,7 @@ App::get('/v1/locale/countries/eu')
     ->label('sdk.response.model', Response::MODEL_COUNTRY_LIST)
     ->inject('response')
     ->inject('locale')
-    ->action(function ($response, $locale) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Locale\Locale $locale */
+    ->action(function (Response $response, Locale $locale) {
 
         $eu = Config::getParam('locale-eu');
         $output = [];
@@ -152,10 +144,8 @@ App::get('/v1/locale/countries/phones')
     ->label('sdk.response.model', Response::MODEL_PHONE_LIST)
     ->inject('response')
     ->inject('locale')
-    ->action(function ($response, $locale) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Locale\Locale $locale */
-
+    ->action(function (Response $response, Locale $locale) {
+        
         $list = Config::getParam('locale-phones'); /* @var $list array */
         $output = [];
 
@@ -187,9 +177,7 @@ App::get('/v1/locale/continents')
     ->label('sdk.response.model', Response::MODEL_CONTINENT_LIST)
     ->inject('response')
     ->inject('locale')
-    ->action(function ($response, $locale) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Locale\Locale $locale */
+    ->action(function (Response $response,Locale $locale) {
 
         $list = Config::getParam('locale-continents'); /* @var $list array */
         
@@ -219,8 +207,7 @@ App::get('/v1/locale/currencies')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_CURRENCY_LIST)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $list = Config::getParam('locale-currencies');
 
@@ -242,8 +229,7 @@ App::get('/v1/locale/languages')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LANGUAGE_LIST)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $list = Config::getParam('locale-languages');
 
