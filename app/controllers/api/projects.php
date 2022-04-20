@@ -1017,9 +1017,11 @@ App::post('/v1/projects/:projectId/platforms')
         /** @var Utopia\Database\Database $dbForConsole */
 
         // Ensure hostname has proper structure (no port, protocol..)
-        $validator = new Hostname();
-        if (!is_null($hostname) && !$validator->isValid($hostname)) {
-            throw new Exception($validator->getDescription(), 400, Exception::ATTRIBUTE_VALUE_INVALID);
+        if(!empty($hostname)) {
+            $validator = new Hostname();
+            if (!is_null($hostname) && !$validator->isValid($hostname)) {
+                throw new Exception($validator->getDescription(), 400, Exception::ATTRIBUTE_VALUE_INVALID);
+            }
         }
 
         $project = $dbForConsole->getDocument('projects', $projectId);
@@ -1142,9 +1144,11 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         /** @var Utopia\Database\Database $dbForConsole */
 
         // Ensure hostname has proper structure (no port, protocol..)
-        $validator = new Hostname();
-        if (!is_null($hostname) && !$validator->isValid($hostname)) {
-            throw new Exception($validator->getDescription(), 400, Exception::ATTRIBUTE_VALUE_INVALID);
+        if(!empty($hostname)) {
+            $validator = new Hostname();
+            if (!is_null($hostname) && !$validator->isValid($hostname)) {
+                throw new Exception($validator->getDescription(), 400, Exception::ATTRIBUTE_VALUE_INVALID);
+            }
         }
 
         $project = $dbForConsole->getDocument('projects', $projectId);
