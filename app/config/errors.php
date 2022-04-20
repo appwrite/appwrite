@@ -81,7 +81,7 @@ return [
     Exception::GENERAL_METHOD_UNSUPPORTED => [
         'name' => Exception::GENERAL_METHOD_UNSUPPORTED,
         'description' => 'The HTTP method is unsupported by the current protocol or resource.',
-        'code' => 500, 
+        'code' => 405, 
     ],
 
     /** User Errors */
