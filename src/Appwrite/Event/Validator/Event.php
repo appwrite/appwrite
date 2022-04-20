@@ -2,60 +2,11 @@
 
 namespace Appwrite\Event\Validator;
 
+use Utopia\Config\Config;
 use Utopia\Validator;
 
 class Event extends Validator
 {
-    protected array $types = [
-        'users' => [
-            'subTypes' => [
-                'sessions',
-                'recovery',
-                'verification'
-            ],
-            'attributes' => [
-                'email',
-                'name',
-                'password',
-                'status',
-                'prefs',
-            ]
-        ],
-        'collections' => [
-            'subTypes' => [
-                'documents',
-                'attributes',
-                'indexes'
-            ]
-        ],
-        'buckets' => [
-            'subTypes' => [
-                'files'
-            ]
-        ],
-        'teams' => [
-            'subTypes' => [
-                'memberships' => [
-                    'attributes' => [
-                        'status'
-                    ]
-                ]
-            ]
-        ],
-        'functions' => [
-            'subTypes' => [
-                'deployments',
-                'executions'
-            ]
-        ],
-    ];
-
-    protected array $actions = [
-        'create',
-        'update',
-        'delete'
-    ];
-
     /**
      * Get Description.
      *
@@ -77,6 +28,7 @@ class Event extends Validator
      */
     public function isValid($value): bool
     {
+        $events = Config::getParam('events', []);
         $parts = \explode('.', $value);
         $count = \count($parts);
 
@@ -89,7 +41,7 @@ class Event extends Validator
          */
         $type = $parts[0] ?? false;
         $resource = $parts[1] ?? false;
-        $hasSubResource = $count > 3 && \array_key_exists('subTypes', $this->types[$type]) && \in_array($parts[2], $this->types[$type]['subTypes']);
+        $hasSubResource = $count > 3 && ($events[$type]['$resource'] ?? false) && ($events[$type][$parts[2]]['$resource'] ?? false);
 
         if (!$type || !$resource) {
             return false;
@@ -117,24 +69,27 @@ class Event extends Validator
             default => false
         };
 
-        if ($action && !\in_array($action, $this->actions)) {
-            return false;
-        }
-
-        if (!\in_array($type, \array_keys($this->types))) {
+        if (!\array_key_exists($type, $events)) {
             return false;
         }
 
         if ($subtype ?? false) {
-            if (!($subResource ?? false) || !\in_array($subType, $this->types[$type]['subTypes'])) {
+            if ($action && !\array_key_exists($action, $events[$type][$subType])) {
+                return false;
+            }
+            if (!($subResource ?? false) || !\array_key_exists($subType, $events[$type])) {
+                return false;
+            }
+        } else {
+            if ($action && !\array_key_exists($action, $events[$type])) {
                 return false;
             }
         }
 
         if ($attribute ?? false) {
             if (
-                (\array_key_exists('attributes', $this->types[$type]) && !\in_array($attribute, $this->types[$type]['attributes'])) ||
-                (($subType ?? false) && \array_key_exists('attributes', $this->types[$type]['subTypes'][$subType]) && !\in_array($attribute, $this->types[$type]['subTypes'][$subType]['attributes']))
+                !\array_key_exists($attribute, $events[$type][$action]) ||
+                (($subType ?? false) && !\array_key_exists($attribute, $events[$type][$subType][$action]))
             ) {
                 return false;
             }

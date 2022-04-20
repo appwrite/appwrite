@@ -4,6 +4,7 @@ namespace Appwrite\Tests;
 
 use Appwrite\Event\Validator\Event;
 use PHPUnit\Framework\TestCase;
+use Utopia\Config\Config;
 
 class EventValidatorTest extends TestCase
 {
@@ -11,6 +12,7 @@ class EventValidatorTest extends TestCase
 
     public function setUp(): void
     {
+        Config::load('events', __DIR__.'/../../../../app/config/events.php');
         $this->object = new Event();
     }
 
@@ -20,6 +22,9 @@ class EventValidatorTest extends TestCase
 
     public function testValues()
     {
+        /**
+         * Test for SUCCESS
+         */
         $this->assertTrue($this->object->isValid('users.*.create'));
         $this->assertTrue($this->object->isValid('users.torsten.update'));
         $this->assertTrue($this->object->isValid('users.torsten'));
@@ -40,12 +45,17 @@ class EventValidatorTest extends TestCase
         $this->assertTrue($this->object->isValid('teams.*'));
         $this->assertTrue($this->object->isValid('users.*'));
 
+        /**
+         * Test for FAILURE
+         */
         $this->assertFalse($this->object->isValid(false));
         $this->assertFalse($this->object->isValid(null));
         $this->assertFalse($this->object->isValid(''));
+        $this->assertFalse($this->object->isValid('unknown.*'));
         $this->assertFalse($this->object->isValid('collections'));
         $this->assertFalse($this->object->isValid('collections.*.unknown'));
         $this->assertFalse($this->object->isValid('collections.*.documents.*.unknown'));
         $this->assertFalse($this->object->isValid('users.torsten.unknown'));
+        $this->assertFalse($this->object->isValid('users.torsten.delete.email'));
     }
 }
