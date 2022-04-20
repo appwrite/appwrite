@@ -119,7 +119,6 @@ return [
             '$description' => 'This event triggers when a collection is updated.',
         ]
     ],
-
     'buckets' => [
         '$model' => Response::MODEL_BUCKET,
         '$resource' => true,
@@ -148,7 +147,6 @@ return [
             '$description' => 'This event triggers when a bucket is updated.',
         ]
     ],
-
     'teams' => [
         '$model' => Response::MODEL_TEAM,
         '$resource' => true,
@@ -180,7 +178,6 @@ return [
             '$description' => 'This event triggers when a bucket is updated.',
         ]
     ],
-
     'functions' => [
         '$model' => Response::MODEL_FUNCTION,
         '$resource' => true,
