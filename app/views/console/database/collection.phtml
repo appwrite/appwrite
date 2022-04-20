@@ -627,7 +627,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="string-key">Attribute ID</label>
-        <input id="string-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{1,36}$" />
+        <input id="string-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{0,35}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
 
         <label for="string-length">Size</label>
@@ -683,7 +683,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="integer-key">Attribute ID</label>
-        <input id="integer-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{1,36}$" />
+        <input id="integer-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{0,35}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
 
         <div class="margin-bottom">
@@ -748,7 +748,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="float-key">Attribute ID</label>
-        <input id="float-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{1,36}$" />
+        <input id="float-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{0,35}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
 
         <div class="margin-bottom">
@@ -813,7 +813,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="email-key">Attribute ID</label>
-        <input id="email-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="128" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{1,36}$" />
+        <input id="email-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="128" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{0,35}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
 
         <div class="margin-bottom">
@@ -866,7 +866,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="boolean-key">Attribute ID</label>
-        <input id="boolean-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{1,36}$" />
+        <input id="boolean-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{0,35}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
 
         <div class="margin-bottom">
@@ -923,7 +923,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="ip-key">Attribute ID</label>
-        <input id="ip-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{1,36}$" />
+        <input id="ip-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{0,35}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
 
         <div class="margin-bottom">
@@ -976,7 +976,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="url-key">Attribute ID</label>
-        <input id="url-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{1,36}$" />
+        <input id="url-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{0,35}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
 
         <div class="margin-bottom">
@@ -1029,7 +1029,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="enum-key">Attribute ID</label>
-        <input id="enum-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{1,36}$" />
+        <input id="enum-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{0,35}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
 
         <label>Elements</label>
@@ -1107,7 +1107,7 @@ $logs = $this->getParam('logs', null);
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
         <label for="index-key">Index Key</label>
-        <input id="index-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{1,36}$" />
+        <input id="index-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{0,35}$" />
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
 
         <label for="index-type">Type</label>
