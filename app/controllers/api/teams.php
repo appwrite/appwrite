@@ -9,6 +9,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Appwrite\Extend\Exception;
+use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -42,11 +43,13 @@ App::post('/v1/teams')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function ($teamId, $name, $roles, $response, $user, $dbForProject, $events) {
+    ->inject('audits')
+    ->action(function ($teamId, $name, $roles, $response, $user, $dbForProject, $events, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
+        /** @var Appwrite\Event\Event $audits */
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
@@ -88,6 +91,12 @@ App::post('/v1/teams')
         if (!empty($user->getId())) {
             $events->setParam('userId', $user->getId());
         }
+
+        $audits
+            ->setParam('event', 'teams.create')
+            ->setParam('resource', 'team/'.$teamId)
+            ->setParam('data', $team->getArrayCopy())
+        ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($team, Response::MODEL_TEAM);
@@ -182,9 +191,11 @@ App::put('/v1/teams/:teamId')
     ->param('name', null, new Text(128), 'New team name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($teamId, $name, $response, $dbForProject) {
+    ->inject('audits')
+    ->action(function ($teamId, $name, $response, $dbForProject, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
+        /** @var Appwrite\Event\Event $audits */
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -196,6 +207,12 @@ App::put('/v1/teams/:teamId')
             ->setAttribute('name', $name)
             ->setAttribute('search', implode(' ', [$teamId, $name]))
         );
+
+        $audits
+            ->setParam('event', 'teams.update')
+            ->setParam('resource', 'team/'.$teamId)
+            ->setParam('data', $team->getArrayCopy())
+        ;
 
         $response->dynamic($team, Response::MODEL_TEAM);
     });
@@ -216,11 +233,13 @@ App::delete('/v1/teams/:teamId')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('deletes')
-    ->action(function ($teamId, $response, $dbForProject, $events, $deletes) {
+    ->inject('audits')
+    ->action(function ($teamId, $response, $dbForProject, $events, $deletes, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $deletes */
+        /** @var Appwrite\Event\Event $audits */
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -250,6 +269,12 @@ App::delete('/v1/teams/:teamId')
 
         $events
             ->setParam('eventData', $response->output($team, Response::MODEL_TEAM))
+        ;
+
+        $audits
+            ->setParam('event', 'teams.delete')
+            ->setParam('resource', 'team/'.$teamId)
+            ->setParam('data', $team->getArrayCopy())
         ;
 
         $response->noContent();
@@ -844,4 +869,89 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         ;
 
         $response->noContent();
+    });
+
+App::get('/v1/teams/:teamId/logs')
+    ->desc('List Team Logs')
+    ->groups(['api', 'teams'])
+    ->label('scope', 'teams.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'listLogs')
+    ->label('sdk.description', '/docs/references/teams/get-team-logs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->param('teamId', null, new UID(), 'Team ID.')
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('locale')
+    ->inject('geodb')
+    ->action(function ($teamId, $limit, $offset, $response, $dbForProject, $locale, $geodb) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Document $project */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var Utopia\Locale\Locale $locale */
+        /** @var MaxMind\Db\Reader $geodb */
+
+        $team = $dbForProject->getDocument('teams', $teamId);
+
+        if ($team->isEmpty()) {
+            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
+        }
+
+        $audit = new Audit($dbForProject);
+        $resource = 'team/'.$team->getId();
+        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+
+        $output = [];
+
+        foreach ($logs as $i => &$log) {
+            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+
+            $detector = new Detector($log['userAgent']);
+            $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+            $os = $detector->getOS();
+            $client = $detector->getClient();
+            $device = $detector->getDevice();
+
+            $output[$i] = new Document([
+                'event' => $log['event'],
+                'userId' => $log['userId'],
+                'userEmail' => $log['data']['userEmail'] ?? null,
+                'userName' => $log['data']['userName'] ?? null,
+                'mode' => $log['data']['mode'] ?? null,
+                'ip' => $log['ip'],
+                'time' => $log['time'],
+                'osCode' => $os['osCode'],
+                'osName' => $os['osName'],
+                'osVersion' => $os['osVersion'],
+                'clientType' => $client['clientType'],
+                'clientCode' => $client['clientCode'],
+                'clientName' => $client['clientName'],
+                'clientVersion' => $client['clientVersion'],
+                'clientEngine' => $client['clientEngine'],
+                'clientEngineVersion' => $client['clientEngineVersion'],
+                'deviceName' => $device['deviceName'],
+                'deviceBrand' => $device['deviceBrand'],
+                'deviceModel' => $device['deviceModel']
+            ]);
+
+            $record = $geodb->get($log['ip']);
+
+            if ($record) {
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+            } else {
+                $output[$i]['countryCode'] = '--';
+                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
+            }
+        }
+        $response->dynamic(new Document([
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
+        ]), Response::MODEL_LOG_LIST);
     });
