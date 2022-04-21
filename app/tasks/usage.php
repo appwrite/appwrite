@@ -757,7 +757,6 @@ $cli
 
                                 // aggregate storage.total = storage.files.total + storage.deployments.total
                                 if($metricPrefix === 'storage' && $subCollection === 'files') {
-                                    Console::info("Aggregating `storage.total`");
                                     $metric = 'storage.total';
                                     $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
                                     $id = \md5($time . '_30m_' . $metric); //Construct unique id for each metric using time, period and metric
@@ -773,7 +772,7 @@ $cli
                                         ]));
                                     } else {
                                         $dbForProject->updateDocument('stats', $document->getId(),
-                                        $document->setAttribute('value', $count));
+                                        $document->setAttribute('value', $count + $deploymentsTotal));
                                     }
 
                                     $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
@@ -790,7 +789,7 @@ $cli
                                         ]));
                                     } else {
                                         $dbForProject->updateDocument('stats', $document->getId(),
-                                        $document->setAttribute('value', $count));
+                                        $document->setAttribute('value', $count + $deploymentsTotal));
                                     }
                                 }
                             }
