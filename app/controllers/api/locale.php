@@ -180,7 +180,7 @@ App::get('/v1/locale/continents')
     ->label('sdk.response.model', Response::MODEL_CONTINENT_LIST)
     ->inject('response')
     ->inject('locale')
-    ->action(function (Response $response,Locale $locale) {
+    ->action(function (Response $response, Locale $locale) {
 
         $list = Config::getParam('locale-continents'); /* @var $list array */
         
