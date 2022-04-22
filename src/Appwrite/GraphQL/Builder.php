@@ -100,7 +100,7 @@ class Builder
                 $fields[$escapedKey] = [
                     'type' => $type,
                     'description' => $props['description'],
-                    'resolve' => fn ($object, $args, $context, $info) => $object->then(function ($obj) use ($object, $key, $props) {
+                    'resolve' => fn ($object, $args, $context, $info) => $object->then(function ($obj) use ($key) {
                         return $obj[$key];
                     }),
                 ];
@@ -240,6 +240,38 @@ class Builder
         Database $dbForProject
     ): Schema
     {
+        $db = self::buildCollectionsSchema($utopia, $request, $response, $dbForProject);
+
+        $queryFields = \array_merge_recursive($apiSchema['query'], $db['query']);
+        $mutationFields = \array_merge_recursive($apiSchema['mutation'], $db['mutation']);
+
+        ksort($queryFields);
+        ksort($mutationFields);
+
+        return new Schema([
+            'query' => new ObjectType([
+                'name' => 'Query',
+                'fields' => $queryFields
+            ]),
+            'mutation' => new ObjectType([
+                'name' => 'Mutation',
+                'fields' => $mutationFields
+            ])
+        ]);
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public static function buildSchema(
+        App      $utopia,
+        Request  $request,
+        Response $response,
+        Registry &$register,
+        Database $dbForProject
+    ): Schema
+    {
+        $apiSchema = self::buildAPISchema($utopia, $request, $response, $register);
         $db = self::buildCollectionsSchema($utopia, $request, $response, $dbForProject);
 
         $queryFields = \array_merge_recursive($apiSchema['query'], $db['query']);
@@ -553,9 +585,12 @@ class Builder
                                 unset($swoole->header['content-type']);
                             }
                             $request = new Request($swoole);
+                            $response = new Response($response->getSwoole());
 
-                            $route->getAction();
-                            $utopia->execute($route, $request);
+                            $utopia->setResource('request', fn() => $request);
+                            $utopia->setResource('response', fn() => $response);
+                            $utopia->setRoute($route)->execute($route, $request);
+
                             $result = $response->getPayload();
 
                             if ($response->getCurrentModel() == Response::MODEL_ERROR_DEV) {

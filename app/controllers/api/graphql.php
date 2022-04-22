@@ -35,7 +35,7 @@ App::get('/v1/graphql')
     ->inject('register')
     ->inject('dbForProject')
     ->inject('promiseAdapter')
-    ->inject('apiSchema')
+    ->inject('gqlSchema')
     ->action(Closure::fromCallable('graphqlRequest'));
 
 App::post('/v1/graphql')
@@ -59,7 +59,7 @@ App::post('/v1/graphql')
     ->inject('utopia')
     ->inject('dbForProject')
     ->inject('promiseAdapter')
-    ->inject('apiSchema')
+    ->inject('gqlSchema')
     ->action(Closure::fromCallable('graphqlRequest'));
 
 /**
@@ -74,7 +74,7 @@ function graphqlRequest(
     $utopia,
     $dbForProject,
     $promiseAdapter,
-    $apiSchema
+    $gqlSchema
 )
 {
     /** @var Appwrite\Utopia\Request $request */
@@ -108,17 +108,9 @@ function graphqlRequest(
         $validations[] = new DisableIntrospection();
     }
 
-    $schema = Builder::appendProjectSchema(
-        $apiSchema,
-        $utopia,
-        $request,
-        $response,
-        $dbForProject
-    );
-
     $promise = GraphQL::promiseToExecute(
         $promiseAdapter,
-        $schema,
+        $gqlSchema,
         $query,
         variableValues: $variables,
         operationName: $operationName,
