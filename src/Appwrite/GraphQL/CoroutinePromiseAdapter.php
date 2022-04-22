@@ -11,12 +11,12 @@ class CoroutinePromiseAdapter implements PromiseAdapter
 {
     public function isThenable($value): bool
     {
-        return $value instanceof Promise;
+        return $value instanceof CoroutinePromise;
     }
 
     public function convertThenable($thenable): Promise
     {
-        if (!$thenable instanceof Promise) {
+        if (!$thenable instanceof CoroutinePromise) {
             throw new InvariantViolation('Expected instance of SwoolePromise, got ' . Utils::printSafe($thenable));
         }
         return new Promise($thenable, $this);
