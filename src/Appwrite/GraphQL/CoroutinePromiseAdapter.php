@@ -6,6 +6,7 @@ use GraphQL\Error\InvariantViolation;
 use GraphQL\Executor\Promise\Promise;
 use GraphQL\Executor\Promise\PromiseAdapter;
 use GraphQL\Utils\Utils;
+use function Co\go;
 
 class CoroutinePromiseAdapter implements PromiseAdapter
 {
@@ -66,28 +67,25 @@ class CoroutinePromiseAdapter implements PromiseAdapter
         $count = 0;
         $result = [];
 
-        \Co\run(function ($promisesOrValues, $all, $total, &$count, $result) {
-            foreach ($promisesOrValues as $index => $promiseOrValue) {
-                go(function ($index, $promiseOrValue, $all, $total, &$count, $result) {
-                    if (!($promiseOrValue instanceof CoroutinePromise)) {
-                        $result[$index] = $promiseOrValue;
-                        $count++;
-                        return;
-                    }
-                    $result[$index] = null;
-                    $promiseOrValue->then(
-                        static function ($value) use ($index, &$count, $total, &$result, $all): void {
-                            $result[$index] = $value;
-                            $count++;
-                            if ($count === $total) {
-                                $all->resolve($result);
-                            }
-                        },
-                        [$all, 'reject']
-                    );
-                }, $index, $promiseOrValue, $all, $total, $count, $result);
-            }
-        }, $promisesOrValues, $all, $total, $count, $result);
+        foreach ($promisesOrValues as $index => $promiseOrValue) {
+            go(function ($index, $promiseOrValue, $all, $total, &$count, $result) {
+                if (!($promiseOrValue instanceof CoroutinePromise)) {
+                    $result[$index] = $promiseOrValue;
+                    $count++;
+                    return;
+                }
+                $result[$index] = null;
+                $promiseOrValue->then(
+                    function ($value) use ($index, &$count, $total, &$result, $all): void {
+                        $result[$index] = $value;
+                        if ($count++ === $total) {
+                            $all->resolve($result);
+                        }
+                    },
+                    [$all, 'reject']
+                );
+            }, $index, $promiseOrValue, $all, $total, $count, $result);
+        }
 
         if ($count === $total) {
             $all->resolve($result);
