@@ -163,7 +163,7 @@ class Okta extends OAuth2
     {
         if (empty($this->user)) {
             $headers = ['Authorization: Bearer '. \urlencode($accessToken)];
-            $user = $this->request('GET', 'https://'.$this->getOktaDomain().'/v1/userinfo', $headers);
+            $user = $this->request('GET', 'https://'.$this->getOktaDomain().'oauth2/default/v1/userinfo', $headers);
             $this->user = \json_decode($user, true);
         }
 
