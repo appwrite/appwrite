@@ -16,6 +16,10 @@
           "keyID": "oauth2AppleKeyId",
           "teamID": "oauth2AppleTeamId",
           "p8": "oauth2AppleP8"
+        },
+        "Okta": {
+          "clientSecret": "oauth2OktaClientSecret",
+          "oktaDomain": "oauth2OktaDomain"
         }
       }
       let provider = element.getAttribute("data-forms-oauth-custom");
