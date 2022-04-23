@@ -23,7 +23,7 @@
         }
       }
       let provider = element.getAttribute("data-forms-oauth-custom");
-      if (!provider || !providers.hasOwnProperty(provider)) { console.error("Provider for custom form not set or unkown") }
+      if (!provider || !providers.hasOwnProperty(provider)) { console.error("Provider for custom form not set or unknown") }
       let config = providers[provider];
 
       // Add Change Listeners for element
