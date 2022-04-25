@@ -31,7 +31,7 @@ use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries as QueriesValidator;
-use Appwrite\Utopia\Database\Validator\OrderAttributes as OrderAttributesValudator;
+use Appwrite\Utopia\Database\Validator\OrderAttributes as OrderAttributesValidator;
 use Appwrite\Utopia\Response;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
@@ -1744,7 +1744,7 @@ App::get('/v1/database/collections/:collectionId/documents')
         }
 
         if(!empty($orderAttributes)) {
-            $validator = new OrderAttributesValudator($collection->getAttribute('attributes', []), $collection->getAttribute('indexes', []), true);
+            $validator = new OrderAttributesValidator($collection->getAttribute('attributes', []), $collection->getAttribute('indexes', []), true);
             if (!$validator->isValid($orderAttributes)) {
                 throw new Exception($validator->getDescription(), 400, Exception::GENERAL_QUERY_INVALID);
             }
