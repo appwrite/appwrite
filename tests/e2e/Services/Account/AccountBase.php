@@ -1279,7 +1279,7 @@ trait AccountBase
         $expireTime = strpos($lastEmail['text'], 'expire='.$response['body']['expire'], 0);
 
         $this->assertNotFalse($expireTime);
-        
+
         $secretTest = strpos($lastEmail['text'], 'secret='.$response['body']['secret'], 0);
 
         $this->assertNotFalse($secretTest);
@@ -1339,6 +1339,7 @@ trait AccountBase
     {
         $id = $data['id'] ?? '';
         $token = $data['token'] ?? '';
+        $email = $data['email'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -1360,6 +1361,20 @@ trait AccountBase
 
         $sessionId = $response['body']['$id'];
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals($response['body']['email'], $email);
+        $this->assertTrue($response['body']['emailVerification']);
 
         /**
          * Test for FAILURE
