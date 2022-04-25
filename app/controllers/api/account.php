@@ -676,7 +676,7 @@ App::post('/v1/account/sessions/magic-url')
                 'emailVerification' => false,
                 'status' => true,
                 'password' => null,
-                'passwordUpdate' => \time(),
+                'passwordUpdate' => 0,
                 'registration' => \time(),
                 'reset' => false,
                 'prefs' => new \stdClass(),
@@ -833,6 +833,7 @@ App::put('/v1/account/sessions/magic-url')
         }
 
         $user
+            ->setAttribute('emailVerification', true)
             ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND)
             ->setAttribute('tokens', $tokens);
 
@@ -862,9 +863,7 @@ App::put('/v1/account/sessions/magic-url')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
-        $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-        ? $countries[strtoupper($session->getAttribute('countryCode'))]
-        : $locale->getText('locale.country.unknown');
+        $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
@@ -942,7 +941,7 @@ App::post('/v1/account/sessions/anonymous')
             'emailVerification' => false,
             'status' => true,
             'password' => null,
-            'passwordUpdate' => \time(),
+            'passwordUpdate' => 0,
             'registration' => \time(),
             'reset' => false,
             'name' => null,
@@ -1008,9 +1007,7 @@ App::post('/v1/account/sessions/anonymous')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
-        $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-            ? $countries[strtoupper($session->getAttribute('countryCode'))]
-            : $locale->getText('locale.country.unknown');
+        $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
@@ -1257,10 +1254,7 @@ App::get('/v1/account/sessions/:sessionId')
 
         foreach ($sessions as $session) {/** @var Document $session */
             if ($sessionId == $session->getId()) {
-
-                $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-                    ? $countries[strtoupper($session->getAttribute('countryCode'))]
-                    : $locale->getText('locale.country.unknown');
+                $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
@@ -1587,7 +1581,7 @@ App::delete('/v1/account/sessions/:sessionId')
                 if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                     $session
                         ->setAttribute('current', true)
-                        ->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))])) ? $countries[strtoupper($session->getAttribute('countryCode'))] : $locale->getText('locale.country.unknown'))
+                        ->setAttribute('countryName', $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
                     ;
 
                     if (!Config::getParam('domainVerification')) {
@@ -1767,7 +1761,7 @@ App::delete('/v1/account/sessions')
 
             $session
                 ->setAttribute('current', false)
-                ->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))])) ? $countries[strtoupper($session->getAttribute('countryCode'))] : $locale->getText('locale.country.unknown'))
+                ->setAttribute('countryName', $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
             ;
 
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too

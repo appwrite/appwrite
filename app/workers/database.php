@@ -75,6 +75,11 @@ class DatabaseV1 extends Worker
             'collectionId' => $collection->getId(),
             'attributeId' => $attribute->getId()
         ]);
+        /**
+         * Fetch attribute from the database, since with Resque float values are loosing informations.
+         */
+        $attribute = $dbForProject->getDocument('attributes', $attribute->getId());
+
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
         $type = $attribute->getAttribute('type', '');

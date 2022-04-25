@@ -185,7 +185,7 @@ if(!empty($user) || !empty($pass)) {
  */
 Database::addFilter('casting',
     function($value) {
-        return json_encode(['value' => $value]);
+        return json_encode(['value' => $value], JSON_PRESERVE_ZERO_FRACTION);
     },
     function($value) {
         if (is_null($value)) {

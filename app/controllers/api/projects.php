@@ -79,6 +79,9 @@ App::post('/v1/projects')
         }
 
         $projectId = ($projectId == 'unique()') ? $dbForConsole->getId() : $projectId;
+        if($projectId === 'console') {
+            throw new Exception("'console' is a reserved project.", 400, Exception::PROJECT_RESERVED_PROJECT);
+        }
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId == 'unique()' ? $dbForConsole->getId() : $projectId,
             '$read' => ['team:' . $teamId],

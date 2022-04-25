@@ -145,6 +145,7 @@ class Exception extends \Exception
     const PROJECT_INVALID_SUCCESS_URL       = 'project_invalid_success_url';
     const PROJECT_INVALID_FAILURE_URL       = 'project_invalid_failure_url';
     const PROJECT_MISSING_USER_ID           = 'project_missing_user_id';
+    const PROJECT_RESERVED_PROJECT          = 'project_reserved_project';
 
     /** Webhooks */
     const WEBHOOK_NOT_FOUND                 = 'webhook_not_found';
