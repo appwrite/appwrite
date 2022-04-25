@@ -174,7 +174,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
         if ($request->getProtocol() !== 'https') {
             if($request->getMethod() !== Request::METHOD_GET) {
-                throw new Exception('Method unsupported over HTTP.', 405, Exception::GENERAL_METHOD_UNSUPPORTED);
+                throw new Exception('Method unsupported over HTTP.', 500, Exception::GENERAL_PROTOCOL_UNSUPPORTED);
             }
 
             return $response->redirect('https://'.$request->getHostname().$request->getURI());

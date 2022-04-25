@@ -78,10 +78,10 @@ return [
         'description' => 'An internal server error occurred.',
         'code' => 500,
     ],
-    Exception::GENERAL_METHOD_UNSUPPORTED => [
-        'name' => Exception::GENERAL_METHOD_UNSUPPORTED,
-        'description' => 'The HTTP method is unsupported by the current protocol or resource.',
-        'code' => 405, 
+    Exception::GENERAL_PROTOCOL_UNSUPPORTED => [
+        'name' => Exception::GENERAL_PROTOCOL_UNSUPPORTED,
+        'description' => 'The request cannot be fulfilled with the current protocol. Please check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
+        'code' => 500, 
     ],
 
     /** User Errors */
