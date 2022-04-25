@@ -254,7 +254,7 @@ class FunctionsV1 extends Worker
                     'trigger' => $trigger,
                     'status' => 'waiting',
                     'statusCode' => 0,
-                    'stdout' => '',
+                    'response' => '',
                     'stderr' => '',
                     'time' => 0.0,
                     'search' => implode(' ', [$functionId, $executionId]),
@@ -303,7 +303,7 @@ class FunctionsV1 extends Worker
             /** Update execution status */
             $execution->setAttribute('status', $executionResponse['status']);
             $execution->setAttribute('statusCode', $executionResponse['statusCode']);
-            $execution->setAttribute('stdout', $executionResponse['stdout']);
+            $execution->setAttribute('response', $executionResponse['response']);
             $execution->setAttribute('stderr', $executionResponse['stderr']);
             $execution->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
