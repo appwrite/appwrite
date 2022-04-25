@@ -621,7 +621,7 @@ $logs = $this->getParam('logs', null);
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
         @reset="array = required = false"
-        x-data="{ array: false, required: false }">
+        x-data="{ array: false, required: false, size: null }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
@@ -631,7 +631,7 @@ $logs = $this->getParam('logs', null);
         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
 
         <label for="string-length">Size</label>
-        <input id="string-length" name="size" type="number" class="margin-bottom" autocomplete="off" required value="255" data-cast-to="integer" />
+        <input id="string-length" name="size" type="number" class="margin-bottom" autocomplete="off" required value="255" data-cast-to="integer" x-model="size" />
 
         <div class="margin-bottom">
             <input x-model="required" name="required" class="button switch" type="checkbox" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
@@ -643,7 +643,7 @@ $logs = $this->getParam('logs', null);
 
         <label for="xdefault">Default Value</label>
         <template x-if="!(array || required)">
-            <input name="xdefault" type="text" class="margin-bottom-large" autocomplete="off">
+            <input name="xdefault" type="text" class="margin-bottom-large" autocomplete="off" :maxlength="size">
         </template>
         <template x-if="(array || required)">
             <input name="xdefault" type="text" class="margin-bottom-large" autocomplete="off" disabled value="">
@@ -677,7 +677,7 @@ $logs = $this->getParam('logs', null);
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
         @reset="array = required = false"
-        x-data="{ array: false, required: false }">
+        x-data="{ array: false, required: false, min: null, max: null }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
@@ -697,18 +697,18 @@ $logs = $this->getParam('logs', null);
         <div class="row responsive thin">
             <div class="col span-6 margin-bottom-small">
                 <label for="integer-min">Min</label>
-                <input id="integer-min" type="number" step="1" class="full-width" name="min" autocomplete="off" data-cast-to="integer" />
+                <input id="integer-min" type="number" step="1" class="full-width" name="min" autocomplete="off" data-cast-to="integer" x-model="min" />
             </div>
             <div class="col span-6 margin-bottom-small">
                 <label for="integer-max">Max</label>
-                <input id="integer-max" type="number" step="1" class="full-width" name="max" autocomplete="off" data-cast-to="integer" />
+                <input id="integer-max" type="number" step="1" class="full-width" name="max" autocomplete="off" data-cast-to="integer" x-model="max" />
             </div>
         </div>
 
         <label for="integer-default">Default Value</label>
 
         <template x-if="!(array || required)">
-            <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off" data-cast-to="integer">
+            <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off" data-cast-to="integer" :min="min" :max="max">
         </template>
         <template x-if="(array || required)">
             <input name="xdefault" type="number" class="margin-bottom-large" autocomplete="off" data-cast-to="integer" disabled>
@@ -742,7 +742,7 @@ $logs = $this->getParam('logs', null);
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
         @reset="array = required = false"
-        x-data="{ array: false, required: false }">
+        x-data="{ array: false, required: false, min: null, max: null }">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
@@ -762,18 +762,18 @@ $logs = $this->getParam('logs', null);
         <div class="row responsive thin">
             <div class="col span-6 margin-bottom-small">
                 <label for="float-min">Min</label>
-                <input id="float-min" type="number" class="full-width" name="min" step="any" autocomplete="off" data-cast-to="float" />
+                <input id="float-min" type="number" class="full-width" name="min" step="any" autocomplete="off" data-cast-to="float" x-model="min" />
             </div>
             <div class="col span-6 margin-bottom-small">
                 <label for="float-max">Max</label>
-                <input id="float-max" type="number" class="full-width" name="max" step="any" autocomplete="off" data-cast-to="float" />
+                <input id="float-max" type="number" class="full-width" name="max" step="any" autocomplete="off" data-cast-to="float" x-model="max" />
             </div>
         </div>
 
         <label for="float-default">Default Value</label>
 
         <template x-if="!(array || required)">
-            <input name="xdefault" type="number" step="any" class="margin-bottom-large" autocomplete="off" data-cast-to="float">
+            <input name="xdefault" type="number" step="any" class="margin-bottom-large" autocomplete="off" data-cast-to="float" :min="min" :max="max">
         </template>
         <template x-if="(array || required)">
             <input name="xdefault" type="number" step="any" class="margin-bottom-large" autocomplete="off" data-cast-to="float" disabled>
