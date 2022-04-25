@@ -1054,8 +1054,8 @@ $collections = [
                 'size' => 16384,
                 'signed' => true,
                 'required' => false,
-                'default' => [],
-                'array' => true,
+                'default' => null,
+                'array' => false,
                 'filters' => ['subQuerySessions'],
             ],
             [

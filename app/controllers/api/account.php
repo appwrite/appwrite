@@ -28,8 +28,6 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-use function PHPUnit\Framework\isEmpty;
-
 $oauthDefaultSuccess = '/v1/auth/oauth2/success';
 $oauthDefaultFailure = '/v1/auth/oauth2/failure';
 

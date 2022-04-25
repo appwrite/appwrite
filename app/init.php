@@ -306,10 +306,11 @@ Database::addFilter('subQuerySessions',
         return null;
     },
     function($value, Document $document, Database $database) {
-        return $database
-            ->find('sessions', [
-                new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
-            ], $database->getIndexLimit(), 0, []);
+        $sessions = Authorization::skip(fn () => $database->find('sessions', [
+            new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
+        ], $database->getIndexLimit(), 0, []));
+
+        return $sessions;
     }
 );
 
@@ -704,8 +705,6 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     else {
         $user = $dbForConsole->getDocument('users', Auth::$unique);
     }
-
-    \var_dump($user);
 
     if ($user->isEmpty() // Check a document has been found in the DB
         || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)) { // Validate user has valid login token
