@@ -1,8 +1,8 @@
 <?php
 
 namespace Appwrite\Network\Validator;
-use Utopia\Validator\Hostname;
 
+use Utopia\Validator\Hostname;
 use Utopia\Validator;
 
 class Origin extends Validator
