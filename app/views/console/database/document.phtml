@@ -267,9 +267,9 @@ $logs = $this->getParam('logs', null);
                                                                                 :required="attr.required"
                                                                                 :name="attr.key"
                                                                                 data-cast-to="string">
-                                                                                <template x-for="element in attr.elements">
-                                                                                    <option :disabled="attr.required" selected label=" "></option>
+                                                                                <option :disabled="attr.required" selected label=" "></option>
 
+                                                                                <template x-for="element in attr.elements">
                                                                                     <option
                                                                                         :value="element"
                                                                                         x-text="element"
