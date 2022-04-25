@@ -838,6 +838,7 @@ App::put('/v1/account/sessions/magic-url')
         }
 
         $user
+            ->setAttribute('emailVerification', true)
             ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND)
             ->setAttribute('tokens', $tokens);
 
