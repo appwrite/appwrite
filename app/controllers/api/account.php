@@ -104,7 +104,7 @@ App::post('/v1/account')
                 'reset' => false,
                 'name' => $name,
                 'prefs' => new \stdClass(),
-                'sessions' => [],
+                'sessions' => null,
                 'tokens' => [],
                 'memberships' => [],
                 'search' => implode(' ', [$userId, $email, $name]),
@@ -501,7 +501,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'reset' => false,
                         'name' => $name,
                         'prefs' => new \stdClass(),
-                        'sessions' => [],
+                        'sessions' => null,
                         'tokens' => [],
                         'memberships' => [],
                         'search' => implode(' ', [$userId, $email, $name]),
@@ -674,7 +674,7 @@ App::post('/v1/account/sessions/magic-url')
                 'registration' => \time(),
                 'reset' => false,
                 'prefs' => new \stdClass(),
-                'sessions' => [],
+                'sessions' => null,
                 'tokens' => [],
                 'memberships' => [],
                 'search' => implode(' ', [$userId, $email]),
@@ -946,7 +946,7 @@ App::post('/v1/account/sessions/anonymous')
             'reset' => false,
             'name' => null,
             'prefs' => new \stdClass(),
-            'sessions' => [],
+            'sessions' => null,
             'tokens' => [],
             'memberships' => [],
             'search' => $userId,
@@ -1273,7 +1273,6 @@ App::get('/v1/account/sessions/:sessionId')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
-        // TODO: Matej refactor
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
         ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
@@ -1599,7 +1598,6 @@ App::delete('/v1/account/sessions/:sessionId')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
             : $sessionId;
 
-        // TODO: Matej refactor
         $sessions = $user->getAttribute('sessions', []);
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
@@ -1633,8 +1631,8 @@ App::delete('/v1/account/sessions/:sessionId')
                         ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
                     ;
                 }
-
-                $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
+                
+                $dbForProject->deleteCachedDocument('users', $user->getId());
 
                 $events
                     ->setParam('eventData', $response->output($session, Response::MODEL_SESSION))
@@ -1690,7 +1688,6 @@ App::patch('/v1/account/sessions/:sessionId')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
             : $sessionId;
 
-        // TODO: Matej refactor
         $sessions = $user->getAttribute('sessions', []);
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
@@ -1729,8 +1726,7 @@ App::patch('/v1/account/sessions/:sessionId')
 
                 $dbForProject->updateDocument('sessions', $sessionId, $session);
 
-                $user->setAttribute("sessions", $sessions);
-                $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+                $dbForProject->deleteCachedDocument('users', $user->getId());
 
                 $audits
                     ->setParam('userId', $user->getId())
@@ -1786,7 +1782,6 @@ App::delete('/v1/account/sessions')
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
-        // TODO: Matej refactor
 
         foreach ($sessions as $session) {/** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
@@ -1817,7 +1812,7 @@ App::delete('/v1/account/sessions')
             }
         }
 
-        $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', []));
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $numOfSessions = count($sessions);
 

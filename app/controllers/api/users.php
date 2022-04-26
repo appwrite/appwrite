@@ -63,7 +63,7 @@ App::post('/v1/users')
                 'reset' => false,
                 'name' => $name,
                 'prefs' => new \stdClass(),
-                'sessions' => [],
+                'sessions' => null,
                 'tokens' => [],
                 'memberships' => [],
                 'search' => implode(' ', [$userId, $email, $name]),
@@ -630,11 +630,11 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
 
         $dbForProject->deleteDocument('sessions', $session->getId());
 
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
         $events
             ->setParam('eventData', $response->output($user, Response::MODEL_USER))
         ;
-
-        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $usage
             ->setParam('users.update', 1)
