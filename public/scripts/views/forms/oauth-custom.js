@@ -19,7 +19,8 @@
         },
         "Okta": {
           "clientSecret": "oauth2OktaClientSecret",
-          "oktaDomain": "oauth2OktaDomain"
+          "oktaDomain": "oauth2OktaDomain",
+          "authorizationServerId": "oauth2OktaAuthorizationServerId"
         }
       }
       let provider = element.getAttribute("data-forms-oauth-custom");

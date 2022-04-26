@@ -42,7 +42,7 @@ class Okta extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://'.$this->getOktaDomain().'/oauth2/default/v1/authorize?'.\http_build_query([
+        return 'https://'.$this->getOktaDomain().'/oauth2/'.$this->getAuthorizationServerId().'/v1/authorize?'.\http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'state'=> \json_encode($this->state),
@@ -62,7 +62,7 @@ class Okta extends OAuth2
             $headers = ['Content-Type: application/x-www-form-urlencoded'];
             $this->tokens = \json_decode($this->request(
                 'POST',
-                'https://'.$this->getOktaDomain().'/oauth2/default/v1/token',
+                'https://'.$this->getOktaDomain().'/oauth2/'.$this->getAuthorizationServerId().'/v1/token',
                 $headers,
                 \http_build_query([
                     'code' => $code,
@@ -89,7 +89,7 @@ class Okta extends OAuth2
         $headers = ['Content-Type: application/x-www-form-urlencoded'];
         $this->tokens = \json_decode($this->request(
             'POST',
-            'https://'.$this->getOktaDomain().'/oauth2/default/v1/token',
+            'https://'.$this->getOktaDomain().'/oauth2/'.$this->getAuthorizationServerId().'/v1/token',
             $headers,
             \http_build_query([
                 'refresh_token' => $refreshToken,
@@ -163,7 +163,7 @@ class Okta extends OAuth2
     {
         if (empty($this->user)) {
             $headers = ['Authorization: Bearer '. \urlencode($accessToken)];
-            $user = $this->request('GET', 'https://'.$this->getOktaDomain().'/oauth2/default/v1/userinfo', $headers);
+            $user = $this->request('GET', 'https://'.$this->getOktaDomain().'/oauth2/'.$this->getAuthorizationServerId().'/v1/userinfo', $headers);
             $this->user = \json_decode($user, true);
         }
 
@@ -191,6 +191,17 @@ class Okta extends OAuth2
     {
         $secret = $this->getAppSecret();
         return (isset($secret['oktaDomain'])) ? $secret['oktaDomain'] : ''; 
+    }
+
+    /**
+     * Extracts the Okta Authorization Server ID from the JSON stored in appSecret
+     * 
+     * @return string
+     */
+    protected function getAuthorizationServerId(): string
+    {
+        $secret = $this->getAppSecret();
+        return (isset($secret['authorizationServerId'])) ? $secret['authorizationServerId'] : 'default'; 
     }
 
     /**
