@@ -21,6 +21,10 @@
           "clientSecret": "oauth2OktaClientSecret",
           "oktaDomain": "oauth2OktaDomain",
           "authorizationServerId": "oauth2OktaAuthorizationServerId"
+        },
+        "Auth0": {
+          "clientSecret": "oauth2Auth0ClientSecret",
+          "auth0Domain": "oauth2Auth0Domain"
         }
       }
       let provider = element.getAttribute("data-forms-oauth-custom");

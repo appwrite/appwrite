@@ -21,6 +21,16 @@ return [ // Ordered by ABC.
         'beta' => true,
         'mock' => false,
     ],
+    'auth0' => [
+        'name' => 'Auth0',
+        'developers' => 'https://auth0.com/developers',
+        'icon' => 'icon-auth0',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => 'auth0.phtml',
+        'beta' => false,
+        'mock' => false,
+    ],
     'bitbucket' => [
         'name' => 'BitBucket',
         'developers' => 'https://developer.atlassian.com/bitbucket',
