@@ -16,6 +16,10 @@
           "keyID": "oauth2AppleKeyId",
           "teamID": "oauth2AppleTeamId",
           "p8": "oauth2AppleP8"
+        },
+        "Auth0": {
+          "clientSecret": "oauth2Auth0ClientSecret",
+          "auth0Domain": "oauth2Auth0Domain"
         }
       }
       let provider = element.getAttribute("data-forms-oauth-custom");
