@@ -553,6 +553,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         Authorization::setRole('user:' . $user->getId());
 
+        $dbForProject->updateDocument('users', $user->getId(), $user);
+
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$read', ['user:' . $user->getId()])
             ->setAttribute('$write', ['user:' . $user->getId()])
