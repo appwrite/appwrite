@@ -86,7 +86,7 @@ class DatabaseV1 extends Worker
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if(!$dbForProject->createAttribute('collection_' . $collectionId, $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
+            if(!$dbForProject->createAttribute('collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
                 throw new Exception('Failed to create Attribute');
             }
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
@@ -135,7 +135,7 @@ class DatabaseV1 extends Worker
         // - failed: attribute was never created
         // - stuck: attribute was available but cannot be removed
         try {
-            if($status !== 'failed' && !$dbForProject->deleteAttribute('collection_' . $collectionId, $key)) {
+            if($status !== 'failed' && !$dbForProject->deleteAttribute('collection_' . $collection->getInternalId(), $key)) {
                 throw new Exception('Failed to delete Attribute');
             }
             $dbForProject->deleteDocument('attributes', $attribute->getId());
@@ -210,7 +210,7 @@ class DatabaseV1 extends Worker
         }
 
         $dbForProject->deleteCachedDocument('collections', $collectionId);
-        $dbForProject->deleteCachedCollection('collection_' . $collectionId);
+        $dbForProject->deleteCachedCollection('collection_' . $collection->getInternalId());
     }
 
     /**
@@ -233,7 +233,7 @@ class DatabaseV1 extends Worker
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if(!$dbForProject->createIndex('collection_' . $collectionId, $key, $type, $attributes, $lengths, $orders)) {
+            if(!$dbForProject->createIndex('collection_' . $collection->getInternalId(), $key, $type, $attributes, $lengths, $orders)) {
                 throw new Exception('Failed to create Index');
             }
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
@@ -276,7 +276,7 @@ class DatabaseV1 extends Worker
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if($status !== 'failed' && !$dbForProject->deleteIndex('collection_' . $collectionId, $key)) {
+            if($status !== 'failed' && !$dbForProject->deleteIndex('collection_' . $collection->getInternalId(), $key)) {
                 throw new Exception('Failed to delete index');
             }
             $dbForProject->deleteDocument('indexes', $index->getId());

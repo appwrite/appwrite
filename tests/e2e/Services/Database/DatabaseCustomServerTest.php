@@ -48,7 +48,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(2, $collections['body']['sum']);
+        $this->assertEquals(2, $collections['body']['total']);
         $this->assertEquals($test1['body']['$id'], $collections['body']['collections'][0]['$id']);
         $this->assertEquals($test2['body']['$id'], $collections['body']['collections'][1]['$id']);
 
@@ -63,7 +63,7 @@ class DatabaseCustomServerTest extends Scope
             'orderType' => 'DESC'
         ]);
 
-        $this->assertEquals(2, $collections['body']['sum']);
+        $this->assertEquals(2, $collections['body']['total']);
         $this->assertEquals($base[0]['$id'], $collections['body']['collections'][0]['$id']);
         $this->assertEquals($base[1]['$id'], $collections['body']['collections'][1]['$id']);
 
@@ -135,7 +135,7 @@ class DatabaseCustomServerTest extends Scope
             'search' => 'first'
         ]);
 
-        $this->assertEquals(1, $collections['body']['sum']);
+        $this->assertEquals(1, $collections['body']['total']);
         $this->assertEquals('first', $collections['body']['collections'][0]['$id']);
 
         $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
@@ -145,7 +145,7 @@ class DatabaseCustomServerTest extends Scope
             'search' => 'Test'
         ]);
         
-        $this->assertEquals(2, $collections['body']['sum']);
+        $this->assertEquals(2, $collections['body']['total']);
         $this->assertEquals('Test 1', $collections['body']['collections'][0]['name']);
         $this->assertEquals('Test 2', $collections['body']['collections'][1]['name']);
 
@@ -156,7 +156,7 @@ class DatabaseCustomServerTest extends Scope
             'search' => 'Nonexistent'
         ]);
         
-        $this->assertEquals(0, $collections['body']['sum']);
+        $this->assertEquals(0, $collections['body']['total']);
 
         /**
          * Test for FAILURE

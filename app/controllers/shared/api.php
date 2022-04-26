@@ -3,12 +3,14 @@
 use Appwrite\Auth\Auth;
 use Appwrite\Messaging\Adapter\Realtime;
 use Utopia\App;
+use Appwrite\Extend\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Database\Document;
+use Utopia\Storage\Device\DOSpaces;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Exception;
 use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\S3;
 use Utopia\Storage\Storage;
 
 App::init(function ($utopia, $request, $response, $project, $user, $events, $audits, $usage, $deletes, $database, $dbForProject, $mode) {
@@ -26,13 +28,10 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
     /** @var Appwrite\Event\Event $functions */
     /** @var Utopia\Database\Database $dbForProject */
 
-    Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
-    Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
-
     $route = $utopia->match($request);
 
     if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
-        throw new Exception('Missing or unknown project ID', 400);
+        throw new Exception('Missing or unknown project ID', 400, Exception::PROJECT_UNKNOWN);
     }
 
     /*
@@ -77,11 +76,11 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
             ;
         }
 
-        if (($abuse->check() // Route is rate-limited
-        && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not disabled
+        if ((App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled' // Route is rate-limited
+        && $abuse->check()) // Abuse is not disabled
         && (!$isAppUser && !$isPrivilegedUser)) // User is not an admin or API key
         {
-            throw new Exception('Too many requests', 429);
+            throw new Exception('Too many requests', 429, Exception::GENERAL_RATE_LIMIT_EXCEEDED);
         }
     }
 
@@ -150,36 +149,36 @@ App::init(function ($utopia, $request, $project) {
     switch ($route->getLabel('auth.type', '')) {
         case 'emailPassword':
             if(($auths['emailPassword'] ?? true) === false) {
-                throw new Exception('Email / Password authentication is disabled for this project', 501);
+                throw new Exception('Email / Password authentication is disabled for this project', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
             }
             break;
 
         case 'magic-url':
             if($project->getAttribute('usersAuthMagicURL', true) === false) {
-                throw new Exception('Magic URL authentication is disabled for this project', 501);
+                throw new Exception('Magic URL authentication is disabled for this project', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
             }
             break;
 
         case 'anonymous':
             if(($auths['anonymous'] ?? true) === false) {
-                throw new Exception('Anonymous authentication is disabled for this project', 501);
+                throw new Exception('Anonymous authentication is disabled for this project', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
             }
             break;
 
         case 'invites':
             if(($auths['invites'] ?? true) === false) {
-                throw new Exception('Invites authentication is disabled for this project', 501);
+                throw new Exception('Invites authentication is disabled for this project', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
             }
             break;
 
         case 'jwt':
             if(($auths['JWT'] ?? true) === false) {
-                throw new Exception('JWT authentication is disabled for this project', 501);
+                throw new Exception('JWT authentication is disabled for this project', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
             }
             break;
 
         default:
-            throw new Exception('Unsupported authentication route');
+            throw new Exception('Unsupported authentication route', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
             break;
     }
 
@@ -218,12 +217,14 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         if ($project->getId() !== 'console') {
             $payload = new Document($response->getPayload());
             $collection = new Document($events->getParam('collection') ?? []);
+            $bucket = new Document($events->getParam('bucket') ?? []);
 
             $target = Realtime::fromPayload(
                 event: $events->getParam('event'), 
                 payload: $payload, 
                 project: $project, 
-                collection: $collection
+                collection: $collection,
+                bucket: $bucket,
             );
 
             Realtime::send(

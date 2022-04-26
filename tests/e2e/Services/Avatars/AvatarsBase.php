@@ -259,6 +259,14 @@ trait AvatarsBase
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'invalid://appwrite.io/images/apple.png'
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
         // TODO Add test for non-image file (PDF, WORD)
 
         return [];

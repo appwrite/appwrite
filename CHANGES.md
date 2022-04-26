@@ -1,3 +1,117 @@
+# Unreleased Version
+- Renamed `providers` to `authProviders` in project collection **Breaking Change**
+
+# Version 0.13.4
+
+## Features
+- Added `detailedTrace` to Logger events
+- Added new `_APP_STORAGE_PREVIEW_LIMIT` environment variable to configure maximum preview file size
+
+## Bugs
+- Fixed missing volume mount in Docker Compose
+- Fixed upload with Bucket File permission
+- Fixed custom ID validation in Console
+- Fixed file preview with no `output` passed
+- Fixed GitHub issue URL in Console
+- Fixed double PDOException logging
+- Fixed functions cleanup when container is already initialized
+- Fixed float input precision in Console
+
+# Version 0.13.3
+## Bugs
+- Fixed search for terms that inlcude `@` characters
+- Fixed Bucket permissions
+- Fixed file upload error in UI
+- Fixed input field for float attributes in UI
+- Fixed `appwrite-executor` restart behavior in docker-compose.yml
+
+# Version 0.13.2
+## Bugs
+- Fixed global issue with write permissions
+- Added missing `_APP_EXECUTOR_SECRET` environment variable for deletes worker
+- Increased execution `stdout` and `stderr` from 8000 to 16384 character limit
+- Increased maximum file size for image preview to 20mb
+- Fixed iOS platforms for origin validation by @stnguyen90 in https://github.com/appwrite/appwrite/pull/2907
+
+# Version 0.13.1
+## Bugs
+- Fixed the Console UI redirect breaking the header and navigation
+- Fixed timeout in Functions API to respect the environment variable `_APP_FUNCTIONS_TIMEOUT`
+- Fixed team invite to be invalid after successful use by @Malte2036 in https://github.com/appwrite/appwrite/issues/2593
+
+# Version 0.13.0
+## Features
+### Functions
+- Synchronous function execution
+- Improved functions execution times by alot
+- Added a new worker to build deployments
+- Functions are now executed differently and your functions need to be adapted **Breaking Change**
+- Tags are now called Deployments **Breaking Change**
+- Renamed `tagId` to `deplyomentId` in collections **Breaking Change**
+- Updated event names from `function.tags.*` to `function.deployments.*` **Breaking Change**
+- Java runtimes are currently not supported **Breaking Change**
+### Storage
+- Added Buckets
+- Buckets allow you to configure following settings:
+  - Maximum File Size
+  - Enabled/Disabled
+  - Encryption
+  - Anti Virus
+  - Allowed file extensions
+  - Permissions
+    - Bucket Level
+    - File Level
+- Support for S3 and Digitalocean Spaces
+- Efficiently process large files by loading only chunks
+- Files larger then 5MB needs to be uploaded in chunks using Content-Range header. SDKs handle this internally **Breaking Change**
+- Encryption, Compression is now limited to files smaller or equal to 20MB
+- New UI in the console for uploading files with progress indication
+- Concurrent file uploads
+- Added `buckets.read` and `buckets.write` scope to API keys
+
+### Account
+- Renamed `providerToken` to `providerAccessToken` in sessions **Breaking Change**
+- New endpoint to refresh the OAuth Access Token
+- OAuth sessions now include `providerAccessTokenExpiry` and `providerRefreshToken`
+- Notion and Stripe have been added to the OAuth Providers
+- Microsoft OAuth provider now supports custom domains
+
+### Others
+- Renamed `sum` to `total` on multiple endpoints returning a list of resource **Breaking Change**
+- Added new `_APP_WORKER_PER_CORE` environment variable to configure the amount of internal workers per core for performance optimization
+
+## Bugs
+- Fixed issue with 36 character long custom IDs
+- Fixed permission issues and is now more consistent and returns all resources
+- Fixed total amount of documents not being updated
+- Fixed issue with searching though memberships
+- Fixed image preview rotation
+- Fixed Database index names that contain SQL keywords
+- Fixed UI to reveal long e-mail addresses on User list
+- Fixed UI for Attribute default value field to reset after submit
+- Fixed UI to check for new available version of Appwrite
+- Fixed UI default values when creating Integer or Float attributes
+- Removed `_project` prepend from internal Database Schema
+- Added dedicated internal permissions table for each Collection
+
+## Security
+- Remove `appwrite.io` and `appwrite.test` from authorized domains for session verification
+
+## Upgrades
+
+- Upgraded `redis` extenstion to version 5.3.7
+- Upgraded `swoole` extenstion to version 4.8.7
+- Upgraded GEO IP database to version March 2022
+
+# Version 0.12.3
+
+## Bugs
+- Fix update membership roles (#2799)
+- Fix migration to 0.12.x to populate search fields (#2799)
+
+## Security
+- Fix URL schema Validation to only allow http/https (#2801)
+
 # Version 0.12.2
 
 ## Bugs
@@ -191,7 +305,6 @@
 ## Bugs
 - Fixed memory leak in realtime service (#1606)
 - Fixed function execution output now being UTF-8 encoded before saved (#1607)
-
 # Version 0.10.2
 
 ## Bugs
@@ -223,9 +336,7 @@
 - Fixed MariaDB timeout after 24 hours (#1510)
 - Fixed upgrading installation with customized `docker-compose.yml` file (#1513)
 - Fixed usage stats on the dashboard displaying invalid total users count (#1514)
-
 # Version 0.9.4
-
 ## Security
 
 - Fixed security vulnerability that exposes project ID's from other admin users (#1453)

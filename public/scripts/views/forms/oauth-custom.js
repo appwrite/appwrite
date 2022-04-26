@@ -9,8 +9,8 @@
       // provider configuration for custom forms. Keys will be property names in JSON, values the elementIDs for the according inputs
       let providers = {
         "Apple": {
-          "keyId": "oauth2AppleKeyId",
-          "teamId": "oauth2AppleTeamId",
+          "keyID": "oauth2AppleKeyId",
+          "teamID": "oauth2AppleTeamId",
           "p8": "oauth2AppleP8"
         },
         "Microsoft": {
