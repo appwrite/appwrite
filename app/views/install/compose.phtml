@@ -16,7 +16,7 @@ $image = $this->getParam('image', '');
 
 services:
   traefik:
-    image: traefik:2.5
+    image: traefik:2.7
     container_name: appwrite-traefik
     command:
       - --providers.file.directory=/storage/config
