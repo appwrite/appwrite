@@ -1041,11 +1041,17 @@ App::post('/v1/account/jwt')
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForProject */
 
-        $current = $dbForProject->findOne('sessions', [
-            new Query('secret', Query::TYPE_EQUAL, [Auth::hash(Auth::$secret)])
-        ]);
 
-        if (!$current) {
+        $sessions = $user->getAttribute('sessions', []);
+        $current = new Document();
+
+        foreach ($sessions as $session) { /** @var Utopia\Database\Document $session */
+            if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                $current = $session;
+            }
+        }
+
+        if ($current->isEmpty()) {
             throw new Exception('No valid session found', 404, Exception::USER_SESSION_NOT_FOUND);
         }
 
