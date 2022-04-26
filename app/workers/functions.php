@@ -37,7 +37,7 @@ class FunctionsV1 extends Worker
 
     public function init(): void
     {
-        $this->executor = new Executor();
+        $this->executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
     }
 
     public function run(): void
