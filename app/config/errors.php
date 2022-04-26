@@ -491,5 +491,10 @@ return [
         'name' => Exception::DOMAIN_VERIFICATION_FAILED,
         'description' => 'Domain verification for the requested domain has failed.',
         'code' => 401,
-    ]
+    ],
+    Exception::GRAPHQL_NO_QUERY => [
+        'name' => Exception::GRAPHQL_NO_QUERY,
+        'description' => 'Query is required and can be provided via parameter or as the raw body if the content-type header is application/graphql.',
+        'code' => 400,
+    ],
 ];

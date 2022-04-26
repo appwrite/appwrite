@@ -25,9 +25,6 @@ class CoroutinePromise
         if (\is_null($executor)) {
             return;
         }
-        if (!\extension_loaded('swoole')) {
-            throw new \RuntimeException('Swoole ext missing!');
-        }
         $resolve = function ($value) {
             $this->setResult($value);
             $this->setState(self::STATE_FULFILLED);
@@ -141,11 +138,9 @@ class CoroutinePromise
             foreach ($promises as $promise) {
                 if (!$promise instanceof CoroutinePromise) {
                     $channel->close();
-                    throw new \RuntimeException(
-                        'Supported only Appwrite\GraphQL\SwoolePromise instance'
-                    );
+                    throw new \RuntimeException('Not an Appwrite\GraphQL\CoroutinePromise');
                 }
-                $promise->then(function ($value) use ($key, $result, $channel) {
+                $promise->then(function ($value) use ($key, &$result, $channel) {
                     $result[$key] = $value;
                     $channel->push(true);
                     return $value;
@@ -166,6 +161,7 @@ class CoroutinePromise
                 $reject($firstError);
                 return;
             }
+
             $resolve($result);
         });
     }

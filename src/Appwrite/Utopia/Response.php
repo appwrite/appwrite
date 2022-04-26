@@ -3,6 +3,7 @@
 namespace Appwrite\Utopia;
 
 use Exception;
+use Swoole\Http\Request as SwooleRequest;
 use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
@@ -305,6 +306,11 @@ class Response extends SwooleResponse
         ;
 
         parent::__construct($response);
+    }
+
+    public function getSwoole(): SwooleHTTPResponse
+    {
+        return $this->swoole;
     }
 
     /**

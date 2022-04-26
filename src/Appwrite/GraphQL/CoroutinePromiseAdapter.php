@@ -68,27 +68,22 @@ class CoroutinePromiseAdapter implements PromiseAdapter
         $result = [];
 
         foreach ($promisesOrValues as $index => $promiseOrValue) {
-            go(function ($index, $promiseOrValue, $all, $total, &$count, $result) {
-                if (!($promiseOrValue instanceof CoroutinePromise)) {
-                    $result[$index] = $promiseOrValue;
+            if (!($promiseOrValue instanceof Promise)) {
+                $result[$index] = $promiseOrValue;
+                $count++;
+                break;
+            }
+            $result[$index] = null;
+            $promiseOrValue->then(
+                function ($value) use ($index, &$count, $total, &$result, $all): void {
+                    $result[$index] = $value;
                     $count++;
-                    return;
-                }
-                $result[$index] = null;
-                $promiseOrValue->then(
-                    function ($value) use ($index, &$count, $total, &$result, $all): void {
-                        $result[$index] = $value;
-                        if ($count++ === $total) {
-                            $all->resolve($result);
-                        }
-                    },
-                    [$all, 'reject']
-                );
-            }, $index, $promiseOrValue, $all, $total, $count, $result);
-        }
-
-        if ($count === $total) {
-            $all->resolve($result);
+                    if ($count === $total) {
+                        $all->resolve($result);
+                    }
+                },
+                [$all, 'reject']
+            );
         }
 
         return new Promise($all, $this);

@@ -6,11 +6,13 @@ use Appwrite\GraphQL\Types\JsonType;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Appwrite\Utopia\Response\Model\User;
 use GraphQL\Error\Error;
 use GraphQL\Error\FormattedError;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
+use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -19,6 +21,8 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 use Utopia\Route;
 use Utopia\Validator;
+
+use function \Co\go;
 
 class Builder
 {
@@ -100,7 +104,7 @@ class Builder
                 $fields[$escapedKey] = [
                     'type' => $type,
                     'description' => $props['description'],
-                    'resolve' => fn ($object, $args, $context, $info) => new CoroutinePromise(
+                    'resolve' => fn($object, $args, $context, $info) => new CoroutinePromise(
                         fn($resolve, $reject) => $resolve($object[$key])
                     ),
                 ];
@@ -268,11 +272,12 @@ class Builder
         Request  $request,
         Response $response,
         Registry &$register,
-        Database $dbForProject
+        Database $dbForProject,
+        Document $user,
     ): Schema
     {
         $apiSchema = self::buildAPISchema($utopia, $request, $response, $register);
-        $db = self::buildCollectionsSchema($utopia, $request, $response, $dbForProject);
+        $db = self::buildCollectionsSchema($utopia, $request, $response, $dbForProject, $user);
 
         $queryFields = \array_merge_recursive($apiSchema['query'], $db['query']);
         $mutationFields = \array_merge_recursive($apiSchema['mutation'], $db['mutation']);
@@ -304,121 +309,127 @@ class Builder
      * @throws \Exception
      */
     public static function buildCollectionsSchema(
-        App      $utopia,
-        Request  $request,
-        Response $response,
-        Database $dbForProject
+        App       $utopia,
+        Request   $request,
+        Response  $response,
+        Database  $dbForProject,
+        ?Document $user = null,
     ): array
     {
         $start = microtime(true);
 
+        $userId = $user?->getId();
         $collections = [];
         $queryFields = [];
         $mutationFields = [];
-        $limit = 1000 * swoole_cpu_num();
+        $limit = 1000;
         $offset = 0;
+        $wg = new WaitGroup();
 
         while (!empty($attrs = Authorization::skip(fn() => $dbForProject->find(
             'attributes',
             limit: $limit,
             offset: $offset
         )))) {
-            //go(function() use ($utopia, $request, $response, $dbForProject, &$collections, &$queryFields, &$mutationFields, $limit, &$offset, $attrs) {
-            foreach ($attrs as $attr) {
-                $collectionId = $attr->getAttribute('collectionId');
-                if ($attr->getAttribute('status') !== 'available') {
-                    continue;
+            $wg->add();
+            go(function () use ($utopia, $request, $response, $dbForProject, &$collections, &$queryFields, &$mutationFields, $limit, &$offset, $attrs, $userId, $wg) {
+                foreach ($attrs as $attr) {
+                    $collectionId = $attr->getAttribute('collectionId');
+                    if ($attr->getAttribute('status') !== 'available') {
+                        continue;
+                    }
+                    $key = $attr->getAttribute('key');
+                    $type = $attr->getAttribute('type');
+                    $array = $attr->getAttribute('array');
+                    $required = $attr->getAttribute('required');
+                    $escapedKey = str_replace('$', '_', $key);
+                    $collections[$collectionId][$escapedKey] = [
+                        'type' => self::getAttributeArgType($type, $array, $required),
+                        'resolve' => fn($object, $args, $context, $info) => $object->then(function ($obj) use ($key) {
+                            return $obj['result'][$key];
+                        }),
+                    ];
                 }
-                $key = $attr->getAttribute('key');
-                $type = $attr->getAttribute('type');
-                $array = $attr->getAttribute('array');
-                $required = $attr->getAttribute('required');
-                $escapedKey = str_replace('$', '_', $key);
-                $collections[$collectionId][$escapedKey] = [
-                    'type' => self::getAttributeArgType($type, $array, $required),
-                    'resolve' => fn ($object, $args, $context, $info) => $object->then(function ($obj) use ($key) {
-                        return $obj['result'][$key];
-                    }),
-                ];
-            }
 
-            foreach ($collections as $collectionId => $attributes) {
-                $objectType = new ObjectType([
-                    'name' => $collectionId,
-                    'fields' => $attributes
-                ]);
-                $idArgs = [
-                    'id' => [
-                        'type' => Type::string()
-                    ]
-                ];
-                $listArgs = [
-                    'limit' => [
-                        'type' => Type::int(),
-                        'defaultValue' => $limit,
-                    ],
-                    'offset' => [
-                        'type' => Type::int(),
-                        'defaultValue' => 0,
-                    ],
-                    'cursor' => [
-                        'type' => Type::string(),
-                        'defaultValue' => null,
-                    ],
-                    'orderAttributes' => [
+                foreach ($collections as $collectionId => $attributes) {
+                    $objectType = new ObjectType([
+                        'name' => $collectionId,
+                        'fields' => $attributes
+                    ]);
+                    $idArgs = [
+                        'id' => [
+                            'type' => Type::string()
+                        ]
+                    ];
+                    $listArgs = [
+                        'limit' => [
+                            'type' => Type::int(),
+                            'defaultValue' => $limit,
+                        ],
+                        'offset' => [
+                            'type' => Type::int(),
+                            'defaultValue' => 0,
+                        ],
+                        'cursor' => [
+                            'type' => Type::string(),
+                            'defaultValue' => null,
+                        ],
+                        'orderAttributes' => [
+                            'type' => Type::listOf(Type::string()),
+                            'defaultValue' => [],
+                        ],
+                        'orderType' => [
+                            'type' => Type::listOf(Type::string()),
+                            'defaultValue' => [],
+                        ]
+                    ];
+
+                    $attributes['read'] = [
                         'type' => Type::listOf(Type::string()),
-                        'defaultValue' => [],
-                    ],
-                    'orderType' => [
+                        'defaultValue' => ["user:$userId"],
+                        'resolve' => function ($object, $args, $context, $info) use ($collectionId) {
+                            return $object->getAttribute('$read');
+                        }
+                    ];
+                    $attributes['write'] = [
                         'type' => Type::listOf(Type::string()),
-                        'defaultValue' => [],
-                    ]
-                ];
+                        'defaultValue' => ["user:$userId"],
+                        'resolve' => function ($object, $args, $context, $info) use ($collectionId) {
+                            return $object->getAttribute('$write');
+                        }
+                    ];
 
-                $attributes['read'] = [
-                    'type' => Type::listOf(Type::string()),
-                    'resolve' => function ($object, $args, $context, $info) use ($collectionId) {
-                        return $object->getAttribute('$read');
-                    }
-                ];
-                $attributes['write'] = [
-                    'type' => Type::listOf(Type::string()),
-                    'resolve' => function ($object, $args, $context, $info) use ($collectionId) {
-                        return $object->getAttribute('$write');
-                    }
-                ];
-
-                $queryFields[$collectionId . 'Get'] = [
-                    'type' => $objectType,
-                    'args' => $idArgs,
-                    'resolve' => self::queryGet($utopia, $request, $response, $dbForProject, $collectionId)
-                ];
-                $queryFields[$collectionId . 'List'] = [
-                    'type' => $objectType,
-                    'args' => $listArgs,
-                    'resolve' => self::queryList($collectionId, $dbForProject)
-                ];
-                $mutationFields[$collectionId . 'Create'] = [
-                    'type' => $objectType,
-                    'args' => $attributes,
-                    'resolve' => self::mutateCreate($collectionId, $dbForProject)
-                ];
-                $mutationFields[$collectionId . 'Update'] = [
-                    'type' => $objectType,
-                    'args' => $attributes,
-                    'resolve' => self::mutateUpdate($collectionId, $dbForProject)
-                ];
-                $mutationFields[$collectionId . 'Delete'] = [
-                    'type' => $objectType,
-                    'args' => $idArgs,
-                    'resolve' => self::mutateDelete($collectionId, $dbForProject)
-                ];
-            }
-            //});
-
+                    $queryFields[$collectionId . 'Get'] = [
+                        'type' => $objectType,
+                        'args' => $idArgs,
+                        'resolve' => self::queryGet($utopia, $request, $response, $dbForProject, $collectionId)
+                    ];
+                    $queryFields[$collectionId . 'List'] = [
+                        'type' => $objectType,
+                        'args' => $listArgs,
+                        'resolve' => self::queryList($collectionId, $dbForProject)
+                    ];
+                    $mutationFields[$collectionId . 'Create'] = [
+                        'type' => $objectType,
+                        'args' => $attributes,
+                        'resolve' => self::mutateCreate($collectionId, $dbForProject)
+                    ];
+                    $mutationFields[$collectionId . 'Update'] = [
+                        'type' => $objectType,
+                        'args' => $attributes,
+                        'resolve' => self::mutateUpdate($collectionId, $dbForProject)
+                    ];
+                    $mutationFields[$collectionId . 'Delete'] = [
+                        'type' => $objectType,
+                        'args' => $idArgs,
+                        'resolve' => self::mutateDelete($collectionId, $dbForProject)
+                    ];
+                }
+                $wg->done();
+            });
             $offset += $limit;
         }
-
+        $wg->wait();
         $time_elapsed_secs = (microtime(true) - $start) * 1000;
         Console::info("[INFO] Built GraphQL Project Collection Schema in ${time_elapsed_secs}ms");
 
@@ -455,6 +466,7 @@ class Builder
                     $utopia
                         ->setRoute($route)
                         ->execute($route, $request);
+
                     $resolve($response->getPayload());
                 } catch (\Throwable $e) {
                     $reject($e);

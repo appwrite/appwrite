@@ -1,6 +1,6 @@
 <?php
 
-use Appwrite\GraphQL\Builder;
+use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
 use GraphQL\GraphQL;
@@ -56,8 +56,6 @@ App::post('/v1/graphql')
     ->param('variables', [], new JSON(), 'Variables to use in the operation', true)
     ->inject('request')
     ->inject('response')
-    ->inject('utopia')
-    ->inject('dbForProject')
     ->inject('promiseAdapter')
     ->inject('gqlSchema')
     ->action(Closure::fromCallable('graphqlRequest'));
@@ -71,8 +69,6 @@ function graphqlRequest(
     $variables,
     $request,
     $response,
-    $utopia,
-    $dbForProject,
     $promiseAdapter,
     $gqlSchema
 )
@@ -89,24 +85,23 @@ function graphqlRequest(
         $query = $request->getSwoole()->rawContent();
     }
     if (empty($query)) {
-        throw new Exception('Query is empty', Response::STATUS_CODE_BAD_REQUEST);
+        throw new Exception('No query supplied.', 400,  Exception::GRAPHQL_NO_QUERY);
     }
 
     $debugFlags = App::isDevelopment()
         ? DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE | DebugFlag::RETHROW_INTERNAL_EXCEPTIONS
         : DebugFlag::NONE;
 
-    $validations = array_merge(
-        GraphQL::getStandardValidationRules(),
-        [
-            new QueryComplexity(App::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 200)),
-            new QueryDepth(App::getEnv('_APP_GRAPHQL_MAX_QUERY_DEPTH', 3)),
-        ]
-    );
+    // Roughly equivalent to 200 REST requests of work per GraphQL request
+    $maxComplexity = App::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 200);
 
-    if (App::isProduction()) {
-        $validations[] = new DisableIntrospection();
-    }
+    // Maximum nested query depth. Limited to 3 as we don't have more than 3 levels of data relationships
+    $maxDepth = App::getEnv('_APP_GRAPHQL_MAX_QUERY_DEPTH', 3);
+
+    $validations = GraphQL::getStandardValidationRules();
+    $validations[] = new QueryComplexity($maxComplexity);
+    $validations[] = new QueryDepth($maxDepth);
+    $validations[] = new DisableIntrospection();
 
     $promise = GraphQL::promiseToExecute(
         $promiseAdapter,
@@ -117,23 +112,25 @@ function graphqlRequest(
         validationRules: $validations
     );
 
-    // Blocking wait while queries resolve asynchronously
+    // Blocking wait while queries resolve
     $wg = new WaitGroup();
     $wg->add();
-    $promise->then(function ($result) use ($response, $debugFlags, $wg) {
-        $result = $result->toArray($debugFlags);
-        \var_dump("Result:" . $result);
-        if (isset($result['errors'])) {
-            $response->json(['data' => [], ...$result]);
+    $promise->then(
+        function ($result) use ($response, $debugFlags, $wg) {
+            $result = $result->toArray($debugFlags);
+            \var_dump("Result:" . $result);
+            if (isset($result['errors'])) {
+                $response->json(['data' => [], ...$result]);
+                $wg->done();
+                return;
+            }
+            $response->json(['data' => $result]);
             $wg->done();
-            return;
+        },
+        function ($error) use ($response, $wg) {
+            $response->text(\json_encode(['errors' => [\json_encode($error)]]));
+            $wg->done();
         }
-        $response->json(['data' => $result]);
-        $wg->done();
-    },
-    function ($error) use ($response, $wg) {
-        $response->text(\json_encode(['errors' => [\json_encode($error)]]));
-        $wg->done();
-    });
+    );
     $wg->wait();
 }
