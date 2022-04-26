@@ -151,6 +151,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'okta' => [
+        'name' => 'Okta',
+        'developers' => 'https://developer.okta.com/',
+        'icon' => 'icon-okta',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => 'okta.phtml',
+        'beta' => false,
+        'mock' => false,
+    ],
     'paypal' => [
         'name' => 'PayPal',
         'developers' => 'https://developer.paypal.com/docs/api/overview/',
