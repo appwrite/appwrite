@@ -598,6 +598,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_EXECUTOR_HOST',
+                'description' => 'The host used by Appwrite to communicate with the function executor!',
+                'introduction' => '0.13.0',
+                'default' => 'http://appwrite-executor/v1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_EXECUTOR_RUNTIME_NETWORK',
                 'description' => 'Deprecated with 0.14.0, use \'OPEN_RUNTIMES_NETWORK\' instead!',
                 'introduction' => '0.13.0',

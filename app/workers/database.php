@@ -71,6 +71,11 @@ class DatabaseV1 extends Worker
         $dbForConsole = $this->getConsoleDB();
         $dbForProject = $this->getProjectDB($projectId);
 
+        /**
+         * Fetch attribute from the database, since with Resque float values are loosing informations.
+         */
+        $attribute = $dbForProject->getDocument('attributes', $attribute->getId());
+
         $event = 'database.attributes.update';
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');

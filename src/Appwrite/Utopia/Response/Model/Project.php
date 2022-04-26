@@ -236,7 +236,7 @@ class Project extends Model
         }
 
         $providers = Config::getParam('providers', []);
-        $providerValues = $document->getAttribute('providers', []);
+        $providerValues = $document->getAttribute('authProviders', []);
 
         foreach ($providers as $key => $provider) {
             if (!$provider['enabled']) {
