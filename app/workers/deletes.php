@@ -18,6 +18,9 @@ use Utopia\Audit\Audit;
 
 require_once __DIR__ . '/../init.php';
 
+Authorization::disable();
+Authorization::setDefaultStatus(false);
+
 Console::title('Deletes V1 Worker');
 Console::success(APP_NAME . ' deletes worker v1 has started' . "\n");
 
@@ -38,7 +41,6 @@ class DeletesV1 extends Worker
 
     public function run(): void
     {
-        Authorization::disable();
 
         $projectId = $this->args['projectId'] ?? '';
         $type = $this->args['type'] ?? '';
@@ -113,8 +115,6 @@ class DeletesV1 extends Worker
                 Console::error('No delete operation for type: ' . $type);
                 break;
         }
-
-        Authorization::reset();
     }
 
     public function shutdown(): void
