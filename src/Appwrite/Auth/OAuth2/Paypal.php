@@ -148,7 +148,13 @@ class Paypal extends OAuth2
         $user = $this->getUser($accessToken);
 
         if (isset($user['emails'])) {
-            return $user['emails'][0]['value'];
+            $email = array_filter($user['emails'], function ($email) {
+                return $email['primary'] === true;
+            });
+            
+            if (!empty($email)) {
+                return $email[0]['value'];
+            }
         }
 
         return '';
@@ -157,12 +163,20 @@ class Paypal extends OAuth2
     /**
      * Check if the OAuth email is verified
      * 
+     * @link https://developer.paypal.com/docs/api/identity/v1/#userinfo_get
+     * 
      * @param $accessToken
      * 
      * @return bool
      */
     public function isEmailVerififed(string $accessToken): bool
     {
+        $user = $this->getUser($accessToken);
+
+        if (isset($user['verified_account']) && $user['verified_account'] === true) {
+            return true;
+        }
+
         return false;
     }
 

@@ -151,12 +151,20 @@ class Salesforce extends OAuth2
     /**
      * Check if the OAuth email is verified
      * 
+     * @link https://help.salesforce.com/s/articleView?id=sf.remoteaccess_using_userinfo_endpoint.htm&type=5
+     * 
      * @param $accessToken
      * 
      * @return bool
      */
     public function isEmailVerififed(string $accessToken): bool
     {
+        $user = $this->getUser($accessToken);
+
+        if (isset($user['email_verified']) && $user['email_verified'] === true) {
+            return true;
+        }
+
         return false;
     }
 
