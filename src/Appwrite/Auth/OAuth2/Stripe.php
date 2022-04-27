@@ -144,13 +144,16 @@ class Stripe extends OAuth2
     /**
      * Check if the OAuth email is verified
      * 
+     * Stripe emails if present are verfied.
+     * 
      * @param $accessToken
      * 
      * @return bool
      */
     public function isEmailVerififed(string $accessToken): bool
     {
-        return false;
+        $email = $this->getUserEmail($accessToken);
+        return !empty($email);
     }
 
     /**
