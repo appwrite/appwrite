@@ -1395,6 +1395,13 @@ $collections = [
                 'lengths' => [100, 100],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
+            [
+                '$id' => '_key_user',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['userId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
         ],
     ],
 
