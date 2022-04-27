@@ -497,12 +497,12 @@ App::post('/v1/execution')
             $functionStatus = ($statusCode >= 200 && $statusCode < 300) ? 'completed' : 'failed';
         
             Console::success('Function executed in ' . $executionTime . ' seconds, status: ' . $functionStatus);
-        
+
             $execution = [
                 'status' => $functionStatus,
                 'statusCode' => $statusCode,
-                'stdout' => \mb_strcut(\utf8_encode($stdout), 0, 1000000), // Limit to 1MB
-                'stderr' => \mb_strcut(\utf8_encode($stderr), 0, 1000000), // Limit to 1MB
+                'stdout' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
+                'stderr' => \mb_strcut($stderr, 0, 1000000), // Limit to 1MB
                 'time' => $executionTime,
             ];
 
