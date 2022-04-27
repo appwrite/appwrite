@@ -148,11 +148,13 @@ class Box extends OAuth2
     }
 
     /**
-     * Is the OAuth email verified?
+     * Check if the OAuth email is verified
+     * 
+     * @param $accessToken
      * 
      * @return bool
      */
-    public function isEmailVerififed(): bool
+    public function isEmailVerififed(string $accessToken): bool
     {
         return false;
     }

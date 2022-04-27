@@ -81,11 +81,13 @@ abstract class OAuth2
     abstract public function getUserEmail(string $accessToken): string;
 
     /**
-     * Is the OAuth email verified?
+     * Check if the OAuth email is verified
+     * 
+     * @param $accessToken
      * 
      * @return bool
      */
-    abstract public function isEmailVerififed(): bool;
+    abstract public function isEmailVerififed(string $accessToken): bool;
 
     /**
      * @param $accessToken
