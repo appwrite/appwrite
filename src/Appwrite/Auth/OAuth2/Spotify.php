@@ -144,6 +144,8 @@ class Spotify extends OAuth2
     /**
      * Check if the OAuth email is verified
      * 
+     * Spotify does not assure that the email is verified 
+     * 
      * @link https://developer.spotify.com/documentation/web-api/reference/#/operations/get-current-users-profile
      * 
      * @param $accessToken

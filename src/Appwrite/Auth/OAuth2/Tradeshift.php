@@ -144,13 +144,17 @@ class Tradeshift extends OAuth2
     /**
      * Check if the OAuth email is verified
      * 
+     * Tradeshift's signup process requires emails to be verified. This was verified manually
+     * 
      * @param $accessToken
      * 
      * @return bool
      */
     public function isEmailVerififed(string $accessToken): bool
     {
-        return false;
+        $email = $this->getUser($accessToken);
+        
+        return !empty($email);
     }
 
     /**
