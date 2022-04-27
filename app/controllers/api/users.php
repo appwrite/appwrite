@@ -65,7 +65,7 @@ App::post('/v1/users')
                 'prefs' => new \stdClass(),
                 'sessions' => [],
                 'tokens' => [],
-                'memberships' => [],
+                'memberships' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
                 'deleted' => false
             ]));
