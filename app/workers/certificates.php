@@ -3,7 +3,6 @@
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Resque\Worker;
-use Appwrite\Exception\Certificate as ExceptionCertificate;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
@@ -91,11 +90,11 @@ class CertificatesV1 extends Worker
             }
     
             if (empty($domain->get())) {
-                throw new ExceptionCertificate('Missing certificate domain.');
+                throw new Exception('Missing certificate domain.');
             }
     
             if (!$domain->isKnown() || $domain->isTest()) {
-                throw new ExceptionCertificate('Unknown public suffix for domain.');
+                throw new Exception('Unknown public suffix for domain.');
             }
     
             if ($validateCNAME) {
@@ -105,13 +104,13 @@ class CertificatesV1 extends Worker
                 $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
     
                 if (!$target->isKnown() || $target->isTest()) {
-                    throw new ExceptionCertificate('Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.');
+                    throw new Exception('Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.');
                 }
     
                 // Verify domain with DNS records
                 $validator = new CNAME($target->get());
                 if (!$validator->isValid($domain->get())) {
-                    throw new ExceptionCertificate('Failed to verify domain DNS records.');
+                    throw new Exception('Failed to verify domain DNS records.');
                 }
             } else {
                 // Main domain validation
@@ -133,21 +132,21 @@ class CertificatesV1 extends Worker
                         throw new Exception('Invalid expiry date.');
                     }
                 } catch(\Throwable $th) {
-                    throw new ExceptionCertificate('Unable to read certificate file (cert.pem).');
+                    throw new Exception('Unable to read certificate file (cert.pem).');
                 }
 
                 // LetsEncrypt allows renewal 30 days before expiry
                 $expiryInAdvance = (60*60*24*30);
                 if ($validTo - $expiryInAdvance > \time()) {
                     $validToVerbose = date('d-m-Y H:i:s', $validTo);
-                    throw new ExceptionCertificate('Renew isn\'t required. Next renew at ' . $validToVerbose);
+                    throw new Exception('Renew isn\'t required. Next renew at ' . $validToVerbose);
                 }
             }
     
             // Email for alerts is required by LetsEncrypt
             $email = App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
             if (empty($email)) {
-                throw new ExceptionCertificate('You must set a valid security email address (_APP_SYSTEM_SECURITY_EMAIL_ADDRESS) to issue an SSL certificate.');
+                throw new Exception('You must set a valid security email address (_APP_SYSTEM_SECURITY_EMAIL_ADDRESS) to issue an SSL certificate.');
             }
 
             // LetsEncrypt communication to issue certificate (using certbot CLI)
@@ -165,7 +164,7 @@ class CertificatesV1 extends Worker
     
             // Unexpected error, usually 5XX, API limits, ...
             if ($exit !== 0) {
-                throw new ExceptionCertificate('Failed to issue a certificate with message: ' . $stderr);
+                throw new Exception('Failed to issue a certificate with message: ' . $stderr);
             }
 
             // Command succeeded, store all data into document
@@ -180,25 +179,25 @@ class CertificatesV1 extends Worker
             $path = APP_STORAGE_CERTIFICATES . '/' . $domain->get();
             if (!\is_readable($path)) {
                 if (!\mkdir($path, 0755, true)) {
-                    throw new ExceptionCertificate('Failed to create path for certificate.');
+                    throw new Exception('Failed to create path for certificate.');
                 }
             }
     
             // Move generated files from certbot into our storage
             if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/cert.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/cert.pem')) {
-                throw new ExceptionCertificate('Failed to rename certificate cert.pem: '.\json_encode($stdout));
+                throw new Exception('Failed to rename certificate cert.pem: '.\json_encode($stdout));
             }
     
             if (!@\rename('/etc/letsencrypt/live/' . $domain->get() . '/chain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain->get() . '/chain.pem')) {
-                throw new ExceptionCertificate('Failed to rename certificate chain.pem: ' . \json_encode($stdout));
+                throw new Exception('Failed to rename certificate chain.pem: ' . \json_encode($stdout));
             }
     
             if (!@\rename('/etc/letsencrypt/live/' . $domain->get() . '/fullchain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain->get() . '/fullchain.pem')) {
-                throw new ExceptionCertificate('Failed to rename certificate fullchain.pem: ' . \json_encode($stdout));
+                throw new Exception('Failed to rename certificate fullchain.pem: ' . \json_encode($stdout));
             }
     
             if (!@\rename('/etc/letsencrypt/live/' . $domain->get() . '/privkey.pem', APP_STORAGE_CERTIFICATES . '/' . $domain->get() . '/privkey.pem')) {
-                throw new ExceptionCertificate('Failed to rename certificate privkey.pem: ' . \json_encode($stdout));
+                throw new Exception('Failed to rename certificate privkey.pem: ' . \json_encode($stdout));
             }
 
             // This multi-line syntax helps IDE
@@ -210,7 +209,7 @@ class CertificatesV1 extends Worker
             
             // Save configuration into Traefik using our new cert files
             if (!\file_put_contents(APP_STORAGE_CONFIG . '/' . $domain->get() . '.yml', $config)) {
-                throw new ExceptionCertificate('Failed to save Traefik configuration.');
+                throw new Exception('Failed to save Traefik configuration.');
             }
 
             // Read new renew date from cert file
@@ -228,7 +227,7 @@ class CertificatesV1 extends Worker
 
             // Mark issue date
             $this->certificate->setAttribute('issueDate', \time());
-        } catch(ExceptionCertificate $e) {
+        } catch(Throwable $e) {
             // These exceptions are expected if renew shouldn't or can't happen
 
             // Add exception as log into certificate
