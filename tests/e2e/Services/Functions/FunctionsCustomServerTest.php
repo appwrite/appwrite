@@ -490,7 +490,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($data['functionId'], $execution['body']['functionId']);
         $this->assertEquals('waiting', $execution['body']['status']);
         $this->assertEquals(0, $execution['body']['statusCode']);
-        $this->assertEquals('', $execution['body']['stdout']);
+        $this->assertEquals('', $execution['body']['response']);
         $this->assertEquals('', $execution['body']['stderr']);
         $this->assertEquals(0, $execution['body']['time']);
 
@@ -507,13 +507,13 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($data['functionId'], $execution['body']['functionId']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['statusCode']);
-        $this->assertStringContainsString($execution['body']['functionId'], $execution['body']['stdout']);
-        $this->assertStringContainsString($data['deploymentId'], $execution['body']['stdout']);
-        $this->assertStringContainsString('Test1', $execution['body']['stdout']);
-        $this->assertStringContainsString('http', $execution['body']['stdout']);
-        $this->assertStringContainsString('PHP', $execution['body']['stdout']);
-        $this->assertStringContainsString('8.0', $execution['body']['stdout']);
-        // $this->assertStringContainsString('êä', $execution['body']['stdout']); // tests unknown utf-8 chars
+        $this->assertStringContainsString($execution['body']['functionId'], $execution['body']['response']);
+        $this->assertStringContainsString($data['deploymentId'], $execution['body']['response']);
+        $this->assertStringContainsString('Test1', $execution['body']['response']);
+        $this->assertStringContainsString('http', $execution['body']['response']);
+        $this->assertStringContainsString('PHP', $execution['body']['response']);
+        $this->assertStringContainsString('8.0', $execution['body']['response']);
+        // $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
         $this->assertEquals('', $execution['body']['stderr']);
         $this->assertLessThan(0.500, $execution['body']['time']);
 
@@ -596,11 +596,11 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         $this->assertEquals('completed', $execution['body']['status']);
-        $this->assertStringContainsString($data['deploymentId'], $execution['body']['stdout']);
-        $this->assertStringContainsString('Test1', $execution['body']['stdout']);
-        $this->assertStringContainsString('http', $execution['body']['stdout']);
-        $this->assertStringContainsString('PHP', $execution['body']['stdout']);
-        $this->assertStringContainsString('8.0', $execution['body']['stdout']);
+        $this->assertStringContainsString($data['deploymentId'], $execution['body']['response']);
+        $this->assertStringContainsString('Test1', $execution['body']['response']);
+        $this->assertStringContainsString('http', $execution['body']['response']);
+        $this->assertStringContainsString('PHP', $execution['body']['response']);
+        $this->assertStringContainsString('8.0', $execution['body']['response']);
         // $this->assertStringContainsString('êä', $execution['body']['sdtout']); // tests unknown utf-8 chars
         $this->assertLessThan(0.500, $execution['body']['time']);
 
@@ -764,7 +764,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['statusCode'], 124);
         $this->assertGreaterThan(2, $executions['body']['executions'][0]['time']);
         $this->assertLessThan(3, $executions['body']['executions'][0]['time']);
-        $this->assertEquals($executions['body']['executions'][0]['stdout'], '');
+        $this->assertEquals($executions['body']['executions'][0]['response'], '');
         $this->assertEquals($executions['body']['executions'][0]['stderr'], 'Execution timed out.');
 
         // Cleanup : Delete function 
@@ -847,7 +847,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $output = json_decode($executions['body']['stdout'], true);
+        $output = json_decode($executions['body']['response'], true);
 
         $this->assertEquals(200, $executions['headers']['status-code']);
         $this->assertEquals('completed', $executions['body']['status']);
@@ -875,7 +875,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
-        $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['stdout']);
+        $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
 
         // Cleanup : Delete function 
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
@@ -952,7 +952,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $output = json_decode($executions['body']['stdout'], true);
+        $output = json_decode($executions['body']['response'], true);
 
         $this->assertEquals(200, $executions['headers']['status-code']);
         $this->assertEquals('completed', $executions['body']['status']);
@@ -981,7 +981,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
-        $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['stdout']);
+        $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
 
         // Cleanup : Delete function 
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
@@ -1057,7 +1057,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $output = json_decode($executions['body']['stdout'], true);
+        $output = json_decode($executions['body']['response'], true);
 
         $this->assertEquals(200, $executions['headers']['status-code']);
         $this->assertEquals('completed', $executions['body']['status']);
@@ -1086,7 +1086,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
-        $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['stdout']);
+        $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
 
         // Cleanup : Delete function 
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
@@ -1162,7 +1162,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $output = json_decode($executions['body']['stdout'], true);
+        $output = json_decode($executions['body']['response'], true);
 
         $this->assertEquals(200, $executions['headers']['status-code']);
         $this->assertEquals('completed', $executions['body']['status']);
@@ -1191,7 +1191,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
-        $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['stdout']);
+        $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
 
         // Cleanup : Delete function 
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
@@ -1267,7 +1267,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $output = json_decode($executions['body']['stdout'], true);
+        $output = json_decode($executions['body']['response'], true);
 
         $this->assertEquals(200, $executions['headers']['status-code']);
         $this->assertEquals('completed', $executions['body']['status']);
@@ -1296,7 +1296,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
-        $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['stdout']);
+        $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
 
         // Cleanup : Delete function 
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
@@ -1372,7 +1372,7 @@ class FunctionsCustomServerTest extends Scope
     //         'x-appwrite-project' => $this->getProject()['$id'],
     //     ], $this->getHeaders()));
 
-    //     $output = json_decode($executions['body']['stdout'], true);
+    //     $output = json_decode($executions['body']['response'], true);
 
     //     $this->assertEquals(200, $executions['headers']['status-code']);
     //     $this->assertEquals('completed', $executions['body']['status']);
@@ -1401,7 +1401,7 @@ class FunctionsCustomServerTest extends Scope
     //     $this->assertCount(1, $executions['body']['executions']);
     //     $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
     //     $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
-    //     $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['stdout']);
+    //     $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
 
     //     // Cleanup : Delete function 
     //     $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [

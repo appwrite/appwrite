@@ -2121,7 +2121,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'stdout',
+                '$id' => 'response',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,

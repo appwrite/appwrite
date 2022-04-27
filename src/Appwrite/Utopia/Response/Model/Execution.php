@@ -53,9 +53,9 @@ class Execution extends Model
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('stdout', [
+            ->addRule('response', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The script stdout output string. Logs the last 4,000 characters of the execution stdout output.',
+                'description' => 'The script response output string. Logs the last 4,000 characters of the execution response output.',
                 'default' => '',
                 'example' => '',
             ])
