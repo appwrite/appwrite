@@ -144,6 +144,8 @@ class Spotify extends OAuth2
     /**
      * Check if the OAuth email is verified
      * 
+     * @link https://developer.spotify.com/documentation/web-api/reference/#/operations/get-current-users-profile
+     * 
      * @param $accessToken
      * 
      * @return bool
@@ -179,7 +181,7 @@ class Spotify extends OAuth2
         if (empty($this->user)) {
             $this->user = \json_decode($this->request(
                 'GET',
-                $this->resourceEndpoint . "me",
+                $this->resourceEndpoint . 'me',
                 ['Authorization: Bearer '.\urlencode($accessToken)]
             ), true);
         }
