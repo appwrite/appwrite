@@ -131,12 +131,22 @@ class Slack extends OAuth2
     /**
      * Check if the OAuth email is verified
      * 
+     * In case of Slack, if an email is present, it is verified
+     * 
+     * @link https://slack.com/help/articles/207262907-Change-your-email-address
+     * 
      * @param $accessToken
      * 
      * @return bool
      */
     public function isEmailVerififed(string $accessToken): bool
     {
+        $user = $this->getUser($accessToken);
+
+        if (isset($user['user']['email'])) {
+            return true;
+        }
+
         return false;
     }
 
@@ -157,6 +167,8 @@ class Slack extends OAuth2
     }
 
     /**
+     * @link https://api.slack.com/methods/users.identity
+     * 
      * @param string $accessToken
      *
      * @return array
@@ -164,7 +176,6 @@ class Slack extends OAuth2
     protected function getUser(string $accessToken):array
     {
         if (empty($this->user)) {
-            // https://api.slack.com/methods/users.identity
             $user = $this->request(
                 'GET',
                 'https://slack.com/api/users.identity?token='.\urlencode($accessToken)
