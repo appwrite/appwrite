@@ -131,6 +131,16 @@ class Mock extends OAuth2
     }
 
     /**
+     * Is the OAuth email verified?
+     * 
+     * @return bool
+     */
+    public function isEmailVerififed(): bool
+    {
+        return true;
+    }
+
+    /**
      * @param string $accessToken
      *
      * @return string

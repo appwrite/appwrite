@@ -149,6 +149,16 @@ class Linkedin extends OAuth2
     }
 
     /**
+     * Is the OAuth email verified?
+     * 
+     * @return bool
+     */
+    public function isEmailVerififed(): bool
+    {
+        return false;
+    }
+
+    /**
      * @param $accessToken
      *
      * @return string

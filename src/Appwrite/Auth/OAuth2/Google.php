@@ -138,6 +138,16 @@ class Google extends OAuth2
     }
 
     /**
+     * Is the OAuth email verified?
+     * 
+     * @return bool
+     */
+    public function isEmailVerififed(): bool
+    {
+        return false;
+    }
+
+    /**
      * @param string $accessToken
      *
      * @return string

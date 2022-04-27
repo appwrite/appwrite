@@ -52,54 +52,54 @@ abstract class OAuth2
     /**
      * @return string
      */
-    abstract public function getName():string;
+    abstract public function getName(): string;
 
     /**
      * @return string
      */
-    abstract public function getLoginURL():string;
+    abstract public function getLoginURL(): string;
 
     /**
      * @param string $code
      *
      * @return array
      */
-    abstract protected function getTokens(string $code):array;
+    abstract protected function getTokens(string $code): array;
 
     /**
      * @param string $refreshToken
      *
      * @return array
      */
-    abstract public function refreshTokens(string $refreshToken):array;
+    abstract public function refreshTokens(string $refreshToken): array;
 
     /**
      * @param $accessToken
      *
      * @return string
      */
-    abstract public function getUserID(string $accessToken):string;
+    abstract public function getUserEmail(string $accessToken): string;
+
+    /**
+     * Is the OAuth email verified?
+     * 
+     * @return bool
+     */
+    abstract public function isEmailVerififed(): bool;
 
     /**
      * @param $accessToken
      *
      * @return string
      */
-    abstract public function getUserEmail(string $accessToken):string;
-
-    /**
-     * @param $accessToken
-     *
-     * @return string
-     */
-    abstract public function getUserName(string $accessToken):string;
+    abstract public function getUserName(string $accessToken): string;
 
     /**
      * @param $scope
      *
      * @return $this
      */
-    protected function addScope(string $scope):OAuth2
+    protected function addScope(string $scope): OAuth2
     {
         // Add a scope to the scopes array if it isn't already present
         if (!\in_array($scope, $this->scopes)) {
@@ -111,7 +111,7 @@ abstract class OAuth2
     /**
      * @return array
      */
-    protected function getScopes():array
+    protected function getScopes(): array
     {
         return $this->scopes;
     }
@@ -121,7 +121,7 @@ abstract class OAuth2
      *
      * @return string
      */
-    public function getAccessToken(string $code):string
+    public function getAccessToken(string $code): string
     {
         $tokens = $this->getTokens($code);
         return $tokens['access_token'] ?? '';
@@ -132,7 +132,7 @@ abstract class OAuth2
      *
      * @return string
      */
-    public function getRefreshToken(string $code):string
+    public function getRefreshToken(string $code): string
     {
         $tokens = $this->getTokens($code);
         return $tokens['refresh_token'] ?? '';
@@ -143,7 +143,7 @@ abstract class OAuth2
      *
      * @return string
      */
-    public function getAccessTokenExpiry(string $code):string
+    public function getAccessTokenExpiry(string $code): string
     {
         $tokens = $this->getTokens($code);
         return $tokens['expires_in'] ?? '';
@@ -170,7 +170,7 @@ abstract class OAuth2
      *
      * @return string
      */
-    protected function request(string $method, string $url = '', array $headers = [], string $payload = ''):string
+    protected function request(string $method, string $url = '', array $headers = [], string $payload = ''): string
     {
         $ch = \curl_init($url);
 
