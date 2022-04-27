@@ -6,7 +6,7 @@ use Exception;
 use Utopia\App;
 use Utopia\CLI\Console;
 
-class Executor 
+class Executor
 {
     const METHOD_GET = 'GET';
     const METHOD_POST = 'POST';
@@ -26,8 +26,11 @@ class Executor
         'content-type' => '',
     ];
 
-    public function __construct(string $endpoint = 'http://appwrite-executor/v1')
-    { 
+    public function __construct(string $endpoint)
+    {
+        if (!filter_var($endpoint, FILTER_VALIDATE_URL)) {
+            throw new Exception('Unsupported endpoint');
+        }
         $this->endpoint = $endpoint;
     }
 
@@ -59,7 +62,6 @@ class Executor
         string $entrypoint = '',
         string $workdir = '',
         string $destination = '',
-        string $network = '',
         array $vars = [],
         array $commands = []
     ) {
@@ -76,7 +78,6 @@ class Executor
             'baseImage' => $baseImage,
             'entrypoint' => $entrypoint,
             'workdir' => $workdir,
-            'network' => empty($network) ? App::getEnv('_APP_EXECUTOR_RUNTIME_NETWORK', 'appwrite_runtimes') : $network,
             'vars' => $vars,
             'remove' => $remove,
             'commands' => $commands

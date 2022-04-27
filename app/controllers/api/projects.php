@@ -4,6 +4,7 @@ use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
+use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
@@ -76,6 +77,9 @@ App::post('/v1/projects')
         }
 
         $projectId = ($projectId == 'unique()') ? $dbForConsole->getId() : $projectId;
+        if($projectId === 'console') {
+            throw new Exception("'console' is a reserved project.", 400, Exception::PROJECT_RESERVED_PROJECT);
+        }
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId == 'unique()' ? $dbForConsole->getId() : $projectId,
             '$read' => ['team:' . $teamId],
@@ -94,7 +98,7 @@ App::post('/v1/projects')
             'legalTaxId' => $legalTaxId,
             'services' => new stdClass(),
             'platforms' => null,
-            'providers' => [],
+            'authProviders' => [],
             'webhooks' => null,
             'keys' => null,
             'domains' => null,
@@ -129,6 +133,8 @@ App::post('/v1/projects')
                     'signed' => $attribute['signed'],
                     'array' => $attribute['array'],
                     'filters' => $attribute['filters'],
+                    'default' => $attribute['default'] ?? null,
+                    'format' => $attribute['format'] ?? ''
                 ]);
             }
 
@@ -444,11 +450,11 @@ App::patch('/v1/projects/:projectId/oauth2')
             throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
-        $providers = $project->getAttribute('providers', []);
+        $providers = $project->getAttribute('authProviders', []);
         $providers[$provider . 'Appid'] = $appId;
         $providers[$provider . 'Secret'] = $secret;
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('providers', $providers));
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('authProviders', $providers));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -1002,7 +1008,7 @@ App::post('/v1/projects/:projectId/platforms')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PLATFORM)
     ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('type', null, new WhiteList(['web', 'flutter-ios', 'flutter-android', 'flutter-linux', 'flutter-macos', 'flutter-windows', 'apple-ios', 'apple-macos', 'apple-watchos', 'apple-tvos', 'android', 'unity'], true), 'Platform type.')
+    ->param('type', null, new WhiteList([Origin::CLIENT_TYPE_WEB, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_LINUX, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_APPLE_IOS, Origin::CLIENT_TYPE_APPLE_MACOS,  Origin::CLIENT_TYPE_APPLE_WATCHOS, Origin::CLIENT_TYPE_APPLE_TVOS, Origin::CLIENT_TYPE_ANDROID, Origin::CLIENT_TYPE_UNITY], true), 'Platform type.')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)

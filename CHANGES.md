@@ -1,11 +1,45 @@
-# Version 0.13.1 (NOT RELEASED)
+# Unreleased Version
+- Renamed `providers` to `authProviders` in project collection **Breaking Change**
+
+# Version 0.13.4
+
+## Features
+- Added `detailedTrace` to Logger events
+- Added new `_APP_STORAGE_PREVIEW_LIMIT` environment variable to configure maximum preview file size
+
+## Bugs
+- Fixed missing volume mount in Docker Compose
+- Fixed upload with Bucket File permission
+- Fixed custom ID validation in Console
+- Fixed file preview with no `output` passed
+- Fixed GitHub issue URL in Console
+- Fixed double PDOException logging
+- Fixed functions cleanup when container is already initialized
+- Fixed float input precision in Console
+
+# Version 0.13.3
+## Bugs
+- Fixed search for terms that inlcude `@` characters
+- Fixed Bucket permissions
+- Fixed file upload error in UI
+- Fixed input field for float attributes in UI
+- Fixed `appwrite-executor` restart behavior in docker-compose.yml
+
+# Version 0.13.2
+## Bugs
+- Fixed global issue with write permissions
+- Added missing `_APP_EXECUTOR_SECRET` environment variable for deletes worker
+- Increased execution `stdout` and `stderr` from 8000 to 16384 character limit
+- Increased maximum file size for image preview to 20mb
+- Fixed iOS platforms for origin validation by @stnguyen90 in https://github.com/appwrite/appwrite/pull/2907
+
+# Version 0.13.1
 ## Bugs
 - Fixed the Console UI redirect breaking the header and navigation
 - Fixed timeout in Functions API to respect the environment variable `_APP_FUNCTIONS_TIMEOUT`
 - Fixed team invite to be invalid after successful use by @Malte2036 in https://github.com/appwrite/appwrite/issues/2593
 
 # Version 0.13.0
-
 ## Features
 ### Functions
 - Synchronous function execution

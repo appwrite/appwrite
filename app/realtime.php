@@ -74,6 +74,7 @@ $logError = function(Throwable $error, string $action) use ($register) {
         $log->addExtra('file', $error->getFile());
         $log->addExtra('line', $error->getLine());
         $log->addExtra('trace', $error->getTraceAsString());
+        $log->addExtra('detailedTrace', $error->getTrace());
 
         $log->setAction($action);
 
@@ -162,28 +163,6 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
      * Save current connections to the Database every 5 seconds.
      */
     Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
-        /** @var Document $statsDocument */
-        foreach ($stats as $projectId => $value) {
-            $connections = $stats->get($projectId, 'connections') ?? 0;
-            $messages = $stats->get($projectId, 'messages' ?? 0);
-
-            $usage = new Event('v1-usage', 'UsageV1');
-            $usage
-                ->setParam('projectId', $projectId)
-                ->setParam('realtimeConnections', $connections)
-                ->setParam('realtimeMessages', $messages)
-                ->setParam('networkRequestSize', 0)
-                ->setParam('networkResponseSize', 0);
-
-            $stats->set($projectId, [
-                'messages' => 0,
-                'connections' => 0
-            ]);
-
-            if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-                $usage->trigger();
-            }
-        }
         $payload = [];
         foreach ($stats as $projectId => $value) {
             $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');

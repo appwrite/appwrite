@@ -13,9 +13,6 @@
                 case 'integer':
                     value = parseInt(value);
                     break;
-                case 'float':
-                    value = parseFloat(parseFloat(value).toFixed(2));
-                    break;
                 case 'numeric':
                     value = Number(value);
                     break;

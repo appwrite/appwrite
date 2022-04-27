@@ -12,6 +12,7 @@ use Appwrite\Extend\Exception;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
+use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
 use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
@@ -73,33 +74,44 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         } else {
             Authorization::disable();
 
-            $domainDocument = $dbForConsole->findOne('domains', [
-                new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
-            ]);
+            $mainDomain = null;
+            if(!empty(App::getEnv('_APP_DOMAIN', ''))) {
+                $mainDomain = App::getEnv('_APP_DOMAIN', '');
+            } else {
+                $domainDocument = $dbForConsole->findOne('domains', [], 0, ['_id'], ['ASC']);
+                $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();
+            }
 
-            if (!$domainDocument) {
-                $domainDocument = new Document([
-                    'domain' => $domain->get(),
-                    'tld' => $domain->getSuffix(),
-                    'registerable' => $domain->getRegisterable(),
-                    'verification' => false,
-                    'certificateId' => null,
+            if($mainDomain !== $domain->get()) {
+                Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
+            } else {
+                $domainDocument = $dbForConsole->findOne('domains', [
+                    new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
                 ]);
 
-                $domainDocument = $dbForConsole->createDocument('domains', $domainDocument);
-
-                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...');
-
-                Resque::enqueue('v1-certificates', 'CertificatesV1', [
-                    'document' => $domainDocument,
-                    'domain' => $domain->get(),
-                    'validateTarget' => false,
-                    'validateCNAME' => false,
-                ]);
+                if (!$domainDocument) {
+                    $domainDocument = new Document([
+                        'domain' => $domain->get(),
+                        'tld' => $domain->getSuffix(),
+                        'registerable' => $domain->getRegisterable(),
+                        'verification' => false,
+                        'certificateId' => null,
+                    ]);
+    
+                    $domainDocument = $dbForConsole->createDocument('domains', $domainDocument);
+    
+                    Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
+    
+                    Resque::enqueue(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME, [
+                        'document' => $domainDocument,
+                        'domain' => $domain->get(),
+                        'validateTarget' => false,
+                        'validateCNAME' => false,
+                    ]);
+                }
             }
 
             $domains[$domain->get()] = true;
-
             Authorization::reset(); // ensure authorization is re-enabled
         }
         Config::setParam('domains', $domains);
@@ -321,6 +333,11 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
     $route = $utopia->match($request);
 
+    /** Delegate PDO exceptions to the global handler so the database connection can be returned to the pool */
+    if ($error instanceof PDOException) {
+        throw $error;
+    }
+
     if($logger) {
         if($error->getCode() >= 500 || $error->getCode() === 0) {
             try {
@@ -353,6 +370,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
+            $log->addExtra('detailedTrace', $error->getTrace());
             $log->addExtra('roles', Authorization::$roles);
 
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
@@ -368,10 +386,6 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
             $responseCode = $logger->addLog($log);
             Console::info('Log pushed with status code: '.$responseCode);
         }
-    }
-
-    if ($error instanceof PDOException) {
-        throw $error;
     }
 
     $code = $error->getCode();

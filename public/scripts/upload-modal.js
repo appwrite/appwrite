@@ -74,7 +74,7 @@
                 }
                 let write = formData.get('write');
                 if(write) {
-                    write = JSON.parse(wirte);
+                    write = JSON.parse(write);
                 }
 
                 if(this.getFile(id)) {

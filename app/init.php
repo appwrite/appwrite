@@ -69,9 +69,8 @@ const APP_LIMIT_USERS = 10000;
 const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
 const APP_LIMIT_ENCRYPTION = 20000000; //20MB
 const APP_LIMIT_COMPRESSION = 20000000; //20MB
-const APP_LIMIT_PREVIEW = 10000000; //10MB file size limit for preview endpoint
-const APP_CACHE_BUSTER = 301;
-const APP_VERSION_STABLE = '0.13.1';
+const APP_CACHE_BUSTER = 304;
+const APP_VERSION_STABLE = '0.13.4';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -182,7 +181,7 @@ if(!empty($user) || !empty($pass)) {
  */
 Database::addFilter('casting',
     function($value) {
-        return json_encode(['value' => $value]);
+        return json_encode(['value' => $value], JSON_PRESERVE_ZERO_FRACTION);
     },
     function($value) {
         if (is_null($value)) {
