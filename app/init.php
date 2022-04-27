@@ -301,6 +301,18 @@ Database::addFilter('subQueryWebhooks',
     }
 );
 
+Database::addFilter('subQueryTokens',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('tokens', [
+                new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []);
+    }
+);
+
 Database::addFilter('encrypt',
     function($value) {
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');

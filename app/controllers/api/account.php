@@ -105,7 +105,7 @@ App::post('/v1/account')
                 'name' => $name,
                 'prefs' => new \stdClass(),
                 'sessions' => [],
-                'tokens' => [],
+                'tokens' => null,
                 'memberships' => [],
                 'search' => implode(' ', [$userId, $email, $name]),
                 'deleted' => false
@@ -506,7 +506,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'name' => $name,
                         'prefs' => new \stdClass(),
                         'sessions' => [],
-                        'tokens' => [],
+                        'tokens' => null,
                         'memberships' => [],
                         'search' => implode(' ', [$userId, $email, $name]),
                         'deleted' => false
@@ -680,7 +680,7 @@ App::post('/v1/account/sessions/magic-url')
                 'reset' => false,
                 'prefs' => new \stdClass(),
                 'sessions' => [],
-                'tokens' => [],
+                'tokens' => null,
                 'memberships' => [],
                 'search' => implode(' ', [$userId, $email]),
                 'deleted' => false
@@ -706,13 +706,12 @@ App::post('/v1/account/sessions/magic-url')
 
         Authorization::setRole('user:'.$user->getId());
 
-        $user->setAttribute('tokens', $token, Document::SET_TYPE_APPEND);
+        $token = $dbForProject->createDocument('tokens', $token
+            ->setAttribute('$read', ['user:'.$user->getId()])
+            ->setAttribute('$write', ['user:'.$user->getId()])
+        );
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
-
-        if (false === $user) {
-            throw new Exception('Failed to save user to DB', 500, Exception::GENERAL_SERVER_ERROR);
-        }
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         if(empty($url)) {
             $url = $request->getProtocol().'://'.$request->getHostname().'/auth/magic-url';
@@ -786,7 +785,7 @@ App::put('/v1/account/sessions/magic-url')
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
 
-        $user = $dbForProject->getDocument('users', $userId);
+        $user = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
             throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
@@ -825,24 +824,12 @@ App::put('/v1/account/sessions/magic-url')
                 ->setAttribute('$write', ['user:' . $user->getId()])
         );
 
-        $tokens = $user->getAttribute('tokens', []);
-
         /**
          * We act like we're updating and validating
          *  the recovery token but actually we don't need it anymore.
          */
-        foreach ($tokens as $key => $singleToken) {
-            if ($token === $singleToken->getId()) {
-                unset($tokens[$key]);
-            }
-        }
-
-        $user
-            ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND)
-            ->setAttribute('tokens', $tokens);
-
-
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        $dbForProject->deleteDocument('tokens', $token);
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500, Exception::GENERAL_SERVER_ERROR);
@@ -952,7 +939,7 @@ App::post('/v1/account/sessions/anonymous')
             'name' => null,
             'prefs' => new \stdClass(),
             'sessions' => [],
-            'tokens' => [],
+            'tokens' => null,
             'memberships' => [],
             'search' => $userId,
             'deleted' => false
@@ -1906,9 +1893,12 @@ App::post('/v1/account/recovery')
 
         Authorization::setRole('user:' . $profile->getId());
 
-        $profile->setAttribute('tokens', $recovery, Document::SET_TYPE_APPEND);
+        $recovery = $dbForProject->createDocument('tokens', $recovery
+            ->setAttribute('$read', ['user:'.$profile->getId()])
+            ->setAttribute('$write', ['user:'.$profile->getId()])
+        );
 
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile);
+        $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $url = Template::parseURL($url);
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
@@ -2003,18 +1993,14 @@ App::put('/v1/account/recovery')
                 ->setAttribute('emailVerification', true)
         );
 
+        $recoveryDocument = $dbForProject->getDocument('tokens', $recovery);
+
         /**
          * We act like we're updating and validating
          *  the recovery token but actually we don't need it anymore.
          */
-        foreach ($tokens as $key => $token) {
-            if ($recovery === $token->getId()) {
-                $recovery = $token;
-                unset($tokens[$key]);
-            }
-        }
-
-        $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('tokens', $tokens));
+        $dbForProject->deleteDocument('tokens', $recovery);
+        $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $audits
             ->setParam('userId', $profile->getId())
@@ -2025,7 +2011,7 @@ App::put('/v1/account/recovery')
         $usage
             ->setParam('users.update', 1)
         ;
-        $response->dynamic($recovery, Response::MODEL_TOKEN);
+        $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
     });
 
 App::post('/v1/account/verification')
@@ -2089,9 +2075,12 @@ App::post('/v1/account/verification')
 
         Authorization::setRole('user:' . $user->getId());
 
-        $user->setAttribute('tokens', $verification, Document::SET_TYPE_APPEND);
+        $verification = $dbForProject->createDocument('tokens', $verification
+            ->setAttribute('$read', ['user:'.$user->getId()])
+            ->setAttribute('$write', ['user:'.$user->getId()])
+        );
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $url = Template::parseURL($url);
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
@@ -2161,7 +2150,7 @@ App::put('/v1/account/verification')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $profile = $dbForProject->getDocument('users', $userId);
+        $profile = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
             throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
@@ -2177,19 +2166,15 @@ App::put('/v1/account/verification')
         Authorization::setRole('user:' . $profile->getId());
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('emailVerification', true));
+        
+        $verificationDocument = $dbForProject->getDocument('tokens', $verification);
 
         /**
          * We act like we're updating and validating
          *  the verification token but actually we don't need it anymore.
          */
-        foreach ($tokens as $key => $token) {
-            if ($token->getId() === $verification) {
-                $verification = $token;
-                unset($tokens[$key]);
-            }
-        }
-
-        $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('tokens', $tokens));
+        $dbForProject->deleteDocument('tokens', $verification);
+        $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $audits
             ->setParam('userId', $profile->getId())
@@ -2200,5 +2185,5 @@ App::put('/v1/account/verification')
         $usage
             ->setParam('users.update', 1)
         ;
-        $response->dynamic($verification, Response::MODEL_TOKEN);
+        $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });

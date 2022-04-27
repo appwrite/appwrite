@@ -339,7 +339,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'name' => $name,
                     'prefs' => new \stdClass(),
                     'sessions' => [],
-                    'tokens' => [],
+                    'tokens' => null,
                     'memberships' => [],
                     'search' => implode(' ', [$userId, $email, $name]),
                 ])));
