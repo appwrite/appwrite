@@ -598,7 +598,9 @@ App::setResource('loggerBreadcrumbs', function() {
 
 App::setResource('register', fn() => $register);
 
-App::setResource('localeRepository', fn() => $register->get(LocaleRepository::class));
+App::setResource('localeRepository', function ($locale, $geodb) {
+    return new LocaleRepository($locale, $geodb);
+}, ['locale', 'geodb']);
 
 App::setResource('layout', function($locale) {
     $layout = new View(__DIR__.'/views/layouts/default.phtml');

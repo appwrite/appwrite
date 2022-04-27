@@ -6,13 +6,23 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Locale\Locale;
 use MaxMind\Db\Reader;
+use Utopia\Storage\Device\Local;
 
 class LocaleRepository
 {
+    private Locale $locale;
+    private Reader $reader;
+
+    public function __construct(Locale $locale, Reader $reader)
+    {
+        $this->locale = $locale;
+        $this->reader = $reader;
+    }
+
     /**
      * @throws \Exception
      */
-    public function get(Locale $locale, Reader $geodb, string $ip): array
+    public function get(string $ip): array
     {
         $eu = Config::getParam('locale-eu');
         $currencies = Config::getParam('locale-currencies');
@@ -22,13 +32,13 @@ class LocaleRepository
 
         $currency = null;
 
-        $record = $geodb->get($ip);
+        $record = $this->geodb->get($ip);
 
         if ($record) {
             $output['countryCode'] = $record['country']['iso_code'];
-            $output['country'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            $output['continent'] = $locale->getText('continents.' . strtolower($record['continent']['code']), $locale->getText('locale.country.unknown'));
-            $output['continent'] = (isset($continents[$record['continent']['code']])) ? $continents[$record['continent']['code']] : $locale->getText('locale.country.unknown');
+            $output['country'] = $this->locale->getText('countries.' . strtolower($record['country']['iso_code']), $this->locale->getText('locale.country.unknown'));
+            $output['continent'] = $this->locale->getText('continents.' . strtolower($record['continent']['code']), $this->locale->getText('locale.country.unknown'));
+            $output['continent'] = (isset($continents[$record['continent']['code']])) ? $continents[$record['continent']['code']] : $this->locale->getText('locale.country.unknown');
             $output['continentCode'] = $record['continent']['code'];
             $output['eu'] = (\in_array($record['country']['iso_code'], $eu)) ? true : false;
 
@@ -41,8 +51,8 @@ class LocaleRepository
             $output['currency'] = $currency;
         } else {
             $output['countryCode'] = '--';
-            $output['country'] = $locale->getText('locale.country.unknown');
-            $output['continent'] = $locale->getText('locale.country.unknown');
+            $output['country'] = $this->locale->getText('locale.country.unknown');
+            $output['continent'] = $this->locale->getText('locale.country.unknown');
             $output['continentCode'] = '--';
             $output['eu'] = false;
             $output['currency'] = $currency;
@@ -54,7 +64,7 @@ class LocaleRepository
     /**
      * @throws \Exception
      */
-    public function getCountries(Locale $locale): array
+    public function getCountries(): array
     {
         $list = Config::getParam('locale-countries');
 
@@ -63,7 +73,7 @@ class LocaleRepository
 
         foreach ($list as $value) {
             $output[] = new Document([
-                'name' => $locale->getText('countries.' . strtolower($value)),
+                'name' => $this->locale->getText('countries.' . strtolower($value)),
                 'code' => $value,
             ]);
         }
@@ -78,15 +88,15 @@ class LocaleRepository
     /**
      * @throws \Exception
      */
-    public function getCountriesEU(Locale $locale): array
+    public function getCountriesEU(): array
     {
         $eu = Config::getParam('locale-eu');
         $output = [];
 
         foreach ($eu as $code) {
-            if ($locale->getText('countries.' . strtolower($code), false) !== false) {
+            if ($this->locale->getText('countries.' . strtolower($code), false) !== false) {
                 $output[] = new Document([
-                    'name' => $locale->getText('countries.' . strtolower($code)),
+                    'name' => $this->locale->getText('countries.' . strtolower($code)),
                     'code' => $code,
                 ]);
             }
@@ -102,7 +112,7 @@ class LocaleRepository
     /**
      * @throws \Exception
      */
-    public function getCountriesPhones(Locale $locale): array
+    public function getCountriesPhones(): array
     {
         $list = Config::getParam('locale-phones');
         /* @var $list array */
@@ -111,11 +121,11 @@ class LocaleRepository
         \asort($list);
 
         foreach ($list as $code => $name) {
-            if ($locale->getText('countries.' . strtolower($code), false) !== false) {
+            if ($this->locale->getText('countries.' . strtolower($code), false) !== false) {
                 $output[] = new Document([
                     'code' => '+' . $name,
                     'countryCode' => $code,
-                    'countryName' => $locale->getText('countries.' . strtolower($code)),
+                    'countryName' => $this->locale->getText('countries.' . strtolower($code)),
                 ]);
             }
         }
@@ -126,14 +136,14 @@ class LocaleRepository
     /**
      * @throws \Exception
      */
-    public function getContinents(Locale $locale): array
+    public function getContinents(): array
     {
         $list = Config::getParam('locale-continents');
         /* @var $list array */
 
         foreach ($list as $key => $value) {
             $output[] = new Document([
-                'name' => $locale->getText('continents.' . strtolower($value)),
+                'name' => $this->locale->getText('continents.' . strtolower($value)),
                 'code' => $value,
             ]);
         }
