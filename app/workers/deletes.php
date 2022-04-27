@@ -435,7 +435,6 @@ class DeletesV1 extends Worker
      */
     protected function deleteById(Document $document, Database $database, callable $callback = null): bool
     {
-        Authorization::disable();
         if ($database->deleteDocument($document->getCollection(), $document->getId())) {
             Console::success('Deleted document "' . $document->getId() . '" successfully');
 
