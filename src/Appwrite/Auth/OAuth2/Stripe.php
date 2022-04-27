@@ -150,7 +150,7 @@ class Stripe extends OAuth2
      * 
      * @return bool
      */
-    public function isEmailVerififed(string $accessToken): bool
+    public function isEmailVerified(string $accessToken): bool
     {
         $email = $this->getUserEmail($accessToken);
 

@@ -87,7 +87,7 @@ abstract class OAuth2
      * 
      * @return bool
      */
-    abstract public function isEmailVerififed(string $accessToken): bool;
+    abstract public function isEmailVerified(string $accessToken): bool;
 
     /**
      * @param $accessToken

@@ -133,7 +133,7 @@ class Zoom extends OAuth2
      * 
      * @return bool
      */
-    public function isEmailVerififed(string $accessToken): bool
+    public function isEmailVerified(string $accessToken): bool
     {
         return false;
     }
