@@ -144,7 +144,7 @@ class Tradeshift extends OAuth2
     /**
      * Check if the OAuth email is verified
      * 
-     * Tradeshift's signup process requires emails to be verified. This was verified manually
+     * If present, the email is verified. This was verfied through a manual Tradeshift sign up process
      * 
      * @param $accessToken
      * 
@@ -153,7 +153,7 @@ class Tradeshift extends OAuth2
     public function isEmailVerififed(string $accessToken): bool
     {
         $email = $this->getUser($accessToken);
-        
+
         return !empty($email);
     }
 

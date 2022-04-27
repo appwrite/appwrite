@@ -143,13 +143,19 @@ class Twitch extends OAuth2
     /**
      * Check if the OAuth email is verified
      * 
+     * If present, the email is verified
+     * 
+     * @link https://dev.twitch.tv/docs/api/reference#get-users
+     * 
      * @param $accessToken
      * 
      * @return bool
      */
     public function isEmailVerififed(string $accessToken): bool
     {
-        return false;
+        $email = $this->getUserEmail($accessToken);
+        
+        return !empty($email);
     }
 
     /**
