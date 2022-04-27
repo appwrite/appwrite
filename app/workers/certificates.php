@@ -18,12 +18,15 @@ Console::success(APP_NAME . ' certificates worker v1 has started');
 
 class CertificatesV1 extends Worker
 {
+    private $certificate = null; // run function fills this. onError callback uses it
+
     public function getName(): string {
         return "certificates";
     }
 
     public function init(): void
     {
+        
     }
 
     public function run(): void
@@ -32,8 +35,7 @@ class CertificatesV1 extends Worker
 
         $dbForConsole = $this->getConsoleDB();
 
-        $certificate = new Document();
-
+        $this->certificate = new Document();
 
         /**
          * 1. Read arguments and validate domain
@@ -70,7 +72,7 @@ class CertificatesV1 extends Worker
             $domain = $this->args['domain']; // String of domain (hostname)
             $domain = new Domain((!empty($domain)) ? $domain : '');
 
-            $certificate->setAttribute('domain', $domain->get());
+            $this->certificate->setAttribute('domain', $domain->get());
     
             $skipRenewCheck = $this->args['skipRenewCheck'] ?? false; // If true, we won't double-check expiry from cert file
     
@@ -169,7 +171,7 @@ class CertificatesV1 extends Worker
             // Command succeeded, store all data into document
             // We store stderr too, because it may include warnings
             // This is only stored if everytng below passes too. Otherwise, it will be overwritten by error message
-            $certificate->setAttribute('log', \json_encode([
+            $this->certificate->setAttribute('log', \json_encode([
                 'stdout' => $stdout,
                 'stderr' => $stderr,
             ]));
@@ -217,26 +219,26 @@ class CertificatesV1 extends Worker
             $certData = openssl_x509_parse(file_get_contents($certPath));
             $validTo = $certData['validTo_time_t'] ?? 0;
             $expiryInAdvance = (60*60*24*30);
-            $certificate->setAttribute('renewDate', $validTo - $expiryInAdvance);
+            $this->certificate->setAttribute('renewDate', $validTo - $expiryInAdvance);
 
             // All went well at this point 🥳
             
             // Reset attempts count for next renwal
-            $certificate->setAttribute('attempts', 0);
+            $this->certificate->setAttribute('attempts', 0);
 
             // Mark issue date
-            $certificate->setAttribute('issueDate', \time());
+            $this->certificate->setAttribute('issueDate', \time());
         } catch(ExceptionCertificate $e) {
             // These exceptions are expected if renew shouldn't or can't happen
 
             // Add exception as log into certificate
-            $certificate->setAttribute('log', $e->getMessage());
+            $this->certificate->setAttribute('log', $e->getMessage());
 
-            $attempt = $certificate->getAttribute('attempts', 0);
+            $attempt = $this->certificate->getAttribute('attempts', 0);
             $attempt++;
             
             // Save increased attempts count
-            $certificate->setAttribute('attempts', $attempt);
+            $this->certificate->setAttribute('attempts', $attempt);
 
             Console::warning('Cannot renew domain (' . $domain->get() . ') on attempt no. ' . $attempt . ' certificate: ' . $e->getMessage());
 
@@ -256,22 +258,22 @@ class CertificatesV1 extends Worker
             ]);
         } finally {
             // All actions result in new updatedAt date
-            $certificate->setAttribute('updated', \time());
+            $this->certificate->setAttribute('updated', \time());
 
             // Save certificate data into database
             // Check if update or insert required
             $certificateDocument = $dbForConsole->findOne('certificates', [ new Query('domain', Query::TYPE_EQUAL, [$domain->get()]) ]);
             if (!empty($certificateDocument) && !$certificateDocument->isEmpty()) {
                 // Merge new data with current data
-                $certificate = new Document(\array_merge($certificateDocument->getArrayCopy(), $certificate->getArrayCopy()));
+                $this->certificate = new Document(\array_merge($certificateDocument->getArrayCopy(), $this->certificate->getArrayCopy()));
                 
-                $certificate = $dbForConsole->updateDocument('certificates', $certificate->getId(), $certificate);
+                $this->certificate = $dbForConsole->updateDocument('certificates', $this->certificate->getId(), $this->certificate);
             } else {
-                $certificate = $dbForConsole->createDocument('certificates', $certificate);
+                $this->certificate = $dbForConsole->createDocument('certificates', $this->certificate);
             }
 
             // Update domains with new certificate ID
-            $certificateId = $certificate->getId();
+            $certificateId = $this->certificate->getId();
 
             $domains = $dbForConsole->find('domains', [
                 new Query('domain', Query::TYPE_EQUAL, [$domain->get()])

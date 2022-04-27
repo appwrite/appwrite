@@ -131,8 +131,7 @@ $cli
         Console::loop(function() use ($register, $interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) { 
             go(function () use ($register, $interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) {
                 try {
-                    [$database, $returnDatabase] = getConsoleDB
-                    ($register, '_console');
+                    [$database, $returnDatabase] = getConsoleDB($register, '_console');
     
                     $time = date('d-m-Y H:i:s', time());
                     Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
