@@ -510,4 +510,85 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 404);
     }
+
+    /**
+     * @depends testUpdateAccountName
+     */
+    public function testUpdateAccountNameSearch($data): void
+    {
+        $id = $data['id'] ?? '';
+        $email = $data['email'] ?? '';
+        $newName = 'Lorem';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'search' => $newName
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['email'], $email);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'search' => $id
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['email'], $email);
+    }
+
+    /**
+     * @depends testUpdateAccountEmail
+     */
+    public function testUpdateAccountEmailSearch($data): void
+    {
+        $id = $data['id'] ?? '';
+        $email = $data['email'] ?? '';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'search' => '"' . $email . '"'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['email'], $email);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'search' => $id
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['email'], $email);
+    }
 }
