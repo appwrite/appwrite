@@ -306,10 +306,10 @@ Database::addFilter('subQueryTokens',
         return null;
     },
     function($value, Document $document, Database $database) {
-        return $database
+        return Authorization::skip(fn() => $database
             ->find('tokens', [
                 new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
-            ], $database->getIndexLimit(), 0, []);
+            ], $database->getIndexLimit(), 0, []));
     }
 );
 

@@ -831,6 +831,8 @@ App::put('/v1/account/sessions/magic-url')
         $dbForProject->deleteDocument('tokens', $token);
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND));
+
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
