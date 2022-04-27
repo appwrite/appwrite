@@ -161,7 +161,7 @@ class Paypal extends OAuth2
      */
     public function isEmailVerififed(): bool
     {
-        return false
+        return false;
     }
 
     /**
