@@ -303,9 +303,23 @@ class FunctionsV1 extends Worker
             /** Update execution status */
             $execution->setAttribute('status', $executionResponse['status']);
             $execution->setAttribute('statusCode', $executionResponse['statusCode']);
-            $execution->setAttribute('stdout', $executionResponse['stdout']);
-            $execution->setAttribute('stderr', $executionResponse['stderr']);
             $execution->setAttribute('time', $executionResponse['time']);
+
+            $stdoutMax = 0;
+            $stderrMax = 0;
+            $attributes = Config::getParam('collections')['executions']['attributes'];
+            foreach ($attributes as $attribute) {
+                switch($attribute['$id']) {
+                    case 'stdout':
+                        $stdoutMax = $attribute['size'];
+                        break;
+                    case 'stderr':
+                        $stderrMax = $attribute['size'];
+                        break;
+                }
+            }
+            $execution->setAttribute('stderr', \substr($executionResponse['stderr'], 0, $stderrMax));
+            $execution->setAttribute('stdout', \substr($executionResponse['stdout'], 0, $stdoutMax));
         } catch (\Throwable $th) {
             $execution->setAttribute('status', 'failed');
             $execution->setAttribute('statusCode', $th->getCode());

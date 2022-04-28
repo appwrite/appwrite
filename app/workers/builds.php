@@ -148,8 +148,22 @@ class BuildsV1 extends Worker
             $build->setAttribute('duration', $response['duration']);
             $build->setAttribute('status', $response['status']);
             $build->setAttribute('outputPath', $response['outputPath']);
-            $build->setAttribute('stderr', $response['stderr']);
-            $build->setAttribute('stdout', $response['stdout']);
+
+            $stdoutMax = 0;
+            $stderrMax = 0;
+            $attributes = Config::getParam('collections')['builds']['attributes'];
+            foreach ($attributes as $attribute) {
+                switch($attribute['$id']) {
+                    case 'stdout':
+                        $stdoutMax = $attribute['size'];
+                        break;
+                    case 'stderr':
+                        $stderrMax = $attribute['size'];
+                        break;
+                }
+            }
+            $build->setAttribute('stderr', \substr($response['stderr'], 0, $stderrMax));
+            $build->setAttribute('stdout', \substr($response['stdout'], 0, $stdoutMax));
 
             Console::success("Build id: $buildId created");
 
