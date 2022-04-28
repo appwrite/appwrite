@@ -129,12 +129,20 @@ class Zoom extends OAuth2
     /**
      * Check if the OAuth email is verified
      * 
+     * @link https://marketplace.zoom.us/docs/api-reference/zoom-api/methods/#operation/user
+     * 
      * @param $accessToken
      * 
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
     {
+        $user = $this->getUser($accessToken);
+
+        if (isset($user['verified']) && $user['verified'] === 1) {
+            return true;
+        }
+        
         return false;
     }
 
