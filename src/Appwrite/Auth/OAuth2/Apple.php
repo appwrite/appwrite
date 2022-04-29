@@ -136,10 +136,7 @@ class Apple extends OAuth2
      */
     public function getUserEmail(string $accessToken): string
     {
-        if (isset($this->claims['email']) &&
-            !empty($this->claims['email']) &&
-            isset($this->claims['email_verified']) &&
-            $this->claims['email_verified'] === 'true') {
+        if (isset($this->claims['email']) && !empty($this->claims['email'])) {
             return $this->claims['email'];
         }
 
@@ -149,12 +146,18 @@ class Apple extends OAuth2
     /**
      * Check if the OAuth email is verified
      * 
+     * @link https://developer.apple.com/forums/thread/121411
+     * 
      * @param $accessToken
      * 
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
     {
+        if (isset($this->claims['email_verified']) && $this->claims['email_verified'] === 'true') {
+            return true;
+        }
+
         return false;
     }
 
