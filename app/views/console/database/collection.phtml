@@ -224,7 +224,7 @@ $logs = $this->getParam('logs', null);
                                                         </div>
                                                     </div>
 
-                                                    <div data-ls-if="{{attribute.default}}">
+                                                    <div data-ls-if="{{attribute.default}} || {{attribute.default}} === false">
                                                         <label>Default Value</label>
                                                         <input type="text" data-ls-bind="{{attribute.default}}" class="full-width" disabled />
                                                     </div>

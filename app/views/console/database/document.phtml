@@ -86,7 +86,7 @@ $logs = $this->getParam('logs', null);
                                             pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{0,35}$" />
                                     <?php endif; ?>
 
-                                    <fieldset name="data" data-cast-to="object" data-ls-attrs="x-init=doc = {{project-document}}" x-data="{doc: {}}">
+                                    <fieldset name="data" data-cast-to="object" data-ls-attrs="x-init=col = {{project-collection}}; hasId = '{{router.params.id}}'.length !== 0; prepareDoc({{project-document}})" x-data="{ doc: {}, col: {}, hasId: false, prepareDoc: function(doc) { this.doc = Object.assign({}, this.getDefaults(), this.hasId ? doc : {}); }, getDefaults: function() { const defs = {}; this.col.attributes.forEach(function(attr) { if (attr.default !== undefined && attr.default !== null) { defs[attr.key] = attr.default; } }); return defs; } }">
                                         <ul data-ls-attrs="x-init=attributes = {{project-collection.attributes}}" x-data="{attributes: []}">
                                             <template x-for="attr in attributes.filter(a => a.status === 'available')">
                                                 <li>
