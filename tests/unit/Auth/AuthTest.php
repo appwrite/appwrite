@@ -124,8 +124,8 @@ class AuthTest extends TestCase
         $hash = 'EPKgfALpS9Tvgr/y1ki7ubY4AEGJeWL3teakrnmOacN4XGiyD00lkzEHgqCQ71wGxoi/zb7Y9a4orOtvMV3/Jw==';
         $options = [ 'salt' => '56dFqW+kswqktw==', 'cost_cpu' => 8, 'cost_memory' => 14, 'cost_parallel' => 1, 'length' => 64 ];
         $generatedHash = Auth::passwordHash($plain, 'scrypt', $options);
-        \var_dump($generatedHash);
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scrypt', $options));
+        // TODO: This test is failing.
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt', $options));
     }
     
