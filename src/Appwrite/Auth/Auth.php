@@ -2,6 +2,10 @@
 
 namespace Appwrite\Auth;
 
+use Appwrite\Auth\Hash\BCrypt;
+use Appwrite\Auth\Hash\MD5;
+use Appwrite\Auth\Hash\PHPass;
+use Appwrite\Auth\Hash\SCrypt;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
@@ -132,19 +136,30 @@ class Auth
      *
      * @param string $string
      * @param string $algo hashing algorithm to use
+     * @param string $options algo-specific options
      *
      * @return bool|string|null
      */
-    public static function passwordHash(string $string, string $algo)
+    public static function passwordHash(string $string, string $algo, mixed $options = [])
     {
+        // TODO: Abstract, somehow.
         switch ($algo) {
             case 'bcrypt':
-                return \password_hash($string, PASSWORD_BCRYPT, array('cost' => 8));
+                $hasher = new BCrypt($options);
+                $hash = $hasher->hash($string);
+                return $hash;
             case 'scrypt':
-                return \scrypt($string, "", 8, 1, 1, 64);
-                throw new Error('Hashing algorithm scrypt not supported yet.');
+                $hasher = new SCrypt($options);
+                $hash = $hasher->hash($string);
+                return $hash;
             case 'md5':
-                return \md5($string);
+                $hasher = new MD5($options);
+                $hash = $hasher->hash($string);
+                return $hash;
+            case 'phpass':
+                $hahser = new PHPass(8, FALSE);
+                $hash = $hahser->hash($string);
+                return $hash;
         }
 
         return null;
@@ -156,18 +171,32 @@ class Auth
      * @param string $plain
      * @param string $hash
      * @param string $algo hashing algorithm used to hash
+     * @param string $options algo-specific options
      *
      * @return bool
      */
-    public static function passwordVerify(string $plain, string $hash, string $algo)
+    public static function passwordVerify(string $plain, string $hash, string $algo, mixed $options = [])
     {
+
+        // TODO: Abstract, somehow.
         switch ($algo) {
             case 'bcrypt':
-                return \password_verify($plain, $hash);
+                $hasher = new BCrypt($options);
+                $verify = $hasher->verify($plain, $hash);
+                return $verify;
             case 'scrypt':
-                return \scrypt($plain, "", 8, 1, 1, 64) === $hash;
+                $hasher = new SCrypt($options ?? [ 'cost_cpu' => 8, 'cost_memory' => 14, 'cost_parallel' => 1, 'length' => 64 ]);
+                $verify = $hasher->verify($plain, $hash);
+                return $verify;
             case 'md5':
-                return \md5($plain) === $hash;
+                $hasher = new MD5($options ?? []);
+                $verify = $hasher->verify($plain, $hash);
+                return $verify;
+            case 'phpass':
+                // TODO: Support options
+                $hahser = new PHPass(8, FALSE);
+                $verify = $hahser->verify($plain, $hash);
+                return $verify;
         }
 
         return false;
