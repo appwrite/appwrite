@@ -6,6 +6,7 @@ use Appwrite\Auth\Hash\BCrypt;
 use Appwrite\Auth\Hash\MD5;
 use Appwrite\Auth\Hash\PHPass;
 use Appwrite\Auth\Hash\SCrypt;
+use Appwrite\Auth\Hash\SCryptModified;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
@@ -148,6 +149,10 @@ class Auth
                 $hasher = new BCrypt($options);
                 $hash = $hasher->hash($string);
                 return $hash;
+            case 'scrypt_mod':
+                $hasher = new SCryptModified($options);
+                $hash = $hasher->hash($string);
+                return $hash;
             case 'scrypt':
                 $hasher = new SCrypt($options);
                 $hash = $hasher->hash($string);
@@ -157,6 +162,7 @@ class Auth
                 $hash = $hasher->hash($string);
                 return $hash;
             case 'phpass':
+                // TODO: Rework to use abstract class
                 $hahser = new PHPass(8, FALSE);
                 $hash = $hahser->hash($string);
                 return $hash;
@@ -177,11 +183,14 @@ class Auth
      */
     public static function passwordVerify(string $plain, string $hash, string $algo, mixed $options = [])
     {
-
         // TODO: Abstract, somehow.
         switch ($algo) {
             case 'bcrypt':
                 $hasher = new BCrypt($options);
+                $verify = $hasher->verify($plain, $hash);
+                return $verify;
+            case 'scrypt_mod':
+                $hasher = new SCryptModified($options);
                 $verify = $hasher->verify($plain, $hash);
                 return $verify;
             case 'scrypt':
@@ -193,7 +202,7 @@ class Auth
                 $verify = $hasher->verify($plain, $hash);
                 return $verify;
             case 'phpass':
-                // TODO: Support options
+                // TODO: Rework to use abstract class
                 $hahser = new PHPass(8, FALSE);
                 $verify = $hahser->verify($plain, $hash);
                 return $verify;

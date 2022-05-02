@@ -101,6 +101,9 @@ class AuthTest extends TestCase
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'phpass'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'phpass'));
 
+        // SCryptModified
+        // TODO: Add tests
+
         /*
         Provider-specific tests, ensuring functionality of specific use-cases
         */
@@ -122,11 +125,14 @@ class AuthTest extends TestCase
         // Provider #2 (Google)
         $plain = 'users-password';
         $hash = 'EPKgfALpS9Tvgr/y1ki7ubY4AEGJeWL3teakrnmOacN4XGiyD00lkzEHgqCQ71wGxoi/zb7Y9a4orOtvMV3/Jw==';
-        $options = [ 'salt' => '56dFqW+kswqktw==', 'cost_cpu' => 8, 'cost_memory' => 14, 'cost_parallel' => 1, 'length' => 64 ];
-        $generatedHash = Auth::passwordHash($plain, 'scrypt', $options);
-        $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scrypt', $options));
-        // TODO: This test is failing.
-        $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt', $options));
+        $salt = '56dFqW+kswqktw==';
+        $saltSeparator = 'Bw==';
+        $signerKey = 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==';
+        
+        $options = [ 'salt' => $salt, 'salt_separator' => $saltSeparator, 'signer_key' => $signerKey ];
+        $generatedHash = Auth::passwordHash($plain, 'scrypt_mod', $options);
+        $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scrypt_mod', $options));
+        $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt_mod', $options));
     }
     
     public function testPasswordGenerator()
