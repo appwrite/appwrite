@@ -16,7 +16,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
+use Utopia\Validator\WhiteList; 
 
 $avatarCallback = function ($type, $code, $width, $height, $quality, Response $response) {
 
