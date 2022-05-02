@@ -104,9 +104,7 @@ class Builder
                 $fields[$escapedKey] = [
                     'type' => $type,
                     'description' => $props['description'],
-                    'resolve' => fn($object, $args, $context, $info) => new CoroutinePromise(
-                        fn($resolve, $reject) => $resolve($object[$key])
-                    ),
+                    'resolve' => fn($object, $args, $context, $info) => $object[$key],
                 ];
             }
         }
