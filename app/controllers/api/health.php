@@ -1,15 +1,15 @@
 <?php
-        
-use Utopia\Storage\Device;
-use Appwrite\Utopia\Response;
-use Utopia\Registry\Registry;
-use Utopia\App;
-use Appwrite\Extend\Exception;
-use Utopia\Storage\Device\Local;
-use Utopia\Storage\Storage;
+
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Response;
+use Utopia\App;
 use Utopia\Database\Document;
+use Utopia\Registry\Registry;
+use Utopia\Storage\Device;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Storage;
 
 App::get('/v1/health')
     ->desc('Get HTTP')
