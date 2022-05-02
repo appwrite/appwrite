@@ -806,6 +806,7 @@ App::setResource('deviceLocal', function() {
 });
 
 App::setResource('deviceFiles', function($project) {
+    var_dump(getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId()));
     return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
@@ -822,14 +823,17 @@ function getDevice($root): Device {
     switch ($device) {
         case Storage::DEVICE_S3:
         case Storage::DEVICE_DO_SPACES:
+        case Storage::DEVICE_BACKBLAZE:
+        case Storage::DEVICE_LINODE:
             $accessKey = App::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
             $secretKey = App::getEnv('_APP_STORAGE_S3_SECRET', '');
             $region = App::getEnv('_APP_STORAGE_S3_REGION', '');
             $bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
             $acl = 'private';
             /**@var $adapter Utopia\Storage\Device**/
-            $adapter = 'Utopia\\Storage\\Device' . $device;
-            return new $adapter($root, $accessKey, $secretKey, $region, $bucket, $acl);
+            $adapter = 'Utopia\\Storage\\Device\\' . $device;
+            var_dump($adapter);
+            return new $adapter($root, $accessKey, $secretKey, $bucket, $region, $acl);
         default:
             return new Local($root);
     }

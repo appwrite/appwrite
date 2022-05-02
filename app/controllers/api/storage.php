@@ -421,6 +421,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $allowedFileExtensions = $bucket->getAttribute('allowedFileExtensions', []);
         $fileExt = new FileExt($allowedFileExtensions);
 
+
+
         $maximumFileSize = $bucket->getAttribute('maximumFileSize', 0);
         if ($maximumFileSize > (int) App::getEnv('_APP_STORAGE_LIMIT', 0)) {
             throw new Exception('Error bucket maximum file size is larger than _APP_STORAGE_LIMIT', 500, Exception::GENERAL_SERVER_ERROR);
@@ -539,6 +541,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
             }
 
+
             if (!empty($data)) {
                 if (!$deviceFiles->write($path, $data, $mimeType)) {
                     throw new Exception('Failed to save file', 500, Exception::GENERAL_SERVER_ERROR);
@@ -550,8 +553,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $algorithm = empty($compressor) ? '' : $compressor->getName();
             $fileHash = $deviceFiles->getFileHash($path);
 
+            $openSSLTag = null;
+            $openSSLIV = null;
+            $openSSLCipher= null;
+            $openSSLVersion = '1';
+
             if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
-                $openSSLVersion = '1';
                 $openSSLCipher = OpenSSL::CIPHER_AES_128_GCM;
                 $openSSLTag = \bin2hex($tag);
                 $openSSLIV = \bin2hex($iv);

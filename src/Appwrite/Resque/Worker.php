@@ -271,7 +271,7 @@ abstract class Worker
                 $bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
                 $acl = 'private';
                 /**@var $adapter Utopia\Storage\Device**/
-                $adapter = 'Utopia\\Storage\\Device' . $device;
+                $adapter = 'Utopia\\Storage\\Device\\' . $device;
                 return new $adapter($root, $accessKey, $secretKey, $region, $bucket, $acl);
             default:
                 return new Local($root);
