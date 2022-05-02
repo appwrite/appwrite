@@ -1,7 +1,7 @@
 ## Getting Started
 
 ### Init your SDK
-Initialize your SDK with your Appwrite server API endpoint and project ID which can be found in your project settings page and your new API secret Key from project's API keys section.
+Initialize your SDK with your Appwrite server API endpoint and project ID which can be found on your project settings page and your new API secret Key from project's API keys section.
 
 ```python
 from appwrite.client import Client
