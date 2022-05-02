@@ -599,6 +599,8 @@ class Builder
 
                             $utopia->setResource('request', fn() => $request);
                             $utopia->setResource('response', fn() => $response);
+
+                            $response->setContentType(Response::CONTENT_TYPE_NULL);
                             $utopia->setRoute($route)->execute($route, $request);
 
                             $result = $response->getPayload();
