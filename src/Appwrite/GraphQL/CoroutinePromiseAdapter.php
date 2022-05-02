@@ -6,6 +6,7 @@ use GraphQL\Error\InvariantViolation;
 use GraphQL\Executor\Promise\Promise;
 use GraphQL\Executor\Promise\PromiseAdapter;
 use GraphQL\Utils\Utils;
+use Swoole\Coroutine\Channel;
 use function Co\go;
 
 class CoroutinePromiseAdapter implements PromiseAdapter
@@ -61,30 +62,42 @@ class CoroutinePromiseAdapter implements PromiseAdapter
 
     public function all(array $promisesOrValues): Promise
     {
-        $all = new CoroutinePromise();
+        $all = new CoroutinePromise(function (callable $resolve, callable $reject) use ($promisesOrValues) {
+            $ticks = count($promisesOrValues);
+            $firstError = null;
+            $channel = new Channel($ticks);
+            $result = [];
+            $key = 0;
 
-        $total = count($promisesOrValues);
-        $count = 0;
-        $result = [];
-
-        foreach ($promisesOrValues as $index => $promiseOrValue) {
-            if (!($promiseOrValue instanceof Promise)) {
-                $result[$index] = $promiseOrValue;
-                $count++;
-                break;
-            }
-            $result[$index] = null;
-            $promiseOrValue->then(
-                function ($value) use ($index, &$count, $total, &$result, $all): void {
-                    $result[$index] = $value;
-                    $count++;
-                    if ($count === $total) {
-                        $all->resolve($result);
+            foreach ($promisesOrValues as $promiseOrValue) {
+                if (!$promiseOrValue instanceof Promise) {
+                    $result[$key] = $promiseOrValue;
+                    $channel->push(true);
+                }
+                $promiseOrValue->then(function ($value) use ($key, &$result, $channel) {
+                    $result[$key] = $value;
+                    $channel->push(true);
+                }, function ($error) use ($channel, &$firstError) {
+                    $channel->push(true);
+                    if ($firstError === null) {
+                        $firstError = $error;
                     }
-                },
-                [$all, 'reject']
-            );
-        }
+                });
+                $key++;
+            }
+
+            while ($ticks--) {
+                $channel->pop();
+            }
+            $channel->close();
+
+            if ($firstError !== null) {
+                $reject($firstError);
+                return;
+            }
+
+            $resolve($result);
+        });
 
         return new Promise($all, $this);
     }
