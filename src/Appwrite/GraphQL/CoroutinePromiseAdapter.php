@@ -21,6 +21,7 @@ class CoroutinePromiseAdapter implements PromiseAdapter
         if (!$thenable instanceof CoroutinePromise) {
             throw new InvariantViolation('Expected instance of SwoolePromise, got ' . Utils::printSafe($thenable));
         }
+
         return new Promise($thenable, $this);
     }
 
@@ -34,30 +35,29 @@ class CoroutinePromiseAdapter implements PromiseAdapter
 
     public function create(callable $resolver): Promise
     {
-        $promise = new CoroutinePromise();
-        try {
-            $resolver(
-                [$promise, 'resolve'],
-                [$promise, 'reject'],
-            );
-        } catch (\Throwable $e) {
-            $promise->reject($e);
-        }
+        $promise = new CoroutinePromise(function($resolve, $reject) use($resolver) {
+            $resolver($resolve, $reject);
+        });
+
         return new Promise($promise, $this);
     }
 
     public function createFulfilled($value = null): Promise
     {
-        $promise = new CoroutinePromise();
+        $promise = new CoroutinePromise(function($resolve, $reject) use($value) {
+            $resolve($value);
+        });
 
-        return new Promise($promise->resolve($value), $this);
+        return new Promise($promise, $this);
     }
 
     public function createRejected($reason): Promise
     {
-        $promise = new CoroutinePromise();
+        $promise = new CoroutinePromise(function ($resolve, $reject) use ($reason) {
+            $reject($reason);
+        });
 
-        return new Promise($promise->reject($reason), $this);
+        return new Promise($promise, $this);
     }
 
     public function all(array $promisesOrValues): Promise
