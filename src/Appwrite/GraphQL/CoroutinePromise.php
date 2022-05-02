@@ -30,19 +30,17 @@ class CoroutinePromise
             $this->setState(self::STATE_FULFILLED);
         };
         $reject = function ($value) {
-            if ($this->isPending()) {
-                $this->setResult($value);
-                $this->setState(self::STATE_REJECTED);
-            }
+            $this->setResult($value);
+            $this->setState(self::STATE_REJECTED);
         };
 
-        go(function (callable $executor, callable $resolve, callable $reject) {
+        go(function () use ($executor, $resolve, $reject) {
             try {
                 $executor($resolve, $reject);
             } catch (\Throwable $exception) {
                 $reject($exception);
             }
-        }, $executor, $resolve, $reject);
+        });
     }
 
     /**
@@ -102,6 +100,12 @@ class CoroutinePromise
      */
     public function then(?callable $onFulfilled = null, ?callable $onRejected = null): CoroutinePromise
     {
+        if ($this->isRejected() && $onRejected === null) {
+            return $this;
+        }
+        if ($this->isFulfilled() && $onFulfilled === null) {
+            return $this;
+        }
         return self::create(function (callable $resolve, callable $reject) use ($onFulfilled, $onRejected) {
             while ($this->isPending()) {
                 usleep(25000);
@@ -220,5 +224,15 @@ class CoroutinePromise
     final protected function isFulfilled(): bool
     {
         return $this->state == self::STATE_FULFILLED;
+    }
+
+    /**
+     * Promise is rejected
+     *
+     * @return boolean
+     */
+    final protected function isRejected(): bool
+    {
+        return $this->state == self::STATE_REJECTED;
     }
 }
