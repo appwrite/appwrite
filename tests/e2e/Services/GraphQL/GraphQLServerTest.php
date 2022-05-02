@@ -84,6 +84,7 @@ class GraphQLServerTest extends Scope
         $query = $this->getQuery(self::$CREATE_USER);
 
         $variables = [
+            'userId' => 'unique()',
             'email' => 'users.service@example.com',
             'password' => 'password',
             'name' => 'Project User',
@@ -116,7 +117,6 @@ class GraphQLServerTest extends Scope
             'x-appwrite-key' => $key
         ]), $graphQLPayload);
 
-        $this->assertNull($user['body']['errors']);
         $this->assertIsArray($user['body']['data']);
         $this->assertIsArray($user['body']['data']['usersCreate']);
 
@@ -224,7 +224,6 @@ class GraphQLServerTest extends Scope
             'x-appwrite-key' => $key
         ], $graphQLPayload);
 
-        $this->assertNull($countries['body']['errors']);
         $this->assertIsArray($countries['body']['data']);
         $this->assertIsArray($countries['body']['data']['localeGetCountries']);
 
@@ -234,7 +233,7 @@ class GraphQLServerTest extends Scope
 
 
         /**
-         * Create a key withouut any scopes
+         * Create a key without any scopes
          */
         $key = $this->getNewKey([]);
         $countries = $this->client->call(Client::METHOD_POST, '/graphql', [

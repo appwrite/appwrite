@@ -36,7 +36,6 @@ class GraphQLClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $graphQLPayload);
 
-        $this->assertNull($account1['body']['errors']);
         $this->assertIsArray($account1['body']['data']);
         $account1 = $account1['body']['data']['accountCreate'];
         $this->assertEquals('Tester', $account1['name']);
@@ -55,7 +54,6 @@ class GraphQLClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $graphQLPayload);
 
-        $this->assertNull($session1['body']['errors']);
         $this->assertIsArray($session1['body']['data']);
         $this->assertIsArray($session1['body']['data']['accountCreateSession']);
         $session1Cookie = $this->client->parseCookie((string)$session1['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];

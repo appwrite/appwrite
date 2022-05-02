@@ -96,15 +96,20 @@ trait GraphQLBase
                     databaseGetCollection(collectionId: $collectionId) {
                         _id
                         name
-                    }';
+                    }
+                }';
             case self::$LIST_COLLECTIONS:
                 return 'query listCollections {
                     databaseListCollections {
-                        _id
-                        name
-                    }';
+                        total
+                        collections {
+                            _id
+                            name
+                        }
+                    }
+                }';
             case self::$CREATE_COLLECTION:
-                return 'mutation createCollection($id: String!, $name: String!, $permission: String!, $read: [String!]!, $write: [String!]!){
+                return 'mutation createCollection($id: String!, $name: String!, $permission: String!, $read: [String!]!, $write: [String!]!) {
                     databaseCreateCollection (id: $\id, name: $name, permission: $permission, read: $read, write: $write) {
                         _id
                         name
@@ -217,7 +222,12 @@ trait GraphQLBase
                     databaseGetDocument (collectionId: $collectionId, documentId: $documentId) {
                         _id
                         collectionId
-                        data
+                        data {
+                            name
+                            age
+                            alive
+                            salary
+                        }
                     }
                 }';
             case self::$LIST_DOCUMENTS :
@@ -235,7 +245,12 @@ trait GraphQLBase
                     databaseCreateDocument (collectionId: $collectionId, documentId: $documentId, data: $data, read: $read, write: $write) {
                         _id
                         documentId
-                        data
+                        data {
+                            name
+                            age
+                            alive
+                            salary
+                        }
                         read
                         write
                     }
@@ -254,7 +269,12 @@ trait GraphQLBase
                     databaseUpdateDocument (collectionId: $collectionId, documentId: $documentId,data: $data, read: $read, write: $write) {
                         _id
                         collectionId
-                        data
+                        data {
+                            name
+                            age
+                            alive
+                            salary
+                        }
                     }
                 }';
             case self::$DELETE_DOCUMENT:
@@ -265,13 +285,12 @@ trait GraphQLBase
             case self::$GET_USER :
                 return 'query getUser ($userId : String!) {
                     usersGet(userId : $userId) {
-                        id
+                        _id
                         name
                         registration
                         status
                         email
                         emailVerification
-                        prefs
                     }
                 }';
             case self::$LIST_USERS:
@@ -279,7 +298,7 @@ trait GraphQLBase
                     usersList (filters: $filters) {
                         total
                         users {
-                            id
+                            _id
                             name
                             registration
                             status
@@ -289,21 +308,20 @@ trait GraphQLBase
                     }   
                 }';
             case self::$CREATE_USER :
-                return 'mutation createUser($usedId: String!, $email: String!, $password: String!, $name: String){
+                return 'mutation createUser($userId: String!, $email: String!, $password: String!, $name: String){
                     usersCreate (userId: $userId, email: $email, password: $password, name: $name) {
-                        id
+                        _id
                         name
                         registration
                         status
                         email
                         emailVerification
-                        prefs
                     }
                 }';
             case self::$UPDATE_USER_STATUS:
                 return 'mutation updateUserStatus($userId: String!, $status: String!){
                     usersUpdateStatus (userId: $userId, status: $status) {
-                        id
+                        _id
                         name
                         registration
                         status
@@ -314,7 +332,7 @@ trait GraphQLBase
             case self::$UPDATE_USER_NAME:
                 return 'mutation updateUserName($userId: String!, $name: String!){
                     usersUpdateName (userId: $userId, name: $name) {
-                        id
+                        _id
                         name
                         registration
                         status
@@ -325,7 +343,7 @@ trait GraphQLBase
             case self::$UPDATE_USER_EMAIL:
                 return 'mutation updateUserEmail($userId: String!, $email: String!){
                     usersUpdateEmail (userId: $userId, email: $email) {
-                        id
+                        _id
                         name
                         registration
                         status
@@ -336,7 +354,7 @@ trait GraphQLBase
             case self::$UPDATE_USER_PASSWORD:
                 return 'mutation updateUserPassword($userId: String!, $password: String!){
                     usersUpdatePassword (userId: $userId, password: $password) {
-                        id
+                        _id
                         name
                         registration
                         status
@@ -347,9 +365,8 @@ trait GraphQLBase
             case self::$UPDATE_USER_PREFS:
                 return 'mutation updateUserPrefs($userId: String!, $prefs: Json!){
                     usersUpdatePrefs (userId: $userId, prefs: $prefs) {
-                        id
+                        _id
                         name
-                        prefs
                     }
                 }';
             case self::$DELETE_USER :
@@ -384,7 +401,6 @@ trait GraphQLBase
                         status
                         registration
                         emailVerification
-                        prefs
                     }
                 }';
             case self::$CREATE_ACCOUNT :
@@ -396,7 +412,6 @@ trait GraphQLBase
                         status
                         email
                         emailVerification
-                        prefs
                     }
                 }';
             case self::$UPDATE_ACCOUNT_NAME :
@@ -408,7 +423,6 @@ trait GraphQLBase
                         status
                         email
                         emailVerification
-                        prefs
                     }
                 }';
             case self::$UPDATE_ACCOUNT_EMAIL :
@@ -420,7 +434,6 @@ trait GraphQLBase
                         status
                         email
                         emailVerification
-                        prefs
                     }
                 }';
             case self::$UPDATE_ACCOUNT_PASSWORD :
@@ -432,7 +445,6 @@ trait GraphQLBase
                         status
                         email
                         emailVerification
-                        prefs
                     }
                 }';
             case self::$UPDATE_ACCOUNT_PREFS :
@@ -444,7 +456,6 @@ trait GraphQLBase
                         status
                         email
                         emailVerification
-                        prefs
                     }
                 }';
             case self::$GET_ACCOUNT_SESSION:
@@ -953,7 +964,7 @@ trait GraphQLBase
      * @depends testCreateFloatAttribute
      * @throws \Exception
      */
-    public function testCreateDocumentGQLHooks(array $data)
+    public function testCreateDocumentGQL(array $data)
     {
         $projectId = $this->getProject()['$id'];
         $key = '';
