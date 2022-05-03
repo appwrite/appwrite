@@ -265,6 +265,9 @@ abstract class Worker
         switch ($device) {
             case Storage::DEVICE_S3:
             case Storage::DEVICE_DO_SPACES:
+            case Storage::DEVICE_BACKBLAZE:
+            case Storage::DEVICE_LINODE:
+            case Storage::DEVICE_WASABI:
                 $accessKey = App::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
                 $secretKey = App::getEnv('_APP_STORAGE_S3_SECRET', '');
                 $region = App::getEnv('_APP_STORAGE_S3_REGION', '');

@@ -2632,12 +2632,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "ab044525a39f054706c61721e20988c49de26269"
+                "reference": "16a82a4eb4e1b14a672c91fa998912b9417708c3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/ab044525a39f054706c61721e20988c49de26269",
-                "reference": "ab044525a39f054706c61721e20988c49de26269",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/16a82a4eb4e1b14a672c91fa998912b9417708c3",
+                "reference": "16a82a4eb4e1b14a672c91fa998912b9417708c3",
                 "shasum": ""
             },
             "require": {
@@ -2676,7 +2676,7 @@
                 "issues": "https://github.com/utopia-php/storage/issues",
                 "source": "https://github.com/utopia-php/storage/tree/refactor-28-genericS3"
             },
-            "time": "2022-05-03T12:47:20+00:00"
+            "time": "2022-05-03T13:25:59+00:00"
         },
         {
             "name": "utopia-php/swoole",
