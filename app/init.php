@@ -806,7 +806,6 @@ App::setResource('deviceLocal', function() {
 });
 
 App::setResource('deviceFiles', function($project) {
-    var_dump(getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId()));
     return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
@@ -832,7 +831,6 @@ function getDevice($root): Device {
             $acl = 'private';
             /**@var $adapter Utopia\Storage\Device**/
             $adapter = 'Utopia\\Storage\\Device\\' . $device;
-            var_dump($adapter);
             return new $adapter($root, $accessKey, $secretKey, $bucket, $region, $acl);
         default:
             return new Local($root);
