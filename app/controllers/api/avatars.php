@@ -1,5 +1,7 @@
 <?php
 
+use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\URL;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
@@ -8,17 +10,15 @@ use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Appwrite\Extend\Exception;
+use Utopia\Database\Document;
 use Utopia\Image\Image;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
-use Appwrite\Network\Validator\URL;
-use Utopia\Validator\WhiteList;
+use Utopia\Validator\WhiteList; 
 
-$avatarCallback = function ($type, $code, $width, $height, $quality, $response) {
-    /** @var Appwrite\Utopia\Response $response */
+$avatarCallback = function ($type, $code, $width, $height, $quality, Response $response) {
 
     $code = \strtolower($code);
     $type = \strtolower($type);
@@ -148,8 +148,7 @@ App::get('/v1/avatars/image')
     ->param('width', 400, new Range(0, 2000), 'Resize preview image width, Pass an integer between 0 to 2000.', true)
     ->param('height', 400, new Range(0, 2000), 'Resize preview image height, Pass an integer between 0 to 2000.', true)
     ->inject('response')
-    ->action(function ($url, $width, $height, $response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function ($url, $width, $height, Response $response) {
 
         $quality = 80;
         $output = 'png';
@@ -215,8 +214,7 @@ App::get('/v1/avatars/favicon')
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE)
     ->param('url', '', new URL(['http', 'https']), 'Website URL which you want to fetch the favicon from.')
     ->inject('response')
-    ->action(function ($url, $response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function ($url, Response $response) {
 
         $width = 56;
         $height = 56;
@@ -371,8 +369,7 @@ App::get('/v1/avatars/qr')
     ->param('margin', 1, new Range(0, 10), 'Margin from edge. Pass an integer between 0 to 10. Defaults to 1.', true)
     ->param('download', false, new Boolean(true), 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
     ->inject('response')
-    ->action(function ($text, $size, $margin, $download, $response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function ($text, $size, $margin, $download, Response $response) {
 
         $download = ($download === '1' || $download === 'true' || $download === 1 || $download === true);
         $options = new QROptions([
@@ -416,9 +413,7 @@ App::get('/v1/avatars/initials')
     ->param('background', '', new HexColor(), 'Changes background color. By default a random color will be picked and stay will persistent to the given name.', true)
     ->inject('response')
     ->inject('user')
-    ->action(function ($name, $width, $height, $color, $background, $response, $user) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
+    ->action(function ($name, $width, $height, $color, $background, Response $response, Document $user) {
 
         $themes = [
             ['color' => '#27005e', 'background' => '#e1d2f6'], // VIOLET
