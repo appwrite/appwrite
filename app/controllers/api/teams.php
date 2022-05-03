@@ -45,7 +45,7 @@ App::post('/v1/teams')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function ($teamId, $name, $roles, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->action(function (string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Event $events) {
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
@@ -111,7 +111,7 @@ App::get('/v1/teams')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, Response $response, Database $dbForProject) {
+    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
 
         if (!empty($cursor)) {
             $cursorTeam = $dbForProject->getDocument('teams', $cursor);
@@ -150,7 +150,7 @@ App::get('/v1/teams/:teamId')
     ->param('teamId', '', new UID(), 'Team ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($teamId, Response $response, Database $dbForProject) {
+    ->action(function (string $teamId, Response $response, Database $dbForProject) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -177,7 +177,7 @@ App::put('/v1/teams/:teamId')
     ->param('name', null, new Text(128), 'New team name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($teamId, $name, Response $response, Database $dbForProject) {
+    ->action(function (string $teamId, string $name, Response $response, Database $dbForProject) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -209,7 +209,7 @@ App::delete('/v1/teams/:teamId')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('deletes')
-    ->action(function ($teamId, Response $response, Database $dbForProject, Event $events, Event $deletes) {
+    ->action(function (string $teamId, Response $response, Database $dbForProject, Event $events, Event $deletes) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -270,7 +270,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('locale')
     ->inject('audits')
     ->inject('mails')
-    ->action(function ($teamId, $email, $roles, $url, $name, Response $response, Document $project, Document $user, Database $dbForProject, $locale, Event $audits, Event $mails) {
+    ->action(function (string $teamId, string $email, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, $locale, Event $audits, Event $mails) {
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
@@ -428,7 +428,7 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($teamId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, Response $response, Database $dbForProject) {
+    ->action(function (string $teamId, string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -500,7 +500,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($teamId, $membershipId, Response $response, Database $dbForProject) {
+    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -544,7 +544,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('audits')
-    ->action(function ($teamId, $membershipId, $roles, Request $request, Response $response, Document $user, Database $dbForProject, Event $audits) {
+    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, Event $audits) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
         if ($team->isEmpty()) {
@@ -621,7 +621,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('dbForProject')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($teamId, $membershipId, $userId, $secret, Request $request, Response $response, Document $user, Database $dbForProject, Reader $geodb, Event $audits) {
+    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Reader $geodb, Event $audits) {
 
         $protocol = $request->getProtocol();
 
@@ -745,7 +745,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($teamId, $membershipId, Response $response, Database $dbForProject, Event $audits, Event $events) {
+    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject, Event $audits, Event $events) {
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
