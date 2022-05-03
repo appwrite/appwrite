@@ -542,15 +542,56 @@ class Builder
         );
     }
 
-    private static function mutateCreate(string $collectionId, Database $dbForProject): callable
+    private static function mutateCreate(
+        App      $utopia,
+        Request  $request,
+        Response $response,
+        Database $dbForProject,
+        string   $collectionId
+    ): callable
     {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
-            function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
+            function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $collectionId, $type, $args) {
+                $swooleRq = $request->getSwoole();
+
+                $id = $args['id'] ?? 'unique()';
+                unset($args['id']);
+                $read = $args['read'];
+                unset($args['read']);
+                $write = $args['write'];
+                unset($args['write']);
+
+                $swooleRq->post = [
+                    'collectionId' => $collectionId,
+                    'documentId' => $id,
+                    'read' => $read,
+                    'write' => $write,
+                    'data' => $args,
+                ];
+                // Drop json content type so post args are used directly
+                if (\array_key_exists('content-type', $swooleRq->header)
+                    && $swooleRq->header['content-type'] === 'application/json') {
+                    unset($swooleRq->header['content-type']);
+                }
+
+                $url = '/v1/database/collections/:collectionId/documents';
+                $route = $utopia->getRoutes()['POST'][$url];
+
+                $request = new Request($swooleRq);
+                $response = new Response($response->getSwoole());
+
+                $utopia->setResource('request', fn() => $request);
+                $utopia->setResource('response', fn() => $response);
+
+                $response->setContentType(Response::CONTENT_TYPE_NULL);
+
                 try {
-                    $resolve($dbForProject->createDocument($collectionId, new Document($args)));
+                    $utopia->setRoute($route)->execute($route, $request);
                 } catch (\Throwable $e) {
                     $reject($e);
                 }
+
+                $resolve($response->getPayload()['data']);
             }
         );
     }
