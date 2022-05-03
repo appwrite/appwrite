@@ -596,17 +596,15 @@ class Builder
         );
     }
 
-    private static function mutateUpdate(string $collectionId, Database $dbForProject): callable
+    private static function mutateUpdate(
+        App      $utopia,
+        Request  $request,
+        Response $response,
+        Database $dbForProject,
+        string   $collectionId
+    ): callable
     {
-        return fn($type, $args, $context, $info) => new CoroutinePromise(
-            function (callable $resolve, callable $reject) use ($collectionId, $type, $args, $dbForProject) {
-                try {
-                    $resolve($dbForProject->updateDocument($collectionId, $args['id'], new Document($args)));
-                } catch (\Throwable $e) {
-                    $reject($e);
-                }
-            }
-        );
+        return self::mutateCreate($utopia, $request, $response, $dbForProject, $collectionId);
     }
 
     private static function mutateDelete(string $collectionId, Database $dbForProject): callable
