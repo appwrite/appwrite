@@ -29,7 +29,7 @@ use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
+use Utopia\Validator\WhiteList; 
 
 include_once __DIR__ . '/../shared/api.php';
 
