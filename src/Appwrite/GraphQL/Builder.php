@@ -554,9 +554,12 @@ class Builder
             function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $collectionId, $type, $args) {
                 $swooleRq = $request->getSwoole();
 
-                $id = $args['id'] ?? 'unique()'; unset($args['id']);
-                $read = $args['read'];           unset($args['read']);
-                $write = $args['write'];         unset($args['write']);
+                $id = $args['id'] ?? 'unique()';
+                unset($args['id']);
+                $read = $args['read'];
+                unset($args['read']);
+                $write = $args['write'];
+                unset($args['write']);
 
                 $swooleRq->post = [
                     'collectionId' => $collectionId,
@@ -565,30 +568,38 @@ class Builder
                     'write' => $write,
                     'data' => $args,
                 ];
+                $swooleRq->server['request_method'] = 'POST';
+                $swooleRq->server['request_uri'] = '/v1/database/collections/:collectionId/documents';
+                $swooleRq->server['path_info'] = '/v1/database/collections/:collectionId/documents';
+
                 // Drop json content type so post args are used directly
                 if (\array_key_exists('content-type', $swooleRq->header)
                     && $swooleRq->header['content-type'] === 'application/json') {
                     unset($swooleRq->header['content-type']);
                 }
 
-                $url = '/v1/database/collections/:collectionId/documents';
-                $route = $utopia->getRoutes()['POST'][$url];
-
                 $request = new Request($swooleRq);
                 $response = new Response($response->getSwoole());
+                $response->setContentType(Response::CONTENT_TYPE_NULL);
 
                 $utopia->setResource('request', fn() => $request);
                 $utopia->setResource('response', fn() => $response);
 
-                $response->setContentType(Response::CONTENT_TYPE_NULL);
-
                 try {
-                    $utopia->setRoute($route)->execute($route, $request);
+                    $utopia->setRoute(null);
+                    $route = $utopia->match($request);
+                    $utopia->execute($route, $request);
                 } catch (\Throwable $e) {
                     $reject($e);
                 }
 
-                $resolve($response->getPayload()['data']);
+                $result = $response->getPayload();
+
+                if ($result['code'] < 200 || $result['code'] >= 300) {
+                    $reject(new \Exception($result['message']));
+                }
+
+                $resolve($result);
             }
         );
     }
