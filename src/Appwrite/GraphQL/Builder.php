@@ -343,9 +343,7 @@ class Builder
                     $escapedKey = str_replace('$', '_', $key);
                     $collections[$collectionId][$escapedKey] = [
                         'type' => self::getAttributeArgType($type, $array, $required),
-                        'resolve' => fn($object, $args, $context, $info) => $object->then(function ($obj) use ($key) {
-                            return $obj['result'][$key];
-                        }),
+                        'resolve' => fn($object, $args, $context, $info) => $object[$key],
                     ];
                 }
 
