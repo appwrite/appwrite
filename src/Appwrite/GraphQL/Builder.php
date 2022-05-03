@@ -322,6 +322,7 @@ class Builder
         $mutationFields = [];
         $limit = 1000;
         $offset = 0;
+
         $wg = new WaitGroup();
 
         while (!empty($attrs = Authorization::skip(fn() => $dbForProject->find(
@@ -354,13 +355,13 @@ class Builder
                     ]);
                     $idArgs = [
                         'id' => [
-                            'type' => Type::string()
+                            'type' => Type::string(),
                         ]
                     ];
                     $listArgs = [
                         'limit' => [
                             'type' => Type::int(),
-                            'defaultValue' => $limit,
+                            'defaultValue' => 25,
                         ],
                         'offset' => [
                             'type' => Type::int(),
@@ -368,7 +369,11 @@ class Builder
                         ],
                         'cursor' => [
                             'type' => Type::string(),
-                            'defaultValue' => null,
+                            'defaultValue' => '',
+                        ],
+                        'cursorDirection' => [
+                            'type' => Type::string(),
+                            'defaultValue' => Database::CURSOR_AFTER,
                         ],
                         'orderAttributes' => [
                             'type' => Type::listOf(Type::string()),
