@@ -387,14 +387,14 @@ class Builder
 
                     $attributes['read'] = [
                         'type' => Type::listOf(Type::string()),
-                        'defaultValue' => ["user:$userId"],
+                        'defaultValue' => ["role:member"],
                         'resolve' => function ($object, $args, $context, $info) use ($collectionId) {
                             return $object->getAttribute('$read');
                         }
                     ];
                     $attributes['write'] = [
                         'type' => Type::listOf(Type::string()),
-                        'defaultValue' => ["user:$userId"],
+                        'defaultValue' => ["role:member"],
                         'resolve' => function ($object, $args, $context, $info) use ($collectionId) {
                             return $object->getAttribute('$write');
                         }
@@ -408,22 +408,22 @@ class Builder
                     $queryFields[$collectionId . 'List'] = [
                         'type' => $objectType,
                         'args' => $listArgs,
-                        'resolve' => self::queryList($collectionId, $dbForProject)
+                        'resolve' => self::queryList($utopia, $request, $response, $dbForProject, $collectionId)
                     ];
                     $mutationFields[$collectionId . 'Create'] = [
                         'type' => $objectType,
                         'args' => $attributes,
-                        'resolve' => self::mutateCreate($collectionId, $dbForProject)
+                        'resolve' => self::mutateCreate($utopia, $request, $response, $dbForProject, $collectionId)
                     ];
                     $mutationFields[$collectionId . 'Update'] = [
                         'type' => $objectType,
                         'args' => $attributes,
-                        'resolve' => self::mutateUpdate($collectionId, $dbForProject)
+                        'resolve' => self::mutateUpdate($utopia, $request, $response, $dbForProject, $collectionId)
                     ];
                     $mutationFields[$collectionId . 'Delete'] = [
                         'type' => $objectType,
                         'args' => $idArgs,
-                        'resolve' => self::mutateDelete($collectionId, $dbForProject)
+                        'resolve' => self::mutateDelete($utopia, $request, $response, $dbForProject, $collectionId)
                     ];
                 }
                 $wg->done();
@@ -554,12 +554,9 @@ class Builder
             function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $collectionId, $type, $args) {
                 $swooleRq = $request->getSwoole();
 
-                $id = $args['id'] ?? 'unique()';
-                unset($args['id']);
-                $read = $args['read'];
-                unset($args['read']);
-                $write = $args['write'];
-                unset($args['write']);
+                $id = $args['id'] ?? 'unique()'; unset($args['id']);
+                $read = $args['read'];           unset($args['read']);
+                $write = $args['write'];         unset($args['write']);
 
                 $swooleRq->post = [
                     'collectionId' => $collectionId,
