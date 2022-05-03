@@ -98,15 +98,14 @@ class WebhooksCustomClientTest extends Scope
         $sessionId = $accountSession['body']['$id'];
         $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
-        $account = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
+        $account = $this->client->call(Client::METHOD_PATCH, '/account/status', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]));
 
-        $this->assertEquals($account['headers']['status-code'], 204);
-        $this->assertEmpty($account['body']);
+        $this->assertEquals($account['headers']['status-code'], 200);
 
         $webhook = $this->getLastRequest();
 

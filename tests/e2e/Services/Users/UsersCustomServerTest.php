@@ -15,9 +15,11 @@ class UsersCustomServerTest extends Scope
 
     public function testDeprecatedUsers():array
     {
-        /**
-         * Test for FAILURE (don't allow recreating account with same custom ID)
-         */
+        // Test deprecated because we no longer reserve custom IDs
+        $this->assertEquals(true, true);
+        return [];
+
+        /*
 
         // Create user with custom ID 'meldiron'
         $response = $this->client->call(Client::METHOD_POST, '/users', array_merge([
@@ -55,6 +57,7 @@ class UsersCustomServerTest extends Scope
         $this->assertEquals('Account already exists', $response1['body']['message']);
 
         return [];
+        */
     }
 
 }
