@@ -461,14 +461,27 @@ class Builder
                         && $swooleRq->header['content-type'] === 'application/json') {
                         unset($swooleRq->header['content-type']);
                     }
-                    $request = new Request($swooleRq);
+
                     $url = '/v1/database/collections/:collectionId/documents/:documentId';
                     $route = $utopia->getRoutes()['GET'][$url];
-                    $utopia
-                        ->setRoute($route)
-                        ->execute($route, $request);
 
-                    $resolve($response->getPayload());
+                    $request = new Request($swooleRq);
+                    $response = new Response($response->getSwoole());
+
+                    $utopia->setResource('request', fn() => $request);
+                    $utopia->setResource('response', fn() => $response);
+
+                    $response->setContentType(Response::CONTENT_TYPE_NULL);
+
+                    try {
+                        $utopia->setRoute($route)->execute($route, $request);
+                    } catch (\Throwable $e) {
+                        $reject($e);
+                    }
+
+                    $result = $response->getPayload();
+
+                    $resolve($result['data']);
                 } catch (\Throwable $e) {
                     $reject($e);
                 }
