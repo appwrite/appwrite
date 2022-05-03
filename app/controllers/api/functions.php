@@ -2,7 +2,6 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\User;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Task\Validator\Cron;
@@ -55,7 +54,7 @@ App::post('/v1/functions')
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($functionId, $name, $execute, $runtime, $vars, $events, $schedule, $timeout, Response $response, Database $dbForProject) {
+    ->action(function (string $functionId, string $name, array $execute, array $runtime, array $vars, array $events, string $schedule, int $timeout, Response $response, Database $dbForProject) {
 
         $functionId = ($functionId == 'unique()') ? $dbForProject->getId() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
@@ -99,7 +98,7 @@ App::get('/v1/functions')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, Response $response, Database $dbForProject) {
+    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
 
         if (!empty($cursor)) {
             $cursorFunction = $dbForProject->getDocument('functions', $cursor);
@@ -162,7 +161,7 @@ App::get('/v1/functions/:functionId')
     ->param('functionId', '', new UID(), 'Function ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($functionId, Response $response, Database $dbForProject) {
+    ->action(function (string $functionId, Response $response, Database $dbForProject) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -187,7 +186,7 @@ App::get('/v1/functions/:functionId/usage')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($functionId, $range, Response $response, Database $dbForProject) {
+    ->action(function (string $functionId, string $range, Response $response, Database $dbForProject) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -294,7 +293,7 @@ App::put('/v1/functions/:functionId')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, Response $response, Database $dbForProject, Document $project, User $user) {
+    ->action(function (string $functionId, string $name, array $execute, array $vars, array $events, string $schedule, int $timeout, Response $response, Database $dbForProject, Document $project, $user) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -349,7 +348,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->action(function ($functionId, $deploymentId, Response $response, Database $dbForProject, Document $project) {
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Document $project) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -407,7 +406,7 @@ App::delete('/v1/functions/:functionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('deletes')
-    ->action(function ($functionId, Response $response, Database $dbForProject, Event $deletes) {
+    ->action(function (string $functionId, Response $response, Database $dbForProject, Event $deletes) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -453,7 +452,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function ($functionId, $entrypoint, $file, $activate, Request $request, Response $response, Database $dbForProject, Event $usage, User $user, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+    ->action(function (string $functionId, string $entrypoint, array $file, bool $activate, Request $request, Response $response, Database $dbForProject, Event $usage, $user, Document $project, Device $deviceFunctions, Device $deviceLocal) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -630,7 +629,7 @@ App::get('/v1/functions/:functionId/deployments')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($functionId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, Response $response, Database $dbForProject) {
+    ->action(function (string $functionId, string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -687,7 +686,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($functionId, $deploymentId, Response $response, Database $dbForProject) {
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -726,7 +725,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('usage')
     ->inject('deletes')
     ->inject('deviceFunctions')
-    ->action(function ($functionId, $deploymentId, Response $response, Database $dbForProject, Event $usage, Event $deletes, Device $deviceFunctions) {
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $usage, Event $deletes, Device $deviceFunctions) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -787,7 +786,7 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('user')
-    ->action(function ($functionId, $data, $async, Response $response, Document $project, Database $dbForProject, Document $user) {
+    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user) {
 
         $function = Authorization::skip(fn() => $dbForProject->getDocument('functions', $functionId));
 
@@ -953,7 +952,7 @@ App::get('/v1/functions/:functionId/executions')
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($functionId, $limit, $offset, $search, $cursor, $cursorDirection, Response $response, Database $dbForProject) {
+    ->action(function (string $functionId, int $limit, int $offset, string $search, string $cursor, string $cursorDirection, Response $response, Database $dbForProject) {
 
         $function = Authorization::skip(fn() => $dbForProject->getDocument('functions', $functionId));
 
@@ -1001,7 +1000,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->param('executionId', '', new UID(), 'Execution ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($functionId, $executionId, Response $response, Database $dbForProject) {
+    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject) {
 
         $function = Authorization::skip(fn() => $dbForProject->getDocument('functions', $functionId));
 
@@ -1039,7 +1038,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->action(function ($functionId, $deploymentId, $buildId, Response $response, Database $dbForProject, Document $project) {
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Response $response, Database $dbForProject, Document $project) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
