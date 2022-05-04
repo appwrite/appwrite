@@ -329,15 +329,9 @@ class Builder
                 $methodName = $namespace . \ucfirst($route->getLabel('sdk.method', ''));
                 $responseModelNames = $route->getLabel('sdk.response.model', "none");
 
-                if ($responseModelNames === "none") {
-                    continue;
-                }
-
                 $responseModels = \is_array($responseModelNames)
                     ? \array_map(static fn($m) => $response->getModel($m), $responseModelNames)
                     : [$response->getModel($responseModelNames)];
-
-
 
                 foreach ($responseModels as $responseModel) {
                     $type = self::getModelTypeMapping($responseModel, $response);

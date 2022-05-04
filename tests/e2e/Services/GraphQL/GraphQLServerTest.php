@@ -159,11 +159,10 @@ class GraphQLServerTest extends Scope
 
         $errorMessage = 'User (role: guest) missing scope (users.write)';
         $this->assertEquals($errorMessage, $user['body']['errors'][0]['message']);
-        $this->assertIsArray($user['body']['data']);
-        $this->assertNull($user['body']['data']['users_deleteUser']);
+        $this->assertArrayNotHasKey('data', $user['body']);
 
         /**
-         * Delete the user with the reqiured scopes
+         * Delete the user with the required scopes
          */
         $key = $this->getNewKey(['users.write']);
         $user = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
