@@ -626,68 +626,32 @@ class Builder
     ): callable
     {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
-            function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $collectionId, $type, $args) {
-                $swooleRq = $request->getSwoole();
+            function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $collectionId, $method, $type, $args) {
+                $swoole = $request->getSwoole();
 
                 $id = $args['id'] ?? 'unique()';
-                unset($args['id']);
                 $read = $args['read'];
-                unset($args['read']);
                 $write = $args['write'];
+
+                unset($args['id']);
+                unset($args['read']);
                 unset($args['write']);
 
-                $swooleRq->post = [
-                    'collectionId' => $collectionId,
+                // Order must be the same as the route params
+                $swoole->post = [
                     'documentId' => $id,
+                    'collectionId' => $collectionId,
+                    'data' => $args,
                     'read' => $read,
                     'write' => $write,
-                    'data' => $args,
                 ];
-                $swooleRq->server['request_method'] = 'POST';
-                $swooleRq->server['request_uri'] = '/v1/database/collections/:collectionId/documents';
-                $swooleRq->server['path_info'] = '/v1/database/collections/:collectionId/documents';
+                $swoole->server['request_method'] = $method;
+                $swoole->server['request_uri'] = "/v1/database/collections/$collectionId/documents";
+                $swoole->server['path_info'] = "/v1/database/collections/$collectionId/documents";
 
-                // Drop json content type so post args are used directly
-                if (\array_key_exists('content-type', $swooleRq->header)
-                    && $swooleRq->header['content-type'] === 'application/json') {
-                    unset($swooleRq->header['content-type']);
-                }
-
-                $request = new Request($swooleRq);
-                $response = new Response($response->getSwoole());
-                $response->setContentType(Response::CONTENT_TYPE_NULL);
-
-                $utopia->setResource('request', fn() => $request);
-                $utopia->setResource('response', fn() => $response);
-
-                try {
-                    $utopia->setRoute(null);
-                    $route = $utopia->match($request);
-                    $utopia->execute($route, $request);
-                } catch (\Throwable $e) {
-                    $reject($e);
-                }
-
-                $result = $response->getPayload();
-
-                if ($result['code'] < 200 || $result['code'] >= 300) {
-                    $reject(new \Exception($result['message']));
-                }
-
-                $resolve($result);
+                self::resolve($utopia, $swoole, $response, $resolve, $reject);
             }
         );
-    }
-
-    private static function mutateUpdate(
-        App      $utopia,
-        Request  $request,
-        Response $response,
-        Database $dbForProject,
-        string   $collectionId
-    ): callable
-    {
-        return self::mutateCreate($utopia, $request, $response, $dbForProject, $collectionId);
     }
 
     private static function mutateDelete(
