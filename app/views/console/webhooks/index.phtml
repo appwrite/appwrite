@@ -1,6 +1,7 @@
 <?php
 
 $events = $this->getParam('events', []);
+$patterns = [];
 
 foreach ($events as $name => $event) {
     foreach ($event as $key => $value) {
@@ -83,22 +84,21 @@ foreach ($events as $name => $event) {
                         <section x-data="events" class="margin-bottom-small" data-ls-attrs="x-init=events={{webhook.events}}">
                             <label>Events</label>
                             <template x-for="(event, index) in events">
-                                <div class="row responsive thin margin-bottom-tiny">
+                                <div class="row events responsive thin margin-bottom-small">
                                     <div class="col span-12 margin-bottom-small">
-                                        <span x-text="event"></span>
-                                        <span class="pull-end" style="cursor: pointer;" @click="removeEvent(index)">
+                                        <span class="text" x-text="event"></span>
+                                        <span class="action" @click="removeEvent(index)">
                                             <i class="icon-trash"></i>
                                         </span>
                                     </div>
                                     <input name="events" data-cast-to="array" type="hidden" :value="event"></input>
                                 </div>
                             </template>
-                            <label>Add event</label>
                             <select x-model="selected" @change="setEvent()">
-                                <option value="" selected>---</option>
+                                <option value="" selected>Add event</option>
                                 <?php foreach ($patterns as $event): ?>
                                     <option value="<?php echo $event; ?>"><?php echo $event; ?></option>
-                                <?php endforeach;?>
+                                <?php endforeach; ?>
                             </select>
                             <div x-show="hasResource">
                                 <label x-text="'Select ' + resourceName + ' (optional)'"></label>
@@ -229,10 +229,10 @@ foreach ($events as $name => $event) {
                 <section x-data="events" class="margin-bottom-small">
                     <label>Events</label>
                     <template x-for="(event, index) in events">
-                        <div class="row responsive thin margin-bottom-tiny">
+                        <div class="row events responsive thin margin-bottom-tiny">
                             <div class="col span-12 margin-bottom-small">
-                                <span x-text="event"></span>
-                                <span class="pull-end" style="cursor: pointer;" @click="removeEvent(index)">
+                                <span class="text" x-text="event"></span>
+                                <span class="action" @click="removeEvent(index)">
                                     <i class="icon-trash"></i>
                                 </span>
                             </div>

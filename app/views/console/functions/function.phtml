@@ -1,9 +1,29 @@
 <?php
 $fileLimit = $this->getParam('fileLimit', 0);
 $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
-$events = array_keys($this->getParam('events', []));
+$events = $this->getParam('events', []);
 $timeout = $this->getParam('timeout', 900);
 $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
+$patterns = [];
+
+foreach ($events as $name => $event) {
+    foreach ($event as $key => $value) {
+        if (!\str_starts_with($key, '$')) {
+            if (!($value['$resource'] ?? false)) {
+                $patterns[] = "{$name}.{$key}";
+            } else {
+                foreach ($value as $key2 => $value2) {
+                    if (!\str_starts_with($key2, '$')) {
+                        if (!($value2['$resource'] ?? false)) {
+                            $patterns[] = "{$key}.{$key2}";
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 ?>
 <div
     data-service="functions.get"
@@ -507,22 +527,45 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                     <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Max value is <?php echo $this->escape(number_format($timeout)); ?> seconds (<?php echo $this->escape((int) ($timeout / 60)); ?> minutes)</div>
                                 </section>
 
-                                <section class="margin-bottom" data-forms-select-all>
-                                    <label for="events" class="margin-bottom">Events <span class="tooltip small" data-tooltip="Choose which events should trigger this function."><i class="icon-info-circled"></i></span></label>
-                                    <div class="row responsive thin margin-top-small">
-                                        <?php foreach ($events as $i => $event): ?>
-                                            <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $event; ?>">
-                                                <input type="checkbox" name="events" data-ls-bind="{{project-function.events}}" id="<?php echo $event; ?>" value="<?php echo $event; ?>" data-by-key="true" />
-                                                &nbsp;
-                                                <label class="inline" for="<?php echo $event; ?>"><?php echo $event; ?></label>
+                                <section x-data="events" class="margin-bottom-small" data-ls-attrs="x-init=events={{project-function.events}}">
+                                    <label>Events</label>
+                                    <template x-for="(event, index) in events">
+                                        <div class="row events responsive thin margin-bottom-small">
+                                            <div class="col span-12 margin-bottom-small">
+                                                <span class="text" x-text="event"></span>
+                                                <span class="action" @click="removeEvent(index)">
+                                                    <i class="icon-trash"></i>
+                                                </span>
                                             </div>
-                                            <?php if (($i + 1) % 2 === 0): ?>
-                                            </div>
-                                            <div class="row responsive thin">
-                                            <?php endif;?>
-
-                                        <?php endforeach;?>
+                                            <input name="events" data-cast-to="array" type="hidden" :value="event"></input>
+                                        </div>
+                                    </template>
+                                    <select x-model="selected" @change="setEvent()">
+                                        <option value="" selected>Add event</option>
+                                        <?php foreach ($patterns as $event): ?>
+                                            <option value="<?php echo $event; ?>"><?php echo $event; ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <div x-show="hasResource">
+                                        <label x-text="'Select ' + resourceName + ' (optional)'"></label>
+                                        <input type="text" :placeholder="resourceName" x-model="resource">
+                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard access</div>
                                     </div>
+                                    <div x-show="hasSubResource">
+                                        <label x-text="'Select ' + subResourceName + ' (optional)'"></label>
+                                        <input type="text" :placeholder="subResourceName" x-model="subResource">
+                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard access</div>
+                                    </div>
+                                    <div x-show="hasAttribute">
+                                        <label for="subResource">Add Attribute (optional)</label>
+                                        <select x-model="attribute">
+                                            <option value="*">Select attribute</option>
+                                            <template x-for="attr in attributes">
+                                                <option :value="attr" x-text="attr"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                    <button x-show="selected" type="button" @click="addEvent()">Add Event</button>
                                 </section>
 
                                 <label for="schedule">Schedule (CRON Syntax) <span class="tooltip small" data-tooltip="Set a CRON schedule to trigger this function."><i class="icon-info-circled"></i></span></label>

@@ -15,10 +15,17 @@
             attribute: null,
             hasAttribute: false,
             attributes: [],
+            reset() {
+                this.hasResource = this.hasSubResource = this.hasAttribute = false;
+                this.type = this.subType = this.subResource = this.resource = this.attribute = this.selected = this.action = null;
+            },
             setEvent() {
                 this.hasResource = this.hasSubResource = this.hasAttribute = this.action = false;
 
-                if (!event) return;
+                if (!this.selected) {
+                    this.reset();
+                    return;
+                }
 
                 let [type, action] = this.selected.split('.');
 
@@ -166,9 +173,7 @@
 
                 this.events.push(event);
 
-                this.status = [];
-                this.hasResource = this.hasSubResource = this.hasAttribute = false;
-                this.type = this.subType = this.subResource = this.resource = this.attribute = this.selected = this.action = null;
+                this.reset();
             },
             removeEvent(index) {
                 this.events.splice(index, 1);
