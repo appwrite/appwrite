@@ -700,36 +700,16 @@ class Builder
     {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $collectionId, $type, $args) {
-                $swooleRq = $request->getSwoole();
-
-                $swooleRq->post = [
+                $swoole = $request->getSwoole();
+                $swoole->post = [
                     'collectionId' => $collectionId,
                     'documentId' => $args['id'],
                 ];
-                // Drop json content type so post args are used directly
-                if (\array_key_exists('content-type', $swooleRq->header)
-                    && $swooleRq->header['content-type'] === 'application/json') {
-                    unset($swooleRq->header['content-type']);
-                }
+                $swoole->server['request_method'] = 'DELETE';
+                $swoole->server['request_uri'] = "/v1/database/collections/$collectionId/documents/{$args['id']}";
+                $swoole->server['path_info'] = "/v1/database/collections/$collectionId/documents/{$args['id']}";
 
-                $url = '/v1/database/collections/:collectionId/documents/:documentId';
-                $route = $utopia->getRoutes()['DELETE'][$url];
-
-                $request = new Request($swooleRq);
-                $response = new Response($response->getSwoole());
-
-                $utopia->setResource('request', fn() => $request);
-                $utopia->setResource('response', fn() => $response);
-
-                $response->setContentType(Response::CONTENT_TYPE_NULL);
-
-                try {
-                    $utopia->setRoute($route)->execute($route, $request);
-                } catch (\Throwable $e) {
-                    $reject($e);
-                }
-
-                $resolve($response->getPayload());
+                self::resolve($utopia, $swoole, $response, $resolve, $reject);
             }
         );
     }
