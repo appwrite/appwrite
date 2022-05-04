@@ -90,10 +90,6 @@ function graphqlRequest(
         throw new Exception('No query supplied.', 400, Exception::GRAPHQL_NO_QUERY);
     }
 
-    $debugFlags = App::isDevelopment()
-        ? DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE | DebugFlag::RETHROW_INTERNAL_EXCEPTIONS
-        : DebugFlag::NONE;
-
     $maxComplexity = App::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 200);
     $maxDepth = App::getEnv('_APP_GRAPHQL_MAX_QUERY_DEPTH', 3);
 
@@ -115,8 +111,8 @@ function graphqlRequest(
     $wg = new WaitGroup();
     $wg->add();
     $promise->then(
-        function ($result) use ($response, $debugFlags, &$output, $wg) {
-            $output = $result->toArray($debugFlags);
+        function ($result) use ($response, &$output, $wg) {
+            $output = $result->toArray();
             $wg->done();
         },
         function ($error) use ($response, &$output, $wg) {
