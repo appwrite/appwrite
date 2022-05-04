@@ -437,6 +437,7 @@ class Builder
         $mutationFields = [];
         $limit = 1000;
         $offset = 0;
+        $count = 0;
 
         $wg = new WaitGroup();
 
@@ -446,9 +447,13 @@ class Builder
             offset: $offset
         )))) {
             $wg->add();
+            $count += count($attrs);
             go(function () use ($utopia, $request, $response, $dbForProject, &$collections, &$queryFields, &$mutationFields, $limit, &$offset, $attrs, $userId, $wg) {
                 foreach ($attrs as $attr) {
                     $collectionId = $attr->getAttribute('collectionId');
+
+                    if
+
                     if ($attr->getAttribute('status') !== 'available') {
                         continue;
                     }
@@ -459,7 +464,6 @@ class Builder
                     $escapedKey = str_replace('$', '_', $key);
                     $collections[$collectionId][$escapedKey] = [
                         'type' => self::getAttributeArgType($type, $array, $required),
-                        'resolve' => fn($object, $args, $context, $info) => $object[$key],
                     ];
                 }
 
@@ -476,29 +480,28 @@ class Builder
 
                     $queryFields[$collectionId . 'Get'] = [
                         'type' => $objectType,
-                        'resolve' => self::queryGet($utopia, $request, $response, $dbForProject, $collectionId)
                         'args' => self::$defaultDocumentArgs['id'],
+                        'resolve' => self::resolveDocumentGet($utopia, $request, $response, $dbForProject, $collectionId)
                     ];
                     $queryFields[$collectionId . 'List'] = [
                         'type' => $objectType,
-                        'args' => $listArgs,
-                        'resolve' => self::queryList($utopia, $request, $response, $dbForProject, $collectionId)
                         'args' => self::$defaultDocumentArgs['list'],
+                        'resolve' => self::resolveDocumentList($utopia, $request, $response, $dbForProject, $collectionId)
                     ];
                     $mutationFields[$collectionId . 'Create'] = [
                         'type' => $objectType,
                         'args' => $attributes,
-                        'resolve' => self::mutateCreate($utopia, $request, $response, $dbForProject, $collectionId)
+                        'resolve' => self::resolveDocumentMutate($utopia, $request, $response, $dbForProject, $collectionId, 'POST')
                     ];
                     $mutationFields[$collectionId . 'Update'] = [
                         'type' => $objectType,
                         'args' => $attributes,
-                        'resolve' => self::mutateUpdate($utopia, $request, $response, $dbForProject, $collectionId)
+                        'resolve' => self::resolveDocumentMutate($utopia, $request, $response, $dbForProject, $collectionId, 'PATCH')
                     ];
                     $mutationFields[$collectionId . 'Delete'] = [
                         'type' => $objectType,
-                        'resolve' => self::mutateDelete($utopia, $request, $response, $dbForProject, $collectionId)
                         'args' => self::$defaultDocumentArgs['id'],
+                        'resolve' => self::resolveDocumentDelete($utopia, $request, $response, $dbForProject, $collectionId)
                     ];
                 }
                 $wg->done();
@@ -506,8 +509,9 @@ class Builder
             $offset += $limit;
         }
         $wg->wait();
+
         $time_elapsed_secs = (microtime(true) - $start) * 1000;
-        Console::info("[INFO] Built GraphQL Project Collection Schema in ${time_elapsed_secs}ms");
+        Console::info('[INFO] Built GraphQL Project Collection Schema (approx. ' . $count . ' attributes) in ' . $time_elapsed_secs . 'ms');
 
         return [
             'query' => $queryFields,
@@ -573,12 +577,13 @@ class Builder
         );
     }
 
-    private static function mutateCreate(
+    private static function resolveDocumentMutate(
         App      $utopia,
         Request  $request,
         Response $response,
         Database $dbForProject,
-        string   $collectionId
+        string   $collectionId,
+        string   $method,
     ): callable
     {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
@@ -610,7 +615,7 @@ class Builder
         );
     }
 
-    private static function mutateDelete(
+    private static function resolveDocumentDelete(
         App      $utopia,
         Request  $request,
         Response $response,
@@ -635,17 +640,14 @@ class Builder
     }
 
     /**
-     * This function goes through all the REST endpoints in the API and builds a
-     * GraphQL schema for all those routes whose response model is neither empty nor NONE
-     *
-     * @param App $utopia
-     * @param Request $request
+     * @param \Swoole\Http\Request $swoole
      * @param Response $response
-     * @param Registry $register
-     * @return array
-     * @throws \Exception
+     * @param App $utopia
+     * @param callable $resolve
+     * @param callable $reject
+     * @return void
+     * @throws \Utopia\Exception
      */
-    public static function buildAPISchema(App $utopia, Request $request, Response $response, Registry $register): array
     private static function resolve(
         App                  $utopia,
         \Swoole\Http\Request $swoole,
