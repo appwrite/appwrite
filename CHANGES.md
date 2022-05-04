@@ -1,5 +1,6 @@
 # Unreleased Version
 - Renamed `providers` to `authProviders` in project collection **Breaking Change**
+- Support for Backblaze adapter in Storage
 
 # Version 0.13.4
 
