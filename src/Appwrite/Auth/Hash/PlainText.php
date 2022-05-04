@@ -5,12 +5,12 @@ namespace Appwrite\Auth\Hash;
 use Appwrite\Auth\Hash;
 
 /*
- * Argon2 accepted options:
+ * PlainText accepted options:
  * none
  * 
  * Refference: None. Simple plain text stored.
 */
-class Argon2 extends Hash
+class PlainText extends Hash
 {
     /**
      * @param string $password Input password to hash

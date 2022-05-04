@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 
@@ -999,7 +1000,7 @@ $collections = [
                 'size' => 256,
                 'signed' => true,
                 'required' => false,
-                'default' => 'bcrypt',
+                'default' => Auth::DEFAULT_ALGO,
                 'array' => false,
                 'filters' => [],
             ],
@@ -1007,10 +1008,10 @@ $collections = [
                 '$id' => 'hashOptions', // Configuration of hashing algorithm
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 16384,
+                'size' => 65535,
                 'signed' => true,
                 'required' => false,
-                'default' => '{}',
+                'default' => Auth::DEFAULT_ALGO_OPTIONS,
                 'array' => false,
                 'filters' => ['json'],
             ],
