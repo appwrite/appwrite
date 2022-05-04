@@ -241,11 +241,6 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                 </p>
                                 <?php endif; ?>
                             </div>
-
-                            <hr />
-
-                            <div class="text-align-center text-size-small text-bold text-success" data-ls-if="!!({{console-project.serviceStatusFor<?php echo ucFirst($this->escape($key)); ?>}})">Enabled</div>
-                            <div class="text-align-center text-size-small text-bold text-danger" data-ls-if="(!{{console-project.serviceStatusFor<?php echo ucFirst($this->escape($key)); ?>}})">Disabled</div>
                         </div>
                     </li>
                     <?php endforeach; ?>
@@ -278,13 +273,13 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                         data-success="trigger"
                         data-success-param-trigger-events="projects.listDomains">
 
-                        <div data-ls-if="0 == {{console-domains.sum}} || undefined == {{console-domains.sum}}" class="box margin-top margin-bottom">
+                        <div data-ls-if="0 == {{console-domains.total}} || undefined == {{console-domains.total}}" class="box margin-top margin-bottom">
                             <h3 class="margin-bottom-small text-bold">No Custom Domains Added</h3>
 
                             <p class="margin-bottom-no">You haven't created any custom domains for your project yet.</p>
                         </div>
 
-                        <div class="box margin-bottom" data-ls-if="0 != {{console-domains.sum}}">
+                        <div class="box margin-bottom" data-ls-if="0 != {{console-domains.total}}">
                             <table class="vertical">
                                 <thead>
                                     <tr>
@@ -548,7 +543,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                 <div class="margin-bottom-tiny">
                                     <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red">Pending Approval</span>
                                 </div>
-                                <span class="text-size-small text-fade" data-ls-bind="{{member.email}}"></small>
+                                <span class="text-size-small text-fade" data-ls-bind="{{member.email}}"></span>
                             </li>
                         </ul>
                     </div>

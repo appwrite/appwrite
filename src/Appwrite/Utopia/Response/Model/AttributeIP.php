@@ -12,6 +12,18 @@ class AttributeIP extends Attribute
         parent::__construct();
 
         $this
+            ->addRule('key', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Attribute Key.',
+                'default' => '',
+                'example' => 'ipAddress',
+            ])
+            ->addRule('type', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Attribute type.',
+                'default' => '',
+                'example' => 'string',
+            ])
             ->addRule('format', [
                 'type' => self::TYPE_STRING,
                 'description' => 'String format.',

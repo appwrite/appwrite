@@ -125,6 +125,18 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'search' => 'cristiano.ronaldo@manchester-united.co.uk'
+        ]);
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['$id'], $data['userId']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'search' => 'cristiano.ronaldo'
         ]);
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -149,14 +161,28 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'search' => 'manchester-united.co.uk'
+            'search' => 'united.co.uk'
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
         $this->assertIsArray($response['body']['users']);
-        $this->assertIsInt($response['body']['sum']);
-        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertCount(1, $response['body']['users']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'man'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertIsArray($response['body']);
+        $this->assertIsArray($response['body']['users']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertEquals(1, $response['body']['total']);
         $this->assertCount(1, $response['body']['users']);
 
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
@@ -165,6 +191,7 @@ trait UsersBase
         ], $this->getHeaders()), [
             'search' => $data['userId']
         ]);
+
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
@@ -219,8 +246,8 @@ trait UsersBase
         $this->assertEquals($users['headers']['status-code'], 200);
         $this->assertIsArray($users['body']);
         $this->assertIsArray($users['body']['users']);
-        $this->assertIsInt($users['body']['sum']);
-        $this->assertGreaterThan(0, $users['body']['sum']);
+        $this->assertIsInt($users['body']['total']);
+        $this->assertGreaterThan(0, $users['body']['total']);
 
         return $data;
     }
@@ -443,7 +470,7 @@ trait UsersBase
 
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']['logs']);
-        $this->assertIsNumeric($logs['body']['sum']);
+        $this->assertIsNumeric($logs['body']['total']);
 
         $logs = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
             'content-type' => 'application/json',
@@ -455,7 +482,7 @@ trait UsersBase
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
-        $this->assertIsNumeric($logs['body']['sum']);
+        $this->assertIsNumeric($logs['body']['total']);
 
         $logs = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
             'content-type' => 'application/json',
@@ -466,7 +493,7 @@ trait UsersBase
 
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']['logs']);
-        $this->assertIsNumeric($logs['body']['sum']);
+        $this->assertIsNumeric($logs['body']['total']);
 
         $logs = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
             'content-type' => 'application/json',
@@ -479,7 +506,7 @@ trait UsersBase
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
-        $this->assertIsNumeric($logs['body']['sum']);
+        $this->assertIsNumeric($logs['body']['total']);
     }
 
     /**

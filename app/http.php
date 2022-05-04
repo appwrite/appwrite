@@ -13,6 +13,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Audit\Audit;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Swoole\Files;
 use Appwrite\Utopia\Request;
@@ -21,10 +22,12 @@ use Utopia\Logger\Log\User;
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
-$payloadSize = max(4000000 /* 4mb */, App::getEnv('_APP_STORAGE_LIMIT', 10000000 /* 10mb */));
+$payloadSize = 6 * (1024 * 1024); // 6MB
+$workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
 
 $http
     ->set([
+        'worker_num' => $workerNumber,
         'open_http2_protocol' => true,
         // 'document_root' => __DIR__.'/../public',
         // 'enable_static_handler' => true,
@@ -109,10 +112,12 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         }
 
         foreach ($collections as $key => $collection) {
+            if(($collection['$collection'] ?? '') !== Database::METADATA) {
+                continue;
+            }
             if(!$dbForConsole->getCollection($key)->isEmpty()) {
                 continue;
             }
-
             Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
 
             $attributes = [];
@@ -127,6 +132,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                     'signed' => $attribute['signed'],
                     'array' => $attribute['array'],
                     'filters' => $attribute['filters'],
+                    'default' => $attribute['default'] ?? null,
+                    'format' => $attribute['format'] ?? ''
                 ]);
             }
 
@@ -141,8 +148,65 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             }
 
             $dbForConsole->createCollection($key, $attributes, $indexes);
-
         }
+
+        if($dbForConsole->getDocument('buckets', 'default')->isEmpty()) {
+            Console::success('[Setup] - Creating default bucket...');
+            $dbForConsole->createDocument('buckets', new Document([
+                '$id' => 'default',
+                '$collection' => 'buckets',
+                'dateCreated' => \time(),
+                'dateUpdated' => \time(),
+                'name' => 'Default',
+                'permission' => 'file',
+                'maximumFileSize' => (int) App::getEnv('_APP_STORAGE_LIMIT', 0), // 10MB
+                'allowedFileExtensions' => [],
+                'enabled' => true,
+                'encryption' => true,
+                'antivirus' => true,
+                '$read' => ['role:all'],
+                '$write' => ['role:all'],
+                'search' => 'buckets Default',
+            ]));
+
+            $bucket = $dbForConsole->getDocument('buckets', 'default');
+    
+            Console::success('[Setup] - Creating files collection for default bucket...');
+            $files = $collections['files'] ?? [];
+            if(empty($files)) {
+                throw new Exception('Files collection is not configured.');
+            }
+    
+            $attributes = [];
+            $indexes = [];
+    
+            foreach ($files['attributes'] as $attribute) {
+                $attributes[] = new Document([
+                    '$id' => $attribute['$id'],
+                    'type' => $attribute['type'],
+                    'size' => $attribute['size'],
+                    'required' => $attribute['required'],
+                    'signed' => $attribute['signed'],
+                    'array' => $attribute['array'],
+                    'filters' => $attribute['filters'],
+                    'default' => $attribute['default'] ?? null,
+                    'format' => $attribute['format'] ?? ''
+                ]);
+            }
+    
+            foreach ($files['indexes'] as $index) {
+                $indexes[] = new Document([
+                    '$id' => $index['$id'],
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]);
+            }
+    
+            $dbForConsole->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
+        }
+
         Console::success('[Setup] - Server database init completed...');
     });
 
@@ -193,8 +257,8 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         $logger = $app->getResource("logger");
         if($logger) {
             try {
+                /** @var Utopia\Database\Document $user */
                 $user = $app->getResource('user');
-                /** @var Appwrite\Database\Document $user */
             } catch(\Throwable $_th) {
                 // All good, user is optional information for logger
             }
@@ -225,6 +289,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $log->addExtra('file', $th->getFile());
             $log->addExtra('line', $th->getLine());
             $log->addExtra('trace', $th->getTraceAsString());
+            $log->addExtra('detailedTrace', $th->getTrace());
             $log->addExtra('roles', Authorization::$roles);
 
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");

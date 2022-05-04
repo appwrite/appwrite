@@ -1,3 +1,5 @@
 <?php
 
-sleep(5);
+return function ($request, $response) {
+    sleep(5);
+};

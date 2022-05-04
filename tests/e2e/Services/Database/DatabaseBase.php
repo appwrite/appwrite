@@ -472,7 +472,7 @@ trait DatabaseBase
         ])); 
 
         $this->assertEquals(200, $attributes['headers']['status-code']);
-        $this->assertEquals(8, $attributes['body']['sum']);
+        $this->assertEquals(8, $attributes['body']['total']);
 
         $attributes = $attributes['body']['attributes'];
 
@@ -2017,7 +2017,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(3, $documents['body']['sum']);
+        $this->assertEquals(3, $documents['body']['total']);
         $this->assertCount(3, $documents['body']['documents']);
 
         /*

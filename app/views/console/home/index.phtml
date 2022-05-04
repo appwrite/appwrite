@@ -97,7 +97,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                         </div>
 
                         <div class="chart-metric">
-                            <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.requests|statsGetSum|statsTotal}}">N/A</span></div>
+                            <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.requests|statsGetTotal|statsTotal}}">N/A</span></div>
                             <div class="unit margin-start-no margin-bottom-small">Requests</div>
                         </div>
                     </div>
@@ -137,7 +137,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
             </div>
         </div>
 
-        <p class="margin-top-small"><i class="icon-info-circled"></i> Data is aggregated and updated every 15 minutes</p>
+        <p class="margin-top-small text-size-small"><i class="icon-info-circled"></i> Data is aggregated and updated every 15 minutes</p>
     </div>
     </div>
 </div>

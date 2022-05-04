@@ -41,5 +41,6 @@ jobs:
     - name: Teardown
       if: always()
       run: |
-        docker compose down -v
         docker ps -aq | xargs docker rm --force
+        docker volume prune --force
+        docker network prune --force
