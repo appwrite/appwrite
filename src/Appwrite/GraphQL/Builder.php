@@ -269,7 +269,6 @@ class Builder
         App      $utopia,
         Request  $request,
         Response $response,
-        Registry &$register,
         Database $dbForProject,
         Document $user,
     ): Schema
