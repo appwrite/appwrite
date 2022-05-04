@@ -337,6 +337,8 @@ class Builder
                     ? \array_map(static fn($m) => $response->getModel($m), $responseModelNames)
                     : [$response->getModel($responseModelNames)];
 
+
+
                 foreach ($responseModels as $responseModel) {
                     $type = self::getModelTypeMapping($responseModel, $response);
                     $description = $route->getDesc();
@@ -418,6 +420,7 @@ class Builder
      * @param Request $request
      * @param Response $response
      * @param Database $dbForProject
+     * @param Document|null $user
      * @return array
      * @throws \Exception
      */
@@ -638,9 +641,9 @@ class Builder
     }
 
     /**
+     * @param App $utopia
      * @param \Swoole\Http\Request $swoole
      * @param Response $response
-     * @param App $utopia
      * @param callable $resolve
      * @param callable $reject
      * @return void
@@ -660,12 +663,14 @@ class Builder
             unset($swoole->header['content-type']);
         }
 
+        $gqlResponse = $response;
+
         $request = new Request($swoole);
-        $response = new Response($response->getSwoole());
-        $response->setContentType(Response::CONTENT_TYPE_NULL);
+        $apiResponse = new Response($response->getSwoole());
+        $apiResponse->setContentType(Response::CONTENT_TYPE_NULL);
 
         $utopia->setResource('request', fn() => $request);
-        $utopia->setResource('response', fn() => $response);
+        $utopia->setResource('response', fn() => $apiResponse);
 
         try {
             // Set route to null so match doesn't early return the GraphQL route
@@ -678,12 +683,23 @@ class Builder
             return;
         }
 
-        $result = $response->getPayload();
+        $result = $apiResponse->getPayload();
 
-        if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 400) {
-            $reject(new GQLException($result['message'], $response->getStatusCode()));
+        if ($apiResponse->getStatusCode() < 200 || $apiResponse->getStatusCode() >= 400) {
+            $reject(new GQLException($result['message'], $apiResponse->getStatusCode()));
             return;
         }
+
+        // Add headers and cookies from inner to outer response
+        // TODO: Add setters to response to allow setting entire array at once
+        foreach ($apiResponse->getHeaders() as $key => $value) {
+            $gqlResponse->addHeader($key, $value);
+        }
+        foreach ($apiResponse->getCookies() as $name => $cookie) {
+            $gqlResponse->addCookie($name, $cookie['value'], $cookie['expire'], $cookie['path'], $cookie['domain'], $cookie['secure'], $cookie['httponly']);
+        }
+
+        $gqlResponse->setStatusCode($apiResponse->getStatusCode());
 
         $resolve($result);
     }
