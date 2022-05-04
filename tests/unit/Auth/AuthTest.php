@@ -101,6 +101,13 @@ class AuthTest extends TestCase
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'phpass'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'phpass'));
 
+        // Argon2
+        $plain = 'safe-argon-password';
+        $hash = '$argon2id$v=19$m=2048,t=3,p=4$MWc5NWRmc2QxZzU2$41mp7rSgBZ49YxLbbxIac7aRaxfp5/e1G45ckwnK0g8';
+        $generatedHash = Auth::passwordHash($plain, 'argon2');
+        $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'argon2'));
+        $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'argon2'));
+
         // SCryptModified
         // TODO: Add tests
 

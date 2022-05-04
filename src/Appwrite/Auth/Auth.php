@@ -5,6 +5,7 @@ namespace Appwrite\Auth;
 use Appwrite\Auth\Hash\BCrypt;
 use Appwrite\Auth\Hash\MD5;
 use Appwrite\Auth\Hash\PHPass;
+use Appwrite\Auth\Hash\Argon2;
 use Appwrite\Auth\Hash\SCrypt;
 use Appwrite\Auth\Hash\SCryptModified;
 use Utopia\Database\Document;
@@ -12,6 +13,20 @@ use Utopia\Database\Validator\Authorization;
 
 class Auth
 {
+
+    const SUPPORTED_ALGOS = [
+        'argon2' => 'Argon2',
+        'bcrypt' => 'BCrypt',
+        'md5' => 'MD5',
+        'phpass' => 'PHPass',
+        'scrypt' => 'SCrypt',
+        'scrypt_modified' => 'SCryptModified',
+        'plaintext' => 'PlainText'
+    ];
+
+    const DEFAULT_ALGO = 'argon2';
+    const DEFAULT_ALGO_OPTIONS = ['memory_cost' => 2048, 'time_cost' => 4, 'threads' => 3];
+
     /**
      * User Roles.
      */
@@ -161,6 +176,10 @@ class Auth
                 $hasher = new MD5($options);
                 $hash = $hasher->hash($string);
                 return $hash;
+            case 'argon2':
+                $hasher = new Argon2($options);
+                $hash = $hasher->hash($string);
+                return $hash;
             case 'phpass':
                 // TODO: Rework to use abstract class
                 $hahser = new PHPass(8, FALSE);
@@ -199,6 +218,10 @@ class Auth
                 return $verify;
             case 'md5':
                 $hasher = new MD5($options ?? []);
+                $verify = $hasher->verify($plain, $hash);
+                return $verify;
+            case 'argon2':
+                $hasher = new Argon2($options ?? []);
                 $verify = $hasher->verify($plain, $hash);
                 return $verify;
             case 'phpass':

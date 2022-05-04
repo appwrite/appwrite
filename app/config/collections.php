@@ -1004,6 +1004,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => 'hashOptions', // Configuration of hashing algorithm
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => '{}',
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
                 '$id' => 'passwordUpdate',
                 'type' => Database::VAR_INTEGER,
                 'format' => '',

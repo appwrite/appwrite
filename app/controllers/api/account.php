@@ -49,25 +49,21 @@ App::post('/v1/account')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
-    ->param('hash', 'bcrypt', new WhiteList(['bcrypt', 'scrypt', 'md5']), 'Hashing algorithm for password. The default value is bcrypt.', true)
-    ->param('import', false, new Boolean(), 'Are you importing hashed password?', true)
+    ->param('hash', Auth::DEFAULT_ALGO, new WhiteList(\array_keys(Auth::SUPPORTED_ALGOS)), 'Hashing algorithm for password. Allowed values are: \'' . \implode('\', \'', \array_keys(Auth::SUPPORTED_ALGOS)) . '\'. The default value is \'' . Auth::DEFAULT_ALGO . '\'.', true)
+    ->param('hashOptions', Auth::DEFAULT_ALGO_OPTIONS, new Text(16384), 'Configuration of hashing algorithm. If left empty, default configuration is used.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($userId, $email, $password, $name, $hash, $import, $request, $response, $project, $dbForProject, $audits, $usage) {
+    ->action(function ($userId, $email, $password, $name, $hash, $hashOptions, $request, $response, $project, $dbForProject, $audits, $usage) {
         /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
-
-        if(!$import && $hash === 'md5') {
-            throw new Exception('For security reasons, MD5 hashing is only allowed for importing accounts. Please use bcrypt instead.');
-        }
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -104,8 +100,9 @@ App::post('/v1/account')
                 'email' => $email,
                 'emailVerification' => false,
                 'status' => true,
-                'password' => $import ? $password : Auth::passwordHash($password, $hash),
+                'password' => Auth::passwordHash($password, $hash, \json_decode($hashOptions, true)),
                 'hash' => $hash,
+                'hashOptions' => $hashOptions,
                 'passwordUpdate' => \time(),
                 'registration' => \time(),
                 'reset' => false,
@@ -176,7 +173,7 @@ App::post('/v1/account/sessions')
 
         $profile = $dbForProject->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
-        if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'), $profile->getAttribute('hash'))) {
+        if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'), $profile->getAttribute('hash'), \json_decode($profile->getAttribute('hashOptions'), true))) {
             $audits
                 //->setParam('userId', $profile->getId())
                 ->setParam('event', 'account.sessions.failed')
@@ -506,8 +503,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'email' => $email,
                         'emailVerification' => true,
                         'status' => true, // Email should already be authenticated by OAuth2 provider
-                        'password' => Auth::passwordHash(Auth::passwordGenerator(), 'bcrypt'),
-                        'hash' => 'bcrypt',
+                        'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO),
+                        'hash' => Auth::DEFAULT_ALGO,
+                        'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
                         'passwordUpdate' => 0,
                         'registration' => \time(),
                         'reset' => false,
@@ -683,7 +681,8 @@ App::post('/v1/account/sessions/magic-url')
                 'emailVerification' => false,
                 'status' => true,
                 'password' => null,
-                'hash' => 'bcrypt',
+                'hash' => Auth::DEFAULT_ALGO,
+                'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
                 'passwordUpdate' => 0,
                 'registration' => \time(),
                 'reset' => false,
@@ -955,7 +954,8 @@ App::post('/v1/account/sessions/anonymous')
             'emailVerification' => false,
             'status' => true,
             'password' => null,
-            'hash' => 'bcrypt',
+            'hash' => Auth::DEFAULT_ALGO,
+            'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
             'passwordUpdate' => 0,
             'registration' => \time(),
             'reset' => false,
