@@ -139,6 +139,12 @@ class Bitbucket extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
+        $user = $this->getUser($accessToken);
+
+        if (isset($user['is_confirmed']) && $user['is_confirmed'] === true) {
+            return true;
+        }
+
         return false;
     }
 
@@ -169,8 +175,18 @@ class Bitbucket extends OAuth2
             $user = $this->request('GET', 'https://api.bitbucket.org/2.0/user?access_token='.\urlencode($accessToken));
             $this->user = \json_decode($user, true);
 
-            $email = $this->request('GET', 'https://api.bitbucket.org/2.0/user/emails?access_token='.\urlencode($accessToken));
-            $this->user['email'] = \json_decode($email, true)['values'][0]['email'];
+            $emails = $this->request('GET', 'https://api.bitbucket.org/2.0/user/emails?access_token='.\urlencode($accessToken));
+            $emails = \json_decode($emails, true);
+            if (isset($emails['values'])) {
+                foreach ($emails['values'] as $email) {
+                    if ($email['is_primary']) {
+                        $this->user['email'] = $email['email'];
+                        $this->user['is_confirmed'] = $email['is_confirmed'];
+                        break;
+                    }
+                }
+            }
+
         }
         return $this->user;
     }

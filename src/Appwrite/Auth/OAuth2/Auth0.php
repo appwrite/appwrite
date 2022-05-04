@@ -139,6 +139,18 @@ class Auth0 extends OAuth2
     }
 
     /**
+     * Check if the OAuth email is verified
+     * 
+     * @param $accessToken
+     * 
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        return false;
+    }
+
+    /**
      * @param string $accessToken
      *
      * @return string
