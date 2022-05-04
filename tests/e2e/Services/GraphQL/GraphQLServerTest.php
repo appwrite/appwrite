@@ -103,11 +103,10 @@ class GraphQLServerTest extends Scope
 
         $errorMessage = 'User (role: guest) missing scope (users.write)';
         $this->assertEquals($errorMessage, $user['body']['errors'][0]['message']);
-        $this->assertIsArray($user['body']['data']);
-        $this->assertNull($user['body']['data']['usersCreate']);
+        $this->assertArrayNotHasKey('data', $user['body']);
 
         /**
-         * Create the user with the reqiured scopes
+         * Create the user with the required scopes
          */
         $key = $this->getNewKey(['users.write']);
         $user = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -121,15 +120,14 @@ class GraphQLServerTest extends Scope
         $this->assertIsArray($user['body']['data']['usersCreate']);
 
         $data = $user['body']['data']['usersCreate'];
-        $this->assertArrayHasKey('id', $data);
+        $this->assertArrayHasKey('_id', $data);
         $this->assertArrayHasKey('registration', $data);
         $this->assertEquals($variables['name'], $data['name']);
         $this->assertEquals($variables['email'], $data['email']);
-        $this->assertEquals(0, $data['status']);
+        $this->assertEquals(true, $data['status']);
         $this->assertEquals(false, $data['emailVerification']);
-        $this->assertEquals([], $data['prefs']);
 
-        return ['userId' => $user['body']['data']['users_create']['id']];
+        return ['userId' => $user['body']['data']['usersCreate']['_id']];
     }
 
     /**
@@ -242,8 +240,10 @@ class GraphQLServerTest extends Scope
             'x-appwrite-key' => $key
         ], $graphQLPayload);
 
+        //\var_dump($countries);
+
         $errorMessage = 'app.${projectId}@service.localhost (role: application) missing scope (locale.read)';
-        $this->assertEquals($countries['headers']['status-code'], 401);
+        $this->assertEquals( 401, $countries['headers']['status-code']);
         $this->assertEquals($countries['body']['errors'][0]['message'], $errorMessage);
         $this->assertIsArray($countries['body']['data']);
         $this->assertNull($countries['body']['data']['locale_getCountries']);

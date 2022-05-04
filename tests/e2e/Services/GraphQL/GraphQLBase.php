@@ -371,7 +371,7 @@ trait GraphQLBase
                 }';
             case self::$DELETE_USER :
                 return 'mutation deleteUser($userId: String!) {
-                    usersDeleteUser(userId : $userId)
+                    usersDelete(userId: $userId)
                 }';
             case self::$LIST_COUNTRIES:
                 return 'query listCountries {
@@ -745,8 +745,8 @@ trait GraphQLBase
         ], $gqlPayload);
 
         $errorMessage = 'User (role: guest) missing scope (collections.write)';
-        $this->assertEquals($actors['headers']['status-code'], 401);
-        $this->assertEquals($actors['body']['errors'][0]['message'], $errorMessage);
+        $this->assertEquals(401, $actors['headers']['status-code']);
+        $this->assertEquals($errorMessage, $actors['body']['errors'][0]['message']);
         $this->assertIsArray($actors['body']['data']);
         $this->assertNull($actors['body']['data']['databaseCreateCollection']);
 
@@ -759,7 +759,7 @@ trait GraphQLBase
             'x-appwrite-key' => $key
         ], $gqlPayload);
 
-        $this->assertEquals($actors['headers']['status-code'], 201);
+        $this->assertEquals(201, $actors['headers']['status-code']);
         $this->assertNull($actors['body']['errors']);
         $this->assertIsArray($actors['body']['data']);
 
@@ -781,7 +781,7 @@ trait GraphQLBase
      * @depends testCreateCollection
      * @throws \Exception
      */
-    public function testCreateStringAttribute(array $data)
+    public function testCreateStringAttribute(array $data): void
     {
         $projectId = $this->getProject()['$id'];
         $key = $data['key'];
@@ -815,7 +815,7 @@ trait GraphQLBase
      * @depends testCreateCollection
      * @throws \Exception
      */
-    public function testCreateIntegerAttribute(array $data)
+    public function testCreateIntegerAttribute(array $data): void
     {
         $projectId = $this->getProject()['$id'];
         $key = $data['key'];
@@ -850,7 +850,7 @@ trait GraphQLBase
      * @depends testCreateCollection
      * @throws \Exception
      */
-    public function testCreateBooleanAttribute(array $data)
+    public function testCreateBooleanAttribute(array $data): void
     {
         $projectId = $this->getProject()['$id'];
         $key = $data['key'];
@@ -883,7 +883,7 @@ trait GraphQLBase
      * @depends testCreateCollection
      * @throws \Exception
      */
-    public function testCreateFloatAttribute(array $data)
+    public function testCreateFloatAttribute(array $data): void
     {
         $projectId = $this->getProject()['$id'];
         $key = $data['key'];
@@ -923,7 +923,7 @@ trait GraphQLBase
      * @depends testCreateFloatAttribute
      * @throws \Exception
      */
-    public function testCreateDocumentREST(array $data)
+    public function testCreateDocumentREST(array $data): void
     {
         $projectId = $this->getProject()['$id'];
         $key = $data['key'];
@@ -964,7 +964,7 @@ trait GraphQLBase
      * @depends testCreateFloatAttribute
      * @throws \Exception
      */
-    public function testCreateDocumentGQL(array $data)
+    public function testCreateDocumentGQL(array $data): void
     {
         $projectId = $this->getProject()['$id'];
         $key = '';
