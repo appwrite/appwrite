@@ -21,6 +21,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
+use Utopia\Locale\Locale;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\ArrayList;
@@ -270,7 +271,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('locale')
     ->inject('audits')
     ->inject('mails')
-    ->action(function (string $teamId, string $email, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, $locale, Event $audits, Event $mails) {
+    ->action(function (string $teamId, string $email, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $audits, Event $mails) {
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
