@@ -321,6 +321,11 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
     $route = $utopia->match($request);
 
+    /** Delegate PDO exceptions to the global handler so the database connection can be returned to the pool */
+    if ($error instanceof PDOException) {
+        throw $error;
+    }
+
     if($logger) {
         if($error->getCode() >= 500 || $error->getCode() === 0) {
             try {
@@ -353,6 +358,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
+            $log->addExtra('detailedTrace', $error->getTrace());
             $log->addExtra('roles', Authorization::$roles);
 
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
@@ -368,10 +374,6 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project, $l
             $responseCode = $logger->addLog($log);
             Console::info('Log pushed with status code: '.$responseCode);
         }
-    }
-
-    if ($error instanceof PDOException) {
-        throw $error;
     }
 
     $code = $error->getCode();
