@@ -746,130 +746,45 @@ class Builder
      * @throws \Exception
      */
     public static function buildAPISchema(App $utopia, Request $request, Response $response, Registry $register): array
+    private static function resolve(
+        App                  $utopia,
+        \Swoole\Http\Request $swoole,
+        Response             $response,
+        callable             $resolve,
+        callable             $reject,
+    ): void
     {
-        $start = microtime(true);
-
-        self::init();
-        $queryFields = [];
-        $mutationFields = [];
-
-        foreach ($utopia->getRoutes() as $method => $routes) {
-            foreach ($routes as $route) {
-                /** @var Route $route */
-
-                if (str_starts_with($route->getPath(), '/v1/mock/')) {
-                    continue;
-                }
-                $namespace = $route->getLabel('sdk.namespace', '');
-                $methodName = $namespace . \ucfirst($route->getLabel('sdk.method', ''));
-                $responseModelNames = $route->getLabel('sdk.response.model', "none");
-
-                if ($responseModelNames === "none") {
-                    continue;
-                }
-
-                $responseModels = \is_array($responseModelNames)
-                    ? \array_map(static fn($m) => $response->getModel($m), $responseModelNames)
-                    : [$response->getModel($responseModelNames)];
-
-                foreach ($responseModels as $responseModel) {
-                    $type = self::getModelTypeMapping($responseModel, $response);
-                    $description = $route->getDesc();
-                    $args = [];
-
-                    foreach ($route->getParams() as $key => $value) {
-                        $argType = self::getParameterArgType(
-                            $utopia,
-                            $value['validator'],
-                            !$value['optional'],
-                            $value['injections']
-                        );
-                        $args[$key] = [
-                            'type' => $argType,
-                            'description' => $value['description'],
-                            'defaultValue' => $value['default']
-                        ];
-                    }
-
-                    $resolve = fn($type, $args, $context, $info) => new CoroutinePromise(
-                        function (callable $resolve, callable $reject) use ($utopia, $request, $response, &$register, $route, $args, $context, $info) {
-                            // Mutate the original request object to include the query variables at the top level
-                            $swoole = $request->getSwoole();
-                            $swoole->post = $args;
-
-                            // Drop json content type so post args are used directly
-                            if (\array_key_exists('content-type', $swoole->header)
-                                && $swoole->header['content-type'] === 'application/json') {
-                                unset($swoole->header['content-type']);
-                            }
-                            $request = new Request($swoole);
-                            $response = new Response($response->getSwoole());
-
-                            $utopia->setResource('request', fn() => $request);
-                            $utopia->setResource('response', fn() => $response);
-
-                            $response->setContentType(Response::CONTENT_TYPE_NULL);
-                            $utopia->setRoute($route)->execute($route, $request);
-
-                            $result = $response->getPayload();
-
-                            if ($response->getCurrentModel() == Response::MODEL_ERROR_DEV) {
-                                $reject(new GQLExceptionDev($result['message'], $result['code'], $result['version'], $result['file'], $result['line'], $result['trace']));
-                            } else if ($response->getCurrentModel() == Response::MODEL_ERROR) {
-                                $reject(new GQLException($result['message'], $result['code']));
-                            }
-
-                            $resolve($result);
-                        }
-                    );
-
-                    $field = [
-                        'type' => $type,
-                        'description' => $description,
-                        'args' => $args,
-                        'resolve' => $resolve
-                    ];
-
-                    if ($method == 'GET') {
-                        $queryFields[$methodName] = $field;
-                    } else if ($method == 'POST' || $method == 'PUT' || $method == 'PATCH' || $method == 'DELETE') {
-                        $mutationFields[$methodName] = $field;
-                    }
-                }
-            }
+        // Drop json content type so post args are used directly
+        if (\array_key_exists('content-type', $swoole->header)
+            && $swoole->header['content-type'] === 'application/json') {
+            unset($swoole->header['content-type']);
         }
-        $time_elapsed_secs = (microtime(true) - $start) * 1000;
-        Console::info("[INFO] Built GraphQL REST API Schema in ${time_elapsed_secs}ms");
 
-        return [
-            'query' => $queryFields,
-            'mutation' => $mutationFields
-        ];
-    }
+        $request = new Request($swoole);
+        $response = new Response($response->getSwoole());
+        $response->setContentType(Response::CONTENT_TYPE_NULL);
 
-    /**
-     * Function to create an appropriate GraphQL Error Formatter
-     * Based on whether we're on a development build or production
-     * build of Appwrite.
-     *
-     * @param bool $isDevelopment
-     * @param string $version
-     * @return callable
-     */
-    public static function getErrorFormatter(bool $isDevelopment, string $version): callable
-    {
-        return function (Error $error) use ($isDevelopment, $version) {
-            $formattedError = FormattedError::createFromException($error);
+        $utopia->setResource('request', fn() => $request);
+        $utopia->setResource('response', fn() => $response);
 
-            // Previous error represents the actual error thrown by Appwrite server
-            $previousError = $error->getPrevious() ?? $error;
-            $formattedError['code'] = $previousError->getCode();
-            $formattedError['version'] = $version;
-            if ($isDevelopment) {
-                $formattedError['file'] = $previousError->getFile();
-                $formattedError['line'] = $previousError->getLine();
-            }
-            return $formattedError;
-        };
+        try {
+            // Set route to null so match doesn't early return the GraphQL route
+            // Then get the route match the request so path matches are populated
+            $route = $utopia->setRoute(null)->match($request);
+
+            $utopia->execute($route, $request);
+        } catch (\Throwable $e) {
+            $reject($e);
+            return;
+        }
+
+        $result = $response->getPayload();
+
+        if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 400) {
+            $reject(new GQLException($result['message'], $response->getStatusCode()));
+            return;
+        }
+
+        $resolve($result);
     }
 }
