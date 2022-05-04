@@ -152,7 +152,7 @@ App::get('/console/settings')
             ->setParam('body', $page);
     });
 
-App::get('/console/webhooks')
+    App::get('/console/webhooks')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -161,6 +161,24 @@ App::get('/console/webhooks')
         /** @var Appwrite\Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/webhooks/index.phtml');
+
+        $page->setParam('events', Config::getParam('events', []));
+
+        $layout
+            ->setParam('title', APP_NAME.' - Webhooks')
+            ->setParam('body', $page);
+    });
+
+    App::get('/console/webhooks/webhook')
+    ->groups(['web', 'console'])
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->param('id', '', new UID(), 'Bucket unique ID.')
+    ->inject('layout')
+    ->action(function ($id, $layout) {
+        /** @var Appwrite\Utopia\View $layout */
+
+        $page = new View(__DIR__.'/../../views/console/webhooks/webhook.phtml');
 
         $page->setParam('events', Config::getParam('events', []));
 
