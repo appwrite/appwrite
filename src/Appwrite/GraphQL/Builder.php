@@ -544,7 +544,7 @@ class Builder
         );
     }
 
-    private static function queryList(
+    private static function resolveDocumentList(
         App      $utopia,
         Request  $request,
         Response $response,
@@ -554,8 +554,8 @@ class Builder
     {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $collectionId, $type, $args) {
-                $swooleRq = $request->getSwoole();
-                $swooleRq->post = [
+                $swoole = $request->getSwoole();
+                $swoole->post = [
                     'collectionId' => $collectionId,
                     'limit' => $args['limit'],
                     'offset' => $args['offset'],
@@ -564,35 +564,11 @@ class Builder
                     'orderAttributes' => $args['orderAttributes'],
                     'orderType' => $args['orderType'],
                 ];
-                // Drop json content type so post args are used directly
-                if (\array_key_exists('content-type', $swooleRq->header)
-                    && $swooleRq->header['content-type'] === 'application/json') {
-                    unset($swooleRq->header['content-type']);
-                }
+                $swoole->server['request_method'] = 'GET';
+                $swoole->server['request_uri'] = "/v1/database/collections/$collectionId/documents";
+                $swoole->server['path_info'] = "/v1/database/collections/$collectionId/documents";
 
-                $url = '/v1/database/collections/:collectionId/documents';
-                $route = $utopia->getRoutes()['GET'][$url];
-
-                $request = new Request($swooleRq);
-                $response = new Response($response->getSwoole());
-
-                $utopia->setResource('request', fn() => $request);
-                $utopia->setResource('response', fn() => $response);
-
-                $response->setContentType(Response::CONTENT_TYPE_NULL);
-
-                try {
-                    $utopia->setRoute($route)->execute($route, $request);
-                } catch (\Throwable $e) {
-                    $reject($e);
-                }
-
-                $result = \array_map(
-                    fn($value) => $value['data'],
-                    $response->getPayload()['documents']
-                );
-
-                $resolve($result);
+                self::resolve($utopia, $swoole, $response, $resolve, $reject);
             }
         );
     }
