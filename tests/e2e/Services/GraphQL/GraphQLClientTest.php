@@ -18,18 +18,15 @@ class GraphQLClientTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_ACCOUNT);
-        $time = \time();
-
-        $variables = [
-            'email' => "test{$time}@test.com",
-            'password' => 'password',
-        ];
+        $email = 'test' . \rand() . '@test.com';
         $graphQLPayload = [
             'query' => $query,
-            'variables' => \array_merge($variables, [
+            'variables' => [
                 'userId' => 'unique()',
                 'name' => 'Tester',
-            ])
+                'email' => $email,
+                'password' => 'password',
+            ],
         ];
         $account1 = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
@@ -39,15 +36,16 @@ class GraphQLClientTest extends Scope
         $this->assertIsArray($account1['body']['data']);
         $account1 = $account1['body']['data']['accountCreate'];
         $this->assertEquals('Tester', $account1['name']);
-        $this->assertEquals($variables['email'], $account1['email']);
+        $this->assertEquals($email, $account1['email']);
 
-        /* 
-        * Create First Account Session
-        */
+        // Create First Account Session
         $query = $this->getQuery(self::$CREATE_ACCOUNT_SESSION);
         $graphQLPayload = [
             'query' => $query,
-            'variables' => $variables
+            'variables' => [
+                'email' => $email,
+                'password' => 'password',
+            ]
         ];
         $session1 = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
@@ -56,33 +54,35 @@ class GraphQLClientTest extends Scope
 
         $this->assertIsArray($session1['body']['data']);
         $this->assertIsArray($session1['body']['data']['accountCreateSession']);
+
         $session1Cookie = $this->client->parseCookie((string)$session1['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
         /* 
         * Create Second Account
         */
         $query = $this->getQuery(self::$CREATE_ACCOUNT);
-        $time = \time();
-        $variables = [
-            'email' => "test{$time}@test.com",
-            'password' => 'password'
-        ];
+        $email = 'test' . \rand() . '@test.com';
         $graphQLPayload = [
             'query' => $query,
-            'variables' => $variables
+            'variables' => [
+                'userId' => 'unique()',
+                'email' => $email,
+                'password' => 'password',
+                'name' => 'Tester2',
+            ],
         ];
         $account2 = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $graphQLPayload);
 
-        $this->assertNull($account2['body']['errors']);
         $this->assertIsArray($account2['body']['data']);
         $this->assertIsArray($account2['body']['data']['accountCreate']);
+        $this->assertArrayNotHasKey('errors', $account2['body']);
 
         $account2 = $account2['body']['data']['accountCreate'];
-        $this->assertEquals($variables['name'], $account2['name']);
-        $this->assertEquals($variables['email'], $account2['email']);
+        $this->assertEquals('Tester2', $account2['name']);
+        $this->assertEquals($email, $account2['email']);
 
         /* 
         * Create Second Account Session
@@ -90,19 +90,19 @@ class GraphQLClientTest extends Scope
         $query = $this->getQuery(self::$CREATE_ACCOUNT_SESSION);
         $graphQLPayload = [
             'query' => $query,
-            'variables' => \array_merge($variables, [
-                'userId' => 'unique()',
-                'name' => 'Tester 2',
-            ])
+            'variables' => [
+                'email' => $email,
+                'password' => 'password',
+            ],
         ];
         $session2 = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $graphQLPayload);
 
-        $this->assertNull($session2['body']['errors']);
         $this->assertIsArray($session2['body']['data']);
         $this->assertIsArray($session2['body']['data']['accountCreateSession']);
+        $this->assertArrayNotHasKey('errors', $session2['body']);
         $session2Cookie = $this->client->parseCookie((string)$session2['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
         return [
@@ -465,7 +465,7 @@ class GraphQLClientTest extends Scope
         /*
         * Create a membership 
         */
-        $email = \time() . 'friend@localhost.test';
+        $email = \rand() . 'friend@localhost.test';
         $query = $this->getQuery(self::$CREATE_TEAM_MEMBERSHIP);
         $createMembershipVariable = [
             'teamId' => $team['id'],
