@@ -4,6 +4,7 @@ use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Detector\Detector;
+use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Host;
 use Appwrite\Network\Validator\URL;
@@ -21,6 +22,9 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Appwrite\Extend\Exception;
+use Appwrite\Stats\Stats;
+use Appwrite\Utopia\Request;
+use Utopia\Database\Database;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
@@ -30,6 +34,155 @@ use Utopia\Validator\WhiteList;
 
 $oauthDefaultSuccess = '/v1/auth/oauth2/success';
 $oauthDefaultFailure = '/v1/auth/oauth2/failure';
+
+function createOAuth2Session(Request $request, Response $response, string $provider, Document $project, string $accessToken, string $refreshToken, Document $user, Database $dbForProject, $geodb,int $accessTokenExpiry, Event $audits, Event $events, Stats $usage, $oauth2, $oauth2ID)
+{
+
+   
+    $sessions = $user->getAttribute('sessions', []);
+    $current = Auth::sessionVerify($sessions, Auth::$secret);
+
+    if ($current) { // Delete current session of new one.
+        foreach ($sessions as $key => $session) {/** @var Document $session */
+            if ($current === $session['$id']) {
+                unset($sessions[$key]);
+
+                $dbForProject->deleteDocument('sessions', $session->getId());
+                $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
+            }
+        }
+    }
+
+    $user = ($user->isEmpty()) ? $dbForProject->findOne('sessions', [ // Get user by provider id
+        new Query('provider', QUERY::TYPE_EQUAL, [$provider]),
+        new Query('providerUid', QUERY::TYPE_EQUAL, [$oauth2ID]),
+    ]) : $user;
+
+    if ($user === false || $user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
+        $name = $oauth2->getUserName($accessToken);
+        $email = $oauth2->getUserEmail($accessToken);
+
+        $user = $dbForProject->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+
+        if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
+            $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
+
+            if ($limit !== 0) {
+                $total = $dbForProject->count('users', [ new Query('deleted', Query::TYPE_EQUAL, [false]),], APP_LIMIT_USERS);
+
+                if ($total >= $limit) {
+                    throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
+                }
+            }
+
+            try {
+                $userId = $dbForProject->getId();
+                $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
+                    '$id' => $userId,
+                    '$read' => ['role:all'],
+                    '$write' => ['user:' . $userId],
+                    'email' => $email,
+                    'emailVerification' => true,
+                    'status' => true, // Email should already be authenticated by OAuth2 provider
+                    'password' => Auth::passwordHash(Auth::passwordGenerator()),
+                    'passwordUpdate' => 0,
+                    'registration' => \time(),
+                    'reset' => false,
+                    'name' => $name,
+                    'prefs' => new \stdClass(),
+                    'sessions' => [],
+                    'tokens' => [],
+                    'memberships' => [],
+                    'search' => implode(' ', [$userId, $email, $name]),
+                    'deleted' => false
+                ])));
+            } catch (Duplicate $th) {
+                throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
+            }
+        }
+    }
+
+    if (false === $user->getAttribute('status')) { // Account is blocked
+        throw new Exception('Invalid credentials. User is blocked', 401, Exception::USER_BLOCKED); // User is in status blocked
+    }
+
+    // Create session token, verify user account and update OAuth2 ID and Access Token
+
+    $detector = new Detector($request->getUserAgent('UNKNOWN'));
+    $record = $geodb->get($request->getIP());
+    $secret = Auth::tokenGenerator();
+    $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+    $session = new Document(array_merge([
+        '$id' => $dbForProject->getId(),
+        'userId' => $user->getId(),
+        'provider' => $provider,
+        'providerUid' => $oauth2ID,
+        'providerAccessToken' => $accessToken,
+        'providerRefreshToken' => $refreshToken,
+        'providerAccessTokenExpiry' => \time() + (int) $accessTokenExpiry,
+        'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+        'expire' => $expiry,
+        'userAgent' => $request->getUserAgent('UNKNOWN'),
+        'ip' => $request->getIP(),
+        'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+    ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
+
+    $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password'));
+
+    if ($isAnonymousUser) {
+        $user
+            ->setAttribute('name', $oauth2->getUserName($accessToken))
+            ->setAttribute('email', $oauth2->getUserEmail($accessToken))
+        ;
+    }
+
+    $user
+        ->setAttribute('status', true)
+        ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND)
+    ;
+
+    Authorization::setRole('user:' . $user->getId());
+
+    $session = $dbForProject->createDocument('sessions', $session
+        ->setAttribute('$read', ['user:' . $user->getId()])
+        ->setAttribute('$write', ['user:' . $user->getId()])
+    );
+
+    $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+
+    $audits
+        ->setParam('userId', $user->getId())
+        ->setParam('event', 'account.sessions.create')
+        ->setParam('resource', 'user/' . $user->getId())
+        ->setParam('data', ['provider' => $provider])
+    ;
+
+    $events->setParam('eventData', $response->output($session, Response::MODEL_SESSION));
+
+    $usage
+        ->setParam('users.sessions.create', 1)
+        ->setParam('projectId', $project->getId())
+        ->setParam('provider', 'oauth2-'.$provider)
+    ;
+
+    if (!Config::getParam('domainVerification')) {
+        $response
+            ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
+        ;
+    }
+    
+    $response
+        ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        ->addHeader('Pragma', 'no-cache')
+        ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $request->getProtocol()), true, null)
+        ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $request->getProtocol()), true, Config::getParam('cookieSamesite'))
+    ;
+
+    return [
+        'session' => $session,
+        'secret' => $secret,
+    ];
+}
 
 App::post('/v1/account')
     ->desc('Create Account')
@@ -394,6 +547,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $validateURL = new URL();
         $appId = $project->getAttribute('authProviders', [])[$provider.'Appid'] ?? '';
@@ -454,136 +608,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             throw new Exception('Missing ID from OAuth2 provider', 400, Exception::PROJECT_MISSING_USER_ID);
         }
 
-        $sessions = $user->getAttribute('sessions', []);
-        $current = Auth::sessionVerify($sessions, Auth::$secret);
+        $session = createOAuth2Session($request, $response, $provider ,$project, $accessToken, $refreshToken, $user, $dbForProject, $geodb, $accessTokenExpiry, $audits, $events, $usage, $oauth2, $oauth2ID);
 
-        if ($current) { // Delete current session of new one.
-            foreach ($sessions as $key => $session) {/** @var Document $session */
-                if ($current === $session['$id']) {
-                    unset($sessions[$key]);
-
-                    $dbForProject->deleteDocument('sessions', $session->getId());
-                    $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
-                }
-            }
-        }
-
-        $user = ($user->isEmpty()) ? $dbForProject->findOne('sessions', [ // Get user by provider id
-            new Query('provider', QUERY::TYPE_EQUAL, [$provider]),
-            new Query('providerUid', QUERY::TYPE_EQUAL, [$oauth2ID]),
-        ]) : $user;
-
-        if ($user === false || $user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
-            $name = $oauth2->getUserName($accessToken);
-            $email = $oauth2->getUserEmail($accessToken);
-
-            $user = $dbForProject->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
-
-            if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
-                $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
-
-                if ($limit !== 0) {
-                    $total = $dbForProject->count('users', [ new Query('deleted', Query::TYPE_EQUAL, [false]),], APP_LIMIT_USERS);
-
-                    if ($total >= $limit) {
-                        throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
-                    }
-                }
-
-                try {
-                    $userId = $dbForProject->getId();
-                    $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
-                        '$id' => $userId,
-                        '$read' => ['role:all'],
-                        '$write' => ['user:' . $userId],
-                        'email' => $email,
-                        'emailVerification' => true,
-                        'status' => true, // Email should already be authenticated by OAuth2 provider
-                        'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                        'passwordUpdate' => 0,
-                        'registration' => \time(),
-                        'reset' => false,
-                        'name' => $name,
-                        'prefs' => new \stdClass(),
-                        'sessions' => [],
-                        'tokens' => [],
-                        'memberships' => [],
-                        'search' => implode(' ', [$userId, $email, $name]),
-                        'deleted' => false
-                    ])));
-                } catch (Duplicate $th) {
-                    throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
-                }
-            }
-        }
-
-        if (false === $user->getAttribute('status')) { // Account is blocked
-            throw new Exception('Invalid credentials. User is blocked', 401, Exception::USER_BLOCKED); // User is in status blocked
-        }
-
-        // Create session token, verify user account and update OAuth2 ID and Access Token
-
-        $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
-        $secret = Auth::tokenGenerator();
-        $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $session = new Document(array_merge([
-            '$id' => $dbForProject->getId(),
-            'userId' => $user->getId(),
-            'provider' => $provider,
-            'providerUid' => $oauth2ID,
-            'providerAccessToken' => $accessToken,
-            'providerRefreshToken' => $refreshToken,
-            'providerAccessTokenExpiry' => \time() + (int) $accessTokenExpiry,
-            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'expire' => $expiry,
-            'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP(),
-            'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-        ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
-
-        $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password'));
-
-        if ($isAnonymousUser) {
-            $user
-                ->setAttribute('name', $oauth2->getUserName($accessToken))
-                ->setAttribute('email', $oauth2->getUserEmail($accessToken))
-            ;
-        }
-
-        $user
-            ->setAttribute('status', true)
-            ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND)
-        ;
-
-        Authorization::setRole('user:' . $user->getId());
-
-        $session = $dbForProject->createDocument('sessions', $session
-            ->setAttribute('$read', ['user:' . $user->getId()])
-            ->setAttribute('$write', ['user:' . $user->getId()])
-        );
-
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
-
-        $audits
-            ->setParam('userId', $user->getId())
-            ->setParam('event', 'account.sessions.create')
-            ->setParam('resource', 'user/' . $user->getId())
-            ->setParam('data', ['provider' => $provider])
-        ;
-
-        $events->setParam('eventData', $response->output($session, Response::MODEL_SESSION));
-
-        $usage
-            ->setParam('users.sessions.create', 1)
-            ->setParam('projectId', $project->getId())
-            ->setParam('provider', 'oauth2-'.$provider)
-        ;
-        if (!Config::getParam('domainVerification')) {
-            $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
-            ;
-        }
+        
 
         // Add keys for non-web platforms - TODO - add verification phase to aviod session sniffing
         if (parse_url($state['success'], PHP_URL_PATH) === $oauthDefaultSuccess) {
@@ -592,22 +619,84 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $query['project'] = $project->getId();
             $query['domain'] = Config::getParam('cookieDomain');
             $query['key'] = Auth::$cookieName;
-            $query['secret'] = Auth::encodeSession($user->getId(), $secret);
+            $query['secret'] = Auth::encodeSession($user->getId(), $session['secret']);
             $state['success']['query'] = URLParser::unparseQuery($query);
             $state['success'] = URLParser::unparse($state['success']);
         }
 
-        $response
-            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->addHeader('Pragma', 'no-cache')
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->redirect($state['success'])
-        ;
+        $response->redirect($state['success']);
     });
 
+App::post('/v1/account/sessions/oauth2/:provider/from')
+    ->desc('Create Account Session with Access Token')
+    ->groups(['api', 'account'])
+    ->label('event', 'account.sessions.create')
+    ->label('scope', 'public')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createAccessTokenSession')
+    ->label('sdk.description', '/docs/references/account/create-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->label('abuse-limit', 50)
+    ->label('abuse-key', 'ip:{ip}')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
+    ->param('accessToken', '', new Text(1024), 'OAuth access token.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('geodb')
+    ->inject('audits')
+    ->inject('events')
+    ->inject('usage')
+    ->action(function ($provider, $accessToken, $request, $response, $project, $user, $dbForProject, $geodb, $audits, $events, $usage) {
+        /** @var Appwrite\Utopia\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Document $project */
+        /** @var Utopia\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var MaxMind\Db\Reader $geodb */
+        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Stats\Stats $usage */
+        
+        $protocol = $request->getProtocol();
+        $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
+    
+        $appId = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Appid', '');
+        $appSecret = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}');
+    
+        if (!empty($appSecret) && isset($appSecret['version'])) {
+            $key = App::getEnv('_APP_OPENSSL_KEY_V'.$appSecret['version']);
+            $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
+        }
+    
+        $classname = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
+    
+        if (!\class_exists($classname)) {
+            throw new Exception('Provider is not supported', 501);
+        }
+    
+        $oauth2 = new $classname($appId, $appSecret, $callback);
+    
+        if (empty($accessToken)) {
+            throw new Exception('Access token not provided', 500, Exception::GENERAL_SERVER_ERROR);
+        }
 
-App::post('/v1/account/sessions/magic-url')
+        $oauth2ID = $oauth2->getUserID($accessToken);
+    
+        if (empty($oauth2ID)) {
+            throw new Exception('Missing ID from OAuth2 provider', 400, Exception::PROJECT_MISSING_USER_ID);
+        }
+    
+        $session = createOAuth2Session($request, $response, $provider, $project, $accessToken, '', $user, $dbForProject, $geodb, 0, $audits, $events, $usage, $oauth2, $oauth2ID);
+
+        $response->dynamic($session['session'], Response::MODEL_SESSION);
+    });
+
+    App::post('/v1/account/sessions/magic-url')
     ->desc('Create Magic URL session')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
