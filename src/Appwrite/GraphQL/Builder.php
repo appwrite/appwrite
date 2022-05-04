@@ -269,26 +269,18 @@ class Builder
     }
 
     /**
-     * Appends queries and mutations for the currently requested
-     * projects collections to the base API GraphQL schema.
-     *
-     * @param array $apiSchema
-     * @param App $utopia
-     * @param Request $request
-     * @param Response $response
-     * @param Database $dbForProject
-     * @return Schema
      * @throws \Exception
      */
-    public static function appendProjectSchema(
-        array    $apiSchema,
+    public static function buildSchema(
         App      $utopia,
         Request  $request,
         Response $response,
-        Database $dbForProject
+        Database $dbForProject,
+        Document $user,
     ): Schema
     {
-        $db = self::buildCollectionsSchema($utopia, $request, $response, $dbForProject);
+        $apiSchema = self::buildAPISchema($utopia, $request, $response);
+        $db = self::buildCollectionsSchema($utopia, $request, $response, $dbForProject, $user);
 
         $queryFields = \array_merge_recursive($apiSchema['query'], $db['query']);
         $mutationFields = \array_merge_recursive($apiSchema['mutation'], $db['mutation']);
@@ -309,35 +301,113 @@ class Builder
     }
 
     /**
+     * This function iterates all API routes and builds a
+     * GraphQL schema defining types (and resolvers) for all response models
+     *
+     * @param App $utopia
+     * @param Request $request
+     * @param Response $response
+     * @return array
      * @throws \Exception
      */
-    public static function buildSchema(
+    public static function buildAPISchema(App $utopia, Request $request, Response $response): array
+    {
+        $start = microtime(true);
+
+        self::init();
+        $queryFields = [];
+        $mutationFields = [];
+
+        foreach ($utopia->getRoutes() as $method => $routes) {
+            foreach ($routes as $route) {
+                /** @var Route $route */
+
+                if (str_starts_with($route->getPath(), '/v1/mock/')) {
+                    continue;
+                }
+                $namespace = $route->getLabel('sdk.namespace', '');
+                $methodName = $namespace . \ucfirst($route->getLabel('sdk.method', ''));
+                $responseModelNames = $route->getLabel('sdk.response.model', "none");
+
+                if ($responseModelNames === "none") {
+                    continue;
+                }
+
+                $responseModels = \is_array($responseModelNames)
+                    ? \array_map(static fn($m) => $response->getModel($m), $responseModelNames)
+                    : [$response->getModel($responseModelNames)];
+
+                foreach ($responseModels as $responseModel) {
+                    $type = self::getModelTypeMapping($responseModel, $response);
+                    $description = $route->getDesc();
+                    $args = [];
+
+                    foreach ($route->getParams() as $key => $value) {
+                        $argType = self::getParameterArgType(
+                            $utopia,
+                            $value['validator'],
+                            !$value['optional'],
+                            $value['injections']
+                        );
+                        $args[$key] = [
+                            'type' => $argType,
+                            'description' => $value['description'],
+                            'defaultValue' => $value['default']
+                        ];
+                    }
+
+                    $resolve = self::resolveAPIRequest($utopia, $request, $response, $route);
+
+                    $field = [
+                        'type' => $type,
+                        'description' => $description,
+                        'args' => $args,
+                        'resolve' => $resolve
+                    ];
+
+                    if ($method == 'GET') {
+                        $queryFields[$methodName] = $field;
+                    } else if ($method == 'POST' || $method == 'PUT' || $method == 'PATCH' || $method == 'DELETE') {
+                        $mutationFields[$methodName] = $field;
+                    }
+                }
+            }
+        }
+        $time_elapsed_secs = (microtime(true) - $start) * 1000;
+        Console::info("[INFO] Built GraphQL REST API Schema in ${time_elapsed_secs}ms");
+
+        return [
+            'query' => $queryFields,
+            'mutation' => $mutationFields
+        ];
+    }
+
+    /**
+     * @param App $utopia
+     * @param Response $response
+     * @param Request $request
+     * @param mixed $route
+     * @return callable
+     */
+    private static function resolveAPIRequest(
         App      $utopia,
         Request  $request,
         Response $response,
-        Database $dbForProject,
-        Document $user,
-    ): Schema
+        mixed    $route,
+    ): callable
     {
-        $apiSchema = self::buildAPISchema($utopia, $request, $response, $register);
-        $db = self::buildCollectionsSchema($utopia, $request, $response, $dbForProject, $user);
+        return fn($type, $args, $context, $info) => new CoroutinePromise(
+            function (callable $resolve, callable $reject) use ($utopia, $request, $response, $route, $args, $context, $info) {
+                // Mutate the original request object to match route
+                $swoole = $request->getSwoole();
+                $swoole->server['request_method'] = $route->getMethod();
+                $swoole->server['request_uri'] = $route->getPath();
+                $swoole->server['path_info'] = $route->getPath();
+                $swoole->post = $args;
 
-        $queryFields = \array_merge_recursive($apiSchema['query'], $db['query']);
-        $mutationFields = \array_merge_recursive($apiSchema['mutation'], $db['mutation']);
-
-        ksort($queryFields);
-        ksort($mutationFields);
-
-        return new Schema([
-            'query' => new ObjectType([
-                'name' => 'Query',
-                'fields' => $queryFields
-            ]),
-            'mutation' => new ObjectType([
-                'name' => 'Mutation',
-                'fields' => $mutationFields
-            ])
-        ]);
+                self::resolve($utopia, $swoole, $response, $resolve, $reject);
+            }
+        );
     }
 
     /**
