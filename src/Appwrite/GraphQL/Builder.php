@@ -6,9 +6,6 @@ use Appwrite\GraphQL\Types\JsonType;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use Appwrite\Utopia\Response\Model\User;
-use GraphQL\Error\Error;
-use GraphQL\Error\FormattedError;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
@@ -210,8 +207,12 @@ class Builder
                 $type = Type::boolean();
                 break;
             case 'Utopia\Validator\ArrayList':
-                $nested = (fn() => $this->validator)->bindTo($validator, $validator)();
-                $type = Type::listOf(self::getParameterArgType($utopia, $nested, $required, $injections));
+                $type = Type::listOf(self::getParameterArgType(
+                    $utopia,
+                    $validator->getValidator(),
+                    $required,
+                    $injections)
+                );
                 break;
             case 'Utopia\Validator\Numeric':
             case 'Utopia\Validator\Integer':
