@@ -29,6 +29,7 @@ class Builder
     protected static ?JsonType $jsonParser = null;
 
     protected static array $typeMapping = [];
+    protected static array $defaultDocumentArgs = [];
 
     /**
      * Initialise the typeMapping array with the base cases of the recursion
@@ -45,6 +46,50 @@ class Builder
             Model::TYPE_JSON => self::json(),
             Response::MODEL_NONE => self::json(),
             Response::MODEL_ANY => self::json(),
+        ];
+
+        self::$defaultDocumentArgs = [
+            'id' => [
+                'id' => [
+                    'type' => Type::string(),
+                ],
+            ],
+            'list' => [
+                'limit' => [
+                    'type' => Type::int(),
+                    'defaultValue' => 25,
+                ],
+                'offset' => [
+                    'type' => Type::int(),
+                    'defaultValue' => 0,
+                ],
+                'cursor' => [
+                    'type' => Type::string(),
+                    'defaultValue' => '',
+                ],
+                'cursorDirection' => [
+                    'type' => Type::string(),
+                    'defaultValue' => Database::CURSOR_AFTER,
+                ],
+                'orderAttributes' => [
+                    'type' => Type::listOf(Type::string()),
+                    'defaultValue' => [],
+                ],
+                'orderType' => [
+                    'type' => Type::listOf(Type::string()),
+                    'defaultValue' => [],
+                ],
+            ],
+            'mutate' => [
+                'read' => [
+                    'type' => Type::listOf(Type::string()),
+                    'defaultValue' => ["role:member"],
+                ],
+                'write' => [
+                    'type' => Type::listOf(Type::string()),
+                    'defaultValue' => ["role:member"],
+                ],
+            ],
         ];
     }
 
@@ -352,62 +397,22 @@ class Builder
                         'name' => $collectionId,
                         'fields' => $attributes
                     ]);
-                    $idArgs = [
-                        'id' => [
-                            'type' => Type::string(),
-                        ]
-                    ];
-                    $listArgs = [
-                        'limit' => [
-                            'type' => Type::int(),
-                            'defaultValue' => 25,
-                        ],
-                        'offset' => [
-                            'type' => Type::int(),
-                            'defaultValue' => 0,
-                        ],
-                        'cursor' => [
-                            'type' => Type::string(),
-                            'defaultValue' => '',
-                        ],
-                        'cursorDirection' => [
-                            'type' => Type::string(),
-                            'defaultValue' => Database::CURSOR_AFTER,
-                        ],
-                        'orderAttributes' => [
-                            'type' => Type::listOf(Type::string()),
-                            'defaultValue' => [],
-                        ],
-                        'orderType' => [
-                            'type' => Type::listOf(Type::string()),
-                            'defaultValue' => [],
-                        ]
-                    ];
 
-                    $attributes['read'] = [
-                        'type' => Type::listOf(Type::string()),
-                        'defaultValue' => ["role:member"],
-                        'resolve' => function ($object, $args, $context, $info) use ($collectionId) {
-                            return $object->getAttribute('$read');
-                        }
-                    ];
-                    $attributes['write'] = [
-                        'type' => Type::listOf(Type::string()),
-                        'defaultValue' => ["role:member"],
-                        'resolve' => function ($object, $args, $context, $info) use ($collectionId) {
-                            return $object->getAttribute('$write');
-                        }
-                    ];
+                    $attributes = \array_merge(
+                        $attributes,
+                        self::$defaultDocumentArgs['mutate']
+                    );
 
                     $queryFields[$collectionId . 'Get'] = [
                         'type' => $objectType,
-                        'args' => $idArgs,
                         'resolve' => self::queryGet($utopia, $request, $response, $dbForProject, $collectionId)
+                        'args' => self::$defaultDocumentArgs['id'],
                     ];
                     $queryFields[$collectionId . 'List'] = [
                         'type' => $objectType,
                         'args' => $listArgs,
                         'resolve' => self::queryList($utopia, $request, $response, $dbForProject, $collectionId)
+                        'args' => self::$defaultDocumentArgs['list'],
                     ];
                     $mutationFields[$collectionId . 'Create'] = [
                         'type' => $objectType,
@@ -421,8 +426,8 @@ class Builder
                     ];
                     $mutationFields[$collectionId . 'Delete'] = [
                         'type' => $objectType,
-                        'args' => $idArgs,
                         'resolve' => self::mutateDelete($utopia, $request, $response, $dbForProject, $collectionId)
+                        'args' => self::$defaultDocumentArgs['id'],
                     ];
                 }
                 $wg->done();
