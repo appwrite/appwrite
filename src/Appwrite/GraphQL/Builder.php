@@ -452,8 +452,6 @@ class Builder
                 foreach ($attrs as $attr) {
                     $collectionId = $attr->getAttribute('collectionId');
 
-                    if
-
                     if ($attr->getAttribute('status') !== 'available') {
                         continue;
                     }

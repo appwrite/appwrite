@@ -72,6 +72,7 @@ use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 
 /**
+ * @method int getStatusCode()
  * @method Response setStatusCode(int $code = 200)
  */
 class Response extends SwooleResponse
