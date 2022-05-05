@@ -25,6 +25,10 @@
         "Auth0": {
           "clientSecret": "oauth2Auth0ClientSecret",
           "auth0Domain": "oauth2Auth0Domain"
+        },
+        "Authentik": {
+          "clientSecret": "oauth2AuthentikClientSecret",
+          "authentikDomain": "oauth2AuthentikDomain"
         }
       }
       let provider = element.getAttribute("data-forms-oauth-custom");

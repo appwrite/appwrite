@@ -31,6 +31,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'authentik' => [
+        'name' => 'authentik',
+        'developers' => 'https://goauthentik.io/docs/',
+        'icon' => 'icon-authentik',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => 'authentik.phtml',
+        'beta' => true,
+        'mock' => false,
+    ],
     'bitbucket' => [
         'name' => 'BitBucket',
         'developers' => 'https://developer.atlassian.com/bitbucket',
