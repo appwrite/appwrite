@@ -210,11 +210,11 @@
                  * @param {string} password
                  * @param {string} name
                  * @param {string} hash
-                 * @param {boolean} ximport
+                 * @param {object} hashOptions
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                create: (userId, email, password, name, hash, ximport) => __awaiter(this, void 0, void 0, function* () {
+                create: (userId, email, password, name, hash, hashOptions) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
@@ -241,8 +241,8 @@
                     if (typeof hash !== 'undefined') {
                         payload['hash'] = hash;
                     }
-                    if (typeof ximport !== 'undefined') {
-                        payload['import'] = ximport;
+                    if (typeof hashOptions !== 'undefined') {
+                        payload['hashOptions'] = hashOptions;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
@@ -284,10 +284,11 @@
                  * @param {string} email
                  * @param {string} password
                  * @param {string} hash
+                 * @param {object} hashOptions
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateEmail: (email, password, hash) => __awaiter(this, void 0, void 0, function* () {
+                updateEmail: (email, password, hash, hashOptions) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof email === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "email"');
                     }
@@ -304,6 +305,9 @@
                     }
                     if (typeof hash !== 'undefined') {
                         payload['hash'] = hash;
+                    }
+                    if (typeof hashOptions !== 'undefined') {
+                        payload['hashOptions'] = hashOptions;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('patch', uri, {
@@ -388,10 +392,11 @@
                  * @param {string} password
                  * @param {string} oldPassword
                  * @param {string} hash
+                 * @param {object} hashOptions
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updatePassword: (password, oldPassword, hash) => __awaiter(this, void 0, void 0, function* () {
+                updatePassword: (password, oldPassword, hash, hashOptions) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof password === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "password"');
                     }
@@ -405,6 +410,9 @@
                     }
                     if (typeof hash !== 'undefined') {
                         payload['hash'] = hash;
+                    }
+                    if (typeof hashOptions !== 'undefined') {
+                        payload['hashOptions'] = hashOptions;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('patch', uri, {
@@ -507,10 +515,11 @@
                  * @param {string} password
                  * @param {string} passwordAgain
                  * @param {string} hash
+                 * @param {object} hashOptions
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateRecovery: (userId, secret, password, passwordAgain, hash) => __awaiter(this, void 0, void 0, function* () {
+                updateRecovery: (userId, secret, password, passwordAgain, hash, hashOptions) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
@@ -539,6 +548,9 @@
                     }
                     if (typeof hash !== 'undefined') {
                         payload['hash'] = hash;
+                    }
+                    if (typeof hashOptions !== 'undefined') {
+                        payload['hashOptions'] = hashOptions;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('put', uri, {
@@ -5050,11 +5062,11 @@
                  * @param {string} password
                  * @param {string} name
                  * @param {string} hash
-                 * @param {boolean} ximport
+                 * @param {object} hashOptions
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                create: (userId, email, password, name, hash, ximport) => __awaiter(this, void 0, void 0, function* () {
+                create: (userId, email, password, name, hash, hashOptions) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
@@ -5081,8 +5093,8 @@
                     if (typeof hash !== 'undefined') {
                         payload['hash'] = hash;
                     }
-                    if (typeof ximport !== 'undefined') {
-                        payload['import'] = ximport;
+                    if (typeof hashOptions !== 'undefined') {
+                        payload['hashOptions'] = hashOptions;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
@@ -5242,10 +5254,11 @@
                  * @param {string} userId
                  * @param {string} password
                  * @param {string} hash
+                 * @param {object} hashOptions
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updatePassword: (userId, password, hash) => __awaiter(this, void 0, void 0, function* () {
+                updatePassword: (userId, password, hash, hashOptions) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
@@ -5259,6 +5272,9 @@
                     }
                     if (typeof hash !== 'undefined') {
                         payload['hash'] = hash;
+                    }
+                    if (typeof hashOptions !== 'undefined') {
+                        payload['hashOptions'] = hashOptions;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('patch', uri, {
