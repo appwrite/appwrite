@@ -547,7 +547,7 @@ App::delete('/v1/projects/:projectId')
         /** @var Utopia\Database\Database $dbForConsole */
         /** @var Appwrite\Event\Event $deletes */
 
-        if (!Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'))) { // Double check user password
+        if (!Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
             throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS);
         }
 

@@ -25,7 +25,7 @@ class Auth
     ];
 
     const DEFAULT_ALGO = 'argon2';
-    const DEFAULT_ALGO_OPTIONS = (object) array('memory_cost' => 2048, 'time_cost' => 4, 'threads' => 3);
+    const DEFAULT_ALGO_OPTIONS = ['memory_cost' => 2048, 'time_cost' => 4, 'threads' => 3];
 
     /**
      * User Roles.

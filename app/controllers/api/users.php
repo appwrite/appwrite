@@ -21,6 +21,7 @@ use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\JSON;
 
 App::post('/v1/users')
     ->desc('Create User')
@@ -38,19 +39,17 @@ App::post('/v1/users')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
-    ->param('hash', 'bcrypt', new WhiteList(['bcrypt', 'scrypt', 'md5']), 'Hashing algorithm for password. The default value is bcrypt.', true)
-    ->param('import', false, new Boolean(), 'Are you importing hashed password?', true)
+    ->param('hash', Auth::DEFAULT_ALGO, new WhiteList(\array_keys(Auth::SUPPORTED_ALGOS)), 'Hashing algorithm for password. Allowed values are: \'' . \implode('\', \'', \array_keys(Auth::SUPPORTED_ALGOS)) . '\'. The default value is \'' . Auth::DEFAULT_ALGO . '\'.', true)
+    ->param('hashOptions', Auth::DEFAULT_ALGO_OPTIONS, new JSON(), 'Configuration of hashing algorithm. If left empty, default configuration is used.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($userId, $email, $password, $name, $hash, $import, $response, $dbForProject, $usage) {
+    ->action(function ($userId, $email, $password, $name, $hash, $hashOptions, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
-        if(!$import && $hash === 'md5') {
-            throw new Exception('For security reasons, MD5 hashing is only allowed for importing accounts. Please use bcrypt instead.');
-        }
+        $hashOptions = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
 
         $email = \strtolower($email);
 
@@ -63,8 +62,9 @@ App::post('/v1/users')
                 'email' => $email,
                 'emailVerification' => false,
                 'status' => true,
-                'password' => $import ? $password : Auth::passwordHash($password, $hash),
+                'password' => Auth::passwordHash($password, $hash, $hashOptions),
                 'hash' => $hash,
+                'hashOptions' => $hashOptions,
                 'passwordUpdate' => \time(),
                 'registration' => \time(),
                 'reset' => false,
@@ -485,14 +485,17 @@ App::patch('/v1/users/:userId/password')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
-    ->param('hash', 'bcrypt', new WhiteList(['bcrypt', 'scrypt']), 'Hashing algorithm for password. The default value is bcrypt.', true) // We don't allow md5 here on purpose.
+    ->param('hash', Auth::DEFAULT_ALGO, new WhiteList(\array_keys(Auth::SUPPORTED_ALGOS)), 'Hashing algorithm for password. Allowed values are: \'' . \implode('\', \'', \array_keys(Auth::SUPPORTED_ALGOS)) . '\'. The default value is \'' . Auth::DEFAULT_ALGO . '\'.', true)
+    ->param('hashOptions', Auth::DEFAULT_ALGO_OPTIONS, new JSON(), 'Configuration of hashing algorithm. If left empty, default configuration is used.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('audits')
-    ->action(function ($userId, $password, $hash, $response, $dbForProject, $audits) {
+    ->action(function ($userId, $password, $hash, $hashOptions, $response, $dbForProject, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
+
+        $hashOptions = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -501,7 +504,9 @@ App::patch('/v1/users/:userId/password')
         }
 
         $user
-            ->setAttribute('password', Auth::passwordHash($password, $hash))
+            ->setAttribute('password', Auth::passwordHash($password, $hash, $hashOptions))
+            ->setAttribute('hash', $hash)
+            ->setAttribute('hashOptions', $hashOptions)
             ->setAttribute('passwordUpdate', \time());
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
