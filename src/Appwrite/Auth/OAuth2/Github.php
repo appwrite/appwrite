@@ -138,6 +138,8 @@ class Github extends OAuth2
     /**
      * Check if the OAuth email is verified
      * 
+     * @link https://docs.github.com/en/rest/users/emails#list-email-addresses-for-the-authenticated-user
+     * 
      * @param $accessToken
      * 
      * @return bool
