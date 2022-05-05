@@ -137,13 +137,17 @@ class Notion extends OAuth2
     /**
      * Check if the OAuth email is verified
      * 
+     * If present, the email is verified. This was verfied through a manual Notion sign up process
+     * 
      * @param $accessToken
      * 
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        return false;
+        $email = $this->getUserEmail($accessToken);
+
+        return !empty($email);
     }
 
     /**
