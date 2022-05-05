@@ -38,7 +38,7 @@ return [ // Ordered by ABC.
         'enabled' => true,
         'sandbox' => false,
         'form' => 'authentik.phtml',
-        'beta' => true,
+        'beta' => false,
         'mock' => false,
     ],
     'bitbucket' => [
