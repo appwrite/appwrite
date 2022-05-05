@@ -179,7 +179,7 @@ class Bitbucket extends OAuth2
             $emails = \json_decode($emails, true);
             if (isset($emails['values'])) {
                 foreach ($emails['values'] as $email) {
-                    if ($email['is_primary']) {
+                    if ($email['is_confirmed']) {
                         $this->user['email'] = $email['email'];
                         $this->user['is_confirmed'] = $email['is_confirmed'];
                         break;
