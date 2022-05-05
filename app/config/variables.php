@@ -403,6 +403,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_STORAGE_PREVIEW_LIMIT',
+                'description' => 'Maximum file size allowed for file image preview. The default value is 20MB. You should pass your size limit value in bytes.',
+                'introduction' => '0.13.4',
+                'default' => '20000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_STORAGE_ANTIVIRUS',
                 'description' => 'This variable allows you to disable the internal anti-virus scans. This value is set to \'disabled\' by default, to enable the scans set the value to \'enabled\'. Before enabling, you must add the ClamAV service and depend on it on main Appwrite service.',
                 'introduction' => '',
@@ -547,7 +556,7 @@ return [
                 'name' => '_APP_FUNCTIONS_CPUS',
                 'description' => 'The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty, CPU limit will be disabled.',
                 'introduction' => '0.7.0',
-                'default' => '',
+                'default' => '0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -556,7 +565,7 @@ return [
                 'name' => '_APP_FUNCTIONS_MEMORY',
                 'description' => 'The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, memory limit will be disabled.',
                 'introduction' => '0.7.0',
-                'default' => '256',
+                'default' => '0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -565,7 +574,7 @@ return [
                 'name' => '_APP_FUNCTIONS_MEMORY_SWAP',
                 'description' => 'The maximum amount of swap memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, swap memory limit will be disabled.',
                 'introduction' => '0.7.0',
-                'default' => '256',
+                'default' => '0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -589,8 +598,17 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_EXECUTOR_HOST',
+                'description' => 'The host used by Appwrite to communicate with the function executor!',
+                'introduction' => '0.13.0',
+                'default' => 'http://appwrite-executor/v1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_EXECUTOR_RUNTIME_NETWORK',
-                'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
+                'description' => 'Deprecated with 0.14.0, use \'OPEN_RUNTIMES_NETWORK\' instead!',
                 'introduction' => '0.13.0',
                 'default' => 'appwrite_runtimes',
                 'required' => false,
@@ -642,48 +660,57 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
-        ],
-        [
-            'category' => 'Maintenance',
-            'description' => '',
-            'variables' => [
-                [
-                    'name' => '_APP_MAINTENANCE_INTERVAL',
-                    'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
-                    'introduction' => '0.7.0',
-                    'default' => '86400',
-                    'required' => false,
-                    'question' => '',
-                    'filter' => ''
-                ],
-                [
-                    'name' => '_APP_MAINTENANCE_RETENTION_EXECUTION',
-                    'description' => 'The maximum duration (in seconds) upto which to retain execution logs. The default value is 1209600 seconds (14 days).',
-                    'introduction' => '0.7.0',
-                    'default' => '1209600',
-                    'required' => false,
-                    'question' => '',
-                    'filter' => ''
-                ],
-                [
-                    'name' => '_APP_MAINTENANCE_RETENTION_AUDIT',
-                    'description' => 'IThe maximum duration (in seconds) upto which to retain audit logs. The default value is 1209600 seconds (14 days).',
-                    'introduction' => '0.7.0',
-                    'default' => '1209600',
-                    'required' => false,
-                    'question' => '',
-                    'filter' => ''
-                ],
-                [
-                    'name' => '_APP_MAINTENANCE_RETENTION_ABUSE',
-                    'description' => 'The maximum duration (in seconds) upto which to retain abuse logs. The default value is 86400 seconds (1 day).',
-                    'introduction' => '0.7.0',
-                    'default' => '86400',
-                    'required' => false,
-                    'question' => '',
-                    'filter' => ''
-                ]
+            [
+                'name' => 'OPEN_RUNTIMES_NETWORK',
+                'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
+                'introduction' => '0.13.0',
+                'default' => 'appwrite_runtimes',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ],
+        ],
+    ],
+    [
+        'category' => 'Maintenance',
+        'description' => '',
+        'variables' => [
+            [
+                'name' => '_APP_MAINTENANCE_INTERVAL',
+                'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
+                'introduction' => '0.7.0',
+                'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_EXECUTION',
+                'description' => 'The maximum duration (in seconds) upto which to retain execution logs. The default value is 1209600 seconds (14 days).',
+                'introduction' => '0.7.0',
+                'default' => '1209600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_AUDIT',
+                'description' => 'IThe maximum duration (in seconds) upto which to retain audit logs. The default value is 1209600 seconds (14 days).',
+                'introduction' => '0.7.0',
+                'default' => '1209600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_ABUSE',
+                'description' => 'The maximum duration (in seconds) upto which to retain abuse logs. The default value is 86400 seconds (1 day).',
+                'introduction' => '0.7.0',
+                'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ]
         ],
     ],
 ];

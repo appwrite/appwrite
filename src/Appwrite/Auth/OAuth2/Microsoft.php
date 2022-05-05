@@ -41,7 +41,7 @@ class Microsoft extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://login.microsoftonline.com/'.$this->getTenantId().'/oauth2/v2.0/authorize?'.\http_build_query([
+        return 'https://login.microsoftonline.com/'.$this->getTenantID().'/oauth2/v2.0/authorize?'.\http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'state'=> \json_encode($this->state),
@@ -62,7 +62,7 @@ class Microsoft extends OAuth2
             $headers = ['Content-Type: application/x-www-form-urlencoded'];
             $this->tokens = \json_decode($this->request(
                 'POST',
-                'https://login.microsoftonline.com/' . $this->getTenantId() . '/oauth2/v2.0/token',
+                'https://login.microsoftonline.com/' . $this->getTenantID() . '/oauth2/v2.0/token',
                 $headers,
                 \http_build_query([
                     'code' => $code,
@@ -88,7 +88,7 @@ class Microsoft extends OAuth2
         $headers = ['Content-Type: application/x-www-form-urlencoded'];
         $this->tokens = \json_decode($this->request(
             'POST',
-            'https://login.microsoftonline.com/' . $this->getTenantId() . '/oauth2/v2.0/token',
+            'https://login.microsoftonline.com/' . $this->getTenantID() . '/oauth2/v2.0/token',
             $headers,
             \http_build_query([
                 'refresh_token' => $refreshToken,
@@ -170,37 +170,39 @@ class Microsoft extends OAuth2
     }
 
     /**
-     * Extracts the Client Secret from the JSON stored in appSecret
-     * @return string
-     */
-    protected function getClientSecret(): string
-    {
-        $secret = $this->decodeJson();
-
-        return (isset($secret['clientSecret'])) ? $secret['clientSecret'] : ''; 
-    }
-
-    /**
      * Decode the JSON stored in appSecret
+     * 
      * @return array
      */
-    protected function decodeJson(): array
+    protected function getAppSecret(): array
     {    
         try {
-            $secret = \json_decode($this->appSecret, true);
+            $secret = \json_decode($this->appSecret, true, 512, JSON_THROW_ON_ERROR);
         } catch (\Throwable $th) {
-            throw new Exception('Invalid secret');
+            throw new \Exception('Invalid secret');
         }
         return $secret;
     }
 
     /**
-     * Extracts the Tenant Id from the JSON stored in appSecret. Defaults to 'common' as a fallback
+     * Extracts the Client Secret from the JSON stored in appSecret
+     * 
      * @return string
      */
-    protected function getTenantId(): string
+    protected function getClientSecret(): string
     {
-        $secret = $this->decodeJson();
-        return (isset($secret['tenantId'])) ? $secret['tenantId'] : 'common'; 
+        $secret = $this->getAppSecret();
+        return (isset($secret['clientSecret'])) ? $secret['clientSecret'] : ''; 
+    }
+
+    /**
+     * Extracts the Tenant Id from the JSON stored in appSecret. Defaults to 'common' as a fallback
+     * 
+     * @return string
+     */
+    protected function getTenantID(): string
+    {
+        $secret = $this->getAppSecret();
+        return (isset($secret['tenantID'])) ? $secret['tenantID'] : 'common'; 
     }
 }

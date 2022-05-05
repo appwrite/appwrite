@@ -1,19 +1,13 @@
 import Appwrite
 
-func main() {
+func main() async throws {
     let client = Client()
       .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
       .setProject("5df5acd0d48c2") // Your project ID
-
     let avatars = Avatars(client)
-    avatars.getFavicon(
+    let byteBuffer = try await avatars.getFavicon(
         url: "https://example.com"
-    ) { result in
-        switch result {
-        case .failure(let error):
-            print(error.message)
-        case .success(let byteBuffer):
-            print(String(describing: byteBuffer)
-        }
-    }
+    )
+
+    print(String(describing: byteBuffer)
 }
