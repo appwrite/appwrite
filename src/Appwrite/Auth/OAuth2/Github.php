@@ -126,12 +126,10 @@ class Github extends OAuth2
      */
     public function getUserEmail(string $accessToken):string
     {
-        $emails = \json_decode($this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token '.\urlencode($accessToken)]), true);
+        $user = $this->getUser($accessToken);
 
-        foreach ($emails as $email) {
-            if ($email['primary'] && $email['verified']) {
-                return $email['email'];
-            }
+        if (isset($user['email'])) {
+            return $user['email'];
         }
 
         return '';
@@ -146,6 +144,12 @@ class Github extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
+        $user = $this->getUser($accessToken);
+
+        if (isset($user['verified']) && $user['verified'] !== null) {
+            return true;
+        }
+
         return false;
     }
 
@@ -174,6 +178,17 @@ class Github extends OAuth2
     {
         if (empty($this->user)) {
             $this->user = \json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: token '.\urlencode($accessToken)]), true);
+            
+            $emails = $this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token '.\urlencode($accessToken)]);
+
+            $emails = \json_decode($emails, true);
+            foreach ($emails as $email) {
+                if (isset($email['verified']) && $email['verified'] === true) {
+                    $this->user['email'] = $email['email'];
+                    $this->user['verified'] = $email['verified'];
+                    break;
+                }
+            }
         }
 
         return $this->user;
