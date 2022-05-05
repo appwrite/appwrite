@@ -141,6 +141,15 @@ class AuthTest extends TestCase
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scrypt_mod', $options));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt_mod', $options));
     }
+
+    public function testUnknownAlgo() {
+        $this->expectExceptionMessage('Hashing algorithm \'md8\' is not supported.');
+
+        // Bcrypt - Cost 5
+        $plain = 'whatIsMd8?!?';
+        $generatedHash = Auth::passwordHash($plain, 'md8');
+        $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'md8'));
+    }
     
     public function testPasswordGenerator()
     {

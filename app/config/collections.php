@@ -991,7 +991,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['encrypt'],
             ],
             [
                 '$id' => 'hash', // Hashing algorithm used to hash the password

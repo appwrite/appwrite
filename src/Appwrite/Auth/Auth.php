@@ -2,12 +2,6 @@
 
 namespace Appwrite\Auth;
 
-use Appwrite\Auth\Hash\BCrypt;
-use Appwrite\Auth\Hash\MD5;
-use Appwrite\Auth\Hash\PHPass;
-use Appwrite\Auth\Hash\Argon2;
-use Appwrite\Auth\Hash\SCrypt;
-use Appwrite\Auth\Hash\SCryptModified;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
@@ -20,8 +14,8 @@ class Auth
         'md5' => 'MD5',
         'phpass' => 'PHPass',
         'scrypt' => 'SCrypt',
-        'scrypt_modified' => 'SCryptModified',
-        'plaintext' => 'PlainText'
+        'scrypt_mod' => 'SCryptModified',
+        'plaintext' => '' // This is alias for DX purposes. It is translated to default algo
     ];
 
     const DEFAULT_ALGO = 'argon2';
@@ -158,36 +152,22 @@ class Auth
      */
     public static function passwordHash(string $string, string $algo, mixed $options = [])
     {
-        // TODO: Abstract, somehow.
-        switch ($algo) {
-            case 'bcrypt':
-                $hasher = new BCrypt($options);
-                $hash = $hasher->hash($string);
-                return $hash;
-            case 'scrypt_mod':
-                $hasher = new SCryptModified($options);
-                $hash = $hasher->hash($string);
-                return $hash;
-            case 'scrypt':
-                $hasher = new SCrypt($options);
-                $hash = $hasher->hash($string);
-                return $hash;
-            case 'md5':
-                $hasher = new MD5($options);
-                $hash = $hasher->hash($string);
-                return $hash;
-            case 'argon2':
-                $hasher = new Argon2($options);
-                $hash = $hasher->hash($string);
-                return $hash;
-            case 'phpass':
-                // TODO: Rework to use abstract class
-                $hahser = new PHPass(8, FALSE);
-                $hash = $hahser->hash($string);
-                return $hash;
+        // Plain text not supported, just an alias. Switch to recommended algo
+        if($algo === 'plaintext') {
+            $algo = Auth::DEFAULT_ALGO;
+            $options = Auth::DEFAULT_ALGO_OPTIONS;
         }
 
-        return null;
+        if(!\array_key_exists($algo, Auth::SUPPORTED_ALGOS)) {
+            throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
+        }
+
+        $className = Auth::SUPPORTED_ALGOS[$algo];
+        $classPath = '\\Appwrite\\Auth\\Hash\\'.$className;
+        $hasher = new $classPath($options);
+        $hash = $hasher->hash($string);
+
+        return $hash;
     }
 
     /**
@@ -202,36 +182,18 @@ class Auth
      */
     public static function passwordVerify(string $plain, string $hash, string $algo, mixed $options = [])
     {
-        // TODO: Abstract, somehow.
-        switch ($algo) {
-            case 'bcrypt':
-                $hasher = new BCrypt($options);
-                $verify = $hasher->verify($plain, $hash);
-                return $verify;
-            case 'scrypt_mod':
-                $hasher = new SCryptModified($options);
-                $verify = $hasher->verify($plain, $hash);
-                return $verify;
-            case 'scrypt':
-                $hasher = new SCrypt($options ?? [ 'cost_cpu' => 8, 'cost_memory' => 14, 'cost_parallel' => 1, 'length' => 64 ]);
-                $verify = $hasher->verify($plain, $hash);
-                return $verify;
-            case 'md5':
-                $hasher = new MD5($options ?? []);
-                $verify = $hasher->verify($plain, $hash);
-                return $verify;
-            case 'argon2':
-                $hasher = new Argon2($options ?? []);
-                $verify = $hasher->verify($plain, $hash);
-                return $verify;
-            case 'phpass':
-                // TODO: Rework to use abstract class
-                $hahser = new PHPass(8, FALSE);
-                $verify = $hahser->verify($plain, $hash);
-                return $verify;
+        // Plain text not supported, just an alias. Switch to recommended algo
+        if($algo === 'plaintext') {
+            $algo = Auth::DEFAULT_ALGO;
+            $options = Auth::DEFAULT_ALGO_OPTIONS;
         }
 
-        return false;
+        $className = Auth::SUPPORTED_ALGOS[$algo];
+        $classPath = '\\Appwrite\\Auth\\Hash\\'.$className;
+        $hasher = new $classPath($options);
+        $verify = $hasher->verify($plain, $hash);
+
+        return $verify;
     }
 
     /**

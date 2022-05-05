@@ -22,12 +22,17 @@
 
 namespace Appwrite\Auth\Hash;
 
-/**
- * PasswordHash class is a portable password hashing framework for use in PHP applications.
- *
- * @since       0.1
- */
-class PHPass
+use Appwrite\Auth\Hash;
+
+/*
+ * PHPass accepted options:
+ * int iteration_count_log2; The Logarithmic cost value used when generating hash values indicating the number of rounds used to generate hashes
+ * string portable_hashes
+ * string random_state; The cached random state
+ * 
+ * Refference: 
+*/
+class PHPass extends Hash
 {
 	/**
 	 * Alphabet used in itoa64 conversions.
@@ -37,77 +42,42 @@ class PHPass
 	 */
 	protected $itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
-	/**
-	 * The Logarithmic cost value used when generating hash values indicating the number of rounds used to generate hashes
-	 *
-	 * @var    integer
-	 * @since  0.1.0
-	 */
-	public $iteration_count_log2 = 12;
-
-	/**
-	 * The portable_hashes
-	 *
-	 * @var    string
-	 * @since  0.1.0
-	 */
-	public $portable_hashes;
-
-	/**
-	 * The cached random state
-	 *
-	 * @var    string
-	 * @since  0.1.0
-	 */
-	protected $random_state;
-
-	/**
-	 * Constructor
-	 *
-	 * @param int $iteration_count_log2 Logarithmic cost value used when generating hash values
-	 * @param string $portable_hashes
-	 *
-	 * @since 0.5.0
-	 */
-	public function __construct($iteration_count_log2, $portable_hashes)
+    /**
+     * Get default options for specific hashing algo
+     * 
+     * @return mixed options named array
+     */
+    public function getDefaultOptions(): mixed
 	{
-		if ($iteration_count_log2 < 10) {
-			// The minimum Logarithmic cost value
-			$iteration_count_log2 = 10;
-		} else {
-			if ($iteration_count_log2 > 32) {
-				// The maximum Logarithmic cost value
-				$iteration_count_log2 = 32;
-			}
+		$randomState = \microtime();
+		if (\function_exists('getmypid')) {
+			$randomState .= getmypid();
 		}
-		$this->iteration_count_log2 = $iteration_count_log2;
-		$this->portable_hashes = $portable_hashes;
-		$this->random_state = microtime();
-		if (function_exists('getmypid')) {
-			$this->random_state .= getmypid();
-		}
-	}
+
+        return ['iteration_count_log2' => 8, 'portable_hashes' => false, 'random_state' => $randomState];
+    }
 
 	/**
-	 * @param String $password
-	 *
-	 * @return String $hash
-	 * @since 0.1.0
-	 */
-	public function hash($password)
+     * @param string $password Input password to hash
+     * 
+     * @return string hash
+     */
+	public function hash(string $password): string
 	{
+		$options = $this->getDefaultOptions();
+
 		$random = '';
-		if (CRYPT_BLOWFISH === 1 && !$this->portable_hashes) {
-			$random = $this->get_random_bytes(16);
-			$hash = crypt($password, $this->gensalt_blowfish($random));
+		if (CRYPT_BLOWFISH === 1 && !$options['portable_hashes']) {
+			$random = $this->get_random_bytes(16, $options);
+			$hash = crypt($password, $this->gensalt_blowfish($random, $options));
 			if (strlen($hash) === 60) {
 				return $hash;
 			}
 		}
 		if (strlen($random) < 6) {
-			$random = $this->get_random_bytes(6);
+			$random = $this->get_random_bytes(6, $options);
 		}
-		$hash = $this->crypt_private($password, $this->gensalt_private($random));
+		$hash = $this->crypt_private($password, $this->gensalt_private($random, $options));
 		if (strlen($hash) === 34) {
 			return $hash;
 		}
@@ -120,18 +90,17 @@ class PHPass
 		return '*';
 	}
 
-	/**
-	 * @param String $password
-	 * @param String $stored_hash
-	 *
-	 * @return boolean
-	 * @since 0.1.0
-	 */
-	public function verify($password, $stored_hash)
+    /**
+     * @param string $password Input password to validate
+     * @param string $hash Hash to verify password against
+     * 
+     * @return boolean true if password matches hash
+     */
+    public function verify(string $password, string $hash): bool
 	{
-		$hash = $this->crypt_private($password, $stored_hash);
+		$hash = $this->crypt_private($password, $hash);
 		if ($hash[0] === '*') {
-			$hash = crypt($password, $stored_hash);
+			$hash = crypt($password, $hash);
 		}
 
 		/**
@@ -140,20 +109,7 @@ class PHPass
 		 * unpredictable, which they are at least in the non-fallback
 		 * cases (that is, when we use /dev/urandom and bcrypt).
 		 */
-		return $hash === $stored_hash;
-	}
-
-	/**
-	 *  A backwards compatible constructor
-	 *
-	 * @param int $iteration_count_log2 Logarithmic cost value used when generating hash values
-	 * @param string $portable_hashes
-	 *
-	 * @since 0.1.0
-	 */
-	public function PasswordHash($iteration_count_log2, $portable_hashes)
-	{
-		self::__construct($iteration_count_log2, $portable_hashes);
+		return $hash === $hash;
 	}
 
 	/**
@@ -161,12 +117,12 @@ class PHPass
 	 *
 	 * @return String $output
 	 * @since 0.1.0
-	 * @throws InvalidArgumentException Thows an InvalidArgumentException if the $count parameter is not a positive integer.
+	 * @throws Exception Thows an Exception if the $count parameter is not a positive integer.
 	 */
-	protected function get_random_bytes($count)
+	protected function get_random_bytes($count, $options)
 	{
 		if (!is_int($count) || $count < 1) {
-			throw new InvalidArgumentException('Argument count must be a positive integer');
+			throw new \Exception('Argument count must be a positive integer');
 		}
 		$output = '';
 		if (@is_readable('/dev/urandom') && ($fh = @fopen('/dev/urandom', 'rb'))) {
@@ -178,8 +134,8 @@ class PHPass
 			$output = '';
 
 			for ($i = 0; $i < $count; $i += 16) {
-				$this->random_state = md5(microtime() . $this->random_state);
-				$output .= md5($this->random_state, TRUE);
+				$options['iteration_count_log2'] = md5(microtime() . $options['iteration_count_log2']);
+				$output .= md5($options['iteration_count_log2'], TRUE);
 			}
 
 			$output = substr($output, 0, $count);
@@ -194,12 +150,12 @@ class PHPass
 	 *
 	 * @return String $output
 	 * @since 0.1.0
-	 * @throws InvalidArgumentException Thows an InvalidArgumentException if the $count parameter is not a positive integer.
+	 * @throws Exception Thows an Exception if the $count parameter is not a positive integer.
 	 */
 	protected function encode64($input, $count)
 	{
 		if (!is_int($count) || $count < 1) {
-			throw new InvalidArgumentException('Argument count must be a positive integer');
+			throw new \Exception('Argument count must be a positive integer');
 		}
 		$output = '';
 		$i = 0;
@@ -232,10 +188,10 @@ class PHPass
 	 * @return String $output
 	 * @since 0.1.0
 	 */
-	private function gensalt_private($input)
+	private function gensalt_private($input, $options)
 	{
 		$output = '$P$';
-		$output .= $this->itoa64[min($this->iteration_count_log2 + ((PHP_VERSION >= '5') ? 5 : 3), 30)];
+		$output .= $this->itoa64[min($options['iteration_count_log2'] + ((PHP_VERSION >= '5') ? 5 : 3), 30)];
 		$output .= $this->encode64($input, 6);
 
 		return $output;
@@ -292,7 +248,7 @@ class PHPass
 	 * @return String $output
 	 * @since 0.1.0
 	 */
-	private function gensalt_blowfish($input)
+	private function gensalt_blowfish($input, $options)
 	{
 		/**
 		 * This one needs to use a different order of characters and a
@@ -306,8 +262,8 @@ class PHPass
 		 */
 		$itoa64 = './ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 		$output = '$2a$';
-		$output .= chr(ord('0') + $this->iteration_count_log2 / 10);
-		$output .= chr(ord('0') + $this->iteration_count_log2 % 10);
+		$output .= chr(ord('0') + $options['iteration_count_log2'] / 10);
+		$output .= chr(ord('0') + $options['iteration_count_log2'] % 10);
 		$output .= '$';
 		$i = 0;
 		do {
