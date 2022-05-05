@@ -140,12 +140,20 @@ class Google extends OAuth2
     /**
      * Check if the OAuth email is verified
      * 
+     * @link https://www.oauth.com/oauth2-servers/signing-in-with-google/verifying-the-user-info/
+     * 
      * @param $accessToken
      * 
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
     {
+        $user = $this->getUser($accessToken);
+
+        if (isset($user['email_verified']) && $user['email_verified'] === true) {
+            return true;
+        }
+
         return false;
     }
 
@@ -173,7 +181,7 @@ class Google extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://www.googleapis.com/oauth2/v2/userinfo?access_token='.\urlencode($accessToken));
+            $user = $this->request('GET', 'https://www.googleapis.com/oauth2/v3/userinfo?access_token='.\urlencode($accessToken));
             $this->user = \json_decode($user, true);
         }
 
