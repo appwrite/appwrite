@@ -130,12 +130,20 @@ class Gitlab extends OAuth2
     /**
      * Check if the OAuth email is verified
      * 
+     * @link https://docs.gitlab.com/ee/api/users.html#list-current-user-for-normal-users
+     * 
      * @param $accessToken
      * 
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
     {
+        $user = $this->getUser($accessToken);
+
+        if (isset($user['confirmed_at']) && $user['confirmed_at'] !== null) {
+            return true;
+        }
+
         return false;
     }
 
