@@ -9,6 +9,7 @@ return [
 
     // Video Files
     'video/mp4',
+    'video/webm',
     'video/x-flv',
     'application/x-mpegURL',
     'video/MP2T',
