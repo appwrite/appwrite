@@ -23,6 +23,12 @@ class User extends Model
                 'default' => '',
                 'example' => 'John Doe',
             ])
+            ->addRule('password', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Hashed user password.',
+                'default' => '',
+                'example' => '$argon2id$v=19$m=2048,t=4,p=3$aUZjLnliVWRINmFNTWMudg$5S+x+7uA31xFnrHFT47yFwcJeaP0w92L/4LdgrVRXxE',
+            ])
             ->addRule('hash', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Password hashing algorithm.',

@@ -66,6 +66,7 @@ App::post('/v1/account')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
+        // TODO: Here and everywhere else.. If you dont provide options, it should not be default algo options.. it should be empty. Only default options if we also default algo
         $hashOptions = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
 
         $email = \strtolower($email);
