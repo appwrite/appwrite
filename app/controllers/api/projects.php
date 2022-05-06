@@ -101,10 +101,7 @@ App::post('/v1/projects')
             'keys' => null,
             'domains' => null,
             'auths' => $auths,
-            'storageSecrets' => [\bin2hex(OpenSSL::randomPseudoBytes(128))],
-            'storageSecretsDisplacement' => 0,
-            'databaseSecrets' => [\bin2hex(OpenSSL::randomPseudoBytes(128))],
-            'databaseSecretsDisplacement' => 0,
+            'databaseSecrets' => [\uniqid() => \bin2hex(OpenSSL::randomPseudoBytes(128))],
             'jwtSecret' => \bin2hex(OpenSSL::randomPseudoBytes(128)),
             'search' => implode(' ', [$projectId, $name]),
         ]));
