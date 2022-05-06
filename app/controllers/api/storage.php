@@ -65,7 +65,7 @@ App::post('/v1/storage/buckets')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function (string $bucketId, string $name, string $permission, array $read, array $write, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $audits, Stats $usage) {
+    ->action(function (string $bucketId, string $name, string $permission, ?array $read, ?array $write, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $audits, Stats $usage) {
 
         $bucketId = $bucketId === 'unique()' ? $dbForProject->getId() : $bucketId;
         try {
@@ -157,7 +157,7 @@ App::get('/v1/storage/buckets')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function (array $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, $search)] : [];
 
@@ -231,7 +231,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function (string $bucketId, string $name, string $permission, array $read, array $write, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $audits, Stats $usage) {
+    ->action(function (string $bucketId, string $name, string $permission, ?array $read, ?array $write, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $audits, Stats $usage) {
 
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
@@ -350,7 +350,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('deviceLocal')
-    ->action(function (string $bucketId, string $fileId, array $file, array $read, array $write, Request $request, Response $response, Database $dbForProject, Document $user, Event $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
+    ->action(function (string $bucketId, string $fileId, array $file, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, Document $user, Event $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -1290,7 +1290,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('usage')
     ->inject('mode')
     ->inject('events')
-    ->action(function (string $bucketId, string $fileId, array $read, array $write,Response  $response, Database $dbForProject, Document $user, Event $audits, Stats $usage, string $mode, Event $events) {
+    ->action(function (string $bucketId, string $fileId, ?array $read, ?array $write,Response  $response, Database $dbForProject, Document $user, Event $audits, Stats $usage, string $mode, Event $events) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
         $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; // By default set read permissions for user
