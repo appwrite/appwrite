@@ -772,6 +772,7 @@ App::setResource('console', function() {
         'legalCity' => '',
         'legalAddress' => '',
         'legalTaxId' => '',
+        'databaseSecrets' => ['v1' => App::getEnv('_APP_OPENSSL_KEY_V1')],
         'auths' => [
             'limit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
         ],
@@ -820,15 +821,46 @@ App::setResource('dbForProject', function($db, $cache, $project) {
     return $database;
 }, ['db', 'cache', 'project']);
 
-App::setResource('dbForConsole', function($db, $cache) {
+App::setResource('dbForConsole', function($db, $cache, $console) {
+    $filters = [];
+    if(!$console->isEmpty()) {
+        $secrets = $console->getAttribute('databaseSecrets');
+        $version = array_key_last($secrets);        
+        $filters['encrypt'] = [
+            'encode' => function($value) use($version, $secrets) {
+                $key = $secrets[$version];
+                $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+                $tag = null;
+                return json_encode([
+                    'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+                    'method' => OpenSSL::CIPHER_AES_128_GCM,
+                    'iv' => \bin2hex($iv),
+                    'tag' => \bin2hex($tag ?? ''),
+                    'version' => $version,
+                ]);
+            },
+            'decode' => function($value) use($secrets) {
+                if(is_null($value)) {
+                    return null;
+                }
+    
+                $value = json_decode($value, true);
+                $version = $value['version'];
+                $key = $secrets[$version];
+        
+                return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+            }
+        ];
+    }
+
     $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database(new MariaDB($db), $cache);
+    $database = new Database(new MariaDB($db), $cache, $filters);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace('_console');
 
     return $database;
-}, ['db', 'cache']);
+}, ['db', 'cache', 'console']);
 
 
 App::setResource('deviceLocal', function() {
