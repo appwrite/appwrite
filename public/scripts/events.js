@@ -156,7 +156,13 @@
                 }
                 this.action = action;
             },
-            addEvent() {
+            addEvent(modal) {
+                if (modal) {
+                    document.documentElement.classList.remove("modal-open");
+                    modal.classList.add("close");
+                    modal.classList.remove("open");
+                }
+
                 let event = `${this.type}.${this.resource ? this.resource : '*'}`;
 
                 if (this.hasSubResource) {
