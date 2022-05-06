@@ -2723,6 +2723,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => 'fileSecret',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 512,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['encrypt'],
+            ],
+            [
                 '$id' => 'openSSLVersion',
                 'type' => Database::VAR_STRING,
                 'format' => '',

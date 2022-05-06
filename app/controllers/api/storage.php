@@ -535,23 +535,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     $data = $deviceFiles->read($path);
                 }
 
-                $secrets = $project->getAttribute('storageSecrets');
-                $displacement = $project->getAttribute('storageSecretsDisplacement', 0);
-                $key = $secrets[\count($secrets)-1];
+                $fileSecret = \bin2hex(OpenSSL::randomPseudoBytes(128));
                 $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
                 $tag = null;
-                $data = json_encode([
-                    'data' => OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-                    'method' => OpenSSL::CIPHER_AES_128_GCM,
-                    'iv' => \bin2hex($iv),
-                    'tag' => \bin2hex($tag ?? ''),
-                    'version' => $displacement + \count($secrets),
-                ]);
-
-
-                $key = App::getEnv('_APP_OPENSSL_KEY_V1');
-                $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-                $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
+                
+                $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $fileSecret, 0, $iv, $tag);
 
                 $openSSLVersion = '1';
                 $openSSLCipher = OpenSSL::CIPHER_AES_128_GCM;
@@ -594,6 +582,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'openSSLIV' => $openSSLIV ?? null,
                         'search' => implode(' ', [$fileId, $fileName]),
                         'metadata' => $metadata,
+                        'fileSecret' => $fileSecret ?? null,
                     ]);
                     if ($permissionBucket) {
                         $file = Authorization::skip(function () use ($dbForProject, $bucket, $doc) {
@@ -615,7 +604,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('openSSLTag', $openSSLTag ?? null)
                         ->setAttribute('openSSLIV', $openSSLIV ?? null)
                         ->setAttribute('metadata', $metadata)
-                        ->setAttribute('chunksUploaded', $chunksUploaded);
+                        ->setAttribute('chunksUploaded', $chunksUploaded)
+                        ->setAttribute('fileSecret', $fileSecret ?? null);
 
                     if ($permissionBucket) {
                         $file = Authorization::skip(function () use ($dbForProject, $bucket, $fileId, $file) {
@@ -664,6 +654,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'chunksUploaded' => $chunksUploaded,
                         'search' => implode(' ', [$fileId, $fileName]),
                         'metadata' => $metadata,
+                        'fileSecret' => $fileSecret ?? null,
                     ]);
                     if ($permissionBucket) {
                         $file = Authorization::skip(function () use ($dbForProject, $bucket, $doc) {
@@ -977,23 +968,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $source = $deviceFiles->read($path);
 
         if (!empty($cipher)) { // Decrypt
-            $data = OpenSSL::decrypt(
+            $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                $file->getAttribute('fileSecret'),
                 0,
                 \hex2bin($file->getAttribute('openSSLIV')),
                 \hex2bin($file->getAttribute('openSSLTag'))
             );
-
-            $secrets = $project->getAttribute('storageSecrets');
-            $displacement = $project->getAttribute('storageSecretsDisplacement', 0);
-            $data = json_decode($data, true);
-            $version = ($data['version'] ?? 1) - $displacement;
-            $key = $secrets[$version - 1];
-    
-            $source = OpenSSL::decrypt($data['data'], $data['method'], $key, 0, hex2bin($data['iv']), hex2bin($data['tag']));
-
         }
 
         if (!empty($algorithm)) {
@@ -1142,22 +1124,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
             $source = $deviceFiles->read($path);
-            $data = OpenSSL::decrypt(
+            $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                $file->getAttribute('fileSecret'),
                 0,
                 \hex2bin($file->getAttribute('openSSLIV')),
                 \hex2bin($file->getAttribute('openSSLTag'))
             );
-
-            $secrets = $project->getAttribute('storageSecrets');
-            $displacement = $project->getAttribute('storageSecretsDisplacement', 0);
-            $data = json_decode($data, true);
-            $version = ($data['version'] ?? 1) - $displacement;
-            $key = $secrets[$version - 1];
-    
-            $source = OpenSSL::decrypt($data['data'], $data['method'], $key, 0, hex2bin($data['iv']), hex2bin($data['tag']));
         }
 
         if (!empty($file->getAttribute('algorithm', ''))) {
@@ -1302,22 +1276,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
             $source = $deviceFiles->read($path);
-            $data = OpenSSL::decrypt(
+            $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                $file->getAttribute('fileSecret'),
                 0,
                 \hex2bin($file->getAttribute('openSSLIV')),
                 \hex2bin($file->getAttribute('openSSLTag'))
             );
-
-            $secrets = $project->getAttribute('storageSecrets');
-            $displacement = $project->getAttribute('storageSecretsDisplacement', 0);
-            $data = json_decode($data, true);
-            $version = ($data['version'] ?? 1) - $displacement;
-            $key = $secrets[$version - 1];
-    
-            $source = OpenSSL::decrypt($data['data'], $data['method'], $key, 0, hex2bin($data['iv']), hex2bin($data['tag']));
         }
 
         if (!empty($file->getAttribute('algorithm', ''))) {
