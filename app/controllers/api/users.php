@@ -39,8 +39,8 @@ App::post('/v1/users')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
-    ->param('hash', Auth::DEFAULT_ALGO, new WhiteList(\array_keys(Auth::SUPPORTED_ALGOS)), 'Hashing algorithm for password. Allowed values are: \'' . \implode('\', \'', \array_keys(Auth::SUPPORTED_ALGOS)) . '\'. The default value is \'' . Auth::DEFAULT_ALGO . '\'.', true)
-    ->param('hashOptions', Auth::DEFAULT_ALGO_OPTIONS, new JSON(), 'Configuration of hashing algorithm. If left empty, default configuration is used.', true)
+    ->param('hash', 'plaintext', new WhiteList(\array_keys(Auth::SUPPORTED_ALGOS)), 'Hashing algorithm for password. Allowed values are: \'' . \implode('\', \'', \array_keys(Auth::SUPPORTED_ALGOS)) . '\'. The default algorithm is \'' . Auth::DEFAULT_ALGO . '\'.', true)
+    ->param('hashOptions', '{}', new JSON(), 'Configuration of hashing algorithm. If left empty, default configuration is used.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
@@ -49,7 +49,7 @@ App::post('/v1/users')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $hashOptions = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
+        $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
 
         $email = \strtolower($email);
 
@@ -62,9 +62,9 @@ App::post('/v1/users')
                 'email' => $email,
                 'emailVerification' => false,
                 'status' => true,
-                'password' => Auth::passwordHash($password, $hash, $hashOptions),
-                'hash' => $hash,
-                'hashOptions' => $hashOptions,
+                'password' => $hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password,
+                'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
+                'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptions,
                 'passwordUpdate' => \time(),
                 'registration' => \time(),
                 'reset' => false,
@@ -485,8 +485,8 @@ App::patch('/v1/users/:userId/password')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
-    ->param('hash', Auth::DEFAULT_ALGO, new WhiteList(\array_keys(Auth::SUPPORTED_ALGOS)), 'Hashing algorithm for password. Allowed values are: \'' . \implode('\', \'', \array_keys(Auth::SUPPORTED_ALGOS)) . '\'. The default value is \'' . Auth::DEFAULT_ALGO . '\'.', true)
-    ->param('hashOptions', Auth::DEFAULT_ALGO_OPTIONS, new JSON(), 'Configuration of hashing algorithm. If left empty, default configuration is used.', true)
+    ->param('hash', 'plaintext', new WhiteList(\array_keys(Auth::SUPPORTED_ALGOS)), 'Hashing algorithm for password. Allowed values are: \'' . \implode('\', \'', \array_keys(Auth::SUPPORTED_ALGOS)) . '\'. The default algorithm is \'' . Auth::DEFAULT_ALGO . '\'.', true)
+    ->param('hashOptions', '{}', new JSON(), 'Configuration of hashing algorithm. If left empty, default configuration is used.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('audits')
@@ -495,7 +495,7 @@ App::patch('/v1/users/:userId/password')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
 
-        $hashOptions = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
+        $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -504,9 +504,9 @@ App::patch('/v1/users/:userId/password')
         }
 
         $user
-            ->setAttribute('password', Auth::passwordHash($password, $hash, $hashOptions))
-            ->setAttribute('hash', $hash)
-            ->setAttribute('hashOptions', $hashOptions)
+            ->setAttribute('password', $hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password)
+            ->setAttribute('hash', $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash)
+            ->setAttribute('hashOptions', $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptions)
             ->setAttribute('passwordUpdate', \time());
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);

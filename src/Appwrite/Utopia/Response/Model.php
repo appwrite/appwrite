@@ -87,6 +87,22 @@ abstract class Model
         return $this;
     }
 
+    /**
+     * Delete an existing Rule
+     * If rule exists, it will be removed
+     *
+     * @param string $key
+     * @param array $options
+     */
+    protected function removeRule(string $key): self
+    {
+        if(isset($this->rules[$key])) {
+            unset($this->rules[$key]);
+        }
+
+        return $this;
+    }
+
     public function getRequired()
     {
         $list = [];

@@ -8,6 +8,7 @@ use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
+use Appwrite\Utopia\Response\Model\Account;
 use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Any;
 use Appwrite\Utopia\Response\Model\Attribute;
@@ -114,6 +115,7 @@ class Response extends SwooleResponse
     const MODEL_ATTRIBUTE_URL= 'attributeUrl';
 
     // Users
+    const MODEL_ACCOUNT = 'account';
     const MODEL_USER = 'user';
     const MODEL_USER_LIST = 'userList';
     const MODEL_SESSION = 'session';
@@ -253,6 +255,7 @@ class Response extends SwooleResponse
             ->setModel(new ModelDocument())
             ->setModel(new Log())
             ->setModel(new User())
+            ->setModel(new Account())
             ->setModel(new Preferences())
             ->setModel(new Session())
             ->setModel(new Token())
