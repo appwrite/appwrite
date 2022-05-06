@@ -39,7 +39,7 @@ class SCryptModified extends Hash
      */
     public function verify(string $password, string $hash): bool {
 
-        return $hash === $this->hash($password);
+        return $this->hash($password) === $hash;
     }
 
     /**

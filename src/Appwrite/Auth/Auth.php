@@ -12,6 +12,7 @@ class Auth
         'argon2' => 'Argon2',
         'bcrypt' => 'BCrypt',
         'md5' => 'MD5',
+        'sha' => 'SHA',
         'phpass' => 'PHPass',
         'scrypt' => 'SCrypt',
         'scrypt_mod' => 'SCryptModified',

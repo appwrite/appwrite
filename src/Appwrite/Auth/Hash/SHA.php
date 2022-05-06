@@ -5,16 +5,15 @@ namespace Appwrite\Auth\Hash;
 use Appwrite\Auth\Hash;
 
 /*
- * SCrypt accepted options:
- * string? salt; auto-generated if empty
- * int cost_cpu
- * int cost_memory
- * int cost_parallel
- * int length
+ * SHA accepted options:
+ * string? type. Allowed:
+ *  - Version 1: sha1
+ *  - Version 2: sha224, sha256, sha384, sha512/224, sha512/256, sha512
+ *  - Version 3: sha3-224, sha3-256, sha3-384, sha3-512
  * 
- * Refference: https://github.com/DomBlack/php-scrypt/blob/master/scrypt.php#L112-L116
+ * Refference: https://www.php.net/manual/en/function.hash-algos.php
 */
-class SCrypt extends Hash
+class SHA extends Hash
 {
     /**
      * @param string $password Input password to hash
@@ -22,9 +21,9 @@ class SCrypt extends Hash
      * @return string hash
      */
     public function hash(string $password): string {
-        $options = $this->getOptions();
+        $algo = $this->getOptions()['type'];
 
-        return \scrypt($password, $options['salt'] ?? null, $options['cost_cpu'], $options['cost_memory'], $options['cost_parallel'], $options['length']);
+        return \hash($algo, $password);
     }
 
     /**
@@ -36,13 +35,13 @@ class SCrypt extends Hash
     public function verify(string $password, string $hash): bool {
         return $this->hash($password) === $hash;
     }
-
+    
     /**
      * Get default options for specific hashing algo
      * 
      * @return mixed options named array
      */
     public function getDefaultOptions(): mixed {
-        return [ 'cost_cpu' => 8, 'cost_memory' => 14, 'cost_parallel' => 1, 'length' => 64 ];
+        return [ 'type' => 'sha3-512' ];
     }
 }

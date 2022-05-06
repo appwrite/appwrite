@@ -27,7 +27,7 @@ class MD5 extends Hash
      * @return boolean true if password matches hash
      */
     public function verify(string $password, string $hash): bool {
-        return \md5($password) === $hash;
+        return $this->hash($password) === $hash;
     }
     
     /**
