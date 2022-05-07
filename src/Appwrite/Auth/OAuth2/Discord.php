@@ -144,12 +144,20 @@ class Discord extends OAuth2
     /**
      * Check if the OAuth email is verified
      * 
+     * @link https://discord.com/developers/docs/resources/user
+     * 
      * @param $accessToken
      * 
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
     {
+        $user = $this->getUser($accessToken);
+
+        if (isset($user['verified']) && $user['verified'] === true) {
+            return true;
+        }
+
         return false;
     }
 
