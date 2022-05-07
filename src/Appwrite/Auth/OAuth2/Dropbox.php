@@ -140,6 +140,12 @@ class Dropbox extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
+        $user = $this->getUser($accessToken);
+
+        if (isset($user['email_verified']) && $user['email_verified'] === true) {
+            return true;
+        }
+
         return false;
     }
 
