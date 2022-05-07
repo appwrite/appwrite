@@ -476,9 +476,12 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         if ($user === false || $user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
             $name = $oauth2->getUserName($accessToken);
             $email = $oauth2->getUserEmail($accessToken);
+            $isVerified = $oauth2->isEmailVerified($accessToken);
 
-            $user = $dbForProject->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
-
+            if ($isVerified === true) {
+                $user = $dbForProject->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+            }
+            
             if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
@@ -497,7 +500,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         '$read' => ['role:all'],
                         '$write' => ['user:' . $userId],
                         'email' => $email,
-                        'emailVerification' => true,
+                        'emailVerification' => $isVerified,
                         'status' => true, // Email should already be authenticated by OAuth2 provider
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
                         'passwordUpdate' => 0,
@@ -522,7 +525,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         // Create session token, verify user account and update OAuth2 ID and Access Token
-
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
