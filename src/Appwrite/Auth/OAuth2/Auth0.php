@@ -141,12 +141,20 @@ class Auth0 extends OAuth2
     /**
      * Check if the OAuth email is verified
      * 
+     * @link https://auth0.com/docs/api/authentication?javascript#user-profile
+     * 
      * @param $accessToken
      * 
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
     {
+        $user = $this->getUser($accessToken);
+
+        if (isset($user['email_verified']) && $user['email_verified'] === true) {
+            return true;
+        }
+
         return false;
     }
 
