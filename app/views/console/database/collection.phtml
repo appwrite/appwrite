@@ -1040,7 +1040,7 @@ $logs = $this->getParam('logs', null);
             <div data-forms-clone="" data-label="Add Element" data-target="elements-section" data-first="1">
                 <div class="row responsive thin margin-bottom-tiny">
                     <div class="col span-11 margin-bottom-small">
-                        <input type="text" class="full-width" name="elements" required autocomplete="off" maxlength="128" />
+                        <input data-cast-to="array" type="text" class="full-width" name="elements" required autocomplete="off" maxlength="128" />
                     </div>
                     <div class="col span-1 margin-bottom-small">
                         <button type="button" data-remove class="dark danger small round pull-end" style="margin-top: 10px;"><i class="icon-cancel"></i></button>
