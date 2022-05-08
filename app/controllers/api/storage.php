@@ -515,7 +515,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 
                 $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $fileSecret, 0, $iv, $tag);
 
-                $openSSLVersion = '1';
                 $openSSLCipher = OpenSSL::CIPHER_AES_128_GCM;
                 $openSSLTag = \bin2hex($tag ?? '');
                 $openSSLIV = \bin2hex($iv);
@@ -550,7 +549,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'comment' => '',
                         'chunksTotal' => $chunks,
                         'chunksUploaded' => $chunksUploaded,
-                        'openSSLVersion' => $openSSLVersion ?? null,
                         'openSSLCipher' => $openSSLCipher ?? null,
                         'openSSLTag' => $openSSLTag ?? null,
                         'openSSLIV' => $openSSLIV ?? null,
@@ -573,7 +571,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('mimeType', $mimeType)
                         ->setAttribute('sizeActual', $sizeActual)
                         ->setAttribute('algorithm', $algorithm)
-                        ->setAttribute('openSSLVersion', $openSSLVersion ?? null)
                         ->setAttribute('openSSLCipher', $openSSLCipher ?? null)
                         ->setAttribute('openSSLTag', $openSSLTag ?? null)
                         ->setAttribute('openSSLIV', $openSSLIV ?? null)

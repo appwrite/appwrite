@@ -2701,17 +2701,6 @@ $collections = [
                 'filters' => ['encrypt'],
             ],
             [
-                '$id' => 'openSSLVersion',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 64,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => 'openSSLCipher',
                 'type' => Database::VAR_STRING,
                 'format' => '',
