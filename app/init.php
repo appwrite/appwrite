@@ -781,34 +781,42 @@ App::setResource('console', function() {
     ]);
 }, []);
 
+function encode(mixed $value, array $secrets): mixed {
+    $version = array_key_last($secrets);
+    $key = $secrets[$version];
+    $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+    $tag = null;
+    return json_encode([
+        'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+        'method' => OpenSSL::CIPHER_AES_128_GCM,
+        'iv' => \bin2hex($iv),
+        'tag' => \bin2hex($tag ?? ''),
+        'version' => $version,
+    ]);
+}
+
+function decode(mixed $value, array $secrets): mixed {
+    if(is_null($value)) {
+        return null;
+    }
+
+    $value = json_decode($value, true);
+    $version = $value['version'];
+    $key = $secrets[$version];
+
+    return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+}
+
 App::setResource('dbForProject', function($db, $cache, $project) {
     $filters = [];
     if(!$project->isEmpty()) {
-        $secrets = $project->getAttribute('databaseSecrets');
-        $version = array_key_last($secrets);        
+        $secrets = $project->getAttribute('databaseSecrets');        
         $filters['encrypt'] = [
-            'encode' => function($value) use($version, $secrets) {
-                $key = $secrets[$version];
-                $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-                $tag = null;
-                return json_encode([
-                    'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-                    'method' => OpenSSL::CIPHER_AES_128_GCM,
-                    'iv' => \bin2hex($iv),
-                    'tag' => \bin2hex($tag ?? ''),
-                    'version' => $version,
-                ]);
+            'encode' => function($value) use($secrets) {
+                return encode($value, $secrets);
             },
             'decode' => function($value) use($secrets) {
-                if(is_null($value)) {
-                    return null;
-                }
-    
-                $value = json_decode($value, true);
-                $version = $value['version'];
-                $key = $secrets[$version];
-        
-                return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+                return decode($value, $secrets);
             }
         ];
     }
@@ -825,30 +833,13 @@ App::setResource('dbForConsole', function($db, $cache, $console) {
     $filters = [];
     if(!$console->isEmpty()) {
         $secrets = $console->getAttribute('databaseSecrets');
-        $version = array_key_last($secrets);        
+
         $filters['encrypt'] = [
-            'encode' => function($value) use($version, $secrets) {
-                $key = $secrets[$version];
-                $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-                $tag = null;
-                return json_encode([
-                    'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-                    'method' => OpenSSL::CIPHER_AES_128_GCM,
-                    'iv' => \bin2hex($iv),
-                    'tag' => \bin2hex($tag ?? ''),
-                    'version' => $version,
-                ]);
+            'encode' => function($value) use($secrets) {
+                return encode($value, $secrets);
             },
             'decode' => function($value) use($secrets) {
-                if(is_null($value)) {
-                    return null;
-                }
-    
-                $value = json_decode($value, true);
-                $version = $value['version'];
-                $key = $secrets[$version];
-        
-                return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+                return decode($value, $secrets);
             }
         ];
     }
