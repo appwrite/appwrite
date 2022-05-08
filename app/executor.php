@@ -279,7 +279,7 @@ App::post('/v1/runtimes')
             $endTime = \time();
             $container = array_merge($container, [
                 'status' => 'ready',
-                'stdout' => \utf8_encode($stdout),
+                'response' => \utf8_encode($stdout),
                 'stderr' => \utf8_encode($stderr),
                 'startTime' => $startTime,
                 'endTime' => $endTime,
@@ -512,7 +512,7 @@ App::post('/v1/execution')
             $execution = [
                 'status' => $functionStatus,
                 'statusCode' => $statusCode,
-                'stdout' => \utf8_encode(\mb_substr($stdout, -16384)),
+                'response' => \utf8_encode(\mb_substr($stdout, -16384)),
                 'stderr' => \utf8_encode(\mb_substr($stderr, -16384)),
                 'time' => $executionTime,
             ];
