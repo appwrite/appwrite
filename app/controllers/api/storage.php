@@ -343,7 +343,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('project')
     ->inject('user')
     ->inject('audits')
     ->inject('usage')
@@ -351,7 +350,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('deviceLocal')
-    ->action(function (string $bucketId, string $fileId, array $file, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
+    ->action(function (string $bucketId, string $fileId, array $file, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, Document $user, Event $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -1005,7 +1004,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->inject('usage')
     ->inject('mode')
     ->inject('deviceFiles')
-    ->action(function (string $bucketId, string $fileId, Request $request, Response $response, Document $project, Database $dbForProject, Stats $usage, string $mode, Device $deviceFiles) {
+    ->action(function (string $bucketId, string $fileId, Request $request, Response $response, Database $dbForProject, Stats $usage, string $mode, Device $deviceFiles) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -1143,7 +1142,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->inject('usage')
     ->inject('mode')
     ->inject('deviceFiles')
-    ->action(function (string $bucketId, string $fileId, Response $response, Request $request, Document $project, Database $dbForProject, Stats $usage, string $mode, Device $deviceFiles) {
+    ->action(function (string $bucketId, string $fileId, Response $response, Request $request, Database $dbForProject, Stats $usage, string $mode, Device $deviceFiles) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
