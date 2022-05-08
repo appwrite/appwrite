@@ -66,8 +66,8 @@ App::post('/v1/users')
                 'name' => $name,
                 'prefs' => new \stdClass(),
                 'sessions' => [],
-                'tokens' => [],
-                'memberships' => [],
+                'tokens' => null,
+                'memberships' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
                 'deleted' => false
             ]));
@@ -457,7 +457,12 @@ App::patch('/v1/users/:userId/name')
             throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('name', $name));
+        $user
+            ->setAttribute('name', $name)
+            ->setAttribute('search', \implode(' ', [$user->getId(), $user->getAttribute('email'), $name]));
+        ;
+
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $audits
             ->setResource('user/'.$user->getId())
@@ -554,8 +559,13 @@ App::patch('/v1/users/:userId/email')
 
         $email = \strtolower($email);
 
+        $user
+            ->setAttribute('email', $email)
+            ->setAttribute('search', \implode(' ', [$user->getId(), $email, $user->getAttribute('name')]))
+        ;
+
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('email', $email));
+            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
         } catch(Duplicate $th) {
             throw new Exception('Email already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
         }
@@ -764,7 +774,7 @@ App::delete('/v1/users/:userId')
             ->setAttribute("email", null)
             ->setAttribute("password", null)
             ->setAttribute("deleted", true)
-            ->setAttribute("tokens", [])
+            ->setAttribute("tokens", null)
             ->setAttribute("search", null)
         ;
 

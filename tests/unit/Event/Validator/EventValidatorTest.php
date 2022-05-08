@@ -44,6 +44,7 @@ class EventValidatorTest extends TestCase
         $this->assertTrue($this->object->isValid('buckets.*'));
         $this->assertTrue($this->object->isValid('teams.*'));
         $this->assertTrue($this->object->isValid('users.*'));
+        $this->assertTrue($this->object->isValid('teams.*.memberships.*.update.status'));
 
         /**
          * Test for FAILURE
@@ -57,5 +58,6 @@ class EventValidatorTest extends TestCase
         $this->assertFalse($this->object->isValid('collections.*.documents.*.unknown'));
         $this->assertFalse($this->object->isValid('users.torsten.unknown'));
         $this->assertFalse($this->object->isValid('users.torsten.delete.email'));
+        $this->assertFalse($this->object->isValid('teams.*.memberships.*.update.unknown'));
     }
 }

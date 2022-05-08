@@ -208,16 +208,11 @@ class DeletesV1 extends Worker
          */
 
         $userId = $document->getId();
-        $user = $this->getProjectDB($projectId)->getDocument('users', $userId);
 
         // Delete all sessions of this user from the sessions table and update the sessions field of the user record
         $this->deleteByGroup('sessions', [
             new Query('userId', Query::TYPE_EQUAL, [$userId])
         ], $this->getProjectDB($projectId));
-
-        $user->setAttribute('sessions', []);
-
-        $this->getProjectDB($projectId)->updateDocument('users', $userId, $user);
 
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
@@ -234,6 +229,11 @@ class DeletesV1 extends Worker
                 }
             }
         });
+
+        // Delete tokens
+        $this->deleteByGroup('tokens', [
+            new Query('userId', Query::TYPE_EQUAL, [$userId])
+        ], $this->getProjectDB($projectId));
     }
 
     /**
