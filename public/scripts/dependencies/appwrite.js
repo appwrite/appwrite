@@ -48,7 +48,7 @@
                 mode: '',
             };
             this.headers = {
-                'x-sdk-version': 'appwrite:web:4.0.4',
+                'x-sdk-version': 'appwrite:web:5.0.0',
                 'X-Appwrite-Response-Format': '0.13.0',
             };
             this.realtime = {
@@ -371,7 +371,7 @@
                  *
                  * Update currently logged in user password. For validation, user is required
                  * to pass in the new password, and the old password. For users created with
-                 * OAuth and Team Invites, oldPassword is optional.
+                 * OAuth, Team Invites and Magic URL, oldPassword is optional.
                  *
                  * @param {string} password
                  * @param {string} oldPassword
@@ -768,6 +768,9 @@
                 /**
                  * Update Session (Refresh Tokens)
                  *
+                 * Access tokens have limited lifespan and expire to mitigate security risks.
+                 * If session was created using an OAuth provider, this route can be used to
+                 * "refresh" the access token.
                  *
                  * @param {string} sessionId
                  * @throws {AppwriteException}
@@ -1923,9 +1926,7 @@
                 /**
                  * Delete Document
                  *
-                 * Delete a document by its unique ID. This endpoint deletes only the parent
-                 * documents, its attributes and relations to other documents. Child documents
-                 * **will not** be deleted.
+                 * Delete a document by its unique ID.
                  *
                  * @param {string} collectionId
                  * @param {string} documentId
@@ -2263,7 +2264,7 @@
                     }, payload);
                 }),
                 /**
-                 * List the currently active function runtimes.
+                 * List runtimes
                  *
                  * Get a list of all runtimes that are currently active on your instance.
                  *
@@ -2488,8 +2489,8 @@
                         if (onProgress) {
                             onProgress({
                                 $id: response.$id,
-                                progress: Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100,
-                                sizeUploaded: end + 1,
+                                progress: Math.min((counter + 1) * Appwrite.CHUNK_SIZE - 1, size) / size * 100,
+                                sizeUploaded: end,
                                 chunksTotal: response.chunksTotal,
                                 chunksUploaded: response.chunksUploaded
                             });
@@ -4329,8 +4330,8 @@
                         if (onProgress) {
                             onProgress({
                                 $id: response.$id,
-                                progress: Math.min((counter + 1) * Appwrite.CHUNK_SIZE, size) / size * 100,
-                                sizeUploaded: end + 1,
+                                progress: Math.min((counter + 1) * Appwrite.CHUNK_SIZE - 1, size) / size * 100,
+                                sizeUploaded: end,
                                 chunksTotal: response.chunksTotal,
                                 chunksUploaded: response.chunksUploaded
                             });
@@ -4741,6 +4742,34 @@
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('delete', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * List Team Logs
+                 *
+                 * Get the team activity logs list by its unique ID.
+                 *
+                 * @param {string} teamId
+                 * @param {number} limit
+                 * @param {number} offset
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                listLogs: (teamId, limit, offset) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof teamId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "teamId"');
+                    }
+                    let path = '/teams/{teamId}/logs'.replace('{teamId}', teamId);
+                    let payload = {};
+                    if (typeof limit !== 'undefined') {
+                        payload['limit'] = limit;
+                    }
+                    if (typeof offset !== 'undefined') {
+                        payload['offset'] = offset;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
@@ -5536,7 +5565,7 @@
             var _a, _b;
             return __awaiter(this, void 0, void 0, function* () {
                 method = method.toUpperCase();
-                headers = Object.assign(Object.assign({}, headers), this.headers);
+                headers = Object.assign({}, this.headers, headers);
                 let options = {
                     method,
                     headers,
