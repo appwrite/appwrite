@@ -79,10 +79,7 @@ App::post('/v1/teams')
             ]);
 
             $membership = $dbForProject->createDocument('memberships', $membership);
-
-            // Attach user to team
-            $user->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND);
-            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+            $dbForProject->deleteCachedDocument('users', $user->getId());
         }
 
         if (!empty($user->getId())) {
@@ -324,7 +321,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'prefs' => new \stdClass(),
                     'sessions' => [],
                     'tokens' => [],
-                    'memberships' => [],
+                    'memberships' => null,
                     'search' => implode(' ', [$userId, $email, $name]),
                 ])));
             } catch (Duplicate $th) {
@@ -364,10 +361,7 @@ App::post('/v1/teams/:teamId/memberships')
             $team->setAttribute('total', $team->getAttribute('total', 0) + 1);
             $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
 
-            // Attach user to team
-            $invitee->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND);
-
-            $invitee = Authorization::skip(fn() => $dbForProject->updateDocument('users', $invitee->getId(), $invitee));
+            $dbForProject->deleteCachedDocument('users', $invitee->getId());
         } else {
             try {
                 $membership = $dbForProject->createDocument('memberships', $membership);
@@ -579,13 +573,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         /**
          * Replace membership on profile
          */
-        $memberships = array_filter($profile->getAttribute('memberships'), fn (Document $m) => $m->getId() !== $membership->getId());
-
-        $profile
-            ->setAttribute('memberships', $memberships)
-            ->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND);
-
-        Authorization::skip(fn () => $dbForProject->updateDocument('users', $profile->getId(), $profile));
+         
+        $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $audits
             ->setParam('userId', $user->getId())
@@ -669,7 +658,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $user
             ->setAttribute('emailVerification', true)
-            ->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND)
         ;
 
         // Log user in
@@ -703,6 +691,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
+        
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
 
@@ -778,20 +768,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception('Failed to remove membership from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
-        $memberships = $user->getAttribute('memberships', []);
-
-        foreach ($memberships as $key => $child) { 
-            /** @var Document $child */
-
-            if ($membershipId == $child->getId()) {
-                unset($memberships[$key]);
-                break;
-            }
-        }
-
-        $user->setAttribute('memberships', $memberships);
-
-        Authorization::skip(fn() => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
             $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0));

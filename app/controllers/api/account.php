@@ -106,7 +106,7 @@ App::post('/v1/account')
                 'prefs' => new \stdClass(),
                 'sessions' => [],
                 'tokens' => [],
-                'memberships' => [],
+                'memberships' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
                 'deleted' => false
             ])));
@@ -507,7 +507,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'prefs' => new \stdClass(),
                         'sessions' => [],
                         'tokens' => [],
-                        'memberships' => [],
+                        'memberships' => null,
                         'search' => implode(' ', [$userId, $email, $name]),
                         'deleted' => false
                     ])));
@@ -681,7 +681,7 @@ App::post('/v1/account/sessions/magic-url')
                 'prefs' => new \stdClass(),
                 'sessions' => [],
                 'tokens' => [],
-                'memberships' => [],
+                'memberships' => null,
                 'search' => implode(' ', [$userId, $email]),
                 'deleted' => false
             ])));
@@ -953,7 +953,7 @@ App::post('/v1/account/sessions/anonymous')
             'prefs' => new \stdClass(),
             'sessions' => [],
             'tokens' => [],
-            'memberships' => [],
+            'memberships' => null,
             'search' => $userId,
             'deleted' => false
         ])));

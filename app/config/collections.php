@@ -1077,8 +1077,8 @@ $collections = [
                 'signed' => true,
                 'required' => false,
                 'default' => [],
-                'array' => true,
-                'filters' => ['json'],
+                'array' => false,
+                'filters' => ['subQueryMemberships'],
             ],
             [
                 '$id' => 'search',
