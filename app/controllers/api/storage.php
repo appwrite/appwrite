@@ -159,7 +159,7 @@ App::get('/v1/storage/buckets')
     ->inject('usage')
     ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
 
-        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, $search)] : [];
+        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
 
         if (!empty($cursor)) {
             $cursorBucket = $dbForProject->getDocument('buckets', $cursor);
