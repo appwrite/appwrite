@@ -19,6 +19,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\QueryValidator;
+use Utopia\Database\Validator\OrderAttributes;
 use Utopia\Database\Validator\Queries as QueriesValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
@@ -1734,6 +1735,13 @@ App::get('/v1/database/collections/:collectionId/documents')
 
             return $query;
         }, $queries);
+
+        if(!empty($orderAttributes)) {
+            $validator = new OrderAttributes($collection->getAttribute('attributes', []), $collection->getAttribute('indexes', []), true);
+            if (!$validator->isValid($orderAttributes)) {
+                throw new Exception($validator->getDescription(), 400);
+            }
+        }
 
         if (!empty($queries)) {
             $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []), true);
