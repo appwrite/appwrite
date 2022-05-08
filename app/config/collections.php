@@ -567,7 +567,7 @@ $collections = [
                 'filters' => ['json'],
             ],
             [
-                '$id' => 'providers',
+                '$id' => 'authProviders',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,

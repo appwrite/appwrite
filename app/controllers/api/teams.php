@@ -2,13 +2,16 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Detector\Detector;
+use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Host;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use MaxMind\Db\Reader;
 use Utopia\App;
-use Appwrite\Extend\Exception;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -18,6 +21,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
+use Utopia\Locale\Locale;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\ArrayList;
@@ -42,11 +46,7 @@ App::post('/v1/teams')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function ($teamId, $name, $roles, $response, $user, $dbForProject, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Event $events) {
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
@@ -112,9 +112,7 @@ App::get('/v1/teams')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
 
         if (!empty($cursor)) {
             $cursorTeam = $dbForProject->getDocument('teams', $cursor);
@@ -153,9 +151,7 @@ App::get('/v1/teams/:teamId')
     ->param('teamId', '', new UID(), 'Team ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($teamId, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $teamId, Response $response, Database $dbForProject) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -182,9 +178,7 @@ App::put('/v1/teams/:teamId')
     ->param('name', null, new Text(128), 'New team name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($teamId, $name, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $teamId, string $name, Response $response, Database $dbForProject) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -216,11 +210,7 @@ App::delete('/v1/teams/:teamId')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('deletes')
-    ->action(function ($teamId, $response, $dbForProject, $events, $deletes) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Event $deletes */
+    ->action(function (string $teamId, Response $response, Database $dbForProject, Event $events, Event $deletes) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -281,13 +271,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('locale')
     ->inject('audits')
     ->inject('mails')
-    ->action(function ($teamId, $email, $roles, $url, $name, $response, $project, $user, $dbForProject, $locale, $audits, $mails) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Event\Event $mails */
+    ->action(function (string $teamId, string $email, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $audits, Event $mails) {
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
@@ -445,9 +429,7 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($teamId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $teamId, string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -519,9 +501,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($teamId, $membershipId, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -565,12 +545,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('audits')
-    ->action(function ($teamId, $membershipId, $roles, $request, $response, $user, $dbForProject, $audits) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, Event $audits) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
         if ($team->isEmpty()) {
@@ -647,13 +622,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('dbForProject')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($teamId, $membershipId, $userId, $secret, $request, $response, $user, $dbForProject, $geodb, $audits) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var MaxMind\Db\Reader $geodb */
-        /** @var Appwrite\Event\Event $audits */
+    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Reader $geodb, Event $audits) {
 
         $protocol = $request->getProtocol();
 
@@ -777,11 +746,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($teamId, $membershipId, $response, $dbForProject, $audits, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject, Event $audits, Event $events) {
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
