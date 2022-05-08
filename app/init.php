@@ -311,7 +311,7 @@ Database::addFilter('encrypt',
             'method' => OpenSSL::CIPHER_AES_128_GCM,
             'iv' => \bin2hex($iv),
             'tag' => \bin2hex($tag ?? ''),
-            'version' => '1',
+            'version' => 'v1',
         ]);
     },
     function($value) {
@@ -799,7 +799,6 @@ function decode(mixed $value, array $secrets): mixed {
     if(is_null($value)) {
         return null;
     }
-
     $value = json_decode($value, true);
     $version = $value['version'];
     $key = $secrets[$version];

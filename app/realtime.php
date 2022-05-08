@@ -517,24 +517,11 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
             if(!$project->isEmpty()) {
 
                 $secrets = $project->getAttribute('databaseSecrets');
-                $displacement = $project->getAttribute('databaseSecretsDisplacement', 0);
-                $version = $displacement + \count($secrets);
                 
                 $filters['encrypt'] = [
-                    'encode' => function($value) use($version, $secrets) {
-        
-                        $key = $secrets[\count($secrets)-1];
-                        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-                        $tag = null;
-                        $value = json_encode([
-                            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-                            'method' => OpenSSL::CIPHER_AES_128_GCM,
-                            'iv' => \bin2hex($iv),
-                            'tag' => \bin2hex($tag ?? ''),
-                            'version' => $version,
-                        ]);
-        
-                        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+                    'encode' => function($value) use($secrets) {
+                        $version = array_key_last($secrets);
+                        $key = $secrets[$version];
                         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
                         $tag = null;
                         return json_encode([
@@ -542,22 +529,16 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                             'method' => OpenSSL::CIPHER_AES_128_GCM,
                             'iv' => \bin2hex($iv),
                             'tag' => \bin2hex($tag ?? ''),
-                            'version' => '1',
+                            'version' => $version,
                         ]);
                     },
-                    'decode' => function($value) use($secrets, $displacement) {
+                    'decode' => function($value) use($secrets) {
                         if(is_null($value)) {
                             return null;
                         }
-                        
                         $value = json_decode($value, true);
-                        $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
-                
-                        $value = OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
-        
-                        $value = json_decode($value, true);
-                        $version = ($value['version'] ?? 1) - $displacement;
-                        $key = $secrets[$version - 1];
+                        $version = $value['version'];
+                        $key = $secrets[$version];
                 
                         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
                     }
