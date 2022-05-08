@@ -833,7 +833,7 @@ App::put('/v1/account/sessions/magic-url')
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $user
-            ->setAttribute('tokens', $tokens);
+            ->setAttribute('emailVerification', true);
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
