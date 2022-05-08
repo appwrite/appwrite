@@ -215,9 +215,6 @@ class DeletesV1 extends Worker
             new Query('userId', Query::TYPE_EQUAL, [$userId])
         ], $this->getProjectDB($projectId));
         
-        $user->setAttribute('sessions', []);
-        $updated = $this->getProjectDB($projectId)->updateDocument('users', $userId, $user);
-
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
             new Query('userId', Query::TYPE_EQUAL, [$userId])

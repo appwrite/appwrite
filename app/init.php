@@ -312,6 +312,18 @@ Database::addFilter('subQueryTokens',
             ], $database->getIndexLimit(), 0, []));
     }
 );
+              
+Database::addFilter('subQueryMemberships',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return Authorization::skip(fn() => $database
+            ->find('memberships', [
+                new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []));
+    }
+);
 
 Database::addFilter('encrypt',
     function($value) {

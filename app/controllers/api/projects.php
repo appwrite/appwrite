@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
+use Appwrite\Event\Event;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\Origin;
@@ -18,6 +19,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
+use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -26,8 +28,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-App::init(function ($project) {
-    /** @var Utopia\Database\Document $project */
+App::init(function (Document $project) {
 
     if ($project->getId() !== 'console') {
         throw new Exception('Access to this API is forbidden.', 401, Exception::GENERAL_ACCESS_FORBIDDEN);
@@ -59,10 +60,7 @@ App::post('/v1/projects')
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('dbForProject')
-    ->action(function ($projectId, $name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $projectId, string $name, string $teamId, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Database $dbForProject) {
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -170,9 +168,7 @@ App::get('/v1/projects')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForConsole) {
 
         if (!empty($cursor)) {
             $cursorProject = $dbForConsole->getDocument('projects', $cursor);
@@ -210,9 +206,7 @@ App::get('/v1/projects/:projectId')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -239,11 +233,7 @@ App::get('/v1/projects/:projectId/usage')
     ->inject('dbForConsole')
     ->inject('dbForProject')
     ->inject('register')
-    ->action(function ($projectId, $range, $response, $dbForConsole, $dbForProject, $register) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Registry\Registry $register */
+    ->action(function (string $projectId, string $range, Response $response, Database $dbForConsole, Database $dbForProject, Registry $register) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -360,9 +350,7 @@ App::patch('/v1/projects/:projectId')
     ->param('legalTaxId', '', new Text(256), 'Project legal tax ID. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $name, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -402,10 +390,7 @@ App::patch('/v1/projects/:projectId/service')
     ->param('status', null, new Boolean(), 'Service status.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $service, $status, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Boolean $status */
+    ->action(function (string $projectId, string $service, bool $status, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -437,9 +422,7 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->param('secret', '', new text(512), 'Provider secret key. Max length: 512 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $provider, $appId, $secret, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $provider, string $appId, string $secret, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -470,9 +453,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
     ->param('limit', false, new Range(0, APP_LIMIT_USERS), 'Set the max number of users allowed in this project. Use 0 for unlimited.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $limit, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, int $limit, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -505,9 +486,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
     ->param('status', false, new Boolean(true), 'Set the status of this auth method.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $method, $status, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $method, bool $status, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
         $auth = Config::getParam('auth')[$method] ?? [];
@@ -541,11 +520,7 @@ App::delete('/v1/projects/:projectId')
     ->inject('user')
     ->inject('dbForConsole')
     ->inject('deletes')
-    ->action(function ($projectId, $password, $response, $user, $dbForConsole, $deletes) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Appwrite\Event\Event $deletes */
+    ->action(function (string $projectId, string $password, Response $response, Document $user, Database $dbForConsole, Event $deletes) {
 
         if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
             throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS);
@@ -594,9 +569,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -640,9 +613,7 @@ App::get('/v1/projects/:projectId/webhooks')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -674,9 +645,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('webhookId', null, new UID(), 'Webhook unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $webhookId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -716,9 +685,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -766,9 +733,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('webhookId', null, new UID(), 'Webhook unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $webhookId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -809,9 +774,7 @@ App::post('/v1/projects/:projectId/keys')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true)), 'Key scopes list.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $name, $scopes, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $name, array $scopes, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -850,9 +813,7 @@ App::get('/v1/projects/:projectId/keys')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -884,9 +845,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
     ->param('keyId', null, new UID(), 'Key unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $keyId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $keyId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -922,9 +881,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true)), 'Key scopes list')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $keyId, $name, $scopes, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $keyId, string $name, array $scopes, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -966,9 +923,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
     ->param('keyId', null, new UID(), 'Key unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $keyId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $keyId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1012,9 +967,7 @@ App::post('/v1/projects/:projectId/platforms')
     ->param('hostname', '', new Text(256), 'Platform client hostname. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $type, $name, $key, $store, $hostname, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $type, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1057,9 +1010,7 @@ App::get('/v1/projects/:projectId/platforms')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1091,9 +1042,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
     ->param('platformId', null, new UID(), 'Platform unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $platformId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $platformId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1131,9 +1080,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->param('hostname', '', new Text(256), 'Platform client URL. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $platformId, $name, $key, $store, $hostname, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $platformId, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1178,9 +1125,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->param('platformId', null, new UID(), 'Platform unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $platformId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $platformId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1220,9 +1165,7 @@ App::post('/v1/projects/:projectId/domains')
     ->param('domain', null, new DomainValidator(), 'Domain name.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $domain, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $domain, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1281,9 +1224,7 @@ App::get('/v1/projects/:projectId/domains')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1315,9 +1256,7 @@ App::get('/v1/projects/:projectId/domains/:domainId')
     ->param('domainId', null, new UID(), 'Domain unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $domainId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1351,9 +1290,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->param('domainId', null, new UID(), 'Domain unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $domainId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1413,9 +1350,7 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('deletes')
-    ->action(function ($projectId, $domainId, $response, $dbForConsole, $deletes) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole, $deletes) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
