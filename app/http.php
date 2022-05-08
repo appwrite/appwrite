@@ -132,6 +132,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                     'signed' => $attribute['signed'],
                     'array' => $attribute['array'],
                     'filters' => $attribute['filters'],
+                    'default' => $attribute['default'] ?? null,
+                    'format' => $attribute['format'] ?? ''
                 ]);
             }
 
@@ -187,6 +189,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                     'signed' => $attribute['signed'],
                     'array' => $attribute['array'],
                     'filters' => $attribute['filters'],
+                    'default' => $attribute['default'] ?? null,
+                    'format' => $attribute['format'] ?? ''
                 ]);
             }
     
@@ -285,6 +289,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $log->addExtra('file', $th->getFile());
             $log->addExtra('line', $th->getLine());
             $log->addExtra('trace', $th->getTraceAsString());
+            $log->addExtra('detailedTrace', $th->getTrace());
             $log->addExtra('roles', Authorization::$roles);
 
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");

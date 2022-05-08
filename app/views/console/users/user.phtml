@@ -242,6 +242,52 @@
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
                         </ul>
 
+                        <div data-ls-if="{{user.emailVerification}} === false" style="display: none">
+                            <form name="users.updateVerification"  class="margin-bottom"
+                                data-analytics
+                                data-analytics-activity
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Update Verification Status"
+                                data-service="users.updateVerification"
+                                data-scope="sdk"
+                                data-event="submit"
+                                data-success="trigger,alert"
+                                data-success-param-alert-text="User verification status was updated successfully"
+                                data-success-param-trigger-events="users.update"
+                                data-failure="alert"
+                                data-failure-param-alert-text="Failed to update user verification status"
+                                data-failure-param-alert-classname="error"
+                            >
+                                <input type="hidden" disabled name="userId" data-ls-bind="{{user.$id}}">
+                                <input type="hidden" disabled name="emailVerification" value="true" data-cast-to="boolean">
+                                <button type="submit" class="dark fill">Verify Account</button>
+                            </form>
+                        </div>
+
+                        <div data-ls-if="{{user.emailVerification}} === true" style="display: none">
+                            <form name="users.updateVerification" class="margin-bottom"
+                                data-analytics
+                                data-analytics-activity
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Update Verification Status"
+                                data-service="users.updateVerification"
+                                data-scope="sdk"
+                                data-event="submit"
+                                data-success="trigger,alert"
+                                data-success-param-alert-text="User verification status was updated successfully"
+                                data-success-param-trigger-events="users.update"
+                                data-failure="alert"
+                                data-failure-param-alert-text="Failed to update user verification status"
+                                data-failure-param-alert-classname="error"
+                            >
+                                <input type="hidden" disabled name="userId" data-ls-bind="{{user.$id}}">
+                                <input type="hidden" disabled name="emailVerification" value="false" data-cast-to="boolean">
+                                <button type="submit" class="dark fill">Unverify Account</button>
+                            </form>
+                        </div>
+
                         <div data-ls-if="{{user.status}} === true" style="display: none">
                             <form name="users.updateStatus" class="margin-bottom"
                                 data-analytics

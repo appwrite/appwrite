@@ -1,3 +1,30 @@
+# Unreleased Version
+- Renamed `providers` to `authProviders` in project collection **Breaking Change**
+
+# Version 0.13.4
+
+## Features
+- Added `detailedTrace` to Logger events
+- Added new `_APP_STORAGE_PREVIEW_LIMIT` environment variable to configure maximum preview file size
+
+## Bugs
+- Fixed missing volume mount in Docker Compose
+- Fixed upload with Bucket File permission
+- Fixed custom ID validation in Console
+- Fixed file preview with no `output` passed
+- Fixed GitHub issue URL in Console
+- Fixed double PDOException logging
+- Fixed functions cleanup when container is already initialized
+- Fixed float input precision in Console
+
+# Version 0.13.3
+## Bugs
+- Fixed search for terms that inlcude `@` characters
+- Fixed Bucket permissions
+- Fixed file upload error in UI
+- Fixed input field for float attributes in UI
+- Fixed `appwrite-executor` restart behavior in docker-compose.yml
+
 # Version 0.13.2
 ## Bugs
 - Fixed global issue with write permissions

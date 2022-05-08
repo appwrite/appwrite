@@ -19,7 +19,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\QueryValidator;
-use Utopia\Database\Validator\Queries as QueriesValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
@@ -31,6 +30,8 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries as QueriesValidator;
+use Appwrite\Utopia\Database\Validator\OrderAttributes as OrderAttributesValidator;
 use Appwrite\Utopia\Response;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
@@ -150,7 +151,7 @@ App::post('/v1/database/collections')
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('collectionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
-    ->param('permission', null, new WhiteList(['document', 'collection']), 'Permissions type model to use for reading documents in this collection. You can use collection-level permission set once on the collection using the `read` and `write` params, or you can set document-level permission where each document read and write params will decide who has access to read and write to each document individually. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
+    ->param('permission', null, new WhiteList(['document', 'collection']), 'Specifies the permissions model used in this collection, which accepts either \'collection\' or \'document\'. For \'collection\' level permission, the permissions specified in read and write params are applied to all documents in the collection. For \'document\' level permissions, read and write permissions are specified in each document. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->inject('response')
@@ -1687,7 +1688,7 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('queries', [], new ArrayList(new Text(0), 100), 'Array of query strings.', true) 
+    ->param('queries', [], new ArrayList(new Text(0), 100), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/database#querying-documents).', true) 
     ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the document used as the starting point for the query, excluding the document itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
@@ -1738,6 +1739,13 @@ App::get('/v1/database/collections/:collectionId/documents')
         if (!empty($queries)) {
             $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []), true);
             if (!$validator->isValid($queries)) {
+                throw new Exception($validator->getDescription(), 400, Exception::GENERAL_QUERY_INVALID);
+            }
+        }
+
+        if(!empty($orderAttributes)) {
+            $validator = new OrderAttributesValidator($collection->getAttribute('attributes', []), $collection->getAttribute('indexes', []), true);
+            if (!$validator->isValid($orderAttributes)) {
                 throw new Exception($validator->getDescription(), 400, Exception::GENERAL_QUERY_INVALID);
             }
         }
@@ -1949,7 +1957,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
     ->param('collectionId', null, new UID(), 'Collection ID.')
     ->param('documentId', null, new UID(), 'Document ID.')
-    ->param('data', [], new JSON(), 'Document data as JSON object.')
+    ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
