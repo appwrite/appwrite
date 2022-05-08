@@ -45,8 +45,9 @@ foreach ($events as $name => $event) {
         </h1>
     </div>
 
-    <div class="zone xl">
-        <div class="row responsive margin-top-negative">
+    <div class="zone xl" x-data="events">
+        <h2 class="margin-top">Settings</h2>
+        <div class="row responsive">
             <div class="col span-8 margin-bottom">
                 <label>&nbsp;</label>
 
@@ -86,42 +87,13 @@ foreach ($events as $name => $event) {
                         <label data-ls-attrs="for=url-{{webhook.$id}}">POST URL</label>
                         <input type="url" class="full-width" data-ls-attrs="id=url-{{project-webhook.$id}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{project-webhook.url}}" />
 
-                        <section x-data="events" class="margin-bottom-small" data-ls-attrs="x-init=events={{project-webhook.events}}">
-                            <label class="margin-bottom">Events
-                                <div data-ui-modal x-ref="modal" class="modal box close width-small height-small" data-button-text="Add Event" data-button-class="pull-end small">
-                                    <select x-model="selected" @change="setEvent()">
-                                        <option value="" selected>Select event</option>
-                                        <?php foreach ($patterns as $event) : ?>
-                                            <option value="<?php echo $event; ?>"><?php echo $event; ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <div x-show="hasResource">
-                                        <label x-text="'Select ' + resourceName + ' (optional)'"></label>
-                                        <input type="text" :placeholder="resourceName" x-model="resource">
-                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard access</div>
-                                    </div>
-                                    <div x-show="hasSubResource">
-                                        <label x-text="'Select ' + subResourceName + ' (optional)'"></label>
-                                        <input type="text" :placeholder="subResourceName" x-model="subResource">
-                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard access</div>
-                                    </div>
-                                    <div x-show="hasAttribute">
-                                        <label for="subResource">Add Attribute (optional)</label>
-                                        <select x-model="attribute">
-                                            <option value="*">Select attribute</option>
-                                            <template x-for="attr in attributes">
-                                                <option :value="attr" x-text="attr"></option>
-                                            </template>
-                                        </select>
-                                    </div>
-                                    <button x-show="selected" type="button" @click="addEvent($refs.modal)">Add Event</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                                </div>
-                            </label>
-                            <template x-for="(event, index) in events">
+                        <section class="margin-bottom-small" data-ls-attrs="x-init=load({{project-webhook.events}})">
+                            <label class="margin-bottom">Events <button class="pull-end small" type="button" @click="showModal($refs.modal_function)">Add Event</button></label>
+                            <template x-for="event in Array.from(events)">
                                 <div class="row events responsive thin margin-bottom-small">
                                     <div class="col span-12 margin-bottom-small">
                                         <span class="text" x-text="event"></span>
-                                        <span class="action" @click="removeEvent(index)">
+                                        <span class="action" @click="removeEvent(event)">
                                             <i class="icon-trash"></i>
                                         </span>
                                     </div>
@@ -186,6 +158,38 @@ foreach ($events as $name => $event) {
                     </form>
                 </div>
             <?php endif; ?>
+            <div x-ref="modal_function" data-ui-modal class="modal box close width-small height-small" data-button-hide="on">
+                <div>
+                    <form @submit.prevent="addEvent($refs.modal_function)">
+                        <select x-model="selected" @change="setEvent()">
+                            <option value="" selected>Select event</option>
+                            <?php foreach ($patterns as $event) : ?>
+                                <option value="<?php echo $event; ?>"><?php echo $event; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div x-show="hasResource">
+                            <label x-text="'Select ' + resourceName + ' (optional)'"></label>
+                            <input type="text" :placeholder="resourceName" x-model="resource">
+                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard access</div>
+                        </div>
+                        <div x-show="hasSubResource">
+                            <label x-text="'Select ' + subResourceName + ' (optional)'"></label>
+                            <input type="text" :placeholder="subResourceName" x-model="subResource">
+                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard access</div>
+                        </div>
+                        <div x-show="hasAttribute">
+                            <label for="subResource">Add Attribute (optional)</label>
+                            <select x-model="attribute">
+                                <option value="*">Select attribute</option>
+                                <template x-for="attr in attributes">
+                                    <option :value="attr" x-text="attr"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <button x-show="selected" type="submit">Add Event</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>

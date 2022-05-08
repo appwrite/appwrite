@@ -1,7 +1,7 @@
 (function (window) {
     document.addEventListener('alpine:init', () => {
         Alpine.data('events', () => ({
-            events: [],
+            events: new Set(),
             selected: null,
             action: null,
             type: null,
@@ -15,6 +15,9 @@
             attribute: null,
             hasAttribute: false,
             attributes: [],
+            load(events) {
+                this.events = new Set(events);
+            },
             reset() {
                 this.hasResource = this.hasSubResource = this.hasAttribute = false;
                 this.type = this.subType = this.subResource = this.resource = this.attribute = this.selected = this.action = null;
@@ -156,12 +159,18 @@
                 }
                 this.action = action;
             },
+            showModal(modal) {
+                document.documentElement.classList.add("modal-open");
+                modal.classList.remove("close");
+                modal.classList.add("open");
+            },
+            closeModal(modal) {
+                document.documentElement.classList.remove("modal-open");
+                modal.classList.add("close");
+                modal.classList.remove("open");
+            },
             addEvent(modal) {
-                if (modal) {
-                    document.documentElement.classList.remove("modal-open");
-                    modal.classList.add("close");
-                    modal.classList.remove("open");
-                }
+                this.closeModal(modal);
 
                 let event = `${this.type}.${this.resource ? this.resource : '*'}`;
 
@@ -177,12 +186,12 @@
                     event += `.${this.attribute}`;
                 }
 
-                this.events.push(event);
+                this.events.add(event);
 
                 this.reset();
             },
-            removeEvent(index) {
-                this.events.splice(index, 1);
+            removeEvent(value) {
+                this.events.delete(value);
             }
         }));
     });
