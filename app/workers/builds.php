@@ -31,7 +31,8 @@ class BuildsV1 extends Worker
         return "builds";
     }
 
-    public function init(): void {
+    public function init(): void
+    {
         $this->executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
     }
 
@@ -129,7 +130,13 @@ class BuildsV1 extends Worker
             'functionId' => $function->getId(),
             'deploymentId' => $deployment->getId()
         ]);
-        $target = Realtime::fromPayload($allEvents[0], $build, $project);
+        $target = Realtime::fromPayload(
+            // Pass first, most verbose event pattern
+            event: $allEvents[0],
+            payload: $build,
+            project: $project
+        );
+
         Realtime::send(
             projectId: 'console',
             payload: $build->getArrayCopy(),
@@ -196,7 +203,12 @@ class BuildsV1 extends Worker
             /** 
              * Send realtime Event
              */
-            $target = Realtime::fromPayload($allEvents[0], $build, $project);
+            $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
+                event: $allEvents[0],
+                payload: $build,
+                project: $project
+            );
             Realtime::send(
                 projectId: 'console',
                 payload: $build->getArrayCopy(),

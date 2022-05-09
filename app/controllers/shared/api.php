@@ -221,6 +221,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
             $bucket = ($trigger && $trigger->getCollection() === 'buckets') ? $trigger : null;
 
             $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
                 event: $allEvents[0],
                 payload: $payload,
                 project: $project,

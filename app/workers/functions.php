@@ -75,6 +75,7 @@ class FunctionsV1 extends Worker
                         function: $function,
                         dbForProject: $database,
                         trigger: 'event',
+                        // Pass first, most verbose event pattern
                         event: $events[0],
                         eventData: $payload,
                         user: $user
@@ -329,7 +330,11 @@ class FunctionsV1 extends Worker
             'functionId' => $function->getId(),
             'executionId' => $execution->getId()
         ]);
-        $target = Realtime::fromPayload($allEvents[0], $execution);
+        $target = Realtime::fromPayload(
+            // Pass first, most verbose event pattern
+            event: $allEvents[0],
+            payload: $execution
+        );
         Realtime::send(
             projectId: 'console',
             payload: $execution->getArrayCopy(),
