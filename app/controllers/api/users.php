@@ -65,7 +65,7 @@ App::post('/v1/users')
                 'reset' => false,
                 'name' => $name,
                 'prefs' => new \stdClass(),
-                'sessions' => [],
+                'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
@@ -654,20 +654,15 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
             throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
-        $sessions = $user->getAttribute('sessions', []);
-        $key = array_search($sessionId, array_column($sessions, '$id'), true);
+        $session = $dbForProject->getDocument('sessions', $sessionId);
 
-        if (!$key) {
+        if($session->isEmpty()) {
             throw new Exception('Session not found', 404, Exception::USER_SESSION_NOT_FOUND);
         }
 
-        $dbForProject->deleteDocument('sessions', $sessions[$key]->getId());
-        $events
-            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
-        ;
-        unset($sessions[$key]);
-        $user->setAttribute('sessions', $sessions);
-        $dbForProject->updateDocument('users', $user->getId(), $user);
+        $dbForProject->deleteDocument('sessions', $session->getId());
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
 
         $usage
             ->setParam('users.update', 1)
@@ -716,7 +711,7 @@ App::delete('/v1/users/:userId/sessions')
             $dbForProject->deleteDocument('sessions', $session->getId());
         }
 
-        $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', []));
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $events
             ->setParam('eventData', $response->output($user, Response::MODEL_USER))

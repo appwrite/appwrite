@@ -204,7 +204,7 @@ trait TeamsBaseServer
         $this->assertEquals(1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
         $this->assertIsInt($response['body']['dateCreated']);
-
+        
         
         /** Delete User */
         $user = $this->client->call(Client::METHOD_DELETE, '/users/' . $userUid, array_merge([

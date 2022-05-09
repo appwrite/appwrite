@@ -105,7 +105,7 @@ App::post('/v1/account')
                 'reset' => false,
                 'name' => $name,
                 'prefs' => new \stdClass(),
-                'sessions' => [],
+                'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
@@ -204,8 +204,7 @@ App::post('/v1/account/sessions')
             ->setAttribute('$write', ['user:' . $profile->getId()])
         );
 
-        $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile);
+        $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $audits
             ->setResource('user/'.$profile->getId())
@@ -458,13 +457,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
         if ($current) { // Delete current session of new one.
-            foreach ($sessions as $key => $session) {/** @var Document $session */
-                if ($current === $session['$id']) {
-                    unset($sessions[$key]);
-
-                    $dbForProject->deleteDocument('sessions', $session->getId());
-                    $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
-                }
+            $currentDocument = $dbForProject->getDocument('sessions', $current);
+            if(!$currentDocument->isEmpty()) {
+                $dbForProject->deleteDocument('sessions', $currentDocument->getId());
+                $dbForProject->deleteCachedDocument('users', $user->getId());
             }
         }
 
@@ -505,7 +501,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'reset' => false,
                         'name' => $name,
                         'prefs' => new \stdClass(),
-                        'sessions' => [],
+                        'sessions' => null,
                         'tokens' => null,
                         'memberships' => null,
                         'search' => implode(' ', [$userId, $email, $name]),
@@ -553,17 +549,18 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $user
             ->setAttribute('status', true)
-            ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND)
         ;
 
         Authorization::setRole('user:' . $user->getId());
+
+        $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$read', ['user:' . $user->getId()])
             ->setAttribute('$write', ['user:' . $user->getId()])
         );
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $audits
             ->setResource('user/'.$user->getId())
@@ -680,7 +677,7 @@ App::post('/v1/account/sessions/magic-url')
                 'registration' => \time(),
                 'reset' => false,
                 'prefs' => new \stdClass(),
-                'sessions' => [],
+                'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
                 'search' => implode(' ', [$userId, $email]),
@@ -819,6 +816,10 @@ App::put('/v1/account/sessions/magic-url')
                 ->setAttribute('$write', ['user:' . $user->getId()])
         );
 
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $tokens = $user->getAttribute('tokens', []);
+
         /**
          * We act like we're updating and validating
          *  the recovery token but actually we don't need it anymore.
@@ -826,9 +827,7 @@ App::put('/v1/account/sessions/magic-url')
         $dbForProject->deleteDocument('tokens', $token);
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        $user
-            ->setAttribute('emailVerification', true)
-            ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
+        $user->setAttribute('emailVerification', true);
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -938,7 +937,7 @@ App::post('/v1/account/sessions/anonymous')
             'reset' => false,
             'name' => null,
             'prefs' => new \stdClass(),
-            'sessions' => [],
+            'sessions' => null,
             'tokens' => null,
             'memberships' => null,
             'search' => $userId,
@@ -974,8 +973,7 @@ App::post('/v1/account/sessions/anonymous')
                 ->setAttribute('$write', ['user:' . $user->getId()])
         );
 
-        $user = $dbForProject->updateDocument('users', $user->getId(),
-            $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND));
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $audits->setResource('user/'.$user->getId());
 
@@ -1025,16 +1023,17 @@ App::post('/v1/account/jwt')
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->inject('response')
     ->inject('user')
-    ->action(function ($response, $user) {
+    ->inject('dbForProject')
+    ->action(function ($response, $user, $dbForProject) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForProject */
+
 
         $sessions = $user->getAttribute('sessions', []);
         $current = new Document();
 
-        foreach ($sessions as $session) {
-            /** @var Utopia\Database\Document $session */
-
+        foreach ($sessions as $session) { /** @var Utopia\Database\Document $session */
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                 $current = $session;
             }
@@ -1587,8 +1586,8 @@ App::delete('/v1/account/sessions/:sessionId')
                         ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
                     ;
                 }
-
-                $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
+                
+                $dbForProject->deleteCachedDocument('users', $user->getId());
 
                 $events
                     ->setParam('userId', $user->getId())
@@ -1684,8 +1683,7 @@ App::patch('/v1/account/sessions/:sessionId')
 
                 $dbForProject->updateDocument('sessions', $sessionId, $session);
 
-                $user->setAttribute("sessions", $sessions);
-                $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+                $dbForProject->deleteCachedDocument('users', $user->getId());
 
                 $audits->setResource('user/' . $user->getId());
 
@@ -1765,7 +1763,7 @@ App::delete('/v1/account/sessions')
             }
         }
 
-        $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', []));
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $numOfSessions = count($sessions);
 

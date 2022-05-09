@@ -343,7 +343,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'reset' => false,
                     'name' => $name,
                     'prefs' => new \stdClass(),
-                    'sessions' => [],
+                    'sessions' => null,
                     'tokens' => null,
                     'memberships' => null,
                     'search' => implode(' ', [$userId, $email, $name]),
@@ -711,11 +711,10 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             ->setAttribute('$write', ['user:'.$user->getId()])
         );
 
-        $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         Authorization::setRole('user:'.$userId);
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
         
         $dbForProject->deleteCachedDocument('users', $user->getId());
