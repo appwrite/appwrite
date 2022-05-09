@@ -629,12 +629,12 @@ foreach ($events as $name => $event) {
                             </select>
                             <div x-show="hasResource">
                                 <label x-text="'Select ' + resourceName + ' (optional)'"></label>
-                                <input type="text" :placeholder="resourceName" x-model="resource">
+                                <input type="text" :placeholder="resourceName" x-model="resource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
                                 <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard access</div>
                             </div>
                             <div x-show="hasSubResource">
                                 <label x-text="'Select ' + subResourceName + ' (optional)'"></label>
-                                <input type="text" :placeholder="subResourceName" x-model="subResource">
+                                <input type="text" :placeholder="subResourceName" x-model="subResource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
                                 <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard access</div>
                             </div>
                             <div x-show="hasAttribute">
