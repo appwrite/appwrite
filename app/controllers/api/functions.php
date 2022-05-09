@@ -971,8 +971,8 @@ App::post('/v1/functions/:functionId/executions')
                         break;
                 }
             }
-            $execution->setAttribute('stderr', \substr($executionResponse['stderr'], 0, $stderrMax));
-            $execution->setAttribute('stdout', \substr($executionResponse['stdout'], 0, $stdoutMax));
+            $execution->setAttribute('stderr', \mb_substr($executionResponse['stderr'], 0, $stderrMax));
+            $execution->setAttribute('stdout', \mb_substr($executionResponse['stdout'], 0, $stdoutMax));
         } catch (\Throwable $th) {
             $execution->setAttribute('status', 'failed');
             $execution->setAttribute('statusCode', $th->getCode());

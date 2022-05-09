@@ -162,8 +162,8 @@ class BuildsV1 extends Worker
                         break;
                 }
             }
-            $build->setAttribute('stderr', \substr($response['stderr'], 0, $stderrMax));
-            $build->setAttribute('stdout', \substr($response['stdout'], 0, $stdoutMax));
+            $build->setAttribute('stderr', \mb_substr($response['stderr'], 0, $stderrMax));
+            $build->setAttribute('stdout', \mb_substr($response['stdout'], 0, $stdoutMax));
 
             Console::success("Build id: $buildId created");
 
