@@ -464,7 +464,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_S3_REGION',
-                'description' => 'AWS S3 storage region. Required when storage adapter is set to S3. You can find your region info for your bucket from AWS console (this applies also to S3 S3 compatible storage like DigitalOcean).',
+                'description' => 'AWS S3 storage region. Required when storage adapter is set to S3. You can find your region info for your bucket from AWS console (this applies also to S3 compatible storage like DigitalOcean).',
                 'introduction' => '0.13.0',
                 'default' => 'us-eas-1',
                 'required' => false,
