@@ -301,6 +301,19 @@ Database::addFilter('subQueryWebhooks',
     }
 );
 
+Database::addFilter('subQuerySessions',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        $sessions = Authorization::skip(fn () => $database->find('sessions', [
+            new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
+        ], $database->getIndexLimit(), 0, []));
+
+        return $sessions;
+    }
+);
+
 Database::addFilter('subQueryTokens',
     function($value) {
         return null;
