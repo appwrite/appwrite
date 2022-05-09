@@ -173,7 +173,7 @@ $cli
                     Console::warning("\nIf you haven't already done so, set the following record for {$input[$var['name']]} on your DNS provider:\n");
                     $mask = "%-15.15s %-10.10s %-30.30s\n";
                     printf($mask, "Type", "Name", "Value");
-                    printf($mask, "A or AAAA", "@", "<YOUR EXTERNAL IP>");
+                    printf($mask, "A or AAAA", "@", "<YOUR PUBLIC IP>");
                     Console::warning("\nUse 'AAAA' if you're using an IPv6 address and 'A' if you're using an IPv4 address.\n");
                 }
             }
