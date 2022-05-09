@@ -189,7 +189,8 @@ App::put('/v1/teams/:teamId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $teamId, string $name, Response $response, Database $dbForProject, Event $events) {
+    ->inject('audits')
+    ->action(function (string $teamId, string $name, Response $response, Database $dbForProject, Event $events, EventAudit $audits) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -203,6 +204,7 @@ App::put('/v1/teams/:teamId')
         );
 
         $events->setParam('teamId', $team->getId());
+        $audits->setResource('team/' . $team->getId());
 
         $response->dynamic($team, Response::MODEL_TEAM);
     });
