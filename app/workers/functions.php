@@ -151,9 +151,7 @@ class FunctionsV1 extends Worker
                 $function = Authorization::skip(fn () => $database->updateDocument(
                     'functions',
                     $function->getId(),
-                    new Document(array_merge($function->getArrayCopy(), [
-                        'scheduleNext' => (int)$next,
-                    ]))
+                    $function->setAttribute('scheduleNext', (int) $next)
                 ));
 
                 if ($function === false) {
