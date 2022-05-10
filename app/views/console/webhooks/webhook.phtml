@@ -4,11 +4,13 @@ $events = $this->getParam('events', []);
 $patterns = [];
 
 foreach ($events as $name => $event) {
+    $patterns[] = $name;
     foreach ($event as $key => $value) {
         if (!\str_starts_with($key, '$')) {
             if (!($value['$resource'] ?? false)) {
                 $patterns[] = "{$name}.{$key}";
             } else {
+                $patterns[] = $key;
                 foreach ($value as $key2 => $value2) {
                     if (!\str_starts_with($key2, '$')) {
                         if (!($value2['$resource'] ?? false)) {
@@ -20,6 +22,8 @@ foreach ($events as $name => $event) {
         }
     }
 }
+
+sort($patterns);
 
 ?>
 <div
@@ -170,12 +174,12 @@ foreach ($events as $name => $event) {
                         <div x-show="hasResource">
                             <label x-text="'Select ' + resourceName + ' (optional)'"></label>
                             <input type="text" :placeholder="resourceName" x-model="resource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
-                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard access</div>
+                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard</div>
                         </div>
                         <div x-show="hasSubResource">
                             <label x-text="'Select ' + subResourceName + ' (optional)'"></label>
                             <input type="text" :placeholder="subResourceName" x-model="subResource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
-                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard access</div>
+                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard</div>
                         </div>
                         <div x-show="hasAttribute">
                             <label for="subResource">Add Attribute (optional)</label>
