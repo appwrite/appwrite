@@ -41,6 +41,12 @@ class Delete extends Event
         return $this->type;
     }
 
+    /**
+     * Set timestamp.
+     *
+     * @param int $timestamp
+     * @return self
+     */
     public function setTimestamp(int $timestamp): self
     {
         $this->timestamp = $timestamp;
@@ -48,6 +54,12 @@ class Delete extends Event
         return $this;
     }
 
+    /**
+     * Set timestamp for 1 day interval.
+     *
+     * @param int $timestamp
+     * @return self
+     */
     public function setTimestamp1d(int $timestamp): self
     {
         $this->timestamp1d = $timestamp;
@@ -55,6 +67,12 @@ class Delete extends Event
         return $this;
     }
 
+    /**
+     * Sets timestamp for 30m interval.
+     *
+     * @param int $timestamp
+     * @return self
+     */
     public function setTimestamp30m(int $timestamp): self
     {
         $this->timestamp30m = $timestamp;
