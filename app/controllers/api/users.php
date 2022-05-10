@@ -715,8 +715,8 @@ App::delete('/v1/users/:userId/sessions')
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $events
-            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
             ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER))
         ;
 
         $usage
@@ -782,8 +782,8 @@ App::delete('/v1/users/:userId')
         ;
 
         $events
-            ->setParam('eventData', $response->output($clone, Response::MODEL_USER))
             ->setParam('userId', $user->getId())
+            ->setPayload($response->output($clone, Response::MODEL_USER))
         ;
 
         $usage

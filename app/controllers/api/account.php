@@ -724,10 +724,12 @@ App::post('/v1/account/sessions/magic-url')
             ->trigger()
         ;
 
-        $events->setParam('eventData', $response->output(
+        $events->setPayload(
+            $response->output(
                 $token->setAttribute('secret', $loginSecret),
                 Response::MODEL_TOKEN
-        ));
+            )
+        );
 
         // Hide secret for clients
         $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $loginSecret : '');
