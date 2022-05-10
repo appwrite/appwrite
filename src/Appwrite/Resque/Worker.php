@@ -12,7 +12,7 @@ use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\DOSpaces;
-use Utopia\Storage\Device\BackBlaze;
+use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\S3;
 
 use Exception;
@@ -285,7 +285,7 @@ abstract class Worker
             $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
             $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
             $backblazeAcl = 'private';
-            return new BackBlaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
+            return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
         }
     }
 }

@@ -8,6 +8,7 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Database\Document;
 use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Device\Backblaze;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;

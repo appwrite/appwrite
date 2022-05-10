@@ -10,7 +10,7 @@ use Executor\Executor;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\DOSpaces;
-use Utopia\Storage\Device\BackBlaze;
+use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Storage;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -570,7 +570,7 @@ class DeletesV1 extends Worker
                 $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
                 $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
                 $backblazeAcl = 'private';
-                $device= new BackBlaze(APP_STORAGE_UPLOADS . '/app-' . $projectId, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
+                $device= new Backblaze(APP_STORAGE_UPLOADS . '/app-' . $projectId, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
                 break;
         }
         
