@@ -53,7 +53,7 @@ App::post('/v1/storage/buckets')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
-    ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0), new Integer(), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self-hosted setups you can change the max limit by changing the `_APP_STORAGE_LIMIT` environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
+    ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0), new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self-hosted setups you can change the max limit by changing the `_APP_STORAGE_LIMIT` environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64)), 'Allowed file extensions', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
@@ -66,11 +66,6 @@ App::post('/v1/storage/buckets')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
-
-        // Maximum allowed size validation
-        if ($maximumFileSize > (int) App::getEnv('_APP_STORAGE_LIMIT', 0)) {
-            throw new Exception('Bucket maximum file size is larger than _APP_STORAGE_LIMIT.', 400, Exception::ATTRIBUTE_VALUE_INVALID);
-        }
 
         $bucketId = $bucketId === 'unique()' ? $dbForProject->getId() : $bucketId;
         try {
@@ -232,7 +227,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
-    ->param('maximumFileSize', null, new Integer(), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human((int)App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self hosted version you can change the limit by changing _APP_STORAGE_LIMIT environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
+    ->param('maximumFileSize', null, new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human((int)App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self hosted version you can change the limit by changing _APP_STORAGE_LIMIT environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64)), 'Allowed file extensions', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
@@ -245,11 +240,6 @@ App::put('/v1/storage/buckets/:bucketId')
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
-
-        // Maximum allowed size validation
-        if ($maximumFileSize > (int) App::getEnv('_APP_STORAGE_LIMIT', 0)) {
-            throw new Exception('Bucket maximum file size allowed is larger than _APP_STORAGE_LIMIT.', 400, Exception::ATTRIBUTE_VALUE_INVALID);
-        }
 
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
@@ -431,7 +421,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $maximumFileSize = $bucket->getAttribute('maximumFileSize', 0);
         if ($maximumFileSize > (int) App::getEnv('_APP_STORAGE_LIMIT', 0)) {
-            throw new Exception('Error bucket maximum file size is larger than _APP_STORAGE_LIMIT', 400, Exception::STORAGE_INVALID_FILE_SIZE);
+            throw new Exception('Maximum bucket file size is larger than _APP_STORAGE_LIMIT', 500, Exception:: GENERAL_SERVER_ERROR);
         }
 
         $file = $request->getFiles('file');
