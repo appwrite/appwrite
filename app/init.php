@@ -181,7 +181,7 @@ if(!empty($user) || !empty($pass)) {
  */
 Database::addFilter('casting',
     function($value) {
-        return json_encode(['value' => $value]);
+        return json_encode(['value' => $value], JSON_PRESERVE_ZERO_FRACTION);
     },
     function($value) {
         if (is_null($value)) {
@@ -298,6 +298,43 @@ Database::addFilter('subQueryWebhooks',
             ->find('webhooks', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
             ], $database->getIndexLimit(), 0, []);
+    }
+);
+
+Database::addFilter('subQuerySessions',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        $sessions = Authorization::skip(fn () => $database->find('sessions', [
+            new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
+        ], $database->getIndexLimit(), 0, []));
+
+        return $sessions;
+    }
+);
+
+Database::addFilter('subQueryTokens',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return Authorization::skip(fn() => $database
+            ->find('tokens', [
+                new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []));
+    }
+);
+              
+Database::addFilter('subQueryMemberships',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return Authorization::skip(fn() => $database
+            ->find('memberships', [
+                new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
+            ], $database->getIndexLimit(), 0, []));
     }
 );
 

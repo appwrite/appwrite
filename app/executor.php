@@ -141,7 +141,6 @@ App::post('/v1/runtimes')
     ->param('vars', [], new Assoc(), 'Environment Variables required for the build')
     ->param('commands', [], new ArrayList(new Text(0)), 'Commands required to build the container')
     ->param('runtime', '', new Text(128), 'Runtime for the cloud function')
-    ->param('network', '', new Text(128), 'Network to attach the container to')
     ->param('baseImage', '', new Text(128), 'Base image name of the runtime')
     ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file', true)
     ->param('remove', false, new Boolean(), 'Remove a runtime after execution')
@@ -149,8 +148,7 @@ App::post('/v1/runtimes')
     ->inject('orchestrationPool')
     ->inject('activeRuntimes')
     ->inject('response')
-    ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $network, string $baseImage, string $entrypoint, bool $remove, string $workdir, $orchestrationPool, $activeRuntimes, Response $response) {
-
+    ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $baseImage, string $entrypoint, bool $remove, string $workdir, $orchestrationPool, $activeRuntimes, Response $response) {
         if ($activeRuntimes->exists($runtimeId)) {
             throw new Exception('Runtime already exists.', 409);
         }
@@ -235,9 +233,7 @@ App::post('/v1/runtimes')
                 throw new Exception('Failed to create build container', 500);
             }
 
-            if (!empty($network)) {
-                $orchestration->networkConnect($runtimeId, $network);
-            }
+            $orchestration->networkConnect($runtimeId, App::getEnv('OPEN_RUNTIMES_NETWORK', 'appwrite_runtimes'));
 
             /** 
              * Execute any commands if they were provided
@@ -283,7 +279,7 @@ App::post('/v1/runtimes')
             $endTime = \time();
             $container = array_merge($container, [
                 'status' => 'ready',
-                'stdout' => \utf8_encode($stdout),
+                'response' => \utf8_encode($stdout),
                 'stderr' => \utf8_encode($stderr),
                 'startTime' => $startTime,
                 'endTime' => $endTime,
@@ -412,7 +408,7 @@ App::post('/v1/execution')
     ->desc('Create an execution')
     ->param('runtimeId', '', new Text(64), 'The runtimeID to execute')
     ->param('vars', [], new Assoc(), 'Environment variables required for the build')
-    ->param('data', '{}', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
+    ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.')
     ->inject('activeRuntimes')
     ->inject('response')
@@ -516,7 +512,7 @@ App::post('/v1/execution')
             $execution = [
                 'status' => $functionStatus,
                 'statusCode' => $statusCode,
-                'stdout' => \utf8_encode(\mb_substr($stdout, -16384)),
+                'response' => \utf8_encode(\mb_substr($stdout, -16384)),
                 'stderr' => \utf8_encode(\mb_substr($stderr, -16384)),
                 'time' => $executionTime,
             ];

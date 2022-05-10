@@ -880,7 +880,7 @@ App::post('/v1/functions/:functionId/executions')
             'trigger' => 'http', // http / schedule / event
             'status' => 'waiting', // waiting / processing / completed / failed
             'statusCode' => 0,
-            'stdout' => '',
+            'response' => '',
             'stderr' => '',
             'time' => 0.0,
             'search' => implode(' ', [$functionId, $executionId]),
@@ -938,7 +938,7 @@ App::post('/v1/functions/:functionId/executions')
         ]);
 
         /** Execute function */
-        $executor = new Executor();
+        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
         $executionResponse = [];
         try {
             $executionResponse = $executor->createExecution(
@@ -956,7 +956,7 @@ App::post('/v1/functions/:functionId/executions')
             /** Update execution status */
             $execution->setAttribute('status', $executionResponse['status']);
             $execution->setAttribute('statusCode', $executionResponse['statusCode']);
-            $execution->setAttribute('stdout', $executionResponse['stdout']);
+            $execution->setAttribute('response', $executionResponse['response']);
             $execution->setAttribute('stderr', $executionResponse['stderr']);
             $execution->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
