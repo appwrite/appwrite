@@ -32,11 +32,6 @@ class WebhooksV1 extends Worker
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                Console::log("");
-                Console::log("");
-                Console::log(var_export($events, true));
-                Console::log("");
-                Console::log("");
                 $this->execute($events, $payload, $webhook, $user, $project);
             }
         }
