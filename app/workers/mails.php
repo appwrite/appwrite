@@ -41,7 +41,7 @@ class MailsV1 extends Worker
         $type = $this->args['type'];
         $prefix = $this->getPrefix($type);
         $locale = new Locale($this->args['locale']);
-        $projectName = $project->getAttribute('name', ['[APP-NAME]']);
+        $projectName = $project->getAttribute('name', '[APP-NAME]');
 
         if (!$this->doesLocaleExist($locale, $prefix)) {
             $locale->setDefault('en');
