@@ -709,6 +709,7 @@ App::delete('/v1/users/:userId/sessions')
 
         foreach ($sessions as $key => $session) { /** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
+            //TODO: fix this
         }
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
