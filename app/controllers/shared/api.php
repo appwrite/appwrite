@@ -196,7 +196,6 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         $events
             ->setClass(Event::FUNCTIONS_CLASS_NAME)
             ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
-            ->setPayload($events->getPayload())
             ->trigger();
 
         /**
@@ -205,9 +204,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         $events
             ->setClass(Event::WEBHOOK_CLASS_NAME)
             ->setQueue(Event::WEBHOOK_QUEUE_NAME)
-            ->setPayload($events->getPayload())
             ->trigger();
-        var_dump($events->getEvent());
 
         /**
          * Trigger realtime.
@@ -215,10 +212,10 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         if ($project->getId() !== 'console') {
             $allEvents = Event::generateEvents($events->getEvent(), $events->getParams());
             $payload = new Document($events->getPayload());
-            $trigger = $events->getContext() ?? false;
+            $context = $events->getContext() ?? false;
 
-            $collection = ($trigger && $trigger->getCollection() === 'collections') ? $trigger : null;
-            $bucket = ($trigger && $trigger->getCollection() === 'buckets') ? $trigger : null;
+            $collection = ($context && $context->getCollection() === 'collections') ? $context : null;
+            $bucket = ($context && $context->getCollection() === 'buckets') ? $context : null;
 
             $target = Realtime::fromPayload(
                 // Pass first, most verbose event pattern
