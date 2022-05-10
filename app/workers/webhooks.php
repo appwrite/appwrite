@@ -64,7 +64,7 @@ class WebhooksV1 extends Worker
                 'Content-Type: application/json',
                 'Content-Length: ' . \strlen($payload),
                 'X-' . APP_NAME . '-Webhook-Id: ' . $webhook->getId(),
-                'X-' . APP_NAME . '-Webhook-Event: ' . implode(', ', $events),
+                'X-' . APP_NAME . '-Webhook-Events: ' . implode(',', $events),
                 'X-' . APP_NAME . '-Webhook-Name: ' . $webhook->getAttribute('name', ''),
                 'X-' . APP_NAME . '-Webhook-User-Id: ' . $user->getId(),
                 'X-' . APP_NAME . '-Webhook-Project-Id: ' . $project->getId(),
