@@ -845,11 +845,11 @@ App::post('/v1/functions/:functionId/executions')
         $deployment = Authorization::skip(fn() => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
-            throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404, Exception::DEPLOYMENT_NOT_FOUND);
+            throw new Exception('Deployment not found. Create a deployment before trying to execute a function', 404, Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404, Exception::DEPLOYMENT_NOT_FOUND);
+            throw new Exception('Deployment not found. Create a deployment before trying to execute a function', 404, Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         /** Check if build has completed */
@@ -938,7 +938,7 @@ App::post('/v1/functions/:functionId/executions')
         ]);
 
         /** Execute function */
-        $executor = new Executor();
+        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
         $executionResponse = [];
         try {
             $executionResponse = $executor->createExecution(

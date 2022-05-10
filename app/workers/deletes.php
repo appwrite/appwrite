@@ -19,6 +19,7 @@ use Utopia\Audit\Audit;
 require_once __DIR__ . '/../init.php';
 
 Authorization::disable();
+Authorization::setDefaultStatus(false);
 
 Console::title('Deletes V1 Worker');
 Console::success(APP_NAME . ' deletes worker v1 has started' . "\n");
@@ -214,9 +215,6 @@ class DeletesV1 extends Worker
             new Query('userId', Query::TYPE_EQUAL, [$userId])
         ], $this->getProjectDB($projectId));
         
-        $user->setAttribute('sessions', []);
-        $updated = $this->getProjectDB($projectId)->updateDocument('users', $userId, $user);
-
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
             new Query('userId', Query::TYPE_EQUAL, [$userId])
@@ -232,6 +230,11 @@ class DeletesV1 extends Worker
                 }
             }
         });
+
+        // Delete tokens
+        $this->deleteByGroup('tokens', [
+            new Query('userId', Query::TYPE_EQUAL, [$userId])
+        ], $this->getProjectDB($projectId));
     }
 
     /**
@@ -368,7 +371,7 @@ class DeletesV1 extends Worker
          * Request executor to delete all deployment containers
          */
         Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
-        $executor = new Executor();
+        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
         foreach ($deploymentIds as $deploymentId) {
             try {
                 $executor->deleteRuntime($projectId, $deploymentId);
@@ -420,7 +423,7 @@ class DeletesV1 extends Worker
          */
         Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
         try {
-            $executor = new Executor();
+            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             $executor->deleteRuntime($projectId, $deploymentId);
         } catch (Throwable $th) {
             Console::error($th->getMessage());

@@ -64,8 +64,8 @@ App::post('/v1/users')
                 'name' => $name,
                 'prefs' => new \stdClass(),
                 'sessions' => [],
-                'tokens' => [],
-                'memberships' => [],
+                'tokens' => null,
+                'memberships' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
                 'deleted' => false
             ]));
@@ -739,7 +739,7 @@ App::delete('/v1/users/:userId')
             ->setAttribute("email", null)
             ->setAttribute("password", null)
             ->setAttribute("deleted", true)
-            ->setAttribute("tokens", [])
+            ->setAttribute("tokens", null)
             ->setAttribute("search", null)
         ;
 
