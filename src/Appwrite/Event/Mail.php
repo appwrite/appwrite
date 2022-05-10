@@ -22,7 +22,7 @@ class Mail extends Event
     /**
      * Sets team for the mail event.
      *
-     * @param \Utopia\Database\Document $team
+     * @param Document $team
      * @return self
      */
     public function setTeam(Document $team): self
@@ -35,7 +35,7 @@ class Mail extends Event
     /**
      * Returns set team for the mail event.
      *
-     * @return null|\Utopia\Database\Document
+     * @return null|Document
      */
     public function getTeam(): ?Document
     {

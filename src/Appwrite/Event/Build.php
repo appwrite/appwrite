@@ -2,9 +2,7 @@
 
 namespace Appwrite\Event;
 
-use DateTime;
 use Resque;
-use ResqueScheduler;
 use Utopia\Database\Document;
 
 class Build extends Event
@@ -21,7 +19,7 @@ class Build extends Event
     /**
      * Sets resource document for the build event.
      *
-     * @param \Utopia\Database\Document $function
+     * @param Document $resource
      * @return self
      */
     public function setResource(Document $resource): self
@@ -34,7 +32,7 @@ class Build extends Event
     /**
      * Returns set resource document for the build event.
      *
-     * @return null|\Utopia\Database\Document 
+     * @return null|Document 
      */
     public function getResource(): ?Document
     {
@@ -44,7 +42,7 @@ class Build extends Event
     /**
      * Sets deployment for the build event.
      *
-     * @param \Utopia\Database\Document $execution
+     * @param Document $deployment
      * @return self
      */
     public function setDeployment(Document $deployment): self
@@ -57,7 +55,7 @@ class Build extends Event
     /**
      * Returns set deployment for the build event.
      *
-     * @return null|\Utopia\Database\Document
+     * @return null|Document
      */
     public function getDeployment(): ?Document
     {

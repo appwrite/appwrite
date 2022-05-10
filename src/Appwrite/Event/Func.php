@@ -23,7 +23,7 @@ class Func extends Event
     /**
      * Sets function document for the function event.
      *
-     * @param \Utopia\Database\Document $function
+     * @param Document $function
      * @return self
      */
     public function setFunction(Document $function): self
@@ -36,7 +36,7 @@ class Func extends Event
     /**
      * Returns set function document for the function event.
      *
-     * @return null|\Utopia\Database\Document 
+     * @return null|Document 
      */
     public function getFunction(): ?Document
     {
@@ -46,7 +46,7 @@ class Func extends Event
     /**
      * Sets execution for the function event.
      *
-     * @param \Utopia\Database\Document $execution
+     * @param Document $execution
      * @return self
      */
     public function setExecution(Document $execution): self
@@ -59,7 +59,7 @@ class Func extends Event
     /**
      * Returns set execution for the function event.
      *
-     * @return null|\Utopia\Database\Document
+     * @return null|Document
      */
     public function getExecution(): ?Document
     {

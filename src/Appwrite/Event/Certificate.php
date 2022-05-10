@@ -19,7 +19,7 @@ class Certificate extends Event
     /**
      * Set domain for this certificates event.
      *
-     * @param \Utopia\Database\Document $domain
+     * @param Document $domain
      * @return self
      */
     public function setDomain(Document $domain): self
@@ -32,7 +32,7 @@ class Certificate extends Event
     /**
      * Returns the set domain for this certificate event.
      *
-     * @return null|\Utopia\Database\Document
+     * @return null|Document
      */
     public function getDomain(): ?Document
     {

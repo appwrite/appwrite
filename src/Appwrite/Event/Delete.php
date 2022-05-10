@@ -65,7 +65,7 @@ class Delete extends Event
     /**
      * Sets the document for the delete event.
      *
-     * @param \Utopia\Database\Document $document
+     * @param Document $document
      * @return self
      */
     public function setDocument(Document $document): self
@@ -78,7 +78,7 @@ class Delete extends Event
     /**
      * Returns the set document for the delete event.
      *
-     * @return null|\Utopia\Database\Document
+     * @return null|Document
      */
     public function getDocument(): ?Document
     {
