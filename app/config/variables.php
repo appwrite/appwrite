@@ -466,7 +466,7 @@ return [
                 'name' => '_APP_STORAGE_S3_REGION',
                 'description' => 'AWS S3 storage region. Required when storage adapter is set to S3. You can find your region info for your bucket from AWS console (this applies also to S3 S3 compatible storage like DigitalOcean).',
                 'introduction' => '0.13.0',
-                'default' => 'us-eas-1',
+                'default' => 'us-east-1',
                 'required' => false,
                 'question' => '',
             ],
@@ -561,6 +561,15 @@ return [
                 'description' => 'The secret key used by Appwrite to communicate with the function executor. Make sure to change this!',
                 'introduction' => '0.13.0',
                 'default' => 'your-secret-key',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EXECUTOR_HOST',
+                'description' => 'The host used by Appwrite to communicate with the function executor!',
+                'introduction' => '0.13.0',
+                'default' => 'http://appwrite-executor/v1',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
