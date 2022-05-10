@@ -246,6 +246,7 @@ class Realtime extends Adapter
         $roles = [];
         $permissionsChanged = false;
         $projectId = null;
+        // TODO: add method here to remove all the magic index accesses
         $parts = explode('.', $event);
 
         switch ($parts[0]) {
