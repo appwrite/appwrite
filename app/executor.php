@@ -17,7 +17,7 @@ use Utopia\Orchestration\Adapter\DockerCLI;
 use Utopia\Orchestration\Orchestration;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
-use Utopia\Storage\Device\BackBlaze;
+use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Storage;
@@ -137,7 +137,7 @@ function getStorageDevice($root): Device {
             $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
             $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
             $backblazeAcl = 'private';
-            return new BackBlaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
+            return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
     }
 }
 

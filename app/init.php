@@ -53,7 +53,7 @@ use Utopia\Database\Query;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Local;
-use Utopia\Storage\Device\BackBlaze;
+use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\DOSpaces;
 
@@ -842,7 +842,7 @@ function getDevice($root): Device {
             $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
             $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
             $backblazeAcl = 'private';
-            return new BackBlaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
+            return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
     }
 }
 

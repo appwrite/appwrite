@@ -512,7 +512,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_ACCESS_KEY',
-                'description' => 'Backblaze access key. Required when the storage adapter is set to BackBlaze. Your Backblaze keyID will be your access key. You can get your keyID from your Backblaze console.',
+                'description' => 'Backblaze access key. Required when the storage adapter is set to Backblaze. Your Backblaze keyID will be your access key. You can get your keyID from your Backblaze console.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -520,7 +520,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_SECRET',
-                'description' => 'Backblaze secret key. Required when the storage adapter is set to BackBlaze. Your Backblaze applicationKey will be your secret key. You can get your applicationKey from your Backblaze console.',
+                'description' => 'Backblaze secret key. Required when the storage adapter is set to Backblaze. Your Backblaze applicationKey will be your secret key. You can get your applicationKey from your Backblaze console.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -528,7 +528,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_REGION',
-                'description' => 'Backblaze region. Required when storage adapter is set to BackBlaze. You can find your region info from your Backblaze console.',
+                'description' => 'Backblaze region. Required when storage adapter is set to Backblaze. You can find your region info from your Backblaze console.',
                 'introduction' => '0.13.0',
                 'default' => 'us-west-004',
                 'required' => false,
@@ -536,7 +536,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_BUCKET',
-                'description' => 'Backblaze bucket. Required when storage adapter is set to BackBlaze. You can create your bucket from your Backblaze console.',
+                'description' => 'Backblaze bucket. Required when storage adapter is set to Backblaze. You can create your bucket from your Backblaze console.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
