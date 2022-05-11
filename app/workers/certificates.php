@@ -23,7 +23,7 @@ class CertificatesV1 extends Worker
      * 
      * @var Database
      */
-    private $dbForConsole;
+    private Database $dbForConsole;
 
     public function getName(): string {
         return "certificates";
@@ -103,7 +103,7 @@ class CertificatesV1 extends Worker
             }
 
             // Generate certificate files using Let's Encrypt
-            $letsEncryptData = $this->letsEncryptAction($domain->get(), $email);
+            $letsEncryptData = $this->issueCertificate($domain->get(), $email);
 
             // Command succeeded, store all data into document
             // We store stderr too, because it may include warnings
@@ -135,7 +135,7 @@ class CertificatesV1 extends Worker
 
             // Save all changes we made to certificate document into database
             $this->saveCertificateDocument($domain->get(), $certificate);
-            
+
             Authorization::reset();
         }
     }
@@ -152,7 +152,7 @@ class CertificatesV1 extends Worker
      * 
      * @return void
      */
-    private function saveCertificateDocument(string $domain, Document $certificate) {
+    private function saveCertificateDocument(string $domain, Document $certificate): void {
         // Check if update or insert required
         $certificateDocument = $this->dbForConsole->findOne('certificates', [ new Query('domain', Query::TYPE_EQUAL, [$domain]) ]);
         if (!empty($certificateDocument) && !$certificateDocument->isEmpty()) {
@@ -175,15 +175,15 @@ class CertificatesV1 extends Worker
      */
     private function getMainDomain(): ?string {
         if (!empty(App::getEnv('_APP_DOMAIN', ''))) {
-            $mainDomain = App::getEnv('_APP_DOMAIN', '');
+            return App::getEnv('_APP_DOMAIN', '');
         } else {
             $domainDocument = $this->dbForConsole->findOne('domains', [], 0, ['_id'], ['ASC']);
             if($domainDocument) {
-                $mainDomain = $domainDocument->getAttribute('domain');
+                return $domainDocument->getAttribute('domain');
             }
         }
 
-        return $mainDomain;
+        return null;
     }
 
     /**
@@ -262,7 +262,7 @@ class CertificatesV1 extends Worker
      *
      * @return array Named array with keys 'stdout' and 'stderr', both string
      */
-    private function letsEncryptAction(string $domain, string $email): array {
+    private function issueCertificate(string $domain, string $email): array {
         $staging = (App::isProduction()) ? '' : ' --dry-run';
 
         $stdout = '';
