@@ -98,6 +98,25 @@ class CertificatesV1 extends Worker
             && isset($certificate['issueDate'])
             && (($certificate['issueDate'] + ($expiry)) > \time())
         ) { // Check last issue time
+            
+            // Update document anyway, if needed.
+            // This occurs when a cert is already generated because a different project is using the domain.
+            // By updating here we ensure all domains has certificateId assigned (share same certificate document)
+            if(!isset($document['certificateId'])) {
+                $certificate = new Document($certificate);
+
+                $domain = new Document(\array_merge($document, [
+                    'updated' => \time(),
+                    'certificateId' => $certificate->getId(),
+                ]));
+    
+                $domain = $dbForConsole->updateDocument('domains', $domain->getId(), $domain);
+    
+                if(!$certificate) {
+                    throw new Exception('Failed saving domain to DB');
+                }
+            }
+
             throw new Exception('Renew isn\'t required');
         }
 
