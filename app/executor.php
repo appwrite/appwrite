@@ -279,7 +279,7 @@ App::post('/v1/runtimes')
             $endTime = \time();
             $container = array_merge($container, [
                 'status' => 'ready',
-                'stdout' => \utf8_encode($stdout),
+                'response' => \utf8_encode($stdout),
                 'stderr' => \utf8_encode($stderr),
                 'startTime' => $startTime,
                 'endTime' => $endTime,
@@ -408,7 +408,7 @@ App::post('/v1/execution')
     ->desc('Create an execution')
     ->param('runtimeId', '', new Text(64), 'The runtimeID to execute')
     ->param('vars', [], new Assoc(), 'Environment variables required for the build')
-    ->param('data', '{}', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
+    ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.')
     ->inject('activeRuntimes')
     ->inject('response')
@@ -512,7 +512,7 @@ App::post('/v1/execution')
             $execution = [
                 'status' => $functionStatus,
                 'statusCode' => $statusCode,
-                'stdout' => \utf8_encode(\mb_substr($stdout, -16384)),
+                'response' => \utf8_encode(\mb_substr($stdout, -16384)),
                 'stderr' => \utf8_encode(\mb_substr($stderr, -16384)),
                 'time' => $executionTime,
             ];

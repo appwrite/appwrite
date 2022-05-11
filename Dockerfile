@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM node:16.13.2-alpine3.15 as node
+FROM node:16.14.2-alpine3.15 as node
 
 WORKDIR /usr/local/src/
 
@@ -24,14 +24,14 @@ COPY public /usr/local/src/public
 RUN npm ci
 RUN npm run build
 
-FROM php:8.0.14-cli-alpine3.15 as compile
+FROM php:8.0.18-cli-alpine3.15 as compile
 
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
 
 ENV PHP_REDIS_VERSION=5.3.7 \
-    PHP_MONGODB_VERSION=1.9.1 \
-    PHP_SWOOLE_VERSION=v4.8.7 \
+    PHP_MONGODB_VERSION=1.13.0 \
+    PHP_SWOOLE_VERSION=v4.8.9 \
     PHP_IMAGICK_VERSION=3.7.0 \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0
@@ -123,7 +123,7 @@ RUN \
   ./configure && \
   make && make install
 
-FROM php:8.0.14-cli-alpine3.15 as final
+FROM php:8.0.18-cli-alpine3.15 as final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -185,6 +185,7 @@ ENV _APP_SERVER=swoole \
     _APP_FUNCTIONS_MEMORY=128 \
     _APP_FUNCTIONS_MEMORY_SWAP=128 \
     _APP_EXECUTOR_SECRET=a-random-secret \
+    _APP_EXECUTOR_HOST=http://appwrite-executor/v1 \
     _APP_EXECUTOR_RUNTIME_NETWORK=appwrite_runtimes \
     _APP_SETUP=self-hosted \
     _APP_VERSION=$VERSION \

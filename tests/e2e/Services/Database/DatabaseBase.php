@@ -1428,6 +1428,7 @@ trait DatabaseBase
         ]), [
             'key' => 'probability',
             'required' => false,
+            'default' => 0,
             'min' => 0,
             'max' => 1,
         ]);
