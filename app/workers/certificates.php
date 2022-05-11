@@ -5,6 +5,7 @@ use Appwrite\Network\Validator\CNAME;
 use Appwrite\Resque\Worker;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
