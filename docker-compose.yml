@@ -389,6 +389,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
+      - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
@@ -543,6 +544,11 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_ABUSE

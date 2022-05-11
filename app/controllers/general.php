@@ -99,16 +99,13 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
                     ]);
     
                     $domainDocument = $dbForConsole->createDocument('domains', $domainDocument);
-    
-                    Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
-    
-                    Resque::enqueue(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME, [
-                        'document' => $domainDocument,
-                        'domain' => $domain->get(),
-                        'validateTarget' => false,
-                        'validateCNAME' => false,
-                    ]);
                 }
+
+                Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
+    
+                Resque::enqueue(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME, [
+                    'domain' => $domain->get()
+                ]);
             }
 
             $domains[$domain->get()] = true;

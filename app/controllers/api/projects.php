@@ -1331,8 +1331,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         // Issue a TLS certificate when domain is verified
-        Resque::enqueue('v1-certificates', 'CertificatesV1', [
-            'document' => $domain->getArrayCopy(),
+        Resque::enqueue(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME, [
             'domain' => $domain->getAttribute('domain'),
         ]);
 
