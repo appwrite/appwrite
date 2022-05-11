@@ -17,5 +17,6 @@ $cli
         // Scheduje a job
         Resque::enqueue(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME, [
             'domain' => $domain,
+            'skipRenewCheck' => true
         ]);
     });

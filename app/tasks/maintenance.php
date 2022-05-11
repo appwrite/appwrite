@@ -9,26 +9,22 @@ use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
-use Utopia\Registry\Registry;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Database\Query;
 
-function getConsoleDB(Registry &$register)
+function getConsoleDB(): Database
 {
+    global $register;
+
     $attempts = 0;
 
     do {
         try {
             $attempts++;
-
-            $db = $register->get('dbPool')->get();
-            $redis = $register->get('redisPool')->get();
-
-            $cache = new Cache(new RedisCache($redis));
-            $database = new Database(new MariaDB($db), $cache);
+            $cache = new Cache(new RedisCache($register->get('cache')));
+            $database = new Database(new MariaDB($register->get('db')), $cache);
             $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-            $database->setNamespace('_console');
-
+            $database->setNamespace('_console'); // Main DB
             break; // leave loop if successful
         } catch(\Exception $e) {
             Console::warning("Database not ready. Retrying connection ({$attempts})...");
@@ -39,20 +35,13 @@ function getConsoleDB(Registry &$register)
         }
     } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
 
-    return [
-        $database,
-        function () use ($register, $db, $redis) {
-            $register->get('dbPool')->put($db);
-            $register->get('redisPool')->put($redis);
-        }
-    ];
-
-};
+    return $database;
+}
 
 $cli
     ->task('maintenance')
     ->desc('Schedules maintenance tasks and publishes them to resque')
-    ->action(function () use ($register) {
+    ->action(function () {
         Console::title('Maintenance V1');
         Console::success(APP_NAME.' maintenance process v1 has started');
 
@@ -128,25 +117,17 @@ $cli
         $usageStatsRetention30m = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_30M', '129600');//36 hours
         $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
 
-        Console::loop(function() use ($register, $interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) { 
-            go(function () use ($register, $interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) {
-                try {
-                    [$database, $returnDatabase] = getConsoleDB($register, '_console');
-    
-                    $time = date('d-m-Y H:i:s', time());
-                    Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
-                    notifyDeleteExecutionLogs($executionLogsRetention);
-                    notifyDeleteAbuseLogs($abuseLogsRetention);
-                    notifyDeleteAuditLogs($auditLogRetention);
-                    notifyDeleteUsageStats($usageStatsRetention30m, $usageStatsRetention1d);
-                    notifyDeleteConnections();
-    
-                    renewCertificates($database);
-                } catch (\Throwable $th) {
-                    throw $th;
-                } finally {
-                    call_user_func($returnDatabase);
-                }
-            });
+        Console::loop(function() use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) { 
+            $database = getConsoleDB();
+
+            $time = date('d-m-Y H:i:s', time());
+            Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
+            notifyDeleteExecutionLogs($executionLogsRetention);
+            notifyDeleteAbuseLogs($abuseLogsRetention);
+            notifyDeleteAuditLogs($auditLogRetention);
+            notifyDeleteUsageStats($usageStatsRetention30m, $usageStatsRetention1d);
+            notifyDeleteConnections();
+
+            renewCertificates($database);
         }, $interval);
     });
