@@ -51,6 +51,16 @@ class MailsV1 extends Worker
         $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
         $subject = '';
         switch ($type) {
+            case MAIL_TYPE_CERTIFICATE:
+                $domain = $this->args['domain'];
+                $error = $this->args['error'];
+                $attempt = $this->args['attempt'];
+
+                $subject = \sprintf($locale->getText("$prefix.subject"), $domain);
+                $body->setParam('{{domain}}', $domain);
+                $body->setParam('{{error}}', $error);
+                $body->setParam('{{attempt}}', $attempt);
+                break;
             case MAIL_TYPE_INVITATION:
                 $subject = \sprintf($locale->getText("$prefix.subject"), $team->getAttribute('name'), $projectName);
                 $body->setParam('{{owner}}', $user->getAttribute('name'));
@@ -131,6 +141,8 @@ class MailsV1 extends Worker
         switch ($type) {
             case MAIL_TYPE_RECOVERY:
                 return 'emails.recovery';
+            case MAIL_TYPE_CERTIFICATE:
+                return 'emails.certificate';
             case MAIL_TYPE_INVITATION:
                 return 'emails.invitation';
             case MAIL_TYPE_VERIFICATION:

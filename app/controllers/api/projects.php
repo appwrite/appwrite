@@ -1336,8 +1336,6 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $event = new Certificate();
         $event
             ->setDomain($domain)
-            ->setValidateCNAME(true)
-            ->setValidateTarget(true)
             ->trigger();
 
         $response->dynamic($domain, Response::MODEL_DOMAIN);
