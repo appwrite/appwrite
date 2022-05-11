@@ -498,7 +498,7 @@ $collections = [
                 'required' => false,
                 'default' => [],
                 'array' => false,
-                'filters' => ['encrypt', 'json'],
+                'filters' => ['json', 'encrypt'],
             ],
             [
                 '$id' => 'jwtSecret',

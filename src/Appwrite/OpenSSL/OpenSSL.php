@@ -20,6 +20,7 @@ class OpenSSL
      */
     public static function encrypt($data, $method, $key, $options = 0, $iv = '', &$tag = null, $aad = '', $tag_length = 16)
     {
+        var_dump($data);
         return \openssl_encrypt($data, $method, $key, $options, $iv, $tag, $aad, $tag_length);
     }
 
