@@ -886,9 +886,14 @@
                  * Get Browser Icon
                  *
                  * You can use this endpoint to show different browser icons to your users.
-                 * The code argument receives the browser code as it appears in your user
-                 * /account/sessions endpoint. Use width, height and quality arguments to
-                 * change the output settings.
+                 * The code argument receives the browser code as it appears in your user [GET
+                 * /account/sessions](/docs/client/account#accountGetSessions) endpoint. Use
+                 * width, height and quality arguments to change the output settings.
+                 *
+                 * When one dimension is specified and the other is 0, the image is scaled
+                 * with preserved aspect ratio. If both dimensions are 0, the API provides an
+                 * image at source quality. If dimensions are not specified, the default size
+                 * of image returned is 100x100px.
                  *
                  * @param {string} code
                  * @param {number} width
@@ -925,6 +930,12 @@
                  * The credit card endpoint will return you the icon of the credit card
                  * provider you need. Use width, height and quality arguments to change the
                  * output settings.
+                 *
+                 * When one dimension is specified and the other is 0, the image is scaled
+                 * with preserved aspect ratio. If both dimensions are 0, the API provides an
+                 * image at source quality. If dimensions are not specified, the default size
+                 * of image returned is 100x100px.
+                 *
                  *
                  * @param {string} code
                  * @param {number} width
@@ -989,6 +1000,12 @@
                  * users. The code argument receives the 2 letter country code. Use width,
                  * height and quality arguments to change the output settings.
                  *
+                 * When one dimension is specified and the other is 0, the image is scaled
+                 * with preserved aspect ratio. If both dimensions are 0, the API provides an
+                 * image at source quality. If dimensions are not specified, the default size
+                 * of image returned is 100x100px.
+                 *
+                 *
                  * @param {string} code
                  * @param {number} width
                  * @param {number} height
@@ -1025,6 +1042,12 @@
                  * you want. This endpoint is very useful if you need to crop and display
                  * remote images in your app or in case you want to make sure a 3rd party
                  * image is properly served using a TLS protocol.
+                 *
+                 * When one dimension is specified and the other is 0, the image is scaled
+                 * with preserved aspect ratio. If both dimensions are 0, the API provides an
+                 * image at source quality. If dimensions are not specified, the default size
+                 * of image returned is 400x400px.
+                 *
                  *
                  * @param {string} url
                  * @param {number} width
@@ -1068,6 +1091,12 @@
                  * the user's initials when reloading the same theme will always return for
                  * the same initials.
                  *
+                 * When one dimension is specified and the other is 0, the image is scaled
+                 * with preserved aspect ratio. If both dimensions are 0, the API provides an
+                 * image at source quality. If dimensions are not specified, the default size
+                 * of image returned is 100x100px.
+                 *
+                 *
                  * @param {string} name
                  * @param {number} width
                  * @param {number} height
@@ -1106,6 +1135,7 @@
                  *
                  * Converts a given plain text to a QR code image. You can use the query
                  * parameters to change the size and style of the resulting image.
+                 *
                  *
                  * @param {string} text
                  * @param {number} size
@@ -2831,23 +2861,6 @@
                  */
                 getQueueLogs: () => __awaiter(this, void 0, void 0, function* () {
                     let path = '/health/queue/logs';
-                    let payload = {};
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('get', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Get Usage Queue
-                 *
-                 * Get the number of usage stats that are waiting to be processed in the
-                 * Appwrite internal queue server.
-                 *
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                getQueueUsage: () => __awaiter(this, void 0, void 0, function* () {
-                    let path = '/health/queue/usage';
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
@@ -5202,6 +5215,25 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Get User Memberships
+                 *
+                 *
+                 * @param {string} userId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getMemberships: (userId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    let path = '/users/{userId}/memberships'.replace('{userId}', userId);
+                    let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
                         'content-type': 'application/json',
