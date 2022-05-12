@@ -2,9 +2,10 @@
 
 global $cli;
 
-use Appwrite\Event\Event;
+use Appwrite\Event\Certificate;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\Document;
 use Utopia\Validator\Hostname;
 
 $cli
@@ -14,9 +15,10 @@ $cli
     ->action(function ($domain) {
         Console::success('Scheduling a job to issue a TLS certificate for domain: ' . $domain);
 
-        // Scheduje a job
-        Resque::enqueue(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME, [
-            'domain' => $domain,
-            'skipCheck' => true
-        ]);
+        (new Certificate())
+            ->setDomain(new Document([
+                'domain' => $domain
+            ]))
+            ->setSkipRenewCheck(true)
+            ->trigger();
     });

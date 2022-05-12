@@ -12,7 +12,7 @@ use Appwrite\Extend\Exception;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
-use Appwrite\Event\Event;
+use Appwrite\Event\Certificate;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
 use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
@@ -98,18 +98,18 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
                         'verification' => false,
                         'certificateId' => null,
                     ]);
-    
+
                     $domainDocument = $dbForConsole->createDocument('domains', $domainDocument);
 
                     Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
-        
-                    Resque::enqueue(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME, [
-                        'domain' => $domain->get()
-                    ]);
+
+                    (new Certificate())
+                        ->setDomain($domainDocument)
+                        ->trigger();
                 }
             }
-
             $domains[$domain->get()] = true;
+
             Authorization::reset(); // ensure authorization is re-enabled
         }
         Config::setParam('domains', $domains);

@@ -11,14 +11,14 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__ . '/../init.php';
 
 Console::title('Certificates V1 Worker');
 Console::success(APP_NAME . ' certificates worker v1 has started');
 
 class CertificatesV1 extends Worker
 {
-    
+
     /**
      * Database connection shared across all methods of this file
      * 
@@ -26,13 +26,13 @@ class CertificatesV1 extends Worker
      */
     private Database $dbForConsole;
 
-    public function getName(): string {
+    public function getName(): string
+    {
         return "certificates";
     }
 
     public function init(): void
     {
-        
     }
 
     public function run(): void
@@ -73,16 +73,22 @@ class CertificatesV1 extends Worker
 
         try {
             // Read arguments
-            $domain = $this->args['domain']; // String of domain (hostname)
-            $skipCheck = $this->args['skipCheck'] ?? false; // If true, we won't double-check expiry from cert file
+            $document = new Document($this->args['domain'] ?? []);
+            $skipCheck = $this->args['skipRenewCheck'] ?? false; // If true, we won't double-check expiry from cert file
+
+            // Options
+            $domain = new Domain($document->getAttribute('domain'));
+            $expiry = 60 * 60 * 24 * 30 * 2; // 60 days
+            $safety = 60 * 60; // 1 hour
+            $renew  = (\time() + $expiry);
 
             $domain = new Domain((!empty($domain)) ? $domain : '');
 
             // Get current certificate
-            $certificate = $this->dbForConsole->findOne('certificates', [ new Query('domain', Query::TYPE_EQUAL, [$domain->get()]) ]);
+            $certificate = $this->dbForConsole->findOne('certificates', [new Query('domain', Query::TYPE_EQUAL, [$domain->get()])]);
 
             // If we don't have certificate for domain yet, let's create new document. At the end we save it
-            if(!$certificate) {
+            if (!$certificate) {
                 $certificate = new Document();
                 $certificate->setAttribute('domain', $domain->get());
             }
@@ -92,16 +98,16 @@ class CertificatesV1 extends Worker
             if (empty($email)) {
                 throw new Exception('You must set a valid security email address (_APP_SYSTEM_SECURITY_EMAIL_ADDRESS) to issue an SSL certificate.');
             }
-            
+
             // Validate domain and DNS records. Skip if job is forced
-            if(!$skipCheck) {
+            if (!$skipCheck) {
                 $mainDomain = $this->getMainDomain();
                 $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
                 $this->validateDomain($domain, $isMainDomain);
             }
 
             // If certificate exists already, double-check expiry date. Skip if job is forced
-            if(!$skipCheck && !$this->isRenewRequired($domain->get())) {
+            if (!$skipCheck && !$this->isRenewRequired($domain->get())) {
                 throw new Exception('Renew isn\'t required.');
             }
 
@@ -114,15 +120,15 @@ class CertificatesV1 extends Worker
                 'stdout' => $letsEncryptData['stdout'],
                 'stderr' => $letsEncryptData['stderr'],
             ]));
-    
+
             // Give certificates to Traefik
             $this->applyCertificateFiles($domain->get(), $letsEncryptData);
-            
+
             // Update certificate info stored in database
             $certificate->setAttribute('renewDate', $this->getRenewDate($domain->get()));
             $certificate->setAttribute('attempts', 0);
             $certificate->setAttribute('issueDate', \time());
-        } catch(Throwable $e) {
+        } catch (Throwable $e) {
             // Set exception as log in certificate document
             $certificate->setAttribute('log', $e->getMessage());
 
@@ -155,13 +161,14 @@ class CertificatesV1 extends Worker
      * 
      * @return void
      */
-    private function saveCertificateDocument(string $domain, Document $certificate): void {
+    private function saveCertificateDocument(string $domain, Document $certificate): void
+    {
         // Check if update or insert required
-        $certificateDocument = $this->dbForConsole->findOne('certificates', [ new Query('domain', Query::TYPE_EQUAL, [$domain]) ]);
+        $certificateDocument = $this->dbForConsole->findOne('certificates', [new Query('domain', Query::TYPE_EQUAL, [$domain])]);
         if (!empty($certificateDocument) && !$certificateDocument->isEmpty()) {
             // Merge new data with current data
             $certificate = new Document(\array_merge($certificateDocument->getArrayCopy(), $certificate->getArrayCopy()));
-            
+
             $certificate = $this->dbForConsole->updateDocument('certificates', $certificate->getId(), $certificate);
         } else {
             $certificate = $this->dbForConsole->createDocument('certificates', $certificate);
@@ -176,12 +183,13 @@ class CertificatesV1 extends Worker
      *
      * @return null|string Returns main domain. If null, there is no main domain yet.
      */
-    private function getMainDomain(): ?string {
+    private function getMainDomain(): ?string
+    {
         if (!empty(App::getEnv('_APP_DOMAIN', ''))) {
             return App::getEnv('_APP_DOMAIN', '');
         } else {
             $domainDocument = $this->dbForConsole->findOne('domains', [], 0, ['_id'], ['ASC']);
-            if($domainDocument) {
+            if ($domainDocument) {
                 return $domainDocument->getAttribute('domain');
             }
         }
@@ -199,7 +207,8 @@ class CertificatesV1 extends Worker
      *
      * @return void
      */
-    private function validateDomain(Domain $domain, bool $isMainDomain): void {    
+    private function validateDomain(Domain $domain, bool $isMainDomain): void
+    {
         if (empty($domain->get())) {
             throw new Exception('Missing certificate domain.');
         }
@@ -215,7 +224,7 @@ class CertificatesV1 extends Worker
             $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
             if (!$target->isKnown() || $target->isTest()) {
-                throw new Exception('Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.');
+                throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
             }
 
             // Verify domain with DNS records
@@ -236,7 +245,8 @@ class CertificatesV1 extends Worker
      *
      * @return bool True, if certificate needs to be renewed
      */
-    private function isRenewRequired(string $domain): bool {
+    private function isRenewRequired(string $domain): bool
+    {
         $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
         if (\file_exists($certPath)) {
             $validTo = null;
@@ -249,7 +259,7 @@ class CertificatesV1 extends Worker
             }
 
             // LetsEncrypt allows renewal 30 days before expiry
-            $expiryInAdvance = (60*60*24*30);
+            $expiryInAdvance = (60 * 60 * 24 * 30);
             if ($validTo - $expiryInAdvance > \time()) {
                 return false;
             }
@@ -265,7 +275,8 @@ class CertificatesV1 extends Worker
      *
      * @return array Named array with keys 'stdout' and 'stderr', both string
      */
-    private function issueCertificate(string $domain, string $email): array {
+    private function issueCertificate(string $domain, string $email): array
+    {
         $staging = (App::isProduction()) ? '' : ' --dry-run';
 
         $stdout = '';
@@ -295,11 +306,12 @@ class CertificatesV1 extends Worker
      *
      * @return int
      */
-    private function getRenewDate(string $domain): int {
+    private function getRenewDate(string $domain): int
+    {
         $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
         $certData = openssl_x509_parse(file_get_contents($certPath));
         $validTo = $certData['validTo_time_t'] ?? 0;
-        $expiryInAdvance = (60*60*24*30); // 30 days
+        $expiryInAdvance = (60 * 60 * 24 * 30); // 30 days
         return $validTo - $expiryInAdvance;
     }
 
@@ -311,7 +323,8 @@ class CertificatesV1 extends Worker
      *
      * @return void
      */
-    private function applyCertificateFiles(string $domain, array $letsEncryptData): void {
+    private function applyCertificateFiles(string $domain, array $letsEncryptData): void
+    {
         // Prepare folder in storage for domain
         $path = APP_STORAGE_CERTIFICATES . '/' . $domain;
         if (!\is_readable($path)) {
@@ -321,7 +334,7 @@ class CertificatesV1 extends Worker
         }
 
         // Move generated files from certbot into our storage
-        if(!@\rename('/etc/letsencrypt/live/'.$domain.'/cert.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem')) {
+        if (!@\rename('/etc/letsencrypt/live/' . $domain . '/cert.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem')) {
             throw new Exception('Failed to rename certificate cert.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
         }
 
@@ -343,7 +356,7 @@ class CertificatesV1 extends Worker
             "    - certFile: /storage/certificates/{$domain}/fullchain.pem",
             "      keyFile: /storage/certificates/{$domain}/privkey.pem"
         ]);
-        
+
         // Save configuration into Traefik using our new cert files
         if (!\file_put_contents(APP_STORAGE_CONFIG . '/' . $domain . '.yml', $config)) {
             throw new Exception('Failed to save Traefik configuration.');
@@ -359,7 +372,8 @@ class CertificatesV1 extends Worker
      *
      * @return void
      */
-    private function notifyError(string $domain, string $errorMessage, int $attempt): void {
+    private function notifyError(string $domain, string $errorMessage, int $attempt): void
+    {
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
 
@@ -391,7 +405,8 @@ class CertificatesV1 extends Worker
      *
      * @return void
      */
-    private function updateDomainDocuments(string $certificateId, string $domain): void {
+    private function updateDomainDocuments(string $certificateId, string $domain): void
+    {
         $domains = $this->dbForConsole->find('domains', [
             new Query('domain', Query::TYPE_EQUAL, [$domain])
         ], 1000);
@@ -402,9 +417,9 @@ class CertificatesV1 extends Worker
 
             $this->dbForConsole->updateDocument('domains', $domainDocument->getId(), $domainDocument);
 
-            if($domainDocument->getAttribute('projectId')) {
+            if ($domainDocument->getAttribute('projectId')) {
                 $this->dbForConsole->deleteCachedDocument('projects', $domainDocument->getAttribute('projectId'));
             }
-        } 
+        }
     }
 }

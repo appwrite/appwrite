@@ -16,7 +16,7 @@ class FunctionsCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    public function testCreate():array
+    public function testCreate(): array
     {
         /**
          * Test for SUCCESS
@@ -34,8 +34,8 @@ class FunctionsCustomServerTest extends Scope
                 'funcKey3' => 'funcValue3',
             ],
             'events' => [
-                'account.create',
-                'account.delete',
+                'users.*.create',
+                'users.*.delete',
             ],
             'schedule' => '0 0 1 1 *',
             'timeout' => 10,
@@ -56,12 +56,12 @@ class FunctionsCustomServerTest extends Scope
             'funcKey3' => 'funcValue3',
         ], $response1['body']['vars']);
         $this->assertEquals([
-            'account.create',
-            'account.delete',
+            'users.*.create',
+            'users.*.delete',
         ], $response1['body']['events']);
         $this->assertEquals('0 0 1 1 *', $response1['body']['schedule']);
         $this->assertEquals(10, $response1['body']['timeout']);
-       
+
         /**
          * Test for FAILURE
          */
@@ -74,7 +74,7 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testCreate
      */
-    public function testList(array $data):array
+    public function testList(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -132,8 +132,8 @@ class FunctionsCustomServerTest extends Scope
                 'funcKey3' => 'funcValue3',
             ],
             'events' => [
-                'account.create',
-                'account.delete',
+                'users.*.create',
+                'users.*.delete',
             ],
             'schedule' => '0 0 1 1 *',
             'timeout' => 10,
@@ -193,7 +193,7 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testList
      */
-    public function testGet(array $data):array
+    public function testGet(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -222,12 +222,12 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testGet
      */
-    public function testUpdate($data):array
+    public function testUpdate($data): array
     {
         /**
          * Test for SUCCESS
          */
-        $response1 = $this->client->call(Client::METHOD_PUT, '/functions/'.$data['functionId'], array_merge([
+        $response1 = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -238,8 +238,8 @@ class FunctionsCustomServerTest extends Scope
                 'key6' => 'value6',
             ],
             'events' => [
-                'account.update.name',
-                'account.update.email',
+                'users.*.update.name',
+                'users.*.update.email',
             ],
             'schedule' => '0 0 1 1 *',
             'timeout' => 5,
@@ -257,12 +257,12 @@ class FunctionsCustomServerTest extends Scope
             'key6' => 'value6',
         ], $response1['body']['vars']);
         $this->assertEquals([
-            'account.update.name',
-            'account.update.email',
+            'users.*.update.name',
+            'users.*.update.email',
         ], $response1['body']['events']);
         $this->assertEquals('0 0 1 1 *', $response1['body']['schedule']);
         $this->assertEquals(5, $response1['body']['timeout']);
-       
+
         /**
          * Test for FAILURE
          */
@@ -273,16 +273,16 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testUpdate
      */
-    public function testCreateDeployment($data):array
+    public function testCreateDeployment($data): array
     {
         /**
          * Test for SUCCESS
          */
         $folder = 'php';
-        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/deployments', array_merge([
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -306,16 +306,17 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testUpdate
      */
-    public function testCreateDeploymentLarge($data): array {
+    public function testCreateDeploymentLarge($data): array
+    {
         /**
          * Test for Large Code File SUCCESS
          */
 
         $folder = 'php-large';
-        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
 
-        $chunkSize = 5*1024*1024;
+        $chunkSize = 5 * 1024 * 1024;
         $handle = @fopen($code, "rb");
         $mimeType = 'application/x-gzip';
         $counter = 0;
@@ -328,10 +329,10 @@ class FunctionsCustomServerTest extends Scope
         while (!feof($handle)) {
             $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'php-large-fx.tar.gz');
             $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
-            if(!empty($id)) {
+            if (!empty($id)) {
                 $headers['x-appwrite-id'] = $id;
             }
-            $largeTag = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/deployments', array_merge($headers, $this->getHeaders()), [
+            $largeTag = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/deployments', array_merge($headers, $this->getHeaders()), [
                 'entrypoint' => 'index.php',
                 'code' => $curlFile,
             ]);
@@ -345,19 +346,19 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsInt($largeTag['body']['dateCreated']);
         $this->assertEquals('index.php', $largeTag['body']['entrypoint']);
         $this->assertGreaterThan(10000, $largeTag['body']['size']);
-        
+
         return $data;
     }
 
     /**
      * @depends testCreateDeployment
      */
-    public function testUpdateDeployment($data):array
+    public function testUpdateDeployment($data): array
     {
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/functions/'.$data['functionId'].'/deployments/'.$data['deploymentId'], array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $data['functionId'] . '/deployments/' . $data['deploymentId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -367,7 +368,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsInt($response['body']['dateCreated']);
         $this->assertIsInt($response['body']['dateUpdated']);
         $this->assertEquals($data['deploymentId'], $response['body']['deployment']);
-       
+
         /**
          * Test for FAILURE
          */
@@ -378,12 +379,12 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testCreateDeployment
      */
-    public function testListDeployments(array $data):array
+    public function testListDeployments(array $data): array
     {
         /**
          * Test for SUCCESS
          */
-        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/deployments', array_merge([
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -396,7 +397,7 @@ class FunctionsCustomServerTest extends Scope
         /**
          * Test search queries
          */
-        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/deployments', array_merge([
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders(), [
@@ -409,7 +410,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(2, $function['body']['deployments']);
         $this->assertEquals($function['body']['deployments'][0]['$id'], $data['deploymentId']);
 
-        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/deployments', array_merge([
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders(), [
@@ -422,7 +423,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(2, $function['body']['deployments']);
         $this->assertEquals($function['body']['deployments'][0]['$id'], $data['deploymentId']);
 
-        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/deployments', array_merge([
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders(), [
@@ -441,12 +442,12 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testCreateDeployment
      */
-    public function testGetDeployment(array $data):array
+    public function testGetDeployment(array $data): array
     {
         /**
          * Test for SUCCESS
          */
-        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/deployments/' . $data['deploymentId'], array_merge([
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments/' . $data['deploymentId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -456,7 +457,7 @@ class FunctionsCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/deployments/x', array_merge([
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments/x', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -469,12 +470,12 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testUpdateDeployment
      */
-    public function testCreateExecution($data):array
+    public function testCreateExecution($data): array
     {
         /**
          * Test for SUCCESS
          */
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/executions', array_merge([
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -496,7 +497,7 @@ class FunctionsCustomServerTest extends Scope
 
         sleep(5);
 
-        $execution = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions/'.$executionId, array_merge([
+        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -529,12 +530,12 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testCreateExecution
      */
-    public function testListExecutions(array $data):array
+    public function testListExecutions(array $data): array
     {
         /**
          * Test for SUCCESS
          */
-        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions', array_merge([
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -549,7 +550,7 @@ class FunctionsCustomServerTest extends Scope
          * Test search queries
          */
 
-        $response = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -562,7 +563,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(1, $response['body']['executions']);
         $this->assertEquals($data['functionId'], $response['body']['executions'][0]['functionId']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -581,12 +582,12 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testUpdateDeployment
      */
-    public function testSyncCreateExecution($data):array
+    public function testSyncCreateExecution($data): array
     {
         /**
          * Test for SUCCESS
          */
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/executions', array_merge([
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -610,12 +611,12 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testListExecutions
      */
-    public function testGetExecution(array $data):array
+    public function testGetExecution(array $data): array
     {
         /**
          * Test for SUCCESS
          */
-        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions/' . $data['executionId'], array_merge([
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/executions/' . $data['executionId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -626,7 +627,7 @@ class FunctionsCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions/x', array_merge([
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/executions/x', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -639,12 +640,12 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testGetExecution
      */
-    public function testDeleteDeployment($data):array
+    public function testDeleteDeployment($data): array
     {
         /**
          * Test for SUCCESS
          */
-        $function = $this->client->call(Client::METHOD_DELETE, '/functions/'.$data['functionId'].'/deployments/' . $data['deploymentId'], array_merge([
+        $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/deployments/' . $data['deploymentId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -652,11 +653,11 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(204, $function['headers']['status-code']);
         $this->assertEmpty($function['body']);
 
-        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/deployments/' . $data['deploymentId'], array_merge([
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments/' . $data['deploymentId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-       
+
         $this->assertEquals(404, $function['headers']['status-code']);
 
         /**
@@ -669,12 +670,12 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testCreateDeployment
      */
-    public function testDelete($data):array
+    public function testDelete($data): array
     {
         /**
          * Test for SUCCESS
          */
-        $function = $this->client->call(Client::METHOD_DELETE, '/functions/'. $data['functionId'], array_merge([
+        $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -686,7 +687,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-       
+
         $this->assertEquals(404, $function['headers']['status-code']);
 
         /**
@@ -702,15 +703,15 @@ class FunctionsCustomServerTest extends Scope
         $entrypoint = 'index.php';
         $timeout = 2;
         $folder = 'timeout';
-        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
-        
+
         $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'functionId' => 'unique()',
-            'name' => 'Test '.$name,
+            'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [],
             'events' => [],
@@ -722,7 +723,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(201, $function['headers']['status-code']);
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', array_merge([
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -735,8 +736,8 @@ class FunctionsCustomServerTest extends Scope
 
         // Allow build step to run
         sleep(20);
-       
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
+
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -744,12 +745,12 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $executionId = $execution['body']['$id'] ?? '';
-        
+
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         sleep(5);
 
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -768,7 +769,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['stderr'], 'Execution timed out.');
 
         // Cleanup : Delete function 
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -786,7 +787,7 @@ class FunctionsCustomServerTest extends Scope
         $entrypoint = 'index.php';
         $timeout = 2;
         $folder = 'php-fn';
-        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
 
         $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
@@ -794,7 +795,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'functionId' => 'unique()',
-            'name' => 'Test '.$name,
+            'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [],
             'events' => [],
@@ -806,7 +807,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(201, $function['headers']['status-code']);
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', array_merge([
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -820,14 +821,14 @@ class FunctionsCustomServerTest extends Scope
         // Allow build step to run
         sleep(10);
 
-        $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployments/'.$deploymentId, array_merge([
+        $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $deployment['headers']['status-code']);
-       
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
+
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -835,14 +836,14 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $executionId = $execution['body']['$id'] ?? '';
-        
+
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
-        
+
         sleep(10);
 
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions/'.$executionId, array_merge([
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -852,7 +853,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $executions['headers']['status-code']);
         $this->assertEquals('completed', $executions['body']['status']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
-        $this->assertEquals('Test '.$name, $output['APPWRITE_FUNCTION_NAME']);
+        $this->assertEquals('Test ' . $name, $output['APPWRITE_FUNCTION_NAME']);
         $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
         $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
         $this->assertEquals('PHP', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
@@ -864,11 +865,11 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
 
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-        
+
         $this->assertEquals($executions['headers']['status-code'], 200);
         $this->assertEquals($executions['body']['total'], 1);
         $this->assertIsArray($executions['body']['executions']);
@@ -878,7 +879,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
 
         // Cleanup : Delete function 
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -892,9 +893,9 @@ class FunctionsCustomServerTest extends Scope
     {
         $name = 'node-17.0';
         $folder = 'node';
-        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
-        
+
         $entrypoint = 'index.js';
         $timeout = 2;
 
@@ -903,7 +904,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'functionId' => 'unique()',
-            'name' => 'Test '.$name,
+            'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [
                 'CUSTOM_VARIABLE' => 'variable',
@@ -917,7 +918,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(201, $function['headers']['status-code']);
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', array_merge([
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -932,7 +933,7 @@ class FunctionsCustomServerTest extends Scope
         // Allow build step to run
         sleep(10);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -940,14 +941,14 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $executionId = $execution['body']['$id'] ?? '';
-        
+
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
-        
+
         sleep(10);
 
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions/'.$executionId, array_merge([
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -957,7 +958,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $executions['headers']['status-code']);
         $this->assertEquals('completed', $executions['body']['status']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
-        $this->assertEquals('Test '.$name, $output['APPWRITE_FUNCTION_NAME']);
+        $this->assertEquals('Test ' . $name, $output['APPWRITE_FUNCTION_NAME']);
         $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
         $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
         $this->assertEquals('Node.js', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
@@ -970,11 +971,11 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
 
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-        
+
         $this->assertEquals($executions['headers']['status-code'], 200);
         $this->assertEquals($executions['body']['total'], 1);
         $this->assertIsArray($executions['body']['executions']);
@@ -984,7 +985,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
 
         // Cleanup : Delete function 
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -997,7 +998,7 @@ class FunctionsCustomServerTest extends Scope
     {
         $name = 'python-3.9';
         $folder = 'python';
-        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
 
         $entrypoint = 'main.py';
@@ -1008,7 +1009,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'functionId' => 'unique()',
-            'name' => 'Test '.$name,
+            'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [
                 'CUSTOM_VARIABLE' => 'variable',
@@ -1022,7 +1023,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(201, $function['headers']['status-code']);
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', array_merge([
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -1037,7 +1038,7 @@ class FunctionsCustomServerTest extends Scope
         // Allow build step to run
         sleep(30);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -1045,14 +1046,14 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $executionId = $execution['body']['$id'] ?? '';
-        
+
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
-        
+
         sleep(30);
 
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions/'.$executionId, array_merge([
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -1062,7 +1063,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $executions['headers']['status-code']);
         $this->assertEquals('completed', $executions['body']['status']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
-        $this->assertEquals('Test '.$name, $output['APPWRITE_FUNCTION_NAME']);
+        $this->assertEquals('Test ' . $name, $output['APPWRITE_FUNCTION_NAME']);
         $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
         $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
         $this->assertEquals('Python', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
@@ -1075,11 +1076,11 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
 
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-        
+
         $this->assertEquals($executions['headers']['status-code'], 200);
         $this->assertEquals($executions['body']['total'], 1);
         $this->assertIsArray($executions['body']['executions']);
@@ -1089,7 +1090,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
 
         // Cleanup : Delete function 
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1102,9 +1103,9 @@ class FunctionsCustomServerTest extends Scope
     {
         $name = 'dart-2.15';
         $folder = 'dart';
-        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
-        
+
         $entrypoint = 'main.dart';
         $timeout = 2;
 
@@ -1113,7 +1114,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'functionId' => 'unique()',
-            'name' => 'Test '.$name,
+            'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [
                 'CUSTOM_VARIABLE' => 'variable',
@@ -1127,7 +1128,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(201, $function['headers']['status-code']);
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', array_merge([
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -1142,7 +1143,7 @@ class FunctionsCustomServerTest extends Scope
         // Allow build step to run
         sleep(40);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -1150,14 +1151,14 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $executionId = $execution['body']['$id'] ?? '';
-        
+
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
-        
+
         sleep(10);
 
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions/'.$executionId, array_merge([
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -1167,7 +1168,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $executions['headers']['status-code']);
         $this->assertEquals('completed', $executions['body']['status']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
-        $this->assertEquals('Test '.$name, $output['APPWRITE_FUNCTION_NAME']);
+        $this->assertEquals('Test ' . $name, $output['APPWRITE_FUNCTION_NAME']);
         $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
         $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
         $this->assertEquals('Dart', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
@@ -1180,11 +1181,11 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
 
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-        
+
         $this->assertEquals($executions['headers']['status-code'], 200);
         $this->assertEquals($executions['body']['total'], 1);
         $this->assertIsArray($executions['body']['executions']);
@@ -1194,7 +1195,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
 
         // Cleanup : Delete function 
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1207,9 +1208,9 @@ class FunctionsCustomServerTest extends Scope
     {
         $name = 'ruby-3.1';
         $folder = 'ruby';
-        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
-        
+
         $entrypoint = 'main.rb';
         $timeout = 2;
 
@@ -1218,7 +1219,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'functionId' => 'unique()',
-            'name' => 'Test '.$name,
+            'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [
                 'CUSTOM_VARIABLE' => 'variable',
@@ -1232,7 +1233,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(201, $function['headers']['status-code']);
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', array_merge([
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -1247,7 +1248,7 @@ class FunctionsCustomServerTest extends Scope
         // Allow build step to run
         sleep(30);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -1255,14 +1256,14 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $executionId = $execution['body']['$id'] ?? '';
-        
+
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
-        
+
         sleep(10);
 
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions/'.$executionId, array_merge([
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -1272,7 +1273,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $executions['headers']['status-code']);
         $this->assertEquals('completed', $executions['body']['status']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
-        $this->assertEquals('Test '.$name, $output['APPWRITE_FUNCTION_NAME']);
+        $this->assertEquals('Test ' . $name, $output['APPWRITE_FUNCTION_NAME']);
         $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
         $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
         $this->assertEquals('Ruby', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
@@ -1285,11 +1286,11 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
 
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-        
+
         $this->assertEquals($executions['headers']['status-code'], 200);
         $this->assertEquals($executions['body']['total'], 1);
         $this->assertIsArray($executions['body']['executions']);
@@ -1299,7 +1300,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
 
         // Cleanup : Delete function 
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1314,7 +1315,7 @@ class FunctionsCustomServerTest extends Scope
     //     $folder = 'swift';
     //     $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
     //     $this->packageCode($folder);
-        
+
     //     $entrypoint = 'index.swift';
     //     $timeout = 5;
 
@@ -1360,11 +1361,11 @@ class FunctionsCustomServerTest extends Scope
     //     ]);
 
     //     $executionId = $execution['body']['$id'] ?? '';
-        
+
     //     $this->assertEquals(201, $execution['headers']['status-code']);
 
     //     $executionId = $execution['body']['$id'] ?? '';
-        
+
     //     sleep(10);
 
     //     $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions/'.$executionId, array_merge([
@@ -1394,7 +1395,7 @@ class FunctionsCustomServerTest extends Scope
     //         'content-type' => 'application/json',
     //         'x-appwrite-project' => $this->getProject()['$id'],
     //     ], $this->getHeaders()));
-        
+
     //     $this->assertEquals($executions['headers']['status-code'], 200);
     //     $this->assertEquals($executions['body']['total'], 1);
     //     $this->assertIsArray($executions['body']['executions']);
@@ -1432,6 +1433,5 @@ class FunctionsCustomServerTest extends Scope
         $this->assertArrayHasKey('image', $runtime);
         $this->assertArrayHasKey('base', $runtime);
         $this->assertArrayHasKey('supports', $runtime);
-
     }
 }
