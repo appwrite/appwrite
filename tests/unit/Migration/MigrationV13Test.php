@@ -46,6 +46,6 @@ class MigrationV13Test extends MigrationTest
         foreach ($events as $event) {
             $this->assertTrue((new Event())->isValid($event), $event);
         }
-        $this->assertCount(45, $events);
+        $this->assertCount(44, $events);
     }
 }

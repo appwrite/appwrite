@@ -22,7 +22,6 @@ class V13 extends Migration
         'account.delete',
         'account.sessions.create',
         'account.sessions.delete',
-        'account.sessions.update',
         'database.collections.create',
         'database.collections.update',
         'database.collections.delete',
