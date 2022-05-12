@@ -397,7 +397,10 @@ class CertificatesV1 extends Worker
             $domainDocument->setAttribute('certificateId', $certificateId);
 
             $this->dbForConsole->updateDocument('domains', $domainDocument->getId(), $domainDocument);
-            $this->dbForConsole->deleteCachedDocument('projects', $domainDocument->getAttribute('projectId'));
+
+            if($domainDocument->getAttribute('projectId')) {
+                $this->dbForConsole->deleteCachedDocument('projects', $domainDocument->getAttribute('projectId'));
+            }
         } 
     }
 }
