@@ -167,7 +167,10 @@ App::post('/v1/account/sessions')
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
-        $profile = $dbForProject->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+        $profile = $dbForProject->findOne('users', [
+            new Query('deleted', Query::TYPE_EQUAL, [false]),
+            new Query('email', Query::TYPE_EQUAL, [$email])]
+        );
 
         if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
             $audits
@@ -472,14 +475,21 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         if ($user === false || $user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
             $name = $oauth2->getUserName($accessToken);
             $email = $oauth2->getUserEmail($accessToken);
+            $isVerified = $oauth2->isEmailVerified($accessToken);
 
-            $user = $dbForProject->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+            if ($isVerified === true) {
+                // Get user by email address
+                $user = $dbForProject->findOne('users', [
+                    new Query('deleted', Query::TYPE_EQUAL, [false]),
+                    new Query('email', Query::TYPE_EQUAL, [$email])]
+                );
+            }
 
             if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
                 if ($limit !== 0) {
-                    $total = $dbForProject->count('users', [ new Query('deleted', Query::TYPE_EQUAL, [false]),], APP_LIMIT_USERS);
+                    $total = $dbForProject->count('users', [new Query('deleted', Query::TYPE_EQUAL, [false])], APP_LIMIT_USERS);
 
                     if ($total >= $limit) {
                         throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
@@ -493,7 +503,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         '$read' => ['role:all'],
                         '$write' => ['user:' . $userId],
                         'email' => $email,
-                        'emailVerification' => true,
+                        'emailVerification' => $isVerified,
                         'status' => true, // Email should already be authenticated by OAuth2 provider
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
                         'passwordUpdate' => 0,
@@ -518,7 +528,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         // Create session token, verify user account and update OAuth2 ID and Access Token
-
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
@@ -1867,7 +1876,11 @@ App::post('/v1/account/recovery')
         $isAppUser = Auth::isAppUser($roles);
 
         $email = \strtolower($email);
-        $profile = $dbForProject->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+
+        $profile = $dbForProject->findOne('users', [
+            new Query('deleted', Query::TYPE_EQUAL, [false]), 
+            new Query('email', Query::TYPE_EQUAL, [$email])
+        ]);
 
         if (!$profile) {
             throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
