@@ -295,7 +295,10 @@ class FunctionsV1 extends Worker
                 ->setAttribute('stderr', $executionResponse['stderr'])
                 ->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
+            $endtime = \microtime(true);
+            $time = $endtime - $execution->getAttribute('dateCreated');
             $execution
+                ->setAttribute('time', $time)
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());

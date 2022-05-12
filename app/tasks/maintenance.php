@@ -27,6 +27,11 @@ function getConsoleDB(): Database
             $database = new Database(new MariaDB($register->get('db')), $cache);
             $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
             $database->setNamespace('_console'); // Main DB
+
+            if (!$database->exists($database->getDefaultDatabase(), '_metadata')) {
+                throw new \Exception('Console project not ready');
+            }
+
             break; // leave loop if successful
         } catch (\Exception $e) {
             Console::warning("Database not ready. Retrying connection ({$attempts})...");

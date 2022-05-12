@@ -748,7 +748,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(201, $execution['headers']['status-code']);
 
-        sleep(5);
+        sleep(10);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -762,11 +762,11 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
         $this->assertEquals($executions['body']['executions'][0]['status'], 'failed');
-        $this->assertEquals($executions['body']['executions'][0]['statusCode'], 124);
+        $this->assertEquals($executions['body']['executions'][0]['statusCode'], 500);
         $this->assertGreaterThan(2, $executions['body']['executions'][0]['time']);
-        $this->assertLessThan(3, $executions['body']['executions'][0]['time']);
+        $this->assertLessThan(6, $executions['body']['executions'][0]['time']);
         $this->assertEquals($executions['body']['executions'][0]['response'], '');
-        $this->assertEquals($executions['body']['executions'][0]['stderr'], 'Execution timed out.');
+        $this->assertEquals($executions['body']['executions'][0]['stderr'], 'An internal curl error has occurred within the executor! Error Msg: Operation timed out');
 
         // Cleanup : Delete function 
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
