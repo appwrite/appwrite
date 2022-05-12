@@ -322,19 +322,19 @@ class CertificatesV1 extends Worker
 
         // Move generated files from certbot into our storage
         if(!@\rename('/etc/letsencrypt/live/'.$domain.'/cert.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem')) {
-            throw new Exception('Failed to rename certificate cert.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . '; ' . $letsEncryptData['stdout']);
+            throw new Exception('Failed to rename certificate cert.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
         }
 
         if (!@\rename('/etc/letsencrypt/live/' . $domain . '/chain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/chain.pem')) {
-            throw new Exception('Failed to rename certificate chain.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . '; ' . $letsEncryptData['stdout']);
+            throw new Exception('Failed to rename certificate chain.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
         }
 
         if (!@\rename('/etc/letsencrypt/live/' . $domain . '/fullchain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/fullchain.pem')) {
-            throw new Exception('Failed to rename certificate fullchain.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . '; ' . $letsEncryptData['stdout']);
+            throw new Exception('Failed to rename certificate fullchain.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
         }
 
         if (!@\rename('/etc/letsencrypt/live/' . $domain . '/privkey.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/privkey.pem')) {
-            throw new Exception('Failed to rename certificate privkey.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . '; ' . $letsEncryptData['stdout']);
+            throw new Exception('Failed to rename certificate privkey.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
         }
 
         $config = \implode(PHP_EOL, [
