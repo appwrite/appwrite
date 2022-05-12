@@ -41,8 +41,7 @@ class DeletesV1 extends Worker
 
     public function run(): void
     {
-
-        $projectId = $this->args['projectId'] ?? '';
+        $project = new Document($this->args['project'] ?? []);
         $type = $this->args['type'] ?? '';
 
         switch (strval($type)) {
@@ -51,25 +50,25 @@ class DeletesV1 extends Worker
 
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_COLLECTIONS:
-                        $this->deleteCollection($document, $projectId);
+                        $this->deleteCollection($document, $project->getId());
                         break;
                     case DELETE_TYPE_PROJECTS:
                         $this->deleteProject($document);
                         break;
                     case DELETE_TYPE_FUNCTIONS:
-                        $this->deleteFunction($document, $projectId);
+                        $this->deleteFunction($document, $project->getId());
                         break;
                     case DELETE_TYPE_DEPLOYMENTS:
-                        $this->deleteDeployment($document, $projectId);
+                        $this->deleteDeployment($document, $project->getId());
                         break;
                     case DELETE_TYPE_USERS:
-                        $this->deleteUser($document, $projectId);
+                        $this->deleteUser($document, $project->getId());
                         break;
                     case DELETE_TYPE_TEAMS:
-                        $this->deleteMemberships($document, $projectId);
+                        $this->deleteMemberships($document, $project->getId());
                         break;
                     case DELETE_TYPE_BUCKETS:
-                        $this->deleteBucket($document, $projectId);
+                        $this->deleteBucket($document, $project->getId());
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
@@ -82,15 +81,15 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_AUDIT:
-                $timestamp = $this->args['timestamp'] ?? 0;
-                $document = new Document($this->args['document'] ?? []);
+                $timestamp = $payload['timestamp'] ?? 0;
+                $document = new Document($payload['document'] ?? []);
 
                 if (!empty($timestamp)) {
                     $this->deleteAuditLogs($this->args['timestamp']);
                 }
 
                 if (!$document->isEmpty()) {
-                    $this->deleteAuditLogsByResource('document/' . $document->getId(), $projectId);
+                    $this->deleteAuditLogsByResource('document/' . $document->getId(), $project->getId());
                 }
 
                 break;
@@ -207,7 +206,7 @@ class DeletesV1 extends Worker
          * DO NOT DELETE THE USER RECORD ITSELF. 
          * WE RETAIN THE USER RECORD TO RESERVE THE USER ID AND ENSURE THAT THE USER ID IS NOT REUSED.
          */
-        
+
         $userId = $document->getId();
 
         // Delete all sessions of this user from the sessions table and update the sessions field of the user record

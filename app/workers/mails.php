@@ -4,6 +4,7 @@ use Appwrite\Resque\Worker;
 use Appwrite\Template\Template;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\Document;
 use Utopia\Locale\Locale;
 
 require_once __DIR__ . '/../init.php';
@@ -30,19 +31,23 @@ class MailsV1 extends Worker
             return;
         }
 
+        $project = new Document($this->args['project']);
+        $user = new Document($this->args['user'] ?? []);
+        $team = new Document($this->args['team'] ?? []);
+
         $recipient = $this->args['recipient'];
-        $name = $this->args['name'];
         $url = $this->args['url'];
-        $project = $this->args['project'];
+        $name = $this->args['name'];
         $type = $this->args['type'];
         $prefix = $this->getPrefix($type);
         $locale = new Locale($this->args['locale']);
+        $projectName = $project->getAttribute('name', '[APP-NAME]');
 
         if (!$this->doesLocaleExist($locale, $prefix)) {
             $locale->setDefault('en');
         }
 
-        $from = $this->args['from'] === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $project);
+        $from = $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
         $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
         $subject = '';
         switch ($type) {
@@ -57,9 +62,9 @@ class MailsV1 extends Worker
                 $body->setParam('{{attempt}}', $attempt);
                 break;
             case MAIL_TYPE_INVITATION:
-                $subject = \sprintf($locale->getText("$prefix.subject"), $this->args['team'], $project);
-                $body->setParam('{{owner}}', $this->args['owner']);
-                $body->setParam('{{team}}', $this->args['team']);
+                $subject = \sprintf($locale->getText("$prefix.subject"), $team->getAttribute('name'), $projectName);
+                $body->setParam('{{owner}}', $user->getAttribute('name'));
+                $body->setParam('{{team}}', $team->getAttribute('name'));
                 break;
             case MAIL_TYPE_RECOVERY:
             case MAIL_TYPE_VERIFICATION:
@@ -79,7 +84,7 @@ class MailsV1 extends Worker
             ->setParam('{{footer}}', $locale->getText("$prefix.footer"))
             ->setParam('{{thanks}}', $locale->getText("$prefix.thanks"))
             ->setParam('{{signature}}', $locale->getText("$prefix.signature"))
-            ->setParam('{{project}}', $project)
+            ->setParam('{{project}}', $projectName)
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')

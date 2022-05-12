@@ -25,7 +25,7 @@ use Utopia\Validator\Boolean;
 App::post('/v1/users')
     ->desc('Create User')
     ->groups(['api', 'users'])
-    ->label('event', 'users.create')
+    ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
@@ -41,10 +41,12 @@ App::post('/v1/users')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($userId, $email, $password, $name, $response, $dbForProject, $usage) {
+    ->inject('events')
+    ->action(function ($userId, $email, $password, $name, $response, $dbForProject, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         $email = \strtolower($email);
 
@@ -75,6 +77,10 @@ App::post('/v1/users')
 
         $usage
             ->setParam('users.create', 1)
+        ;
+
+        $events
+            ->setParam('userId', $user->getId())
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -281,26 +287,8 @@ App::get('/v1/users/:userId/logs')
         }
 
         $audit = new Audit($dbForProject);
-        $auditEvents = [
-            'account.create',
-            'account.delete',
-            'account.update.name',
-            'account.update.email',
-            'account.update.password',
-            'account.update.prefs',
-            'account.sessions.create',
-            'account.sessions.update',
-            'account.sessions.delete',
-            'account.recovery.create',
-            'account.recovery.update',
-            'account.verification.create',
-            'account.verification.update',
-            'teams.membership.create',
-            'teams.membership.update',
-            'teams.membership.delete',
-        ];
 
-        $logs = $audit->getLogsByUserAndEvents($user->getId(), $auditEvents, $limit, $offset);
+        $logs = $audit->getLogsByUser($user->getId(), $limit, $offset);
 
         $output = [];
 
@@ -348,7 +336,7 @@ App::get('/v1/users/:userId/logs')
         ;
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUserAndEvents($user->getId(), $auditEvents),
+            'total' => $audit->countLogsByUser($user->getId()),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -356,7 +344,7 @@ App::get('/v1/users/:userId/logs')
 App::patch('/v1/users/:userId/status')
     ->desc('Update User Status')
     ->groups(['api', 'users'])
-    ->label('event', 'users.update.status')
+    ->label('event', 'users.[userId].update.status')
     ->label('scope', 'users.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
@@ -370,10 +358,12 @@ App::patch('/v1/users/:userId/status')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($userId, $status, $response, $dbForProject, $usage) {
+    ->inject('events')
+    ->action(function ($userId, $status, $response, $dbForProject, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -386,13 +376,18 @@ App::patch('/v1/users/:userId/status')
         $usage
             ->setParam('users.update', 1)
         ;
+
+        $events
+            ->setParam('userId', $user->getId())
+        ;
+
         $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::patch('/v1/users/:userId/verification')
     ->desc('Update Email Verification')
     ->groups(['api', 'users'])
-    ->label('event', 'users.update.verification')
+    ->label('event', 'users.[userId].update.verification')
     ->label('scope', 'users.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
@@ -406,10 +401,12 @@ App::patch('/v1/users/:userId/verification')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($userId, $emailVerification, $response, $dbForProject, $usage) {
+    ->inject('events')
+    ->action(function ($userId, $emailVerification, $response, $dbForProject, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -422,13 +419,18 @@ App::patch('/v1/users/:userId/verification')
         $usage
             ->setParam('users.update', 1)
         ;
+
+        $events
+            ->setParam('userId', $user->getId())
+        ;
+
         $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::patch('/v1/users/:userId/name')
     ->desc('Update Name')
     ->groups(['api', 'users'])
-    ->label('event', 'users.update.name')
+    ->label('event', 'users.[userId].update.name')
     ->label('scope', 'users.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
@@ -442,10 +444,12 @@ App::patch('/v1/users/:userId/name')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('audits')
-    ->action(function ($userId, $name, $response, $dbForProject, $audits) {
+    ->inject('events')
+    ->action(function ($userId, $name, $response, $dbForProject, $audits, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
+        /** @var Appwrite\Event\Event $events */
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -461,9 +465,11 @@ App::patch('/v1/users/:userId/name')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $audits
+            ->setResource('user/'.$user->getId())
+        ;
+
+        $events
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'users.update.name')
-            ->setParam('resource', 'user/'.$user->getId())
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -472,7 +478,7 @@ App::patch('/v1/users/:userId/name')
 App::patch('/v1/users/:userId/password')
     ->desc('Update Password')
     ->groups(['api', 'users'])
-    ->label('event', 'users.update.password')
+    ->label('event', 'users.[userId].update.password')
     ->label('scope', 'users.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
@@ -486,10 +492,12 @@ App::patch('/v1/users/:userId/password')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('audits')
-    ->action(function ($userId, $password, $response, $dbForProject, $audits) {
+    ->inject('events')
+    ->action(function ($userId, $password, $response, $dbForProject, $audits, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
+        /** @var Appwrite\Event\Event $events */
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -504,9 +512,11 @@ App::patch('/v1/users/:userId/password')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $audits
+            ->setResource('user/'.$user->getId())
+        ;
+
+        $events
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'users.update.password')
-            ->setParam('resource', 'user/'.$user->getId())
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -515,7 +525,7 @@ App::patch('/v1/users/:userId/password')
 App::patch('/v1/users/:userId/email')
     ->desc('Update Email')
     ->groups(['api', 'users'])
-    ->label('event', 'users.update.email')
+    ->label('event', 'users.[userId].update.email')
     ->label('scope', 'users.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
@@ -529,10 +539,12 @@ App::patch('/v1/users/:userId/email')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('audits')
-    ->action(function ($userId, $email, $response, $dbForProject, $audits) {
+    ->inject('events')
+    ->action(function ($userId, $email, $response, $dbForProject, $audits, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Audit $audits */
+        /** @var Appwrite\Event\Event $events */
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -558,10 +570,13 @@ App::patch('/v1/users/:userId/email')
             throw new Exception('Email already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
+
         $audits
+            ->setResource('user/'.$user->getId())
+        ;
+
+        $events
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'users.update.email')
-            ->setParam('resource', 'user/'.$user->getId())
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -570,7 +585,7 @@ App::patch('/v1/users/:userId/email')
 App::patch('/v1/users/:userId/prefs')
     ->desc('Update User Preferences')
     ->groups(['api', 'users'])
-    ->label('event', 'users.update.prefs')
+    ->label('event', 'users.[userId].update.prefs')
     ->label('scope', 'users.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
@@ -584,10 +599,12 @@ App::patch('/v1/users/:userId/prefs')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($userId, $prefs, $response, $dbForProject, $usage) {
+    ->inject('events')
+    ->action(function ($userId, $prefs, $response, $dbForProject, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -600,13 +617,18 @@ App::patch('/v1/users/:userId/prefs')
         $usage
             ->setParam('users.update', 1)
         ;
+
+        $events
+            ->setParam('userId', $user->getId())
+        ;
+
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
 App::delete('/v1/users/:userId/sessions/:sessionId')
     ->desc('Delete User Session')
     ->groups(['api', 'users'])
-    ->label('event', 'users.sessions.delete')
+    ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('scope', 'users.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
@@ -635,20 +657,21 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
         $session = $dbForProject->getDocument('sessions', $sessionId);
 
         if($session->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_SESSION_NOT_FOUND);
+            throw new Exception('Session not found', 404, Exception::USER_SESSION_NOT_FOUND);
         }
 
         $dbForProject->deleteDocument('sessions', $session->getId());
-
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        $events
-            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
-        ;
 
         $usage
             ->setParam('users.update', 1)
             ->setParam('users.sessions.delete', 1)
+        ;
+
+        $events
+            ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $sessionId)
         ;
 
         $response->noContent();
@@ -657,7 +680,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
 App::delete('/v1/users/:userId/sessions')
     ->desc('Delete User Sessions')
     ->groups(['api', 'users'])
-    ->label('event', 'users.sessions.delete')
+    ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('scope', 'users.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
@@ -686,25 +709,28 @@ App::delete('/v1/users/:userId/sessions')
 
         foreach ($sessions as $key => $session) { /** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
+            //TODO: fix this
         }
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $events
-            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER))
         ;
 
         $usage
             ->setParam('users.update', 1)
             ->setParam('users.sessions.delete', 1)
         ;
+
         $response->noContent();
     });
 
 App::delete('/v1/users/:userId')
     ->desc('Delete User')
     ->groups(['api', 'users'])
-    ->label('event', 'users.delete')
+    ->label('event', 'users.[userId].delete')
     ->label('scope', 'users.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
@@ -722,9 +748,9 @@ App::delete('/v1/users/:userId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Event $deletes */
+        /** @var Appwrite\Event\Delete $deletes */
         /** @var Appwrite\Stats\Stats $usage */
-        
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty() || $user->getAttribute('deleted')) {
@@ -735,7 +761,7 @@ App::delete('/v1/users/:userId')
          * DO NOT DELETE THE USER RECORD ITSELF. 
          * WE RETAIN THE USER RECORD TO RESERVE THE USER ID AND ENSURE THAT THE USER ID IS NOT REUSED.
          */
-        
+
         // clone user object to send to workers
         $clone = clone $user;
 
@@ -751,12 +777,13 @@ App::delete('/v1/users/:userId')
         $dbForProject->updateDocument('users', $userId, $user);
 
         $deletes
-            ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $clone)
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($clone)
         ;
 
         $events
-            ->setParam('eventData', $response->output($clone, Response::MODEL_USER))
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($clone, Response::MODEL_USER))
         ;
 
         $usage
