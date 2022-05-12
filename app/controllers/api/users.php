@@ -268,10 +268,9 @@ App::get('/v1/users/:userId/memberships')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function ($userId, $response, $dbForProject) {
+        /** @var string $userId */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Stats\Stats $usage */
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -285,8 +284,7 @@ App::get('/v1/users/:userId/memberships')
             $membership
                 ->setAttribute('teamName', $team->getAttribute('name'))
                 ->setAttribute('userName', $user->getAttribute('name'))
-                ->setAttribute('userEmail', $user->getAttribute('email'))
-            ;
+                ->setAttribute('userEmail', $user->getAttribute('email'));
 
             return $membership;
         }, $user->getAttribute('memberships', []));
