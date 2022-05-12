@@ -167,7 +167,10 @@ App::post('/v1/account/sessions')
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
-        $profile = $dbForProject->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+        $profile = $dbForProject->findOne('users', [
+            new Query('deleted', Query::TYPE_EQUAL, [false]),
+            new Query('email', Query::TYPE_EQUAL, [$email])]
+        );
 
         if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
             $audits
@@ -479,14 +482,18 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $isVerified = $oauth2->isEmailVerified($accessToken);
 
             if ($isVerified === true) {
-                $user = $dbForProject->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+                // Get user by email address
+                $user = $dbForProject->findOne('users', [
+                    new Query('deleted', Query::TYPE_EQUAL, [false]),
+                    new Query('email', Query::TYPE_EQUAL, [$email])]
+                );
             }
-            
+
             if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
                 if ($limit !== 0) {
-                    $total = $dbForProject->count('users', [ new Query('deleted', Query::TYPE_EQUAL, [false]),], APP_LIMIT_USERS);
+                    $total = $dbForProject->count('users', [new Query('deleted', Query::TYPE_EQUAL, [false])], APP_LIMIT_USERS);
 
                     if ($total >= $limit) {
                         throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
@@ -1883,7 +1890,11 @@ App::post('/v1/account/recovery')
         $isAppUser = Auth::isAppUser($roles);
 
         $email = \strtolower($email);
-        $profile = $dbForProject->findOne('users', [new Query('deleted', Query::TYPE_EQUAL, [false]), new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+
+        $profile = $dbForProject->findOne('users', [
+            new Query('deleted', Query::TYPE_EQUAL, [false]), 
+            new Query('email', Query::TYPE_EQUAL, [$email])
+        ]);
 
         if (!$profile) {
             throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
