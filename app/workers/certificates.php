@@ -334,7 +334,7 @@ class CertificatesV1 extends Worker
             throw new Exception('Failed to rename certificate privkey.pem.');
         }
 
-        $config = \implode('\n', [
+        $config = \implode(PHP_EOL, [
             "tls:",
             "  certificates:",
             "    - certFile: /storage/certificates/{$domain}/fullchain.pem",
