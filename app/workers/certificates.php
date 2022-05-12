@@ -5,6 +5,7 @@ use Appwrite\Network\Validator\CNAME;
 use Appwrite\Resque\Worker;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -73,7 +74,7 @@ class CertificatesV1 extends Worker
         try {
             // Read arguments
             $domain = $this->args['domain']; // String of domain (hostname)
-            $skipRenewCheck = $this->args['skipRenewCheck'] ?? false; // If true, we won't double-check expiry from cert file
+            $skipCheck = $this->args['skipCheck'] ?? false; // If true, we won't double-check expiry from cert file
 
             $domain = new Domain((!empty($domain)) ? $domain : '');
 
@@ -92,13 +93,15 @@ class CertificatesV1 extends Worker
                 throw new Exception('You must set a valid security email address (_APP_SYSTEM_SECURITY_EMAIL_ADDRESS) to issue an SSL certificate.');
             }
             
-            $mainDomain = $this->getMainDomain();
-            $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
-            $this->validateDomain($domain, $isMainDomain);
+            // Validate domain and DNS records. Skip if job is forced
+            if(!$skipCheck) {
+                $mainDomain = $this->getMainDomain();
+                $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
+                $this->validateDomain($domain, $isMainDomain);
+            }
 
-            // If certificate exists already, double-check expiry date
-            // If asked to skip, we won't
-            if(!$skipRenewCheck && !$this->isRenewRequired($domain->get())) {
+            // If certificate exists already, double-check expiry date. Skip if job is forced
+            if(!$skipCheck && !$this->isRenewRequired($domain->get())) {
                 throw new Exception('Renew isn\'t required.');
             }
 
@@ -113,7 +116,7 @@ class CertificatesV1 extends Worker
             ]));
     
             // Give certificates to Traefik
-            $this->applyCertificateFiles($domain->get());
+            $this->applyCertificateFiles($domain->get(), $letsEncryptData);
             
             // Update certificate info stored in database
             $certificate->setAttribute('renewDate', $this->getRenewDate($domain->get()));
@@ -304,10 +307,11 @@ class CertificatesV1 extends Worker
      * Method to take files from Let's Encrypt, and put it into Traefik.
      *
      * @param string $domain Domain which certificate was generated for
+     * @param array $letsEncryptData Let's Encrypt logs to use for additional info when throwing error
      *
      * @return void
      */
-    private function applyCertificateFiles(string $domain): void {
+    private function applyCertificateFiles(string $domain, array $letsEncryptData): void {
         // Prepare folder in storage for domain
         $path = APP_STORAGE_CERTIFICATES . '/' . $domain;
         if (!\is_readable($path)) {
@@ -317,27 +321,28 @@ class CertificatesV1 extends Worker
         }
 
         // Move generated files from certbot into our storage
-        if(!@\rename('/etc/letsencrypt/live/'.$domain.'/cert.pem', APP_STORAGE_CERTIFICATES.'/'.$domain.'/cert.pem')) {
-            throw new Exception('Failed to rename certificate cert.pem.');
+        if(!@\rename('/etc/letsencrypt/live/'.$domain.'/cert.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem')) {
+            throw new Exception('Failed to rename certificate cert.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
         }
 
         if (!@\rename('/etc/letsencrypt/live/' . $domain . '/chain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/chain.pem')) {
-            throw new Exception('Failed to rename certificate chain.pem.');
+            throw new Exception('Failed to rename certificate chain.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
         }
 
         if (!@\rename('/etc/letsencrypt/live/' . $domain . '/fullchain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/fullchain.pem')) {
-            throw new Exception('Failed to rename certificate fullchain.pem.');
+            throw new Exception('Failed to rename certificate fullchain.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
         }
 
         if (!@\rename('/etc/letsencrypt/live/' . $domain . '/privkey.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/privkey.pem')) {
-            throw new Exception('Failed to rename certificate privkey.pem.');
+            throw new Exception('Failed to rename certificate privkey.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
         }
 
-        $config =
-            "tls:" .
-            "  certificates:" . 
-            "    - certFile: /storage/certificates/{$domain}/fullchain.pem" . 
-            "      keyFile: /storage/certificates/{$domain}/privkey.pem";
+        $config = \implode(PHP_EOL, [
+            "tls:",
+            "  certificates:",
+            "    - certFile: /storage/certificates/{$domain}/fullchain.pem",
+            "      keyFile: /storage/certificates/{$domain}/privkey.pem"
+        ]);
         
         // Save configuration into Traefik using our new cert files
         if (!\file_put_contents(APP_STORAGE_CONFIG . '/' . $domain . '.yml', $config)) {
@@ -396,7 +401,10 @@ class CertificatesV1 extends Worker
             $domainDocument->setAttribute('certificateId', $certificateId);
 
             $this->dbForConsole->updateDocument('domains', $domainDocument->getId(), $domainDocument);
-            $this->dbForConsole->deleteCachedDocument('projects', $domainDocument->getAttribute('projectId'));
+
+            if($domainDocument->getAttribute('projectId')) {
+                $this->dbForConsole->deleteCachedDocument('projects', $domainDocument->getAttribute('projectId'));
+            }
         } 
     }
 }
