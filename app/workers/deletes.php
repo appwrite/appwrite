@@ -545,8 +545,7 @@ class DeletesV1 extends Worker
         $dbForProject = $this->getProjectDB($projectId);
         $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
 
-        $worker=new Worker();
-        $device=$worker->getDevice(APP_STORAGE_UPLOADS.'/app-'.$projectId);
+        $device=$this->getDevice(APP_STORAGE_UPLOADS.'/app-'.$projectId);
         
         $device->deletePath($document->getId());
     }
