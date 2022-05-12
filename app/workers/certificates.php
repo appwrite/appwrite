@@ -334,11 +334,12 @@ class CertificatesV1 extends Worker
             throw new Exception('Failed to rename certificate privkey.pem.');
         }
 
-        $config =
-            "tls:" .
-            "  certificates:" . 
-            "    - certFile: /storage/certificates/{$domain}/fullchain.pem" . 
-            "      keyFile: /storage/certificates/{$domain}/privkey.pem";
+        $config = \implode('\n', [
+            "tls:",
+            "  certificates:",
+            "    - certFile: /storage/certificates/{$domain}/fullchain.pem",
+            "      keyFile: /storage/certificates/{$domain}/privkey.pem"
+        ]);
         
         // Save configuration into Traefik using our new cert files
         if (!\file_put_contents(APP_STORAGE_CONFIG . '/' . $domain . '.yml', $config)) {
