@@ -423,8 +423,9 @@ App::post('/v1/teams/:teamId/memberships')
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($membership
-            ->setAttribute('email', $email)
-            ->setAttribute('name', $name)
+            ->setAttribute('teamName', $team->getAttribute('name'))
+            ->setAttribute('userName', $user->getAttribute('name'))
+            ->setAttribute('userEmail', $user->getAttribute('email'))
         , Response::MODEL_MEMBERSHIP);
     });
 
@@ -488,12 +489,13 @@ App::get('/v1/teams/:teamId/memberships')
 
         $memberships = array_filter($memberships, fn(Document $membership) => !empty($membership->getAttribute('userId')));
 
-        $memberships = array_map(function($membership) use ($dbForProject) {
+        $memberships = array_map(function($membership) use ($dbForProject, $team) {
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
             $membership
-                ->setAttribute('name', $user->getAttribute('name'))
-                ->setAttribute('email', $user->getAttribute('email'))
+                ->setAttribute('teamName', $team->getAttribute('name'))
+                ->setAttribute('userName', $user->getAttribute('name'))
+                ->setAttribute('userEmail', $user->getAttribute('email'))
             ;
 
             return $membership;
@@ -537,8 +539,9 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
         $membership
-            ->setAttribute('name', $user->getAttribute('name'))
-            ->setAttribute('email', $user->getAttribute('email'))
+            ->setAttribute('teamName', $team->getAttribute('name'))
+            ->setAttribute('userName', $user->getAttribute('name'))
+            ->setAttribute('userEmail', $user->getAttribute('email'))
         ;
 
         $response->dynamic($membership, Response::MODEL_MEMBERSHIP );
@@ -609,8 +612,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
 
         $response->dynamic(
             $membership
-                ->setAttribute('email', $profile->getAttribute('email'))
-                ->setAttribute('name', $profile->getAttribute('name')),
+                ->setAttribute('teamName', $team->getAttribute('name'))
+                ->setAttribute('userName', $profile->getAttribute('name'))
+                ->setAttribute('userEmail', $profile->getAttribute('email')),
             Response::MODEL_MEMBERSHIP
         );
     });
@@ -717,7 +721,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
-        
+
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
@@ -741,8 +745,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         ;
 
         $response->dynamic($membership
-            ->setAttribute('email', $user->getAttribute('email'))
-            ->setAttribute('name', $user->getAttribute('name'))
+            ->setAttribute('teamName', $team->getAttribute('name'))
+            ->setAttribute('userName', $user->getAttribute('name'))
+            ->setAttribute('userEmail', $user->getAttribute('email'))
         , Response::MODEL_MEMBERSHIP);
     });
 
