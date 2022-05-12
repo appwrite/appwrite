@@ -332,6 +332,61 @@
                     </div>
                 </div>
             </li>
+            <li data-state="/console/users/user/memberships?id={{router.params.id}}&project={{router.params.project}}">
+                <h2>Memberships</h2>
+
+                <div
+                    data-service="users.getMemberships"
+                    data-name="memberships"
+                    data-param-user-id="{{router.params.id}}"
+                    data-event="load,users.update">
+
+                    <div class="box margin-top margin-bottom" data-ls-if="{{memberships.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
+                        <h3 class="text-bold margin-bottom-no">No memberships available.</h3>
+                    </div>
+
+                    <div data-ls-if="0 != {{memberships.total}}">
+                        <div class="margin-bottom-small margin-end-small text-align-end text-size-small margin-top-negative text-fade"><span data-ls-bind="{{memberships.total}}"></span> memberships found</div>
+
+                        <div class="box margin-bottom">
+                            <ul data-ls-loop="memberships.memberships" data-ls-as="membership" class="list">
+                                <li class="clear">
+                                    <form class="pull-end"
+                                        data-analytics
+                                        data-analytics-activity
+                                        data-analytics-event="submit"
+                                        data-analytics-category="console"
+                                        data-analytics-label="Delete Team Membership"
+                                        data-service="teams.deleteMembership"
+                                        data-event="submit"
+                                        data-success="alert,trigger"
+                                        data-confirm="Are you sure you want to remove that user from the team?"
+                                        data-success-param-alert-text="Member Removed Successfully"
+                                        data-success-param-trigger-events="teams.deleteMembership"
+                                        data-failure="alert"
+                                        data-failure-param-alert-text="Failed to Remove Member"
+                                        data-failure-param-alert-classname="error">
+
+                                        <input name="teamId" data-ls-attrs="id={{membership.$id}}" type="hidden" data-ls-bind="{{router.params.id}}">
+                                        <input name="membershipId" data-ls-attrs="id=leave-membershipId-{{membership.$id}}" type="hidden" data-ls-bind="{{membership.$id}}">
+
+                                        <button class="danger">Remove</button>
+                                    </form>
+                                    <div class="pull-start margin-end">
+                                        <img src="" data-ls-attrs="src={{membership.teamName|avatar}},alt={{membership.teamName}}" data-size="60" class="avatar margin-end pull-start" loading="lazy" width="60" height="60" />
+                                    </div>
+                                    <a data-ls-attrs="href=/console/users/teams/team?id={{membership.teamId}}&project={{router.params.project}}" data-ls-bind="{{membership.teamName}}"></a>
+                                    <div class="margin-top-small">
+                                        <span data-ls-if="1 == {{membership.roles.length}}" class="text-fade tooltip" data-ls-bind="{{membership.roles.length}} role" data-ls-attrs="data-tooltip={{membership.roles|arraySentence}}"></span>
+                                        <span  data-ls-if="2 <= {{membership.roles.length}}" class="text-fade tooltip" data-ls-bind="{{membership.roles.length}} roles" data-ls-attrs="data-tooltip={{membership.roles|arraySentence}}"></span>
+                                        <span data-ls-if="false === {{membership.confirm}}" class="text-danger text-size-small">Pending Approval</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </li>
             <li data-state="/console/users/user/sessions?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Sessions</h2>
 

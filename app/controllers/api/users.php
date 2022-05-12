@@ -253,6 +253,48 @@ App::get('/v1/users/:userId/sessions')
         ]), Response::MODEL_SESSION_LIST);
     });
 
+App::get('/v1/users/:userId/memberships')
+    ->desc('Get User Memberships')
+    ->groups(['api', 'users'])
+    ->label('scope', 'users.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'getMemberships')
+    ->label('sdk.description', '/docs/references/users/get-user-memberships.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MEMBERSHIP_LIST)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function ($userId, $response, $dbForProject) {
+        /** @var string $userId */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForProject */
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+        }
+
+        $memberships = array_map(function($membership) use ($dbForProject, $user) {
+            $team = $dbForProject->getDocument('teams', $membership->getAttribute('teamId'));
+
+            $membership
+                ->setAttribute('teamName', $team->getAttribute('name'))
+                ->setAttribute('userName', $user->getAttribute('name'))
+                ->setAttribute('userEmail', $user->getAttribute('email'));
+
+            return $membership;
+        }, $user->getAttribute('memberships', []));
+
+        $response->dynamic(new Document([
+            'memberships' => $memberships,
+            'total' => count($memberships),
+        ]), Response::MODEL_MEMBERSHIP_LIST);
+    });
+
 App::get('/v1/users/:userId/logs')
     ->desc('Get User Logs')
     ->groups(['api', 'users'])
