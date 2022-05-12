@@ -7,27 +7,27 @@ abstract class OAuth2
     /**
      * @var string
      */
-    protected $appID;
+    protected string $appID;
 
     /**
      * @var string
      */
-    protected $appSecret;
+    protected string $appSecret;
 
     /**
      * @var string
      */
-    protected $callback;
+    protected string $callback;
 
     /**
      * @var array
      */
-    protected $state;
+    protected array $state;
 
     /**
      * @var array
      */
-    protected $scopes;
+    protected array $scopes;
 
     /**
      * OAuth2 constructor.
@@ -74,7 +74,7 @@ abstract class OAuth2
     abstract public function refreshTokens(string $refreshToken): array;
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
@@ -83,14 +83,14 @@ abstract class OAuth2
     /**
      * Check if the OAuth email is verified
      * 
-     * @param $accessToken
+     * @param string $accessToken
      * 
      * @return bool
      */
     abstract public function isEmailVerified(string $accessToken): bool;
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
@@ -107,6 +107,7 @@ abstract class OAuth2
         if (!\in_array($scope, $this->scopes)) {
             $this->scopes[] = $scope;
         }
+
         return $this;
     }
 
@@ -126,6 +127,7 @@ abstract class OAuth2
     public function getAccessToken(string $code): string
     {
         $tokens = $this->getTokens($code);
+
         return $tokens['access_token'] ?? '';
     }
 
@@ -137,6 +139,7 @@ abstract class OAuth2
     public function getRefreshToken(string $code): string
     {
         $tokens = $this->getTokens($code);
+
         return $tokens['refresh_token'] ?? '';
     }
 
@@ -148,6 +151,7 @@ abstract class OAuth2
     public function getAccessTokenExpiry(string $code): string
     {
         $tokens = $this->getTokens($code);
+
         return $tokens['expires_in'] ?? '';
     }
 

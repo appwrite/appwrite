@@ -13,34 +13,34 @@ class Spotify extends OAuth2
     /**
      * @var string
      */
-    private $endpoint = 'https://accounts.spotify.com/';
+    private string $endpoint = 'https://accounts.spotify.com/';
 
     /**
      * @var string
      */
-    private $resourceEndpoint = 'https://api.spotify.com/v1/';
+    private string $resourceEndpoint = 'https://api.spotify.com/v1/';
 
     /**
      * @var array
      */
-    protected $scopes = [
+    protected array $scopes = [
         'user-read-email',
     ];
 
     /**
      * @var array
      */
-    protected $user = [];
-    
+    protected array $user = [];
+
     /**
      * @var array
      */
-    protected $tokens = [];
+    protected array $tokens = [];
 
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'spotify';
     }
@@ -48,9 +48,9 @@ class Spotify extends OAuth2
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return $this->endpoint . 'authorize?'.
+        return $this->endpoint . 'authorize?' .
             \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
@@ -67,7 +67,7 @@ class Spotify extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $headers = ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)];
             $this->tokens = \json_decode($this->request(
                 'POST',
@@ -89,7 +89,7 @@ class Spotify extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $headers = ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)];
         $this->tokens = \json_decode($this->request(
@@ -102,7 +102,7 @@ class Spotify extends OAuth2
             ])
         ), true);
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -110,35 +110,27 @@ class Spotify extends OAuth2
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
-        }
-
-        return '';
+        return $user['id'] ?? '';
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['email'])) {
-            return $user['email'];
-        }
-
-        return '';
+        return $user['email'] ?? '';
     }
 
     /**
@@ -148,7 +140,7 @@ class Spotify extends OAuth2
      * 
      * @link https://developer.spotify.com/documentation/web-api/reference/#/operations/get-current-users-profile
      * 
-     * @param $accessToken
+     * @param string $accessToken
      * 
      * @return bool
      */
@@ -158,19 +150,15 @@ class Spotify extends OAuth2
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserName(string $accessToken):string
+    public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['display_name'])) {
-            return $user['display_name'];
-        }
-
-        return '';
+        return $user['display_name'] ?? '';
     }
 
     /**
@@ -184,7 +172,7 @@ class Spotify extends OAuth2
             $this->user = \json_decode($this->request(
                 'GET',
                 $this->resourceEndpoint . 'me',
-                ['Authorization: Bearer '.\urlencode($accessToken)]
+                ['Authorization: Bearer ' . \urlencode($accessToken)]
             ), true);
         }
 
