@@ -73,6 +73,7 @@ const APP_LIMIT_USERS = 10000;
 const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
 const APP_LIMIT_ENCRYPTION = 20000000; //20MB
 const APP_LIMIT_COMPRESSION = 20000000; //20MB
+const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
 const APP_CACHE_BUSTER = 304;
 const APP_VERSION_STABLE = '0.14.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';

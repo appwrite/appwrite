@@ -514,7 +514,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('http', $execution['body']['response']);
         $this->assertStringContainsString('PHP', $execution['body']['response']);
         $this->assertStringContainsString('8.0', $execution['body']['response']);
-        // $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
+        $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
         $this->assertEquals('', $execution['body']['stderr']);
         $this->assertLessThan(0.500, $execution['body']['time']);
 
@@ -602,7 +602,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('http', $execution['body']['response']);
         $this->assertStringContainsString('PHP', $execution['body']['response']);
         $this->assertStringContainsString('8.0', $execution['body']['response']);
-        // $this->assertStringContainsString('êä', $execution['body']['sdtout']); // tests unknown utf-8 chars
+        $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
         $this->assertLessThan(0.500, $execution['body']['time']);
 
         return $data;
