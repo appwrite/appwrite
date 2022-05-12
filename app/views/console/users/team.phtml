@@ -111,14 +111,14 @@
                                                 <button class="danger">Remove</button>
                                             </form>
 
-                                            <img src="" data-ls-attrs="src={{member|avatar}}" data-size="200" alt="User Avatar" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
+                                            <img src="" data-ls-attrs="src={{member.userName|avatar}}" data-size="200" alt="User Avatar" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
 
                                             <div class="margin-bottom-tiny">
-                                                <a data-ls-attrs="href=/console/users/user?id={{member.userId}}&project={{router.params.project}}"><span data-ls-bind="{{member.name}}"></span></a> &nbsp;&nbsp;
+                                                <a data-ls-attrs="href=/console/users/user?id={{member.userId}}&project={{router.params.project}}"><span data-ls-bind="{{member.userName}}"></span></a> &nbsp;&nbsp;
                                                 <span data-ls-if="1 == {{member.roles.length}}" class="text-fade tooltip" data-ls-bind="{{member.roles.length}} role" data-ls-attrs="data-tooltip={{member.roles|arraySentence}}"></span>
                                                 <span  data-ls-if="2 <= {{member.roles.length}}" class="text-fade tooltip" data-ls-bind="{{member.roles.length}} roles" data-ls-attrs="data-tooltip={{member.roles|arraySentence}}"></span>
                                             </div>
-                                            <small class="text-size-small text-fade" data-ls-bind="{{member.email}}"></small> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="text-danger text-size-small">Pending Approval</span>
+                                            <small class="text-size-small text-fade" data-ls-bind="{{member.userEmail}}"></small> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="text-danger text-size-small">Pending Approval</span>
                                         </li>
                                     </ul>
                                 </div>
