@@ -127,6 +127,7 @@ const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
 const MAIL_TYPE_RECOVERY = 'recovery';
 const MAIL_TYPE_INVITATION = 'invitation';
+const MAIL_TYPE_CERTIFICATE = 'certificate';
 // Auth Types
 const APP_AUTH_TYPE_SESSION = 'Session';
 const APP_AUTH_TYPE_JWT = 'JWT';
@@ -298,6 +299,19 @@ Database::addFilter('subQueryWebhooks',
             ->find('webhooks', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
             ], $database->getIndexLimit(), 0, []);
+    }
+);
+
+Database::addFilter('subQuerySessions',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        $sessions = Authorization::skip(fn () => $database->find('sessions', [
+            new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
+        ], $database->getIndexLimit(), 0, []));
+
+        return $sessions;
     }
 );
 

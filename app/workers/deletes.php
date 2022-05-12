@@ -41,6 +41,7 @@ class DeletesV1 extends Worker
 
     public function run(): void
     {
+
         $projectId = $this->args['projectId'] ?? '';
         $type = $this->args['type'] ?? '';
 
@@ -208,13 +209,14 @@ class DeletesV1 extends Worker
          */
         
         $userId = $document->getId();
-        $user = $this->getProjectDB($projectId)->getDocument('users', $userId);
 
         // Delete all sessions of this user from the sessions table and update the sessions field of the user record
         $this->deleteByGroup('sessions', [
             new Query('userId', Query::TYPE_EQUAL, [$userId])
         ], $this->getProjectDB($projectId));
-        
+
+        $this->getProjectDB($projectId)->deleteCachedDocument('users', $userId);
+
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
             new Query('userId', Query::TYPE_EQUAL, [$userId])
@@ -529,11 +531,40 @@ class DeletesV1 extends Worker
      */
     protected function deleteCertificates(Document $document): void
     {
+        $consoleDB = $this->getConsoleDB();
+
+        // If domain has certificate generated
+        if(isset($document['certificateId'])) {
+            $domainUsingCertificate = $consoleDB->findOne('domains', [
+                new Query('certificateId', Query::TYPE_EQUAL, [$document['certificateId']])
+            ]);
+
+            if(!$domainUsingCertificate) {
+                $mainDomain = App::getEnv('_APP_DOMAIN_TARGET', '');
+                if($mainDomain === $document->getAttribute('domain')) {
+                    $domainUsingCertificate = $mainDomain;
+                }
+            }
+
+            // If certificate is still used by some domain, mark we can't delete.
+            // Current domain should not be found, because we only have copy. Original domain is already deleted from database.
+            if($domainUsingCertificate) {
+                Console::warning("Skipping certificate deletion, because a domain is still using it.");
+                return;
+            }
+        }
+
         $domain = $document->getAttribute('domain');
         $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
         $checkTraversal = realpath($directory) === $directory;
 
         if ($domain && $checkTraversal && is_dir($directory)) {
+            // Delete certificate document, so Appwrite is aware of change
+            if(isset($document['certificateId'])) {
+                $consoleDB->deleteDocument('certificates', $document['certificateId']);
+            }
+
+            // Delete files, so Traefik is aware of change
             array_map('unlink', glob($directory . '/*.*'));
             rmdir($directory);
             Console::info("Deleted certificate files for {$domain}");

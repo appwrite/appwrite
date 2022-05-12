@@ -63,7 +63,7 @@ App::post('/v1/users')
                 'reset' => false,
                 'name' => $name,
                 'prefs' => new \stdClass(),
-                'sessions' => [],
+                'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
@@ -632,24 +632,19 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
             throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
-        $sessions = $user->getAttribute('sessions', []);
+        $session = $dbForProject->getDocument('sessions', $sessionId);
 
-        foreach ($sessions as $key => $session) { /** @var Document $session */
-
-            if ($sessionId == $session->getId()) {
-                unset($sessions[$key]);
-
-                $dbForProject->deleteDocument('sessions', $session->getId());
-
-                $user->setAttribute('sessions', $sessions);
-
-                $events
-                    ->setParam('eventData', $response->output($user, Response::MODEL_USER))
-                ;
-
-                $dbForProject->updateDocument('users', $user->getId(), $user);
-            }
+        if($session->isEmpty()) {
+            throw new Exception('User not found', 404, Exception::USER_SESSION_NOT_FOUND);
         }
+
+        $dbForProject->deleteDocument('sessions', $session->getId());
+
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $events
+            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+        ;
 
         $usage
             ->setParam('users.update', 1)
@@ -693,7 +688,7 @@ App::delete('/v1/users/:userId/sessions')
             $dbForProject->deleteDocument('sessions', $session->getId());
         }
 
-        $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', []));
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $events
             ->setParam('eventData', $response->output($user, Response::MODEL_USER))

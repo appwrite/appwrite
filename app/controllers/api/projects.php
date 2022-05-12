@@ -23,7 +23,7 @@ use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Integer;
+use Utopia\Validator\Hostname;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -972,6 +972,14 @@ App::post('/v1/projects/:projectId/platforms')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForConsole) {
 
+        // Ensure hostname has proper structure (no port, protocol..)
+        if(!empty($hostname)) {
+            $validator = new Hostname();
+            if (!is_null($hostname) && !$validator->isValid($hostname)) {
+                throw new Exception($validator->getDescription(), 400, Exception::ATTRIBUTE_VALUE_INVALID);
+            }
+        }
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1084,6 +1092,14 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $platformId, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForConsole) {
+
+        // Ensure hostname has proper structure (no port, protocol..)
+        if(!empty($hostname)) {
+            $validator = new Hostname();
+            if (!is_null($hostname) && !$validator->isValid($hostname)) {
+                throw new Exception($validator->getDescription(), 400, Exception::ATTRIBUTE_VALUE_INVALID);
+            }
+        }
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1331,8 +1347,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         // Issue a TLS certificate when domain is verified
-        Resque::enqueue('v1-certificates', 'CertificatesV1', [
-            'document' => $domain->getArrayCopy(),
+        Resque::enqueue(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME, [
             'domain' => $domain->getAttribute('domain'),
         ]);
 

@@ -2,22 +2,21 @@
 
 global $cli;
 
+use Appwrite\Event\Event;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Validator\Hostname;
 
 $cli
     ->task('ssl')
     ->desc('Validate server certificates')
-    ->action(function () {
-        $domain = App::getEnv('_APP_DOMAIN', '');
+    ->param('domain', App::getEnv('_APP_DOMAIN', ''), new Hostname(), 'Domain to generate certificate for. If empty, main domain will be used.', true)
+    ->action(function ($domain) {
+        Console::success('Scheduling a job to issue a TLS certificate for domain: ' . $domain);
 
-        Console::log('Issue a TLS certificate for master domain ('.$domain.') in 30 seconds.
-            Make sure your domain points to your server or restart to try again.');
-
-        ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
-            'document' => [],
+        // Scheduje a job
+        Resque::enqueue(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME, [
             'domain' => $domain,
-            'validateTarget' => false,
-            'validateCNAME' => false,
+            'skipCheck' => true
         ]);
     });
