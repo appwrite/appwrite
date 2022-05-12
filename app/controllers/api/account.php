@@ -1755,9 +1755,7 @@ App::delete('/v1/account/sessions')
             $audits->setResource('user/' . $user->getId());
 
             if (!Config::getParam('domainVerification')) {
-                $response
-                    ->addHeader('X-Fallback-Cookies', \json_encode([]))
-                ;
+                $response->addHeader('X-Fallback-Cookies', \json_encode([]));
             }
 
             $session
@@ -1765,12 +1763,16 @@ App::delete('/v1/account/sessions')
                 ->setAttribute('countryName', $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
             ;
 
-            if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+            if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) {
                 $session->setAttribute('current', true);
+
+                 // If current session delete the cookies too
                 $response
                     ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-                    ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-                ;
+                    ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+
+                // Use current session for events.
+                $events->setPayload($response->output($session, Response::MODEL_SESSION));
             }
         }
 
@@ -1780,12 +1782,7 @@ App::delete('/v1/account/sessions')
 
         $events
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output(new Document([
-                'sessions' => $sessions,
-                'total' => $numOfSessions,
-            ]), Response::MODEL_SESSION_LIST))
-        ;
+            ->setParam('sessionId', $session->getId());
 
         $usage
             ->setParam('users.sessions.delete', $numOfSessions)

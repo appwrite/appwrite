@@ -693,7 +693,6 @@ App::get('/v1/functions/:functionId/deployments')
             $cursorDeployment = $dbForProject->getDocument('deployments', $cursor);
 
             if ($cursorDeployment->isEmpty()) {
-                // TODO: Shouldn't this be a 404 error ? 
                 throw new Exception("Tag '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
