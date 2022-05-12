@@ -99,16 +99,16 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
                     ]);
 
                     $domainDocument = $dbForConsole->createDocument('domains', $domainDocument);
+
+                    Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
+
+                    (new Certificate())
+                        ->setDomain($domainDocument)
+                        ->trigger();
                 }
-
-                Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
-
-                (new Certificate())
-                    ->setDomain($domainDocument)
-                    ->trigger();
             }
-
             $domains[$domain->get()] = true;
+
             Authorization::reset(); // ensure authorization is re-enabled
         }
         Config::setParam('domains', $domains);

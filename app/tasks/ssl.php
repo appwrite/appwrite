@@ -13,13 +13,9 @@ $cli
     ->desc('Validate server certificates')
     ->param('domain', App::getEnv('_APP_DOMAIN', ''), new Hostname(), 'Domain to generate certificate for. If empty, main domain will be used.', true)
     ->action(function ($domain) {
-        Console::success('Scheduling a job to issue a TLS certificate for domain:' . $domain);
+        Console::success('Scheduling a job to issue a TLS certificate for domain: ' . $domain);
 
-        Console::log('Issue a TLS certificate for master domain (' . $domain . ') in 30 seconds.
-            Make sure your domain points to your server or restart to try again.');
-
-        $event = new Certificate();
-        $event
+        (new Certificate())
             ->setDomain(new Document([
                 'domain' => $domain
             ]))
