@@ -969,19 +969,10 @@ App::post('/v1/projects/:projectId/platforms')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
-    ->param('hostname', '', new Text(256), 'Platform client hostname. Max length: 256 chars.', true)
+    ->param('hostname', '', new Hostname(), 'Platform client hostname. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForConsole) {
-
-        // Ensure hostname has proper structure (no port, protocol..)
-        if(!empty($hostname)) {
-            $validator = new Hostname();
-            if (!is_null($hostname) && !$validator->isValid($hostname)) {
-                throw new Exception($validator->getDescription(), 400, Exception::ATTRIBUTE_VALUE_INVALID);
-            }
-        }
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1090,19 +1081,10 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for android or bundle ID for iOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
-    ->param('hostname', '', new Text(256), 'Platform client URL. Max length: 256 chars.', true)
+    ->param('hostname', '', new Hostname(), 'Platform client URL. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $platformId, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForConsole) {
-
-        // Ensure hostname has proper structure (no port, protocol..)
-        if(!empty($hostname)) {
-            $validator = new Hostname();
-            if (!is_null($hostname) && !$validator->isValid($hostname)) {
-                throw new Exception($validator->getDescription(), 400, Exception::ATTRIBUTE_VALUE_INVALID);
-            }
-        }
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
