@@ -532,28 +532,29 @@ sort($patterns);
                                 </section>
 
                                 <section class="margin-bottom-small" data-ls-attrs="x-init=load({{project-function.events}})">
-                            <label class="margin-bottom">Events <button class="pull-end small" type="button" @click="showModal($refs.modal)">Add Event</button></label>
-                            <template x-for="event in Array.from(events)">
-                                <div class="row events responsive thin margin-bottom-small">
-                                    <div class="col span-12 margin-bottom-small">
-                                        <span class="text" x-text="event"></span>
-                                        <span class="action" @click="removeEvent(event)">
-                                            <i class="icon-trash"></i>
-                                        </span>
+                                    <label class="margin-bottom-small">Events <span class="tooltip small" data-tooltip="Set events that will trigger your function."><i class="icon-info-circled"></i></span></label>
+                                    <div>
+                                        <template x-for="event in Array.from(events)">
+                                            <div class="row events responsive thin margin-bottom-small">
+                                                <div class="col span-12 margin-bottom-small">
+                                                    <span class="text" x-text="event"></span>
+                                                    <span class="action" @click="removeEvent(event)">
+                                                        <i class="icon-trash"></i>
+                                                    </span>
+                                                </div>
+                                                <input name="events" data-cast-to="array" type="hidden" :value="event"></input>
+                                            </div>
+                                        </template>
                                     </div>
-                                    <input name="events" data-cast-to="array" type="hidden" :value="event"></input>
-                                </div>
-                            </template>
-                        </section>
+                                    <button class="margin-end margin-bottom-small reverse" type="button" @click="showModal($refs.modal_function)">Add Event</button>
+                                </section>
 
                                 <label for="schedule">Schedule (CRON Syntax) <span class="tooltip small" data-tooltip="Set a CRON schedule to trigger this function."><i class="icon-info-circled"></i></span></label>
                                 <input type="text" id="function-schedule" class="full-width" name="schedule" autocomplete="off" data-ls-bind="{{project-function.schedule}}" placeholder="* * * * *" />
                                 <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Leave blank for no schedule</div>
 
-                                <h3 class="margin-bottom-small">Variables <span class="tooltip small" data-tooltip="Set variables or secret keys that will be passed as env vars to your function at runtime."><i class="icon-info-circled"></i></span></h3>
+                                <label class="margin-bottom-small">Variables <span class="tooltip small" data-tooltip="Set variables or secret keys that will be passed as env vars to your function at runtime."><i class="icon-info-circled"></i></span></label>
                                 <div data-ls-if="(!{{project-function.vars.length}})">
-                                    <hr class="margin-bottom margin-top-no" />
-
                                     <fieldset name="vars" data-cast-to="object">
                                         <div data-ls-loop="project-function.vars" data-ls-as="var" id="project-vars" style="visibility: visible;">
                                             <div class="margin-bottom-small">
@@ -562,7 +563,7 @@ sort($patterns);
                                                         <input type="hidden" data-forms-key-value data-ls-attrs="name={{$index}}" data-ls-bind="{{var}}" />
                                                     </div>
                                                     <div class="col span-2">
-                                                        <button type="button" data-remove class="close pull-end is-margin-top-10"><i class="icon-cancel"></i></button>
+                                                        <button type="button" data-remove class="close pull-end is-margin-top-10"><i class="icon-trash"></i></button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -575,14 +576,14 @@ sort($patterns);
                                                         <input type="hidden" data-ls-attrs="data-forms-key-value"/>
                                                     </div>
                                                     <div class="col span-2">
-                                                        <button type="button" data-remove class="close pull-end is-margin-top-10"><i class="icon-cancel"></i></button>
+                                                        <button type="button" data-remove class="close pull-end is-margin-top-10"><i class="icon-trash"></i></button>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </fieldset>
-                                    <hr class="margin-bottom margin-top-small" />
                                 </div>
+                                <hr class="margin-bottom margin-top-small" />
 
                                 <button>Update</button>
                             </div>
@@ -622,28 +623,31 @@ sort($patterns);
                         </form>
                     </div>
                 </div>
-                <div x-ref="modal" data-ui-modal class="modal box close width-small height-small" data-button-hide="on">
+                <div x-ref="modal_function" data-ui-modal class="modal box close width-small height-small" data-button-hide="on">
                     <div>
-                        <form @submit.prevent="addEvent($refs.modal)">
-                            <select x-model="selected" @change="setEvent()">
+                        <form @submit.prevent="addEvent($refs.modal_function)">
+                            <label for="event">
+                                Event
+                            </label>
+                            <select id="event" x-model="selected" @change="setEvent()">
                                 <option value="" selected>Select event</option>
                                 <?php foreach ($patterns as $event) : ?>
                                     <option value="<?php echo $event; ?>"><?php echo $event; ?></option>
                                 <?php endforeach; ?>
                             </select>
                             <div x-show="hasResource">
-                                <label x-text="'Select ' + resourceName + ' (optional)'"></label>
-                                <input type="text" :placeholder="resourceName" x-model="resource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
+                                <label x-text="'Select ' + resourceName + ' (optional)'" for="resource"></label>
+                                <input id="resource" type="text" :placeholder="resourceName" x-model="resource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
                                 <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard</div>
                             </div>
                             <div x-show="hasSubResource">
-                                <label x-text="'Select ' + subResourceName + ' (optional)'"></label>
-                                <input type="text" :placeholder="subResourceName" x-model="subResource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
+                                <label x-text="'Select ' + subResourceName + ' (optional)'" for="subResource"></label>
+                                <input id="subResource" type="text" :placeholder="subResourceName" x-model="subResource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
                                 <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard</div>
                             </div>
                             <div x-show="hasAttribute">
-                                <label for="subResource">Add Attribute (optional)</label>
-                                <select x-model="attribute">
+                                <label for="attribute">Add Attribute (optional)</label>
+                                <select id="attribute" x-model="attribute">
                                     <option value="*">Select attribute</option>
                                     <template x-for="attr in attributes">
                                         <option :value="attr" x-text="attr"></option>
