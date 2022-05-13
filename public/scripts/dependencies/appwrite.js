@@ -5223,6 +5223,7 @@
                 /**
                  * Get User Memberships
                  *
+                 * Get the user membership list by its unique ID.
                  *
                  * @param {string} userId
                  * @throws {AppwriteException}
