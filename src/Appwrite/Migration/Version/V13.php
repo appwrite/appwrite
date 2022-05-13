@@ -177,6 +177,13 @@ class V13 extends Migration
                     case 'stats':
                         //TODO: migrate value (size => 8)
                         break;
+                    case 'tokens':
+                        try {
+                            $this->createCollection('tokens');
+                        } catch (\Throwable $th) {
+                            Console::warning("'tokens': {$th->getMessage()}");
+                        }
+                        break;
             }
             usleep(100000);
         }
