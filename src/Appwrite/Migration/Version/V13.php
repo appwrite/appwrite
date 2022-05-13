@@ -2,9 +2,9 @@
 
 namespace Appwrite\Migration\Version;
 
-use Appwrite\Event\Validator\Event;
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 
 class V13 extends Migration
@@ -104,6 +104,79 @@ class V13 extends Migration
                         Console::warning("'providers' from {$id}: {$th->getMessage()}");
                     }
                     break;
+                case 'users':
+                    try {
+                        $this->projectDB->deleteAttribute($id, 'sessions');
+                        $this->projectDB->createAttribute(
+                            collection: $id,
+                            id: 'sessions',
+                            required: false,
+                            type: Database::VAR_STRING,
+                            format: '',
+                            size: 16384,
+                            filters: ['subQuerySessions']
+                        );
+                    } catch (\Throwable $th) {
+                        Console::warning("'sessions' from {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        $this->projectDB->deleteAttribute($id, 'tokens');
+                        $this->projectDB->createAttribute(
+                            collection: $id,
+                            id: 'tokens',
+                            required: false,
+                            type: Database::VAR_STRING,
+                            format: '',
+                            size: 16384,
+                            filters: ['subQueryTokens']
+                        );
+                    } catch (\Throwable $th) {
+                        Console::warning("'tokens' from {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        $this->projectDB->deleteAttribute($id, 'memberships');
+                        $this->projectDB->createAttribute(
+                            collection: $id,
+                            id: 'memberships',
+                            required: false,
+                            type: Database::VAR_STRING,
+                            format: '',
+                            size: 16384,
+                            filters: ['subQueryMemberships']
+                        );
+                    } catch (\Throwable $th) {
+                        Console::warning("'memberships' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                case 'sessions':
+                    try {
+                        /**
+                         * Add new index for users.
+                         */
+                        $this->projectDB->createIndex(collection: $id, id: '_key_user', type: Database::INDEX_KEY, attributes: ['userId'], orders: [Database::ORDER_ASC]);
+                    } catch (\Throwable $th) {
+                        Console::warning("'_key_user' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                    case 'executions':
+                        // TODO: migrate stdout (size => 1000000)
+                        // TODO: migrate stderr (size => 1000000)
+                        break;
+                    case 'executions':
+                        try {
+                            /**
+                             * Rename stdout to response
+                             */
+                            $this->projectDB->renameAttribute($id, 'stdout', 'response');
+                        // TODO: migrate response (size => 1000000)
+                        // TODO: migrate stderr (size => 1000000)
+                        } catch (\Throwable $th) {
+                            Console::warning("'stdout' from {$id}: {$th->getMessage()}");
+                        }
+                        break;
+                    case 'stats':
+                        //TODO: migrate value (size => 8)
+                        break;
             }
             usleep(100000);
         }

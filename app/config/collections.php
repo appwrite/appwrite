@@ -1076,7 +1076,7 @@ $collections = [
                 'size' => 16384,
                 'signed' => true,
                 'required' => false,
-                'default' => [],
+                'default' => null,
                 'array' => false,
                 'filters' => ['subQueryMemberships'],
             ],
