@@ -2,10 +2,12 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\User;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Validator\UID;
+use Utopia\Storage\Device;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
@@ -27,6 +29,7 @@ use Cron\CronExpression;
 use Executor\Executor;
 use Utopia\CLI\Console;
 use Utopia\Validator\Boolean;
+use Utopia\Swoole\Request;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -52,9 +55,7 @@ App::post('/v1/functions')
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($functionId, $name, $execute, $runtime, $vars, $events, $schedule, $timeout, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $vars, array $events, string $schedule, int $timeout, Response $response, Database $dbForProject) {
 
         $functionId = ($functionId == 'unique()') ? $dbForProject->getId() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
@@ -98,9 +99,7 @@ App::get('/v1/functions')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
 
         if (!empty($cursor)) {
             $cursorFunction = $dbForProject->getDocument('functions', $cursor);
@@ -134,8 +133,7 @@ App::get('/v1/functions/runtimes')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_RUNTIME_LIST)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $runtimes = Config::getParam('runtimes');
 
@@ -164,9 +162,7 @@ App::get('/v1/functions/:functionId')
     ->param('functionId', '', new UID(), 'Function ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($functionId, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $functionId, Response $response, Database $dbForProject) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -191,11 +187,7 @@ App::get('/v1/functions/:functionId/usage')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($functionId, $range, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Registry\Registry $register */
+    ->action(function (string $functionId, string $range, Response $response, Database $dbForProject) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -302,11 +294,7 @@ App::put('/v1/functions/:functionId')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $dbForProject, $project, $user) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Database\Document $project */
-        /** @var Appwrite\Auth\User $user */
+    ->action(function (string $functionId, string $name, array $execute, array $vars, array $events, string $schedule, int $timeout, Response $response, Database $dbForProject, Document $project, User $user) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -361,10 +349,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $project) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Database\Document $project */
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Document $project) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -422,10 +407,7 @@ App::delete('/v1/functions/:functionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('deletes')
-    ->action(function ($functionId, $response, $dbForProject, $deletes) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $deletes */
+    ->action(function (string $functionId, Response $response, Database $dbForProject, Event $deletes) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -471,15 +453,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function ($functionId, $entrypoint, $file, $activate, $request, $response, $dbForProject, $usage, $user, $project, $deviceFunctions, $deviceLocal) {
-        /** @var Utopia\Swoole\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $usage */
-        /** @var Appwrite\Auth\User $user */
-        /** @var Appwrite\Database\Document $project */
-        /** @var Utopia\Storage\Device $deviceFunctions */
-        /** @var Utopia\Storage\Device $deviceLocal */
+    ->action(function (string $functionId, string $entrypoint, string $file, bool $activate, Request $request, Response $response, Database $dbForProject, Event $usage, $user, Document $project, Device $deviceFunctions, Device $deviceLocal) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -656,9 +630,7 @@ App::get('/v1/functions/:functionId/deployments')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($functionId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $functionId, string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -715,9 +687,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($functionId, $deploymentId, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -756,12 +726,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('usage')
     ->inject('deletes')
     ->inject('deviceFunctions')
-    ->action(function ($functionId, $deploymentId, $response, $dbForProject, $usage, $deletes, $deviceFunctions) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $usage */
-        /** @var Appwrite\Event\Event $deletes */
-        /** @var Utopia\Storage\Device $deviceFunctions */
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $usage, Event $deletes, Device $deviceFunctions) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -822,11 +787,7 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('user')
-    ->action(function ($functionId, $data, $async, $response, $project, $dbForProject, $user) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Database\Document $user */
+    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user) {
 
         $function = Authorization::skip(fn() => $dbForProject->getDocument('functions', $functionId));
 
@@ -992,9 +953,7 @@ App::get('/v1/functions/:functionId/executions')
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($functionId, $limit, $offset, $search, $cursor, $cursorDirection, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $functionId, int $limit, int $offset, string $search, string $cursor, string $cursorDirection, Response $response, Database $dbForProject) {
 
         $function = Authorization::skip(fn() => $dbForProject->getDocument('functions', $functionId));
 
@@ -1042,9 +1001,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->param('executionId', '', new UID(), 'Execution ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($functionId, $executionId, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject) {
 
         $function = Authorization::skip(fn() => $dbForProject->getDocument('functions', $functionId));
 
@@ -1082,10 +1039,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->action(function ($functionId, $deploymentId, $buildId, $response, $dbForProject, $project) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Database\Document $project */
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Response $response, Database $dbForProject, Document $project) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
