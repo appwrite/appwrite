@@ -2,9 +2,9 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\User;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Stats\Stats;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Device;
@@ -453,7 +453,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function (string $functionId, string $entrypoint, $file, bool $activate, Request $request, Response $response, Database $dbForProject, Event $usage, $user, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+    ->action(function (string $functionId, string $entrypoint, $file, bool $activate, Request $request, Response $response, Database $dbForProject, Stats $usage, $user, Document $project, Device $deviceFunctions, Device $deviceLocal) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -726,7 +726,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('usage')
     ->inject('deletes')
     ->inject('deviceFunctions')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $usage, Event $deletes, Device $deviceFunctions) {
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Stats $usage, Event $deletes, Device $deviceFunctions) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
