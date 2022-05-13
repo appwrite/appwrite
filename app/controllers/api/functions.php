@@ -294,7 +294,7 @@ App::put('/v1/functions/:functionId')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->action(function (string $functionId, string $name, array $execute, array $vars, array $events, string $schedule, int $timeout, Response $response, Database $dbForProject, Document $project, User $user) {
+    ->action(function (string $functionId, string $name, array $execute, $vars, array $events, string $schedule, int $timeout, Response $response, Database $dbForProject, Document $project, User $user) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -453,7 +453,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function (string $functionId, string $entrypoint, string $file, bool $activate, Request $request, Response $response, Database $dbForProject, Event $usage, $user, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+    ->action(function (string $functionId, string $entrypoint, array $file, bool $activate, Request $request, Response $response, Database $dbForProject, Event $usage, $user, Document $project, Device $deviceFunctions, Device $deviceLocal) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
