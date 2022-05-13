@@ -7,8 +7,7 @@ use Utopia\Database\Document;
 
 class Certificate extends Event
 {
-    protected bool $validateTarget = false;
-    protected bool $validateCNAME = false;
+    protected bool $skipRenewCheck = false;
     protected ?Document $domain = null;
 
     public function __construct()
@@ -19,7 +18,7 @@ class Certificate extends Event
     /**
      * Set domain for this certificates event.
      *
-     * @param \Utopia\Database\Document $domain
+     * @param Document $domain
      * @return self
      */
     public function setDomain(Document $domain): self
@@ -32,7 +31,7 @@ class Certificate extends Event
     /**
      * Returns the set domain for this certificate event.
      *
-     * @return null|\Utopia\Database\Document
+     * @return null|Document
      */
     public function getDomain(): ?Document
     {
@@ -40,49 +39,26 @@ class Certificate extends Event
     }
 
     /**
-     * Set if the target needs be validated.
+     * Set if the certificate needs to be validated.
      *
-     * @param bool $validateTarget
+     * @param bool $skipRenewCheck
      * @return self
      */
-    public function setValidateTarget(bool $validateTarget): self
+    public function setSkipRenewCheck(bool $skipRenewCheck): self
     {
-        $this->validateTarget = $validateTarget;
+        $this->skipRenewCheck = $skipRenewCheck;
 
         return $this;
     }
 
     /**
-     * Return if the domain target will be validated.
+     * Return if the certificate needs be validated.
      *
      * @return bool
      */
-    public function getValidateTarget(): bool
+    public function getSkipRenewCheck(): bool
     {
-        return $this->validateTarget;
-    }
-
-    /**
-     * Set if the CNAME needs to be validated.
-     *
-     * @param bool $validateCNAME
-     * @return self
-     */
-    public function setValidateCNAME(bool $validateCNAME): self
-    {
-        $this->validateCNAME = $validateCNAME;
-
-        return $this;
-    }
-
-    /**
-     * Return if the CNAME will be validated.
-     *
-     * @return bool
-     */
-    public function getValidateCNAME(): bool
-    {
-        return $this->validateCNAME;
+        return $this->skipRenewCheck;
     }
 
     /**

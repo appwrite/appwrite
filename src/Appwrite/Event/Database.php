@@ -41,7 +41,7 @@ class Database extends Event
     /**
      * Set the collection for this database event.
      *
-     * @param \Utopia\Database\Document $collection
+     * @param Document $collection
      * @return self
      */
     public function setCollection(Document $collection): self
@@ -54,7 +54,7 @@ class Database extends Event
     /**
      * Returns set collection for this event.
      *
-     * @return null|\Utopia\Database\Document
+     * @return null|Document
      */
     public function getCollection(): ?Document
     {
@@ -64,7 +64,7 @@ class Database extends Event
     /**
      * Set the document for this database event.
      *
-     * @param \Utopia\Database\Document $document
+     * @param Document $document
      * @return self
      */
     public function setDocument(Document $document): self
@@ -76,7 +76,7 @@ class Database extends Event
 
     /**
      * Returns set document for this database event.
-     * @return null|\Utopia\Database\Document
+     * @return null|Document
      */
     public function getDocument(): ?Document
     {

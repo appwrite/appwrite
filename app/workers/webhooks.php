@@ -32,11 +32,6 @@ class WebhooksV1 extends Worker
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                Console::log("");
-                Console::log("");
-                Console::log(var_export($events, true));
-                Console::log("");
-                Console::log("");
                 $this->execute($events, $payload, $webhook, $user, $project);
             }
         }
@@ -69,7 +64,7 @@ class WebhooksV1 extends Worker
                 'Content-Type: application/json',
                 'Content-Length: ' . \strlen($payload),
                 'X-' . APP_NAME . '-Webhook-Id: ' . $webhook->getId(),
-                'X-' . APP_NAME . '-Webhook-Event: ' . implode(', ', $events),
+                'X-' . APP_NAME . '-Webhook-Events: ' . implode(',', $events),
                 'X-' . APP_NAME . '-Webhook-Name: ' . $webhook->getAttribute('name', ''),
                 'X-' . APP_NAME . '-Webhook-User-Id: ' . $user->getId(),
                 'X-' . APP_NAME . '-Webhook-Project-Id: ' . $project->getId(),

@@ -25,7 +25,7 @@ use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Integer;
+use Utopia\Validator\Hostname;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -567,7 +567,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->label('sdk.response.model', Response::MODEL_WEBHOOK)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
-    ->param('events', null, new ArrayList(new Event()), 'Events list.')
+    ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
@@ -683,7 +683,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('webhookId', null, new UID(), 'Webhook unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
-    ->param('events', null, new ArrayList(new Event()), 'Events list.')
+    ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
@@ -776,7 +776,7 @@ App::post('/v1/projects/:projectId/keys')
     ->label('sdk.response.model', Response::MODEL_KEY)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true)), 'Key scopes list.')
+    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $name, array $scopes, Response $response, Database $dbForConsole) {
@@ -883,7 +883,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('keyId', null, new UID(), 'Key unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true)), 'Key scopes list')
+    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $keyId, string $name, array $scopes, Response $response, Database $dbForConsole) {
@@ -969,11 +969,10 @@ App::post('/v1/projects/:projectId/platforms')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
-    ->param('hostname', '', new Text(256), 'Platform client hostname. Max length: 256 chars.', true)
+    ->param('hostname', '', new Hostname(), 'Platform client hostname. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1082,11 +1081,10 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for android or bundle ID for iOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
-    ->param('hostname', '', new Text(256), 'Platform client URL. Max length: 256 chars.', true)
+    ->param('hostname', '', new Hostname(), 'Platform client URL. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $platformId, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1336,8 +1334,6 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $event = new Certificate();
         $event
             ->setDomain($domain)
-            ->setValidateCNAME(true)
-            ->setValidateTarget(true)
             ->trigger();
 
         $response->dynamic($domain, Response::MODEL_DOMAIN);

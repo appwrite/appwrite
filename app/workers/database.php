@@ -102,7 +102,12 @@ class DatabaseV1 extends Worker
             Console::error($th->getMessage());
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));
         } finally {
-            $target = Realtime::fromPayload($events[0], $attribute, $project);
+            $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
+                event: $events[0],
+                payload: $attribute,
+                project: $project
+            );
 
             Realtime::send(
                 projectId: 'console',
@@ -154,7 +159,12 @@ class DatabaseV1 extends Worker
             Console::error($th->getMessage());
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'stuck'));
         } finally {
-            $target = Realtime::fromPayload($events[0], $attribute, $project);
+            $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
+                event: $events[0],
+                payload: $attribute,
+                project: $project
+            );
 
             Realtime::send(
                 projectId: 'console',
@@ -255,7 +265,12 @@ class DatabaseV1 extends Worker
             Console::error($th->getMessage());
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'failed'));
         } finally {
-            $target = Realtime::fromPayload($events[0], $index, $project);
+            $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
+                event: $events[0],
+                payload: $index,
+                project: $project
+            );
 
             Realtime::send(
                 projectId: 'console',
@@ -300,7 +315,12 @@ class DatabaseV1 extends Worker
             Console::error($th->getMessage());
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'stuck'));
         } finally {
-            $target = Realtime::fromPayload($events[0], $index, $project);
+            $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
+                event: $events[0],
+                payload: $index,
+                project: $project
+            );
 
             Realtime::send(
                 projectId: 'console',

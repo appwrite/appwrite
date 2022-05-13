@@ -46,10 +46,10 @@ App::post('/v1/functions')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new CustomId(), 'Function ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-    ->param('execute', [], new ArrayList(new Text(64)), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
+    ->param('execute', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each 64 characters long.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
-    ->param('events', [], new ArrayList(new ValidatorEvent()), 'Events list.', true)
+    ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->inject('response')
@@ -299,9 +299,9 @@ App::put('/v1/functions/:functionId')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-    ->param('execute', [], new ArrayList(new Text(64)), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
+    ->param('execute', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each 64 characters long.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
-    ->param('events', [], new ArrayList(new ValidatorEvent()), 'Events list.', true)
+    ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->inject('response')
@@ -693,7 +693,6 @@ App::get('/v1/functions/:functionId/deployments')
             $cursorDeployment = $dbForProject->getDocument('deployments', $cursor);
 
             if ($cursorDeployment->isEmpty()) {
-                // TODO: Shouldn't this be a 404 error ? 
                 throw new Exception("Tag '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
@@ -874,11 +873,11 @@ App::post('/v1/functions/:functionId/executions')
         $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
-            throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404, Exception::DEPLOYMENT_NOT_FOUND);
+            throw new Exception('Deployment not found. Create a deployment before trying to execute a function', 404, Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found. Deploy deployment before trying to execute a function', 404, Exception::DEPLOYMENT_NOT_FOUND);
+            throw new Exception('Deployment not found. Create a deployment before trying to execute a function', 404, Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         /** Check if build has completed */
@@ -997,6 +996,9 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('stderr', $executionResponse['stderr']);
             $execution->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
+            $endtime = \microtime(true);
+            $time = $endtime - $execution->getAttribute('dateCreated');
+            $execution->setAttribute('time', $time);
             $execution->setAttribute('status', 'failed');
             $execution->setAttribute('statusCode', $th->getCode());
             $execution->setAttribute('stderr', $th->getMessage());

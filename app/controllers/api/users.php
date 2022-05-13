@@ -65,7 +65,7 @@ App::post('/v1/users')
                 'reset' => false,
                 'name' => $name,
                 'prefs' => new \stdClass(),
-                'sessions' => [],
+                'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
@@ -251,6 +251,48 @@ App::get('/v1/users/:userId/sessions')
             'sessions' => $sessions,
             'total' => count($sessions),
         ]), Response::MODEL_SESSION_LIST);
+    });
+
+App::get('/v1/users/:userId/memberships')
+    ->desc('Get User Memberships')
+    ->groups(['api', 'users'])
+    ->label('scope', 'users.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'getMemberships')
+    ->label('sdk.description', '/docs/references/users/get-user-memberships.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MEMBERSHIP_LIST)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function ($userId, $response, $dbForProject) {
+        /** @var string $userId */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForProject */
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty() || $user->getAttribute('deleted')) {
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+        }
+
+        $memberships = array_map(function($membership) use ($dbForProject, $user) {
+            $team = $dbForProject->getDocument('teams', $membership->getAttribute('teamId'));
+
+            $membership
+                ->setAttribute('teamName', $team->getAttribute('name'))
+                ->setAttribute('userName', $user->getAttribute('name'))
+                ->setAttribute('userEmail', $user->getAttribute('email'));
+
+            return $membership;
+        }, $user->getAttribute('memberships', []));
+
+        $response->dynamic(new Document([
+            'memberships' => $memberships,
+            'total' => count($memberships),
+        ]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
 App::get('/v1/users/:userId/logs')
@@ -654,20 +696,15 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
             throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
-        $sessions = $user->getAttribute('sessions', []);
-        $key = array_search($sessionId, array_column($sessions, '$id'), true);
+        $session = $dbForProject->getDocument('sessions', $sessionId);
 
-        if (!$key) {
+        if($session->isEmpty()) {
             throw new Exception('Session not found', 404, Exception::USER_SESSION_NOT_FOUND);
         }
 
-        $dbForProject->deleteDocument('sessions', $sessions[$key]->getId());
-        $events
-            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
-        ;
-        unset($sessions[$key]);
-        $user->setAttribute('sessions', $sessions);
-        $dbForProject->updateDocument('users', $user->getId(), $user);
+        $dbForProject->deleteDocument('sessions', $session->getId());
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
 
         $usage
             ->setParam('users.update', 1)
@@ -714,13 +751,14 @@ App::delete('/v1/users/:userId/sessions')
 
         foreach ($sessions as $key => $session) { /** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
+            //TODO: fix this
         }
 
-        $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('sessions', []));
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $events
-            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
             ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER))
         ;
 
         $usage
@@ -786,8 +824,8 @@ App::delete('/v1/users/:userId')
         ;
 
         $events
-            ->setParam('eventData', $response->output($clone, Response::MODEL_USER))
             ->setParam('userId', $user->getId())
+            ->setPayload($response->output($clone, Response::MODEL_USER))
         ;
 
         $usage

@@ -138,13 +138,13 @@ App::post('/v1/runtimes')
     ->param('runtimeId', '', new Text(64), 'Unique runtime ID.')
     ->param('source', '', new Text(0), 'Path to source files.')
     ->param('destination', '', new Text(0), 'Destination folder to store build files into.', true)
-    ->param('vars', [], new Assoc(), 'Environment Variables required for the build')
-    ->param('commands', [], new ArrayList(new Text(0)), 'Commands required to build the container')
-    ->param('runtime', '', new Text(128), 'Runtime for the cloud function')
-    ->param('baseImage', '', new Text(128), 'Base image name of the runtime')
-    ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file', true)
-    ->param('remove', false, new Boolean(), 'Remove a runtime after execution')
-    ->param('workdir', '', new Text(256), 'Working directory', true)
+    ->param('vars', [], new Assoc(), 'Environment Variables required for the build.')
+    ->param('commands', [], new ArrayList(new Text(1024), 100), 'Commands required to build the container. Maximum of 100 commands are allowed, each 1024 characters long.')
+    ->param('runtime', '', new Text(128), 'Runtime for the cloud function.')
+    ->param('baseImage', '', new Text(128), 'Base image name of the runtime.')
+    ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file.', true)
+    ->param('remove', false, new Boolean(), 'Remove a runtime after execution.')
+    ->param('workdir', '', new Text(256), 'Working directory.', true)
     ->inject('orchestrationPool')
     ->inject('activeRuntimes')
     ->inject('response')
@@ -244,7 +244,7 @@ App::post('/v1/runtimes')
                     command: $commands,
                     stdout: $stdout,
                     stderr: $stderr,
-                    timeout: App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)
+                    timeout: App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900)
                 );
 
                 if (!$status) {
@@ -279,8 +279,8 @@ App::post('/v1/runtimes')
             $endTime = \time();
             $container = array_merge($container, [
                 'status' => 'ready',
-                'response' => \utf8_encode($stdout),
-                'stderr' => \utf8_encode($stderr),
+                'response' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
+                'stderr' => \mb_strcut($stderr, 0, 1000000), // Limit to 1MB
                 'startTime' => $startTime,
                 'endTime' => $endTime,
                 'duration' => $endTime - $startTime,
@@ -406,9 +406,9 @@ App::delete('/v1/runtimes/:runtimeId')
 
 App::post('/v1/execution')
     ->desc('Create an execution')
-    ->param('runtimeId', '', new Text(64), 'The runtimeID to execute')
-    ->param('vars', [], new Assoc(), 'Environment variables required for the build')
-    ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
+    ->param('runtimeId', '', new Text(64), 'The runtimeID to execute.')
+    ->param('vars', [], new Assoc(), 'Environment variables required for the build.')
+    ->param('data', '{}', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.')
     ->inject('activeRuntimes')
     ->inject('response')
@@ -426,7 +426,7 @@ App::post('/v1/execution')
             }
 
             Console::info('Executing Runtime: ' . $runtimeId);
-            
+
             $execution = [];
             $executionStart = \microtime(true);
             $stdout = '';
@@ -467,53 +467,41 @@ App::post('/v1/execution')
     
             \curl_close($ch);
 
-            // If timeout error
-            if (in_array($errNo, [CURLE_OPERATION_TIMEDOUT, 110])) {
-                $statusCode = 124;
+            switch (true) {
+                /** No Error. */
+                case $errNo === 0: 
+                    break;
+                /** Runtime not ready for requests yet. 111 is the swoole error code for Connection Refused - see https://openswoole.com/docs/swoole-error-code */
+                case $errNo === 111:
+                    throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 406);
+                /** Any other CURL error */
+                default: 
+                    throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 500);
             }
-        
-            // 110 is the Swoole error code for timeout, see: https://www.swoole.co.uk/docs/swoole-error-code
-            if ($errNo !== 0 && $errNo !== CURLE_COULDNT_CONNECT && $errNo !== CURLE_OPERATION_TIMEDOUT && $errNo !== 110) {
-                throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 406);
+
+            switch (true) {
+                case $statusCode >= 500:
+                    $stderr = $executorResponse ?? 'Internal Runtime error.';
+                    break;
+                case $statusCode >= 100:
+                    $stdout = $executorResponse;
+                    break;
+                default:
+                    $stderr = $executorResponse ?? 'Execution failed.';
+                    break;
             }
-        
-            $executionData = [];
-        
-            if (!empty($executorResponse)) {
-                $executionData = json_decode($executorResponse, true);
-            }
-        
-            if (isset($executionData['code'])) {
-                $statusCode = $executionData['code'];
-            }
-        
-            if ($statusCode === 500) {
-                if (isset($executionData['message'])) {
-                    $stderr = $executionData['message'];
-                } else {
-                    $stderr = 'Internal Runtime error';
-                }
-            } else if ($statusCode === 124) {
-                $stderr = 'Execution timed out.';
-            } else if ($statusCode === 0) {
-                $stderr = 'Execution failed.';
-            } else if ($statusCode >= 200 && $statusCode < 300) {
-                $stdout = $executorResponse;
-            } else {
-                $stderr = 'Execution failed.';
-            }
-        
+
             $executionEnd = \microtime(true);
             $executionTime = ($executionEnd - $executionStart);
-            $functionStatus = ($statusCode >= 200 && $statusCode < 300) ? 'completed' : 'failed';
-        
+            $functionStatus = ($statusCode >= 500) ? 'failed' : 'completed';
+
             Console::success('Function executed in ' . $executionTime . ' seconds, status: ' . $functionStatus);
-        
+
             $execution = [
                 'status' => $functionStatus,
                 'statusCode' => $statusCode,
-                'response' => \utf8_encode(\mb_substr($stdout, -16384)),
-                'stderr' => \utf8_encode(\mb_substr($stderr, -16384)),
+                'response' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
+                'stderr' => \mb_strcut($stderr, 0, 1000000), // Limit to 1MB
                 'time' => $executionTime,
             ];
 

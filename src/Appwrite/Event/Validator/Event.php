@@ -73,11 +73,11 @@ class Event extends Validator
             return false;
         }
 
-        if ($subtype ?? false) {
+        if ($subType) {
             if ($action && !\array_key_exists($action, $events[$type][$subType])) {
                 return false;
             }
-            if (!($subResource ?? false) || !\array_key_exists($subType, $events[$type])) {
+            if (!($subResource) || !\array_key_exists($subType, $events[$type])) {
                 return false;
             }
         } else {
@@ -86,8 +86,8 @@ class Event extends Validator
             }
         }
 
-        if ($attribute ?? false) {
-            if (($subType ?? false)) {
+        if ($attribute) {
+            if (($subType)) {
                 if (!\array_key_exists($attribute, $events[$type][$subType][$action])) {
                     return false;
                 }

@@ -26,7 +26,7 @@ trait UsersBase
         $bodyString = $user['body'];
         $prefs = substr($bodyString, strpos($bodyString, '"prefs":')+8,2);
         $this->assertEquals('{}', $prefs);
-        
+
         $body = json_decode($bodyString, true);
 
         $this->assertEquals($user['headers']['status-code'], 201);

@@ -2,7 +2,6 @@
 
 namespace Appwrite\Event;
 
-use Exception;
 use InvalidArgumentException;
 use Resque;
 use Utopia\Database\Document;
@@ -98,6 +97,12 @@ class Event
         return $this->event;
     }
 
+    /**
+     * Set project for this event.
+     *
+     * @param Document $project
+     * @return self
+     */
     public function setProject(Document $project): self
     {
         $this->project = $project;
@@ -105,11 +110,22 @@ class Event
         return $this;
     }
 
+    /**
+     * Get project for this event.
+     *
+     * @return Document
+     */
     public function getProject(): Document
     {
         return $this->project;
     }
 
+    /**
+     * Set user for this event.
+     *
+     * @param Document $user
+     * @return self
+     */
     public function setUser(Document $user): self
     {
         $this->user = $user;
@@ -117,11 +133,22 @@ class Event
         return $this;
     }
 
+    /**
+     * Get project for this event.
+     *
+     * @return Document
+     */
     public function getUser(): Document
     {
         return $this->user;
     }
 
+    /**
+     * Set payload for this event.
+     *
+     * @param Document $payload
+     * @return self
+     */
     public function setPayload(array $payload): self
     {
         $this->payload = $payload;
@@ -129,11 +156,22 @@ class Event
         return $this;
     }
 
+    /**
+     * Get payload for this event.
+     *
+     * @return Document
+     */
     public function getPayload(): array
     {
         return $this->payload;
     }
 
+    /**
+     * Set context for this event.
+     *
+     * @param Document $context
+     * @return self
+     */
     public function setContext(Document $context): self
     {
         $this->context = $context;
@@ -141,6 +179,11 @@ class Event
         return $this;
     }
 
+    /**
+     * Get context for this event.
+     *
+     * @return Document
+     */
     public function getContext(): ?Document
     {
         return $this->context;
@@ -149,7 +192,7 @@ class Event
     /**
      * Set class used for this event.
      * @param string $class
-     * @return Event
+     * @return self
      */
     public function setClass(string $class): self
     {
@@ -173,7 +216,7 @@ class Event
      *
      * @param string $key
      * @param mixed $value
-     * @return Event
+     * @return self
      */
     public function setParam(string $key, mixed $value): self
     {
@@ -223,7 +266,7 @@ class Event
     /**
      * Resets event.
      *
-     * @return Event 
+     * @return self
      */
     public function reset(): self
     {
@@ -244,7 +287,7 @@ class Event
         $count = \count($parts);
 
         /**
-         * Identify all sestions of the pattern.
+         * Identify all sections of the pattern.
          */
         $type = $parts[0] ?? false;
         $resource = $parts[1] ?? false;
@@ -291,7 +334,7 @@ class Event
      */
     static function generateEvents(string $pattern, array $params = []): array
     {
-        $params = \array_filter($params, fn($param) => !\is_array($param));
+        // $params = \array_filter($params, fn($param) => !\is_array($param));
         $paramKeys = \array_keys($params);
         $paramValues = \array_values($params);
 

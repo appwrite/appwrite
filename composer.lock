@@ -2133,16 +2133,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.16.0",
+            "version": "0.16.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "7c484e2f71c551d2f8f43bf721938af3726c7455"
+                "reference": "ab30b2a2ae27b83bd1756928e4ffa47fd8c9e602"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/7c484e2f71c551d2f8f43bf721938af3726c7455",
-                "reference": "7c484e2f71c551d2f8f43bf721938af3726c7455",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/ab30b2a2ae27b83bd1756928e4ffa47fd8c9e602",
+                "reference": "ab30b2a2ae27b83bd1756928e4ffa47fd8c9e602",
                 "shasum": ""
             },
             "require": {
@@ -2190,9 +2190,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.16.0"
+                "source": "https://github.com/utopia-php/database/tree/0.16.1"
             },
-            "time": "2022-05-08T16:07:02+00:00"
+            "time": "2022-05-12T17:05:57+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2250,16 +2250,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.19.20",
+            "version": "0.19.21",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "65ced168db8f6e188ceeb0d101f57552c3d8b2af"
+                "reference": "3b7bd8e4acf84fd7d560ced8e0142221d302575d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/65ced168db8f6e188ceeb0d101f57552c3d8b2af",
-                "reference": "65ced168db8f6e188ceeb0d101f57552c3d8b2af",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/3b7bd8e4acf84fd7d560ced8e0142221d302575d",
+                "reference": "3b7bd8e4acf84fd7d560ced8e0142221d302575d",
                 "shasum": ""
             },
             "require": {
@@ -2293,31 +2293,31 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.19.20"
+                "source": "https://github.com/utopia-php/framework/tree/0.19.21"
             },
-            "time": "2022-04-14T15:42:37+00:00"
+            "time": "2022-05-12T18:42:28+00:00"
         },
         {
             "name": "utopia-php/image",
-            "version": "0.5.3",
+            "version": "0.5.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/image.git",
-                "reference": "4a8429b62dcf56562b038d6712375f75166f0c02"
+                "reference": "ca5f436f9aa22dedaa6648f24f3687733808e336"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/image/zipball/4a8429b62dcf56562b038d6712375f75166f0c02",
-                "reference": "4a8429b62dcf56562b038d6712375f75166f0c02",
+                "url": "https://api.github.com/repos/utopia-php/image/zipball/ca5f436f9aa22dedaa6648f24f3687733808e336",
+                "reference": "ca5f436f9aa22dedaa6648f24f3687733808e336",
                 "shasum": ""
             },
             "require": {
                 "ext-imagick": "*",
-                "php": ">=7.4"
+                "php": ">=8.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
+                "vimeo/psalm": "4.13.1"
             },
             "type": "library",
             "autoload": {
@@ -2345,9 +2345,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/image/issues",
-                "source": "https://github.com/utopia-php/image/tree/0.5.3"
+                "source": "https://github.com/utopia-php/image/tree/0.5.4"
             },
-            "time": "2021-11-02T05:47:16+00:00"
+            "time": "2022-05-11T12:30:41+00:00"
         },
         {
             "name": "utopia-php/locale",

@@ -75,6 +75,7 @@ class FunctionsV1 extends Worker
                         function: $function,
                         dbForProject: $database,
                         trigger: 'event',
+                        // Pass first, most verbose event pattern
                         event: $events[0],
                         eventData: $payload,
                         user: $user
@@ -150,9 +151,7 @@ class FunctionsV1 extends Worker
                 $function = Authorization::skip(fn () => $database->updateDocument(
                     'functions',
                     $function->getId(),
-                    new Document(array_merge($function->getArrayCopy(), [
-                        'scheduleNext' => (int)$next,
-                    ]))
+                    $function->setAttribute('scheduleNext', (int) $next)
                 ));
 
                 if ($function === false) {
@@ -296,7 +295,10 @@ class FunctionsV1 extends Worker
                 ->setAttribute('stderr', $executionResponse['stderr'])
                 ->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
+            $endtime = \microtime(true);
+            $time = $endtime - $execution->getAttribute('dateCreated');
             $execution
+                ->setAttribute('time', $time)
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());
@@ -329,7 +331,11 @@ class FunctionsV1 extends Worker
             'functionId' => $function->getId(),
             'executionId' => $execution->getId()
         ]);
-        $target = Realtime::fromPayload($allEvents[0], $execution);
+        $target = Realtime::fromPayload(
+            // Pass first, most verbose event pattern
+            event: $allEvents[0],
+            payload: $execution
+        );
         Realtime::send(
             projectId: 'console',
             payload: $execution->getArrayCopy(),

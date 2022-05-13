@@ -73,8 +73,9 @@ const APP_LIMIT_USERS = 10000;
 const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
 const APP_LIMIT_ENCRYPTION = 20000000; //20MB
 const APP_LIMIT_COMPRESSION = 20000000; //20MB
+const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
 const APP_CACHE_BUSTER = 304;
-const APP_VERSION_STABLE = '0.13.4';
+const APP_VERSION_STABLE = '0.14.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -131,6 +132,7 @@ const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
 const MAIL_TYPE_RECOVERY = 'recovery';
 const MAIL_TYPE_INVITATION = 'invitation';
+const MAIL_TYPE_CERTIFICATE = 'certificate';
 // Auth Types
 const APP_AUTH_TYPE_SESSION = 'Session';
 const APP_AUTH_TYPE_JWT = 'JWT';
@@ -302,6 +304,19 @@ Database::addFilter('subQueryWebhooks',
             ->find('webhooks', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
             ], $database->getIndexLimit(), 0, []);
+    }
+);
+
+Database::addFilter('subQuerySessions',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        $sessions = Authorization::skip(fn () => $database->find('sessions', [
+            new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
+        ], $database->getIndexLimit(), 0, []));
+
+        return $sessions;
     }
 );
 

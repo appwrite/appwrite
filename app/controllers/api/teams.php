@@ -45,7 +45,7 @@ App::post('/v1/teams')
     ->label('sdk.response.model', Response::MODEL_TEAM)
     ->param('teamId', '', new CustomId(), 'Team ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
-    ->param('roles', ['owner'], new ArrayList(new Key()), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.', true)
+    ->param('roles', ['owner'], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', true)
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
@@ -189,7 +189,8 @@ App::put('/v1/teams/:teamId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $teamId, string $name, Response $response, Database $dbForProject, Event $events) {
+    ->inject('audits')
+    ->action(function (string $teamId, string $name, Response $response, Database $dbForProject, Event $events, EventAudit $audits) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -203,6 +204,7 @@ App::put('/v1/teams/:teamId')
         );
 
         $events->setParam('teamId', $team->getId());
+        $audits->setResource('team/' . $team->getId());
 
         $response->dynamic($team, Response::MODEL_TEAM);
     });
@@ -281,7 +283,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('abuse-limit', 10)
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('email', '', new Email(), 'Email of the new team member.')
-    ->param('roles', [], new ArrayList(new Key()), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
+    ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
@@ -343,7 +345,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'reset' => false,
                     'name' => $name,
                     'prefs' => new \stdClass(),
-                    'sessions' => [],
+                    'sessions' => null,
                     'tokens' => null,
                     'memberships' => null,
                     'search' => implode(' ', [$userId, $email, $name]),
@@ -423,8 +425,9 @@ App::post('/v1/teams/:teamId/memberships')
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($membership
-            ->setAttribute('email', $email)
-            ->setAttribute('name', $name)
+            ->setAttribute('teamName', $team->getAttribute('name'))
+            ->setAttribute('userName', $user->getAttribute('name'))
+            ->setAttribute('userEmail', $user->getAttribute('email'))
         , Response::MODEL_MEMBERSHIP);
     });
 
@@ -488,12 +491,13 @@ App::get('/v1/teams/:teamId/memberships')
 
         $memberships = array_filter($memberships, fn(Document $membership) => !empty($membership->getAttribute('userId')));
 
-        $memberships = array_map(function($membership) use ($dbForProject) {
+        $memberships = array_map(function($membership) use ($dbForProject, $team) {
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
             $membership
-                ->setAttribute('name', $user->getAttribute('name'))
-                ->setAttribute('email', $user->getAttribute('email'))
+                ->setAttribute('teamName', $team->getAttribute('name'))
+                ->setAttribute('userName', $user->getAttribute('name'))
+                ->setAttribute('userEmail', $user->getAttribute('email'))
             ;
 
             return $membership;
@@ -537,8 +541,9 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
         $membership
-            ->setAttribute('name', $user->getAttribute('name'))
-            ->setAttribute('email', $user->getAttribute('email'))
+            ->setAttribute('teamName', $team->getAttribute('name'))
+            ->setAttribute('userName', $user->getAttribute('name'))
+            ->setAttribute('userEmail', $user->getAttribute('email'))
         ;
 
         $response->dynamic($membership, Response::MODEL_MEMBERSHIP );
@@ -558,7 +563,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
-    ->param('roles', [], new ArrayList(new Key()), 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Max length for each role is 32 chars.')
+    ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.')
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -609,8 +614,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
 
         $response->dynamic(
             $membership
-                ->setAttribute('email', $profile->getAttribute('email'))
-                ->setAttribute('name', $profile->getAttribute('name')),
+                ->setAttribute('teamName', $team->getAttribute('name'))
+                ->setAttribute('userName', $profile->getAttribute('name'))
+                ->setAttribute('userEmail', $profile->getAttribute('email')),
             Response::MODEL_MEMBERSHIP
         );
     });
@@ -711,13 +717,12 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             ->setAttribute('$write', ['user:'.$user->getId()])
         );
 
-        $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         Authorization::setRole('user:'.$userId);
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
-        
+
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
@@ -741,8 +746,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         ;
 
         $response->dynamic($membership
-            ->setAttribute('email', $user->getAttribute('email'))
-            ->setAttribute('name', $user->getAttribute('name'))
+            ->setAttribute('teamName', $team->getAttribute('name'))
+            ->setAttribute('userName', $user->getAttribute('name'))
+            ->setAttribute('userEmail', $user->getAttribute('email'))
         , Response::MODEL_MEMBERSHIP);
     });
 

@@ -88,7 +88,7 @@ class Audit extends Event
     /**
      * Set IP for this audit event.
      *
-     * @param string $userAgent
+     * @param string $ip
      * @return self
      */
     public function setIP(string $ip): self
