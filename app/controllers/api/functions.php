@@ -55,7 +55,7 @@ App::post('/v1/functions')
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, string $name, array $execute, string $runtime, $vars, ?array $events, ?string $schedule, int $timeout, Response $response, Database $dbForProject) {
+    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $vars, ?array $events, ?string $schedule, int $timeout, Response $response, Database $dbForProject) {
 
         $functionId = ($functionId == 'unique()') ? $dbForProject->getId() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
@@ -294,7 +294,7 @@ App::put('/v1/functions/:functionId')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->action(function (string $functionId, string $name, array $execute, $vars, ?array $events, ?string $schedule, ?int $timeout, Response $response, Database $dbForProject, Document $project, $user) {
+    ->action(function (string $functionId, string $name, array $execute, array $vars, ?array $events, ?string $schedule, ?int $timeout, Response $response, Database $dbForProject, Document $project, $user) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -453,7 +453,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function (string $functionId, string $entrypoint, $file, bool $activate, Request $request, Response $response, Database $dbForProject, Stats $usage, $user, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+    ->action(function (string $functionId, string $entrypoint, array $file, bool $activate, Request $request, Response $response, Database $dbForProject, Stats $usage, $user, Document $project, Device $deviceFunctions, Device $deviceLocal) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
