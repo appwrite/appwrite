@@ -1,6 +1,54 @@
-# Unreleased Version
-- Renamed `providers` to `authProviders` in project collection **Breaking Change**
+# Version 0.14.0
 
+## Features
+- New Event Model **Breaking Change**
+  - The new Event Model allows you to define events for Webhooks or Functions more granular
+  - Account and Users events have been merged to just Users
+  - Examples:
+    - `database.documents.create` is now `collections.[COLLECTION_ID].documents.[DOCUMENT_ID].create`
+    - Both placeholders needs to be replaced with either `*` for wildcard or an ID of the respective collection or document
+    - So you can listen to every document that is created in the `posts` collection with `collections.posts.*.documents.*.create`
+  - `event` in the Realtime payload has been renamed to `events` and contains all possible events
+  - `X-Appwrite-Webhook-Event` Webhook header has been renamed to `X-Appwrite-Webhook-Events` and contains all possible events
+- Renamed `providers` to `authProviders` in Projects **Breaking Change**
+- Renamed `stdout` to `response` in Projects **Breaking Change**
+- Added new endppoint to list all memberships on the Users API
+- Increased Execution response to 1MB
+- Added Wildcard support to Platforms
+- Added Activity page to Teams console
+- Added button to verify/unverify user's e-mail address in the console
+- Added Docker log limits to `docker-compose.yaml`
+- Renamed `_APP_EXECUTOR_RUNTIME_NETWORK` environment variable to `OPEN_RUNTIMES_NETWORK`
+## Bugs
+- Fixed issues with `min`, `max` and `default` values for float attributes
+- Fixed account created with Magic URL to set a new password
+- Fixed Database to respect `null` values
+- Fixed missing realtime events from the Users API
+- Fixed missing events when all sessions are deleted from the Users and Account API
+- Fixed dots in database attributes
+- Fixed renewal of SSL certificates
+- Fixed errors in the certificates workers
+- Fixed HTTPS redirect bug for non GET requests
+- Fixed search when a User is updated
+- Fixed aspect ratio bug in Avatars API
+- Fixed wrong `Fail to Warmup ...` error message in Executor
+- Fixed UI when file uploader is covered by jumpt to top button
+- Fixed bug that allowed Queries on failed indexes
+- Fixed UI when an alert with a lot text disappears too fast by increasing duration
+- Fixed issues with cache and case-sensivity on ID's
+- Fixed storage stats by upgrading to `BIGINT`
+- Fixed `storage.total` stats which now is a sum of `storage.files.total` and `storage.deployments.total`
+- Fixed Project logo preview
+- Fixed UI for missing icons in Collection attributes
+- Fixed UI to allow single-character custom ID's
+- Fixed array size validation in the Database Service
+- Fixed file preview when file extension is missing
+- Fixed `Open an Issue` link in the console
+- Fixed missing environment variables on Executor service
+- Fixed all endpoints that expect an Array in their params to have not more than 100 items
+
+## Security
+- OAuth2 provider now check if the email is verified
 # Version 0.13.4
 
 ## Features
