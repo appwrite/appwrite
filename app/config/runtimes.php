@@ -6,7 +6,7 @@ use Appwrite\Runtimes\Runtimes;
 /**
  * List of Appwrite Cloud Functions supported runtimes
  */
-$runtimes = new Runtimes();
+$runtimes = new Runtimes(App::getEnv('_APP_EXECUTOR_VERSION'));
 
 $allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
 

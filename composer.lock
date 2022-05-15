@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "23a43ddfd26689ff154463410f7da3a4",
+    "content-hash": "b4d24566e38e481c9b5612033101324f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -115,11 +115,11 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.7.4",
+            "version": "dev-feat-runtime-versioning",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "8e0972ecce6ad96f3701edab8d2c9a8af7074093"
+                "reference": "3c47c09c0781434f5aba726f726c695f144917b1"
             },
             "require": {
                 "php": ">=8.0",
@@ -154,7 +154,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2022-02-26T11:38:09+00:00"
+            "time": "2022-05-15T03:00:16+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -6554,7 +6554,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "appwrite/php-runtimes": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -6576,5 +6578,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.2.0"
 }

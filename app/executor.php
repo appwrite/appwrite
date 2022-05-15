@@ -584,7 +584,7 @@ $http->on('start', function ($http) {
     /** 
      * Warmup: make sure images are ready to run fast 🚀
      */
-    $runtimes = new Runtimes();
+    $runtimes = new Runtimes(App::getEnv('_APP_EXECUTOR_VERSION'));
     $allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
     $runtimes = $runtimes->getAll(true, $allowList);
     foreach ($runtimes as $runtime) {

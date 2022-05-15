@@ -1,7 +1,6 @@
 <?php
 
 use Utopia\Config\Config;
-
 return [
     [
         'category' => 'General',
@@ -611,6 +610,15 @@ return [
                 'description' => 'Deprecated with 0.14.0, use \'OPEN_RUNTIMES_NETWORK\' instead!',
                 'introduction' => '0.13.0',
                 'default' => 'appwrite_runtimes',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EXECUTOR_VERSION',
+                'description' => 'Executor version',
+                'introduction' => '0.14.0',
+                'default' => 'v1',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
