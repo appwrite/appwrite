@@ -33,6 +33,7 @@ ENV PHP_REDIS_VERSION=5.3.7 \
     PHP_MONGODB_VERSION=1.9.1 \
     PHP_SWOOLE_VERSION=v4.8.7 \
     PHP_IMAGICK_VERSION=3.7.0 \
+    PHP_SCRYPT_VERSION=v1.4.2 \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0
 
@@ -97,7 +98,7 @@ RUN \
 ## Scrypt Extension
 FROM compile AS scrypt
 RUN \
-  git clone --depth 1 --branch master https://github.com/DomBlack/php-scrypt.git && \
+  git clone --depth 1 --branch $PHP_SCRYPT_VERSION https://github.com/DomBlack/php-scrypt.git && \
   cd php-scrypt && \
   phpize && \
   ./configure --enable-scrypt && \

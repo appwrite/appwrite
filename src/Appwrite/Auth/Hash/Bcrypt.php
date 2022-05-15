@@ -11,7 +11,7 @@ use Appwrite\Auth\Hash;
  * 
  * Refference: https://www.php.net/manual/en/password.constants.php
 */
-class BCrypt extends Hash
+class Bcrypt extends Hash
 {
     /**
      * @param string $password Input password to hash

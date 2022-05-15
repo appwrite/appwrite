@@ -33,7 +33,7 @@ class User extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Password hashing algorithm.',
                 'default' => '',
-                'example' => 'bcrypt',
+                'example' => 'argon2',
             ])
             ->addRule('hashOptions', [
                 'type' => self::TYPE_STRING,

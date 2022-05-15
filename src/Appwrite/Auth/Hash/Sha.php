@@ -13,7 +13,7 @@ use Appwrite\Auth\Hash;
  * 
  * Refference: https://www.php.net/manual/en/function.hash-algos.php
 */
-class SHA extends Hash
+class Sha extends Hash
 {
     /**
      * @param string $password Input password to hash

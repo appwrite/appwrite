@@ -32,7 +32,7 @@ use Appwrite\Auth\Hash;
  * 
  * Refference: 
 */
-class PHPass extends Hash
+class Phpass extends Hash
 {
 	/**
 	 * Alphabet used in itoa64 conversions.

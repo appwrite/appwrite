@@ -10,12 +10,12 @@ class Auth
 
     const SUPPORTED_ALGOS = [
         'argon2' => 'Argon2',
-        'bcrypt' => 'BCrypt',
-        'md5' => 'MD5',
-        'sha' => 'SHA',
-        'phpass' => 'PHPass',
-        'scrypt' => 'SCrypt',
-        'scrypt_mod' => 'SCryptModified',
+        'bcrypt' => 'Bcrypt',
+        'md5' => 'Md5',
+        'sha' => 'Sha',
+        'phpass' => 'Phpass',
+        'scrypt' => 'Scrypt',
+        'scrypt_mod' => 'Scryptmodified',
         'plaintext' => '' // This is alias for DX purposes. It is translated to default algo
     ];
 

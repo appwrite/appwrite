@@ -9,7 +9,7 @@ use Appwrite\Auth\Hash;
  * 
  * Refference: https://www.php.net/manual/en/function.md5.php
 */
-class MD5 extends Hash
+class Md5 extends Hash
 {
     /**
      * @param string $password Input password to hash

@@ -14,7 +14,7 @@ use Appwrite\Auth\Hash;
  * 
  * Refference: https://github.com/DomBlack/php-scrypt/blob/master/scrypt.php#L112-L116
 */
-class SCrypt extends Hash
+class Scrypt extends Hash
 {
     /**
      * @param string $password Input password to hash
