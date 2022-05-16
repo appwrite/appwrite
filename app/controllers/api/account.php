@@ -81,9 +81,7 @@ App::post('/v1/account')
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
         if ($limit !== 0) {
-            $total = $dbForProject->count('users', [
-                new Query('deleted', Query::TYPE_EQUAL, [false]),
-            ], APP_LIMIT_USERS);
+            $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
 
             if ($total >= $limit) {
                 throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
@@ -108,8 +106,7 @@ App::post('/v1/account')
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
-                'search' => implode(' ', [$userId, $email, $name]),
-                'deleted' => false
+                'search' => implode(' ', [$userId, $email, $name])
             ])));
         } catch (Duplicate $th) {
             throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
@@ -170,7 +167,6 @@ App::post('/v1/account/sessions')
         $protocol = $request->getProtocol();
 
         $profile = $dbForProject->findOne('users', [
-            new Query('deleted', Query::TYPE_EQUAL, [false]),
             new Query('email', Query::TYPE_EQUAL, [$email])]
         );
 
@@ -480,7 +476,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             if ($isVerified === true) {
                 // Get user by email address
                 $user = $dbForProject->findOne('users', [
-                    new Query('deleted', Query::TYPE_EQUAL, [false]),
                     new Query('email', Query::TYPE_EQUAL, [$email])]
                 );
             }
@@ -489,7 +484,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
                 if ($limit !== 0) {
-                    $total = $dbForProject->count('users', [new Query('deleted', Query::TYPE_EQUAL, [false])], APP_LIMIT_USERS);
+                    $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
 
                     if ($total >= $limit) {
                         throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
@@ -514,8 +509,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'sessions' => null,
                         'tokens' => null,
                         'memberships' => null,
-                        'search' => implode(' ', [$userId, $email, $name]),
-                        'deleted' => false
+                        'search' => implode(' ', [$userId, $email, $name])
                     ])));
                 } catch (Duplicate $th) {
                     throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
@@ -663,9 +657,7 @@ App::post('/v1/account/sessions/magic-url')
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if ($limit !== 0) {
-                $total = $dbForProject->count('users', [
-                    new Query('deleted', Query::TYPE_EQUAL, [false]),
-                ], APP_LIMIT_USERS);
+                $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
 
                 if ($total >= $limit) {
                     throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
@@ -689,8 +681,7 @@ App::post('/v1/account/sessions/magic-url')
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
-                'search' => implode(' ', [$userId, $email]),
-                'deleted' => false
+                'search' => implode(' ', [$userId, $email])
             ])));
         }
 
@@ -790,7 +781,7 @@ App::put('/v1/account/sessions/magic-url')
 
         $user = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
-        if ($user->isEmpty() || $user->getAttribute('deleted')) {
+        if ($user->isEmpty()) {
             throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
@@ -925,9 +916,7 @@ App::post('/v1/account/sessions/anonymous')
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
         if ($limit !== 0) {
-            $total = $dbForProject->count('users', [
-                new Query('deleted', Query::TYPE_EQUAL, [false]),
-            ], APP_LIMIT_USERS);
+            $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
 
             if ($total >= $limit) {
                 throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
@@ -951,8 +940,7 @@ App::post('/v1/account/sessions/anonymous')
             'sessions' => null,
             'tokens' => null,
             'memberships' => null,
-            'search' => $userId,
-            'deleted' => false
+            'search' => $userId
         ])));
 
         // Create session token
@@ -1469,17 +1457,18 @@ App::patch('/v1/account/prefs')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::delete('/v1/account')
-    ->desc('Delete Account')
+App::patch('/v1/account/status')
+    ->desc('Update Account Status')
     ->groups(['api', 'account'])
-    ->label('event', 'users.[userId].delete')
+    ->label('event', 'users.[userId].update.status')
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'delete')
-    ->label('sdk.description', '/docs/references/account/delete.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk.method', 'updateStatus')
+    ->label('sdk.description', '/docs/references/account/update-status.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1496,28 +1485,15 @@ App::delete('/v1/account')
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $protocol = $request->getProtocol();
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', false));
-
-        // TODO Seems to be related to users.php/App::delete('/v1/users/:userId'). Can we share code between these two? Do todos below apply to users.php?
-
-        // TODO delete all tokens or only current session?
-        // TODO delete all user data according to GDPR. Make sure everything is backed up and backups are deleted later
-        /**
-        * Data to delete
-        * * Tokens
-        * * Memberships
-        */
 
         $audits
             ->setResource('user/' . $user->getId())
-            ->setPayload($response->output($user, Response::MODEL_USER))
-        ;
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $events
             ->setParam('userId', $user->getId())
-            ->setPayload($response->output($user, Response::MODEL_USER))
-        ;
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         if (!Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([]));
@@ -1525,11 +1501,7 @@ App::delete('/v1/account')
 
         $usage->setParam('users.delete', 1);
 
-        $response
-            ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->noContent()
-        ;
+        $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::delete('/v1/account/sessions/:sessionId')
@@ -1839,7 +1811,6 @@ App::post('/v1/account/recovery')
         $email = \strtolower($email);
 
         $profile = $dbForProject->findOne('users', [
-            new Query('deleted', Query::TYPE_EQUAL, [false]), 
             new Query('email', Query::TYPE_EQUAL, [$email])
         ]);
 
@@ -1942,7 +1913,7 @@ App::put('/v1/account/recovery')
 
         $profile = $dbForProject->getDocument('users', $userId);
 
-        if ($profile->isEmpty() || $profile->getAttribute('deleted')) {
+        if ($profile->isEmpty()) {
             throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
