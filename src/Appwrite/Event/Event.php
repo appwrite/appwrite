@@ -182,7 +182,7 @@ class Event
     /**
      * Get context for this event.
      *
-     * @return Document
+     * @return null|Document
      */
     public function getContext(): ?Document
     {
