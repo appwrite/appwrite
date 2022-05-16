@@ -146,7 +146,7 @@ class Event
     /**
      * Set payload for this event.
      *
-     * @param Document $payload
+     * @param array $payload
      * @return self
      */
     public function setPayload(array $payload): self
@@ -159,7 +159,7 @@ class Event
     /**
      * Get payload for this event.
      *
-     * @return Document
+     * @return array
      */
     public function getPayload(): array
     {
