@@ -162,7 +162,7 @@ class V13 extends Migration
                         /**
                          * Increase stdout size.
                          */
-                        $this->projectDB->updateAttribute($id, 'stdout', size: 1000000);
+                        $this->projectDB->updateAttribute($id, 'stdout', size: 1_000_000);
                     } catch (\Throwable $th) {
                         Console::warning("'stdout' from {$id}: {$th->getMessage()}");
                     }
@@ -170,7 +170,7 @@ class V13 extends Migration
                         /**
                          * Increase stderr size.
                          */
-                        $this->projectDB->updateAttribute($id, 'stderr', size: 1000000);
+                        $this->projectDB->updateAttribute($id, 'stderr', size: 1_000_000);
                     } catch (\Throwable $th) {
                         Console::warning("'stderr' from {$id}: {$th->getMessage()}");
                     }
@@ -182,7 +182,7 @@ class V13 extends Migration
                          * Increase response size.
                          */
                         $this->projectDB->renameAttribute($id, 'stdout', 'response');
-                        $this->projectDB->updateAttribute($id, 'response', size: 1000000);
+                        $this->projectDB->updateAttribute($id, 'response', size: 1_000_000);
                     } catch (\Throwable $th) {
                         Console::warning("'stdout' from {$id}: {$th->getMessage()}");
                     }
@@ -190,7 +190,7 @@ class V13 extends Migration
                         /**
                          * Increase stderr size.
                          */
-                        $this->projectDB->updateAttribute($id, 'stderr', size: 1000000);
+                        $this->projectDB->updateAttribute($id, 'stderr', size: 1_000_000);
                     } catch (\Throwable $th) {
                         Console::warning("'stderr' from {$id}: {$th->getMessage()}");
                     }
