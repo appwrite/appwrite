@@ -28,7 +28,7 @@ function getConsoleDB(): Database
             $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
             $database->setNamespace('_console'); // Main DB
 
-            if (!$database->exists($database->getDefaultDatabase(), '_metadata')) {
+            if (!$database->exists($database->getDefaultDatabase(), 'certificates')) {
                 throw new \Exception('Console project not ready');
             }
 
