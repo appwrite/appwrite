@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
         val account = Account(client)
 
         GlobalScope.launch {
-            val response = account.delete()
+            val response = account.updateStatus()
             val json = response.body?.string()        
         }
     }

@@ -11,4 +11,4 @@ client = Client()
 
 account = Account(client)
 
-result = account.delete()
+result = account.update_status()

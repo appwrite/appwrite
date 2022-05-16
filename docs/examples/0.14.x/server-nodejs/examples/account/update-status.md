@@ -1,4 +1,4 @@
-import * as sdk from "https://deno.land/x/appwrite/mod.ts";
+const sdk = require('node-appwrite');
 
 // Init SDK
 let client = new sdk.Client();
@@ -11,8 +11,7 @@ client
     .setJWT('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...') // Your secret JSON Web Token
 ;
 
-
-let promise = account.delete();
+let promise = account.updateStatus();
 
 promise.then(function (response) {
     console.log(response);
