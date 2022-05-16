@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "23a43ddfd26689ff154463410f7da3a4",
+    "content-hash": "ffb0a355553045db9c4f517eec033a90",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2133,16 +2133,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.16.1",
+            "version": "0.17.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "ab30b2a2ae27b83bd1756928e4ffa47fd8c9e602"
+                "reference": "a4d001452b78b85335ffbd34176cd45d2b13c1ca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/ab30b2a2ae27b83bd1756928e4ffa47fd8c9e602",
-                "reference": "ab30b2a2ae27b83bd1756928e4ffa47fd8c9e602",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/a4d001452b78b85335ffbd34176cd45d2b13c1ca",
+                "reference": "a4d001452b78b85335ffbd34176cd45d2b13c1ca",
                 "shasum": ""
             },
             "require": {
@@ -2190,9 +2190,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.16.1"
+                "source": "https://github.com/utopia-php/database/tree/0.17.1"
             },
-            "time": "2022-05-12T17:05:57+00:00"
+            "time": "2022-05-16T09:11:44+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -6320,16 +6320,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.3.10",
+            "version": "v3.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "8442df056c51b706793adf80a9fd363406dd3674"
+                "reference": "ed19f4bf9d19c4ef920b5d8243910bd32e85b9ba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/8442df056c51b706793adf80a9fd363406dd3674",
-                "reference": "8442df056c51b706793adf80a9fd363406dd3674",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/ed19f4bf9d19c4ef920b5d8243910bd32e85b9ba",
+                "reference": "ed19f4bf9d19c4ef920b5d8243910bd32e85b9ba",
                 "shasum": ""
             },
             "require": {
@@ -6344,7 +6344,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.3-dev"
+                    "dev-master": "3.4-dev"
                 }
             },
             "autoload": {
@@ -6380,7 +6380,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.3.10"
+                "source": "https://github.com/twigphp/Twig/tree/v3.4.0"
             },
             "funding": [
                 {
@@ -6392,7 +6392,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-04-06T06:47:41+00:00"
+            "time": "2022-05-15T06:25:28+00:00"
         },
         {
             "name": "vimeo/psalm",
