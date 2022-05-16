@@ -1,7 +1,7 @@
 # Version 0.14.0
 
 ## Features
-- New Event Model **Breaking Change**
+- **BREAKING CHANGE** New Event Model
   - The new Event Model allows you to define events for Webhooks or Functions more granular
   - Account and Users events have been merged to just Users
   - Examples:
@@ -10,9 +10,12 @@
     - So you can listen to every document that is created in the `posts` collection with `collections.posts.*.documents.*.create`
   - `event` in the Realtime payload has been renamed to `events` and contains all possible events
   - `X-Appwrite-Webhook-Event` Webhook header has been renamed to `X-Appwrite-Webhook-Events` and contains all possible events
-- Renamed `providers` to `authProviders` in Projects **Breaking Change**
-- Renamed `stdout` to `response` in Execution **Breaking Change**
-- Removed deleted endpoint from the Accounts API
+- **BREAKING CHANGE** Renamed `providers` to `authProviders` in Projects
+- **BREAKING CHANGE** Renamed `stdout` to `response` in Execution
+- **BREAKING CHANGE** Removed delete endpoint from the Accounts API
+- **BREAKING CHANGE** Renamed `name` to `userName` on Membership response model
+- **BREAKING CHANGE** Renamed `email` to `userEmail` on Membership response model
+- Added `teamName` to Membership response model
 - Added new endpoint to update user's status from the Accounts API
 - Deleted users will now free their ID and not reserve it anymore
 - Added new endpoint to list all memberships on the Users API
@@ -23,6 +26,7 @@
 - Added button to verify/unverify user's e-mail address in the console
 - Added Docker log limits to `docker-compose.yaml`
 - Renamed `_APP_EXECUTOR_RUNTIME_NETWORK` environment variable to `OPEN_RUNTIMES_NETWORK`
+
 ## Bugs
 - Fixed issues with `min`, `max` and `default` values for float attributes
 - Fixed account created with Magic URL to set a new password
