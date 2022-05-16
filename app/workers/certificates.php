@@ -38,9 +38,7 @@ class CertificatesV1 extends Worker
     public function run(): void
     {
         Authorization::disable();
-
-        $this->dbForConsole = $this->getConsoleDB();
-
+        Authorization::setDefaultStatus(false);
         /**
          * 1. Read arguments and validate domain
          * 2. Get main domain
@@ -71,28 +69,22 @@ class CertificatesV1 extends Worker
          * Note: Renewals are checked and scheduled from maintenence worker
          */
 
+        $this->dbForConsole = $this->getConsoleDB();
+
+        $document = new Document($this->args['domain'] ?? []);
+        $skipCheck = $this->args['skipRenewCheck'] ?? false; // If true, we won't double-check expiry from cert file
+        $domain = new Domain($document->getAttribute('domain', ''));
+
+        // Get current certificate
+        $certificate = $this->dbForConsole->findOne('certificates', [new Query('domain', Query::TYPE_EQUAL, [$domain->get()])]);
+
+        // If we don't have certificate for domain yet, let's create new document. At the end we save it
+        if (!$certificate) {
+            $certificate = new Document();
+            $certificate->setAttribute('domain', $domain->get());
+        }
+
         try {
-            // Read arguments
-            $document = new Document($this->args['domain'] ?? []);
-            $skipCheck = $this->args['skipRenewCheck'] ?? false; // If true, we won't double-check expiry from cert file
-
-            // Options
-            $domain = new Domain($document->getAttribute('domain'));
-            $expiry = 60 * 60 * 24 * 30 * 2; // 60 days
-            $safety = 60 * 60; // 1 hour
-            $renew  = (\time() + $expiry);
-
-            $domain = new Domain((!empty($domain)) ? $domain : '');
-
-            // Get current certificate
-            $certificate = $this->dbForConsole->findOne('certificates', [new Query('domain', Query::TYPE_EQUAL, [$domain->get()])]);
-
-            // If we don't have certificate for domain yet, let's create new document. At the end we save it
-            if (!$certificate) {
-                $certificate = new Document();
-                $certificate->setAttribute('domain', $domain->get());
-            }
-
             // Email for alerts is required by LetsEncrypt
             $email = App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
             if (empty($email)) {
@@ -144,8 +136,6 @@ class CertificatesV1 extends Worker
 
             // Save all changes we made to certificate document into database
             $this->saveCertificateDocument($domain->get(), $certificate);
-
-            Authorization::reset();
         }
     }
 
