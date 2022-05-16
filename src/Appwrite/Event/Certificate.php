@@ -72,8 +72,7 @@ class Certificate extends Event
         return Resque::enqueue($this->queue, $this->class, [
             'project' => $this->project,
             'domain' => $this->domain,
-            'validateTarget' => $this->validateTarget,
-            'validateCNAME' => $this->validateCNAME
+            'skipRenewCheck' => $this->skipRenewCheck
         ]);
     }
 }
