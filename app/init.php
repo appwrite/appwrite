@@ -52,9 +52,10 @@ use Swoole\Database\RedisPool;
 use Utopia\Database\Query;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
+use Utopia\Storage\Device\Backblaze;
+use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
-use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Linode;
 
 const APP_NAME = 'Appwrite';
@@ -70,9 +71,8 @@ const APP_LIMIT_USERS = 10000;
 const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
 const APP_LIMIT_ENCRYPTION = 20000000; //20MB
 const APP_LIMIT_COMPRESSION = 20000000; //20MB
-const APP_LIMIT_PREVIEW = 20000000; //20MB file size limit for preview endpoint
-const APP_CACHE_BUSTER = 303;
-const APP_VERSION_STABLE = '0.13.3';
+const APP_CACHE_BUSTER = 304;
+const APP_VERSION_STABLE = '0.13.4';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -837,6 +837,13 @@ function getDevice($root): Device {
             $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
             $doSpacesAcl = 'private';
             return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+        case Storage::DEVICE_BACKBLAZE:
+            $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
+            $backblazeSecretKey = App::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
+            $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
+            $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
+            $backblazeAcl = 'private';
+            return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
         case Storage::DEVICE_LINODE:
             $linodeAccessKey = App::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
             $linodeSecretKey = App::getEnv('_APP_STORAGE_LINODE_SECRET', '');

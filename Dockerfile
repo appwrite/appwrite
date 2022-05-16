@@ -24,7 +24,7 @@ COPY public /usr/local/src/public
 RUN npm ci
 RUN npm run build
 
-FROM php:8.0.14-cli-alpine3.15 as compile
+FROM php:8.0.18-cli-alpine3.15 as compile
 
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
@@ -123,7 +123,7 @@ RUN \
   ./configure && \
   make && make install
 
-FROM php:8.0.14-cli-alpine3.15 as final
+FROM php:8.0.18-cli-alpine3.15 as final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -162,6 +162,10 @@ ENV _APP_SERVER=swoole \
     _APP_STORAGE_DO_SPACES_SECRET= \
     _APP_STORAGE_DO_SPACES_REGION= \
     _APP_STORAGE_DO_SPACES_BUCKET= \
+    _APP_STORAGE_BACKBLAZE_ACCESS_KEY= \
+    _APP_STORAGE_BACKBLAZE_SECRET= \
+    _APP_STORAGE_BACKBLAZE_REGION= \
+    _APP_STORAGE_BACKBLAZE_BUCKET= \
     _APP_STORAGE_LINODE_ACCESS_KEY= \
     _APP_STORAGE_LINODE_SECRET= \
     _APP_STORAGE_LINODE_REGION= \
@@ -189,6 +193,7 @@ ENV _APP_SERVER=swoole \
     _APP_FUNCTIONS_MEMORY=128 \
     _APP_FUNCTIONS_MEMORY_SWAP=128 \
     _APP_EXECUTOR_SECRET=a-random-secret \
+    _APP_EXECUTOR_HOST=http://appwrite-executor/v1 \
     _APP_EXECUTOR_RUNTIME_NETWORK=appwrite_runtimes \
     _APP_SETUP=self-hosted \
     _APP_VERSION=$VERSION \
