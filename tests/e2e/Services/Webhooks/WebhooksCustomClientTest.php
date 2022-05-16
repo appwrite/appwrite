@@ -101,15 +101,14 @@ class WebhooksCustomClientTest extends Scope
         $id = $account['body']['$id'];
         $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
-        $account = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
+        $account = $this->client->call(Client::METHOD_PATCH, '/account/status', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($account['headers']['status-code'], 204);
-        $this->assertEmpty($account['body']);
+        $this->assertEquals($account['headers']['status-code'], 200);
 
         $webhook = $this->getLastRequest();
 
@@ -117,9 +116,9 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
         $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString('users.*.delete', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('users.*.update.status', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("users.{$id}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("users.{$id}.update.status", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);

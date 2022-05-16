@@ -1090,18 +1090,7 @@ $collections = [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
-            ],
-            [
-                '$id' => 'deleted',
-                'type' => Database::VAR_BOOLEAN,
-                'format' => '',
-                'size' => 0,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
+            ]
         ],
         'indexes' => [
             [
@@ -1117,14 +1106,7 @@ $collections = [
                 'attributes' => ['search'],
                 'lengths' => [],
                 'orders' => [],
-            ],
-            [
-                '$id' => '_key_deleted_email',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['deleted', 'email'],
-                'lengths' => [0, 320],
-                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
-            ],
+            ]
         ],
     ],
 

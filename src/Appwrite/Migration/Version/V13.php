@@ -84,20 +84,10 @@ class V13 extends Migration
 
             Console::log("- {$id}");
             switch ($id) {
-                case 'executions':
-                    try {
-                        /**
-                         * Rename stdout to response
-                         */
-                        $this->projectDB->renameAttribute($id, 'stdout', 'response');
-                    } catch (\Throwable $th) {
-                        Console::warning("'stdout' from {$id}: {$th->getMessage()}");
-                    }
-                    break;
                 case 'projects':
                     try {
                         /**
-                         * Rename providers to authProviders
+                         * Rename providers to authProviders.
                          */
                         $this->projectDB->renameAttribute($id, 'providers', 'authProviders');
                     } catch (\Throwable $th) {
@@ -106,6 +96,9 @@ class V13 extends Migration
                     break;
                 case 'users':
                     try {
+                        /**
+                         * Recreate sessions for new subquery.
+                         */
                         $this->projectDB->deleteAttribute($id, 'sessions');
                         $this->projectDB->createAttribute(
                             collection: $id,
@@ -120,6 +113,9 @@ class V13 extends Migration
                         Console::warning("'sessions' from {$id}: {$th->getMessage()}");
                     }
                     try {
+                        /**
+                         * Recreate tokens for new subquery.
+                         */
                         $this->projectDB->deleteAttribute($id, 'tokens');
                         $this->projectDB->createAttribute(
                             collection: $id,
@@ -134,6 +130,9 @@ class V13 extends Migration
                         Console::warning("'tokens' from {$id}: {$th->getMessage()}");
                     }
                     try {
+                        /**
+                         * Recreate memberships for new subquery.
+                         */
                         $this->projectDB->deleteAttribute($id, 'memberships');
                         $this->projectDB->createAttribute(
                             collection: $id,
@@ -158,32 +157,64 @@ class V13 extends Migration
                         Console::warning("'_key_user' from {$id}: {$th->getMessage()}");
                     }
                     break;
-                    case 'executions':
-                        // TODO: migrate stdout (size => 1000000)
-                        // TODO: migrate stderr (size => 1000000)
-                        break;
-                    case 'executions':
-                        try {
-                            /**
-                             * Rename stdout to response
-                             */
-                            $this->projectDB->renameAttribute($id, 'stdout', 'response');
-                        // TODO: migrate response (size => 1000000)
-                        // TODO: migrate stderr (size => 1000000)
-                        } catch (\Throwable $th) {
-                            Console::warning("'stdout' from {$id}: {$th->getMessage()}");
-                        }
-                        break;
-                    case 'stats':
-                        //TODO: migrate value (size => 8)
-                        break;
-                    case 'tokens':
-                        try {
-                            $this->createCollection('tokens');
-                        } catch (\Throwable $th) {
-                            Console::warning("'tokens': {$th->getMessage()}");
-                        }
-                        break;
+                case 'builds':
+                    try {
+                        /**
+                         * Increase stdout size.
+                         */
+                        $this->projectDB->updateAttribute($id, 'stdout', size: 1_000_000);
+                    } catch (\Throwable $th) {
+                        Console::warning("'stdout' from {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        /**
+                         * Increase stderr size.
+                         */
+                        $this->projectDB->updateAttribute($id, 'stderr', size: 1_000_000);
+                    } catch (\Throwable $th) {
+                        Console::warning("'stderr' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                case 'executions':
+                    try {
+                        /**
+                         * Rename stdout to response.
+                         * Increase response size.
+                         */
+                        $this->projectDB->renameAttribute($id, 'stdout', 'response');
+                        $this->projectDB->updateAttribute($id, 'response', size: 1_000_000);
+                    } catch (\Throwable $th) {
+                        Console::warning("'stdout' from {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        /**
+                         * Increase stderr size.
+                         */
+                        $this->projectDB->updateAttribute($id, 'stderr', size: 1_000_000);
+                    } catch (\Throwable $th) {
+                        Console::warning("'stderr' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                case 'stats':
+                    try {
+                        /**
+                         * Increase value size ot BIGINT.
+                         */
+                        $this->projectDB->updateAttribute($id, 'value', size: 8);
+                    } catch (\Throwable $th) {
+                        Console::warning("'size' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                case 'tokens':
+                    try {
+                        /**
+                         * Create new Tokens collection.
+                         */
+                        $this->createCollection('tokens');
+                    } catch (\Throwable $th) {
+                        Console::warning("'tokens': {$th->getMessage()}");
+                    }
+                    break;
             }
             usleep(100000);
         }
@@ -224,6 +255,15 @@ class V13 extends Migration
                     $document->setAttribute('events', $this->migrateEvents($document->getAttribute('events')));
                 }
 
+                break;
+
+            case 'users':
+                /**
+                 * Remove deleted users.
+                 */
+                if ($document->getAttribute('deleted', false) === true) {
+                    $this->projectDB->deleteDocument('users', $document->getId());
+                }
                 break;
         }
 
