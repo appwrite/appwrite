@@ -420,12 +420,11 @@ sort($patterns);
 
                                                     <h1>STDOUT</h1>
 
-                                                    <div class="margin-bottom ide" data-ls-if="({{execution.stdout.length}})">
-                                                        <pre data-ls-bind="{{execution.stdout}}"></pre>
-                                                        <!-- <input type="hidden" data-ls-bind="{{execution.stdout}}" data-forms-code="bash" /> -->
+                                                    <div class="margin-bottom ide" data-ls-if="({{execution.response.length}})">
+                                                        <pre data-ls-bind="{{execution.response}}"></pre>
                                                     </div>
 
-                                                    <div class="margin-bottom" data-ls-if="(!{{execution.stdout.length}})">
+                                                    <div class="margin-bottom" data-ls-if="(!{{execution.response.length}})">
                                                         <p>No output was logged.</p>
                                                     </div>
                                                 </div>
@@ -636,12 +635,12 @@ sort($patterns);
                                 <?php endforeach; ?>
                             </select>
                             <div x-show="hasResource">
-                                <label x-text="'Select ' + resourceName + ' (optional)'" for="resource"></label>
+                                <label x-text="resourceName + ' (optional)'" for="resource"></label>
                                 <input id="resource" type="text" :placeholder="resourceName" x-model="resource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
                                 <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard</div>
                             </div>
                             <div x-show="hasSubResource">
-                                <label x-text="'Select ' + subResourceName + ' (optional)'" for="subResource"></label>
+                                <label x-text="subResourceName + ' (optional)'" for="subResource"></label>
                                 <input id="subResource" type="text" :placeholder="subResourceName" x-model="subResource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
                                 <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard</div>
                             </div>

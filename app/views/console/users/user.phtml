@@ -339,9 +339,9 @@
                     data-service="users.getMemberships"
                     data-name="memberships"
                     data-param-user-id="{{router.params.id}}"
-                    data-event="load,users.update">
+                    data-event="load,users.update,teams.deleteMembership">
 
-                    <div class="box margin-top margin-bottom" data-ls-if="{{memberships.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
+                    <div class="box margin-top margin-bottom" data-ls-if="{{memberships.memberships.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
                         <h3 class="text-bold margin-bottom-no">No memberships available.</h3>
                     </div>
 
@@ -367,7 +367,7 @@
                                         data-failure-param-alert-text="Failed to Remove Member"
                                         data-failure-param-alert-classname="error">
 
-                                        <input name="teamId" data-ls-attrs="id={{membership.$id}}" type="hidden" data-ls-bind="{{router.params.id}}">
+                                        <input name="teamId" data-ls-attrs="id=leave-teamId-{{membership.teamId}}" type="hidden" data-ls-bind="{{membership.teamId}}">
                                         <input name="membershipId" data-ls-attrs="id=leave-membershipId-{{membership.$id}}" type="hidden" data-ls-bind="{{membership.$id}}">
 
                                         <button class="danger">Remove</button>
