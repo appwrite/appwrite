@@ -1,7 +1,24 @@
-# Latest
+# Unreleased Version
+- Renamed `providers` to `authProviders` in project collection **Breaking Change**
+- Support for Backblaze adapter in Storage
+- Support for Linode adapter in Storage
+- Support for Wasabi adapter in Storage
+
+# Version 0.13.4
+
 ## Features
-### Storage
-- Support for Linode object storage and Wasabi
+- Added `detailedTrace` to Logger events
+- Added new `_APP_STORAGE_PREVIEW_LIMIT` environment variable to configure maximum preview file size
+
+## Bugs
+- Fixed missing volume mount in Docker Compose
+- Fixed upload with Bucket File permission
+- Fixed custom ID validation in Console
+- Fixed file preview with no `output` passed
+- Fixed GitHub issue URL in Console
+- Fixed double PDOException logging
+- Fixed functions cleanup when container is already initialized
+- Fixed float input precision in Console
 
 # Version 0.13.3
 ## Bugs

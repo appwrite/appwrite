@@ -17,6 +17,7 @@ use Utopia\Orchestration\Adapter\DockerCLI;
 use Utopia\Orchestration\Orchestration;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Wasabi;
@@ -97,6 +98,7 @@ function logError(Throwable $error, string $action, Utopia\Route $route = null)
         $log->addExtra('file', $error->getFile());
         $log->addExtra('line', $error->getLine());
         $log->addExtra('trace', $error->getTraceAsString());
+        $log->addExtra('detailedTrace', $error->getTrace());
 
         $log->setAction($action);
 
@@ -131,6 +133,13 @@ function getStorageDevice($root): Device {
             $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
             $doSpacesAcl = 'private';
             return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+        case Storage::DEVICE_BACKBLAZE:
+            $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
+            $backblazeSecretKey = App::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
+            $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
+            $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
+            $backblazeAcl = 'private';
+            return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
         case Storage::DEVICE_LINODE:
             $linodeAccessKey = App::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
             $linodeSecretKey = App::getEnv('_APP_STORAGE_LINODE_SECRET', '');
@@ -156,7 +165,6 @@ App::post('/v1/runtimes')
     ->param('vars', [], new Assoc(), 'Environment Variables required for the build')
     ->param('commands', [], new ArrayList(new Text(0)), 'Commands required to build the container')
     ->param('runtime', '', new Text(128), 'Runtime for the cloud function')
-    ->param('network', '', new Text(128), 'Network to attach the container to')
     ->param('baseImage', '', new Text(128), 'Base image name of the runtime')
     ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file', true)
     ->param('remove', false, new Boolean(), 'Remove a runtime after execution')
@@ -164,8 +172,7 @@ App::post('/v1/runtimes')
     ->inject('orchestrationPool')
     ->inject('activeRuntimes')
     ->inject('response')
-    ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $network, string $baseImage, string $entrypoint, bool $remove, string $workdir, $orchestrationPool, $activeRuntimes, Response $response) {
-
+    ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $baseImage, string $entrypoint, bool $remove, string $workdir, $orchestrationPool, $activeRuntimes, Response $response) {
         if ($activeRuntimes->exists($runtimeId)) {
             throw new Exception('Runtime already exists.', 409);
         }
@@ -250,9 +257,7 @@ App::post('/v1/runtimes')
                 throw new Exception('Failed to create build container', 500);
             }
 
-            if (!empty($network)) {
-                $orchestration->networkConnect($runtimeId, $network);
-            }
+            $orchestration->networkConnect($runtimeId, App::getEnv('OPEN_RUNTIMES_NETWORK', 'appwrite_runtimes'));
 
             /** 
              * Execute any commands if they were provided
@@ -322,9 +327,24 @@ App::post('/v1/runtimes')
             Console::error('Build failed: ' . $th->getMessage() . $stdout);
             throw new Exception($th->getMessage() . $stdout, 500);
         } finally {
-            if (!empty($containerId) && $remove) {
-                $orchestration->remove($containerId, true);
+            // Container cleanup
+            if($remove) {
+                if (!empty($containerId)) {
+                    // If container properly created
+                    $orchestration->remove($containerId, true);
+                } else {
+                    // If whole creation failed, but container might have been initialized
+                    try {
+                        // Try to remove with contaier name instead of ID
+                        $orchestration->remove($runtimeId, true);
+                    } catch (Throwable $th) {
+                        // If fails, means initialization also failed.
+                        // Contianer is not there, no need to remove
+                    }
+                }
             }
+
+            // Release orchestration back to pool, we are done with it
             $orchestrationPool->put($orchestration);
         }
 
