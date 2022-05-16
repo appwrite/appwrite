@@ -71,8 +71,8 @@ class CertificatesV1 extends Worker
 
         $this->dbForConsole = $this->getConsoleDB();
 
-        $document = new Document($this->args['domain'] ?? []);
         $skipCheck = $this->args['skipRenewCheck'] ?? false; // If true, we won't double-check expiry from cert file
+        $document = new Document($this->args['domain'] ?? []);
         $domain = new Domain($document->getAttribute('domain', ''));
 
         // Get current certificate
@@ -267,8 +267,6 @@ class CertificatesV1 extends Worker
      */
     private function issueCertificate(string $domain, string $email): array
     {
-        $staging = (App::isProduction()) ? '' : ' --dry-run';
-
         $stdout = '';
         $stderr = '';
 
@@ -302,6 +300,7 @@ class CertificatesV1 extends Worker
         $certData = openssl_x509_parse(file_get_contents($certPath));
         $validTo = $certData['validTo_time_t'] ?? 0;
         $expiryInAdvance = (60 * 60 * 24 * 30); // 30 days
+
         return $validTo - $expiryInAdvance;
     }
 
