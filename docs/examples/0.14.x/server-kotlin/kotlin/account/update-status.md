@@ -8,6 +8,6 @@ suspend fun main() {
       .setJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...") // Your secret JSON Web Token
 
     val account = Account(client)
-    val response = account.delete()
+    val response = account.updateStatus()
     val json = response.body?.string()
 }

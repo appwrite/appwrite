@@ -12,7 +12,10 @@
   - `X-Appwrite-Webhook-Event` Webhook header has been renamed to `X-Appwrite-Webhook-Events` and contains all possible events
 - Renamed `providers` to `authProviders` in Projects **Breaking Change**
 - Renamed `stdout` to `response` in Projects **Breaking Change**
-- Added new endppoint to list all memberships on the Users API
+- Removed deleted endpoint from the Accounts API
+- Added new endpoint to update user's status from the Accounts API
+- Deleted users will now free their ID and not reserve it anymore
+- Added new endpoint to list all memberships on the Users API
 - Increased Execution response to 1MB
 - Added Wildcard support to Platforms
 - Added Activity page to Teams console

@@ -18,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
 
         Account account = new Account(client);
 
-        account.delete(new Continuation<Object>() {
+        account.updateStatus(new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

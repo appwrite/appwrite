@@ -9,6 +9,6 @@ client
 
 account = Appwrite::Account.new(client)
 
-response = account.delete()
+response = account.update_status()
 
 puts response.inspect

@@ -348,8 +348,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'sessions' => null,
                     'tokens' => null,
                     'memberships' => null,
-                    'search' => implode(' ', [$userId, $email, $name]),
-                    'deleted' => false
+                    'search' => implode(' ', [$userId, $email, $name])
                 ])));
             } catch (Duplicate $th) {
                 throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);

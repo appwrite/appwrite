@@ -256,6 +256,15 @@ class V13 extends Migration
                 }
 
                 break;
+
+            case 'users':
+                /**
+                 * Remove deleted users.
+                 */
+                if ($document->getAttribute('deleted', false) === true) {
+                    $this->projectDB->deleteDocument('users', $document->getId());
+                }
+                break;
         }
 
         return $document;
