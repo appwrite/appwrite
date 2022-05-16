@@ -580,11 +580,11 @@ App::init(function ($request, $response) {
 $http->on('start', function ($http) {
     global $orchestrationPool;
     global $activeRuntimes;
-    
+
     /** 
      * Warmup: make sure images are ready to run fast 🚀
      */
-    $runtimes = new Runtimes(App::getEnv('_APP_EXECUTOR_VERSION', 'v1'));
+    $runtimes = new Runtimes('v1');
     $allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
     $runtimes = $runtimes->getAll(true, $allowList);
     foreach ($runtimes as $runtime) {

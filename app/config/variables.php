@@ -615,15 +615,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_EXECUTOR_VERSION',
-                'description' => 'Executor version',
-                'introduction' => '0.14.0',
-                'default' => 'v1',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_FUNCTIONS_ENVS',
                 'description' => 'Deprecated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead!',
                 'introduction' => '0.7.0',
