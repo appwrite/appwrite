@@ -51,8 +51,6 @@
 - Fixed missing environment variables on Executor service
 - Fixed all endpoints that expect an Array in their params to have not more than 100 items
 
-## Security
-- OAuth2 provider now check if the email is verified
 # Version 0.13.4
 
 ## Features
