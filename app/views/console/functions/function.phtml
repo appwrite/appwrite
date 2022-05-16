@@ -635,12 +635,12 @@ sort($patterns);
                                 <?php endforeach; ?>
                             </select>
                             <div x-show="hasResource">
-                                <label x-text="'Select ' + resourceName + ' (optional)'" for="resource"></label>
+                                <label x-text="resourceName + ' (optional)'" for="resource"></label>
                                 <input id="resource" type="text" :placeholder="resourceName" x-model="resource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
                                 <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard</div>
                             </div>
                             <div x-show="hasSubResource">
-                                <label x-text="'Select ' + subResourceName + ' (optional)'" for="subResource"></label>
+                                <label x-text="subResourceName + ' (optional)'" for="subResource"></label>
                                 <input id="subResource" type="text" :placeholder="subResourceName" x-model="subResource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
                                 <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard</div>
                             </div>
