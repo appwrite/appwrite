@@ -440,7 +440,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DEVICE',
-                'description' => 'Select default storage device. The default value is \'Local\'. List of supported adapters are \'Local\', \'S3\', \'DOSpaces\', \'Backblaze\' and \'Linode\'.',
+                'description' => 'Select default storage device. The default value is \'Local\'. List of supported adapters are \'Local\', \'S3\', \'DOSpaces\', \'Backblaze\', \'Linode\' and \'Wasabi\'.',
                 'introduction' => '0.13.0',
                 'default' => 'Local',
                 'required' => false,
