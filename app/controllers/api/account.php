@@ -471,14 +471,15 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         if ($user === false || $user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
             $name = $oauth2->getUserName($accessToken);
             $email = $oauth2->getUserEmail($accessToken);
+
+            /**
+             * Is verified is not used yet, since we don't know after an accout is created anymore if it was verified or not.
+             */
             $isVerified = $oauth2->isEmailVerified($accessToken);
 
-            if ($isVerified === true) {
-                // Get user by email address
-                $user = $dbForProject->findOne('users', [
-                    new Query('email', Query::TYPE_EQUAL, [$email])]
-                );
-            }
+            $user = $dbForProject->findOne('users', [
+                new Query('email', Query::TYPE_EQUAL, [$email])]
+            );
 
             if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -498,7 +499,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         '$read' => ['role:all'],
                         '$write' => ['user:' . $userId],
                         'email' => $email,
-                        'emailVerification' => $isVerified,
+                        'emailVerification' => true,
                         'status' => true, // Email should already be authenticated by OAuth2 provider
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
                         'passwordUpdate' => 0,
