@@ -681,13 +681,11 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('usage')
-    ->inject('deletes')
-    ->action(function ($userId, $sessionId, $response, $dbForProject, $events, $usage, $deletes) {
+    ->action(function ($userId, $sessionId, $response, $dbForProject, $events, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Delete $deletes */
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -713,11 +711,6 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
         $events
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $sessionId)
-        ;
-
-        $deletes
-            ->setType(DELETE_TYPE_USERS)
-            ->setDocument($user)
         ;
 
         $response->noContent();
