@@ -16,6 +16,7 @@ use Appwrite\Event\Certificate;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
 use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
+use Appwrite\Utopia\Response\Filters\V13 as ResponseV13;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -23,6 +24,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Hostname;
 use Appwrite\Utopia\Request\Filters\V12 as RequestV12;
 use Appwrite\Utopia\Request\Filters\V13 as RequestV13;
+use Appwrite\Utopia\Request\Filters\V14 as RequestV14;
 use Utopia\Validator\Text;
 
 Config::setParam('domainVerification', false);
@@ -54,6 +56,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
                 break;
             case version_compare ($requestFormat , '0.13.0', '<') :
                 Request::setFilter(new RequestV13());
+                break;
+            case version_compare ($requestFormat , '0.14.0', '<') :
+                Request::setFilter(new RequestV14());
                 break;
             default:
                 Request::setFilter(null);
@@ -172,6 +177,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
                 break;
             case version_compare ($responseFormat , '0.12.4', '<='):
                 Response::setFilter(new ResponseV12());
+                break;
+            case version_compare ($responseFormat , '0.13.4', '<='):
+                Response::setFilter(new ResponseV13());
                 break;
             default:
                 Response::setFilter(null);
