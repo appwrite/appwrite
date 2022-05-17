@@ -27,6 +27,8 @@
 - Added button to verify/unverify user's e-mail address in the console
 - Added Docker log limits to `docker-compose.yaml`
 - Renamed `_APP_EXECUTOR_RUNTIME_NETWORK` environment variable to `OPEN_RUNTIMES_NETWORK`
+- Added Auth0 OAuth2 provider
+- Added Okta Oauth2 provider @tanay1337 in https://github.com/appwrite/appwrite/pull/3139
 
 ## Bugs
 - Fixed issues with `min`, `max` and `default` values for float attributes
@@ -55,6 +57,8 @@
 - Fixed `Open an Issue` link in the console
 - Fixed missing environment variables on Executor service
 - Fixed all endpoints that expect an Array in their params to have not more than 100 items
+- Added Executor host variables as a part of infrastructure configuration by @sjke in https://github.com/appwrite/appwrite/pull/3084
+- Added new tab/window for new release link by @Akshay-Rana-Gujjar in https://github.com/appwrite/appwrite/pull/3202
 
 # Version 0.13.4
 
