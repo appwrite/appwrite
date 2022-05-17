@@ -13,4 +13,4 @@ $client
 
 $storage = new Storage($client);
 
-$result = $storage->createFile('[BUCKET_ID]', '[FILE_ID]', new \CURLFile('/path/to/file.png', 'image/png', 'file.png'));
+$result = $storage->createFile('[BUCKET_ID]', '[FILE_ID]', 'file.png');

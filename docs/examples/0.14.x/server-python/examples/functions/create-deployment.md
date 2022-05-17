@@ -11,4 +11,4 @@ client = Client()
 
 functions = Functions(client)
 
-result = functions.create_deployment('[FUNCTION_ID]', '[ENTRYPOINT]', open('/path/to/file.png', 'rb'), False)
+result = functions.create_deployment('[FUNCTION_ID]', '[ENTRYPOINT]', 'file.png', False)

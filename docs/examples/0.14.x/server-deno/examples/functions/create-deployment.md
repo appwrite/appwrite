@@ -12,7 +12,7 @@ client
 ;
 
 
-let promise = functions.createDeployment('[FUNCTION_ID]', '[ENTRYPOINT]', new File([fileBlob], 'file.png'), false);
+let promise = functions.createDeployment('[FUNCTION_ID]', '[ENTRYPOINT]', 'file.png', false);
 
 promise.then(function (response) {
     console.log(response);

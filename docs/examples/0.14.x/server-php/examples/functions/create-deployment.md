@@ -13,4 +13,4 @@ $client
 
 $functions = new Functions($client);
 
-$result = $functions->createDeployment('[FUNCTION_ID]', '[ENTRYPOINT]', new \CURLFile('/path/to/file.png', 'image/png', 'file.png'), false);
+$result = $functions->createDeployment('[FUNCTION_ID]', '[ENTRYPOINT]', 'file.png', false);

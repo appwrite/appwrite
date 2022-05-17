@@ -12,7 +12,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = storage.createFile('[BUCKET_ID]', '[FILE_ID]', fs.createReadStream(__dirname + '/file.png'));
+let promise = storage.createFile('[BUCKET_ID]', '[FILE_ID]', 'file.png');
 
 promise.then(function (response) {
     console.log(response);

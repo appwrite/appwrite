@@ -8,9 +8,18 @@ void main() { // Init SDK
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
   ;
+  // downloading file
+  Future result = avatars.getCreditCard(
+    code: 'amex',
+  ).then((bytes) {
+    final file = File('path_to_file/filename.ext');
+    file.writeAsBytesSync(bytes)
+  }).catchError((error) {
+      print(error.response);
+  })
 }
 
-//displaying image
+//displaying image preview
 FutureBuilder(
   future: avatars.getCreditCard(
     code: 'amex',

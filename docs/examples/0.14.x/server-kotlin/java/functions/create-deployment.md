@@ -11,7 +11,7 @@ public void main() {
     functions.createDeployment(
         functionId = "[FUNCTION_ID]",
         entrypoint = "[ENTRYPOINT]",
-        code = File("./path-to-files/image.jpg"),
+        code = File("file.png"),
         activate = false
         new Continuation<Response>() {
             @NotNull

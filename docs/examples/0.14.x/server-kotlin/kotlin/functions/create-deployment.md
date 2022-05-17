@@ -11,7 +11,7 @@ suspend fun main() {
     val response = functions.createDeployment(
         functionId = "[FUNCTION_ID]",
         entrypoint = "[ENTRYPOINT]",
-        code = File("./path-to-files/image.jpg"),
+        code = File("file.png"),
         activate = false
     )
     val json = response.body?.string()

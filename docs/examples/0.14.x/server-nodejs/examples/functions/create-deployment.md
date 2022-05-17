@@ -12,7 +12,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = functions.createDeployment('[FUNCTION_ID]', '[ENTRYPOINT]', fs.createReadStream(__dirname + '/file.png'), false);
+let promise = functions.createDeployment('[FUNCTION_ID]', '[ENTRYPOINT]', 'file.png', false);
 
 promise.then(function (response) {
     console.log(response);

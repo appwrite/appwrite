@@ -11,7 +11,7 @@ suspend fun main() {
     val response = storage.createFile(
         bucketId = "[BUCKET_ID]",
         fileId = "[FILE_ID]",
-        file = File("./path-to-files/image.jpg"),
+        file = File("file.png"),
     )
     val json = response.body?.string()
 }
