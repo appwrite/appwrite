@@ -10,6 +10,6 @@ return function ($request, $response) {
         'APPWRITE_FUNCTION_RUNTIME_VERSION' => $request['env']['APPWRITE_FUNCTION_RUNTIME_VERSION'],
         'APPWRITE_FUNCTION_EVENT' => $request['env']['APPWRITE_FUNCTION_EVENT'],
         'APPWRITE_FUNCTION_EVENT_DATA' => $request['env']['APPWRITE_FUNCTION_EVENT_DATA'],
-        'UNICODE_TEST' => "êä" // TODO: Re-add unicode test to FunctionsCustomServerTest.php
+        'UNICODE_TEST' => "êä"
     ]);
 };

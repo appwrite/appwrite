@@ -310,7 +310,8 @@ trait AccountBase
     {
         sleep(10);
         $session = $data['session'] ?? '';
-
+        $sessionId = $data['sessionId'] ?? '';
+        $userId = $data['id'] ?? '';
         /**
          * Test for SUCCESS
          */
@@ -326,8 +327,7 @@ trait AccountBase
         $this->assertNotEmpty($response['body']['logs']);
         $this->assertCount(2, $response['body']['logs']);
         $this->assertIsNumeric($response['body']['total']);
-
-        $this->assertContains($response['body']['logs'][0]['event'], ['account.create', 'account.sessions.create']);
+        $this->assertContains($response['body']['logs'][0]['event'], ["users.{$userId}.create", "users.{$userId}.sessions.{$sessionId}.create"]);
         $this->assertEquals($response['body']['logs'][0]['ip'], filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP));
         $this->assertIsNumeric($response['body']['logs'][0]['time']);
 
@@ -349,7 +349,7 @@ trait AccountBase
         $this->assertEquals('--', $response['body']['logs'][0]['countryCode']);
         $this->assertEquals('Unknown', $response['body']['logs'][0]['countryName']);
 
-        $this->assertContains($response['body']['logs'][1]['event'], ['account.create', 'account.sessions.create']);
+        $this->assertContains($response['body']['logs'][1]['event'], ["users.{$userId}.create", "users.{$userId}.sessions.{$sessionId}.create"]);
         $this->assertEquals($response['body']['logs'][1]['ip'], filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP));
         $this->assertIsNumeric($response['body']['logs'][1]['time']);
 

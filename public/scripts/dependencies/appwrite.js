@@ -49,7 +49,7 @@
             };
             this.headers = {
                 'x-sdk-version': 'appwrite:web:5.0.0',
-                'X-Appwrite-Response-Format': '0.13.0',
+                'X-Appwrite-Response-Format': '0.14.0',
             };
             this.realtime = {
                 socket: undefined,
@@ -238,26 +238,6 @@
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Delete Account
-                 *
-                 * Delete a currently logged in user account. Behind the scene, the user
-                 * record is not deleted but permanently blocked from any access. This is done
-                 * to avoid deleted accounts being overtaken by new users with the same email
-                 * address. Any user-related resources like documents or storage files should
-                 * be deleted separately.
-                 *
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                delete: () => __awaiter(this, void 0, void 0, function* () {
-                    let path = '/account';
-                    let payload = {};
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('delete', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
@@ -811,6 +791,24 @@
                     }, payload);
                 }),
                 /**
+                 * Update Account Status
+                 *
+                 * Block the currently logged in user account. Behind the scene, the user
+                 * record is not deleted but permanently blocked from any access. To
+                 * completely delete a user, use the Users API instead.
+                 *
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateStatus: () => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/account/status';
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Create Email Verification
                  *
                  * Use this endpoint to send a verification message to your user email address
@@ -886,9 +884,14 @@
                  * Get Browser Icon
                  *
                  * You can use this endpoint to show different browser icons to your users.
-                 * The code argument receives the browser code as it appears in your user
-                 * /account/sessions endpoint. Use width, height and quality arguments to
-                 * change the output settings.
+                 * The code argument receives the browser code as it appears in your user [GET
+                 * /account/sessions](/docs/client/account#accountGetSessions) endpoint. Use
+                 * width, height and quality arguments to change the output settings.
+                 *
+                 * When one dimension is specified and the other is 0, the image is scaled
+                 * with preserved aspect ratio. If both dimensions are 0, the API provides an
+                 * image at source quality. If dimensions are not specified, the default size
+                 * of image returned is 100x100px.
                  *
                  * @param {string} code
                  * @param {number} width
@@ -925,6 +928,12 @@
                  * The credit card endpoint will return you the icon of the credit card
                  * provider you need. Use width, height and quality arguments to change the
                  * output settings.
+                 *
+                 * When one dimension is specified and the other is 0, the image is scaled
+                 * with preserved aspect ratio. If both dimensions are 0, the API provides an
+                 * image at source quality. If dimensions are not specified, the default size
+                 * of image returned is 100x100px.
+                 *
                  *
                  * @param {string} code
                  * @param {number} width
@@ -989,6 +998,12 @@
                  * users. The code argument receives the 2 letter country code. Use width,
                  * height and quality arguments to change the output settings.
                  *
+                 * When one dimension is specified and the other is 0, the image is scaled
+                 * with preserved aspect ratio. If both dimensions are 0, the API provides an
+                 * image at source quality. If dimensions are not specified, the default size
+                 * of image returned is 100x100px.
+                 *
+                 *
                  * @param {string} code
                  * @param {number} width
                  * @param {number} height
@@ -1025,6 +1040,12 @@
                  * you want. This endpoint is very useful if you need to crop and display
                  * remote images in your app or in case you want to make sure a 3rd party
                  * image is properly served using a TLS protocol.
+                 *
+                 * When one dimension is specified and the other is 0, the image is scaled
+                 * with preserved aspect ratio. If both dimensions are 0, the API provides an
+                 * image at source quality. If dimensions are not specified, the default size
+                 * of image returned is 400x400px.
+                 *
                  *
                  * @param {string} url
                  * @param {number} width
@@ -1068,6 +1089,12 @@
                  * the user's initials when reloading the same theme will always return for
                  * the same initials.
                  *
+                 * When one dimension is specified and the other is 0, the image is scaled
+                 * with preserved aspect ratio. If both dimensions are 0, the API provides an
+                 * image at source quality. If dimensions are not specified, the default size
+                 * of image returned is 100x100px.
+                 *
+                 *
                  * @param {string} name
                  * @param {number} width
                  * @param {number} height
@@ -1106,6 +1133,7 @@
                  *
                  * Converts a given plain text to a QR code image. You can use the query
                  * parameters to change the size and style of the resulting image.
+                 *
                  *
                  * @param {string} text
                  * @param {number} size
@@ -2831,23 +2859,6 @@
                  */
                 getQueueLogs: () => __awaiter(this, void 0, void 0, function* () {
                     let path = '/health/queue/logs';
-                    let payload = {};
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('get', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Get Usage Queue
-                 *
-                 * Get the number of usage stats that are waiting to be processed in the
-                 * Appwrite internal queue server.
-                 *
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                getQueueUsage: () => __awaiter(this, void 0, void 0, function* () {
-                    let path = '/health/queue/usage';
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
@@ -5135,7 +5146,11 @@
                 /**
                  * Delete User
                  *
-                 * Delete a user by its unique ID.
+                 * Delete a user by its unique ID, thereby releasing it's ID. Since ID is
+                 * released and can be reused, all user-related resources like documents or
+                 * storage files should be deleted before user deletion. If you want to keep
+                 * ID reserved, use the [updateStatus](/docs/server/users#usersUpdateStatus)
+                 * endpoint instead.
                  *
                  * @param {string} userId
                  * @throws {AppwriteException}
@@ -5202,6 +5217,26 @@
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
                     }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Get User Memberships
+                 *
+                 * Get the user membership list by its unique ID.
+                 *
+                 * @param {string} userId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getMemberships: (userId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    let path = '/users/{userId}/memberships'.replace('{userId}', userId);
+                    let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
                         'content-type': 'application/json',
@@ -5377,7 +5412,8 @@
                 /**
                  * Update User Status
                  *
-                 * Update the user status by its unique ID.
+                 * Update the user status by its unique ID. Use this endpoint as an
+                 * alternative to deleting a user if you want to keep user's ID reserved.
                  *
                  * @param {string} userId
                  * @param {boolean} status

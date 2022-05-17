@@ -4,7 +4,6 @@ namespace Appwrite\Utopia\Response\Filters;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
-use Exception;
 
 class V11 extends Filter
 {

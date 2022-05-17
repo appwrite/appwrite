@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "78c5402d7bf745469d0063a9bc955df0",
+    "content-hash": "ae4e8cc9efbd28d8c2536e378c9e7ead",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -115,11 +115,11 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.7.4",
+            "version": "0.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "8e0972ecce6ad96f3701edab8d2c9a8af7074093"
+                "reference": "e8aa94aa42f45711e11cb1da401b442ecc2c32a4"
             },
             "require": {
                 "php": ">=8.0",
@@ -154,7 +154,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2022-02-26T11:38:09+00:00"
+            "time": "2022-05-16T10:54:14+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -2133,16 +2133,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.15.5",
+            "version": "0.17.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "6507b58ef3e22703b9df68d3dbd5e822d5bb023f"
+                "reference": "a4d001452b78b85335ffbd34176cd45d2b13c1ca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/6507b58ef3e22703b9df68d3dbd5e822d5bb023f",
-                "reference": "6507b58ef3e22703b9df68d3dbd5e822d5bb023f",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/a4d001452b78b85335ffbd34176cd45d2b13c1ca",
+                "reference": "a4d001452b78b85335ffbd34176cd45d2b13c1ca",
                 "shasum": ""
             },
             "require": {
@@ -2190,9 +2190,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.15.5"
+                "source": "https://github.com/utopia-php/database/tree/0.17.1"
             },
-            "time": "2022-04-04T13:42:00+00:00"
+            "time": "2022-05-16T09:11:44+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2250,16 +2250,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.19.20",
+            "version": "0.19.21",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "65ced168db8f6e188ceeb0d101f57552c3d8b2af"
+                "reference": "3b7bd8e4acf84fd7d560ced8e0142221d302575d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/65ced168db8f6e188ceeb0d101f57552c3d8b2af",
-                "reference": "65ced168db8f6e188ceeb0d101f57552c3d8b2af",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/3b7bd8e4acf84fd7d560ced8e0142221d302575d",
+                "reference": "3b7bd8e4acf84fd7d560ced8e0142221d302575d",
                 "shasum": ""
             },
             "require": {
@@ -2293,31 +2293,31 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.19.20"
+                "source": "https://github.com/utopia-php/framework/tree/0.19.21"
             },
-            "time": "2022-04-14T15:42:37+00:00"
+            "time": "2022-05-12T18:42:28+00:00"
         },
         {
             "name": "utopia-php/image",
-            "version": "0.5.3",
+            "version": "0.5.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/image.git",
-                "reference": "4a8429b62dcf56562b038d6712375f75166f0c02"
+                "reference": "ca5f436f9aa22dedaa6648f24f3687733808e336"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/image/zipball/4a8429b62dcf56562b038d6712375f75166f0c02",
-                "reference": "4a8429b62dcf56562b038d6712375f75166f0c02",
+                "url": "https://api.github.com/repos/utopia-php/image/zipball/ca5f436f9aa22dedaa6648f24f3687733808e336",
+                "reference": "ca5f436f9aa22dedaa6648f24f3687733808e336",
                 "shasum": ""
             },
             "require": {
                 "ext-imagick": "*",
-                "php": ">=7.4"
+                "php": ">=8.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
+                "vimeo/psalm": "4.13.1"
             },
             "type": "library",
             "autoload": {
@@ -2345,9 +2345,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/image/issues",
-                "source": "https://github.com/utopia-php/image/tree/0.5.3"
+                "source": "https://github.com/utopia-php/image/tree/0.5.4"
             },
-            "time": "2021-11-02T05:47:16+00:00"
+            "time": "2022-05-11T12:30:41+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -3075,16 +3075,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.18.3",
+            "version": "0.18.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "96e2c9b0f350d4fa43ddff6334ef44908716c944"
+                "reference": "841281fab95c774d5aa96f5bf9bd0dabf9f96e8d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/96e2c9b0f350d4fa43ddff6334ef44908716c944",
-                "reference": "96e2c9b0f350d4fa43ddff6334ef44908716c944",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/841281fab95c774d5aa96f5bf9bd0dabf9f96e8d",
+                "reference": "841281fab95c774d5aa96f5bf9bd0dabf9f96e8d",
                 "shasum": ""
             },
             "require": {
@@ -3119,9 +3119,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.18.3"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.18.4"
             },
-            "time": "2022-04-13T04:00:59+00:00"
+            "time": "2022-05-17T12:16:09+00:00"
         },
         {
             "name": "composer/pcre",
@@ -3551,16 +3551,16 @@
         },
         {
             "name": "matthiasmullie/minify",
-            "version": "1.3.67",
+            "version": "1.3.68",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matthiasmullie/minify.git",
-                "reference": "acaee1b7ca3cd67a39d7f98673cacd7e4739a8d9"
+                "reference": "c00fb02f71b2ef0a5f53fe18c5a8b9aa30f48297"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matthiasmullie/minify/zipball/acaee1b7ca3cd67a39d7f98673cacd7e4739a8d9",
-                "reference": "acaee1b7ca3cd67a39d7f98673cacd7e4739a8d9",
+                "url": "https://api.github.com/repos/matthiasmullie/minify/zipball/c00fb02f71b2ef0a5f53fe18c5a8b9aa30f48297",
+                "reference": "c00fb02f71b2ef0a5f53fe18c5a8b9aa30f48297",
                 "shasum": ""
             },
             "require": {
@@ -3609,7 +3609,7 @@
             ],
             "support": {
                 "issues": "https://github.com/matthiasmullie/minify/issues",
-                "source": "https://github.com/matthiasmullie/minify/tree/1.3.67"
+                "source": "https://github.com/matthiasmullie/minify/tree/1.3.68"
             },
             "funding": [
                 {
@@ -3617,7 +3617,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-03-24T08:54:59+00:00"
+            "time": "2022-04-19T08:28:56+00:00"
         },
         {
             "name": "matthiasmullie/path-converter",
@@ -5711,16 +5711,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v6.0.7",
+            "version": "v6.0.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "70dcf7b2ca2ea08ad6ebcc475f104a024fb5632e"
+                "reference": "0d00aa289215353aa8746a31d101f8e60826285c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/70dcf7b2ca2ea08ad6ebcc475f104a024fb5632e",
-                "reference": "70dcf7b2ca2ea08ad6ebcc475f104a024fb5632e",
+                "url": "https://api.github.com/repos/symfony/console/zipball/0d00aa289215353aa8746a31d101f8e60826285c",
+                "reference": "0d00aa289215353aa8746a31d101f8e60826285c",
                 "shasum": ""
             },
             "require": {
@@ -5786,7 +5786,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v6.0.7"
+                "source": "https://github.com/symfony/console/tree/v6.0.8"
             },
             "funding": [
                 {
@@ -5802,7 +5802,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-03-31T17:18:25+00:00"
+            "time": "2022-04-20T15:01:42+00:00"
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
@@ -6136,16 +6136,16 @@
         },
         {
             "name": "symfony/string",
-            "version": "v6.0.3",
+            "version": "v6.0.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/string.git",
-                "reference": "522144f0c4c004c80d56fa47e40e17028e2eefc2"
+                "reference": "ac0aa5c2282e0de624c175b68d13f2c8f2e2649d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/string/zipball/522144f0c4c004c80d56fa47e40e17028e2eefc2",
-                "reference": "522144f0c4c004c80d56fa47e40e17028e2eefc2",
+                "url": "https://api.github.com/repos/symfony/string/zipball/ac0aa5c2282e0de624c175b68d13f2c8f2e2649d",
+                "reference": "ac0aa5c2282e0de624c175b68d13f2c8f2e2649d",
                 "shasum": ""
             },
             "require": {
@@ -6201,7 +6201,7 @@
                 "utf8"
             ],
             "support": {
-                "source": "https://github.com/symfony/string/tree/v6.0.3"
+                "source": "https://github.com/symfony/string/tree/v6.0.8"
             },
             "funding": [
                 {
@@ -6217,7 +6217,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-01-02T09:55:41+00:00"
+            "time": "2022-04-22T08:18:02+00:00"
         },
         {
             "name": "textalk/websocket",
@@ -6320,16 +6320,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.3.10",
+            "version": "v3.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "8442df056c51b706793adf80a9fd363406dd3674"
+                "reference": "e939eae92386b69b49cfa4599dd9bead6bf4a342"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/8442df056c51b706793adf80a9fd363406dd3674",
-                "reference": "8442df056c51b706793adf80a9fd363406dd3674",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/e939eae92386b69b49cfa4599dd9bead6bf4a342",
+                "reference": "e939eae92386b69b49cfa4599dd9bead6bf4a342",
                 "shasum": ""
             },
             "require": {
@@ -6344,7 +6344,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.3-dev"
+                    "dev-master": "3.4-dev"
                 }
             },
             "autoload": {
@@ -6380,7 +6380,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.3.10"
+                "source": "https://github.com/twigphp/Twig/tree/v3.4.1"
             },
             "funding": [
                 {
@@ -6392,7 +6392,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-04-06T06:47:41+00:00"
+            "time": "2022-05-17T05:48:52+00:00"
         },
         {
             "name": "vimeo/psalm",
