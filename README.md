@@ -19,7 +19,7 @@
 
 English | [简体中文](README-CN.md)
 
-[**Appwrite 0.13 has been released! Learn what's new!**](https://dev.to/appwrite/announcing-appwrite-013-with-major-upgrades-to-storage-and-functions-3hpf)
+[**Appwrite 0.14 has been released! Learn what's new!**](https://dev.to/appwrite/announcing-appwrite-014-with-11-cloud-function-runtimes-36f5)
 
 Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
