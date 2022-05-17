@@ -15,6 +15,7 @@
 - **BREAKING CHANGE** Removed delete endpoint from the Accounts API
 - **BREAKING CHANGE** Renamed `name` to `userName` on Membership response model
 - **BREAKING CHANGE** Renamed `email` to `userEmail` on Membership response model
+- **BREAKING CHANGE** Renamed `event` to `events` on Realtime Response and now is an array of strings
 - Added `teamName` to Membership response model
 - Added new endpoint to update user's status from the Accounts API
 - Deleted users will now free their ID and not reserve it anymore
