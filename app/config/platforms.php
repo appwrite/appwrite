@@ -180,7 +180,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '0.16.0',
+                'version' => '0.17.0',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,
@@ -193,7 +193,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-cli.git',
                 'gitRepoName' => 'sdk-for-cli',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'main',
+                'gitBranch' => 'master',
             ],
         ],
     ],
