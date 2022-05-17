@@ -138,13 +138,13 @@ App::post('/v1/runtimes')
     ->param('runtimeId', '', new Text(64), 'Unique runtime ID.')
     ->param('source', '', new Text(0), 'Path to source files.')
     ->param('destination', '', new Text(0), 'Destination folder to store build files into.', true)
-    ->param('vars', [], new Assoc(), 'Environment Variables required for the build')
-    ->param('commands', [], new ArrayList(new Text(0)), 'Commands required to build the container')
-    ->param('runtime', '', new Text(128), 'Runtime for the cloud function')
-    ->param('baseImage', '', new Text(128), 'Base image name of the runtime')
-    ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file', true)
-    ->param('remove', false, new Boolean(), 'Remove a runtime after execution')
-    ->param('workdir', '', new Text(256), 'Working directory', true)
+    ->param('vars', [], new Assoc(), 'Environment Variables required for the build.')
+    ->param('commands', [], new ArrayList(new Text(1024), 100), 'Commands required to build the container. Maximum of 100 commands are allowed, each 1024 characters long.')
+    ->param('runtime', '', new Text(128), 'Runtime for the cloud function.')
+    ->param('baseImage', '', new Text(128), 'Base image name of the runtime.')
+    ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file.', true)
+    ->param('remove', false, new Boolean(), 'Remove a runtime after execution.')
+    ->param('workdir', '', new Text(256), 'Working directory.', true)
     ->inject('orchestrationPool')
     ->inject('activeRuntimes')
     ->inject('response')
@@ -279,8 +279,8 @@ App::post('/v1/runtimes')
             $endTime = \time();
             $container = array_merge($container, [
                 'status' => 'ready',
-                'stdout' => \utf8_encode($stdout),
-                'stderr' => \utf8_encode($stderr),
+                'stdout' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
+                'stderr' => \mb_strcut($stderr, 0, 1000000), // Limit to 1MB
                 'startTime' => $startTime,
                 'endTime' => $endTime,
                 'duration' => $endTime - $startTime,
@@ -406,8 +406,8 @@ App::delete('/v1/runtimes/:runtimeId')
 
 App::post('/v1/execution')
     ->desc('Create an execution')
-    ->param('runtimeId', '', new Text(64), 'The runtimeID to execute')
-    ->param('vars', [], new Assoc(), 'Environment variables required for the build')
+    ->param('runtimeId', '', new Text(64), 'The runtimeID to execute.')
+    ->param('vars', [], new Assoc(), 'Environment variables required for the build.')
     ->param('data', '{}', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.')
     ->inject('activeRuntimes')
@@ -508,12 +508,12 @@ App::post('/v1/execution')
             $functionStatus = ($statusCode >= 200 && $statusCode < 300) ? 'completed' : 'failed';
         
             Console::success('Function executed in ' . $executionTime . ' seconds, status: ' . $functionStatus);
-        
+
             $execution = [
                 'status' => $functionStatus,
                 'statusCode' => $statusCode,
-                'stdout' => \utf8_encode(\mb_substr($stdout, -16384)),
-                'stderr' => \utf8_encode(\mb_substr($stderr, -16384)),
+                'stdout' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
+                'stderr' => \mb_strcut($stderr, 0, 1000000), // Limit to 1MB
                 'time' => $executionTime,
             ];
 
