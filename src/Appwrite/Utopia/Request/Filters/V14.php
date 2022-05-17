@@ -3,6 +3,7 @@
 namespace Appwrite\Utopia\Request\Filters;
 
 use Appwrite\Utopia\Request\Filter;
+use Appwrite\Migration\Version\V13 as MigrationV13;
 
 class V14 extends Filter
 {
@@ -23,7 +24,11 @@ class V14 extends Filter
 
     private function convertEvents($content)
     {
-        // TODO: Convert events
+        $migration = new MigrationV13();
+
+        $events = $content['events'] ?? [];
+        $content['events']  = $migration->migrateEvents($events);
+
         return $content;
     }
 }
