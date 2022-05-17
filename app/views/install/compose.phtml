@@ -18,6 +18,7 @@ services:
   traefik:
     image: traefik:2.7
     container_name: appwrite-traefik
+    <<: *x-logging
     command:
       - --providers.file.directory=/storage/config
       - --providers.file.watch=true
