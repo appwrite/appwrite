@@ -228,7 +228,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     'project' => 'console',
                     'roles' => ['team:' . $stats->get($projectId, 'teamId')],
                     'data' => [
-                        'event' => 'stats.connections',
+                        'events' => ['stats.connections'],
                         'channels' => ['project'],
                         'timestamp' => time(),
                         'payload' => [
@@ -255,7 +255,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 'project' => 'console',
                 'roles' => ['role:guest'],
                 'data' => [
-                    'event' => 'test.event',
+                    'events' => ['test.event'],
                     'channels' => ['tests'],
                     'timestamp' => time(),
                     'payload' => $payload
