@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Filters;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
 
-class V14 extends Filter
+class V13 extends Filter
 {
     // Convert 0.14 Data format to 0.13 format
     public function parse(array $content, string $model): array
@@ -81,7 +81,7 @@ class V14 extends Filter
         unset($content['userEmail']);
 
         unset($content['teamName']);
-        
+
         return $content;
     }
 
