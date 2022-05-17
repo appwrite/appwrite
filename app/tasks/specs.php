@@ -7,6 +7,7 @@ use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Model;
 use Swoole\Http\Response as HttpResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -178,10 +179,6 @@ $cli
                         }
 
                         $routes[] = $route;
-                        $modelLabel = $route->getLabel('sdk.response.model', 'none');
-                        \is_array($modelLabel) ? \array_map(function ($m) use ($response) {
-                            return $response->getModel($m);
-                        }, $modelLabel) : $response->getModel($modelLabel);
                     }
                 }
 
@@ -203,25 +200,14 @@ $cli
 
                 $models = $response->getModels();
 
-                foreach ($models as $key => $value) {
-                    if ($platform !== APP_PLATFORM_CONSOLE && !$value->isPublic()) {
-                        unset($models[$key]);
-                    }
+                if ($platform !== APP_PLATFORM_CONSOLE) {
+                    $models = array_filter($models, fn(Model $model) => $model->isPublic());
                 }
 
-                switch ($format) {
-                    case 'swagger2':
-                        $formatInstance = new Swagger2(new App('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0);
-                        break;
-
-                    case 'open-api3':
-                        $formatInstance = new OpenAPI3(new App('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0);
-                        break;
-
-                    default:
-                        throw new Exception('Format not found: ' . $format);
-                        break;
-                }
+                $formatInstance = match ($format) {
+                    'swagger2' => new Swagger2(new App('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0),
+                    'open-api3' => new OpenAPI3(new App('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0)
+                };
 
                 $specs = new Specification($formatInstance);
                 $endpoint = App::getEnv('_APP_HOME', '[HOSTNAME]');
@@ -232,19 +218,19 @@ $cli
                     ->setParam('description', 'Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)')
                     ->setParam('endpoint', 'https://HOSTNAME/v1')
                     ->setParam('version', APP_VERSION_STABLE)
-                    ->setParam('terms', $endpoint . '/policy/terms')
+                    ->setParam('terms', "{$endpoint}/policy/terms")
                     ->setParam('support.email', $email)
-                    ->setParam('support.url', $endpoint . '/support')
+                    ->setParam('support.url', "{$endpoint}/support")
                     ->setParam('contact.name', APP_NAME . ' Team')
                     ->setParam('contact.email', $email)
-                    ->setParam('contact.url', $endpoint . '/support')
+                    ->setParam('contact.url', "{$endpoint}/support")
                     ->setParam('license.name', 'BSD-3-Clause')
                     ->setParam('license.url', 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE')
                     ->setParam('docs.description', 'Full API docs, specs and tutorials')
-                    ->setParam('docs.url', $endpoint . '/docs');
+                    ->setParam('docs.url', "{$endpoint}/docs");
 
                 if ($mocks) {
-                    $path = __DIR__ . '/../config/specs/' . $format . '-mocks-' . $platform . '.json';
+                    $path = __DIR__ . "/../config/specs/{$format}-mocks-{$platform}.json";
 
                     if (!file_put_contents($path, json_encode($specs->parse()))) {
                         throw new Exception('Failed to save mocks spec file: ' . $path);
@@ -255,10 +241,10 @@ $cli
                     continue;
                 }
 
-                $path = __DIR__ . '/../config/specs/' . $format . '-' . $version . '-' . $platform . '.json';
+                $path = __DIR__ . "/../config/specs/{$format}-{$version}-{$platform}.json";
 
                 if (!file_put_contents($path, json_encode($specs->parse()))) {
-                    throw new Exception('Failed to save spec file: ' . $path);
+                    throw new Exception("Failed to save spec file: {$path}");
                 }
 
                 Console::success('Saved spec file: ' . realpath($path));
