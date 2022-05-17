@@ -49,7 +49,7 @@
             };
             this.headers = {
                 'x-sdk-version': 'appwrite:web:5.0.0',
-                'X-Appwrite-Response-Format': '0.13.0',
+                'X-Appwrite-Response-Format': '0.14.0',
             };
             this.realtime = {
                 socket: undefined,
@@ -238,26 +238,6 @@
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Delete Account
-                 *
-                 * Delete a currently logged in user account. Behind the scene, the user
-                 * record is not deleted but permanently blocked from any access. This is done
-                 * to avoid deleted accounts being overtaken by new users with the same email
-                 * address. Any user-related resources like documents or storage files should
-                 * be deleted separately.
-                 *
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                delete: () => __awaiter(this, void 0, void 0, function* () {
-                    let path = '/account';
-                    let payload = {};
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('delete', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
@@ -807,6 +787,24 @@
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('delete', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Account Status
+                 *
+                 * Block the currently logged in user account. Behind the scene, the user
+                 * record is not deleted but permanently blocked from any access. To
+                 * completely delete a user, use the Users API instead.
+                 *
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateStatus: () => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/account/status';
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
@@ -5148,7 +5146,11 @@
                 /**
                  * Delete User
                  *
-                 * Delete a user by its unique ID.
+                 * Delete a user by its unique ID, thereby releasing it's ID. Since ID is
+                 * released and can be reused, all user-related resources like documents or
+                 * storage files should be deleted before user deletion. If you want to keep
+                 * ID reserved, use the [updateStatus](/docs/server/users#usersUpdateStatus)
+                 * endpoint instead.
                  *
                  * @param {string} userId
                  * @throws {AppwriteException}
@@ -5410,7 +5412,8 @@
                 /**
                  * Update User Status
                  *
-                 * Update the user status by its unique ID.
+                 * Update the user status by its unique ID. Use this endpoint as an
+                 * alternative to deleting a user if you want to keep user's ID reserved.
                  *
                  * @param {string} userId
                  * @param {boolean} status
