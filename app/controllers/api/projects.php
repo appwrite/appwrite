@@ -2,7 +2,9 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
-use Appwrite\Event\Event;
+use Appwrite\Event\Certificate;
+use Appwrite\Event\Delete;
+use Appwrite\Event\Validator\Event;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\Origin;
@@ -23,7 +25,7 @@ use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Integer;
+use Utopia\Validator\Hostname;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -75,6 +77,9 @@ App::post('/v1/projects')
         }
 
         $projectId = ($projectId == 'unique()') ? $dbForConsole->getId() : $projectId;
+        if($projectId === 'console') {
+            throw new Exception("'console' is a reserved project.", 400, Exception::PROJECT_RESERVED_PROJECT);
+        }
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId == 'unique()' ? $dbForConsole->getId() : $projectId,
             '$read' => ['team:' . $teamId],
@@ -520,7 +525,7 @@ App::delete('/v1/projects/:projectId')
     ->inject('user')
     ->inject('dbForConsole')
     ->inject('deletes')
-    ->action(function (string $projectId, string $password, Response $response, Document $user, Database $dbForConsole, Event $deletes) {
+    ->action(function (string $projectId, string $password, Response $response, Document $user, Database $dbForConsole, Delete $deletes) {
 
         if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
             throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS);
@@ -533,8 +538,8 @@ App::delete('/v1/projects/:projectId')
         }
 
         $deletes
-            ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $project)
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($project)
         ;
 
         if (!$dbForConsole->deleteDocument('teams', $project->getAttribute('teamId', null))) {
@@ -562,7 +567,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->label('sdk.response.model', Response::MODEL_WEBHOOK)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
-    ->param('events', null, new ArrayList(new WhiteList(array_keys(Config::getParam('events'), true), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
+    ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
@@ -678,7 +683,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('webhookId', null, new UID(), 'Webhook unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
-    ->param('events', null, new ArrayList(new WhiteList(array_keys(Config::getParam('events'), true), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
+    ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
@@ -964,11 +969,10 @@ App::post('/v1/projects/:projectId/platforms')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
-    ->param('hostname', '', new Text(256), 'Platform client hostname. Max length: 256 chars.', true)
+    ->param('hostname', '', new Hostname(), 'Platform client hostname. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1077,11 +1081,10 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for android or bundle ID for iOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
-    ->param('hostname', '', new Text(256), 'Platform client URL. Max length: 256 chars.', true)
+    ->param('hostname', '', new Hostname(), 'Platform client URL. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $platformId, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForConsole) {
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1328,10 +1331,10 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         // Issue a TLS certificate when domain is verified
-        Resque::enqueue('v1-certificates', 'CertificatesV1', [
-            'document' => $domain->getArrayCopy(),
-            'domain' => $domain->getAttribute('domain'),
-        ]);
+        $event = new Certificate();
+        $event
+            ->setDomain($domain)
+            ->trigger();
 
         $response->dynamic($domain, Response::MODEL_DOMAIN);
     });
@@ -1350,7 +1353,7 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('deletes')
-    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole, $deletes) {
+    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole, Delete $deletes) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1372,9 +1375,8 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $deletes
-            ->setParam('type', DELETE_TYPE_CERTIFICATES)
-            ->setParam('document', $domain)
-        ;
+            ->setType(DELETE_TYPE_CERTIFICATES)
+            ->setDocument($domain);
 
         $response->noContent();
     });

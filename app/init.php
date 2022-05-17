@@ -22,7 +22,11 @@ use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
+use Appwrite\Event\Audit;
+use Appwrite\Event\Database as EventDatabase;
+use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Mail;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
@@ -71,7 +75,7 @@ const APP_LIMIT_ENCRYPTION = 20000000; //20MB
 const APP_LIMIT_COMPRESSION = 20000000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
 const APP_CACHE_BUSTER = 304;
-const APP_VERSION_STABLE = '0.13.4';
+const APP_VERSION_STABLE = '0.14.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -128,6 +132,7 @@ const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
 const MAIL_TYPE_RECOVERY = 'recovery';
 const MAIL_TYPE_INVITATION = 'invitation';
+const MAIL_TYPE_CERTIFICATE = 'certificate';
 // Auth Types
 const APP_AUTH_TYPE_SESSION = 'Session';
 const APP_AUTH_TYPE_JWT = 'JWT';
@@ -182,7 +187,7 @@ if(!empty($user) || !empty($pass)) {
  */
 Database::addFilter('casting',
     function($value) {
-        return json_encode(['value' => $value]);
+        return json_encode(['value' => $value], JSON_PRESERVE_ZERO_FRACTION);
     },
     function($value) {
         if (is_null($value)) {
@@ -299,6 +304,19 @@ Database::addFilter('subQueryWebhooks',
             ->find('webhooks', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
             ], $database->getIndexLimit(), 0, []);
+    }
+);
+
+Database::addFilter('subQuerySessions',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        $sessions = Authorization::skip(fn () => $database->find('sessions', [
+            new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
+        ], $database->getIndexLimit(), 0, []));
+
+        return $sessions;
     }
 );
 
@@ -629,10 +647,10 @@ App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')))
 
 // Queues
 App::setResource('events', fn() => new Event('', ''));
-App::setResource('audits', fn() => new Event(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME));
-App::setResource('mails', fn() => new Event(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME));
-App::setResource('deletes', fn() => new Event(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME));
-App::setResource('database', fn() => new Event(Event::DATABASE_QUEUE_NAME, Event::DATABASE_CLASS_NAME));
+App::setResource('audits', fn() => new Audit());
+App::setResource('mails', fn() => new Mail());
+App::setResource('deletes', fn() => new Delete());
+App::setResource('database', fn() => new EventDatabase());
 App::setResource('usage', function($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);

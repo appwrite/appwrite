@@ -2,8 +2,8 @@ x-logging: &x-logging
   logging:
     driver: 'json-file'
     options:
-      max-file: 5
-      max-size: 10m
+      max-file: '5'
+      max-size: '10m'
 
 <?php
 
@@ -16,8 +16,9 @@ $image = $this->getParam('image', '');
 
 services:
   traefik:
-    image: traefik:2.5
+    image: traefik:2.7
     container_name: appwrite-traefik
+    <<: *x-logging
     command:
       - --providers.file.directory=/storage/config
       - --providers.file.watch=true
@@ -342,6 +343,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
+      - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
@@ -473,10 +475,17 @@ services:
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
+      - _APP_DOMAIN
+      - _APP_DOMAIN_TARGET
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_ABUSE

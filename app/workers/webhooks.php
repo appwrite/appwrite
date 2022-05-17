@@ -3,15 +3,19 @@
 use Appwrite\Resque\Worker;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\Document;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__ . '/../init.php';
 
 Console::title('Webhooks V1 Worker');
 Console::success(APP_NAME . ' webhooks worker v1 has started');
 
 class WebhooksV1 extends Worker
 {
-    public function getName(): string {
+    protected array $errors = [];
+
+    public function getName(): string
+    {
         return "webhooks";
     }
 
@@ -21,77 +25,72 @@ class WebhooksV1 extends Worker
 
     public function run(): void
     {
-        $errors = [];
+        $events = $this->args['events'];
+        $payload = json_encode($this->args['payload']);
+        $project = new Document($this->args['project']);
+        $user = new Document($this->args['user'] ?? []);
 
-        // Event
-        $projectId = $this->args['projectId'] ?? '';
-        $webhooks = $this->args['webhooks'] ?? [];
-        $userId = $this->args['userId'] ?? '';
-        $event = $this->args['event'] ?? '';
-        $eventData = \json_encode($this->args['eventData']);
-
-        foreach ($webhooks as $webhook) {
-            if (!(isset($webhook['events']) && \is_array($webhook['events']) && \in_array($event, $webhook['events']))) {
-                continue;
+        foreach ($project->getAttribute('webhooks', []) as $webhook) {
+            if (array_intersect($webhook->getAttribute('events', []), $events)) {
+                $this->execute($events, $payload, $webhook, $user, $project);
             }
-
-            $id = $webhook['$id'] ?? '';
-            $name = $webhook['name'] ?? '';
-            $signature = $webhook['signature'] ?? 'not-yet-implemented';
-            $url = $webhook['url'] ?? '';
-            $security = (bool) ($webhook['security'] ?? true);
-            $httpUser = $webhook['httpUser'] ?? null;
-            $httpPass = $webhook['httpPass'] ?? null;
-
-            $ch = \curl_init($url);
-
-            \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-            \curl_setopt($ch, CURLOPT_POSTFIELDS, $eventData);
-            \curl_setopt($ch, CURLOPT_HEADER, 0);
-            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(
-                APP_USERAGENT,
-                App::getEnv('_APP_VERSION', 'UNKNOWN'),
-                App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
-            ));
-            \curl_setopt(
-                $ch,
-                CURLOPT_HTTPHEADER,
-                [
-                    'Content-Type: application/json',
-                    'Content-Length: ' . \strlen($eventData),
-                    'X-' . APP_NAME . '-Webhook-Id: ' . $id,
-                    'X-' . APP_NAME . '-Webhook-Event: ' . $event,
-                    'X-' . APP_NAME . '-Webhook-Name: ' . $name,
-                    'X-' . APP_NAME . '-Webhook-User-Id: ' . $userId,
-                    'X-' . APP_NAME . '-Webhook-Project-Id: ' . $projectId,
-                    'X-' . APP_NAME . '-Webhook-Signature: ' . $signature,
-                ]
-            );
-
-            if (!$security) {
-                \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-                \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            }
-
-            if (!empty($httpUser) && !empty($httpPass)) {
-                \curl_setopt($ch, CURLOPT_USERPWD, "$httpUser:$httpPass");
-                \curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-            }
-
-            if (false === \curl_exec($ch)) {
-                $errors[] = \curl_error($ch) . ' in event ' . $event . ' for webhook ' . $name;
-            }
-
-            \curl_close($ch);
         }
 
-        if (!empty($errors)) {
-            throw new Exception(\implode(" / \n\n", $errors));
+        if (!empty($this->errors)) {
+            throw new Exception(\implode(" / \n\n", $this->errors));
         }
+    }
+
+    protected function execute(array $events, string $payload, Document $webhook, Document $user, Document $project): void
+    {
+        $httpUser = $webhook->getAttribute('httpUser');
+        $httpPass = $webhook->getAttribute('httpPass');
+
+        $ch = \curl_init($webhook->getAttribute('url'));
+
+        \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        \curl_setopt($ch, CURLOPT_HEADER, 0);
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(
+            APP_USERAGENT,
+            App::getEnv('_APP_VERSION', 'UNKNOWN'),
+            App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+        ));
+        \curl_setopt(
+            $ch,
+            CURLOPT_HTTPHEADER,
+            [
+                'Content-Type: application/json',
+                'Content-Length: ' . \strlen($payload),
+                'X-' . APP_NAME . '-Webhook-Id: ' . $webhook->getId(),
+                'X-' . APP_NAME . '-Webhook-Events: ' . implode(',', $events),
+                'X-' . APP_NAME . '-Webhook-Name: ' . $webhook->getAttribute('name', ''),
+                'X-' . APP_NAME . '-Webhook-User-Id: ' . $user->getId(),
+                'X-' . APP_NAME . '-Webhook-Project-Id: ' . $project->getId(),
+                'X-' . APP_NAME . '-Webhook-Signature: ' . $webhook->getAttribute('signature', 'not-yet-implemented'),
+            ]
+        );
+
+        if (!$webhook->getAttribute('security', true)) {
+            \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        }
+
+        if (!empty($httpUser) && !empty($httpPass)) {
+            \curl_setopt($ch, CURLOPT_USERPWD, "$httpUser:$httpPass");
+            \curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        }
+
+        if (false === \curl_exec($ch)) {
+            $this->errors[] = \curl_error($ch) . ' in events ' . implode(', ', $events) . ' for webhook ' . $webhook->getAttribute('name');
+        }
+
+        \curl_close($ch);
     }
 
     public function shutdown(): void
     {
+        $this->errors = [];
     }
 }

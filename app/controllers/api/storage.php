@@ -2,6 +2,8 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\ClamAV\Network;
+use Appwrite\Event\Audit;
+use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\OpenSSL\OpenSSL;
@@ -43,7 +45,7 @@ App::post('/v1/storage/buckets')
     ->desc('Create bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
-    ->label('event', 'storage.buckets.create')
+    ->label('event', 'buckets.[bucketId].create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'createBucket')
@@ -57,7 +59,7 @@ App::post('/v1/storage/buckets')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
-    ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0), new Integer(), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self-hosted setups you can change the max limit by changing the `_APP_STORAGE_LIMIT` environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
+    ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0), new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self-hosted setups you can change the max limit by changing the `_APP_STORAGE_LIMIT` environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
@@ -65,7 +67,8 @@ App::post('/v1/storage/buckets')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function (string $bucketId, string $name, string $permission, ?array $read, ?array $write, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $audits, Stats $usage) {
+    ->inject('events')
+    ->action(function (string $bucketId, string $name, string $permission, ?array $read, ?array $write, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
 
         $bucketId = $bucketId === 'unique()' ? $dbForProject->getId() : $bucketId;
         try {
@@ -126,9 +129,12 @@ App::post('/v1/storage/buckets')
         }
 
         $audits
-            ->setParam('event', 'storage.buckets.create')
-            ->setParam('resource', 'storage/buckets/' . $bucket->getId())
-            ->setParam('data', $bucket->getArrayCopy())
+            ->setResource('storage/buckets/' . $bucket->getId())
+            ->setPayload($bucket->getArrayCopy())
+        ;
+
+        $events
+            ->setParam('bucketId', $bucket->getId())
         ;
 
         $usage->setParam('storage.buckets.create', 1);
@@ -209,7 +215,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->desc('Update Bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
-    ->label('event', 'storage.buckets.update')
+    ->label('event', 'buckets.[bucketId].update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'updateBucket')
@@ -223,7 +229,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
-    ->param('maximumFileSize', null, new Integer(), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human((int)App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self hosted version you can change the limit by changing _APP_STORAGE_LIMIT environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
+    ->param('maximumFileSize', null, new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human((int)App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self hosted version you can change the limit by changing _APP_STORAGE_LIMIT environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
@@ -231,21 +237,21 @@ App::put('/v1/storage/buckets/:bucketId')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
-    ->action(function (string $bucketId, string $name, string $permission, ?array $read, ?array $write, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $audits, Stats $usage) {
-
+    ->inject('events')
+    ->action(function (string $bucketId, string $name, string $permission, ?array $read, ?array $write, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404, Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $read??=$bucket->getAttribute('$read', []); // By default inherit read permissions
-        $write??=$bucket->getAttribute('$write', []); // By default inherit write permissions
-        $maximumFileSize??=$bucket->getAttribute('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0));
-        $allowedFileExtensions??=$bucket->getAttribute('allowedFileExtensions', []);
-        $enabled??=$bucket->getAttribute('enabled', true);
-        $encryption??=$bucket->getAttribute('encryption', true);
-        $antivirus??=$bucket->getAttribute('antivirus', true);
+        $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
+        $write ??= $bucket->getAttribute('$write', []); // By default inherit write permissions
+        $maximumFileSize ??= $bucket->getAttribute('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0));
+        $allowedFileExtensions ??= $bucket->getAttribute('allowedFileExtensions', []);
+        $enabled ??= $bucket->getAttribute('enabled', true);
+        $encryption ??= $bucket->getAttribute('encryption', true);
+        $antivirus ??= $bucket->getAttribute('antivirus', true);
 
         $bucket = $dbForProject->updateDocument('buckets', $bucket->getId(), $bucket
                 ->setAttribute('name', $name)
@@ -260,9 +266,12 @@ App::put('/v1/storage/buckets/:bucketId')
         );
 
         $audits
-            ->setParam('event', 'storage.buckets.update')
-            ->setParam('resource', 'storage/buckets/' . $bucket->getId())
-            ->setParam('data', $bucket->getArrayCopy())
+            ->setResource('storage/buckets/' . $bucket->getId())
+            ->setPayload($bucket->getArrayCopy())
+        ;
+
+        $events
+            ->setParam('bucketId', $bucket->getId())
         ;
 
         $usage->setParam('storage.buckets.update', 1);
@@ -274,7 +283,7 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->desc('Delete Bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
-    ->label('event', 'storage.buckets.delete')
+    ->label('event', 'buckets.[bucketId].delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'deleteBucket')
@@ -288,8 +297,7 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->inject('deletes')
     ->inject('events')
     ->inject('usage')
-    ->action(function (string $bucketId, Response $response, Database $dbForProject, Event $audits, Event $deletes, Event $events, Stats $usage) {
-
+    ->action(function (string $bucketId, Response $response, Database $dbForProject, Audit $audits, Delete $deletes, Event $events, Stats $usage) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
@@ -301,18 +309,17 @@ App::delete('/v1/storage/buckets/:bucketId')
         }
 
         $deletes
-            ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $bucket)
-        ;
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($bucket);
 
         $events
-            ->setParam('eventData', $response->output($bucket, Response::MODEL_BUCKET))
+            ->setParam('bucketId', $bucket->getId())
+            ->setPayload($response->output($bucket, Response::MODEL_BUCKET))
         ;
 
         $audits
-            ->setParam('event', 'storage.buckets.delete')
-            ->setParam('resource', 'storage/buckets/' . $bucket->getId())
-            ->setParam('data', $bucket->getArrayCopy())
+            ->setResource('storage/buckets/' . $bucket->getId())
+            ->setPayload($bucket->getArrayCopy())
         ;
 
         $usage->setParam('storage.buckets.delete', 1);
@@ -325,7 +332,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->desc('Create File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
-    ->label('event', 'storage.files.create')
+    ->label('event', 'buckets.[bucketId].files.[fileId].create')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'createFile')
@@ -350,8 +357,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('deviceLocal')
-    ->action(function (string $bucketId, string $fileId, array $file, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, Document $user, Event $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
-
+    ->action(function (string $bucketId, string $fileId, array $file, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty()
@@ -397,7 +403,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $maximumFileSize = $bucket->getAttribute('maximumFileSize', 0);
         if ($maximumFileSize > (int) App::getEnv('_APP_STORAGE_LIMIT', 0)) {
-            throw new Exception('Error bucket maximum file size is larger than _APP_STORAGE_LIMIT', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception('Maximum bucket file size is larger than _APP_STORAGE_LIMIT', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $file = $request->getFiles('file');
@@ -557,9 +563,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'metadata' => $metadata,
                     ]);
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function () use ($dbForProject, $bucket, $doc) {
-                            return $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
-                        });
+                        $file = Authorization::skip(fn () => $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc));
                     } else {
                         $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
                     }
@@ -579,9 +583,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('chunksUploaded', $chunksUploaded);
 
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function () use ($dbForProject, $bucket, $fileId, $file) {
-                            return $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
-                        });
+                        $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
                     } else {
                         $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                     }
@@ -594,8 +596,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             $audits
-                ->setParam('event', 'storage.files.create')
-                ->setParam('resource', 'storage/files/' . $file->getId())
+                ->setResource('storage/files/' . $file->getId())
             ;
 
             $usage
@@ -627,9 +628,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'metadata' => $metadata,
                     ]);
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function () use ($dbForProject, $bucket, $doc) {
-                            return $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
-                        });
+                        $file = Authorization::skip(fn () => $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc));
                     } else {
                         $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
                     }
@@ -639,9 +638,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('metadata', $metadata);
 
                     if ($permissionBucket) {
-                        $file = Authorization::skip(function () use ($dbForProject, $bucket, $fileId, $file) {
-                            return $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
-                        });
+                        $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
                     } else {
                         $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                     }
@@ -653,13 +650,16 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
         }
 
-        $events->setParam('bucket', $bucket->getArrayCopy());
+        $events
+            ->setParam('bucketId', $bucket->getId())
+            ->setParam('fileId', $file->getId())
+            ->setContext($bucket)
+        ;
 
         $metadata = null; // was causing leaks as it was passed by reference
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($file, Response::MODEL_FILE);
-        ;
     });
 
 App::get('/v1/storage/buckets/:bucketId/files')
@@ -1271,7 +1271,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->desc('Update File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
-    ->label('event', 'storage.files.update')
+    ->label('event', 'buckets.[bucketId].files.[fileId].update')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'updateFile')
@@ -1290,8 +1290,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('usage')
     ->inject('mode')
     ->inject('events')
-    ->action(function (string $bucketId, string $fileId, ?array $read, ?array $write,Response  $response, Database $dbForProject, Document $user, Event $audits, Stats $usage, string $mode, Event $events) {
-
+    ->action(function (string $bucketId, string $fileId, ?array $read, ?array $write, Response $response, Database $dbForProject, Document $user, Audit $audits, Stats $usage, string $mode, Event $events) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
         $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; // By default set read permissions for user
         $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
@@ -1346,12 +1345,13 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
         }
 
-        $events->setParam('bucket', $bucket->getArrayCopy());
-
-        $audits
-            ->setParam('event', 'storage.files.update')
-            ->setParam('resource', 'file/' . $file->getId())
+        $events
+            ->setParam('bucketId', $bucket->getId())
+            ->setParam('fileId', $file->getId())
+            ->setContext($bucket)
         ;
+
+        $audits->setResource('file/' . $file->getId());
 
         $usage
             ->setParam('storage.files.update', 1)
@@ -1366,7 +1366,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->desc('Delete File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
-    ->label('event', 'storage.files.delete')
+    ->label('event', 'buckets.[bucketId].files.[fileId].delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'deleteFile')
@@ -1383,8 +1383,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('project')
-    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $events, Event $audits, Stats $usage, string $mode, Device $deviceFiles, Document $project) {
-
+    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $events, Audit $audits, Stats $usage, string $mode, Device $deviceFiles, Document $project) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty()
@@ -1438,10 +1437,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception('Failed to delete file from device', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
-        $audits
-            ->setParam('event', 'storage.files.delete')
-            ->setParam('resource', 'file/' . $file->getId())
-        ;
+        $audits->setResource('file/' . $file->getId());
 
         $usage
             ->setParam('storage', $file->getAttribute('size', 0) * -1)
@@ -1450,8 +1446,10 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         ;
 
         $events
-            ->setParam('eventData', $response->output($file, Response::MODEL_FILE))
-            ->setParam('bucket', $bucket->getArrayCopy())
+            ->setParam('bucketId', $bucket->getId())
+            ->setParam('fileId', $file->getId())
+            ->setContext($bucket)
+            ->setPayload($response->output($file, Response::MODEL_FILE))
         ;
 
         $response->noContent();

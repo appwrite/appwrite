@@ -1,7 +1,6 @@
 <?php
 
 use Utopia\Config\Config;
-
 return [
     [
         'category' => 'General',
