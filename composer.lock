@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cb8163f39b3bac09c2c547d9afb1064b",
+    "content-hash": "ae4e8cc9efbd28d8c2536e378c9e7ead",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3075,16 +3075,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.18.3",
+            "version": "0.18.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "96e2c9b0f350d4fa43ddff6334ef44908716c944"
+                "reference": "841281fab95c774d5aa96f5bf9bd0dabf9f96e8d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/96e2c9b0f350d4fa43ddff6334ef44908716c944",
-                "reference": "96e2c9b0f350d4fa43ddff6334ef44908716c944",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/841281fab95c774d5aa96f5bf9bd0dabf9f96e8d",
+                "reference": "841281fab95c774d5aa96f5bf9bd0dabf9f96e8d",
                 "shasum": ""
             },
             "require": {
@@ -3119,9 +3119,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.18.3"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.18.4"
             },
-            "time": "2022-04-13T04:00:59+00:00"
+            "time": "2022-05-17T12:16:09+00:00"
         },
         {
             "name": "composer/pcre",
@@ -6576,5 +6576,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.1.0"
 }
