@@ -114,7 +114,7 @@ class Google extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        return $user['id'] ?? '';
+        return $user['sub'] ?? '';
     }
 
     /**
