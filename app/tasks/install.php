@@ -92,6 +92,7 @@ $cli
                     $env = $service->getEnvironment()->list();
 
                     foreach ($env as $key => $value) {
+                        if (is_null($value)) continue;
                         foreach($vars as &$var) {
                             if($var['name'] === $key) {
                                 $var['default'] = $value;
@@ -108,6 +109,7 @@ $cli
                     $env = new Env($data);
 
                     foreach ($env->list() as $key => $value) {
+                        if (is_null($value)) continue;
                         foreach($vars as &$var) {
                             if($var['name'] === $key) {
                                 $var['default'] = $value;
