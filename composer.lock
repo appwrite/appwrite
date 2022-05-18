@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e0de8d0bba618a46646cf3da1e06a652",
+    "content-hash": "ae4e8cc9efbd28d8c2536e378c9e7ead",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -115,11 +115,11 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.7.4",
+            "version": "0.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "8e0972ecce6ad96f3701edab8d2c9a8af7074093"
+                "reference": "e8aa94aa42f45711e11cb1da401b442ecc2c32a4"
             },
             "require": {
                 "php": ">=8.0",
@@ -154,7 +154,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2022-02-26T11:38:09+00:00"
+            "time": "2022-05-16T10:54:14+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -925,16 +925,16 @@
         },
         {
             "name": "matomo/device-detector",
-            "version": "5.0.4",
+            "version": "6.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matomo-org/device-detector.git",
-                "reference": "99ea1953fc7f23f785e593ce1499a00586645530"
+                "reference": "7fc2af3af62bd69e6e3404d561e371a83c112be9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/99ea1953fc7f23f785e593ce1499a00586645530",
-                "reference": "99ea1953fc7f23f785e593ce1499a00586645530",
+                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/7fc2af3af62bd69e6e3404d561e371a83c112be9",
+                "reference": "7fc2af3af62bd69e6e3404d561e371a83c112be9",
                 "shasum": ""
             },
             "require": {
@@ -990,7 +990,7 @@
                 "source": "https://github.com/matomo-org/matomo",
                 "wiki": "https://dev.matomo.org/"
             },
-            "time": "2022-02-18T19:51:56+00:00"
+            "time": "2022-04-11T09:58:17+00:00"
         },
         {
             "name": "mongodb/mongodb",
@@ -2133,16 +2133,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.15.5",
+            "version": "0.17.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "6507b58ef3e22703b9df68d3dbd5e822d5bb023f"
+                "reference": "a4d001452b78b85335ffbd34176cd45d2b13c1ca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/6507b58ef3e22703b9df68d3dbd5e822d5bb023f",
-                "reference": "6507b58ef3e22703b9df68d3dbd5e822d5bb023f",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/a4d001452b78b85335ffbd34176cd45d2b13c1ca",
+                "reference": "a4d001452b78b85335ffbd34176cd45d2b13c1ca",
                 "shasum": ""
             },
             "require": {
@@ -2190,9 +2190,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.15.5"
+                "source": "https://github.com/utopia-php/database/tree/0.17.1"
             },
-            "time": "2022-04-04T13:42:00+00:00"
+            "time": "2022-05-16T09:11:44+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2250,16 +2250,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.19.20",
+            "version": "0.19.21",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "65ced168db8f6e188ceeb0d101f57552c3d8b2af"
+                "reference": "3b7bd8e4acf84fd7d560ced8e0142221d302575d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/65ced168db8f6e188ceeb0d101f57552c3d8b2af",
-                "reference": "65ced168db8f6e188ceeb0d101f57552c3d8b2af",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/3b7bd8e4acf84fd7d560ced8e0142221d302575d",
+                "reference": "3b7bd8e4acf84fd7d560ced8e0142221d302575d",
                 "shasum": ""
             },
             "require": {
@@ -2293,31 +2293,31 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.19.20"
+                "source": "https://github.com/utopia-php/framework/tree/0.19.21"
             },
-            "time": "2022-04-14T15:42:37+00:00"
+            "time": "2022-05-12T18:42:28+00:00"
         },
         {
             "name": "utopia-php/image",
-            "version": "0.5.3",
+            "version": "0.5.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/image.git",
-                "reference": "4a8429b62dcf56562b038d6712375f75166f0c02"
+                "reference": "ca5f436f9aa22dedaa6648f24f3687733808e336"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/image/zipball/4a8429b62dcf56562b038d6712375f75166f0c02",
-                "reference": "4a8429b62dcf56562b038d6712375f75166f0c02",
+                "url": "https://api.github.com/repos/utopia-php/image/zipball/ca5f436f9aa22dedaa6648f24f3687733808e336",
+                "reference": "ca5f436f9aa22dedaa6648f24f3687733808e336",
                 "shasum": ""
             },
             "require": {
                 "ext-imagick": "*",
-                "php": ">=7.4"
+                "php": ">=8.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
+                "vimeo/psalm": "4.13.1"
             },
             "type": "library",
             "autoload": {
@@ -2345,9 +2345,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/image/issues",
-                "source": "https://github.com/utopia-php/image/tree/0.5.3"
+                "source": "https://github.com/utopia-php/image/tree/0.5.4"
             },
-            "time": "2021-11-02T05:47:16+00:00"
+            "time": "2022-05-11T12:30:41+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -3075,16 +3075,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.18.3",
+            "version": "0.18.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "96e2c9b0f350d4fa43ddff6334ef44908716c944"
+                "reference": "841281fab95c774d5aa96f5bf9bd0dabf9f96e8d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/96e2c9b0f350d4fa43ddff6334ef44908716c944",
-                "reference": "96e2c9b0f350d4fa43ddff6334ef44908716c944",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/841281fab95c774d5aa96f5bf9bd0dabf9f96e8d",
+                "reference": "841281fab95c774d5aa96f5bf9bd0dabf9f96e8d",
                 "shasum": ""
             },
             "require": {
@@ -3119,9 +3119,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.18.3"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.18.4"
             },
-            "time": "2022-04-13T04:00:59+00:00"
+            "time": "2022-05-17T12:16:09+00:00"
         },
         {
             "name": "composer/pcre",
@@ -3551,16 +3551,16 @@
         },
         {
             "name": "matthiasmullie/minify",
-            "version": "1.3.67",
+            "version": "1.3.68",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matthiasmullie/minify.git",
-                "reference": "acaee1b7ca3cd67a39d7f98673cacd7e4739a8d9"
+                "reference": "c00fb02f71b2ef0a5f53fe18c5a8b9aa30f48297"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matthiasmullie/minify/zipball/acaee1b7ca3cd67a39d7f98673cacd7e4739a8d9",
-                "reference": "acaee1b7ca3cd67a39d7f98673cacd7e4739a8d9",
+                "url": "https://api.github.com/repos/matthiasmullie/minify/zipball/c00fb02f71b2ef0a5f53fe18c5a8b9aa30f48297",
+                "reference": "c00fb02f71b2ef0a5f53fe18c5a8b9aa30f48297",
                 "shasum": ""
             },
             "require": {
@@ -3609,7 +3609,7 @@
             ],
             "support": {
                 "issues": "https://github.com/matthiasmullie/minify/issues",
-                "source": "https://github.com/matthiasmullie/minify/tree/1.3.67"
+                "source": "https://github.com/matthiasmullie/minify/tree/1.3.68"
             },
             "funding": [
                 {
@@ -3617,7 +3617,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-03-24T08:54:59+00:00"
+            "time": "2022-04-19T08:28:56+00:00"
         },
         {
             "name": "matthiasmullie/path-converter",
@@ -4549,16 +4549,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "9.5.10",
+            "version": "9.5.20",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "c814a05837f2edb0d1471d6e3f4ab3501ca3899a"
+                "reference": "12bc8879fb65aef2138b26fc633cb1e3620cffba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/c814a05837f2edb0d1471d6e3f4ab3501ca3899a",
-                "reference": "c814a05837f2edb0d1471d6e3f4ab3501ca3899a",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/12bc8879fb65aef2138b26fc633cb1e3620cffba",
+                "reference": "12bc8879fb65aef2138b26fc633cb1e3620cffba",
                 "shasum": ""
             },
             "require": {
@@ -4574,7 +4574,7 @@
                 "phar-io/version": "^3.0.2",
                 "php": ">=7.3",
                 "phpspec/prophecy": "^1.12.1",
-                "phpunit/php-code-coverage": "^9.2.7",
+                "phpunit/php-code-coverage": "^9.2.13",
                 "phpunit/php-file-iterator": "^3.0.5",
                 "phpunit/php-invoker": "^3.1.1",
                 "phpunit/php-text-template": "^2.0.3",
@@ -4588,7 +4588,7 @@
                 "sebastian/global-state": "^5.0.1",
                 "sebastian/object-enumerator": "^4.0.3",
                 "sebastian/resource-operations": "^3.0.3",
-                "sebastian/type": "^2.3.4",
+                "sebastian/type": "^3.0",
                 "sebastian/version": "^3.0.2"
             },
             "require-dev": {
@@ -4636,11 +4636,11 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.5.10"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.5.20"
             },
             "funding": [
                 {
-                    "url": "https://phpunit.de/donate.html",
+                    "url": "https://phpunit.de/sponsors.html",
                     "type": "custom"
                 },
                 {
@@ -4648,7 +4648,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-09-25T07:38:51+00:00"
+            "time": "2022-04-01T12:37:26+00:00"
         },
         {
             "name": "psr/container",
@@ -5560,28 +5560,28 @@
         },
         {
             "name": "sebastian/type",
-            "version": "2.3.4",
+            "version": "3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/type.git",
-                "reference": "b8cd8a1c753c90bc1a0f5372170e3e489136f914"
+                "reference": "b233b84bc4465aff7b57cf1c4bc75c86d00d6dad"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/type/zipball/b8cd8a1c753c90bc1a0f5372170e3e489136f914",
-                "reference": "b8cd8a1c753c90bc1a0f5372170e3e489136f914",
+                "url": "https://api.github.com/repos/sebastianbergmann/type/zipball/b233b84bc4465aff7b57cf1c4bc75c86d00d6dad",
+                "reference": "b233b84bc4465aff7b57cf1c4bc75c86d00d6dad",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.3"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.3"
+                "phpunit/phpunit": "^9.5"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.3-dev"
+                    "dev-master": "3.0-dev"
                 }
             },
             "autoload": {
@@ -5604,7 +5604,7 @@
             "homepage": "https://github.com/sebastianbergmann/type",
             "support": {
                 "issues": "https://github.com/sebastianbergmann/type/issues",
-                "source": "https://github.com/sebastianbergmann/type/tree/2.3.4"
+                "source": "https://github.com/sebastianbergmann/type/tree/3.0.0"
             },
             "funding": [
                 {
@@ -5612,7 +5612,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-06-15T12:49:02+00:00"
+            "time": "2022-03-15T09:54:48+00:00"
         },
         {
             "name": "sebastian/version",
@@ -5669,16 +5669,16 @@
         },
         {
             "name": "swoole/ide-helper",
-            "version": "4.8.5",
+            "version": "4.8.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/swoole/ide-helper.git",
-                "reference": "d03c707d4dc803228e93b4884c72949c4d28e8b8"
+                "reference": "8f82ba3b6af04a5bccb97c1654af992d1ee8b0fe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/d03c707d4dc803228e93b4884c72949c4d28e8b8",
-                "reference": "d03c707d4dc803228e93b4884c72949c4d28e8b8",
+                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/8f82ba3b6af04a5bccb97c1654af992d1ee8b0fe",
+                "reference": "8f82ba3b6af04a5bccb97c1654af992d1ee8b0fe",
                 "shasum": ""
             },
             "type": "library",
@@ -5695,7 +5695,7 @@
             "description": "IDE help files for Swoole.",
             "support": {
                 "issues": "https://github.com/swoole/ide-helper/issues",
-                "source": "https://github.com/swoole/ide-helper/tree/4.8.5"
+                "source": "https://github.com/swoole/ide-helper/tree/4.8.9"
             },
             "funding": [
                 {
@@ -5707,20 +5707,20 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-12-24T22:44:20+00:00"
+            "time": "2022-04-18T20:38:04+00:00"
         },
         {
             "name": "symfony/console",
-            "version": "v6.0.7",
+            "version": "v6.0.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "70dcf7b2ca2ea08ad6ebcc475f104a024fb5632e"
+                "reference": "0d00aa289215353aa8746a31d101f8e60826285c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/70dcf7b2ca2ea08ad6ebcc475f104a024fb5632e",
-                "reference": "70dcf7b2ca2ea08ad6ebcc475f104a024fb5632e",
+                "url": "https://api.github.com/repos/symfony/console/zipball/0d00aa289215353aa8746a31d101f8e60826285c",
+                "reference": "0d00aa289215353aa8746a31d101f8e60826285c",
                 "shasum": ""
             },
             "require": {
@@ -5786,7 +5786,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v6.0.7"
+                "source": "https://github.com/symfony/console/tree/v6.0.8"
             },
             "funding": [
                 {
@@ -5802,7 +5802,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-03-31T17:18:25+00:00"
+            "time": "2022-04-20T15:01:42+00:00"
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
@@ -6136,16 +6136,16 @@
         },
         {
             "name": "symfony/string",
-            "version": "v6.0.3",
+            "version": "v6.0.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/string.git",
-                "reference": "522144f0c4c004c80d56fa47e40e17028e2eefc2"
+                "reference": "ac0aa5c2282e0de624c175b68d13f2c8f2e2649d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/string/zipball/522144f0c4c004c80d56fa47e40e17028e2eefc2",
-                "reference": "522144f0c4c004c80d56fa47e40e17028e2eefc2",
+                "url": "https://api.github.com/repos/symfony/string/zipball/ac0aa5c2282e0de624c175b68d13f2c8f2e2649d",
+                "reference": "ac0aa5c2282e0de624c175b68d13f2c8f2e2649d",
                 "shasum": ""
             },
             "require": {
@@ -6201,7 +6201,7 @@
                 "utf8"
             ],
             "support": {
-                "source": "https://github.com/symfony/string/tree/v6.0.3"
+                "source": "https://github.com/symfony/string/tree/v6.0.8"
             },
             "funding": [
                 {
@@ -6217,20 +6217,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-01-02T09:55:41+00:00"
+            "time": "2022-04-22T08:18:02+00:00"
         },
         {
             "name": "textalk/websocket",
-            "version": "1.5.5",
+            "version": "1.5.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Textalk/websocket-php.git",
-                "reference": "846542f82658132cd36acb7a7e8ce0f03960c295"
+                "reference": "1712325e99b6bf869ccbf9bf41ab749e7328ea46"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Textalk/websocket-php/zipball/846542f82658132cd36acb7a7e8ce0f03960c295",
-                "reference": "846542f82658132cd36acb7a7e8ce0f03960c295",
+                "url": "https://api.github.com/repos/Textalk/websocket-php/zipball/1712325e99b6bf869ccbf9bf41ab749e7328ea46",
+                "reference": "1712325e99b6bf869ccbf9bf41ab749e7328ea46",
                 "shasum": ""
             },
             "require": {
@@ -6264,9 +6264,9 @@
             "description": "WebSocket client and server",
             "support": {
                 "issues": "https://github.com/Textalk/websocket-php/issues",
-                "source": "https://github.com/Textalk/websocket-php/tree/1.5.5"
+                "source": "https://github.com/Textalk/websocket-php/tree/1.5.7"
             },
-            "time": "2021-08-07T10:21:40+00:00"
+            "time": "2022-03-29T09:46:59+00:00"
         },
         {
             "name": "theseer/tokenizer",
@@ -6320,16 +6320,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.3.10",
+            "version": "v3.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "8442df056c51b706793adf80a9fd363406dd3674"
+                "reference": "e939eae92386b69b49cfa4599dd9bead6bf4a342"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/8442df056c51b706793adf80a9fd363406dd3674",
-                "reference": "8442df056c51b706793adf80a9fd363406dd3674",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/e939eae92386b69b49cfa4599dd9bead6bf4a342",
+                "reference": "e939eae92386b69b49cfa4599dd9bead6bf4a342",
                 "shasum": ""
             },
             "require": {
@@ -6344,7 +6344,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.3-dev"
+                    "dev-master": "3.4-dev"
                 }
             },
             "autoload": {
@@ -6380,7 +6380,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.3.10"
+                "source": "https://github.com/twigphp/Twig/tree/v3.4.1"
             },
             "funding": [
                 {
@@ -6392,7 +6392,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-04-06T06:47:41+00:00"
+            "time": "2022-05-17T05:48:52+00:00"
         },
         {
             "name": "vimeo/psalm",
@@ -6576,5 +6576,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.1.0"
 }

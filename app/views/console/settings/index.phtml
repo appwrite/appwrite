@@ -532,8 +532,8 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
 
                                         <input name="teamId" type="hidden" data-ls-bind="{{member.teamId}}">
                                         <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}/auth/join?project={{router.params.project}}" />
-                                        <input name="email" type="hidden" data-ls-bind="{{member.email}}">
-                                        <input name="name" type="hidden" data-ls-bind="{{member.name}}">
+                                        <input name="email" type="hidden" data-ls-bind="{{member.userEmail}}">
+                                        <input name="name" type="hidden" data-ls-bind="{{member.userName}}">
                                         <input name="roles" type="hidden" data-ls-bind="{{member.roles}}" data-cast-to="json">
                                     </form>
                                 </div>
@@ -541,9 +541,9 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                 <img src="" data-ls-attrs="src={{member|avatar}}" data-size="200" alt="User Avatar" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
 
                                 <div class="margin-bottom-tiny">
-                                    <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red">Pending Approval</span>
+                                    <span data-ls-bind="{{member.userName}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red">Pending Approval</span>
                                 </div>
-                                <span class="text-size-small text-fade" data-ls-bind="{{member.email}}"></span>
+                                <span class="text-size-small text-fade" data-ls-bind="{{member.userEmail}}"></span>
                             </li>
                         </ul>
                     </div>

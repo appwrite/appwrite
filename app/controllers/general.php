@@ -12,15 +12,19 @@ use Appwrite\Extend\Exception;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
+use Appwrite\Event\Certificate;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
 use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
+use Appwrite\Utopia\Response\Filters\V13 as ResponseV13;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Validator\Hostname;
 use Appwrite\Utopia\Request\Filters\V12 as RequestV12;
 use Appwrite\Utopia\Request\Filters\V13 as RequestV13;
+use Appwrite\Utopia\Request\Filters\V14 as RequestV14;
 use Utopia\Validator\Text;
 
 Config::setParam('domainVerification', false);
@@ -53,6 +57,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
             case version_compare ($requestFormat , '0.13.0', '<') :
                 Request::setFilter(new RequestV13());
                 break;
+            case version_compare ($requestFormat , '0.14.0', '<') :
+                Request::setFilter(new RequestV14());
+                break;
             default:
                 Request::setFilter(null);
         }
@@ -73,31 +80,39 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         } else {
             Authorization::disable();
 
-            $domainDocument = $dbForConsole->findOne('domains', [
-                new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
-            ]);
-
-            if (!$domainDocument) {
-                $domainDocument = new Document([
-                    'domain' => $domain->get(),
-                    'tld' => $domain->getSuffix(),
-                    'registerable' => $domain->getRegisterable(),
-                    'verification' => false,
-                    'certificateId' => null,
-                ]);
-
-                $domainDocument = $dbForConsole->createDocument('domains', $domainDocument);
-
-                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...');
-
-                Resque::enqueue('v1-certificates', 'CertificatesV1', [
-                    'document' => $domainDocument,
-                    'domain' => $domain->get(),
-                    'validateTarget' => false,
-                    'validateCNAME' => false,
-                ]);
+            $mainDomain = null;
+            if(!empty(App::getEnv('_APP_DOMAIN', ''))) {
+                $mainDomain = App::getEnv('_APP_DOMAIN', '');
+            } else {
+                $domainDocument = $dbForConsole->findOne('domains', [], 0, ['_id'], ['ASC']);
+                $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();
             }
 
+            if($mainDomain !== $domain->get()) {
+                Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
+            } else {
+                $domainDocument = $dbForConsole->findOne('domains', [
+                    new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
+                ]);
+
+                if (!$domainDocument) {
+                    $domainDocument = new Document([
+                        'domain' => $domain->get(),
+                        'tld' => $domain->getSuffix(),
+                        'registerable' => $domain->getRegisterable(),
+                        'verification' => false,
+                        'certificateId' => null,
+                    ]);
+
+                    $domainDocument = $dbForConsole->createDocument('domains', $domainDocument);
+
+                    Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
+
+                    (new Certificate())
+                        ->setDomain($domainDocument)
+                        ->trigger();
+                }
+            }
             $domains[$domain->get()] = true;
 
             Authorization::reset(); // ensure authorization is re-enabled
@@ -123,8 +138,13 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);
     $port = \parse_url($request->getOrigin($referrer), PHP_URL_PORT);
 
-    $refDomain = (!empty($protocol) ? $protocol : $request->getProtocol()).'://'.((\in_array($origin, $clients))
-        ? $origin : 'localhost').(!empty($port) ? ':'.$port : '');
+    $refDomainOrigin = 'localhost';
+    $validator = new Hostname($clients);
+    if ($validator->isValid($origin)) {
+        $refDomainOrigin = $origin;
+    }
+
+    $refDomain = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $refDomainOrigin . (!empty($port) ? ':' . $port : '');
 
     $refDomain = (!$route->getLabel('origin', false))  // This route is publicly accessible
         ? $refDomain
@@ -158,6 +178,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
             case version_compare ($responseFormat , '0.12.4', '<='):
                 Response::setFilter(new ResponseV12());
                 break;
+            case version_compare ($responseFormat , '0.13.4', '<='):
+                Response::setFilter(new ResponseV13());
+                break;
             default:
                 Response::setFilter(null);
         }
@@ -173,6 +196,10 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
      */
     if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
         if ($request->getProtocol() !== 'https') {
+            if($request->getMethod() !== Request::METHOD_GET) {
+                throw new Exception('Method unsupported over HTTP.', 500, Exception::GENERAL_PROTOCOL_UNSUPPORTED);
+            }
+
             return $response->redirect('https://'.$request->getHostname().$request->getURI());
         }
 

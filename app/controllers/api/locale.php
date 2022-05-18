@@ -24,7 +24,6 @@ App::get('/v1/locale')
     ->inject('locale')
     ->inject('geodb')
     ->action(function (Request $request, Response $response, Locale $locale, Reader $geodb) {
-        
         $eu = Config::getParam('locale-eu');
         $currencies = Config::getParam('locale-currencies');
         $output = [];
@@ -39,8 +38,8 @@ App::get('/v1/locale')
 
         if ($record) {
             $output['countryCode'] = $record['country']['iso_code'];
-            $output['country'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            $output['continent'] = $locale->getText('continents.'.strtolower($record['continent']['code']), $locale->getText('locale.country.unknown'));
+            $output['country'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+            $output['continent'] = $locale->getText('continents.' . strtolower($record['continent']['code']), $locale->getText('locale.country.unknown'));
             $output['continent'] = (isset($continents[$record['continent']['code']])) ? $continents[$record['continent']['code']] : $locale->getText('locale.country.unknown');
             $output['continentCode'] = $record['continent']['code'];
             $output['eu'] = (\in_array($record['country']['iso_code'], $eu)) ? true : false;
@@ -62,8 +61,8 @@ App::get('/v1/locale')
         }
 
         $response
-            ->addHeader('Cache-Control', 'public, max-age='.$time)
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time).' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'public, max-age=' . $time)
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
         ;
         $response->dynamic(new Document($output), Response::MODEL_LOCALE);
     });
@@ -82,13 +81,12 @@ App::get('/v1/locale/countries')
     ->inject('response')
     ->inject('locale')
     ->action(function (Response $response, Locale $locale) {
-       
         $list = Config::getParam('locale-countries'); /* @var $list array */
         $output = [];
 
         foreach ($list as $value) {
             $output[] = new Document([
-                'name' => $locale->getText('countries.'.strtolower($value)),
+                'name' => $locale->getText('countries.' . strtolower($value)),
                 'code' => $value,
             ]);
         }
@@ -114,14 +112,13 @@ App::get('/v1/locale/countries/eu')
     ->inject('response')
     ->inject('locale')
     ->action(function (Response $response, Locale $locale) {
-
         $eu = Config::getParam('locale-eu');
         $output = [];
 
         foreach ($eu as $code) {
-            if ($locale->getText('countries.'.strtolower($code), false) !== false) {
+            if ($locale->getText('countries.' . strtolower($code), false) !== false) {
                 $output[] = new Document([
-                    'name' => $locale->getText('countries.'.strtolower($code)),
+                    'name' => $locale->getText('countries.' . strtolower($code)),
                     'code' => $code,
                 ]);
             }
@@ -148,18 +145,17 @@ App::get('/v1/locale/countries/phones')
     ->inject('response')
     ->inject('locale')
     ->action(function (Response $response, Locale $locale) {
-        
         $list = Config::getParam('locale-phones'); /* @var $list array */
         $output = [];
 
         \asort($list);
 
         foreach ($list as $code => $name) {
-            if ($locale->getText('countries.'.strtolower($code), false) !== false) {
+            if ($locale->getText('countries.' . strtolower($code), false) !== false) {
                 $output[] = new Document([
-                    'code' => '+'.$list[$code],
+                    'code' => '+' . $list[$code],
                     'countryCode' => $code,
-                    'countryName' => $locale->getText('countries.'.strtolower($code)),
+                    'countryName' => $locale->getText('countries.' . strtolower($code)),
                 ]);
             }
         }
@@ -181,12 +177,11 @@ App::get('/v1/locale/continents')
     ->inject('response')
     ->inject('locale')
     ->action(function (Response $response, Locale $locale) {
+        $list = Config::getParam('locale-continents');
 
-        $list = Config::getParam('locale-continents'); /* @var $list array */
-        
-        foreach ($list as $key => $value) {
+        foreach ($list as $value) {
             $output[] = new Document([
-                'name' => $locale->getText('continents.'.strtolower($value)),
+                'name' => $locale->getText('continents.' . strtolower($value)),
                 'code' => $value,
             ]);
         }
@@ -211,10 +206,9 @@ App::get('/v1/locale/currencies')
     ->label('sdk.response.model', Response::MODEL_CURRENCY_LIST)
     ->inject('response')
     ->action(function (Response $response) {
-
         $list = Config::getParam('locale-currencies');
 
-        $list = array_map(fn($node) => new Document($node), $list);
+        $list = array_map(fn ($node) => new Document($node), $list);
 
         $response->dynamic(new Document(['currencies' => $list, 'total' => \count($list)]), Response::MODEL_CURRENCY_LIST);
     });
@@ -233,7 +227,6 @@ App::get('/v1/locale/languages')
     ->label('sdk.response.model', Response::MODEL_LANGUAGE_LIST)
     ->inject('response')
     ->action(function (Response $response) {
-
         $list = Config::getParam('locale-languages');
 
         $list = array_map(fn ($node) => new Document($node), $list);

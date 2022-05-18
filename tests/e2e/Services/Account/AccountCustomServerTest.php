@@ -33,7 +33,7 @@ class AccountCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-        
+
         return [];
     }
 }

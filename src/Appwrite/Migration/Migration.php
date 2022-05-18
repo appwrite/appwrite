@@ -8,6 +8,8 @@ use Utopia\Database\Database;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Exception;
+use Utopia\App;
+use Utopia\Database\Validator\Authorization;
 
 abstract class Migration
 {
@@ -40,6 +42,7 @@ abstract class Migration
         '0.13.2' => 'V12',
         '0.13.3' => 'V12',
         '0.13.4' => 'V12',
+        '0.14.0' => 'V13',
     ];
 
     /**
@@ -49,15 +52,20 @@ abstract class Migration
 
     public function __construct()
     {
+        Authorization::disable();
+        Authorization::setDefaultStatus(false);
         $this->collections = array_merge([
             '_metadata' => [
-                '$id' => '_metadata'
+                '$id' => '_metadata',
+                '$collection' => Database::METADATA
             ],
             'audit' => [
-                '$id' => 'audit'
+                '$id' => 'audit',
+                '$collection' => Database::METADATA
             ],
             'abuse' => [
-                '$id' => 'abuse'
+                '$id' => 'abuse',
+                '$collection' => Database::METADATA
             ]
         ], Config::getParam('collections', []));
     }
@@ -92,6 +100,7 @@ abstract class Migration
         Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
         foreach ($this->collections as $collection) {
+            if ($collection['$collection'] !== Database::METADATA) return;
             $sum = 0;
             $nextDocument = null;
             $collectionCount = $this->projectDB->count($collection['$id']);
@@ -186,6 +195,53 @@ abstract class Migration
         $result = array_merge($result, $array2);
 
         return $result;
+    }
+
+    /**
+     * Creates colletion from the config collection.
+     *
+     * @param string $id
+     * @param string|null $name
+     * @return void
+     * @throws \Throwable
+     */
+    protected function createCollection(string $id, string $name = null): void
+    {
+        $name ??= $id;
+
+        if (!$this->projectDB->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
+            $attributes = [];
+            $indexes = [];
+            $collection = $this->collections[$id];
+
+            foreach ($collection['attributes'] as $attribute) {
+                $attributes[] = new Document([
+                    '$id' => $attribute['$id'],
+                    'type' => $attribute['type'],
+                    'size' => $attribute['size'],
+                    'required' => $attribute['required'],
+                    'signed' => $attribute['signed'],
+                    'array' => $attribute['array'],
+                    'filters' => $attribute['filters'],
+                ]);
+            }
+
+            foreach ($collection['indexes'] as $index) {
+                $indexes[] = new Document([
+                    '$id' => $index['$id'],
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]);
+            }
+
+            try {
+                $this->projectDB->createCollection($name, $attributes, $indexes);
+            } catch (\Throwable $th) {
+                throw $th;
+            }
+        }
     }
 
     /**

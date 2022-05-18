@@ -58,45 +58,41 @@ window.addEventListener("load", async () => {
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
   let current = {};
   window.ls.container.get('console').subscribe(['project', 'console'], response => {
-    switch (response.event) {
-      case 'stats.connections':
-        for (let project in response.payload) {
-          current[project] = response.payload[project] ?? 0;
-        }
-        break;
-      case 'database.attributes.create':
-      case 'database.attributes.update':
-      case 'database.attributes.delete':
-        document.dispatchEvent(new CustomEvent('database.createAttribute'));
+    if (response.events.includes('stats.connections')) {
+      for (let project in response.payload) {
+        current[project] = response.payload[project] ?? 0;
+      }
 
-        break;
-      case 'database.indexes.create':
-      case 'database.indexes.update':
-      case 'database.indexes.delete':
-        document.dispatchEvent(new CustomEvent('database.createIndex'));
-
-        break;
-      case 'functions.deployments.create':
-      case 'functions.deployments.update':
-      case 'functions.deployments.delete':
-          document.dispatchEvent(new CustomEvent('functions.createDeployment'));
-
-          break;
-
-      case 'functions.executions.create':
-      case 'functions.executions.update':
-      case 'functions.executions.delete':
-          document.dispatchEvent(new CustomEvent('functions.createExecution'));
-
-          break;
-
+      return;
     }
 
+    if (response.events.includes('collections.*.attributes.*')) {
+      document.dispatchEvent(new CustomEvent('database.createAttribute'));
+
+      return;
+    }
+
+    if (response.events.includes('collections.*.indexes.*')) {
+      document.dispatchEvent(new CustomEvent('database.createIndex'));
+
+      return;
+    }
+
+    if (response.events.includes('functions.*.deployments.*')) {
+      document.dispatchEvent(new CustomEvent('functions.createDeployment'));
+
+      return;
+    }
+
+    if (response.events.includes('functions.*.executions.*')) {
+      document.dispatchEvent(new CustomEvent('functions.createExecution'));
+
+      return;
+    }
   });
 
   while (true) {
     let newHistory = {};
-    let createdHistory = false;
     for (const project in current) {
       let history = realtime?.history ?? {};
 

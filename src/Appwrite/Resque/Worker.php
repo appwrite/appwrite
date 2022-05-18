@@ -209,7 +209,7 @@ abstract class Worker
                     throw new \Exception("Project does not exist: {$projectId}");
                 }
 
-                if ($type === self::DATABASE_CONSOLE && !$database->exists($database->getDefaultDatabase(), 'realtime')) {
+                if ($type === self::DATABASE_CONSOLE && !$database->exists($database->getDefaultDatabase(), '_metadata')) {
                     throw new \Exception('Console project not ready');
                 }
 
