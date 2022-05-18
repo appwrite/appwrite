@@ -80,9 +80,10 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         } else {
             Authorization::disable();
 
+            $envDomain = App::getEnv('_APP_DOMAIN', '');
             $mainDomain = null;
-            if(!empty(App::getEnv('_APP_DOMAIN', ''))) {
-                $mainDomain = App::getEnv('_APP_DOMAIN', '');
+            if(!empty($envDomain) && $envDomain !== 'localhost') {
+                $mainDomain = $envDomain;
             } else {
                 $domainDocument = $dbForConsole->findOne('domains', [], 0, ['_id'], ['ASC']);
                 $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();

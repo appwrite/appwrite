@@ -175,8 +175,9 @@ class CertificatesV1 extends Worker
      */
     private function getMainDomain(): ?string
     {
-        if (!empty(App::getEnv('_APP_DOMAIN', ''))) {
-            return App::getEnv('_APP_DOMAIN', '');
+        $envDomain = App::getEnv('_APP_DOMAIN', '');
+        if (!empty($envDomain) && $envDomain !== 'localhost') {
+            return $envDomain;
         } else {
             $domainDocument = $this->dbForConsole->findOne('domains', [], 0, ['_id'], ['ASC']);
             if ($domainDocument) {
