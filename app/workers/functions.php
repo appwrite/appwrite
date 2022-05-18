@@ -193,6 +193,7 @@ class FunctionsV1 extends Worker
         string $jwt = null
     ) {
 
+        $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
 
@@ -228,12 +229,12 @@ class FunctionsV1 extends Worker
 
         /** Create execution or update execution status */
         $execution = Authorization::skip(function () use ($dbForProject, &$executionId, $functionId, $deploymentId, $trigger, $user) {
-            $execution = $dbForProject->getDocument('executions', $executionId);
+            $execution = $dbForProject->getDocument('executions', $executionId ?? '');
             if ($execution->isEmpty()) {
                 $executionId = $dbForProject->getId();
                 $execution = $dbForProject->createDocument('executions', new Document([
                     '$id' => $executionId,
-                    '$read' => $user->getId() ? ['user:' . $user->getId()] : [],
+                    '$read' => $user->isEmpty() ? [] : ['user:' . $user->getId()],
                     '$write' => [],
                     'dateCreated' => time(),
                     'functionId' => $functionId,
@@ -282,7 +283,7 @@ class FunctionsV1 extends Worker
                 path: $build->getAttribute('outputPath', ''),
                 vars: $vars,
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
-                data: $vars['APPWRITE_FUNCTION_DATA'],
+                data: $vars['APPWRITE_FUNCTION_DATA'] ?? '',
                 runtime: $function->getAttribute('runtime', ''),
                 timeout: $function->getAttribute('timeout', 0),
                 baseImage: $runtime['image']
