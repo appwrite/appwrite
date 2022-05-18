@@ -9,10 +9,10 @@ use Appwrite\Auth\OAuth2;
 
 class Authentik extends OAuth2
 {  
-     /**
+    /**
      * @var array
      */
-    protected $scopes = [
+    protected array $scopes = [
         'openid',
         'profile',
         'email',
@@ -22,12 +22,12 @@ class Authentik extends OAuth2
     /**
      * @var array
      */
-    protected $user = [];
+    protected array $user = [];
     
     /**
      * @var array
      */
-    protected $tokens = [];
+    protected array $tokens = [];
     
     /**
      * @return string
@@ -135,6 +135,25 @@ class Authentik extends OAuth2
         }
         
         return '';
+    }
+
+    /**
+     * Check if the User email is verified
+     * 
+     * 
+     * @param string $accessToken
+     * 
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $user = $this->getUser($accessToken);
+
+        if ($user['email_verified'] ?? false) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
