@@ -19,7 +19,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\QueryValidator;
-use Utopia\Database\Validator\OrderAttributes;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
@@ -32,7 +31,7 @@ use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries as QueriesValidator;
-use Appwrite\Utopia\Database\Validator\OrderAttributes as OrderAttributesValidator;
+use Appwrite\Utopia\Database\Validator\OrderAttributes;
 use Appwrite\Utopia\Response;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Audit as EventAudit;
@@ -1776,20 +1775,13 @@ App::get('/v1/database/collections/:collectionId/documents')
         if(!empty($orderAttributes)) {
             $validator = new OrderAttributes($collection->getAttribute('attributes', []), $collection->getAttribute('indexes', []), true);
             if (!$validator->isValid($orderAttributes)) {
-                throw new Exception($validator->getDescription(), 400);
-            }
-        }
-
-        if (!empty($queries)) {
-            $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []), true);
-            if (!$validator->isValid($queries)) {
                 throw new Exception($validator->getDescription(), 400, Exception::GENERAL_QUERY_INVALID);
             }
         }
-
-        if(!empty($orderAttributes)) {
-            $validator = new OrderAttributesValidator($collection->getAttribute('attributes', []), $collection->getAttribute('indexes', []), true);
-            if (!$validator->isValid($orderAttributes)) {
+        
+        if (!empty($queries)) {
+            $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []), true);
+            if (!$validator->isValid($queries)) {
                 throw new Exception($validator->getDescription(), 400, Exception::GENERAL_QUERY_INVALID);
             }
         }
