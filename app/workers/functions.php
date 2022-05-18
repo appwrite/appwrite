@@ -94,6 +94,7 @@ class FunctionsV1 extends Worker
         $user = new Document($this->args['user'] ?? []);
         $project = new Document($this->args['project'] ?? []);
         $execution = new Document($this->args['execution'] ?? []);
+        $function = new Document($this->args['function'] ?? []);
 
         switch ($type) {
             case 'http':
@@ -117,8 +118,6 @@ class FunctionsV1 extends Worker
 
             case 'schedule':
                 $scheduleOriginal = $execution->getAttribute('scheduleOriginal', '');
-                $function = Authorization::skip(fn () => $database->getDocument('functions', $execution->getAttribute('functionId')));
-
                 /*
                  * 1. Get Original Task
                  * 2. Check for updates
@@ -133,6 +132,8 @@ class FunctionsV1 extends Worker
                  */
 
                 // Reschedule
+                $function = Authorization::skip(fn () => $database->getDocument('functions', $function->getId()));
+
                 if (empty($function->getId())) {
                     throw new Exception('Function not found (' . $function->getId() . ')');
                 }
