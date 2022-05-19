@@ -16,7 +16,7 @@ abstract class Migration
     /**
      * @var int
      */
-    protected int $limit = 250;
+    protected int $limit = 100;
 
     /**
      * @var Document
@@ -108,9 +108,7 @@ abstract class Migration
             Console::log('Migrating Collection ' . $collection['$id'] . ':');
 
             do {
-                $start = microtime(true);
                 $documents = $this->projectDB->find($collection['$id'], limit: $this->limit, cursor: $nextDocument);
-                var_dump("Fetching documents took " . microtime(true) - $start);
                 $count = count($documents);
                 $sum += $count;
 
@@ -123,17 +121,10 @@ abstract class Migration
                                 return;
                             }
 
-                            $start = microtime(true);
-
                             $old = $document->getArrayCopy();
                             $new = call_user_func($callback, $document);
-                            var_dump("migration took " . microtime(true) - $start);
 
-                            $start = microtime(true);
-                            $diff = !$this->hasDifference($new->getArrayCopy(), $old);
-                            var_dump("Diff took " . microtime(true) - $start);
-
-                            if (!$diff) {
+                            if (!$this->hasDifference($new->getArrayCopy(), $old)) {
                                 return;
                             }
 
