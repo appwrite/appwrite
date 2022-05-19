@@ -124,7 +124,7 @@ abstract class Migration
                             $old = $document->getArrayCopy();
                             $new = call_user_func($callback, $document);
 
-                            if (!$this->hasDifference($new->getArrayCopy(), $old)) {
+                            if (!self::hasDifference($new->getArrayCopy(), $old)) {
                                 return;
                             }
 
@@ -158,14 +158,14 @@ abstract class Migration
      * @param array $array2
      * @return bool
      */
-    public function hasDifference(array $array1, array $array2): bool
+    public static function hasDifference(array $array1, array $array2): bool
     {
         foreach ($array1 as $key => $value) {
             if (is_array($value)) {
                 if (!isset($array2[$key]) || !is_array($array2[$key])) {
                     return true;
                 } else {
-                    if ($this->hasDifference($value, $array2[$key])) {
+                    if (self::hasDifference($value, $array2[$key])) {
                         return true;
                     }
                 }
