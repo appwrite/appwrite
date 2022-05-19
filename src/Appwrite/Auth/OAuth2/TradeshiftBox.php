@@ -6,7 +6,7 @@ use Appwrite\Auth\OAuth2\Tradeshift;
 
 class TradeshiftBox extends Tradeshift
 {
-    protected $environment = 'sandbox';
+    protected string $environment = 'sandbox';
 
     /**
      * @return string

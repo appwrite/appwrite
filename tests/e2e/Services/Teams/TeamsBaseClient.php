@@ -12,6 +12,7 @@ trait TeamsBaseClient
     public function testGetTeamMemberships($data):array
     {
         $teamUid = $data['teamUid'] ?? '';
+        $teamName = $data['teamName'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -24,8 +25,9 @@ trait TeamsBaseClient
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsInt($response['body']['total']);
         $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
-        $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['name']);
-        $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['email']);
+        $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['userName']);
+        $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['userEmail']);
+        $this->assertEquals($teamName, $response['body']['memberships'][0]['teamName']);
         $this->assertEquals('owner', $response['body']['memberships'][0]['roles'][0]);
 
         $membershipId = $response['body']['memberships'][0]['$id'];
@@ -40,8 +42,9 @@ trait TeamsBaseClient
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsInt($response['body']['total']);
         $this->assertNotEmpty($response['body']['memberships'][0]);
-        $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['name']);
-        $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['email']);
+        $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['userName']);
+        $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['userEmail']);
+        $this->assertEquals($teamName, $response['body']['memberships'][0]['teamName']);
         $this->assertEquals('owner', $response['body']['memberships'][0]['roles'][0]);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid.'/memberships', array_merge([
@@ -54,8 +57,9 @@ trait TeamsBaseClient
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsInt($response['body']['total']);
         $this->assertNotEmpty($response['body']['memberships'][0]);
-        $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['name']);
-        $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['email']);
+        $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['userName']);
+        $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['userEmail']);
+        $this->assertEquals($teamName, $response['body']['memberships'][0]['teamName']);
         $this->assertEquals('owner', $response['body']['memberships'][0]['roles'][0]);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid.'/memberships', array_merge([
@@ -104,6 +108,7 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
         $this->assertNotEmpty($response['body']['teamId']);
+        $this->assertNotEmpty($response['body']['teamName']);
         $this->assertCount(2, $response['body']['roles']);
         $this->assertIsInt($response['body']['joined']);
         $this->assertEquals(false, $response['body']['confirm']);
@@ -172,6 +177,7 @@ trait TeamsBaseClient
 
         return [
             'teamUid' => $teamUid,
+            'teamName' => $teamName,
             'secret' => $secret,
             'membershipUid' => $membershipUid,
             'userUid' => $userUid,
