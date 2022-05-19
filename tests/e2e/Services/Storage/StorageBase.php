@@ -188,6 +188,24 @@ trait StorageBase
         $this->assertEquals('File extension not allowed', $res['body']['message']);
 
         return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id'],  'largeFileId' => $largeFile['body']['$id'], 'largeBucketId' => $bucket2['body']['$id']];
+
+        /**
+         * Test for FAILURE create bucket with too high limit (bigger then _APP_STORAGE_LIMIT)
+         */
+        $failedBucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => 'unique()',
+            'name' => 'Test Bucket 2',
+            'permission' => 'file',
+            'maximumFileSize' => 200000000, //200MB
+            'allowedFileExtensions' => ["jpg", "png"],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+        $this->assertEquals(400, $failedBucket['headers']['status-code']);
     }
 
     /**

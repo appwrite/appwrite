@@ -26,7 +26,7 @@ trait UsersBase
         $bodyString = $user['body'];
         $prefs = substr($bodyString, strpos($bodyString, '"prefs":')+8,2);
         $this->assertEquals('{}', $prefs);
-        
+
         $body = json_decode($bodyString, true);
 
         $this->assertEquals($user['headers']['status-code'], 201);
@@ -282,6 +282,44 @@ trait UsersBase
     }
 
     /**
+     * @depends testUpdateUserName
+     */
+    public function testUpdateUserNameSearch($data): void
+    {
+        $id = $data['userId'] ?? '';
+        $newName = 'Updated name';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $newName
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['$id'], $id);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $id
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['$id'], $id);
+    }
+
+    /**
      * @depends testGetUser
      */
     public function testUpdateUserEmail(array $data):array
@@ -308,6 +346,44 @@ trait UsersBase
         $this->assertEquals($user['body']['email'], 'users.service@updated.com');
 
         return $data;
+    }
+
+    /**
+     * @depends testUpdateUserEmail
+     */
+    public function testUpdateUserEmailSearch($data): void
+    {
+        $id = $data['userId'] ?? '';
+        $newEmail = '"users.service@updated.com"';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $newEmail
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['$id'], $id);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $id
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['$id'], $id);
     }
 
     /**

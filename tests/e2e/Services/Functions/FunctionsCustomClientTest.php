@@ -33,8 +33,8 @@ class FunctionsCustomClientTest extends Scope
                 'funcKey3' => 'funcValue3',
             ],
             'events' => [
-                'account.create',
-                'account.delete',
+                'users.*.create',
+                'users.*.delete',
             ],
             'schedule' => '0 0 1 1 *',
             'timeout' => 10,
@@ -65,8 +65,8 @@ class FunctionsCustomClientTest extends Scope
                 'funcKey3' => 'funcValue3',
             ],
             'events' => [
-                'account.create',
-                'account.delete',
+                'users.*.create',
+                'users.*.delete',
             ],
             'schedule' => '0 0 1 1 *',
             'timeout' => 10,
@@ -208,7 +208,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-key' => $apikey,
         ]);
 
-        $output = json_decode($executions['body']['stdout'], true);
+        $output = json_decode($executions['body']['response'], true);
         $this->assertEquals(200, $executions['headers']['status-code']);
         $this->assertEquals('completed', $executions['body']['status']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
@@ -383,7 +383,7 @@ class FunctionsCustomClientTest extends Scope
             'async' => false
         ]);
 
-        $output = json_decode($execution['body']['stdout'], true);
+        $output = json_decode($execution['body']['response'], true);
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
