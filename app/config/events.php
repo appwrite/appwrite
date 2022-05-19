@@ -7,279 +7,217 @@
 use Appwrite\Utopia\Response;
 
 return [
-    'account.create' => [
-        'description' => 'This event triggers when the account is created.',
-        'model' => Response::MODEL_USER,
-        'note' => '',
+    'users' => [
+        '$model' => Response::MODEL_USER,
+        '$resource' => true,
+        '$description' => 'This event triggers on any user\'s event.',
+        'sessions' => [
+            '$model' => Response::MODEL_SESSION,
+            '$resource' => true,
+            '$description' => 'This event triggers on any user\'s sessions event.',
+            'create' => [
+                '$description' => 'This event triggers when a session for a user is created.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a session for a user is deleted.'
+            ],
+        ],
+        'recovery' => [
+            '$model' => Response::MODEL_TOKEN,
+            '$resource' => true,
+            '$description' => 'This event triggers on any user\'s recovery token event.',
+            'create' => [
+                '$description' => 'This event triggers when a recovery token for a user is created.',
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a recovery token for a user is validated.'
+            ],
+        ],
+        'verification' => [
+            '$model' => Response::MODEL_TOKEN,
+            '$resource' => true,
+            '$description' => 'This event triggers on any user\'s verification token event.',
+            'create' => [
+                '$description' => 'This event triggers when a verification token for a user is created.',
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a verification token for a user is validated.'
+            ],
+        ],
+        'create' => [
+            '$description' => 'This event triggers when a user is created.'
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a user is deleted.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a user is updated.',
+            'email' => [
+                '$description' => 'This event triggers when a user\'s email address is updated.',
+            ],
+            'name' => [
+                '$description' => 'This event triggers when a user\'s name is updated.',
+            ],
+            'password' => [
+                '$description' => 'This event triggers when a user\'s password is updated.',
+            ],
+            'status' => [
+                '$description' => 'This event triggers when a user\'s status is updated.',
+            ],
+            'prefs' => [
+                '$description' => 'This event triggers when a user\'s preferences is updated.',
+            ],
+        ]
     ],
-    'account.update.email' => [
-        'description' => 'This event triggers when the account email address is updated.',
-        'model' => Response::MODEL_USER,
-        'note' => '',
+    'collections' => [
+        '$model' => Response::MODEL_COLLECTION,
+        '$resource' => true,
+        '$description' => 'This event triggers on any collection event.',
+        'documents' => [
+            '$model' => Response::MODEL_DOCUMENT,
+            '$resource' => true,
+            '$description' => 'This event triggers on any documents event.',
+            'create' => [
+                '$description' => 'This event triggers when a document is created.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a document is deleted.'
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a document is updated.'
+            ],
+        ],
+        'indexes' => [
+            '$model' => Response::MODEL_INDEX,
+            '$resource' => true,
+            '$description' => 'This event triggers on any indexes event.',
+            'create' => [
+                '$description' => 'This event triggers when an index is created.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when an index is deleted.'
+            ]
+        ],
+        'attributes' => [
+            '$model' => Response::MODEL_ATTRIBUTE,
+            '$resource' => true,
+            '$description' => 'This event triggers on any attributes event.',
+            'create' => [
+                '$description' => 'This event triggers when an attribute is created.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when an attribute is deleted.'
+            ]
+        ],
+        'create' => [
+            '$description' => 'This event triggers when a collection is created.'
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a collection is deleted.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a collection is updated.',
+        ]
     ],
-    'account.update.name' => [
-        'description' => 'This event triggers when the account name is updated.',
-        'model' => Response::MODEL_USER,
-        'note' => '',
+    'buckets' => [
+        '$model' => Response::MODEL_BUCKET,
+        '$resource' => true,
+        '$description' => 'This event triggers on any buckets event.',
+        'files' => [
+            '$model' => Response::MODEL_FILE,
+            '$resource' => true,
+            '$description' => 'This event triggers on any files event.',
+            'create' => [
+                '$description' => 'This event triggers when a file is created.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a file is deleted.'
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a file is updated.'
+            ],
+        ],
+        'create' => [
+            '$description' => 'This event triggers when a bucket is created.'
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a bucket is deleted.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a bucket is updated.',
+        ]
     ],
-    'account.update.password' => [
-        'description' => 'This event triggers when the account password is updated.',
-        'model' => Response::MODEL_USER,
-        'note' => '',
+    'teams' => [
+        '$model' => Response::MODEL_TEAM,
+        '$resource' => true,
+        '$description' => 'This event triggers on any teams event.',
+        'memberships' => [
+            '$model' => Response::MODEL_MEMBERSHIP,
+            '$resource' => true,
+            '$description' => 'This event triggers on any team memberships event.',
+            'create' => [
+                '$description' => 'This event triggers when a membership is created.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a membership is deleted.'
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a membership is updated.',
+                'status' => [
+                    '$description' => 'This event triggers when a team memberships status is updated.'
+                ]
+            ],
+        ],
+        'create' => [
+            '$description' => 'This event triggers when a bucket is created.'
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a bucket is deleted.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a bucket is updated.',
+        ]
     ],
-    'users.update.email' => [
-        'description' => 'This event triggers when the user email address is updated.',
-        'model' => Response::MODEL_USER,
-        'note' => '',
-    ],
-    'users.update.name' => [
-        'description' => 'This event triggers when the user name is updated.',
-        'model' => Response::MODEL_USER,
-        'note' => '',
-    ],
-    'users.update.password' => [
-        'description' => 'This event triggers when the user password is updated.',
-        'model' => Response::MODEL_USER,
-        'note' => '',
-    ],
-    'account.update.prefs' => [
-        'description' => 'This event triggers when the account preferences are updated.',
-        'model' => Response::MODEL_USER,
-        'note' => '',
-    ],
-    'account.recovery.create' => [
-        'description' => 'This event triggers when the account recovery token is created.',
-        'model' => Response::MODEL_TOKEN,
-        'note' => 'version >= 0.7',
-    ],
-    'account.recovery.update' => [
-        'description' => 'This event triggers when the account recovery token is validated.',
-        'model' => Response::MODEL_TOKEN,
-        'note' => 'version >= 0.7',
-    ],
-    'account.verification.create' => [
-        'description' => 'This event triggers when the account verification token is created.',
-        'model' => Response::MODEL_TOKEN,
-        'note' => 'version >= 0.7',
-    ],
-    'account.verification.update' => [
-        'description' => 'This event triggers when the account verification token is validated.',
-        'model' => Response::MODEL_TOKEN,
-        'note' => 'version >= 0.7',
-    ],
-    'account.delete' => [
-        'description' => 'This event triggers when the account is deleted.',
-        'model' => Response::MODEL_USER,
-        'note' => '',
-    ],
-    'account.sessions.create' => [
-        'description' => 'This event triggers when the account session is created.',
-        'model' => Response::MODEL_SESSION,
-        'note' => '',
-    ],
-    'account.sessions.delete' => [
-        'description' => 'This event triggers when the account session is deleted.',
-        'model' => Response::MODEL_SESSION,
-        'note' => '',
-    ],
-    'account.sessions.update' => [
-        'description' => 'This event triggers when the account session is updated.',
-        'model' => Response::MODEL_SESSION,
-        'note' => '',
-    ],
-    'database.collections.create' => [
-        'description' => 'This event triggers when a database collection is created.',
-        'model' => Response::MODEL_COLLECTION,
-        'note' => '',
-    ],
-    'database.collections.update' => [
-        'description' => 'This event triggers when a database collection is updated.',
-        'model' => Response::MODEL_COLLECTION,
-        'note' => '',
-    ],
-    'database.collections.delete' => [
-        'description' => 'This event triggers when a database collection is deleted.',
-        'model' => Response::MODEL_COLLECTION,
-        'note' => '',
-    ],
-    'database.attributes.create' => [
-        'description' => 'This event triggers when a collection attribute is created.',
-        'model' => Response::MODEL_ATTRIBUTE,
-        'note' => '',
-    ],
-    'database.attributes.delete' => [
-        'description' => 'This event triggers when a collection attribute is deleted.',
-        'model' => Response::MODEL_ATTRIBUTE,
-        'note' => '',
-    ],
-    'database.indexes.create' => [
-        'description' => 'This event triggers when a collection index is created.',
-        'model' => Response::MODEL_INDEX,
-        'note' => '',
-    ],
-    'database.indexes.delete' => [
-        'description' => 'This event triggers when a collection index is deleted.',
-        'model' => Response::MODEL_INDEX,
-        'note' => '',
-    ],
-    'database.documents.create' => [
-        'description' => 'This event triggers when a database document is created.',
-        'model' => Response::MODEL_DOCUMENT,
-        'note' => '',
-    ],
-    'database.documents.update' => [
-        'description' => 'This event triggers when a database document is updated.',
-        'model' => Response::MODEL_DOCUMENT,
-        'note' => '',
-    ],
-    'database.documents.delete' => [
-        'description' => 'This event triggers when a database document is deleted.',
-        'model' => Response::MODEL_DOCUMENT,
-        'note' => '',
-    ],
-    'functions.create' => [
-        'description' => 'This event triggers when a function is created.',
-        'model' => Response::MODEL_FUNCTION,
-        'note' => 'version >= 0.7',
-    ],
-    'functions.update' => [
-        'description' => 'This event triggers when a function is updated.',
-        'model' => Response::MODEL_FUNCTION,
-        'note' => 'version >= 0.7',
-    ],
-    'functions.delete' => [
-        'description' => 'This event triggers when a function is deleted.',
-        'model' => Response::MODEL_ANY,
-        'note' => 'version >= 0.7',
-    ],
-    'functions.deployments.create' => [
-        'description' => 'This event triggers when a function delpoyment is created.',
-        'model' => Response::MODEL_DEPLOYMENT,
-        'note' => 'version >= 0.7',
-    ],
-    'functions.deployments.update' => [
-        'description' => 'This event triggers when a function delpoyment is updated.',
-        'model' => Response::MODEL_FUNCTION,
-        'note' => 'version >= 0.7',
-    ],
-    'functions.deployments.delete' => [
-        'description' => 'This event triggers when a function delpoyment is deleted.',
-        'model' => Response::MODEL_ANY,
-        'note' => 'version >= 0.7',
-    ],
-    'functions.executions.create' => [
-        'description' => 'This event triggers when a function execution is created.',
-        'model' => Response::MODEL_EXECUTION,
-        'note' => 'version >= 0.7',
-    ],
-    'functions.executions.update' => [
-        'description' => 'This event triggers when a function execution is updated.',
-        'model' => Response::MODEL_EXECUTION,
-        'note' => 'version >= 0.7',
-    ],
-    'storage.files.create' => [
-        'description' => 'This event triggers when a storage file is created.',
-        'model' => Response::MODEL_FILE,
-        'note' => '',
-    ],
-    'storage.files.update' => [
-        'description' => 'This event triggers when a storage file is updated.',
-        'model' => Response::MODEL_FILE,
-        'note' => '',
-    ],
-    'storage.files.delete' => [
-        'description' => 'This event triggers when a storage file is deleted.',
-        'model' => Response::MODEL_FILE,
-        'note' => '',
-    ],
-    'storage.buckets.create' => [
-        'description' => 'This event triggers when a storage bucket is created.',
-        'model' => Response::MODEL_BUCKET,
-        'note' => '',
-    ],
-    'storage.buckets.update' => [
-        'description' => 'This event triggers when a storage bucket is updated.',
-        'model' => Response::MODEL_BUCKET,
-        'note' => '',
-    ],
-    'storage.buckets.delete' => [
-        'description' => 'This event triggers when a storage bucket is deleted.',
-        'model' => Response::MODEL_BUCKET,
-        'note' => '',
-    ],
-    'users.create' => [
-        'description' => 'This event triggers when a user is created from the users API.',
-        'model' => Response::MODEL_USER,
-        'note' => 'version >= 0.7',
-    ],
-    'users.update.prefs' => [
-        'description' => 'This event triggers when a user preference is updated from the users API.',
-        'model' => Response::MODEL_ANY,
-        'note' => 'version >= 0.7',
-    ],
-    'users.update.email' => [
-        'description' => 'This event triggers when the user email address is updated.',
-        'model' => Response::MODEL_USER,
-        'note' => 'version >= 0.10',
-    ],
-    'users.update.name' => [
-        'description' => 'This event triggers when the user name is updated.',
-        'model' => Response::MODEL_USER,
-        'note' => 'version >= 0.10',
-    ],
-    'users.update.password' => [
-        'description' => 'This event triggers when the user password is updated.',
-        'model' => Response::MODEL_USER,
-        'note' => 'version >= 0.10',
-    ],
-    'users.update.status' => [
-        'description' => 'This event triggers when a user status is updated from the users API.',
-        'model' => Response::MODEL_USER,
-        'note' => 'version >= 0.7',
-    ],
-    'users.delete' => [
-        'description' => 'This event triggers when a user is deleted from users API.',
-        'model' => Response::MODEL_USER,
-        'note' => 'version >= 0.7',
-    ],
-    'users.sessions.delete' => [
-        'description' => 'This event triggers when a user session is deleted from users API.',
-        'model' => Response::MODEL_SESSION,
-        'note' => 'version >= 0.7',
-    ],
-    'teams.create' => [
-        'description' => 'This event triggers when a team is created.',
-        'model' => Response::MODEL_TEAM,
-        'note' => 'version >= 0.7',
-    ],
-    'teams.update' => [
-        'description' => 'This event triggers when a team is updated.',
-        'model' => Response::MODEL_TEAM,
-        'note' => 'version >= 0.7',
-    ],
-    'teams.delete' => [
-        'description' => 'This event triggers when a team is deleted.',
-        'model' => Response::MODEL_TEAM,
-        'note' => 'version >= 0.7',
-    ],
-    'teams.memberships.create' => [
-        'description' => 'This event triggers when a team memberships is created.',
-        'model' => Response::MODEL_MEMBERSHIP,
-        'note' => 'version >= 0.7',
-    ],
-    'teams.memberships.update' => [
-        'description' => 'This event triggers when a team membership is updated.',
-        'model' => Response::MODEL_MEMBERSHIP,
-        'note' => 'version >= 0.8',
-    ],
-    'teams.memberships.update.status' => [
-        'description' => 'This event triggers when a team memberships status is updated.',
-        'model' => Response::MODEL_MEMBERSHIP,
-        'note' => 'version >= 0.7',
-    ],
-    'teams.memberships.delete' => [
-        'description' => 'This event triggers when a team memberships is deleted.',
-        'model' => Response::MODEL_MEMBERSHIP,
-        'note' => 'version >= 0.7',
-    ],
+    'functions' => [
+        '$model' => Response::MODEL_FUNCTION,
+        '$resource' => true,
+        '$description' => 'This event triggers on any functions event.',
+        'deployments' => [
+            '$model' => Response::MODEL_DEPLOYMENT,
+            '$resource' => true,
+            '$description' => 'This event triggers on any deployments event.',
+            'create' => [
+                '$description' => 'This event triggers when a deployment is created.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a deployment is deleted.'
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a deployment is updated.'
+            ],
+        ],
+        'executions' => [
+            '$model' => Response::MODEL_EXECUTION,
+            '$resource' => true,
+            '$description' => 'This event triggers on any executions event.',
+            'create' => [
+                '$description' => 'This event triggers when an execution is created.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when an execution is deleted.'
+            ],
+            'update' => [
+                '$description' => 'This event triggers when an execution is updated.'
+            ],
+        ],
+        'create' => [
+            '$description' => 'This event triggers when a function is created.'
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a function is deleted.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a function is updated.',
+        ]
+    ]
 ];

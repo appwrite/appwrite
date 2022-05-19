@@ -83,8 +83,17 @@ window.ls.router
     scope: "console",
     project: true
   })
-  .add("/console/webhooks/:tab", {
-    template: "/console/webhooks?version=" + APP_ENV.CACHEBUSTER,
+  .add("/console/webhooks/webhook", {
+    template: function(window) {
+      return window.location.pathname + window.location.search + '&version=' + APP_ENV.CACHEBUSTER;
+    },
+    scope: "console",
+    project: true
+  })
+  .add("/console/webhooks/webhook/new", {
+    template: function(window) {
+      return window.location.pathname + window.location.search + '&version=' + APP_ENV.CACHEBUSTER;
+    },
     scope: "console",
     project: true
   })

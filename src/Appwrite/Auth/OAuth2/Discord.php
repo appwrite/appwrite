@@ -12,22 +12,22 @@ class Discord extends OAuth2
     /**
      * @var string
      */
-    private $endpoint = 'https://discordapp.com/api';
+    private string $endpoint = 'https://discordapp.com/api';
 
     /**
      * @var array
      */
-    protected $user = [];
+    protected array $user = [];
     
     /**
      * @var array
      */
-    protected $tokens = [];
+    protected array $tokens = [];
 
     /**
      * @var array
      */
-    protected $scopes = [
+    protected array $scopes = [
             'identify',
             'email'
     ];
@@ -118,11 +118,7 @@ class Discord extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
-        }
-
-        return '';
+        return $user['id'] ?? '';
     }
 
     /**
@@ -134,11 +130,27 @@ class Discord extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['email'])) {
-            return $user['email'];
+        return $user['email'] ?? '';
+    }
+
+    /**
+     * Check if the OAuth email is verified
+     * 
+     * @link https://discord.com/developers/docs/resources/user
+     * 
+     * @param string $accessToken
+     * 
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $user = $this->getUser($accessToken);
+
+        if ($user['verified'] ?? false) {
+            return true;
         }
 
-        return '';
+        return false;
     }
 
     /**
@@ -150,11 +162,7 @@ class Discord extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['username'])) {
-            return $user['username'];
-        }
-
-        return '';
+        return $user['username'] ?? '';
     }
 
     /**

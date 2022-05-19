@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM node:16.13.2-alpine3.15 as node
+FROM node:16.14.2-alpine3.15 as node
 
 WORKDIR /usr/local/src/
 
@@ -30,8 +30,8 @@ ARG DEBUG=false
 ENV DEBUG=$DEBUG
 
 ENV PHP_REDIS_VERSION=5.3.7 \
-    PHP_MONGODB_VERSION=1.9.1 \
-    PHP_SWOOLE_VERSION=v4.8.7 \
+    PHP_MONGODB_VERSION=1.13.0 \
+    PHP_SWOOLE_VERSION=v4.8.9 \
     PHP_IMAGICK_VERSION=3.7.0 \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0
