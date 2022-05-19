@@ -6380,7 +6380,11 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
+                "source": "https://github.com/twigphp/Twig/tree/v3.4.1"
+            },
+            "funding": [
                 {
+                    "url": "https://github.com/fabpot",
                     "type": "github"
                 },
                 {
