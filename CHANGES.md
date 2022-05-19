@@ -1,3 +1,11 @@
+# Version 0.14.2
+
+## Features
+
+- Support for Backblaze adapter in Storage
+- Support for Linode adapter in Storage
+- Support for Wasabi adapter in Storage
+
 # Version 0.14.1
 
 ## Bugs
