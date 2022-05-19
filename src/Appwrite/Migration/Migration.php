@@ -153,10 +153,10 @@ abstract class Migration
 
     /**
      * Checks 2 arrays for differences.
-     * 
-     * @param array $array1 
-     * @param array $array2 
-     * @return bool 
+     *
+     * @param array $array1
+     * @param array $array2
+     * @return bool
      */
     public function hasDifference(array $array1, array $array2): bool
     {
@@ -165,8 +165,7 @@ abstract class Migration
                 if (!isset($array2[$key]) || !is_array($array2[$key])) {
                     return true;
                 } else {
-                    $new_diff = $this->hasDifference($value, $array2[$key]);
-                    if ($new_diff) {
+                    if ($this->hasDifference($value, $array2[$key])) {
                         return true;
                     }
                 }
