@@ -17,7 +17,10 @@ use Utopia\Orchestration\Adapter\DockerCLI;
 use Utopia\Orchestration\Orchestration;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Device\Linode;
+use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Storage;
 use Utopia\Swoole\Request;
@@ -130,6 +133,27 @@ function getStorageDevice($root): Device {
             $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
             $doSpacesAcl = 'private';
             return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+        case Storage::DEVICE_BACKBLAZE:
+            $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
+            $backblazeSecretKey = App::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
+            $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
+            $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
+            $backblazeAcl = 'private';
+            return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
+        case Storage::DEVICE_LINODE:
+            $linodeAccessKey = App::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
+            $linodeSecretKey = App::getEnv('_APP_STORAGE_LINODE_SECRET', '');
+            $linodeRegion = App::getEnv('_APP_STORAGE_LINODE_REGION', '');
+            $linodeBucket = App::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
+            $linodeAcl = 'private';
+            return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
+        case Storage::DEVICE_WASABI:
+            $wasabiAccessKey = App::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
+            $wasabiSecretKey = App::getEnv('_APP_STORAGE_WASABI_SECRET', '');
+            $wasabiRegion = App::getEnv('_APP_STORAGE_WASABI_REGION', '');
+            $wasabiBucket = App::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
+            $wasabiAcl = 'private';
+            return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
     }
 }
 
