@@ -50,22 +50,22 @@ abstract class MigrationTest extends TestCase
     {
         $this->assertFalse(Migration::hasDifference([], []));
         $this->assertFalse(Migration::hasDifference([
-            'a' => true,
-            'b' => 'abc',
-            'c' => 123,
-            'd' => ['a', 'b', 'c'],
-            'nested' => [
+            'bool' => true,
+            'string' => 'abc',
+            'int' => 123,
+            'array' => ['a', 'b', 'c'],
+            'assoc' => [
                 'a' => true,
                 'b' => 'abc',
                 'c' => 123,
                 'd' => ['a', 'b', 'c']
             ]
         ], [
-            'a' => true,
-            'b' => 'abc',
-            'c' => 123,
-            'd' => ['a', 'b', 'c'],
-            'nested' => [
+            'bool' => true,
+            'string' => 'abc',
+            'int' => 123,
+            'array' => ['a', 'b', 'c'],
+            'assoc' => [
                 'a' => true,
                 'b' => 'abc',
                 'c' => 123,
@@ -95,17 +95,17 @@ abstract class MigrationTest extends TestCase
             'nested' => []
         ]));
         $this->assertTrue(Migration::hasDifference([
-            'nested' => [
-                'a' => true,
-                'b' => 'abc',
-                'c' => 123,
-                'd' => ['a', 'b', 'c']
+            'assoc' => [
+                'bool' => true,
+                'string' => 'abc',
+                'int' => 123,
+                'array' => ['a', 'b', 'c']
             ]
         ], [
             'nested' => [
                 'a' => true,
-                'c' => '123',
-                'd' => ['a', 'b', 'c']
+                'int' => '123',
+                'array' => ['a', 'b', 'c']
             ]
         ]));
     }
