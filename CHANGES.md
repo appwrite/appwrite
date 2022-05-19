@@ -5,6 +5,7 @@
 - Support for Backblaze adapter in Storage
 - Support for Linode adapter in Storage
 - Support for Wasabi adapter in Storage
+- Improved overall Migration speed
 
 # Version 0.14.1
 
