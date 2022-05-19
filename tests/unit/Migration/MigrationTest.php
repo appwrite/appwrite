@@ -72,6 +72,30 @@ abstract class MigrationTest extends TestCase
                 'd' => ['a', 'b', 'c']
             ]
         ]));
+        $this->assertFalse(Migration::hasDifference([
+            'bool' => true,
+            'string' => 'abc',
+            'int' => 123,
+            'array' => ['a', 'b', 'c'],
+            'assoc' => [
+                'a' => true,
+                'b' => 'abc',
+                'c' => 123,
+                'd' => ['a', 'b', 'c']
+            ]
+        ], [
+            'string' => 'abc',
+            'assoc' => [
+                'a' => true,
+                'b' => 'abc',
+                'c' => 123,
+                'd' => ['a', 'b', 'c']
+            ],
+            'int' => 123,
+            'array' => ['a', 'b', 'c'],
+            'bool' => true,
+
+        ]));
         $this->assertTrue(Migration::hasDifference([
             'a' => true
         ], [
