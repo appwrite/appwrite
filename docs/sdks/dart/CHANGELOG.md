@@ -1,3 +1,6 @@
+## 5.0.1
+* Code formatting fix
+
 ## 5.0.0
 * Support for Appwrite 0.14
 * **BREAKING** `account.delete()` -> `account.updateStatus()`
