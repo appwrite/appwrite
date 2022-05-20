@@ -1831,7 +1831,7 @@
                         payload['cursorDirection'] = cursorDirection;
                     }
                     if (typeof orderAttributes !== 'undefined') {
-                        payload['orderAttributes'] = orderAttributes;
+                        payload['orderAttributes'] = orderAttributes.map((orderAttribute) => '`' + orderAttribute + '`');
                     }
                     if (typeof orderTypes !== 'undefined') {
                         payload['orderTypes'] = orderTypes;
