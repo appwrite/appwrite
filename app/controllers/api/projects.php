@@ -390,9 +390,7 @@ App::patch('/v1/projects/:projectId/service')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), function ($element) {
-        return $element['optional'];
-    })), true), 'Service name.')
+    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional'])), true), 'Service name.')
     ->param('status', null, new Boolean(), 'Service status.')
     ->inject('response')
     ->inject('dbForConsole')
