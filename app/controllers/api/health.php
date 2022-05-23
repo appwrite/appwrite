@@ -206,23 +206,6 @@ App::get('/v1/health/queue/logs')
         $response->dynamic(new Document([ 'size' => Resque::size(Event::AUDITS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-App::get('/v1/health/queue/usage')
-    ->desc('Get Usage Queue')
-    ->groups(['api', 'health'])
-    ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueUsage')
-    ->label('sdk.description', '/docs/references/health/get-queue-usage.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->inject('response')
-    ->action(function (Response $response) {
-
-        $response->dynamic(new Document([ 'size' => Resque::size(Event::USAGE_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
-    }, ['response']);
-
 App::get('/v1/health/queue/certificates')
     ->desc('Get Certificates Queue')
     ->groups(['api', 'health'])

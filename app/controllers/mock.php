@@ -27,7 +27,7 @@ App::get('/v1/mock/tests/foo')
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
     ->param('y', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -45,7 +45,7 @@ App::post('/v1/mock/tests/foo')
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
     ->param('y', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -63,7 +63,7 @@ App::patch('/v1/mock/tests/foo')
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
     ->param('y', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -81,7 +81,7 @@ App::put('/v1/mock/tests/foo')
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
     ->param('y', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -99,7 +99,7 @@ App::delete('/v1/mock/tests/foo')
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
     ->param('y', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -117,7 +117,7 @@ App::get('/v1/mock/tests/bar')
     ->label('sdk.mock', true)
     ->param('required', '', new Text(100), 'Sample string param')
     ->param('default', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($required, $default, $z) {
     });
 
@@ -135,7 +135,7 @@ App::post('/v1/mock/tests/bar')
     ->label('sdk.mock', true)
     ->param('required', '', new Text(100), 'Sample string param')
     ->param('default', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($required, $default, $z) {
     });
 
@@ -153,7 +153,7 @@ App::patch('/v1/mock/tests/bar')
     ->label('sdk.mock', true)
     ->param('required', '', new Text(100), 'Sample string param')
     ->param('default', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($required, $default, $z) {
     });
 
@@ -171,7 +171,7 @@ App::put('/v1/mock/tests/bar')
     ->label('sdk.mock', true)
     ->param('required', '', new Text(100), 'Sample string param')
     ->param('default', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($required, $default, $z) {
     });
 
@@ -189,7 +189,7 @@ App::delete('/v1/mock/tests/bar')
     ->label('sdk.mock', true)
     ->param('required', '', new Text(100), 'Sample string param')
     ->param('default', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($required, $default, $z) {
     });
 
@@ -233,7 +233,7 @@ App::post('/v1/mock/tests/general/upload')
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
     ->param('y', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->param('file', [], new File(), 'Sample file param', false)
     ->inject('request')
     ->inject('response')

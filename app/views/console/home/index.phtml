@@ -299,8 +299,9 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Web App" maxlength="128" />
 
-        <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments. No port number required."><i class="icon-question"></i></span></label>
-        <input name="hostname" type="text" class="margin-bottom" autocomplete="off" placeholder="localhost" required>
+        <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments. No protocol or port number required."><i class="icon-question"></i></span></label>
+        <input name="hostname" type="text" class="margin-bottom" autocomplete="off" placeholder="yourapp.com" required>
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">You can use * to allow wildcard hostnames or subdomains.</div>
 
         <div class="info margin-top margin-bottom">
             <div class="text-bold margin-bottom-small">Next Steps</div>
@@ -329,7 +330,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
         data-success="alert,trigger"
         data-success-param-alert-text="Updated platform successfully"
         data-success-param-trigger-events="projects.updatePlatform"
-        data-failure="alert"
+        data-failure="alert,trigger"
+        data-failure-param-trigger-events="projects.updatePlatform"
         data-failure-param-alert-text="Failed to update platform"
         data-failure-param-alert-classname="error">
 
@@ -340,7 +342,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
         <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" placeholder="My Web App" maxlength="128" />
 
         <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments. No port number required."><i class="icon-question"></i></span></label>
-        <input name="hostname" type="text" class="margin-bottom" autocomplete="off" placeholder="localhost" data-ls-bind="{{platform.hostname}}" required />
+        <input name="hostname" type="text" class="margin-bottom" autocomplete="off" placeholder="yourapp.com" data-ls-bind="{{platform.hostname}}" required />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">You can use * to allow wildcard hostnames or subdomains.</div>
 
         <hr />
 
@@ -714,7 +717,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
         data-success="alert,trigger"
         data-success-param-alert-text="Updated platform successfully"
         data-success-param-trigger-events="projects.updatePlatform"
-        data-failure="alert"
+        data-failure="alert,trigger"
+        data-failure-param-trigger-events="projects.updatePlatform"
         data-failure-param-alert-text="Failed to update platform"
         data-failure-param-alert-classname="error">
 
@@ -746,7 +750,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
             data-success="alert,trigger"
             data-success-param-alert-text="Updated platform successfully"
             data-success-param-trigger-events="projects.updatePlatform"
-            data-failure="alert"
+            data-failure="alert,trigger"
+            data-failure-param-trigger-events="projects.updatePlatform"
             data-failure-param-alert-text="Failed to update platform"
             data-failure-param-alert-classname="error">
 
@@ -777,7 +782,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
         data-success="alert,trigger"
         data-success-param-alert-text="Updated platform successfully"
         data-success-param-trigger-events="projects.updatePlatform"
-        data-failure="alert"
+        data-failure="alert,trigger"
+        data-failure-param-trigger-events="projects.updatePlatform"
         data-failure-param-alert-text="Failed to update platform"
         data-failure-param-alert-classname="error">
 
@@ -808,7 +814,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
         data-success="alert,trigger"
         data-success-param-alert-text="Updated platform successfully"
         data-success-param-trigger-events="projects.updatePlatform"
-        data-failure="alert"
+        data-failure="alert,trigger"
+        data-failure-param-trigger-events="projects.updatePlatform"
         data-failure-param-alert-text="Failed to update platform"
         data-failure-param-alert-classname="error">
 
@@ -841,7 +848,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
             data-success="alert,trigger"
             data-success-param-alert-text="Updated platform successfully"
             data-success-param-trigger-events="projects.updatePlatform"
-            data-failure="alert"
+            data-failure="alert,trigger"
+            data-failure-param-trigger-events="projects.updatePlatform"
             data-failure-param-alert-text="Failed to update platform"
             data-failure-param-alert-classname="error">
 
@@ -873,7 +881,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
             data-success="alert,trigger"
             data-success-param-alert-text="Updated platform successfully"
             data-success-param-trigger-events="projects.updatePlatform"
-            data-failure="alert"
+            data-failure="alert,trigger"
+            data-failure-param-trigger-events="projects.updatePlatform"
             data-failure-param-alert-text="Failed to update platform"
             data-failure-param-alert-classname="error">
 
