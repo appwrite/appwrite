@@ -1042,7 +1042,7 @@ App::post('/v1/account/jwt')
             throw new Exception('No valid session found', 404, Exception::USER_SESSION_NOT_FOUND);
         }
 
-        $jwt = new JWT($project->getId() == 'console' ? App::getEnv('_APP_OPENSSL_KEY_V1') : $project->getAttribute('jwtSecret'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT($project->getAttribute('jwtSecrets'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic(new Document(['jwt' => $jwt->encode([

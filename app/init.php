@@ -755,7 +755,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
     if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
-        $jwt = new JWT($project->getId() == 'console' ? App::getEnv('_APP_OPENSSL_KEY_V1') : $project->getAttribute('jwtSecret'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT($project->getAttribute('jwtSecrets'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
         try {
             $payload = $jwt->decode($authJWT);
@@ -819,6 +819,7 @@ App::setResource('console', function() {
         'legalAddress' => '',
         'legalTaxId' => '',
         'databaseSecrets' => ['v1' => App::getEnv('_APP_OPENSSL_KEY_V1')],
+        'jwtSecrets' => App::getEnv('_APP_OPENSSL_KEY_V1'),
         'auths' => [
             'limit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
         ],
