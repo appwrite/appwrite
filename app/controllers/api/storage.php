@@ -515,7 +515,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     $data = $deviceFiles->read($path);
                 }
 
-                $fileSecret = \bin2hex(OpenSSL::randomPseudoBytes(128));
+                $fileSecret = OpenSSL::secretString();
                 $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
                 $tag = null;
                 

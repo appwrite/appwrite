@@ -104,8 +104,8 @@ App::post('/v1/projects')
             'keys' => null,
             'domains' => null,
             'auths' => $auths,
-            'databaseSecrets' => [\uniqid() => \bin2hex(OpenSSL::randomPseudoBytes(128))],
-            'jwtSecrets' => \bin2hex(OpenSSL::randomPseudoBytes(128)),
+            'databaseSecrets' => [\uniqid() => OpenSSL::secretString()],
+            'jwtSecrets' => OpenSSL::secretString(),
             'search' => implode(' ', [$projectId, $name]),
         ]));
         /** @var array $collections */
@@ -797,7 +797,7 @@ App::post('/v1/projects/:projectId/keys')
             'projectId' => $project->getId(),
             'name' => $name,
             'scopes' => $scopes,
-            'secret' => \bin2hex(\random_bytes(128)),
+            'secret' => Auth::tokenGenerator(),
         ]);
 
         $key = $dbForConsole->createDocument('keys', $key);

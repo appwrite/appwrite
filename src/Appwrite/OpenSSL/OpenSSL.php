@@ -20,7 +20,6 @@ class OpenSSL
      */
     public static function encrypt($data, $method, $key, $options = 0, $iv = '', &$tag = null, $aad = '', $tag_length = 16)
     {
-        var_dump($data);
         return \openssl_encrypt($data, $method, $key, $options, $iv, $tag, $aad, $tag_length);
     }
 
@@ -59,5 +58,21 @@ class OpenSSL
     public static function randomPseudoBytes($length, &$crypto_strong = null)
     {
         return \openssl_random_pseudo_bytes($length, $crypto_strong);
+    }
+
+    /**
+     * Secret String
+     *
+     * Generate random encryption secret
+     *
+     * @param int $length
+     *
+     * @return string
+     *
+     * @throws \Exception
+     */
+    public static function secretString(int $length = 128):string
+    {
+        return \bin2hex(self::randomPseudoBytes($length));
     }
 }
