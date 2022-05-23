@@ -105,7 +105,7 @@ App::post('/v1/projects')
             'domains' => null,
             'auths' => $auths,
             'databaseSecrets' => [\uniqid() => \bin2hex(OpenSSL::randomPseudoBytes(128))],
-            'jwtSecret' => \bin2hex(OpenSSL::randomPseudoBytes(128)),
+            'jwtSecrets' => \bin2hex(OpenSSL::randomPseudoBytes(128)),
             'search' => implode(' ', [$projectId, $name]),
         ]));
         /** @var array $collections */
