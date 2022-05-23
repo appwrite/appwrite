@@ -501,7 +501,7 @@ $collections = [
                 'filters' => ['json', 'encrypt'],
             ],
             [
-                '$id' => 'jwtSecret',
+                '$id' => 'jwtSecrets',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
