@@ -34,7 +34,7 @@ abstract class Model
 
     /**
      * Filter Document Structure
-     * 
+     *
      * @return Document
      */
     public function filter(Document $document): Document

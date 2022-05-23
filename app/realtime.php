@@ -197,7 +197,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
          * Sending current connections to project channels on the console project every 5 seconds.
          */
         if ($realtime->hasSubscriber('console', 'role:member', 'project')) {
-
             [$database, $returnDatabase] = getDatabase($register, '_console');
 
             $payload = [];

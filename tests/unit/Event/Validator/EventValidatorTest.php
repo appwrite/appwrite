@@ -12,7 +12,7 @@ class EventValidatorTest extends TestCase
 
     public function setUp(): void
     {
-        Config::load('events', __DIR__.'/../../../../app/config/events.php');
+        Config::load('events', __DIR__ . '/../../../../app/config/events.php');
         $this->object = new Event();
     }
 

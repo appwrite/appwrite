@@ -50,20 +50,20 @@ class AttributeEmail extends Attribute
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'AttributeEmail';
     }
 
     /**
      * Get Type
-     * 
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_ATTRIBUTE_EMAIL;
     }

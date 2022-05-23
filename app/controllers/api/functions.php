@@ -916,7 +916,6 @@ App::post('/v1/functions/:functionId/executions')
 
         $jwt = ''; // initialize
         if (!$user->isEmpty()) { // If userId exists, generate a JWT for function
-
             $sessions = $user->getAttribute('sessions', []);
             $current = new Document();
 

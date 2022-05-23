@@ -32,7 +32,7 @@ class Build extends Event
     /**
      * Returns set resource document for the build event.
      *
-     * @return null|Document 
+     * @return null|Document
      */
     public function getResource(): ?Document
     {

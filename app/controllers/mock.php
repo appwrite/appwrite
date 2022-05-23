@@ -208,11 +208,11 @@ App::get('/v1/mock/tests/general/download')
     ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Request $request */
-        
+
         $response
             ->setContentType('text/plain')
             ->addHeader('Content-Disposition', 'attachment; filename="test.txt"')
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->send("Download test passed.")
         ;
@@ -240,51 +240,51 @@ App::post('/v1/mock/tests/general/upload')
     ->action(function ($x, $y, $z, $file, $request, $response) {
         /** @var Appwrite\Utopia\Request $request */
         /** @var Utopia\Swoole\Response $response */
-        
+
         $file = $request->getFiles('file');
-        
+
         $contentRange = $request->getHeader('content-range');
 
-        $chunkSize = 5*1024*1024; // 5MB
+        $chunkSize = 5 * 1024 * 1024; // 5MB
 
-        if(!empty($contentRange)) {
+        if (!empty($contentRange)) {
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
             $size = $request->getContentRangeSize();
             $id = $request->getHeader('x-appwrite-id', '');
             $file['size'] = (\is_array($file['size'])) ? $file['size'][0] : $file['size'];
 
-            if(is_null($start) || is_null($end) || is_null($size)) {
+            if (is_null($start) || is_null($end) || is_null($size)) {
                 throw new Exception('Invalid content-range header', 400, Exception::GENERAL_MOCK);
             }
 
-            if($start > $end || $end > $size) {
+            if ($start > $end || $end > $size) {
                 throw new Exception('Invalid content-range header', 400, Exception::GENERAL_MOCK);
             }
 
-            if($start === 0 && !empty($id)) {
+            if ($start === 0 && !empty($id)) {
                 throw new Exception('First chunked request cannot have id header', 400, Exception::GENERAL_MOCK);
             }
 
-            if($start !== 0 && $id !== 'newfileid') {
+            if ($start !== 0 && $id !== 'newfileid') {
                 throw new Exception('All chunked request must have id header (except first)', 400, Exception::GENERAL_MOCK);
             }
 
-            if($end !== $size && $end-$start+1 !== $chunkSize) {
+            if ($end !== $size && $end - $start + 1 !== $chunkSize) {
                 throw new Exception('Chunk size must be 5MB (except last chunk)', 400, Exception::GENERAL_MOCK);
             }
 
             if ($end !== $size && $file['size'] !== $chunkSize) {
                 throw new Exception('Wrong chunk size', 400, Exception::GENERAL_MOCK);
             }
-            
-            if($file['size'] > $chunkSize) {
+
+            if ($file['size'] > $chunkSize) {
                 throw new Exception('Chunk size must be 5MB or less', 400, Exception::GENERAL_MOCK);
             }
 
-            if($end !== $size) {
+            if ($end !== $size) {
                 $response->json([
-                    '$id'=> 'newfileid',
+                    '$id' => 'newfileid',
                     'chunksTotal' => $file['size'] / $chunkSize,
                     'chunksUploaded' => $start / $chunkSize
                 ]);
@@ -293,11 +293,11 @@ App::post('/v1/mock/tests/general/upload')
             $file['tmp_name'] = (\is_array($file['tmp_name'])) ? $file['tmp_name'][0] : $file['tmp_name'];
             $file['name'] = (\is_array($file['name'])) ? $file['name'][0] : $file['name'];
             $file['size'] = (\is_array($file['size'])) ? $file['size'][0] : $file['size'];
-    
+
             if ($file['name'] !== 'file.png') {
                 throw new Exception('Wrong file name', 400, Exception::GENERAL_MOCK);
             }
-    
+
             if ($file['size'] !== 38756) {
                     throw new Exception('Wrong file size', 400, Exception::GENERAL_MOCK);
             }
@@ -470,7 +470,7 @@ App::get('/v1/mock/tests/general/oauth2')
     ->action(function ($client_id, $redirectURI, $scope, $state, $response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->redirect($redirectURI.'?'.\http_build_query(['code' => 'abcdef', 'state' => $state]));
+        $response->redirect($redirectURI . '?' . \http_build_query(['code' => 'abcdef', 'state' => $state]));
     });
 
 App::get('/v1/mock/tests/general/oauth2/token')
@@ -503,13 +503,13 @@ App::get('/v1/mock/tests/general/oauth2/token')
             'expires_in' => 14400
         ];
 
-        if($grantType === 'authorization_code') {
+        if ($grantType === 'authorization_code') {
             if ($code !== 'abcdef') {
                 throw new Exception('Invalid token', 400, Exception::GENERAL_MOCK);
             }
 
             $response->json($responseJson);
-        } else if($grantType === 'refresh_token') {
+        } elseif ($grantType === 'refresh_token') {
             if ($refreshToken !== 'tuvwxyz') {
                 throw new Exception('Invalid refresh token', 400, Exception::GENERAL_MOCK);
             }
@@ -571,16 +571,16 @@ App::get('/v1/mock/tests/general/oauth2/failure')
             ]);
     });
 
-App::shutdown(function($utopia, $response, $request) {
+App::shutdown(function ($utopia, $response, $request) {
     /** @var Utopia\App $utopia */
     /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
 
     $result = [];
     $route  = $utopia->match($request);
-    $path   = APP_STORAGE_CACHE.'/tests.json';
+    $path   = APP_STORAGE_CACHE . '/tests.json';
     $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
-    
+
     if (!\is_array($tests)) {
         throw new Exception('Failed to read results', 500, Exception::GENERAL_MOCK);
     }

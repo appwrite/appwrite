@@ -46,7 +46,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
             ->setParam('{userId}', $user->getId())
             ->setParam('{userAgent}', $request->getUserAgent(''))
             ->setParam('{ip}', $request->getIP())
-            ->setParam('{url}', $request->getHostname().$route->getPath());
+            ->setParam('{url}', $request->getHostname() . $route->getPath());
         $timeLimitArray[] = $timeLimit;
     }
 
@@ -58,8 +58,8 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
 
     foreach ($timeLimitArray as $timeLimit) {
         foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-            if(!empty($value)) {
-                $timeLimit->setParam('{param-'.$key.'}', (\is_array($value)) ? \json_encode($value) : $value);
+            if (!empty($value)) {
+                $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
             }
         }
 
@@ -74,10 +74,11 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
             ;
         }
 
-        if ((App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled' // Route is rate-limited
-        && $abuse->check()) // Abuse is not disabled
-        && (!$isAppUser && !$isPrivilegedUser)) // User is not an admin or API key
-        {
+        if (
+            (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled' // Route is rate-limited
+            && $abuse->check()) // Abuse is not disabled
+            && (!$isAppUser && !$isPrivilegedUser)
+        ) { // User is not an admin or API key
             throw new Exception('Too many requests', 429, Exception::GENERAL_RATE_LIMIT_EXCEEDED);
         }
     }
@@ -108,7 +109,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
     $usage
         ->setParam('projectId', $project->getId())
         ->setParam('httpRequest', 1)
-        ->setParam('httpUrl', $request->getHostname().$request->getURI())
+        ->setParam('httpUrl', $request->getHostname() . $request->getURI())
         ->setParam('httpMethod', $request->getMethod())
         ->setParam('httpPath', $route->getPath())
         ->setParam('networkRequestSize', 0)
@@ -130,38 +131,38 @@ App::init(function ($utopia, $request, $project) {
     $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
     $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
-    if($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
+    if ($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
         return;
     }
 
     $auths = $project->getAttribute('auths', []);
     switch ($route->getLabel('auth.type', '')) {
         case 'emailPassword':
-            if(($auths['emailPassword'] ?? true) === false) {
+            if (($auths['emailPassword'] ?? true) === false) {
                 throw new Exception('Email / Password authentication is disabled for this project', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
             }
             break;
 
         case 'magic-url':
-            if($project->getAttribute('usersAuthMagicURL', true) === false) {
+            if ($project->getAttribute('usersAuthMagicURL', true) === false) {
                 throw new Exception('Magic URL authentication is disabled for this project', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
             }
             break;
 
         case 'anonymous':
-            if(($auths['anonymous'] ?? true) === false) {
+            if (($auths['anonymous'] ?? true) === false) {
                 throw new Exception('Anonymous authentication is disabled for this project', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
             }
             break;
 
         case 'invites':
-            if(($auths['invites'] ?? true) === false) {
+            if (($auths['invites'] ?? true) === false) {
                 throw new Exception('Invites authentication is disabled for this project', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
             }
             break;
 
         case 'jwt':
-            if(($auths['JWT'] ?? true) === false) {
+            if (($auths['JWT'] ?? true) === false) {
                 throw new Exception('JWT authentication is disabled for this project', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
             }
             break;
@@ -170,7 +171,6 @@ App::init(function ($utopia, $request, $project) {
             throw new Exception('Unsupported authentication route', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
             break;
     }
-
 }, ['utopia', 'request', 'project'], 'auth');
 
 App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $database, $mode, $dbForProject) {
@@ -233,7 +233,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
                 channels: $target['channels'],
                 roles: $target['roles'],
                 options: [
-                    'permissionsChanged' => $target['permissionsChanged'], 
+                    'permissionsChanged' => $target['permissionsChanged'],
                     'userId' => $events->getParam('userId')
                 ]
             );
@@ -256,15 +256,15 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     }
 
     $route = $utopia->match($request);
-    if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled' 
+    if (
+        App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
         && $project->getId()
         && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
-        && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
-
+        && !empty($route->getLabel('sdk.namespace', null))
+    ) { // Don't calculate console usage on admin mode
         $usage
             ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
             ->setParam('networkResponseSize', $response->getSize())
             ->submit();
     }
-
 }, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'database', 'mode', 'dbForProject'], 'api');

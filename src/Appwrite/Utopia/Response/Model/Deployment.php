@@ -84,7 +84,7 @@ class Deployment extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Deployment';
     }
@@ -94,7 +94,7 @@ class Deployment extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_DEPLOYMENT;
     }

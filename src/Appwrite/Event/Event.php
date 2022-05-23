@@ -392,7 +392,9 @@ class Event
             $events[] = \str_replace($paramKeys, '*', $eventPattern);
             foreach ($paramKeys as $key) {
                 foreach ($paramKeys as $current) {
-                    if ($current === $key) continue;
+                    if ($current === $key) {
+                        continue;
+                    }
 
                     $filtered = \array_filter($paramKeys, fn(string $k) => $k === $current);
                     $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered, '*', $eventPattern));

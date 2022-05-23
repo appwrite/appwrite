@@ -55,7 +55,7 @@ App::post('/v1/users')
             $user = $dbForProject->createDocument('users', new Document([
                 '$id' => $userId,
                 '$read' => ['role:all'],
-                '$write' => ['user:'.$userId],
+                '$write' => ['user:' . $userId],
                 'email' => $email,
                 'emailVerification' => false,
                 'status' => true,
@@ -153,7 +153,7 @@ App::get('/v1/users/:userId')
     ->action(function ($userId, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Stats\Stats $usage */ 
+        /** @var Appwrite\Stats\Stats $usage */
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -231,10 +231,10 @@ App::get('/v1/users/:userId/sessions')
 
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $key => $session) { 
+        foreach ($sessions as $key => $session) {
             /** @var Document $session */
 
-            $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+            $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', false);
 
@@ -275,7 +275,7 @@ App::get('/v1/users/:userId/memberships')
             throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
-        $memberships = array_map(function($membership) use ($dbForProject, $user) {
+        $memberships = array_map(function ($membership) use ($dbForProject, $user) {
             $team = $dbForProject->getDocument('teams', $membership->getAttribute('teamId'));
 
             $membership
@@ -362,8 +362,8 @@ App::get('/v1/users/:userId/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -504,7 +504,7 @@ App::patch('/v1/users/:userId/name')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $audits
-            ->setResource('user/'.$user->getId())
+            ->setResource('user/' . $user->getId())
         ;
 
         $events
@@ -551,7 +551,7 @@ App::patch('/v1/users/:userId/password')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $audits
-            ->setResource('user/'.$user->getId())
+            ->setResource('user/' . $user->getId())
         ;
 
         $events
@@ -605,13 +605,13 @@ App::patch('/v1/users/:userId/email')
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
-        } catch(Duplicate $th) {
+        } catch (Duplicate $th) {
             throw new Exception('Email already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
 
         $audits
-            ->setResource('user/'.$user->getId())
+            ->setResource('user/' . $user->getId())
         ;
 
         $events
@@ -695,7 +695,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
 
         $session = $dbForProject->getDocument('sessions', $sessionId);
 
-        if($session->isEmpty()) {
+        if ($session->isEmpty()) {
             throw new Exception('Session not found', 404, Exception::USER_SESSION_NOT_FOUND);
         }
 
@@ -777,7 +777,9 @@ App::delete('/v1/users/:userId')
     ->label('sdk.description', '/docs/references/users/delete.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('userId', '', function () {return new UID();}, 'User ID.')
+    ->param('userId', '', function () {
+        return new UID();
+    }, 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
@@ -829,7 +831,7 @@ App::get('/v1/users/usage')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_USERS)
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
-    ->param('provider', '', new WhiteList(\array_merge(['email', 'anonymous'], \array_map(fn($value) => "oauth-".$value, \array_keys(Config::getParam('providers', [])))), true), 'Provider Name.', true)
+    ->param('provider', '', new WhiteList(\array_merge(['email', 'anonymous'], \array_map(fn($value) => "oauth-" . $value, \array_keys(Config::getParam('providers', [])))), true), 'Provider Name.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('register')
@@ -871,7 +873,7 @@ App::get('/v1/users/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
+            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
@@ -880,7 +882,7 @@ App::get('/v1/users/usage')
                         new Query('period', Query::TYPE_EQUAL, [$period]),
                         new Query('metric', Query::TYPE_EQUAL, [$metric]),
                     ], $limit, 0, ['time'], [Database::ORDER_DESC]);
-    
+
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
                         $stats[$metric][] = [
@@ -892,9 +894,8 @@ App::get('/v1/users/usage')
                     // backfill metrics with empty values for graphs
                     $backfill = $limit - \count($requestDocs);
                     while ($backfill > 0) {
-
                         $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                        $diff = match ($period) { // convert period to seconds for unix timestamp math
                             '30m' => 1800,
                             '1d' => 86400,
                         };
@@ -905,7 +906,7 @@ App::get('/v1/users/usage')
                         $backfill--;
                     }
                     $stats[$metric] = array_reverse($stats[$metric]);
-                }    
+                }
             });
 
             $usage = new Document([
@@ -919,7 +920,6 @@ App::get('/v1/users/usage')
                 'sessionsProviderCreate' => $stats["users.sessions.$provider.create"],
                 'sessionsDelete' => $stats["users.sessions.delete"]
             ]);
-
         }
 
         $response->dynamic($usage, Response::MODEL_USAGE_USERS);

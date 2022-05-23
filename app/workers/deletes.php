@@ -358,7 +358,7 @@ class DeletesV1 extends Worker
             });
         }
 
-        /** 
+        /**
          * Delete Executions
          */
         Console::info("Deleting executions for function " . $functionId);
@@ -523,7 +523,7 @@ class DeletesV1 extends Worker
     }
 
     /**
-     * @param Document $document certificates document 
+     * @param Document $document certificates document
      */
     protected function deleteCertificates(Document $document): void
     {
@@ -574,8 +574,8 @@ class DeletesV1 extends Worker
         $dbForProject = $this->getProjectDB($projectId);
         $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
 
-        $device = $this->getDevice(APP_STORAGE_UPLOADS.'/app-'.$projectId);
-        
+        $device = $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
+
         $device->deletePath($document->getId());
     }
 }

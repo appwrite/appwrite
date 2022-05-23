@@ -14,7 +14,8 @@ Console::success(APP_NAME . ' mails worker v1 has started' . "\n");
 
 class MailsV1 extends Worker
 {
-    public function getName(): string {
+    public function getName(): string
+    {
         return "mails";
     }
 
@@ -131,9 +132,9 @@ class MailsV1 extends Worker
 
     /**
      * Returns a prefix from a mail type
-     * 
+     *
      * @param $type
-     * 
+     *
      * @return string
      */
     protected function getPrefix(string $type): string
@@ -156,10 +157,10 @@ class MailsV1 extends Worker
 
     /**
      * Returns true if all the required terms in a locale exist. False otherwise
-     * 
+     *
      * @param $locale
      * @param $prefix
-     * 
+     *
      * @return bool
      */
     protected function doesLocaleExist(Locale $locale, string $prefix): bool

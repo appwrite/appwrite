@@ -95,8 +95,8 @@ class Origin extends Validator
             return 'Unsupported platform';
         }
 
-        return 'Invalid Origin. Register your new client ('.$this->host.') as a new '
-            .$this->platforms[$this->client].' platform on your project console dashboard';
+        return 'Invalid Origin. Register your new client (' . $this->host . ') as a new '
+            . $this->platforms[$this->client] . ' platform on your project console dashboard';
     }
 
     /**
@@ -124,7 +124,7 @@ class Origin extends Validator
         }
 
         $validator = new Hostname($this->clients);
-        
+
         return $validator->isValid($host);
     }
 

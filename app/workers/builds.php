@@ -200,7 +200,7 @@ class BuildsV1 extends Worker
         } finally {
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
-            /** 
+            /**
              * Send realtime Event
              */
             $target = Realtime::fromPayload(
