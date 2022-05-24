@@ -60,7 +60,7 @@ App::post('/v1/functions')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $vars, array $events, string $schedule, int $timeout, Response $response, Database $dbForProject, Event $eventsInstance) {
+    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $vars, array $events, string $schedule, float $timeout, Response $response, Database $dbForProject, Event $eventsInstance) {
 
         $functionId = ($functionId == 'unique()') ? $dbForProject->getId() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
@@ -301,7 +301,7 @@ App::put('/v1/functions/:functionId')
     ->inject('project')
     ->inject('user')
     ->inject('events')
-    ->action(function (string $functionId, string $name, array $execute, array $vars, array $events, string $schedule, int $timeout, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+    ->action(function (string $functionId, string $name, array $execute, array $vars, array $events, string $schedule, float $timeout, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
