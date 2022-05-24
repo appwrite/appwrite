@@ -242,6 +242,52 @@
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
                         </ul>
 
+                        <div data-ls-if="{{user.emailVerification}} === false" style="display: none">
+                            <form name="users.updateVerification"  class="margin-bottom"
+                                data-analytics
+                                data-analytics-activity
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Update Verification Status"
+                                data-service="users.updateVerification"
+                                data-scope="sdk"
+                                data-event="submit"
+                                data-success="trigger,alert"
+                                data-success-param-alert-text="User verification status was updated successfully"
+                                data-success-param-trigger-events="users.update"
+                                data-failure="alert"
+                                data-failure-param-alert-text="Failed to update user verification status"
+                                data-failure-param-alert-classname="error"
+                            >
+                                <input type="hidden" disabled name="userId" data-ls-bind="{{user.$id}}">
+                                <input type="hidden" disabled name="emailVerification" value="true" data-cast-to="boolean">
+                                <button type="submit" class="dark fill">Verify Account</button>
+                            </form>
+                        </div>
+
+                        <div data-ls-if="{{user.emailVerification}} === true" style="display: none">
+                            <form name="users.updateVerification" class="margin-bottom"
+                                data-analytics
+                                data-analytics-activity
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Update Verification Status"
+                                data-service="users.updateVerification"
+                                data-scope="sdk"
+                                data-event="submit"
+                                data-success="trigger,alert"
+                                data-success-param-alert-text="User verification status was updated successfully"
+                                data-success-param-trigger-events="users.update"
+                                data-failure="alert"
+                                data-failure-param-alert-text="Failed to update user verification status"
+                                data-failure-param-alert-classname="error"
+                            >
+                                <input type="hidden" disabled name="userId" data-ls-bind="{{user.$id}}">
+                                <input type="hidden" disabled name="emailVerification" value="false" data-cast-to="boolean">
+                                <button type="submit" class="dark fill">Unverify Account</button>
+                            </form>
+                        </div>
+
                         <div data-ls-if="{{user.status}} === true" style="display: none">
                             <form name="users.updateStatus" class="margin-bottom"
                                 data-analytics
@@ -282,6 +328,61 @@
 
                                 <button name="status" type="submit" class="fill" value="true" data-cast-to="boolean">Activate Account</button>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            <li data-state="/console/users/user/memberships?id={{router.params.id}}&project={{router.params.project}}">
+                <h2>Memberships</h2>
+
+                <div
+                    data-service="users.getMemberships"
+                    data-name="memberships"
+                    data-param-user-id="{{router.params.id}}"
+                    data-event="load,users.update,teams.deleteMembership">
+
+                    <div class="box margin-top margin-bottom" data-ls-if="{{memberships.memberships.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
+                        <h3 class="text-bold margin-bottom-no">No memberships available.</h3>
+                    </div>
+
+                    <div data-ls-if="0 != {{memberships.total}}">
+                        <div class="margin-bottom-small margin-end-small text-align-end text-size-small margin-top-negative text-fade"><span data-ls-bind="{{memberships.total}}"></span> memberships found</div>
+
+                        <div class="box margin-bottom">
+                            <ul data-ls-loop="memberships.memberships" data-ls-as="membership" class="list">
+                                <li class="clear">
+                                    <form class="pull-end"
+                                        data-analytics
+                                        data-analytics-activity
+                                        data-analytics-event="submit"
+                                        data-analytics-category="console"
+                                        data-analytics-label="Delete Team Membership"
+                                        data-service="teams.deleteMembership"
+                                        data-event="submit"
+                                        data-success="alert,trigger"
+                                        data-confirm="Are you sure you want to remove that user from the team?"
+                                        data-success-param-alert-text="Member Removed Successfully"
+                                        data-success-param-trigger-events="teams.deleteMembership"
+                                        data-failure="alert"
+                                        data-failure-param-alert-text="Failed to Remove Member"
+                                        data-failure-param-alert-classname="error">
+
+                                        <input name="teamId" data-ls-attrs="id=leave-teamId-{{membership.teamId}}" type="hidden" data-ls-bind="{{membership.teamId}}">
+                                        <input name="membershipId" data-ls-attrs="id=leave-membershipId-{{membership.$id}}" type="hidden" data-ls-bind="{{membership.$id}}">
+
+                                        <button class="danger">Remove</button>
+                                    </form>
+                                    <div class="pull-start margin-end">
+                                        <img src="" data-ls-attrs="src={{membership.teamName|avatar}},alt={{membership.teamName}}" data-size="60" class="avatar margin-end pull-start" loading="lazy" width="60" height="60" />
+                                    </div>
+                                    <a data-ls-attrs="href=/console/users/teams/team?id={{membership.teamId}}&project={{router.params.project}}" data-ls-bind="{{membership.teamName}}"></a>
+                                    <div class="margin-top-small">
+                                        <span data-ls-if="1 == {{membership.roles.length}}" class="text-fade tooltip" data-ls-bind="{{membership.roles.length}} role" data-ls-attrs="data-tooltip={{membership.roles|arraySentence}}"></span>
+                                        <span  data-ls-if="2 <= {{membership.roles.length}}" class="text-fade tooltip" data-ls-bind="{{membership.roles.length}} roles" data-ls-attrs="data-tooltip={{membership.roles|arraySentence}}"></span>
+                                        <span data-ls-if="false === {{membership.confirm}}" class="text-danger text-size-small">Pending Approval</span>
+                                    </div>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>

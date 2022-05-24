@@ -13,17 +13,17 @@ class Microsoft extends OAuth2
     /**
      * @var array
      */
-    protected $user = [];
-    
-    /**
-     * @var array
-     */
-    protected $tokens = [];
+    protected array $user = [];
 
     /**
      * @var array
      */
-    protected $scopes = [
+    protected array $tokens = [];
+
+    /**
+     * @var array
+     */
+    protected array $scopes = [
         'offline_access',
         'user.read'
     ];
@@ -35,17 +35,17 @@ class Microsoft extends OAuth2
     {
         return 'microsoft';
     }
-    
+
     /**
      * @return string
      */
     public function getLoginURL(): string
     {
-        return 'https://login.microsoftonline.com/'.$this->getTenantID().'/oauth2/v2.0/authorize?'.\http_build_query([
+        return 'https://login.microsoftonline.com/' . $this->getTenantID() . '/oauth2/v2.0/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
-            'state'=> \json_encode($this->state),
-            'scope'=> \implode(' ', $this->getScopes()),
+            'state' => \json_encode($this->state),
+            'scope' => \implode(' ', $this->getScopes()),
             'response_type' => 'code',
             'response_mode' => 'query'
         ]);
@@ -58,7 +58,7 @@ class Microsoft extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $headers = ['Content-Type: application/x-www-form-urlencoded'];
             $this->tokens = \json_decode($this->request(
                 'POST',
@@ -83,7 +83,7 @@ class Microsoft extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $headers = ['Content-Type: application/x-www-form-urlencoded'];
         $this->tokens = \json_decode($this->request(
@@ -98,7 +98,7 @@ class Microsoft extends OAuth2
             ])
         ), true);
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -114,11 +114,7 @@ class Microsoft extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
-        }
-
-        return '';
+        return $user['id'] ?? '';
     }
 
     /**
@@ -130,11 +126,23 @@ class Microsoft extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['userPrincipalName'])) {
-            return $user['userPrincipalName'];
-        }
+        return $user['userPrincipalName'] ?? '';
+    }
 
-        return '';
+    /**
+     * Check if the OAuth email is verified
+     * 
+     * If present, the email is verified. This was verfied through a manual Microsoft sign up process
+     * 
+     * @param string $accessToken
+     * 
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $email = $this->getUserEmail($accessToken);
+
+        return !empty($email);
     }
 
     /**
@@ -146,11 +154,7 @@ class Microsoft extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['displayName'])) {
-            return $user['displayName'];
-        }
-
-        return '';
+        return $user['displayName'] ?? '';
     }
 
     /**
@@ -161,7 +165,7 @@ class Microsoft extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $headers = ['Authorization: Bearer '. \urlencode($accessToken)];
+            $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
             $user = $this->request('GET', 'https://graph.microsoft.com/v1.0/me', $headers);
             $this->user = \json_decode($user, true);
         }
@@ -175,7 +179,7 @@ class Microsoft extends OAuth2
      * @return array
      */
     protected function getAppSecret(): array
-    {    
+    {
         try {
             $secret = \json_decode($this->appSecret, true, 512, JSON_THROW_ON_ERROR);
         } catch (\Throwable $th) {
@@ -192,7 +196,8 @@ class Microsoft extends OAuth2
     protected function getClientSecret(): string
     {
         $secret = $this->getAppSecret();
-        return (isset($secret['clientSecret'])) ? $secret['clientSecret'] : ''; 
+
+        return $secret['clientSecret'] ?? '';
     }
 
     /**
@@ -203,6 +208,7 @@ class Microsoft extends OAuth2
     protected function getTenantID(): string
     {
         $secret = $this->getAppSecret();
-        return (isset($secret['tenantID'])) ? $secret['tenantID'] : 'common'; 
+
+        return $secret['tenantID'] ?? 'common';
     }
 }

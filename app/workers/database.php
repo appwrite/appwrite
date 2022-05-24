@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Utopia\CLI\Console;
@@ -20,12 +21,11 @@ class DatabaseV1 extends Worker
     public function run(): void
     {
         Authorization::disable();
-        $projectId = $this->args['projectId'] ?? '';
-        $type = $this->args['type'] ?? '';
-        $collection = $this->args['collection'] ?? [];
-        $collection = new Document($collection);
-        $document = $this->args['document'] ?? [];
-        $document = new Document($document);
+
+        $type = $this->args['type'];
+        $project = new Document($this->args['project']);
+        $collection = new Document($this->args['collection'] ?? []);
+        $document = new Document($this->args['document'] ?? []);
 
         if($collection->isEmpty()) {
             throw new Exception('Missing collection');
@@ -37,16 +37,16 @@ class DatabaseV1 extends Worker
 
         switch (strval($type)) {
             case DATABASE_TYPE_CREATE_ATTRIBUTE:
-                $this->createAttribute($collection, $document, $projectId);
+                $this->createAttribute($collection, $document, $project->getId());
                 break;
             case DATABASE_TYPE_DELETE_ATTRIBUTE:
-                $this->deleteAttribute($collection, $document, $projectId);
+                $this->deleteAttribute($collection, $document, $project->getId());
                 break;
             case DATABASE_TYPE_CREATE_INDEX:
-                $this->createIndex($collection, $document, $projectId);
+                $this->createIndex($collection, $document, $project->getId());
                 break;
             case DATABASE_TYPE_DELETE_INDEX:
-                $this->deleteIndex($collection, $document, $projectId);
+                $this->deleteIndex($collection, $document, $project->getId());
                 break;
 
             default:
@@ -71,7 +71,15 @@ class DatabaseV1 extends Worker
         $dbForConsole = $this->getConsoleDB();
         $dbForProject = $this->getProjectDB($projectId);
 
-        $event = 'database.attributes.update';
+        $events = Event::generateEvents('collections.[collectionId].attributes.[attributeId].update', [
+            'collectionId' => $collection->getId(),
+            'attributeId' => $attribute->getId()
+        ]);
+        /**
+         * Fetch attribute from the database, since with Resque float values are loosing informations.
+         */
+        $attribute = $dbForProject->getDocument('attributes', $attribute->getId());
+
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
         $type = $attribute->getAttribute('type', '');
@@ -94,12 +102,17 @@ class DatabaseV1 extends Worker
             Console::error($th->getMessage());
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));
         } finally {
-            $target = Realtime::fromPayload($event, $attribute, $project);
+            $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
+                event: $events[0],
+                payload: $attribute,
+                project: $project
+            );
 
             Realtime::send(
                 projectId: 'console',
                 payload: $attribute->getArrayCopy(),
-                event: $event,
+                events: $events,
                 channels: $target['channels'],
                 roles: $target['roles'],
                 options: [
@@ -122,7 +135,10 @@ class DatabaseV1 extends Worker
         $dbForConsole = $this->getConsoleDB();
         $dbForProject = $this->getProjectDB($projectId);
 
-        $event = 'database.attributes.delete';
+        $events = Event::generateEvents('collections.[collectionId].attributes.[attributeId].delete', [
+            'collectionId' => $collection->getId(),
+            'attributeId' => $attribute->getId()
+        ]);
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
         $status = $attribute->getAttribute('status', '');
@@ -143,12 +159,17 @@ class DatabaseV1 extends Worker
             Console::error($th->getMessage());
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'stuck'));
         } finally {
-            $target = Realtime::fromPayload($event, $attribute, $project);
+            $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
+                event: $events[0],
+                payload: $attribute,
+                project: $project
+            );
 
             Realtime::send(
                 projectId: 'console',
                 payload: $attribute->getArrayCopy(),
-                event: $event,
+                events: $events,
                 channels: $target['channels'],
                 roles: $target['roles'],
                 options: [
@@ -223,7 +244,10 @@ class DatabaseV1 extends Worker
         $dbForConsole = $this->getConsoleDB();
         $dbForProject = $this->getProjectDB($projectId);
 
-        $event = 'database.indexes.update';
+        $events = Event::generateEvents('collections.[collectionId].indexes.[indexId].update', [
+            'collectionId' => $collection->getId(),
+            'indexId' => $index->getId()
+        ]);
         $collectionId = $collection->getId();
         $key = $index->getAttribute('key', '');
         $type = $index->getAttribute('type', '');
@@ -241,12 +265,17 @@ class DatabaseV1 extends Worker
             Console::error($th->getMessage());
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'failed'));
         } finally {
-            $target = Realtime::fromPayload($event, $index, $project);
+            $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
+                event: $events[0],
+                payload: $index,
+                project: $project
+            );
 
             Realtime::send(
                 projectId: 'console',
                 payload: $index->getArrayCopy(),
-                event: $event,
+                events: $events,
                 channels: $target['channels'],
                 roles: $target['roles'],
                 options: [
@@ -269,10 +298,12 @@ class DatabaseV1 extends Worker
         $dbForConsole = $this->getConsoleDB();
         $dbForProject = $this->getProjectDB($projectId);
 
-        $collectionId = $collection->getId();
+        $events = Event::generateEvents('collections.[collectionId].indexes.[indexId].delete', [
+            'collectionId' => $collection->getId(),
+            'indexId' => $index->getId()
+        ]);
         $key = $index->getAttribute('key');
         $status = $index->getAttribute('status', '');
-        $event = 'database.indexes.delete';
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
@@ -284,12 +315,17 @@ class DatabaseV1 extends Worker
             Console::error($th->getMessage());
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'stuck'));
         } finally {
-            $target = Realtime::fromPayload($event, $index, $project);
+            $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
+                event: $events[0],
+                payload: $index,
+                project: $project
+            );
 
             Realtime::send(
                 projectId: 'console',
                 payload: $index->getArrayCopy(),
-                event: $event,
+                events: $events,
                 channels: $target['channels'],
                 roles: $target['roles'],
                 options: [
@@ -299,6 +335,6 @@ class DatabaseV1 extends Worker
             );
         }
 
-        $dbForProject->deleteCachedDocument('collections', $collectionId);
+        $dbForProject->deleteCachedDocument('collections', $collection->getId());
     }
 }
