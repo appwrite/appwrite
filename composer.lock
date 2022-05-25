@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "69e0c12a4c4b22cf17727f5b8833b1ac",
+    "content-hash": "6764d068d2f6aa5e9eb8befd84c0c2c9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -115,11 +115,11 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.9.0",
+            "version": "0.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "e8aa94aa42f45711e11cb1da401b442ecc2c32a4"
+                "reference": "01acf8741f539f64248d54a9f0f6c4d39195d16c"
             },
             "require": {
                 "php": ">=8.0",
@@ -154,7 +154,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2022-05-16T10:54:14+00:00"
+            "time": "2022-05-19T11:48:16+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -2628,16 +2628,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.7.1",
+            "version": "0.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "1921d5da3d155c1e03b26f8f6184dba3a69cd5e4"
+                "reference": "c7912481a56e17cc86358fa8de57309de5e88ef7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/1921d5da3d155c1e03b26f8f6184dba3a69cd5e4",
-                "reference": "1921d5da3d155c1e03b26f8f6184dba3a69cd5e4",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/c7912481a56e17cc86358fa8de57309de5e88ef7",
+                "reference": "c7912481a56e17cc86358fa8de57309de5e88ef7",
                 "shasum": ""
             },
             "require": {
@@ -2674,9 +2674,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.7.1"
+                "source": "https://github.com/utopia-php/storage/tree/0.9.0"
             },
-            "time": "2022-02-20T13:27:43+00:00"
+            "time": "2022-05-19T11:05:45+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -3075,16 +3075,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.18.6",
+            "version": "0.18.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "c0914d9f4047fd7b86112c289d98e9161cf9d0b0"
+                "reference": "8ba45dfb74ff6062f96c0e4d10d7c4fae94768b1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/c0914d9f4047fd7b86112c289d98e9161cf9d0b0",
-                "reference": "c0914d9f4047fd7b86112c289d98e9161cf9d0b0",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/8ba45dfb74ff6062f96c0e4d10d7c4fae94768b1",
+                "reference": "8ba45dfb74ff6062f96c0e4d10d7c4fae94768b1",
                 "shasum": ""
             },
             "require": {
@@ -3119,9 +3119,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.18.6"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.18.8"
             },
-            "time": "2022-05-17T15:09:23+00:00"
+            "time": "2022-05-19T10:34:06+00:00"
         },
         {
             "name": "composer/pcre",

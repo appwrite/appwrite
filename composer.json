@@ -51,7 +51,7 @@
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
         "utopia-php/swoole": "0.3.*",
-        "utopia-php/storage": "0.7.*",
+        "utopia-php/storage": "0.9.*",
         "utopia-php/websocket": "0.1.0",
         "utopia-php/image": "0.5.*",
         "utopia-php/orchestration": "0.4.*",
@@ -71,7 +71,7 @@
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "0.18.6",
+        "appwrite/sdk-generator": "0.18.8",
         "phpunit/phpunit": "9.5.20",
         "swoole/ide-helper": "4.8.9",
         "textalk/websocket": "1.5.7",
