@@ -19,7 +19,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Appwrite\Event\Audit;
-use Utopia\Audit\Audit as Audits;
+use Utopia\Audit\Audit as EventAudit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -1105,7 +1105,7 @@ App::get('/v1/account/logs')
     ->inject('usage')
     ->action(function (?int $limit, ?int $offset, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject, Stats $usage) {
 
-        $audit = new Audits($dbForProject);
+        $audit = new EventAudit($dbForProject);
 
         $logs = $audit->getLogsByUser($user->getId(), $limit, $offset);
 
