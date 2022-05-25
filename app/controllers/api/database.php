@@ -1,6 +1,7 @@
 <?php
 
 use Utopia\App;
+use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
 use Utopia\Validator\Boolean;
@@ -25,6 +26,7 @@ use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Locale\Locale;
 use Appwrite\Auth\Auth;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
@@ -38,6 +40,7 @@ use Appwrite\Event\Audit as EventAudit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Appwrite\Stats\Stats;
+use MaxMind\Db\Reader;
 
 /**
  * Create attribute of varying type
@@ -162,12 +165,7 @@ App::post('/v1/database/collections')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $name, $permission, $read, $write, $response, $dbForProject, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $collectionId, string $name, ?string $permission, array $read, array $write, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
 
         $collectionId = $collectionId == 'unique()' ? $dbForProject->getId() : $collectionId;
 
@@ -224,9 +222,7 @@ App::get('/v1/database/collections')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
 
         if (!empty($cursor)) {
             $cursorCollection = $dbForProject->getDocument('collections', $cursor);
@@ -265,9 +261,7 @@ App::get('/v1/database/collections/:collectionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($collectionId, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $collectionId, Response $response, Database $dbForProject, Stats $usage) {
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
@@ -293,11 +287,7 @@ App::get('/v1/database/usage')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($range, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Registry\Registry $register */
+    ->action(function (string $range, Response $response, Database $dbForProject) {
 
         $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
@@ -404,10 +394,7 @@ App::get('/v1/database/:collectionId/usage')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($range, $collectionId, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Registry\Registry $register */
+    ->action(function (string $range, string $collectionId, Response $response, Database $dbForProject) {
 
         $collectionDocument = $dbForProject->getDocument('collections', $collectionId);
         $collection = $dbForProject->getCollection('collection_' . $collectionDocument->getInternalId());
@@ -514,12 +501,7 @@ App::get('/v1/database/collections/:collectionId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($collectionId, $limit, $offset, $response, $dbForProject, $locale, $geodb) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
+    ->action(function (string $collectionId, int $limit, int $offset, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $collectionDocument = $dbForProject->getDocument('collections', $collectionId);
         $collection = $dbForProject->getCollection('collection_' . $collectionDocument->getInternalId());
@@ -606,12 +588,7 @@ App::put('/v1/database/collections/:collectionId')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $name, $permission, $read, $write, $enabled, $response, $dbForProject, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $collectionId, string $name, string $permission, array $read, array $write, bool $enabled, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
@@ -670,13 +647,7 @@ App::delete('/v1/database/collections/:collectionId')
     ->inject('audits')
     ->inject('deletes')
     ->inject('usage')
-    ->action(function ($collectionId, $response, $dbForProject, $events, $audits, $deletes, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Delete $deletes */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $collectionId, Response $response, Database $dbForProject, Event $events, EventAudit $audits, Delete $deletes, Stats $usage) {
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
@@ -734,13 +705,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $key, $size, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $collectionId,string $key, int $size, bool $required, string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         // Ensure attribute default is within required size
         $validator = new Text($size);
@@ -783,12 +748,7 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $collectionId, string $key, bool $required, string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $audits, Stats $usage, Event $events) {
 
         $attribute = createAttribute($collectionId, new Document([
             'key' => $key,
@@ -827,13 +787,7 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $key, $elements, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $collectionId, string $key, array $elements, bool $required, string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         // use length of longest string as attribute size
         $size = 0;
@@ -887,12 +841,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $collectionId, string $key, bool $required, string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         $attribute = createAttribute($collectionId, new Document([
             'key' => $key,
@@ -930,12 +879,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $collectionId, string $key, bool $required, string $default, array $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         $attribute = createAttribute($collectionId, new Document([
             'key' => $key,
@@ -975,13 +919,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $key, $required, $min, $max, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $collectionId, string $key, bool $required, int $min, int $max, int $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? PHP_INT_MIN : \intval($min);
@@ -1048,13 +986,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $required, $min, $max, $default, $array, $response, $dbForProject, $database, $audits, $events, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $collectionId, string $key, bool $required, int $min, int $max, float $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Event $events, Stats $usage) {
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? -PHP_FLOAT_MAX : \floatval($min);
@@ -1122,13 +1054,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $collectionId, string $key, bool $required, bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         $attribute = createAttribute($collectionId, new Document([
             'key' => $key,
@@ -1157,9 +1083,7 @@ App::get('/v1/database/collections/:collectionId/attributes')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($collectionId, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $collectionId, Response $response, Database $dbForProject, Stats $usage) {
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
@@ -1201,9 +1125,7 @@ App::get('/v1/database/collections/:collectionId/attributes/:key')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $collectionId, string $key, Response $response, Database $dbForProject, Stats $usage) {
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
@@ -1259,13 +1181,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $response, $dbForProject, $database, $events, $audits, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $database, Event $events, EventAudit $audits, Stats $usage) {
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
@@ -1351,13 +1267,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $key, $type, $attributes, $orders, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $collectionId, string $key, string $type, array $attributes, array $orders, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
@@ -1457,9 +1367,7 @@ App::get('/v1/database/collections/:collectionId/indexes')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($collectionId, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $collectionId, Response $response, Database $dbForProject, Stats $usage) {
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
@@ -1493,9 +1401,7 @@ App::get('/v1/database/collections/:collectionId/indexes/:key')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $collectionId, string $key, Response $response, Database $dbForProject, Stats $usage) {
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
@@ -1540,13 +1446,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:key')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $response, $dbForProject, $database, $events, $audits, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $database, Event $events, EventAudit $audits, Stats $usage) {
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
@@ -1614,14 +1514,7 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->inject('usage')
     ->inject('events')
     ->inject('mode')
-    ->action(function ($documentId, $collectionId, $data, $read, $write, $response, $dbForProject, $user, $audits, $usage, $events, $mode) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Database\Document $user */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
-        /** @var string $mode */
+    ->action(function (string $documentId, string $collectionId, array $data, array $read, array $write, Response $response, Database $dbForProject, Document $user, EventAudit $audits, Stats $usage, Event $events, string $mode) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -1735,11 +1628,7 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($collectionId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderAttributes, $orderTypes, $response, $dbForProject, $usage, $mode) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var string $mode */
+    ->action(function (string $collectionId, array $queries, int $limit, int $offset, string $cursor,string $cursorDirection, array $orderAttributes, array $orderTypes, Response $response, Database $dbForProject, Stats $usage, string $mode) {
 
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
@@ -1839,10 +1728,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($collectionId, $documentId, $response, $dbForProject, $usage, $mode) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var string $mode */
+    ->action(function (string $collectionId, string $documentId, Response $response, Database $dbForProject, Stats $usage, string $mode) {
 
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
@@ -1906,12 +1792,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($collectionId, $documentId, $limit, $offset, $response, $dbForProject, $locale, $geodb) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
+    ->action(function (string $collectionId, string $documentId, int $limit, int $offset, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $collection = $dbForProject->getDocument('collections', $collectionId);
 
@@ -2002,13 +1883,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->inject('usage')
     ->inject('events')
     ->inject('mode')
-    ->action(function ($collectionId, $documentId, $data, $read, $write, $response, $dbForProject, $audits, $usage, $events, $mode) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
-        /** @var string $mode */
+    ->action(function (string $collectionId, string $documentId, array $data, array $read, array $write, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events, string $mode) {
 
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
@@ -2136,14 +2011,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->inject('deletes')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($collectionId, $documentId, $response, $dbForProject, $events, $audits, $deletes, $usage, $mode) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Delete $deletes */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var string $mode */
+    ->action(function (string $collectionId, string $documentId, Response $response, Database $dbForProject, Event $events, EventAudit $audits, Delete $deletes, Stats $usage, string $mode) {
 
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
