@@ -3,12 +3,17 @@
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Detector\Detector;
+use Appwrite\Event\Delete;
+use Appwrite\Event\Event;
+use Appwrite\Event\Audit as EventAudit;
 use Appwrite\Network\Validator\Email;
+use Appwrite\Stats\Stats;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
+use Utopia\Locale\Locale;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
@@ -21,6 +26,7 @@ use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\Boolean;
+use MaxMind\Db\Reader;
 
 App::post('/v1/users')
     ->desc('Create User')
@@ -42,11 +48,7 @@ App::post('/v1/users')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($userId, $email, $password, $name, $response, $dbForProject, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
 
         $email = \strtolower($email);
 
@@ -106,10 +108,7 @@ App::get('/v1/users')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
 
         if (!empty($cursor)) {
             $cursorUser = $dbForProject->getDocument('users', $cursor);
@@ -150,10 +149,7 @@ App::get('/v1/users/:userId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($userId, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Stats\Stats $usage */ 
+    ->action(function (string $userId, Response $response, Database $dbForProject, Stats $usage) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -182,10 +178,7 @@ App::get('/v1/users/:userId/prefs')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($userId, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $userId, Response $response, Database $dbForProject, Stats $usage) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -217,11 +210,7 @@ App::get('/v1/users/:userId/sessions')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('usage')
-    ->action(function ($userId, $response, $dbForProject, $locale, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $userId, Response $response, Database $dbForProject, Locale $locale, Stats $usage) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -264,10 +253,7 @@ App::get('/v1/users/:userId/memberships')
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function ($userId, $response, $dbForProject) {
-        /** @var string $userId */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $userId, Response $response, Database $dbForProject) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -311,13 +297,7 @@ App::get('/v1/users/:userId/logs')
     ->inject('locale')
     ->inject('geodb')
     ->inject('usage')
-    ->action(function ($userId, $limit, $offset, $response, $dbForProject, $locale, $geodb, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $userId, int $limit, int $offset, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Stats $usage) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -398,11 +378,7 @@ App::patch('/v1/users/:userId/status')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($userId, $status, $response, $dbForProject, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $userId, bool $status, Response $response, Database $dbForProject, Stats $usage, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -441,11 +417,7 @@ App::patch('/v1/users/:userId/verification')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($userId, $emailVerification, $response, $dbForProject, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $userId, bool $emailVerification, Response $response, Database $dbForProject, Stats $usage, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -484,11 +456,7 @@ App::patch('/v1/users/:userId/name')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($userId, $name, $response, $dbForProject, $audits, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $userId, string $name, Response $response, Database $dbForProject, EventAudit $audits, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -532,11 +500,7 @@ App::patch('/v1/users/:userId/password')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($userId, $password, $response, $dbForProject, $audits, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $userId, string $password, Response $response, Database $dbForProject, EventAudit $audits, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -579,11 +543,7 @@ App::patch('/v1/users/:userId/email')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($userId, $email, $response, $dbForProject, $audits, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $userId, string $email, Response $response, Database $dbForProject, EventAudit $audits, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -639,11 +599,7 @@ App::patch('/v1/users/:userId/prefs')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($userId, $prefs, $response, $dbForProject, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $userId, array $prefs, Response $response, Database $dbForProject, Stats $usage, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -681,11 +637,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($userId, $sessionId, $response, $dbForProject, $events, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $userId, string $sessionId, Response $response, Database $dbForProject, Event $events, Stats $usage) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -732,11 +684,7 @@ App::delete('/v1/users/:userId/sessions')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($userId, $response, $dbForProject, $events, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $events, Stats $usage) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -783,12 +731,7 @@ App::delete('/v1/users/:userId')
     ->inject('events')
     ->inject('deletes')
     ->inject('usage')
-    ->action(function ($userId, $response, $dbForProject, $events, $deletes, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Delete $deletes */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $events, Delete $deletes, Stats $usage) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -833,9 +776,7 @@ App::get('/v1/users/usage')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('register')
-    ->action(function ($range, $provider, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $range, string $provider, Response $response, Database $dbForProject) {
 
         $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
