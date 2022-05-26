@@ -1507,7 +1507,7 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->inject('usage')
     ->inject('events')
     ->inject('mode')
-    ->action(function (string $documentId, string $collectionId, string $data, ?array $read, ?array $write, Response $response, Database $dbForProject, Document $user, EventAudit $audits, Stats $usage, Event $events, string $mode) {
+    ->action(function (string $documentId, string $collectionId, array $data, ?array $read, ?array $write, Response $response, Database $dbForProject, Document $user, EventAudit $audits, Stats $usage, Event $events, string $mode) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -1876,7 +1876,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->inject('usage')
     ->inject('events')
     ->inject('mode')
-    ->action(function (string $collectionId, string $documentId, string $data, ?array $read, ?array $write, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events, string $mode) {
+    ->action(function (string $collectionId, string $documentId, array $data, ?array $read, ?array $write, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events, string $mode) {
 
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
