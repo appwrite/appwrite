@@ -5,6 +5,7 @@ global $utopia, $request, $response;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
 use Appwrite\Network\Validator\Host;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Validator\ArrayList;
@@ -206,8 +207,7 @@ App::get('/v1/mock/tests/general/download')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.mock', true)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Request $request */
+    ->action(function (Response $response) {
         
         $response
             ->setContentType('text/plain')
@@ -237,9 +237,7 @@ App::post('/v1/mock/tests/general/upload')
     ->param('file', [], new File(), 'Sample file param', false)
     ->inject('request')
     ->inject('response')
-    ->action(function ($x, $y, $z, $file, $request, $response) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Utopia\Swoole\Response $response */
+    ->action(function (string $x, int $y, array $z, array $file, Request $request, Response $response) {
         
         $file = $request->getFiles('file');
         
@@ -321,8 +319,7 @@ App::get('/v1/mock/tests/general/redirect')
     ->label('sdk.response.model', Response::MODEL_MOCK)
     ->label('sdk.mock', true)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $response->redirect('/v1/mock/tests/general/redirect/done');
     });
@@ -356,9 +353,7 @@ App::get('/v1/mock/tests/general/set-cookie')
     ->label('sdk.mock', true)
     ->inject('response')
     ->inject('request')
-    ->action(function ($response, $request) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Utopia\Request $request */
+    ->action(function (Response $response, Request $request) {
 
         $response->addCookie('cookieName', 'cookieValue', \time() + 31536000, '/', $request->getHostname(), true, true);
     });
@@ -376,8 +371,7 @@ App::get('/v1/mock/tests/general/get-cookie')
     ->label('sdk.response.model', Response::MODEL_MOCK)
     ->label('sdk.mock', true)
     ->inject('request')
-    ->action(function ($request) {
-        /** @var Appwrite\Utopia\Request $request */
+    ->action(function (Request $request) {
 
         if ($request->getCookie('cookieName', '') !== 'cookieValue') {
             throw new Exception('Missing cookie value', 400, Exception::GENERAL_MOCK);
@@ -396,8 +390,7 @@ App::get('/v1/mock/tests/general/empty')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('sdk.mock', true)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $response->noContent();
     });
@@ -447,8 +440,7 @@ App::get('/v1/mock/tests/general/502-error')
     ->label('sdk.response.model', Response::MODEL_ANY)
     ->label('sdk.mock', true)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $response
             ->setStatusCode(502)
@@ -467,8 +459,7 @@ App::get('/v1/mock/tests/general/oauth2')
     ->param('scope', '', new Text(100), 'OAuth2 scope list.')
     ->param('state', '', new Text(1024), 'OAuth2 state.')
     ->inject('response')
-    ->action(function ($client_id, $redirectURI, $scope, $state, $response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (string $client_id, string $redirectURI, string $scope, string $state, Response $response) {
 
         $response->redirect($redirectURI.'?'.\http_build_query(['code' => 'abcdef', 'state' => $state]));
     });
@@ -486,8 +477,7 @@ App::get('/v1/mock/tests/general/oauth2/token')
     ->param('code', '', new Text(100), 'OAuth2 state.', true)
     ->param('refresh_token', '', new Text(100), 'OAuth2 refresh token.', true)
     ->inject('response')
-    ->action(function ($client_id, $client_secret, $grantType, $redirectURI, $code, $refreshToken, $response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (string $client_id, string $client_secret, string $grantType, string $redirectURI, string $code, string $refreshToken, Response $response) {
 
         if ($client_id != '1') {
             throw new Exception('Invalid client ID', 400, Exception::GENERAL_MOCK);
@@ -527,8 +517,7 @@ App::get('/v1/mock/tests/general/oauth2/user')
     ->label('docs', false)
     ->param('token', '', new Text(100), 'OAuth2 Access Token.')
     ->inject('response')
-    ->action(function ($token, $response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (string $token, Response $response) {
 
         if ($token != '123456') {
             throw new Exception('Invalid token', 400, Exception::GENERAL_MOCK);
@@ -547,8 +536,7 @@ App::get('/v1/mock/tests/general/oauth2/success')
     ->label('scope', 'public')
     ->label('docs', false)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $response->json([
             'result' => 'success',
@@ -561,8 +549,7 @@ App::get('/v1/mock/tests/general/oauth2/failure')
     ->label('scope', 'public')
     ->label('docs', false)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $response
             ->setStatusCode(Response::STATUS_CODE_BAD_REQUEST)
@@ -571,10 +558,7 @@ App::get('/v1/mock/tests/general/oauth2/failure')
             ]);
     });
 
-App::shutdown(function($utopia, $response, $request) {
-    /** @var Utopia\App $utopia */
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
+App::shutdown(function(App $utopia, Response $response, Request $request) {
 
     $result = [];
     $route  = $utopia->match($request);
