@@ -698,7 +698,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $collectionId,string $key, int $size, bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $collectionId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         // Ensure attribute default is within required size
         $validator = new Text($size);
@@ -741,7 +741,7 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $collectionId, string $key, bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $audits, Stats $usage, Event $events) {
+    ->action(function (string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $audits, Stats $usage, Event $events) {
 
         $attribute = createAttribute($collectionId, new Document([
             'key' => $key,
@@ -780,7 +780,7 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $collectionId, string $key, array $elements, bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         // use length of longest string as attribute size
         $size = 0;
@@ -834,7 +834,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $collectionId, string $key, bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         $attribute = createAttribute($collectionId, new Document([
             'key' => $key,
@@ -872,7 +872,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $collectionId, string $key, bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         $attribute = createAttribute($collectionId, new Document([
             'key' => $key,
@@ -912,7 +912,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $collectionId, string $key, bool $required, ?int $min, ?int $max, ?int $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? PHP_INT_MIN : \intval($min);
@@ -979,7 +979,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function (string $collectionId, string $key, bool $required, ?float $min, ?float $max, ?float $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Event $events, Stats $usage) {
+    ->action(function (string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Event $events, Stats $usage) {
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? -PHP_FLOAT_MAX : \floatval($min);
@@ -1047,7 +1047,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $collectionId, string $key, bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         $attribute = createAttribute($collectionId, new Document([
             'key' => $key,
@@ -1507,7 +1507,7 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->inject('usage')
     ->inject('events')
     ->inject('mode')
-    ->action(function (string $documentId, string $collectionId, $data, ?array $read, ?array $write, Response $response, Database $dbForProject, Document $user, EventAudit $audits, Stats $usage, Event $events, string $mode) {
+    ->action(function (string $documentId, string $collectionId, string $data, ?array $read, ?array $write, Response $response, Database $dbForProject, Document $user, EventAudit $audits, Stats $usage, Event $events, string $mode) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -1876,7 +1876,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->inject('usage')
     ->inject('events')
     ->inject('mode')
-    ->action(function (string $collectionId, string $documentId, $data, ?array $read, ?array $write, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events, string $mode) {
+    ->action(function (string $collectionId, string $documentId, string $data, ?array $read, ?array $write, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events, string $mode) {
 
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
