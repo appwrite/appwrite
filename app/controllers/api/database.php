@@ -1712,6 +1712,132 @@ App::post('/v1/database/collections/:collectionId/documents')
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
+    App::post('/v1/database/collections/:collectionId/bulk-documents')
+    ->desc('Create Multiple Documents')
+    ->groups(['api', 'database'])
+    ->label('event', 'collections.[collectionId].documents.[documentId].create')
+    ->label('scope', 'documents.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.method', 'createDocuments')
+    ->label('sdk.description', '/docs/references/database/create-document.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
+    // ->param('documentId', '', new CustomId(), 'Document ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection). Make sure to define attributes before creating documents.')
+    ->param('data', [], new JSON(), 'Document data as JSON object in a JSON array.')
+    ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
+    ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('user')
+    ->inject('audits')
+    ->inject('usage')
+    ->inject('events')
+    ->inject('mode')
+    ->action(function ($collectionId, $data, $read, $write, $response, $dbForProject, $user, $audits, $usage, $events, $mode) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var Utopia\Database\Document $user */
+        /** @var Appwrite\Event\Audit $audits */
+        /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
+        /** @var string $mode */
+
+        $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
+
+        if (empty($data)) {
+            throw new Exception('Missing payload', 400, Exception::DOCUMENT_MISSING_PAYLOAD);
+        }
+
+        if (isset($data[0]['$id'])) {
+            throw new Exception('$id is not allowed for creating new documents, try update instead', 400, Exception::DOCUMENT_INVALID_STRUCTURE);
+        }
+
+        /**
+         * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
+         * 
+         * @var Document $collection
+         */
+        $collection = Authorization::skip(fn() => $dbForProject->getDocument('collections', $collectionId));
+
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+                throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
+            }
+        }
+
+        // Check collection permissions when enforced
+        if ($collection->getAttribute('permission') === 'collection') {
+            $validator = new Authorization('write');
+            if (!$validator->isValid($collection->getWrite())) {
+                throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
+            }
+        }
+        
+
+        foreach ($data as $doc) {
+            // $doc = \json_decode($doc, true);
+            $doc['$collection'] = $collection->getId(); // Adding this param to make API easier for developers
+            // $doc['$id'] = $documentId == 'unique()' ? $dbForProject->getId() : $documentId;
+            $doc['$id'] = $dbForProject->getId();
+            $doc['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
+            $doc['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
+
+            // Users can only add their roles to documents, API keys and Admin users can add any
+            $roles = Authorization::getRoles();
+
+            if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+                foreach ($doc['$read'] as $read) {
+                    if (!Authorization::isRole($read)) {
+                        // TODO: Isn't this a 401: Unauthorized Error ? 
+                        throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::USER_UNAUTHORIZED);
+                    }
+                }
+                foreach ($doc['$write'] as $write) {
+                    if (!Authorization::isRole($write)) {
+                        throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::USER_UNAUTHORIZED);
+                    }
+                }
+            }
+            try {
+                if ($collection->getAttribute('permission') === 'collection') {
+                    /** @var Document $document */
+                    $document = Authorization::skip(fn() => $dbForProject->createDocument('collection_' . $collection->getInternalId(), new Document($doc)));
+                } else {
+                    $document = $dbForProject->createDocument('collection_' . $collection->getInternalId(), new Document($doc));
+                }
+                $document->setAttribute('$collection', $collectionId);
+            }
+            catch (StructureException $exception) {
+                throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
+            }
+            catch (DuplicateException $exception) {
+                throw new Exception('Document already exists', 409, Exception::DOCUMENT_ALREADY_EXISTS);
+            }
+
+            $events
+                ->setParam('collectionId', $collection->getId())
+                ->setParam('documentId', $document->getId())
+                ->setContext($collection)
+            ;
+
+            $usage
+                ->setParam('database.documents.create', 1)
+                ->setParam('collectionId', $collectionId)
+            ;
+
+            $audits
+                ->setResource('document/'.$document->getId())
+                ->setPayload($document->getArrayCopy())
+            ;
+        }
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->json((object) ['status' => 'Success']);
+    });
+
 App::get('/v1/database/collections/:collectionId/documents')
     ->desc('List Documents')
     ->groups(['api', 'database'])
