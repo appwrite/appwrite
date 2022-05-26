@@ -3,6 +3,8 @@
 require_once __DIR__.'/../init.php';
 
 use Utopia\App;
+use Utopia\Locale\Locale;
+use Utopia\Logger\Logger;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Appwrite\Utopia\Request;
@@ -10,6 +12,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
 use Appwrite\Extend\Exception;
 use Utopia\Config\Config;
+use Utopia\Exception as Exceptions;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
@@ -18,6 +21,7 @@ use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
 use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
 use Appwrite\Utopia\Response\Filters\V13 as ResponseV13;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -31,16 +35,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-App::init(function ($utopia, $request, $response, $console, $project, $dbForConsole, $user, $locale, $clients) {
-    /** @var Utopia\App $utopia */
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\Database\Document $console */
-    /** @var Utopia\Database\Document $project */
-    /** @var Utopia\Database\Database $dbForConsole */
-    /** @var Utopia\Database\Document $user */
-    /** @var Utopia\Locale\Locale $locale */
-    /** @var array $clients */
+App::init(function (App $utopia, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients) {
 
     /*
      * Request format
@@ -320,9 +315,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
 
 }, ['utopia', 'request', 'response', 'console', 'project', 'dbForConsole', 'user', 'locale', 'clients']);
 
-App::options(function ($request, $response) {
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
+App::options(function (Request $request, Response $response) {
 
     $origin = $request->getOrigin();
 
@@ -336,15 +329,7 @@ App::options(function ($request, $response) {
         ->noContent();
 }, ['request', 'response']);
 
-App::error(function ($error, $utopia, $request, $response, $layout, $project, $logger, $loggerBreadcrumbs) {
-    /** @var Exception $error */
-    /** @var Utopia\App $utopia */
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Appwrite\Utopia\View $layout */
-    /** @var Utopia\Database\Document $project */
-    /** @var Utopia\Logger\Logger $logger */
-    /** @var Utopia\Logger\Log\Breadcrumb[] $loggerBreadcrumbs */
+App::error(function (Exception|Exceptions $error, App $utopia, Request $request, Response $response, View $layout, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
 
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
     $route = $utopia->match($request);
@@ -520,8 +505,7 @@ App::get('/manifest.json')
     ->label('scope', 'public')
     ->label('docs', false)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $response->json([
             'name' => APP_NAME,
@@ -547,7 +531,7 @@ App::get('/robots.txt')
     ->label('scope', 'public')
     ->label('docs', false)
     ->inject('response')
-    ->action(function ($response) {
+    ->action(function (Response $response) {
         $template = new View(__DIR__.'/../views/general/robots.phtml');
         $response->text($template->render(false));
     });
@@ -557,7 +541,7 @@ App::get('/humans.txt')
     ->label('scope', 'public')
     ->label('docs', false)
     ->inject('response')
-    ->action(function ($response) {
+    ->action(function (Response $response) {
         $template = new View(__DIR__.'/../views/general/humans.phtml');
         $response->text($template->render(false));
     });
@@ -568,7 +552,7 @@ App::get('/.well-known/acme-challenge')
     ->label('docs', false)
     ->inject('request')
     ->inject('response')
-    ->action(function ($request, $response) {
+    ->action(function (Request $request, Response $response) {
         $uriChunks = \explode('/', $request->getURI());
         $token = $uriChunks[\count($uriChunks) - 1];
 
