@@ -10,9 +10,9 @@ use Utopia\Logger\Log\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
-use Appwrite\Extend\Exception;
+use Appwrite\Extend\Exception as AppwriteException;
 use Utopia\Config\Config;
-use Utopia\Exception as Exceptions;
+use Utopia\Exception as UtopiaException;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
@@ -122,11 +122,11 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
     }
 
     if ($project->isEmpty()) {
-        throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+        throw new AppwriteException('Project not found', 404, AppwriteException::PROJECT_NOT_FOUND);
     }
 
     if (!empty($route->getLabel('sdk.auth', [])) && $project->isEmpty() && ($route->getLabel('scope', '') !== 'public')) {
-        throw new Exception('Missing or unknown project ID', 400, Exception::PROJECT_UNKNOWN);
+        throw new AppwriteException('Missing or unknown project ID', 400, AppwriteException::PROJECT_UNKNOWN);
     }
 
     $referrer = $request->getReferer();
@@ -193,7 +193,7 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
     if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
         if ($request->getProtocol() !== 'https') {
             if($request->getMethod() !== Request::METHOD_GET) {
-                throw new Exception('Method unsupported over HTTP.', 500, Exception::GENERAL_PROTOCOL_UNSUPPORTED);
+                throw new AppwriteException('Method unsupported over HTTP.', 500, AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED);
             }
 
             return $response->redirect('https://'.$request->getHostname().$request->getURI());
@@ -224,7 +224,7 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
         && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
         && $route->getLabel('origin', false) !== '*'
         && empty($request->getHeader('x-appwrite-key', ''))) {
-        throw new Exception($originValidator->getDescription(), 403, Exception::GENERAL_UNKNOWN_ORIGIN);
+        throw new AppwriteException($originValidator->getDescription(), 403, AppwriteException::GENERAL_UNKNOWN_ORIGIN);
     }
 
     /*
@@ -293,24 +293,24 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
         if(array_key_exists($service, $project->getAttribute('services',[]))
             && !$project->getAttribute('services',[])[$service]
             && !Auth::isPrivilegedUser(Authorization::getRoles())) {
-            throw new Exception('Service is disabled', 503, Exception::GENERAL_SERVICE_DISABLED);
+            throw new AppwriteException('Service is disabled', 503, AppwriteException::GENERAL_SERVICE_DISABLED);
         }
     }
 
     if (!\in_array($scope, $scopes)) {
         if ($project->isEmpty()) { // Check if permission is denied because project is missing
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new AppwriteException('Project not found', 404, AppwriteException::PROJECT_NOT_FOUND);
         }
 
-        throw new Exception($user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401, Exception::GENERAL_UNAUTHORIZED_SCOPE);
+        throw new AppwriteException($user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401, AppwriteException::GENERAL_UNAUTHORIZED_SCOPE);
     }
 
     if (false === $user->getAttribute('status')) { // Account is blocked
-        throw new Exception('Invalid credentials. User is blocked', 401, Exception::USER_BLOCKED);
+        throw new AppwriteException('Invalid credentials. User is blocked', 401, AppwriteException::USER_BLOCKED);
     }
 
     if ($user->getAttribute('reset')) {
-        throw new Exception('Password reset is required', 412, Exception::USER_PASSWORD_RESET_REQUIRED);
+        throw new AppwriteException('Password reset is required', 412, AppwriteException::USER_PASSWORD_RESET_REQUIRED);
     }
 
 }, ['utopia', 'request', 'response', 'console', 'project', 'dbForConsole', 'user', 'locale', 'clients']);
@@ -329,7 +329,7 @@ App::options(function (Request $request, Response $response) {
         ->noContent();
 }, ['request', 'response']);
 
-App::error(function (Exception|Exceptions $error, App $utopia, Request $request, Response $response, View $layout, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
+App::error(function (AppwriteException|UtopiaException $error, App $utopia, Request $request, Response $response, View $layout, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
 
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
     $route = $utopia->match($request);
@@ -411,20 +411,20 @@ App::error(function (Exception|Exceptions $error, App $utopia, Request $request,
 
     /** Handle Utopia Errors */
     if ($error instanceof Utopia\Exception) {
-        $error = new Exception($message, $code, Exception::GENERAL_UNKNOWN, $error);
+        $error = new AppwriteException($message, $code, AppwriteException::GENERAL_UNKNOWN, $error);
         switch($code) {
             case 400:
-                $error->setType(Exception::GENERAL_ARGUMENT_INVALID);
+                $error->setType(AppwriteException::GENERAL_ARGUMENT_INVALID);
                 break;
             case 404:
-                $error->setType(Exception::GENERAL_ROUTE_NOT_FOUND);
+                $error->setType(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
                 break;
         }
     }
 
     /** Wrap all exceptions inside Appwrite\Extend\Exception */
-    if (!($error instanceof Exception)) {
-        $error = new Exception($message, $code, Exception::GENERAL_UNKNOWN, $error);
+    if (!($error instanceof AppwriteException)) {
+        $error = new AppwriteException($message, $code, AppwriteException::GENERAL_UNKNOWN, $error);
     }
 
     switch ($code) { // Don't show 500 errors!
@@ -565,32 +565,32 @@ App::get('/.well-known/acme-challenge')
         ]);
 
         if (!$validator->isValid($token) || \count($uriChunks) !== 4) {
-            throw new Exception('Invalid challenge token.', 400);
+            throw new AppwriteException('Invalid challenge token.', 400);
         }
 
         $base = \realpath(APP_STORAGE_CERTIFICATES);
         $absolute = \realpath($base.'/.well-known/acme-challenge/'.$token);
 
         if (!$base) {
-            throw new Exception('Storage error', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new AppwriteException('Storage error', 500, AppwriteException::GENERAL_SERVER_ERROR);
         }
 
         if (!$absolute) {
-            throw new Exception('Unknown path', 404);
+            throw new AppwriteException('Unknown path', 404);
         }
 
         if (!\substr($absolute, 0, \strlen($base)) === $base) {
-            throw new Exception('Invalid path', 401);
+            throw new AppwriteException('Invalid path', 401);
         }
 
         if (!\file_exists($absolute)) {
-            throw new Exception('Unknown path', 404);
+            throw new AppwriteException('Unknown path', 404);
         }
 
         $content = @\file_get_contents($absolute);
 
         if (!$content) {
-            throw new Exception('Failed to get contents', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new AppwriteException('Failed to get contents', 500, AppwriteException::GENERAL_SERVER_ERROR);
         }
 
         $response->text($content);
