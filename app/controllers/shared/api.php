@@ -18,7 +18,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 
-App::init(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Stats $usage, Delete $deletes, Event $database, Database $dbForProject, bool $mode) {
+App::init(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Stats $usage, Delete $deletes, Event $database, Database $dbForProject, string $mode) {
 
     $route = $utopia->match($request);
 
@@ -164,7 +164,7 @@ App::init(function (App $utopia, Request $request, Document $project) {
 
 }, ['utopia', 'request', 'project'], 'auth');
 
-App::shutdown(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, Event $database, bool $mode, Database $dbForProject) {
+App::shutdown(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, Event $database, string $mode, Database $dbForProject) {
 
     if (!empty($events->getEvent())) {
         if (empty($events->getPayload())) {
