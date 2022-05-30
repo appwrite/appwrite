@@ -43,6 +43,8 @@ abstract class Migration
         '0.13.3' => 'V12',
         '0.13.4' => 'V12',
         '0.14.0' => 'V13',
+        '0.14.1' => 'V13',
+        '0.14.2' => 'V13',
     ];
 
     /**
@@ -123,21 +125,7 @@ abstract class Migration
                             $old = $document->getArrayCopy();
                             $new = call_user_func($callback, $document);
 
-                            foreach ($document as &$attr) {
-                                if ($attr instanceof Document) {
-                                    $attr = call_user_func($callback, $attr);
-                                }
-
-                                if (\is_array($attr)) {
-                                    foreach ($attr as &$child) {
-                                        if ($child instanceof Document) {
-                                            $child = call_user_func($callback, $child);
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (!$this->check_diff_multi($new->getArrayCopy(), $old)) {
+                            if (!self::hasDifference($new->getArrayCopy(), $old)) {
                                 return;
                             }
 
@@ -166,35 +154,28 @@ abstract class Migration
 
     /**
      * Checks 2 arrays for differences.
-     * 
-     * @param array $array1 
-     * @param array $array2 
-     * @return array 
+     *
+     * @param array $array1
+     * @param array $array2
+     * @return bool
      */
-    public function check_diff_multi(array $array1, array $array2): array
+    public static function hasDifference(array $array1, array $array2): bool
     {
-        $result = array();
-
-        foreach ($array1 as $key => $val) {
-            if (is_array($val) && isset($array2[$key])) {
-                $tmp = $this->check_diff_multi($val, $array2[$key]);
-                if ($tmp) {
-                    $result[$key] = $tmp;
+        foreach ($array1 as $key => $value) {
+            if (is_array($value)) {
+                if (!isset($array2[$key]) || !is_array($array2[$key])) {
+                    return true;
+                } else {
+                    if (self::hasDifference($value, $array2[$key])) {
+                        return true;
+                    }
                 }
-            } elseif (!isset($array2[$key])) {
-                $result[$key] = null;
-            } elseif ($val !== $array2[$key]) {
-                $result[$key] = $array2[$key];
-            }
-
-            if (isset($array2[$key])) {
-                unset($array2[$key]);
+            } elseif (!array_key_exists($key, $array2) || $array2[$key] !== $value) {
+                return true;
             }
         }
 
-        $result = array_merge($result, $array2);
-
-        return $result;
+        return false;
     }
 
     /**
