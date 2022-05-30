@@ -136,7 +136,7 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
     $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
     return $attribute;
-};
+}
 
 App::post('/v1/database/collections')
     ->desc('Create Collection')

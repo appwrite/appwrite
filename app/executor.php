@@ -114,7 +114,7 @@ function logError(Throwable $error, string $action, Utopia\Route $route = null)
     Console::error('[Error] Message: ' . $error->getMessage());
     Console::error('[Error] File: ' . $error->getFile());
     Console::error('[Error] Line: ' . $error->getLine());
-};
+}
 
 function getStorageDevice($root): Device
 {
