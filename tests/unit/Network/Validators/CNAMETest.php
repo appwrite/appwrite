@@ -27,8 +27,6 @@ class CNAMETest extends TestCase
         $this->assertEquals($this->object->isValid(null), false);
         $this->assertEquals($this->object->isValid(false), false);
         $this->assertEquals($this->object->isValid('cname-unit-test.appwrite.org'), true);
-        $this->assertEquals($this->object->isValid('cname-unit-test.appwrite.org'), true);
-        $this->assertEquals($this->object->isValid('test1.appwrite.org'), false);
         $this->assertEquals($this->object->isValid('test1.appwrite.org'), false);
     }
 }
