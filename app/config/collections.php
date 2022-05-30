@@ -20,6 +20,67 @@ $collections = [
         '$collection' => Database::METADATA,
         '$id' => 'databases',
         'name' => 'Databases',
+<<<<<<< HEAD
+=======
+        'attributes' => [
+            [
+                '$id' => 'name',
+                'type' => Database::VAR_STRING,
+                'size' => 256,
+                'required' => true,
+                'signed' => true,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'dateCreated',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'dateUpdated',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'search',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+        ],
+        'indexes' => [
+            [
+                '$id' => '_fulltext_search',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['search'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+        ],
+    ],
+    'collections' => [
+        '$collection' => 'databases',
+        '$id' => 'collections',
+        'name' => 'Collections',
+>>>>>>> f2078499c (database collection config)
         'attributes' => [
             [
                 '$id' => 'name',
