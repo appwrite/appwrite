@@ -22,6 +22,7 @@ use Appwrite\Utopia\Response\Model\AttributeIP;
 use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Collection;
+use Appwrite\Utopia\Response\Model\Database;
 use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
 use Appwrite\Utopia\Response\Model\Currency;
@@ -94,6 +95,8 @@ class Response extends SwooleResponse
     const MODEL_USAGE_PROJECT = 'usageProject';
     
     // Database
+    const MODEL_DATABASE = 'database';
+    const MODEL_DATABASE_LIST = 'databaseList';
     const MODEL_COLLECTION = 'collection';
     const MODEL_COLLECTION_LIST = 'collectionList';
     const MODEL_INDEX = 'index';
@@ -213,6 +216,7 @@ class Response extends SwooleResponse
             // Lists
             ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
             ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
+            ->setModel(new BaseList('Databases List', self::MODEL_DATABASE_LIST, 'databases', self::MODEL_DATABASE))
             ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
             ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
             ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
@@ -238,6 +242,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             // Entities
+            ->setModel(new Database())
             ->setModel(new Collection())
             ->setModel(new Attribute())
             ->setModel(new AttributeList())
