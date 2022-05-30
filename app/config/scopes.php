@@ -13,6 +13,12 @@ return [ // List of publicly visible scopes
     'teams.write' => [
         'description' => 'Access to create, update, and delete your project\'s teams',
     ],
+    'databases.read' => [
+        'description' => 'Access to read your project\'s databases',
+    ],
+    'databases.write' => [
+        'description' => 'Access to create, update, and delete your project\'s databases',
+    ],
     'collections.read' => [
         'description' => 'Access to read your project\'s database collections',
     ],
