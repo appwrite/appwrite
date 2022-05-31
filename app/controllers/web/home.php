@@ -86,7 +86,7 @@ App::get('/auth/signup')
     ->inject('layout')
     ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/signup.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/signup.phtml');
 
         $page
             ->setParam('root', App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled'))

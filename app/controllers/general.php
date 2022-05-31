@@ -193,7 +193,7 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
      */
     if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
         if ($request->getProtocol() !== 'https') {
-            if($request->getMethod() !== Request::METHOD_GET) {
+            if ($request->getMethod() !== Request::METHOD_GET) {
                 throw new AppwriteException('Method unsupported over HTTP.', 500, AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED);
             }
 
@@ -225,7 +225,8 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
         !$originValidator->isValid($origin)
         && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
         && $route->getLabel('origin', false) !== '*'
-        && empty($request->getHeader('x-appwrite-key', ''))) {
+        && empty($request->getHeader('x-appwrite-key', ''))
+    ) {
         throw new AppwriteException($originValidator->getDescription(), 403, AppwriteException::GENERAL_UNKNOWN_ORIGIN);
     }
 
@@ -290,11 +291,13 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
         Authorization::setRole($authRole);
     }
 
-    $service = $route->getLabel('sdk.namespace','');
-    if(!empty($service)) {
-        if(array_key_exists($service, $project->getAttribute('services',[]))
-            && !$project->getAttribute('services',[])[$service]
-            && !Auth::isPrivilegedUser(Authorization::getRoles())) {
+    $service = $route->getLabel('sdk.namespace', '');
+    if (!empty($service)) {
+        if (
+            array_key_exists($service, $project->getAttribute('services', []))
+            && !$project->getAttribute('services', [])[$service]
+            && !Auth::isPrivilegedUser(Authorization::getRoles())
+        ) {
             throw new AppwriteException('Service is disabled', 503, AppwriteException::GENERAL_SERVICE_DISABLED);
         }
     }
@@ -304,7 +307,7 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
             throw new AppwriteException('Project not found', 404, AppwriteException::PROJECT_NOT_FOUND);
         }
 
-        throw new AppwriteException($user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401, AppwriteException::GENERAL_UNAUTHORIZED_SCOPE);
+        throw new AppwriteException($user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')', 401, AppwriteException::GENERAL_UNAUTHORIZED_SCOPE);
     }
 
     if (false === $user->getAttribute('status')) { // Account is blocked
@@ -413,7 +416,7 @@ App::error(function (AppwriteException|UtopiaException $error, App $utopia, Requ
     /** Handle Utopia Errors */
     if ($error instanceof Utopia\Exception) {
         $error = new AppwriteException($message, $code, AppwriteException::GENERAL_UNKNOWN, $error);
-        switch($code) {
+        switch ($code) {
             case 400:
                 $error->setType(AppwriteException::GENERAL_ARGUMENT_INVALID);
                 break;
@@ -535,7 +538,7 @@ App::get('/robots.txt')
     ->label('docs', false)
     ->inject('response')
     ->action(function (Response $response) {
-        $template = new View(__DIR__.'/../views/general/robots.phtml');
+        $template = new View(__DIR__ . '/../views/general/robots.phtml');
         $response->text($template->render(false));
     });
 
@@ -545,7 +548,7 @@ App::get('/humans.txt')
     ->label('docs', false)
     ->inject('response')
     ->action(function (Response $response) {
-        $template = new View(__DIR__.'/../views/general/humans.phtml');
+        $template = new View(__DIR__ . '/../views/general/humans.phtml');
         $response->text($template->render(false));
     });
 

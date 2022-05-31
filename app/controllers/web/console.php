@@ -324,8 +324,8 @@ App::get('/console/storage')
     ->inject('layout')
     ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/console/storage/index.phtml');
-        
+        $page = new View(__DIR__ . '/../../views/console/storage/index.phtml');
+
         $page
             ->setParam('home', App::getEnv('_APP_HOME', 0))
             ->setParam('fileLimit', App::getEnv('_APP_STORAGE_LIMIT', 0))
@@ -420,7 +420,7 @@ App::get('/console/functions')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function (View $layout) {
-        $page = new View(__DIR__.'/../../views/console/functions/index.phtml');
+        $page = new View(__DIR__ . '/../../views/console/functions/index.phtml');
 
         $page
             ->setParam('runtimes', Config::getParam('runtimes'))
@@ -438,7 +438,7 @@ App::get('/console/functions/function')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function (View $layout) {
-        $page = new View(__DIR__.'/../../views/console/functions/function.phtml');
+        $page = new View(__DIR__ . '/../../views/console/functions/function.phtml');
 
         $page
             ->setParam('events', Config::getParam('events', []))

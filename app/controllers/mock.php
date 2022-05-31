@@ -208,7 +208,7 @@ App::get('/v1/mock/tests/general/download')
     ->label('sdk.mock', true)
     ->inject('response')
     ->action(function (Response $response) {
-        
+
         $response
             ->setContentType('text/plain')
             ->addHeader('Content-Disposition', 'attachment; filename="test.txt"')
@@ -238,7 +238,7 @@ App::post('/v1/mock/tests/general/upload')
     ->inject('request')
     ->inject('response')
     ->action(function (string $x, int $y, array $z, array $file, Request $request, Response $response) {
-        
+
         $file = $request->getFiles('file');
 
         $contentRange = $request->getHeader('content-range');
@@ -558,7 +558,7 @@ App::get('/v1/mock/tests/general/oauth2/failure')
             ]);
     });
 
-App::shutdown(function(App $utopia, Response $response, Request $request) {
+App::shutdown(function (App $utopia, Response $response, Request $request) {
 
     $result = [];
     $route  = $utopia->match($request);
