@@ -30,7 +30,7 @@ class Zoom extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        'user_profile'
+        'user_info:read'
     ];
 
     /**

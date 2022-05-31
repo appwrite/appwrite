@@ -174,7 +174,7 @@ class BuildsV1 extends Worker
             $build->setAttribute('status', $response['status']);
             $build->setAttribute('outputPath', $response['outputPath']);
             $build->setAttribute('stderr', $response['stderr']);
-            $build->setAttribute('stdout', $response['stdout']);
+            $build->setAttribute('stdout', $response['response']);
 
             Console::success("Build id: $buildId created");
 
