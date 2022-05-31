@@ -12,7 +12,6 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
 use Appwrite\Extend\Exception as AppwriteException;
 use Utopia\Config\Config;
-use Utopia\Exception as UtopiaException;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
@@ -333,7 +332,7 @@ App::options(function (Request $request, Response $response) {
         ->noContent();
 }, ['request', 'response']);
 
-App::error(function (AppwriteException|UtopiaException $error, App $utopia, Request $request, Response $response, View $layout, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
+App::error(function (Throwable $error, App $utopia, Request $request, Response $response, View $layout, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
 
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
     $route = $utopia->match($request);
