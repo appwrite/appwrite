@@ -4,6 +4,7 @@ on: [pull_request]
 jobs:
   tests:
     name: Linter
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
