@@ -25,7 +25,7 @@ jobs:
         php-version: '8.0'
 
     - name: Install dependencies
-      uses: php-actions/composer@v7
+      uses: php-actions/composer@v6
       with:
         php_version: '8.0'
         args: --profile --ignore-platform-reqs
