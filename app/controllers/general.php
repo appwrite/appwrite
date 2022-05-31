@@ -45,6 +45,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     /*
      * Request format
     */
+
     $route = $utopia->match($request);
     Request::setRoute($route);
 
@@ -265,11 +266,14 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
     if (!empty($authKey)) { // API Key authentication
         // Check if given key match project API keys
         $key = $project->find('secret', $authKey, 'keys');
-
+        var_dump($project->getAttribute('keys'));
+        var_dump($authKey);
+        var_dump($key);
         /*
          * Try app auth when we have project key and no user
          *  Mock user to app and grant API key scopes in addition to default app scopes
          */
+
         if ($key && $user->isEmpty()) {
             $user = new Document([
                 '$id' => '',
@@ -281,6 +285,12 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
 
             $role = Auth::USER_ROLE_APP;
             $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
+
+
+            //$expire = $key->getAttribute('expire', 0);
+           // if($expire !== 0 && $expire < \time()){
+                //throw new Exception('Project key expired', 401, Exception:: PROJECT_KEY_EXPIRED);
+             //}
 
             Authorization::setRole('role:'.Auth::USER_ROLE_APP);
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.

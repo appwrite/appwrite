@@ -46,7 +46,7 @@ class Exception extends \Exception
     const GENERAL_ROUTE_NOT_FOUND           = 'general_route_not_found';
     const GENERAL_CURSOR_NOT_FOUND          = 'general_cursor_not_found';
     const GENERAL_SERVER_ERROR              = 'general_server_error';
-    const GENERAL_PROTOCOL_UNSUPPORTED       = 'general_protocol_unsupported';
+    const GENERAL_PROTOCOL_UNSUPPORTED      = 'general_protocol_unsupported';
 
     /** Users */
     const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
@@ -147,6 +147,7 @@ class Exception extends \Exception
     const PROJECT_INVALID_FAILURE_URL       = 'project_invalid_failure_url';
     const PROJECT_MISSING_USER_ID           = 'project_missing_user_id';
     const PROJECT_RESERVED_PROJECT          = 'project_reserved_project';
+    const PROJECT_KEY_EXPIRED               = 'project_key_expired';
 
     /** Webhooks */
     const WEBHOOK_NOT_FOUND                 = 'webhook_not_found';

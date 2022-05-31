@@ -1055,6 +1055,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test',
             'scopes' => ['teams.read', 'teams.write'],
+            'expire' => time()-3600,
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -1064,7 +1065,10 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('teams.write', $response['body']['scopes']);
         $this->assertNotEmpty($response['body']['secret']);
 
-        $data = array_merge($data, ['keyId' => $response['body']['$id']]);
+        $data = array_merge($data, [
+            'keyId' => $response['body']['$id'],
+            'secret' => $response['body']['secret']
+        ]);
 
         /**
          * Test for FAILURE
@@ -1081,6 +1085,7 @@ class ProjectsConsoleClientTest extends Scope
 
         return $data;
     }
+
 
     /**
      * @depends testCreateProjectKey
@@ -1103,6 +1108,7 @@ class ProjectsConsoleClientTest extends Scope
 
         return $data;
     }
+
 
     /**
      * @depends testCreateProjectKey
@@ -1142,6 +1148,26 @@ class ProjectsConsoleClientTest extends Scope
     /**
      * @depends testCreateProjectKey
      */
+    public function testValidateProjectKey($data): void
+    {
+        $id = $data['projectId'] ?? '';
+        $secret = $data['secret'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id , array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $secret
+        ], $this->getHeaders()), []);
+
+        //var_dump($id);
+        //var_dump($secret);
+        exit;
+    }
+
+
+    /**
+     * @depends testCreateProjectKey
+     */
     public function testUpdateProjectKey($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -1153,6 +1179,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test Update',
             'scopes' => ['users.read', 'users.write', 'collections.read'],
+            'expire' => time()+360,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);

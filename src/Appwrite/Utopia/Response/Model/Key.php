@@ -27,6 +27,12 @@ class Key extends Model
                 'default' => '',
                 'example' => 'My API Key',
             ])
+            ->addRule('expire', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Key expiration .',
+                'default' => 0,
+                'example' => '1653990687',
+            ])
             ->addRule('scopes', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Allowed permission scopes.',
