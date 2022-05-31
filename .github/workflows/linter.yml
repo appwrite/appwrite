@@ -19,9 +19,13 @@ jobs:
     - run: git checkout HEAD^2
       if: ${{ github.event_name == 'pull_request' }}
 
-    - name: Install Dependencies
-      uses: php-actions/composer@v6
-      run: composer install --ignore-platform-reqs --no-cache
-
+    - name: Install dependencies
+      uses: php-actions/composer@v7
+      with:
+        php_version: '8.0'
+        args: --profile --ignore-platform-reqs
     - name: Run Linter
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.0'
       run: ./vendor/bin/phpcs -p || true
