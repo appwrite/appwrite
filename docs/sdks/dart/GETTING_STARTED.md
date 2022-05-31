@@ -7,7 +7,7 @@ Once you add the dependencies, its extremely easy to get started with the SDK; A
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 void main() async {
-  Client client = Client();
+  Client client = Client()
     .setEndpoint('http://[HOSTNAME_OR_IP]/v1') // Make sure your endpoint is accessible
     .setProject('5ff3379a01d25') // Your project ID
     .setKey('cd868c7af8bdc893b4...93b7535db89')
