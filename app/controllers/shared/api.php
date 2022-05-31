@@ -1,30 +1,24 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Event\Audit;
+use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Mail;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Stats\Stats;
+use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Request;
 use Utopia\App;
 use Appwrite\Extend\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Registry\Registry;
 
-App::init(function ($utopia, $request, $response, $project, $user, $events, $audits, $mails, $usage, $deletes, $database, $dbForProject, $mode) {
-    /** @var Utopia\App $utopia */
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\Database\Document $project */
-    /** @var Utopia\Database\Document $user */
-    /** @var Utopia\Registry\Registry $register */
-    /** @var Appwrite\Event\Event $events */
-    /** @var Appwrite\Event\Audit $audits */
-    /** @var Appwrite\Event\Mail $mails */
-    /** @var Appwrite\Stats\Stats $usage */
-    /** @var Appwrite\Event\Event $deletes */
-    /** @var Appwrite\Event\Event $database */
-    /** @var Appwrite\Event\Event $functions */
-    /** @var Utopia\Database\Database $dbForProject */
+App::init(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Stats $usage, Delete $deletes, Event $database, Database $dbForProject, string $mode) {
 
     $route = $utopia->match($request);
 
@@ -120,10 +114,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $events, $aud
     $database->setProject($project);
 }, ['utopia', 'request', 'response', 'project', 'user', 'events', 'audits', 'mails', 'usage', 'deletes', 'database', 'dbForProject', 'mode'], 'api');
 
-App::init(function ($utopia, $request, $project) {
-    /** @var Utopia\App $utopia */
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Utopia\Database\Document $project */
+App::init(function (App $utopia, Request $request, Document $project) {
 
     $route = $utopia->match($request);
 
@@ -173,18 +164,7 @@ App::init(function ($utopia, $request, $project) {
 
 }, ['utopia', 'request', 'project'], 'auth');
 
-App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $database, $mode, $dbForProject) {
-    /** @var Utopia\App $utopia */
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\Database\Document $project */
-    /** @var Appwrite\Event\Event $events */
-    /** @var Appwrite\Event\Audit $audits */
-    /** @var Appwrite\Stats\Stats $usage */
-    /** @var Appwrite\Event\Delete $deletes */
-    /** @var Appwrite\Event\Database $database */
-    /** @var bool $mode */
-    /** @var Utopia\Database\Database $dbForProject */
+App::shutdown(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, Event $database, string $mode, Database $dbForProject) {
 
     if (!empty($events->getEvent())) {
         if (empty($events->getPayload())) {
