@@ -158,7 +158,7 @@ App::post('/v1/database/collections')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $collectionId, string $name, string $permission, ?array $read, ?array $write, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $collectionId, string $name, ?string $permission, ?array $read, ?array $write, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
 
         $collectionId = $collectionId == 'unique()' ? $dbForProject->getId() : $collectionId;
 
