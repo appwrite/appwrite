@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+    <ruleset name="Custom Standard" namespace="MyProject\CS\Standard">
+    <description>A custom coding standard</description>
+    <file>./app</file>
+    <file>./src</file>
+    <file>./tests</file>
+    <ini name="memory_limit" value="512M"/>
+    <rule ref="PSR12"/>
+</ruleset>
