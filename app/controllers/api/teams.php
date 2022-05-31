@@ -354,7 +354,6 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $isOwner = Authorization::isRole('team:' . $team->getId() . '/owner');
-        ;
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception('User is not allowed to send invitations for this team', 401, Exception::USER_UNAUTHORIZED);
@@ -590,7 +589,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
         $isOwner = Authorization::isRole('team:' . $team->getId() . '/owner');
-        ;
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception('User is not allowed to modify roles', 401, Exception::USER_UNAUTHORIZED);

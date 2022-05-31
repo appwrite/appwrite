@@ -71,4 +71,4 @@ return [ // List of publicly visible scopes
         'description' => 'Access to read your project\'s health status',
     ],
 ];
-;
+
