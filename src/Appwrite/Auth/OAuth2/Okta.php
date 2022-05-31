@@ -132,11 +132,11 @@ class Okta extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
+     *
      * @link https://developer.okta.com/docs/reference/api/oidc/#userinfo
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -180,7 +180,7 @@ class Okta extends OAuth2
 
     /**
      * Extracts the Client Secret from the JSON stored in appSecret
-     * 
+     *
      * @return string
      */
     protected function getClientSecret(): string
@@ -192,7 +192,7 @@ class Okta extends OAuth2
 
     /**
      * Extracts the Okta Domain from the JSON stored in appSecret
-     * 
+     *
      * @return string
      */
     protected function getOktaDomain(): string
@@ -204,7 +204,7 @@ class Okta extends OAuth2
 
     /**
      * Extracts the Okta Authorization Server ID from the JSON stored in appSecret
-     * 
+     *
      * @return string
      */
     protected function getAuthorizationServerId(): string
@@ -216,7 +216,7 @@ class Okta extends OAuth2
 
     /**
      * Decode the JSON stored in appSecret
-     * 
+     *
      * @return array
      */
     protected function getAppSecret(): array

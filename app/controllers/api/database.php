@@ -54,11 +54,11 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
     $type = $attribute->getAttribute('type', '');
     $size = $attribute->getAttribute('size', 0);
     $required = $attribute->getAttribute('required', true);
-    $signed = $attribute->getAttribute('signed', true); // integers are signed by default 
+    $signed = $attribute->getAttribute('signed', true); // integers are signed by default
     $array = $attribute->getAttribute('array', false);
     $format = $attribute->getAttribute('format', '');
     $formatOptions = $attribute->getAttribute('formatOptions', []);
-    $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint 
+    $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint
     $default = $attribute->getAttribute('default');
 
     $collection = $dbForProject->getDocument('collections', $collectionId);
@@ -84,7 +84,7 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
 
     try {
         $attribute = new Document([
-            '$id' => $collectionId.'_'.$key,
+            '$id' => $collectionId . '_' . $key,
             'key' => $key,
             'collectionId' => $collectionId,
             'type' => $type,
@@ -101,11 +101,9 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
 
         $dbForProject->checkAttribute($collection, $attribute);
         $attribute = $dbForProject->createDocument('attributes', $attribute);
-    }
-    catch (DuplicateException $exception) {
+    } catch (DuplicateException $exception) {
         throw new Exception('Attribute already exists', 409, Exception::ATTRIBUTE_ALREADY_EXISTS);
-    }
-    catch (LimitException $exception) {
+    } catch (LimitException $exception) {
         throw new Exception('Attribute limit exceeded', 400, Exception::ATTRIBUTE_LIMIT_EXCEEDED);
     }
 
@@ -127,14 +125,14 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
     ;
 
     $audits
-        ->setResource('collection/'.$collectionId)
+        ->setResource('collection/' . $collectionId)
         ->setPayload($attribute->getArrayCopy())
     ;
 
     $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
     return $attribute;
-};
+}
 
 App::post('/v1/database/collections')
     ->desc('Create Collection')
@@ -184,7 +182,7 @@ App::post('/v1/database/collections')
         }
 
         $audits
-            ->setResource('collection/'.$collectionId)
+            ->setResource('collection/' . $collectionId)
             ->setPayload($collection->getArrayCopy())
         ;
 
@@ -318,7 +316,7 @@ App::get('/v1/database/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
+            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
@@ -340,7 +338,7 @@ App::get('/v1/database/usage')
                     $backfill = $limit - \count($requestDocs);
                     while ($backfill > 0) {
                         $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                        $diff = match ($period) { // convert period to seconds for unix timestamp math
                             '30m' => 1800,
                             '1d' => 86400,
                         };
@@ -397,7 +395,7 @@ App::get('/v1/database/:collectionId/usage')
         }
 
         $usage = [];
-        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
                     'period' => '30m',
@@ -427,7 +425,7 @@ App::get('/v1/database/:collectionId/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
+            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
@@ -449,7 +447,7 @@ App::get('/v1/database/:collectionId/usage')
                     $backfill = $limit - \count($requestDocs);
                     while ($backfill > 0) {
                         $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                        $diff = match ($period) { // convert period to seconds for unix timestamp math
                             '30m' => 1800,
                             '1d' => 86400,
                         };
@@ -504,7 +502,7 @@ App::get('/v1/database/collections/:collectionId/logs')
         }
 
         $audit = new Audit($dbForProject);
-        $resource = 'collection/'.$collectionId;
+        $resource = 'collection/' . $collectionId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
         $output = [];
@@ -544,8 +542,8 @@ App::get('/v1/database/collections/:collectionId/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -601,18 +599,15 @@ App::put('/v1/database/collections/:collectionId')
                 ->setAttribute('permission', $permission)
                 ->setAttribute('dateUpdated', time())
                 ->setAttribute('enabled', $enabled)
-                ->setAttribute('search', implode(' ', [$collectionId, $name]))
-            );
-        }
-        catch (AuthorizationException $exception) {
+                ->setAttribute('search', implode(' ', [$collectionId, $name])));
+        } catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-        }
-        catch (StructureException $exception) {
-            throw new Exception('Bad structure. '.$exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
+        } catch (StructureException $exception) {
+            throw new Exception('Bad structure. ' . $exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
         }
 
         $audits
-            ->setResource('collection/'.$collectionId)
+            ->setResource('collection/' . $collectionId)
             ->setPayload($collection->getArrayCopy())
         ;
 
@@ -665,7 +660,7 @@ App::delete('/v1/database/collections/:collectionId')
         ;
 
         $audits
-            ->setResource('collection/'.$collectionId)
+            ->setResource('collection/' . $collectionId)
             ->setPayload($collection->getArrayCopy())
         ;
 
@@ -788,7 +783,6 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
             $length = \strlen($element);
             if ($length === 0) {
                 throw new Exception('Each enum element must not be empty', 400, Exception::ATTRIBUTE_VALUE_INVALID);
-
             }
             $size = ($length > $size) ? $length : $size;
         }
@@ -1126,7 +1120,7 @@ App::get('/v1/database/collections/:collectionId/attributes/:key')
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attribute = $dbForProject->getDocument('attributes', $collectionId.'_'.$key);
+        $attribute = $dbForProject->getDocument('attributes', $collectionId . '_' . $key);
 
         if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
@@ -1136,11 +1130,11 @@ App::get('/v1/database/collections/:collectionId/attributes/:key')
         $type = $attribute->getAttribute('type');
         $format = $attribute->getAttribute('format');
 
-        $model = match($type) {
+        $model = match ($type) {
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
-            Database::VAR_STRING => match($format) {
+            Database::VAR_STRING => match ($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,
                 APP_DATABASE_ATTRIBUTE_ENUM => Response::MODEL_ATTRIBUTE_ENUM,
                 APP_DATABASE_ATTRIBUTE_IP => Response::MODEL_ATTRIBUTE_IP,
@@ -1182,7 +1176,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attribute = $dbForProject->getDocument('attributes', $collectionId.'_'.$key);
+        $attribute = $dbForProject->getDocument('attributes', $collectionId . '_' . $key);
 
         if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
@@ -1208,11 +1202,11 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
         $type = $attribute->getAttribute('type');
         $format = $attribute->getAttribute('format');
 
-        $model = match($type) {
+        $model = match ($type) {
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
-            Database::VAR_STRING => match($format) {
+            Database::VAR_STRING => match ($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,
                 APP_DATABASE_ATTRIBUTE_ENUM => Response::MODEL_ATTRIBUTE_ENUM,
                 APP_DATABASE_ATTRIBUTE_IP => Response::MODEL_ATTRIBUTE_IP,
@@ -1230,7 +1224,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
         ;
 
         $audits
-            ->setResource('collection/'.$collectionId)
+            ->setResource('collection/' . $collectionId)
             ->setPayload($attribute->getArrayCopy())
         ;
 
@@ -1298,7 +1292,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
 
             // ensure attribute is available
             if ($attributeStatus !== 'available') {
-                throw new Exception ('Attribute not available: ' . $oldAttributes[$attributeIndex]['key'], 400, Exception::ATTRIBUTE_NOT_AVAILABLE);
+                throw new Exception('Attribute not available: ' . $oldAttributes[$attributeIndex]['key'], 400, Exception::ATTRIBUTE_NOT_AVAILABLE);
             }
 
             // set attribute size as index length only for strings
@@ -1307,7 +1301,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
 
         try {
             $index = $dbForProject->createDocument('indexes', new Document([
-                '$id' => $collectionId.'_'.$key,
+                '$id' => $collectionId . '_' . $key,
                 'key' => $key,
                 'status' => 'processing', // processing, available, failed, deleting, stuck
                 'collectionId' => $collectionId,
@@ -1337,7 +1331,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
         ;
 
         $audits
-            ->setResource('collection/'.$collection->getId())
+            ->setResource('collection/' . $collection->getId())
             ->setPayload($index->getArrayCopy())
         ;
 
@@ -1447,7 +1441,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:key')
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $index = $dbForProject->getDocument('indexes', $collectionId.'_'.$key);
+        $index = $dbForProject->getDocument('indexes', $collectionId . '_' . $key);
 
         if (empty($index->getId())) {
             throw new Exception('Index not found', 404, Exception::INDEX_NOT_FOUND);
@@ -1476,7 +1470,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:key')
         ;
 
         $audits
-            ->setResource('collection/'.$collection->getId())
+            ->setResource('collection/' . $collection->getId())
             ->setPayload($index->getArrayCopy())
         ;
 
@@ -1521,7 +1515,7 @@ App::post('/v1/database/collections/:collectionId/documents')
 
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
-         * 
+         *
          * @var Document $collection
          */
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('collections', $collectionId));
@@ -1542,8 +1536,8 @@ App::post('/v1/database/collections/:collectionId/documents')
 
         $data['$collection'] = $collection->getId(); // Adding this param to make API easier for developers
         $data['$id'] = $documentId == 'unique()' ? $dbForProject->getId() : $documentId;
-        $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
-        $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
+        $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; //  By default set read permissions for user
+        $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? []; //  By default set write permissions for user
 
         // Users can only add their roles to documents, API keys and Admin users can add any
         $roles = Authorization::getRoles();
@@ -1551,13 +1545,13 @@ App::post('/v1/database/collections/:collectionId/documents')
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach ($data['$read'] as $read) {
                 if (!Authorization::isRole($read)) {
-                    // TODO: Isn't this a 401: Unauthorized Error ? 
-                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::USER_UNAUTHORIZED);
+                    // TODO: Isn't this a 401: Unauthorized Error ?
+                    throw new Exception('Read permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
                 }
             }
             foreach ($data['$write'] as $write) {
                 if (!Authorization::isRole($write)) {
-                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::USER_UNAUTHORIZED);
+                    throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
                 }
             }
         }
@@ -1570,11 +1564,9 @@ App::post('/v1/database/collections/:collectionId/documents')
                 $document = $dbForProject->createDocument('collection_' . $collection->getInternalId(), new Document($data));
             }
             $document->setAttribute('$collection', $collectionId);
-        }
-        catch (StructureException $exception) {
+        } catch (StructureException $exception) {
             throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
-        }
-        catch (DuplicateException $exception) {
+        } catch (DuplicateException $exception) {
             throw new Exception('Document already exists', 409, Exception::DOCUMENT_ALREADY_EXISTS);
         }
 
@@ -1590,7 +1582,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         ;
 
         $audits
-            ->setResource('document/'.$document->getId())
+            ->setResource('document/' . $document->getId())
             ->setPayload($document->getArrayCopy())
         ;
 
@@ -1610,7 +1602,7 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('queries', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/database#querying-documents). Maximum of 100 queries are allowed, each 128 characters long.', true) 
+    ->param('queries', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/database#querying-documents). Maximum of 100 queries are allowed, each 128 characters long.', true)
     ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response. By default will return maximum 25 results. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the document used as the starting point for the query, excluding the document itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
@@ -1654,13 +1646,13 @@ App::get('/v1/database/collections/:collectionId/documents')
             return $query;
         }, $queries);
 
-        if(!empty($orderAttributes)) {
+        if (!empty($orderAttributes)) {
             $validator = new OrderAttributes($collection->getAttribute('attributes', []), $collection->getAttribute('indexes', []), true);
             if (!$validator->isValid($orderAttributes)) {
                 throw new Exception($validator->getDescription(), 400, Exception::GENERAL_QUERY_INVALID);
             }
         }
-        
+
         if (!empty($queries)) {
             $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []), true);
             if (!$validator->isValid($queries)) {
@@ -1800,7 +1792,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId/logs')
         }
 
         $audit = new Audit($dbForProject);
-        $resource = 'document/'.$document->getId();
+        $resource = 'document/' . $document->getId();
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
         $output = [];
@@ -1840,8 +1832,8 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -1927,14 +1919,14 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $roles = Authorization::getRoles();
 
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
-            if(!is_null($read)) {
+            if (!is_null($read)) {
                 foreach ($data['$read'] as $read) {
                     if (!Authorization::isRole($read)) {
-                        throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::USER_UNAUTHORIZED);
+                        throw new Exception('Read permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
                     }
                 }
             }
-            if(!is_null($write)) {
+            if (!is_null($write)) {
                 foreach ($data['$write'] as $write) {
                     if (!Authorization::isRole($write)) {
                         throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
@@ -1954,14 +1946,11 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
              * Reset $collection attribute to remove prefix.
              */
             $document->setAttribute('$collection', $collectionId);
-        }
-        catch (AuthorizationException $exception) {
+        } catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-        }
-        catch (DuplicateException $exception) {
+        } catch (DuplicateException $exception) {
             throw new Exception('Document already exists', 409, Exception::DOCUMENT_ALREADY_EXISTS);
-        }
-        catch (StructureException $exception) {
+        } catch (StructureException $exception) {
             throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
         }
 
@@ -1977,7 +1966,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         ;
 
         $audits
-            ->setResource('document/'.$document->getId())
+            ->setResource('document/' . $document->getId())
             ->setPayload($document->getArrayCopy())
         ;
 
@@ -2067,7 +2056,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         ;
 
         $audits
-            ->setResource('document/'.$document->getId())
+            ->setResource('document/' . $document->getId())
             ->setPayload($document->getArrayCopy())
         ;
 

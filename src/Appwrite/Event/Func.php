@@ -36,7 +36,7 @@ class Func extends Event
     /**
      * Returns set function document for the function event.
      *
-     * @return null|Document 
+     * @return null|Document
      */
     public function getFunction(): ?Document
     {

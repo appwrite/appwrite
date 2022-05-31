@@ -9,8 +9,8 @@ use Utopia\Database\Document;
 
 App::init(function (View $layout) {
 
-    $header = new View(__DIR__.'/../../views/home/comps/header.phtml');
-    $footer = new View(__DIR__.'/../../views/home/comps/footer.phtml');
+    $header = new View(__DIR__ . '/../../views/home/comps/header.phtml');
+    $footer = new View(__DIR__ . '/../../views/home/comps/footer.phtml');
 
     $footer
         ->setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'))
@@ -49,10 +49,10 @@ App::get('/')
         if ('console' === $project->getId() || $project->isEmpty()) {
             $whitelistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled');
 
-            if($whitelistRoot !== 'disabled') {
+            if ($whitelistRoot !== 'disabled') {
                 $count = $dbForConsole->count('users', [], 1);
 
-                if($count !== 0) {
+                if ($count !== 0) {
                     return $response->redirect('/auth/signin');
                 }
             }
@@ -68,14 +68,14 @@ App::get('/auth/signin')
     ->inject('layout')
     ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/signin.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/signin.phtml');
 
         $page
             ->setParam('root', App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled'))
         ;
 
         $layout
-            ->setParam('title', 'Sign In - '.APP_NAME)
+            ->setParam('title', 'Sign In - ' . APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -86,14 +86,14 @@ App::get('/auth/signup')
     ->inject('layout')
     ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/signup.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/signup.phtml');
 
         $page
             ->setParam('root', App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled'))
         ;
 
         $layout
-            ->setParam('title', 'Sign Up - '.APP_NAME)
+            ->setParam('title', 'Sign Up - ' . APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -104,14 +104,14 @@ App::get('/auth/recovery')
     ->inject('layout')
     ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/recovery.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/recovery.phtml');
 
         $page
             ->setParam('smtpEnabled', (!empty(App::getEnv('_APP_SMTP_HOST'))))
         ;
 
         $layout
-            ->setParam('title', 'Password Recovery - '.APP_NAME)
+            ->setParam('title', 'Password Recovery - ' . APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -122,10 +122,10 @@ App::get('/auth/confirm')
     ->inject('layout')
     ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/confirm.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/confirm.phtml');
 
         $layout
-            ->setParam('title', 'Account Confirmation - '.APP_NAME)
+            ->setParam('title', 'Account Confirmation - ' . APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -136,10 +136,10 @@ App::get('/auth/join')
     ->inject('layout')
     ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/join.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/join.phtml');
 
         $layout
-            ->setParam('title', 'Invitation - '.APP_NAME)
+            ->setParam('title', 'Invitation - ' . APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -150,10 +150,10 @@ App::get('/auth/recovery/reset')
     ->inject('layout')
     ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/recovery/reset.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/recovery/reset.phtml');
 
         $layout
-            ->setParam('title', 'Password Reset - '.APP_NAME)
+            ->setParam('title', 'Password Reset - ' . APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -164,7 +164,7 @@ App::get('/auth/oauth2/success')
     ->inject('layout')
     ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/oauth2.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/oauth2.phtml');
 
         $layout
             ->setParam('title', APP_NAME)
@@ -181,7 +181,7 @@ App::get('/auth/magic-url')
     ->inject('layout')
     ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/magicURL.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/magicURL.phtml');
 
         $layout
             ->setParam('title', APP_NAME)
@@ -198,7 +198,7 @@ App::get('/auth/oauth2/failure')
     ->inject('layout')
     ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/oauth2.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/oauth2.phtml');
 
         $layout
             ->setParam('title', APP_NAME)
@@ -216,14 +216,14 @@ App::get('/error/:code')
     ->inject('layout')
     ->action(function (int $code, View $layout) {
 
-        $page = new View(__DIR__.'/../../views/error.phtml');
+        $page = new View(__DIR__ . '/../../views/error.phtml');
 
         $page
             ->setParam('code', $code)
         ;
 
         $layout
-            ->setParam('title', 'Error'.' - '.APP_NAME)
+            ->setParam('title', 'Error' . ' - ' . APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -240,15 +240,15 @@ App::get('/versions')
             'server' => APP_VERSION_STABLE,
         ];
 
-        foreach($platforms as $platform) {
+        foreach ($platforms as $platform) {
             $languages = $platform['languages'] ?? [];
 
             foreach ($languages as $key => $language) {
-                if(isset($language['dev']) && $language['dev']) {
+                if (isset($language['dev']) && $language['dev']) {
                     continue;
                 }
 
-                if(isset($language['enabled']) && !$language['enabled']) {
+                if (isset($language['enabled']) && !$language['enabled']) {
                     continue;
                 }
 

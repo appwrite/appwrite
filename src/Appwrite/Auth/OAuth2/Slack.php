@@ -121,13 +121,13 @@ class Slack extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
+     *
      * If present, the email is verified. This was verfied through a manual Slack sign up process
-     * 
+     *
      * @link https://slack.com/help/articles/207262907-Change-your-email-address
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -151,7 +151,7 @@ class Slack extends OAuth2
 
     /**
      * @link https://api.slack.com/methods/users.identity
-     * 
+     *
      * @param string $accessToken
      *
      * @return array

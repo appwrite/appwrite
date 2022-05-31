@@ -25,7 +25,7 @@ $cli
         $response = new Response(new HttpResponse());
         $mocks = ($mode === 'mocks');
 
-        App::setResource('request', fn () => new Request);
+        App::setResource('request', fn () => new Request());
         App::setResource('response', fn () => $response);
         App::setResource('db', fn () => $db);
         App::setResource('cache', fn () => $redis);
@@ -125,7 +125,6 @@ $cli
 
         foreach (['swagger2', 'open-api3'] as $format) {
             foreach ($platforms as $platform) {
-
                 $routes = [];
                 $models = [];
                 $services = [];

@@ -142,11 +142,11 @@ class Salesforce extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
+     *
      * @link https://help.salesforce.com/s/articleView?id=sf.remoteaccess_using_userinfo_endpoint.htm&type=5
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool

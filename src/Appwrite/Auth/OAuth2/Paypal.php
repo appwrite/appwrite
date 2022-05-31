@@ -158,11 +158,11 @@ class Paypal extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
+     *
      * @link https://developer.paypal.com/docs/api/identity/v1/#userinfo_get
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool

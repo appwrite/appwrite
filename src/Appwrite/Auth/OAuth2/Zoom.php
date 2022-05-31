@@ -130,11 +130,11 @@ class Zoom extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
+     *
      * @link https://marketplace.zoom.us/docs/api-reference/zoom-api/methods/#operation/user
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
