@@ -1161,7 +1161,7 @@ App::get('/v1/account/sessions/:sessionId')
     ->inject('locale')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function (string $sessionId, Response $response, Document $user, Locale $locale, Database $dbForProject, Stats $usage) {
+    ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Database $dbForProject, Stats $usage) {
 
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
@@ -1420,7 +1420,7 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function (string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Stats $usage) {
+    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Stats $usage) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
@@ -1499,7 +1499,7 @@ App::patch('/v1/account/sessions/:sessionId')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function (string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Audit $audits, Event $events, Stats $usage) {
+    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Audit $audits, Event $events, Stats $usage) {
 
         $sessionId = ($sessionId === 'current')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
