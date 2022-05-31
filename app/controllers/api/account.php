@@ -63,7 +63,7 @@ App::post('/v1/account')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, ?string $name, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -257,7 +257,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->action(function (string $provider, ?string $success, ?string $failure, ?array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
 
         $protocol = $request->getProtocol();
         $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
@@ -1103,7 +1103,7 @@ App::get('/v1/account/logs')
     ->inject('geodb')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function (?int $limit, ?int $offset, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject, Stats $usage) {
+    ->action(function (int $limit, int $offset, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject, Stats $usage) {
 
         $audit = new EventAudit($dbForProject);
 
