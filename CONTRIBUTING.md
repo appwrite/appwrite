@@ -45,18 +45,18 @@ $ git checkout -b [name_of_your_new_branch]
 
 4. Before you push your changes, make sure your code follows the `PSR12` coding standards , which is the standard Appwrite follows currently.
    You can easily do this by running the formatter
-```php
+```bash
 ./vendor/bin/phpcbf --standard=PSR12  <your file path>
 ```
 This will format the code according to the `PSR12` coding standard.
 
 Now, go a step further by running the linter by the following command to manually fix the issues the formatter wasn't able to fix
-```php
+```bash
 ./vendor/bin/phpcs --standard=PSR12 <your file path>
 ```
 This will give you a list of errors for you to rectify , if there is an instance you need more information on the errors being displayed you can pass in additional command line arguments. More list of available arguments can be found [here](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues
 
-```php
+```bash
 ./vendor/bin/phpcs --standard=PSR12 --report=diff <your file path>
 ```
 
@@ -395,20 +395,14 @@ docker run --rm skandyla/wrk -t3 -c100 -d30  https://[APPWRITE_HOSTNAME_OR_IP]
 
 We use some automation tools to help us keep a healthy codebase.
 
-Improve PHP execution time by using [fully-qualified function calls](https://veewee.github.io/blog/optimizing-php-performance-by-fq-function-calls/):
-
-```bash
-php-cs-fixer fix src/ --rules=native_function_invocation --allow-risky=yes
-```
-
 Coding Standards:
 
 ```bash
-php-cs-fixer fix app/controllers --rules='{"braces": {"allow_single_line_closure": true}}'
+./vendor/bin/phpcbf --standard=PSR12 <your file path>
 ```
 
 ```bash
-php-cs-fixer fix src --rules='{"braces": {"allow_single_line_closure": true}}'
+./vendor/bin/phpcs --standard=PSR12 <your file path>
 ```
 
 Static Code Analysis:
