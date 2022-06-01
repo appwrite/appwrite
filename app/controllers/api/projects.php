@@ -26,6 +26,7 @@ use Appwrite\Extend\Exception;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
+use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -775,9 +776,10 @@ App::post('/v1/projects/:projectId/keys')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
+    ->param('expire', 0, new Integer() , 'Key expiration time in Unix timestamp. Use 0 for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $name, array $scopes, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $name, array $scopes, int $expire, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -792,6 +794,7 @@ App::post('/v1/projects/:projectId/keys')
             'projectId' => $project->getId(),
             'name' => $name,
             'scopes' => $scopes,
+            'expire' => $expire,
             'secret' => \bin2hex(\random_bytes(128)),
         ]);
 
@@ -882,9 +885,10 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('keyId', null, new UID(), 'Key unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
+    ->param('expire', 0, new Integer() , 'Key expiration time in Unix timestamp. Use 0 for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $keyId, string $name, array $scopes, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $keyId, string $name, array $scopes, int $expire, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -904,6 +908,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         $key
             ->setAttribute('name', $name)
             ->setAttribute('scopes', $scopes)
+            ->setAttribute('expire', $expire)
         ;
 
         $dbForConsole->updateDocument('keys', $key->getId(), $key);

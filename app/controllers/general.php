@@ -12,7 +12,6 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
 use Appwrite\Extend\Exception as AppwriteException;
 use Utopia\Config\Config;
-use Utopia\Exception as UtopiaException;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
@@ -280,6 +279,12 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
             $role = Auth::USER_ROLE_APP;
             $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
+            $expire = $key->getAttribute('expire', 0);
+
+            if(!empty($expire) && $expire < \time()){
+                throw new AppwriteException('Project key expired', 401, AppwriteException:: PROJECT_KEY_EXPIRED);
+             }
+
             Authorization::setRole('role:' . Auth::USER_ROLE_APP);
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
         }
@@ -333,7 +338,7 @@ App::options(function (Request $request, Response $response) {
         ->noContent();
 }, ['request', 'response']);
 
-App::error(function (AppwriteException|UtopiaException $error, App $utopia, Request $request, Response $response, View $layout, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
+App::error(function (Throwable $error, App $utopia, Request $request, Response $response, View $layout, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
 
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
     $route = $utopia->match($request);
