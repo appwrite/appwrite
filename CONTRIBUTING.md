@@ -422,7 +422,7 @@ We use some automation tools to help us keep a healthy codebase.
 
 ```bash
 # Run on all files
-./vendor/bin/phpcs <your file path>
+./vendor/bin/phpcs
 # Run on single file or folder
 ./vendor/bin/phpcs <your file path>
 ```
