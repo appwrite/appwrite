@@ -281,7 +281,7 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
 
             $expire = $key->getAttribute('expire', 0);
 
-            if($expire !== 0 && $expire < \time()){
+            if(!empty($expire) && $expire < \time()){
                 throw new AppwriteException('Project key expired', 401, AppwriteException:: PROJECT_KEY_EXPIRED);
              }
 
