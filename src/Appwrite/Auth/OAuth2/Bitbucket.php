@@ -124,9 +124,9 @@ class Bitbucket extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool

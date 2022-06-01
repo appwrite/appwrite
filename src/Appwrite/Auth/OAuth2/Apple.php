@@ -137,11 +137,11 @@ class Apple extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
+     *
      * @link https://developer.apple.com/forums/thread/121411
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool

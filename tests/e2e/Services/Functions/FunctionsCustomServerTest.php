@@ -764,8 +764,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['status'], 'failed');
         $this->assertEquals($executions['body']['executions'][0]['statusCode'], 500);
         $this->assertGreaterThan(2, $executions['body']['executions'][0]['time']);
-        $this->assertLessThan(7, $executions['body']['executions'][0]['time']);
-        $this->assertGreaterThan(5, $executions['body']['executions'][0]['time']);
+        $this->assertLessThan(6, $executions['body']['executions'][0]['time']);
+        $this->assertGreaterThan(4, $executions['body']['executions'][0]['time']);
         $this->assertEquals($executions['body']['executions'][0]['response'], '');
         $this->assertEquals($executions['body']['executions'][0]['stderr'], 'An internal curl error has occurred within the executor! Error Msg: Operation timed out');
 
@@ -879,7 +879,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
         $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
 
-        // Cleanup : Delete function 
+        // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -985,7 +985,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
         $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
 
-        // Cleanup : Delete function 
+        // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1090,7 +1090,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
         $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
 
-        // Cleanup : Delete function 
+        // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1195,7 +1195,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
         $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
 
-        // Cleanup : Delete function 
+        // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1300,7 +1300,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
         $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
 
-        // Cleanup : Delete function 
+        // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1405,7 +1405,7 @@ class FunctionsCustomServerTest extends Scope
     //     $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
     //     $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
 
-    //     // Cleanup : Delete function 
+    //     // Cleanup : Delete function
     //     $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
     //         'content-type' => 'application/json',
     //         'x-appwrite-project' => $this->getProject()['$id'],

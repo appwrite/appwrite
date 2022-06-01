@@ -9,7 +9,6 @@ use Appwrite\Auth\OAuth2;
 
 class Yahoo extends OAuth2
 {
-
     /**
      * @var string
      */
@@ -155,11 +154,11 @@ class Yahoo extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
+     *
      * If present, the email is verified. This was verfied through a manual Yahoo sign up process
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool

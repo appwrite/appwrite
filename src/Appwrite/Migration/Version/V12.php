@@ -300,11 +300,11 @@ class V12 extends Migration
     /**
      * Migrates permissions to dedicated table.
      *
-     * @param \Utopia\Database\Document $document 
-     * @param string $internalId 
-     * @return void 
-     * @throws \Exception 
-     * @throws \PDOException 
+     * @param \Utopia\Database\Document $document
+     * @param string $internalId
+     * @return void
+     * @throws \Exception
+     * @throws \PDOException
      */
     protected function migratePermissionsToDedicatedTable(string $collection, Document $document): void
     {
@@ -499,8 +499,8 @@ class V12 extends Migration
     /**
      * Fix run on each document
      *
-     * @param \Utopia\Database\Document $document 
-     * @return \Utopia\Database\Document 
+     * @param \Utopia\Database\Document $document
+     * @return \Utopia\Database\Document
      */
     protected function fixDocument(Document $document)
     {

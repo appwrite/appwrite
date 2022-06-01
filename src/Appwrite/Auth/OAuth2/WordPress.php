@@ -129,11 +129,11 @@ class WordPress extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
+     *
      * @link https://developer.wordpress.com/docs/api/1.1/get/me/
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool

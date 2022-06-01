@@ -34,7 +34,7 @@ class Password extends Validator
     {
         if (!\is_string($value)) {
             return false;
-        } 
+        }
 
         if (\strlen($value) < 8) {
             return false;

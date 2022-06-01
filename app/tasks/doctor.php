@@ -19,46 +19,41 @@ $cli
 /    \ ) __/ ) __/\ /\ / )   / )(   )(   ) _)  _  )((  O )
 \_/\_/(__)  (__)  (_/\_)(__\_)(__) (__) (____)(_)(__)\__/ ");
 
-        Console::log("\n".'👩‍⚕️ Running '.APP_NAME.' Doctor for version '.App::getEnv('_APP_VERSION', 'UNKNOWN').' ...'."\n");
+        Console::log("\n" . '👩‍⚕️ Running ' . APP_NAME . ' Doctor for version ' . App::getEnv('_APP_VERSION', 'UNKNOWN') . ' ...' . "\n");
 
         Console::log('Checking for production best practices...');
 
         $domain = new Domain(App::getEnv('_APP_DOMAIN'));
 
-        if(!$domain->isKnown() || $domain->isTest()) {
-            Console::log('🔴 Hostname has no public suffix ('.$domain->get().')');
-        }
-        else {
-            Console::log('🟢 Hostname has a public suffix ('.$domain->get().')');
+        if (!$domain->isKnown() || $domain->isTest()) {
+            Console::log('🔴 Hostname has no public suffix (' . $domain->get() . ')');
+        } else {
+            Console::log('🟢 Hostname has a public suffix (' . $domain->get() . ')');
         }
 
         $domain = new Domain(App::getEnv('_APP_DOMAIN_TARGET'));
 
-        if(!$domain->isKnown() || $domain->isTest()) {
-            Console::log('🔴 CNAME target has no public suffix ('.$domain->get().')');
-        }
-        else {
-            Console::log('🟢 CNAME target has a public suffix ('.$domain->get().')');
+        if (!$domain->isKnown() || $domain->isTest()) {
+            Console::log('🔴 CNAME target has no public suffix (' . $domain->get() . ')');
+        } else {
+            Console::log('🟢 CNAME target has a public suffix (' . $domain->get() . ')');
         }
 
-        if(App::getEnv('_APP_OPENSSL_KEY_V1') === 'your-secret-key' || empty(App::getEnv('_APP_OPENSSL_KEY_V1'))) {
+        if (App::getEnv('_APP_OPENSSL_KEY_V1') === 'your-secret-key' || empty(App::getEnv('_APP_OPENSSL_KEY_V1'))) {
             Console::log('🔴 Not using a unique secret key for encryption');
-        }
-        else {
+        } else {
             Console::log('🟢 Using a unique secret key for encryption');
         }
 
-        if(App::getEnv('_APP_ENV', 'development') !== 'production') {
+        if (App::getEnv('_APP_ENV', 'development') !== 'production') {
             Console::log('🔴 App environment is set for development');
-        }
-        else {
+        } else {
             Console::log('🟢 App environment is set for production');
         }
 
-        if('enabled' !== App::getEnv('_APP_OPTIONS_ABUSE', 'disabled')) {
+        if ('enabled' !== App::getEnv('_APP_OPTIONS_ABUSE', 'disabled')) {
             Console::log('🔴 Abuse protection is disabled');
-        }
-        else {
+        } else {
             Console::log('🟢 Abuse protection is enabled');
         }
 
@@ -66,20 +61,19 @@ $cli
         $authWhitelistEmails = App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null);
         $authWhitelistIPs = App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null);
 
-        if(empty($authWhitelistRoot)
+        if (
+            empty($authWhitelistRoot)
             && empty($authWhitelistEmails)
             && empty($authWhitelistIPs)
         ) {
             Console::log('🔴 Console access limits are disabled');
-        }
-        else {
+        } else {
             Console::log('🟢 Console access limits are enabled');
         }
 
-        if('enabled' !== App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled')) {
+        if ('enabled' !== App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled')) {
             Console::log('🔴 HTTPS force option is disabled');
-        }
-        else {
+        } else {
             Console::log('🟢 HTTPS force option is enabled');
         }
 
@@ -87,7 +81,7 @@ $cli
         $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
         $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
 
-        if(empty($providerName) || empty($providerConfig) || !Logger::hasProvider($providerName)) {
+        if (empty($providerName) || empty($providerConfig) || !Logger::hasProvider($providerName)) {
             Console::log('🔴 Logging adapter is disabled');
         } else {
             Console::log('🟢 Logging adapter is enabled (' . $providerName . ')');
@@ -96,7 +90,7 @@ $cli
         \sleep(0.2);
 
         try {
-            Console::log("\n".'Checking connectivity...');
+            Console::log("\n" . 'Checking connectivity...');
         } catch (\Throwable $th) {
             //throw $th;
         }
@@ -122,15 +116,16 @@ $cli
             Console::error('Cache............disconnected 👎');
         }
 
-        if(App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
+        if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
             try {
-                $antivirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-                    (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
+                $antivirus = new Network(
+                    App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+                    (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
+                );
 
-                if((@$antivirus->ping())) {
+                if ((@$antivirus->ping())) {
                     Console::success('Antivirus...........connected 👍');
-                }
-                else {
+                } else {
                     Console::error('Antivirus........disconnected 👎');
                 }
             } catch (\Throwable $th) {
@@ -155,7 +150,7 @@ $cli
         $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
         $port = App::getEnv('_APP_STATSD_PORT', 8125);
 
-        if($fp = @\fsockopen('udp://'.$host, $port, $errCode, $errStr, 2)){
+        if ($fp = @\fsockopen('udp://' . $host, $port, $errCode, $errStr, 2)) {
             Console::success('StatsD..............connected 👍');
             \fclose($fp);
         } else {
@@ -165,7 +160,7 @@ $cli
         $host = App::getEnv('_APP_INFLUXDB_HOST', '');
         $port = App::getEnv('_APP_INFLUXDB_PORT', '');
 
-        if($fp = @\fsockopen($host, $port, $errCode, $errStr, 2)){
+        if ($fp = @\fsockopen($host, $port, $errCode, $errStr, 2)) {
             Console::success('InfluxDB............connected 👍');
             \fclose($fp);
         } else {
@@ -177,26 +172,26 @@ $cli
         Console::log('');
         Console::log('Checking volumes...');
 
-        foreach ([
+        foreach (
+            [
             'Uploads' => APP_STORAGE_UPLOADS,
             'Cache' => APP_STORAGE_CACHE,
             'Config' => APP_STORAGE_CONFIG,
             'Certs' => APP_STORAGE_CERTIFICATES
-        ] as $key => $volume) {
+            ] as $key => $volume
+        ) {
             $device = new Local($volume);
 
             if (\is_readable($device->getRoot())) {
-                Console::success('🟢 '.$key.' Volume is readable');
-            }
-            else {
-                Console::error('🔴 '.$key.' Volume is unreadable');
+                Console::success('🟢 ' . $key . ' Volume is readable');
+            } else {
+                Console::error('🔴 ' . $key . ' Volume is unreadable');
             }
 
             if (\is_writable($device->getRoot())) {
-                Console::success('🟢 '.$key.' Volume is writeable');
-            }
-            else {
-                Console::error('🔴 '.$key.' Volume is unwriteable');
+                Console::success('🟢 ' . $key . ' Volume is writeable');
+            } else {
+                Console::error('🔴 ' . $key . ' Volume is unwriteable');
             }
         }
 
@@ -205,44 +200,44 @@ $cli
         Console::log('');
         Console::log('Checking disk space usage...');
 
-        foreach ([
+        foreach (
+            [
             'Uploads' => APP_STORAGE_UPLOADS,
             'Cache' => APP_STORAGE_CACHE,
             'Config' => APP_STORAGE_CONFIG,
             'Certs' => APP_STORAGE_CERTIFICATES
-        ] as $key => $volume) {
+            ] as $key => $volume
+        ) {
             $device = new Local($volume);
 
             $percentage = (($device->getPartitionTotalSpace() - $device->getPartitionFreeSpace())
             / $device->getPartitionTotalSpace()) * 100;
 
-            $message = $key.' Volume has '.Storage::human($device->getPartitionFreeSpace()) . ' free space ('.\round($percentage, 2).'% used)';
+            $message = $key . ' Volume has ' . Storage::human($device->getPartitionFreeSpace()) . ' free space (' . \round($percentage, 2) . '% used)';
 
             if ($percentage < 80) {
                 Console::success('🟢 ' . $message);
-            }
-            else {
+            } else {
                 Console::error('🔴 ' . $message);
             }
         }
 
         try {
-            if(App::isProduction()) {
+            if (App::isProduction()) {
                 Console::log('');
-                $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost').'/v1/health/version'), true);
+                $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost') . '/v1/health/version'), true);
 
                 if ($version && isset($version['version'])) {
-                    if(\version_compare($version['version'], App::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {
-                        Console::info('You are running the latest version of '.APP_NAME.'! 🥳');
-                    }
-                    else {
-                        Console::info('A new version ('.$version['version'].') is available! 🥳'."\n");
+                    if (\version_compare($version['version'], App::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {
+                        Console::info('You are running the latest version of ' . APP_NAME . '! 🥳');
+                    } else {
+                        Console::info('A new version (' . $version['version'] . ') is available! 🥳' . "\n");
                     }
                 } else {
-                    Console::error('Failed to check for a newer version'."\n");
+                    Console::error('Failed to check for a newer version' . "\n");
                 }
             }
         } catch (\Throwable $th) {
-            Console::error('Failed to check for a newer version'."\n");
+            Console::error('Failed to check for a newer version' . "\n");
         }
     });
