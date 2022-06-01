@@ -44,20 +44,20 @@ $ git checkout -b [name_of_your_new_branch]
 3. Work - commit - repeat ( be sure to be in your branch )
 
 4. Before you push your changes, make sure your code follows the `PSR12` coding standards , which is the standard Appwrite follows currently.
-   You can easily do this by running the formatter
+   You can easily do this by running the formatter.
 ```bash
-./vendor/bin/phpcbf --standard=PSR12  <your file path>
+./vendor/bin/phpcbf <your file path>
 ```
 This will format the code according to the `PSR12` coding standard.
 
-Now, go a step further by running the linter by the following command to manually fix the issues the formatter wasn't able to fix
+Now, go a step further by running the linter by the following command to manually fix the issues the formatter wasn't able to fix.
 ```bash
-./vendor/bin/phpcs --standard=PSR12 <your file path>
+./vendor/bin/phpcs <your file path>
 ```
-This will give you a list of errors for you to rectify , if there is an instance you need more information on the errors being displayed you can pass in additional command line arguments. More list of available arguments can be found [here](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues
+This will give you a list of errors for you to rectify , if there is an instance you need more information on the errors being displayed you can pass in additional command line arguments. More list of available arguments can be found [here](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues.
 
 ```bash
-./vendor/bin/phpcs --standard=PSR12 --report=diff <your file path>
+./vendor/bin/phpcs --report=diff <your file path>
 ```
 
 5. Push changes to GitHub 
@@ -240,7 +240,7 @@ Appwrite uses [PHP's Composer](https://getcomposer.org/) for managing dependenci
 
 ## Coding Standards
 
-Appwrite is following the [PHP-FIG standards](https://www.php-fig.org/). Currently, we are using _PSR-12_ for coding standards and autoloading standards.
+Appwrite is following the [PHP-FIG standards](https://www.php-fig.org/). Currently, we are using PSR-0 and PSR-12 for coding standards and autoloading standards.
 
 We use prettier for our JS coding standards and auto-formatting our code.
 
@@ -397,9 +397,13 @@ We use some automation tools to help us keep a healthy codebase.
 
 Coding Standards:
 
+`Run Formatter` :
+
 ```bash
 ./vendor/bin/phpcbf --standard=PSR12 <your file path>
 ```
+
+`Run Linter` :
 
 ```bash
 ./vendor/bin/phpcs --standard=PSR12 <your file path>
