@@ -43,18 +43,34 @@ $ git checkout -b [name_of_your_new_branch]
 ```
 3. Work - commit - repeat ( be sure to be in your branch )
 
-4. Push changes to GitHub 
+4. Before you push your changes, make sure your code follows the `PSR12` coding standards , which is the standard Appwrite follows currently.
+   You can easily do this by running the formatter
+```
+./vendor/bin/phpcbf --standard=PSR12  <your file path>
+```
+This will format the code according to the `PSR12` coding standard.
+
+Now, go a step further by running the linter by the following command to manually fix the issues the formatter wasn't able to fix
+```
+./vendor/bin/phpcs --standard=PSR12 <your file path>
+```
+This will give you a list of errors for you to rectify , if there is an instance you need more information on the errors being displayed you can pass in additional command line arguments. More list of available arguments can be found [here](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues
+
+```
+./vendor/bin/phpcs --standard=PSR12 --report=diff <your file path>
+```
+
+5. Push changes to GitHub 
 ```
 $ git push origin [name_of_your_new_branch]
 ```
-
-5. Submit your changes for review  
-If you go to your repository on GitHub, you'll see a `Compare & pull request` button. Click on that button.
-6. Start a Pull Request  
-Now submit the pull request and click on `Create pull request`.
-7. Get a code review approval/reject
-8. After approval, merge your PR
-9. GitHub will automatically delete the branch after the merge is done. (they can still be restored).
+6. Submit your changes for review    
+If you go to your repository on GitHub, you'll see a `Compare & pull request` button. Click on that button.  
+7. Start a Pull Request     
+Now submit the pull request and click on `Create pull request`.  
+8. Get a code review approval/reject  
+9. After approval, merge your PR  
+10. GitHub will automatically delete the branch after the merge is done. (they can still be restored).  
 
 ## Setup From Source
 
@@ -96,7 +112,7 @@ We love to create issues that are good for beginners and label them as `good fir
 
 ##### Tools and Libs
 - [Docker](https://www.docker.com/get-started)
-- [PHP FIG](https://www.php-fig.org/) - [PSR-1](https://www.php-fig.org/psr/psr-1/) and [PSR-4](https://www.php-fig.org/psr/psr-4/)
+- [PHP FIG](https://www.php-fig.org/) - [PSR-12](https://www.php-fig.org/psr/psr-12/)
 - [PHP Swoole](https://www.swoole.co.uk/)
 
 Learn more at our [Technology Stack](#technology-stack) section.
@@ -224,7 +240,7 @@ Appwrite uses [PHP's Composer](https://getcomposer.org/) for managing dependenci
 
 ## Coding Standards
 
-Appwrite is following the [PHP-FIG standards](https://www.php-fig.org/). Currently, we are using both PSR-0 and PSR-4 for coding standards and autoloading standards. Soon we will also review the project for support with PSR-12 (Extended Coding Style).
+Appwrite is following the [PHP-FIG standards](https://www.php-fig.org/). Currently, we are using _PSR-12_ for coding standards and autoloading standards.
 
 We use prettier for our JS coding standards and auto-formatting our code.
 
