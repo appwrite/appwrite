@@ -27,20 +27,20 @@ class Metric extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Metric';
     }
 
     /**
      * Get Collection
-     * 
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_METRIC;
     }

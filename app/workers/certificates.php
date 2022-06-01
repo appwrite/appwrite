@@ -18,10 +18,9 @@ Console::success(APP_NAME . ' certificates worker v1 has started');
 
 class CertificatesV1 extends Worker
 {
-
     /**
      * Database connection shared across all methods of this file
-     * 
+     *
      * @var Database
      */
     private Database $dbForConsole;
@@ -52,20 +51,20 @@ class CertificatesV1 extends Worker
          * 10. Create/Update our Storage with new Traefik config with new certificate paths
          * 11. Read certificate file and update 'renewDate' on certificate document
          * 12. Update 'issueDate' and 'attempts' on certificate
-         * 
+         *
          * If at any point unexpected error occurs, program stops without applying changes to document, and error is thrown into worker
-         * 
+         *
          * If code stops with expected error:
          * 1. 'log' attribute on document is updated with error message
          * 2. 'attempts' amount is increased
          * 3. Console log is shown
          * 4. Email is sent to security email
-         * 
+         *
          * Unless unexpected error occurs, at the end, we:
          * 1. Update 'updated' attribute on document
          * 2. Save document to database
          * 3. Update all domains documents with current certificate ID
-         * 
+         *
          * Note: Renewals are checked and scheduled from maintenence worker
          */
 
@@ -148,7 +147,7 @@ class CertificatesV1 extends Worker
      *
      * @param string $domain Domain name that certificate is for
      * @param Document $certificate Certificate document that we need to save
-     * 
+     *
      * @return void
      */
     private function saveCertificateDocument(string $domain, Document $certificate): void

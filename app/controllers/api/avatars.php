@@ -193,7 +193,7 @@ App::get('/v1/avatars/image')
             ->setContentType('image/png')
             ->addHeader('Expires', $date)
             ->addHeader('X-Appwrite-Cache', 'miss')
-            ->send($data);;
+            ->send($data);
 
         unset($image);
     });

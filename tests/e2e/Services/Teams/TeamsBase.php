@@ -7,7 +7,7 @@ use Utopia\Database\Database;
 
 trait TeamsBase
 {
-    public function testCreateTeam():array
+    public function testCreateTeam(): array
     {
         /**
          * Test for SUCCESS
@@ -79,14 +79,14 @@ trait TeamsBase
     /**
      * @depends testCreateTeam
      */
-    public function testGetTeam($data):array
+    public function testGetTeam($data): array
     {
         $id = $data['teamUid'] ?? '';
 
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$id, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -108,7 +108,7 @@ trait TeamsBase
     /**
      * @depends testCreateTeam
      */
-    public function testListTeams($data):array
+    public function testListTeams($data): array
     {
         /**
          * Test for SUCCESS
@@ -242,7 +242,7 @@ trait TeamsBase
         return [];
     }
 
-    public function testUpdateTeam():array
+    public function testUpdateTeam(): array
     {
         /**
          * Test for SUCCESS
@@ -262,7 +262,7 @@ trait TeamsBase
         $this->assertIsInt($response['body']['total']);
         $this->assertIsInt($response['body']['dateCreated']);
 
-        $response = $this->client->call(Client::METHOD_PUT, '/teams/'.$response['body']['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/teams/' . $response['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -280,7 +280,7 @@ trait TeamsBase
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_PUT, '/teams/'.$response['body']['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/teams/' . $response['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -291,7 +291,7 @@ trait TeamsBase
         return [];
     }
 
-    public function testDeleteTeam():array
+    public function testDeleteTeam(): array
     {
         /**
          * Test for SUCCESS
@@ -313,7 +313,7 @@ trait TeamsBase
         $this->assertIsInt($response['body']['total']);
         $this->assertIsInt($response['body']['dateCreated']);
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/teams/'.$teamUid, array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -324,7 +324,7 @@ trait TeamsBase
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));

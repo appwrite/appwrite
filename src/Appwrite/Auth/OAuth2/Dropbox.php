@@ -125,11 +125,11 @@ class Dropbox extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
+     *
      * @link https://www.dropbox.com/developers/documentation/http/documentation#users-get_current_account
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool

@@ -173,7 +173,7 @@ class Stats
         foreach ($sessionsMetrics as $metric) {
             $value = $this->params[$metric] ?? 0;
             if ($value >= 1) {
-                $tags = ",projectId={$projectId},provider=". ($this->params['provider'] ?? '');
+                $tags = ",projectId={$projectId},provider=" . ($this->params['provider'] ?? '');
                 $this->statsd->count($metric . $tags, $value);
             }
         }

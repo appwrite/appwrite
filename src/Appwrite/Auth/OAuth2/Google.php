@@ -131,11 +131,11 @@ class Google extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
+     *
      * @link https://www.oauth.com/oauth2-servers/signing-in-with-google/verifying-the-user-info/
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool

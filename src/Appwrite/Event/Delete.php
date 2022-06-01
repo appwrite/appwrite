@@ -34,7 +34,7 @@ class Delete extends Event
     /**
      * Returns the set type for the delete event.
      *
-     * @return string 
+     * @return string
      */
     public function getType(): string
     {

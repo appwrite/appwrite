@@ -48,20 +48,20 @@ class Attribute extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Attribute';
     }
 
     /**
      * Get Collection
-     * 
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_ATTRIBUTE;
     }

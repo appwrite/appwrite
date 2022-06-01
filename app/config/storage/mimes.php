@@ -30,7 +30,7 @@ return [
     'audio/ogg', // Ogg Vorbis RFC 5334
     'audio/vorbis', // Vorbis RFC 5215
     'audio/vnd.wav', // wav RFC 2361
-    
+
     // Microsoft Word
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Utopia PHP Framework
  *
@@ -22,12 +23,12 @@ class HostTest extends TestCase
      */
     protected $host = null;
 
-    public function setUp():void
+    public function setUp(): void
     {
         $this->host = new Host(['appwrite.io', 'subdomain.appwrite.test', 'localhost']);
     }
 
-    public function tearDown():void
+    public function tearDown(): void
     {
         $this->host = null;
     }
