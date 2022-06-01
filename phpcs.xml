@@ -11,4 +11,8 @@
     <rule ref="Generic.Files.LineLength">
         <exclude-pattern>*</exclude-pattern>
     </rule>
+    <!-- Allow Side Effects on root level of files -->
+    <rule ref="PSR1.Files.SideEffects.FoundWithSymbols">
+        <exclude-pattern>*</exclude-pattern>
+    </rule>
 </ruleset>
