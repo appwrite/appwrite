@@ -844,7 +844,7 @@ $collections = [
                 'size' => 0,
                 'signed' => false,
                 'required' => false,
-                'default' => null,
+                'default' => 0,
                 'array' => false,
                 'filters' => [],
             ],
