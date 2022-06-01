@@ -282,7 +282,7 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
             $expire = $key->getAttribute('expire', 0);
 
             if($expire !== 0 && $expire < \time()){
-                throw new AppwriteException('Project key expired', 401, Exception:: PROJECT_KEY_EXPIRED);
+                throw new AppwriteException('Project key expired', 401, AppwriteException:: PROJECT_KEY_EXPIRED);
              }
 
             Authorization::setRole('role:'.Auth::USER_ROLE_APP);
