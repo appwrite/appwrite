@@ -10,7 +10,6 @@ use Tests\E2E\Scopes\SideClient;
 use Utopia\CLI\Console;
 use WebSocket\ConnectionException;
 
-
 class RealtimeCustomClientTest extends Scope
 {
     use RealtimeBase;
@@ -1257,7 +1256,7 @@ class RealtimeCustomClientTest extends Scope
 
         $client->close();
 
-        // Cleanup : Delete function 
+        // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

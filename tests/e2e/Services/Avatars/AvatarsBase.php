@@ -6,7 +6,7 @@ use Tests\E2E\Client;
 
 trait AvatarsBase
 {
-    public function testGetCreditCard():array
+    public function testGetCreditCard(): array
     {
         /**
          * Test for SUCCESS
@@ -55,7 +55,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-       
+
         $response = $this->client->call(Client::METHOD_GET, '/avatars/credit-cards/visa', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
@@ -65,11 +65,11 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-       
+
         return [];
     }
 
-    public function testGetBrowser():array
+    public function testGetBrowser(): array
     {
         /**
          * Test for SUCCESS
@@ -104,7 +104,7 @@ trait AvatarsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
-        
+
         /**
          * Test for FAILURE
          */
@@ -118,7 +118,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        
+
         $response = $this->client->call(Client::METHOD_GET, '/avatars/browsers/ch', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
@@ -126,13 +126,13 @@ trait AvatarsBase
             'height' => 300,
             'quality' => 30,
         ]);
-            
+
         $this->assertEquals(400, $response['headers']['status-code']);
 
         return [];
     }
 
-    public function testGetFlag():array
+    public function testGetFlag(): array
     {
         /**
          * Test for SUCCESS
@@ -167,7 +167,7 @@ trait AvatarsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
-        
+
         /**
          * Test for FAILURE
          */
@@ -180,7 +180,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        
+
         $response = $this->client->call(Client::METHOD_GET, '/avatars/flags/us', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
@@ -188,13 +188,13 @@ trait AvatarsBase
             'height' => 300,
             'quality' => 30,
         ]);
-            
+
         $this->assertEquals(400, $response['headers']['status-code']);
 
         return [];
     }
 
-    public function testGetImage():array
+    public function testGetImage(): array
     {
         /**
          * Test for SUCCESS
@@ -233,7 +233,7 @@ trait AvatarsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
-        
+
         /**
          * Test for FAILURE
          */
@@ -272,7 +272,7 @@ trait AvatarsBase
         return [];
     }
 
-    public function testGetFavicon():array
+    public function testGetFavicon(): array
     {
         /**
          * Test for SUCCESS
@@ -329,7 +329,7 @@ trait AvatarsBase
         return [];
     }
 
-    public function testGetQR():array
+    public function testGetQR(): array
     {
         /**
          * Test for SUCCESS
@@ -408,7 +408,7 @@ trait AvatarsBase
         $this->assertEquals('attachment; filename="qr.png"', $response['headers']['content-disposition']);
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
-        
+
         /**
          * Test for FAILURE
          */

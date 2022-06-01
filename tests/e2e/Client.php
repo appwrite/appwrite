@@ -226,18 +226,18 @@ class Client
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        if($decode) {
+        if ($decode) {
             switch (substr($responseType, 0, strpos($responseType, ';'))) {
                 case 'application/json':
                     $json = json_decode($responseBody, true);
-    
+
                     if ($json === null) {
-                        throw new Exception('Failed to parse response: '.$responseBody);
+                        throw new Exception('Failed to parse response: ' . $responseBody);
                     }
-    
+
                     $responseBody = $json;
                     $json = null;
-                break;
+                    break;
             }
         }
 
@@ -250,7 +250,7 @@ class Client
         $responseHeaders['status-code'] = $responseStatus;
 
         if ($responseStatus === 500) {
-            echo 'Server error('.$method.': '.$path.'. Params: '.json_encode($params).'): '.json_encode($responseBody)."\n";
+            echo 'Server error(' . $method . ': ' . $path . '. Params: ' . json_encode($params) . '): ' . json_encode($responseBody) . "\n";
         }
 
         return [

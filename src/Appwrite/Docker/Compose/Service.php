@@ -17,7 +17,7 @@ class Service
     public function __construct(array $service)
     {
         $this->service = $service;
-        
+
         $ports = (isset($this->service['ports']) && is_array($this->service['ports'])) ? $this->service['ports'] : [];
         $this->service['ports'] = [];
 
@@ -54,7 +54,7 @@ class Service
     public function getImageVersion(): string
     {
         $image = $this->getImage();
-        return substr($image, ((int)strpos($image, ':'))+1);
+        return substr($image, ((int)strpos($image, ':')) + 1);
     }
 
     /**

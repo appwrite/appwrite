@@ -1,3 +1,27 @@
+# Version 0.14.2
+
+## Features
+
+- Support for Backblaze adapter in Storage
+- Support for Linode adapter in Storage
+- Support for Wasabi adapter in Storage
+- New Cloud Function Runtimes:
+  - Dart 2.17
+  - Deno 1.21
+  - Java 18
+  - Node 18
+- Improved overall Migration speed
+
+
+# Version 0.14.1
+
+## Bugs
+* Fixed scheduled Cloud Functions execution with cron-job by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3245
+* Fixed missing runtime icons by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3234
+* Fixed Google OAuth by @Meldiron in https://github.com/appwrite/appwrite/pull/3236
+* Fixed certificate generation when hostname was set to 'localhost' by @Meldiron in https://github.com/appwrite/appwrite/pull/3237
+* Fixed Installation overriding default env variables by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3241
+
 # Version 0.14.0
 
 ## Features

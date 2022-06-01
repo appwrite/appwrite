@@ -160,6 +160,5 @@ class DatabasePermissionsMemberTest extends Scope
             }, false);
             $this->assertTrue($hasPermissions);
         }
-
     }
 }

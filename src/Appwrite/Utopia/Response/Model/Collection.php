@@ -61,14 +61,14 @@ class Collection extends Model
                 ],
                 'description' => 'Collection attributes.',
                 'default' => [],
-                'example' => new \stdClass,
+                'example' => new \stdClass(),
                 'array' => true,
             ])
             ->addRule('indexes', [
                 'type' => Response::MODEL_INDEX,
                 'description' => 'Collection indexes.',
                 'default' => [],
-                'example' => new \stdClass,
+                'example' => new \stdClass(),
                 'array' => true
             ])
         ;
@@ -79,7 +79,7 @@ class Collection extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Collection';
     }
@@ -89,7 +89,7 @@ class Collection extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_COLLECTION;
     }

@@ -1,18 +1,18 @@
 <?php
 
 return [ // Based on this list @see http://stackoverflow.com/a/4212908/2299554
-    'default' => __DIR__.'/logos/none.png',
-    'default_image' => __DIR__.'/logos/image.png',
-    
+    'default' => __DIR__ . '/logos/none.png',
+    'default_image' => __DIR__ . '/logos/image.png',
+
     // Video Files
-    'video/mp4' => __DIR__.'/logos/video.png',
-    'video/x-flv' => __DIR__.'/logos/video.png',
-    'application/x-mpegURL' => __DIR__.'/logos/video.png',
-    'video/MP2T' => __DIR__.'/logos/video.png',
-    'video/3gpp' => __DIR__.'/logos/video.png',
-    'video/quicktime' => __DIR__.'/logos/video.png',
-    'video/x-msvideo' => __DIR__.'/logos/video.png',
-    'video/x-ms-wmv' => __DIR__.'/logos/video.png',
+    'video/mp4' => __DIR__ . '/logos/video.png',
+    'video/x-flv' => __DIR__ . '/logos/video.png',
+    'application/x-mpegURL' => __DIR__ . '/logos/video.png',
+    'video/MP2T' => __DIR__ . '/logos/video.png',
+    'video/3gpp' => __DIR__ . '/logos/video.png',
+    'video/quicktime' => __DIR__ . '/logos/video.png',
+    'video/x-msvideo' => __DIR__ . '/logos/video.png',
+    'video/x-ms-wmv' => __DIR__ . '/logos/video.png',
 
     // // Microsoft Word
     // 'application/msword' =>  __DIR__.'/logos/word.png',

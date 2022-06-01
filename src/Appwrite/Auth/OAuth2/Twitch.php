@@ -9,7 +9,6 @@ use Appwrite\Auth\OAuth2;
 
 class Twitch extends OAuth2
 {
-
     /**
      * @var string
      */
@@ -134,13 +133,13 @@ class Twitch extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
+     *
      * If present, the email is verified
-     * 
+     *
      * @link https://dev.twitch.tv/docs/api/reference#get-users
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
