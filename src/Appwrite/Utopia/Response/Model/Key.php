@@ -29,7 +29,7 @@ class Key extends Model
             ])
             ->addRule('expire', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Key expiration timestamp.',
+                'description' => 'Key expiration in Unix timestamp.',
                 'default' => 0,
                 'example' => '1653990687',
             ])
