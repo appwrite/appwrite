@@ -240,7 +240,7 @@ Appwrite uses [PHP's Composer](https://getcomposer.org/) for managing dependenci
 
 ## Coding Standards
 
-Appwrite is following the [PHP-FIG standards](https://www.php-fig.org/). Currently, we are using PSR-0 and PSR-12 for coding standards and autoloading standards.
+Appwrite is following the [PHP-FIG standards](https://www.php-fig.org/). Currently, we are using both PSR-0 and PSR-12 for coding standards and autoloading standards.
 
 We use prettier for our JS coding standards and auto-formatting our code.
 
