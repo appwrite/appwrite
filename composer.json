@@ -75,8 +75,7 @@
         "appwrite/sdk-generator": "0.18.8",
         "phpunit/phpunit": "9.5.20",
         "swoole/ide-helper": "4.8.9",
-        "textalk/websocket": "1.5.7",
-        "vimeo/psalm": "4.13.1"
+        "textalk/websocket": "1.5.7"
     },
     "provide": {
         "ext-phpiredis": "*"

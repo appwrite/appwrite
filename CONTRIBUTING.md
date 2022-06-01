@@ -12,11 +12,12 @@ Help us keep Appwrite open and inclusive. Please read and follow our [Code of Co
 
 ## Submit a Pull Request 🚀
 
-Branch naming convention is as following 
+Branch naming convention is as following
 
 `TYPE-ISSUE_ID-DESCRIPTION`
 
 example:
+
 ```
 doc-548-submit-a-pull-request-section-to-contribution-guide
 ```
@@ -29,32 +30,55 @@ When `TYPE` can be:
 - **fix** - a bug fix
 - **refactor** - code change that neither fixes a bug nor adds a feature
 
-**All PRs must include a commit message with the changes description!** 
+**All PRs must include a commit message with the changes description!**
 
 For the initial start, fork the project and use git clone command to download the repository to your computer. A standard procedure for working on an issue would be to:
 
 1. `git pull`, before creating a new branch, pull the changes from upstream. Your master needs to be up to date.
+
 ```
 $ git pull
 ```
+
 2. Create new branch from `master` like: `doc-548-submit-a-pull-request-section-to-contribution-guide`<br/>
+
 ```
 $ git checkout -b [name_of_your_new_branch]
 ```
+
 3. Work - commit - repeat ( be sure to be in your branch )
 
-4. Push changes to GitHub 
+4. Before you push your changes, make sure your code follows the `PSR12` coding standards , which is the standard Appwrite follows currently. You can easily do this by running the formatter.
+
+```bash
+./vendor/bin/phpcbf <your file path>
+```
+
+Now, go a step further by running the linter by the following command to manually fix the issues the formatter wasn't able to fix.
+
+```bash
+./vendor/bin/phpcs <your file path>
+```
+
+This will give you a list of errors for you to rectify , if there is an instance you need more information on the errors being displayed you can pass in additional command line arguments. More list of available arguments can be found [here](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues.
+
+```bash
+./vendor/bin/phpcs --report=diff <your file path>
+```
+
+5. Push changes to GitHub
+
 ```
 $ git push origin [name_of_your_new_branch]
 ```
 
-5. Submit your changes for review  
-If you go to your repository on GitHub, you'll see a `Compare & pull request` button. Click on that button.
-6. Start a Pull Request  
-Now submit the pull request and click on `Create pull request`.
-7. Get a code review approval/reject
-8. After approval, merge your PR
-9. GitHub will automatically delete the branch after the merge is done. (they can still be restored).
+6. Submit your changes for review
+   If you go to your repository on GitHub, you'll see a `Compare & pull request` button. Click on that button.
+7. Start a Pull Request
+   Now submit the pull request and click on `Create pull request`.
+8. Get a code review approval/reject
+9. After approval, merge your PR
+10. GitHub will automatically delete the branch after the merge is done. (they can still be restored).
 
 ## Setup From Source
 
@@ -90,18 +114,20 @@ Appwrite uses an internal micro-framework called Litespeed.js to build simple UI
 
 After finishing the installation process, you can start writing and editing code.
 
-
 #### Advanced Topics
+
 We love to create issues that are good for beginners and label them as `good first issue` or `hacktoberfest`, but some more advanced topics might require extra knowledge. Below is a list of links you can use to learn more about some of the more advance topics that will help you master the Appwrite codebase.
 
 ##### Tools and Libs
+
 - [Docker](https://www.docker.com/get-started)
-- [PHP FIG](https://www.php-fig.org/) - [PSR-1](https://www.php-fig.org/psr/psr-1/) and [PSR-4](https://www.php-fig.org/psr/psr-4/)
+- [PHP FIG](https://www.php-fig.org/) - [PSR-12](https://www.php-fig.org/psr/psr-12/)
 - [PHP Swoole](https://www.swoole.co.uk/)
 
 Learn more at our [Technology Stack](#technology-stack) section.
 
 ##### Network and Protocols
+
 - [OSI Model](https://en.wikipedia.org/wiki/OSI_model)
 - [TCP vs UDP](https://www.guru99.com/tcp-vs-udp-understanding-the-difference.html#:~:text=TCP%20is%20a%20connection%2Doriented,speed%20of%20UDP%20is%20faster&text=TCP%20does%20error%20checking%20and,but%20it%20discards%20erroneous%20packets.)
 - [HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol)
@@ -110,10 +136,12 @@ Learn more at our [Technology Stack](#technology-stack) section.
 - [gRPC](https://en.wikipedia.org/wiki/GRPC)
 
 ##### Architecture
+
 - [Microservices vs Monolithic](https://www.mulesoft.com/resources/api/microservices-vs-monolithic#:~:text=Microservices%20architecture%20vs%20monolithic%20architecture&text=A%20monolithic%20application%20is%20built%20as%20a%20single%20unit.&text=To%20make%20any%20alterations%20to,formally%20with%20business%2Doriented%20APIs.)
 - [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) - Appwrite console architecture
 
 ##### Security
+
 - [Appwrite Auth and ACL](https://github.com/appwrite/appwrite/blob/0.7.x/docs/specs/authentication.drawio.svg)
 - [OAuth](https://en.wikipedia.org/wiki/OAuth)
 - [Encryption](https://medium.com/searchencrypt/what-is-encryption-how-does-it-work-e8f20e340537#:~:text=Encryption%20is%20a%20process%20that,%2C%20or%20decrypt%2C%20the%20information.)
@@ -124,8 +152,8 @@ Learn more at our [Technology Stack](#technology-stack) section.
 Appwrite's current structure is a combination of both [Monolithic](https://en.wikipedia.org/wiki/Monolithic_application) and [Microservice](https://en.wikipedia.org/wiki/Microservices) architectures, but our final goal, as we grow, is to be using only microservices.
 
 ---
-![Appwrite](docs/specs/overview.drawio.svg)
----
+
+## ![Appwrite](docs/specs/overview.drawio.svg)
 
 ### File Structure
 
@@ -204,15 +232,15 @@ Appwrite stack is combined from a variety of open-source technologies and tools.
 
 ### Other Technologies
 
-* Redis - for managing cache and in-memory data (currently, we do not use Redis for persistent data)
-* MariaDB - for database storage and queries
-* InfluxDB - for managing stats and time-series based data
-* Statsd - for sending data over UDP protocol (using Telegraf)
-* ClamAV - for validating and scanning storage files
-* Imagemagick - for manipulating and managing image media files.
-* Webp - for better compression of images on supporting clients
-* SMTP - for sending email messages and alerts
-* Resque - for managing data queues and scheduled tasks over a Redis server
+- Redis - for managing cache and in-memory data (currently, we do not use Redis for persistent data)
+- MariaDB - for database storage and queries
+- InfluxDB - for managing stats and time-series based data
+- Statsd - for sending data over UDP protocol (using Telegraf)
+- ClamAV - for validating and scanning storage files
+- Imagemagick - for manipulating and managing image media files.
+- Webp - for better compression of images on supporting clients
+- SMTP - for sending email messages and alerts
+- Resque - for managing data queues and scheduled tasks over a Redis server
 
 ## Package Managers
 
@@ -224,7 +252,7 @@ Appwrite uses [PHP's Composer](https://getcomposer.org/) for managing dependenci
 
 ## Coding Standards
 
-Appwrite is following the [PHP-FIG standards](https://www.php-fig.org/). Currently, we are using both PSR-0 and PSR-4 for coding standards and autoloading standards. Soon we will also review the project for support with PSR-12 (Extended Coding Style).
+Appwrite is following the [PHP-FIG standards](https://www.php-fig.org/). Currently, we are using both PSR-0 and PSR-12 for coding standards and autoloading standards.
 
 We use prettier for our JS coding standards and auto-formatting our code.
 
@@ -236,14 +264,14 @@ We wish Appwrite will be as easy to set up and in a single, localhost, and easy 
 
 When contributing code, please take into account the following considerations:
 
-* Response Time
-* Throughput
-* Requests per Seconds
-* Network Usage
-* Memory Usage
-* Browser Rendering
-* Background Jobs
-* Task Execution Time
+- Response Time
+- Throughput
+- Requests per Seconds
+- Network Usage
+- Memory Usage
+- Browser Rendering
+- Background Jobs
+- Task Execution Time
 
 ## Security & Privacy
 
@@ -280,6 +308,7 @@ Before running the command, make sure you have proper write permissions to the A
 ```bash
 docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x -t appwrite/appwrite:dev --push .
 ```
+
 **Build Functions Runtimes**
 
 The Runtimes for all supported cloud functions (multicore builds) can be found at the [open-runtimes/open-runtimes](https://github.com/open-runtimes/open-runtimes) repository.
@@ -299,11 +328,11 @@ For generating a new console SDK follow the next steps:
 
 Things to remember when releasing SDKs
 
-* Update the Changelogs in **docs/sdks** (right now only Dart and Flutter are using these)
-* Update **GETTING_STARTED.md** in **docs/sdks** for each SDKs if any changes in the related APIs in there
-* Update SDK versions as required on **app/config/platforms.php**
-* Generate SDKs using the command `php app/cli.php sdks` and follow the instructions
-* Release new tags on GitHub repository for each SDKs
+- Update the Changelogs in **docs/sdks** (right now only Dart and Flutter are using these)
+- Update **GETTING_STARTED.md** in **docs/sdks** for each SDKs if any changes in the related APIs in there
+- Update SDK versions as required on **app/config/platforms.php**
+- Generate SDKs using the command `php app/cli.php sdks` and follow the instructions
+- Release new tags on GitHub repository for each SDKs
 
 ## Debug
 
@@ -315,13 +344,13 @@ First, you need to create an init file. Duplicate **dev/yasd_init.php.stub** fil
 
 ```json
 {
-    "name": "Listen for Xdebug",
-    "type": "php",
-    "request": "launch",
-    "port": 9005,
-    "pathMappings": {
-        "/usr/src/code": "${workspaceRoot}"
-    },
+  "name": "Listen for Xdebug",
+  "type": "php",
+  "request": "launch",
+  "port": 9005,
+  "pathMappings": {
+    "/usr/src/code": "${workspaceRoot}"
+  }
 }
 ```
 
@@ -354,65 +383,62 @@ To run end-2-end tests for a spcific service use:
 ```bash
 docker-compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName]
 ```
+
 ## Benchmarking
 
 You can use WRK Docker image to benchmark the server performance. Benchmarking is extremely useful when you want to compare how the server behaves before and after a change has been applied. Replace [APPWRITE_HOSTNAME_OR_IP] with your Appwrite server hostname or IP. Note that localhost is not accessible from inside the WRK container.
 
 ```
-  Options:                                            
-    -c, --connections <N>  Connections to keep open   
-    -d, --duration    <T>  Duration of test           
-    -t, --threads     <N>  Number of threads to use   
-                                                      
-    -s, --script      <S>  Load Lua script file       
-    -H, --header      <H>  Add header to request      
-        --latency          Print latency statistics   
-        --timeout     <T>  Socket/request timeout     
-    -v, --version          Print version details    
-``` 
+  Options:
+    -c, --connections <N>  Connections to keep open
+    -d, --duration    <T>  Duration of test
+    -t, --threads     <N>  Number of threads to use
+
+    -s, --script      <S>  Load Lua script file
+    -H, --header      <H>  Add header to request
+        --latency          Print latency statistics
+        --timeout     <T>  Socket/request timeout
+    -v, --version          Print version details
+```
 
 ```bash
 docker run --rm skandyla/wrk -t3 -c100 -d30  https://[APPWRITE_HOSTNAME_OR_IP]
 ```
 
-## Code Maintenance  
+## Code Maintenance
 
 We use some automation tools to help us keep a healthy codebase.
 
-Improve PHP execution time by using [fully-qualified function calls](https://veewee.github.io/blog/optimizing-php-performance-by-fq-function-calls/):
+**Run Formatter:**
 
 ```bash
-php-cs-fixer fix src/ --rules=native_function_invocation --allow-risky=yes
+# Run on all files
+./vendor/bin/phpcbf
+# Run on single file or folder
+./vendor/bin/phpcbf <your file path>
 ```
 
-Coding Standards:
+**Run Linter:**
 
 ```bash
-php-cs-fixer fix app/controllers --rules='{"braces": {"allow_single_line_closure": true}}'
-```
-
-```bash
-php-cs-fixer fix src --rules='{"braces": {"allow_single_line_closure": true}}'
-```
-
-Static Code Analysis:
-
-```bash
-docker-compose exec appwrite /usr/src/code/vendor/bin/psalm
+# Run on all files
+./vendor/bin/phpcs
+# Run on single file or folder
+./vendor/bin/phpcs <your file path>
 ```
 
 ## Tutorials
 
 From time to time, our team will add tutorials that will help contributors find their way in the Appwrite source code. Below is a list of currently available tutorials:
 
-* [Adding Support for a New OAuth2 Provider](./docs/tutorials/add-oauth2-provider.md)
-* [Appwrite Environment Variables](./docs/tutorials/environment-variables.md)
-* [Running in Production](./docs/tutorials/running-in-production.md)
-* [Adding Storage Adapter](./docs/tutorials/add-storage-adapter.md)
+- [Adding Support for a New OAuth2 Provider](./docs/tutorials/add-oauth2-provider.md)
+- [Appwrite Environment Variables](./docs/tutorials/environment-variables.md)
+- [Running in Production](./docs/tutorials/running-in-production.md)
+- [Adding Storage Adapter](./docs/tutorials/add-storage-adapter.md)
 
 ## Other Ways to Help
 
-Pull requests are great, but there are many other areas where you can help Appwrite. 
+Pull requests are great, but there are many other areas where you can help Appwrite.
 
 ### Blogging & Speaking
 
@@ -437,4 +463,3 @@ Submitting documentation updates, enhancements, designs, or bug fixes. Spelling 
 ### Helping Someone
 
 Searching for Appwrite on Discord, GitHub, or StackOverflow and helping someone else who needs help. You can also help by teaching others how to contribute to Appwrite's repo!
-
