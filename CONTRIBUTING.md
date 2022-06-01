@@ -409,17 +409,21 @@ docker run --rm skandyla/wrk -t3 -c100 -d30  https://[APPWRITE_HOSTNAME_OR_IP]
 
 We use some automation tools to help us keep a healthy codebase.
 
-Coding Standards:
-
 **Run Formatter:**
 
 ```bash
+# Run on all files
+./vendor/bin/phpcbf
+# Run on single file or folder
 ./vendor/bin/phpcbf <your file path>
 ```
 
 **Run Linter:**
 
 ```bash
+# Run on all files
+./vendor/bin/phpcs <your file path>
+# Run on single file or folder
 ./vendor/bin/phpcs <your file path>
 ```
 
