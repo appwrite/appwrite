@@ -405,12 +405,6 @@ Coding Standards:
 ./vendor/bin/phpcs --standard=PSR12 <your file path>
 ```
 
-Static Code Analysis:
-
-```bash
-docker-compose exec appwrite /usr/src/code/vendor/bin/psalm
-```
-
 ## Tutorials
 
 From time to time, our team will add tutorials that will help contributors find their way in the Appwrite source code. Below is a list of currently available tutorials:
