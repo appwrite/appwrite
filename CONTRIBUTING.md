@@ -66,7 +66,7 @@ $ git push origin [name_of_your_new_branch]
 ```
 6. Submit your changes for review    
 If you go to your repository on GitHub, you'll see a `Compare & pull request` button. Click on that button.  
-7. Start a Pull Request
+7. Start a Pull Request  
 Now submit the pull request and click on `Create pull request`.  
 8. Get a code review approval/reject  
 9. After approval, merge your PR  
