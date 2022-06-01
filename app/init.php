@@ -257,7 +257,7 @@ Database::addFilter(
         return $database
             ->find('attributes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
-            ], $database->getAttributeLimit(), 0, []);
+            ], $database->getAttributeLimit());
     }
 );
 
@@ -270,7 +270,7 @@ Database::addFilter(
         return $database
             ->find('indexes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 64, 0, []);
+            ], 64);
     }
 );
 
@@ -283,7 +283,7 @@ Database::addFilter(
         return $database
             ->find('platforms', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], APP_LIMIT_SUBQUERY, 0, []);
+            ], APP_LIMIT_SUBQUERY);
     }
 );
 
@@ -296,7 +296,7 @@ Database::addFilter(
         return $database
             ->find('domains', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], APP_LIMIT_SUBQUERY, 0, []);
+            ], APP_LIMIT_SUBQUERY);
     }
 );
 
@@ -309,7 +309,7 @@ Database::addFilter(
         return $database
             ->find('keys', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], APP_LIMIT_SUBQUERY, 0, []);
+            ], APP_LIMIT_SUBQUERY);
     }
 );
 
@@ -322,7 +322,7 @@ Database::addFilter(
         return $database
             ->find('webhooks', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], APP_LIMIT_SUBQUERY, 0, []);
+            ], APP_LIMIT_SUBQUERY);
     }
 );
 
@@ -332,9 +332,9 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
-        $sessions = Authorization::skip(fn () => $database->find('sessions', [
+        return Authorization::skip(fn () => $database->find('sessions', [
             new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
-        ], APP_LIMIT_SUBQUERY, 0, []));
+        ], APP_LIMIT_SUBQUERY));
     }
 );
 
@@ -347,7 +347,7 @@ Database::addFilter(
         return Authorization::skip(fn() => $database
             ->find('tokens', [
                 new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
-            ], APP_LIMIT_SUBQUERY, 0, []));
+            ], APP_LIMIT_SUBQUERY));
     }
 );
 
@@ -360,7 +360,7 @@ Database::addFilter(
         return Authorization::skip(fn() => $database
             ->find('memberships', [
                 new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
-            ], APP_LIMIT_SUBQUERY, 0, []));
+            ], APP_LIMIT_SUBQUERY));
     }
 );
 
