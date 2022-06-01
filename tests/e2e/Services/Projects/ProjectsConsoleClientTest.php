@@ -1055,7 +1055,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test',
             'scopes' => ['teams.read', 'teams.write'],
-            'expire' => time()-3600,
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -1099,6 +1098,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
+
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
 
@@ -1121,6 +1121,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys/' . $keyId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $keyId
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1146,22 +1147,72 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @depends testCreateProjectKey
+     * @depends testCreateProject
      */
     public function testValidateProjectKey($data): void
     {
         $id = $data['projectId'] ?? '';
-        $secret = $data['secret'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id , array_merge([
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $secret
-        ], $this->getHeaders()), []);
+        ], $this->getHeaders()), [
+            'name' => 'Key Test',
+            'scopes' => ['health.read'],
+            'expire' => time()+3600,
+        ]);
 
-        //var_dump($id);
-        //var_dump($secret);
-        exit;
+        $response = $this->client->call(Client::METHOD_GET, '/health' , [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $response['body']['secret']
+        ], []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Key Test',
+            'scopes' => ['health.read'],
+            'expire' => 0,
+        ]);
+
+        $response = $this->client->call(Client::METHOD_GET, '/health' , [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $response['body']['secret']
+        ], []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Key Test',
+            'scopes' => ['health.read'],
+            'expire' => time()-3600,
+        ]);
+
+        $response = $this->client->call(Client::METHOD_GET, '/health' , [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $response['body']['secret']
+        ], []);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
     }
 
 
