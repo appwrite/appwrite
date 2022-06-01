@@ -232,7 +232,7 @@ $collections = [
                 'size' => 16384,
                 'signed' => true,
                 'required' => false,
-                'default' => new stdClass,
+                'default' => new stdClass(),
                 'array' => false,
                 'filters' => ['json', 'range', 'enum'],
             ],
@@ -2055,7 +2055,7 @@ $collections = [
             ],
             [
                 '$id' => 'status',
-                'type' => Database::VAR_STRING, 
+                'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
                 'signed' => true,
@@ -2099,7 +2099,7 @@ $collections = [
             ],
             [
                 '$id' => 'sourceType',
-                'type' => Database::VAR_STRING, 
+                'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
                 'signed' => true,
@@ -2110,7 +2110,7 @@ $collections = [
             ],
             [
                 '$id' => 'source',
-                'type' => Database::VAR_STRING, 
+                'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
                 'signed' => true,

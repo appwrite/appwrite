@@ -11,7 +11,7 @@ class BaseList extends Model
      * @var string
      */
     protected $name = '';
-    
+
     /**
      * @var string
      */
@@ -53,7 +53,7 @@ class BaseList extends Model
         }
         $this->addRule($key, [
             'type' => $model,
-            'description' => 'List of '.$key.'.',
+            'description' => 'List of ' . $key . '.',
             'default' => [],
             'array' => true,
         ]);
@@ -64,7 +64,7 @@ class BaseList extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return $this->name;
     }
@@ -74,7 +74,7 @@ class BaseList extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return $this->type;
     }

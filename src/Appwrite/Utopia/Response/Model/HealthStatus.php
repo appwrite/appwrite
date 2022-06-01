@@ -30,7 +30,7 @@ class HealthStatus extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Health Status';
     }
@@ -40,7 +40,7 @@ class HealthStatus extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_HEALTH_STATUS;
     }

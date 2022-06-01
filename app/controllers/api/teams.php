@@ -59,8 +59,8 @@ App::post('/v1/teams')
         $teamId = $teamId == 'unique()' ? $dbForProject->getId() : $teamId;
         $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
             '$id' => $teamId ,
-            '$read' => ['team:'.$teamId],
-            '$write' => ['team:'.$teamId .'/owner'],
+            '$read' => ['team:' . $teamId],
+            '$write' => ['team:' . $teamId . '/owner'],
             'name' => $name,
             'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
             'dateCreated' => \time(),
@@ -71,8 +71,8 @@ App::post('/v1/teams')
             $membershipId = $dbForProject->getId();
             $membership = new Document([
                 '$id' => $membershipId,
-                '$read' => ['user:'.$user->getId(), 'team:'.$team->getId()],
-                '$write' => ['user:'.$user->getId(), 'team:'.$team->getId().'/owner'],
+                '$read' => ['user:' . $user->getId(), 'team:' . $team->getId()],
+                '$write' => ['user:' . $user->getId(), 'team:' . $team->getId() . '/owner'],
                 'userId' => $user->getId(),
                 'teamId' => $team->getId(),
                 'roles' => $roles,
@@ -95,7 +95,7 @@ App::post('/v1/teams')
 
         $audits
             ->setParam('event', 'teams.create')
-            ->setParam('resource', 'team/'.$teamId)
+            ->setParam('resource', 'team/' . $teamId)
             ->setParam('data', $team->getArrayCopy())
         ;
 
@@ -198,10 +198,9 @@ App::put('/v1/teams/:teamId')
             throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
         }
 
-        $team = $dbForProject->updateDocument('teams', $team->getId(),$team
+        $team = $dbForProject->updateDocument('teams', $team->getId(), $team
             ->setAttribute('name', $name)
-            ->setAttribute('search', implode(' ', [$teamId, $name]))
-        );
+            ->setAttribute('search', implode(' ', [$teamId, $name])));
 
         $events->setParam('teamId', $team->getId());
         $audits->setResource('team/' . $team->getId());
@@ -260,7 +259,7 @@ App::delete('/v1/teams/:teamId')
 
         $audits
             ->setParam('event', 'teams.delete')
-            ->setParam('resource', 'team/'.$teamId)
+            ->setParam('resource', 'team/' . $teamId)
             ->setParam('data', $team->getArrayCopy())
         ;
 
@@ -284,7 +283,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('email', '', new Email(), 'Email of the new team member.')
     ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.')
-    ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
+    ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -296,7 +295,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('events')
     ->action(function (string $teamId, string $email, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, EventAudit $audits, Mail $mails, Event $events) {
 
-        if(empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
         }
 
@@ -314,13 +313,12 @@ App::post('/v1/teams/:teamId/memberships')
         $invitee = $dbForProject->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
         if (empty($invitee)) { // Create new user if no user with same email found
-
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if ($limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
                 $total = $dbForProject->count('users', [], APP_LIMIT_USERS);
 
-                if($total >= $limit) {
+                if ($total >= $limit) {
                     throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
                 }
             }
@@ -329,16 +327,16 @@ App::post('/v1/teams/:teamId/memberships')
                 $userId = $dbForProject->getId();
                 $invitee = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
                     '$id' => $userId,
-                    '$read' => ['user:'.$userId, 'role:all'],
-                    '$write' => ['user:'.$userId],
+                    '$read' => ['user:' . $userId, 'role:all'],
+                    '$write' => ['user:' . $userId],
                     'email' => $email,
                     'emailVerification' => false,
                     'status' => true,
                     'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                    /** 
-                     * Set the password update time to 0 for users created using 
-                     * team invite and OAuth to allow password updates without an 
-                     * old password 
+                    /**
+                     * Set the password update time to 0 for users created using
+                     * team invite and OAuth to allow password updates without an
+                     * old password
                      */
                     'passwordUpdate' => 0,
                     'registration' => \time(),
@@ -355,7 +353,7 @@ App::post('/v1/teams/:teamId/memberships')
             }
         }
 
-        $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
+        $isOwner = Authorization::isRole('team:' . $team->getId() . '/owner');
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception('User is not allowed to send invitations for this team', 401, Exception::USER_UNAUTHORIZED);
@@ -367,7 +365,7 @@ App::post('/v1/teams/:teamId/memberships')
         $membership = new Document([
             '$id' => $membershipId,
             '$read' => ['role:all'],
-            '$write' => ['user:'.$invitee->getId(), 'team:'.$team->getId().'/owner'],
+            '$write' => ['user:' . $invitee->getId(), 'team:' . $team->getId() . '/owner'],
             'userId' => $invitee->getId(),
             'teamId' => $team->getId(),
             'roles' => $roles,
@@ -414,7 +412,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $audits
-            ->setResource('team/'.$teamId)
+            ->setResource('team/' . $teamId)
         ;
 
         $events
@@ -423,11 +421,13 @@ App::post('/v1/teams/:teamId/memberships')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($membership
+        $response->dynamic(
+            $membership
             ->setAttribute('teamName', $team->getAttribute('name'))
             ->setAttribute('userName', $user->getAttribute('name'))
-            ->setAttribute('userEmail', $user->getAttribute('email'))
-        , Response::MODEL_MEMBERSHIP);
+            ->setAttribute('userEmail', $user->getAttribute('email')),
+            Response::MODEL_MEMBERSHIP
+        );
     });
 
 App::get('/v1/teams/:teamId/memberships')
@@ -490,7 +490,7 @@ App::get('/v1/teams/:teamId/memberships')
 
         $memberships = array_filter($memberships, fn(Document $membership) => !empty($membership->getAttribute('userId')));
 
-        $memberships = array_map(function($membership) use ($dbForProject, $team) {
+        $memberships = array_map(function ($membership) use ($dbForProject, $team) {
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
             $membership
@@ -533,7 +533,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
-        if($membership->isEmpty() || empty($membership->getAttribute('userId'))) {
+        if ($membership->isEmpty() || empty($membership->getAttribute('userId'))) {
             throw new Exception('Membership not found', 404, Exception::MEMBERSHIP_NOT_FOUND);
         }
 
@@ -545,7 +545,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
             ->setAttribute('userEmail', $user->getAttribute('email'))
         ;
 
-        $response->dynamic($membership, Response::MODEL_MEMBERSHIP );
+        $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
     });
 
 App::patch('/v1/teams/:teamId/memberships/:membershipId')
@@ -588,7 +588,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
-        $isOwner = Authorization::isRole('team:' . $team->getId() . '/owner');;
+        $isOwner = Authorization::isRole('team:' . $team->getId() . '/owner');
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception('User is not allowed to modify roles', 401, Exception::USER_UNAUTHORIZED);
@@ -667,7 +667,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         if ($userId !== $membership->getAttribute('userId')) {
-            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401, Exception::TEAM_INVITE_MISMATCH);
+            throw new Exception('Invite does not belong to current user (' . $user->getAttribute('email') . ')', 401, Exception::TEAM_INVITE_MISMATCH);
         }
 
         if ($user->isEmpty()) {
@@ -675,7 +675,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         if ($membership->getAttribute('userId') !== $user->getId()) {
-            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401, Exception::TEAM_INVITE_MISMATCH);
+            throw new Exception('Invite does not belong to current user (' . $user->getAttribute('email') . ')', 401, Exception::TEAM_INVITE_MISMATCH);
         }
 
         if ($membership->getAttribute('confirm') === true) {
@@ -693,7 +693,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         // Log user in
 
-        Authorization::setRole('user:'.$user->getId());
+        Authorization::setRole('user:' . $user->getId());
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
@@ -712,13 +712,12 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
         $session = $dbForProject->createDocument('sessions', $session
-            ->setAttribute('$read', ['user:'.$user->getId()])
-            ->setAttribute('$write', ['user:'.$user->getId()])
-        );
+            ->setAttribute('$read', ['user:' . $user->getId()])
+            ->setAttribute('$write', ['user:' . $user->getId()]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        Authorization::setRole('user:'.$userId);
+        Authorization::setRole('user:' . $userId);
 
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
 
@@ -726,7 +725,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
 
-        $audits->setResource('team/'.$teamId);
+        $audits->setResource('team/' . $teamId);
 
         $events
             ->setParam('teamId', $team->getId())
@@ -740,15 +739,17 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         $response
-            ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
         ;
 
-        $response->dynamic($membership
+        $response->dynamic(
+            $membership
             ->setAttribute('teamName', $team->getAttribute('name'))
             ->setAttribute('userName', $user->getAttribute('name'))
-            ->setAttribute('userEmail', $user->getAttribute('email'))
-        , Response::MODEL_MEMBERSHIP);
+            ->setAttribute('userEmail', $user->getAttribute('email')),
+            Response::MODEL_MEMBERSHIP
+        );
     });
 
 App::delete('/v1/teams/:teamId/memberships/:membershipId')
@@ -807,7 +808,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
         }
 
-        $audits->setResource('team/'.$teamId);
+        $audits->setResource('team/' . $teamId);
 
         $events
             ->setParam('teamId', $team->getId())
@@ -850,7 +851,7 @@ App::get('/v1/teams/:teamId/logs')
         }
 
         $audit = new Audit($dbForProject);
-        $resource = 'team/'.$team->getId();
+        $resource = 'team/' . $team->getId();
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
         $output = [];
@@ -890,8 +891,8 @@ App::get('/v1/teams/:teamId/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');

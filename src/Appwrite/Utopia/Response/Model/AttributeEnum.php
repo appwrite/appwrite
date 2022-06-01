@@ -61,7 +61,7 @@ class AttributeEnum extends Attribute
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'AttributeEnum';
     }
@@ -71,7 +71,7 @@ class AttributeEnum extends Attribute
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_ATTRIBUTE_ENUM;
     }

@@ -1,4 +1,5 @@
 <?php
+
 namespace Appwrite\Utopia\Database\Validator;
 
 use Utopia\Database\Document;
@@ -16,7 +17,7 @@ class Queries extends ValidatorQueries
     public function __construct($attributes, $indexes, $strict)
     {
         // Remove failed/stuck/processing indexes
-        $indexes = \array_filter($indexes, function($index) {
+        $indexes = \array_filter($indexes, function ($index) {
             return $index->getAttribute('status') === 'available';
         });
 

@@ -36,7 +36,7 @@ class Phone extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Phone';
     }
@@ -46,7 +46,7 @@ class Phone extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_PHONE;
     }
