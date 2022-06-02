@@ -78,6 +78,7 @@ const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
 const APP_LIMIT_ENCRYPTION = 20000000; //20MB
 const APP_LIMIT_COMPRESSION = 20000000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
+const APP_LIMIT_SUBQUERY = 1000;
 const APP_CACHE_BUSTER = 305;
 const APP_VERSION_STABLE = '0.14.2';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
@@ -191,46 +192,50 @@ if (!empty($user) || !empty($pass)) {
  */
 Database::addFilter(
     'casting',
-    function ($value) {
+    function (mixed $value) {
         return json_encode(['value' => $value], JSON_PRESERVE_ZERO_FRACTION);
     },
-    function ($value) {
+    function (mixed $value) {
         if (is_null($value)) {
             return null;
         }
+
         return json_decode($value, true)['value'];
     }
 );
 
 Database::addFilter(
     'enum',
-    function ($value, Document $attribute) {
+    function (mixed $value, Document $attribute) {
         if ($attribute->isSet('elements')) {
             $attribute->removeAttribute('elements');
         }
+
         return $value;
     },
-    function ($value, Document $attribute) {
+    function (mixed $value, Document $attribute) {
         $formatOptions = json_decode($attribute->getAttribute('formatOptions', '[]'), true);
         if (isset($formatOptions['elements'])) {
             $attribute->setAttribute('elements', $formatOptions['elements']);
         }
+
         return $value;
     }
 );
 
 Database::addFilter(
     'range',
-    function ($value, Document $attribute) {
+    function (mixed $value, Document $attribute) {
         if ($attribute->isSet('min')) {
             $attribute->removeAttribute('min');
         }
         if ($attribute->isSet('max')) {
             $attribute->removeAttribute('max');
         }
+
         return $value;
     },
-    function ($value, Document $attribute) {
+    function (mixed $value, Document $attribute) {
         $formatOptions = json_decode($attribute->getAttribute('formatOptions', '[]'), true);
         if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
             $attribute
@@ -238,134 +243,134 @@ Database::addFilter(
                 ->setAttribute('max', $formatOptions['max'])
             ;
         }
+
         return $value;
     }
 );
 
 Database::addFilter(
     'subQueryAttributes',
-    function ($value) {
+    function (mixed $value) {
         return null;
     },
-    function ($value, Document $document, Database $database) {
+    function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('attributes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
-            ], $database->getAttributeLimit(), 0, []);
+            ], $database->getAttributeLimit());
     }
 );
 
 Database::addFilter(
     'subQueryIndexes',
-    function ($value) {
+    function (mixed $value) {
         return null;
     },
-    function ($value, Document $document, Database $database) {
+    function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('indexes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 64, 0, []);
+            ], 64);
     }
 );
 
 Database::addFilter(
     'subQueryPlatforms',
-    function ($value) {
+    function (mixed $value) {
         return null;
     },
-    function ($value, Document $document, Database $database) {
+    function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('platforms', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], $database->getIndexLimit(), 0, []);
+            ], APP_LIMIT_SUBQUERY);
     }
 );
 
 Database::addFilter(
     'subQueryDomains',
-    function ($value) {
+    function (mixed $value) {
         return null;
     },
-    function ($value, Document $document, Database $database) {
+    function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('domains', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], $database->getIndexLimit(), 0, []);
+            ], APP_LIMIT_SUBQUERY);
     }
 );
 
 Database::addFilter(
     'subQueryKeys',
-    function ($value) {
+    function (mixed $value) {
         return null;
     },
-    function ($value, Document $document, Database $database) {
+    function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('keys', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], $database->getIndexLimit(), 0, []);
+            ], APP_LIMIT_SUBQUERY);
     }
 );
 
 Database::addFilter(
     'subQueryWebhooks',
-    function ($value) {
+    function (mixed $value) {
         return null;
     },
-    function ($value, Document $document, Database $database) {
+    function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('webhooks', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], $database->getIndexLimit(), 0, []);
+            ], APP_LIMIT_SUBQUERY);
     }
 );
 
 Database::addFilter(
     'subQuerySessions',
-    function ($value) {
+    function (mixed $value) {
         return null;
     },
-    function ($value, Document $document, Database $database) {
-        $sessions = Authorization::skip(fn () => $database->find('sessions', [
+    function (mixed $value, Document $document, Database $database) {
+        return Authorization::skip(fn () => $database->find('sessions', [
             new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
-        ], $database->getIndexLimit(), 0, []));
-
-        return $sessions;
+        ], APP_LIMIT_SUBQUERY));
     }
 );
 
 Database::addFilter(
     'subQueryTokens',
-    function ($value) {
+    function (mixed $value) {
         return null;
     },
-    function ($value, Document $document, Database $database) {
+    function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn() => $database
             ->find('tokens', [
                 new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
-            ], $database->getIndexLimit(), 0, []));
+            ], APP_LIMIT_SUBQUERY));
     }
 );
 
 Database::addFilter(
     'subQueryMemberships',
-    function ($value) {
+    function (mixed $value) {
         return null;
     },
-    function ($value, Document $document, Database $database) {
+    function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn() => $database
             ->find('memberships', [
                 new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
-            ], $database->getIndexLimit(), 0, []));
+            ], APP_LIMIT_SUBQUERY));
     }
 );
 
 Database::addFilter(
     'encrypt',
-    function ($value) {
+    function (mixed $value) {
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
+
         return json_encode([
             'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
             'method' => OpenSSL::CIPHER_AES_128_GCM,
@@ -374,7 +379,7 @@ Database::addFilter(
             'version' => '1',
         ]);
     },
-    function ($value) {
+    function (mixed $value) {
         if (is_null($value)) {
             return null;
         }
