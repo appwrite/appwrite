@@ -16,20 +16,6 @@ class Database extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('$read', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Collection read permissions.',
-                'default' => '',
-                'example' => 'role:all',
-                'array' => true
-            ])
-            ->addRule('$write', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Collection write permissions.',
-                'default' => '',
-                'example' => 'user:608f9da25e7e1',
-                'array' => true
-            ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Database name.',
@@ -46,7 +32,7 @@ class Database extends Model
      */
     public function getName():string
     {
-        return 'Collection';
+        return 'Database';
     }
 
     /**
@@ -56,6 +42,6 @@ class Database extends Model
      */
     public function getType():string
     {
-        return Response::MODEL_COLLECTION;
+        return Response::MODEL_DATABASE;
     }
 }
