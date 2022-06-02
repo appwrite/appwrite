@@ -1,5 +1,88 @@
-# Unreleased Version
-- Renamed `providers` to `authProviders` in project collection **Breaking Change**
+# Version 0.14.2
+
+## Features
+
+- Support for Backblaze adapter in Storage
+- Support for Linode adapter in Storage
+- Support for Wasabi adapter in Storage
+- New Cloud Function Runtimes:
+  - Dart 2.17
+  - Deno 1.21
+  - Java 18
+  - Node 18
+- Improved overall Migration speed
+
+
+# Version 0.14.1
+
+## Bugs
+* Fixed scheduled Cloud Functions execution with cron-job by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3245
+* Fixed missing runtime icons by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3234
+* Fixed Google OAuth by @Meldiron in https://github.com/appwrite/appwrite/pull/3236
+* Fixed certificate generation when hostname was set to 'localhost' by @Meldiron in https://github.com/appwrite/appwrite/pull/3237
+* Fixed Installation overriding default env variables by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3241
+
+# Version 0.14.0
+
+## Features
+- **BREAKING CHANGE** New Event Model
+  - The new Event Model allows you to define events for Webhooks or Functions more granular
+  - Account and Users events have been merged to just Users
+  - Examples:
+    - `database.documents.create` is now `collections.[COLLECTION_ID].documents.[DOCUMENT_ID].create`
+    - Both placeholders needs to be replaced with either `*` for wildcard or an ID of the respective collection or document
+    - So you can listen to every document that is created in the `posts` collection with `collections.posts.*.documents.*.create`
+  - `event` in the Realtime payload has been renamed to `events` and contains all possible events
+  - `X-Appwrite-Webhook-Event` Webhook header has been renamed to `X-Appwrite-Webhook-Events` and contains all possible events
+- **BREAKING CHANGE** Renamed `providers` to `authProviders` in Projects
+- **BREAKING CHANGE** Renamed `stdout` to `response` in Execution
+- **BREAKING CHANGE** Removed delete endpoint from the Accounts API
+- **BREAKING CHANGE** Renamed `name` to `userName` on Membership response model
+- **BREAKING CHANGE** Renamed `email` to `userEmail` on Membership response model
+- **BREAKING CHANGE** Renamed `event` to `events` on Realtime Response and now is an array of strings
+- Added `teamName` to Membership response model
+- Added new endpoint to update user's status from the Accounts API
+- Deleted users will now free their ID and not reserve it anymore
+- Added new endpoint to list all memberships on the Users API
+- Increased Execution `response` to 1MB
+- Increased Build `stdout` to 1MB
+- Added Wildcard support to Platforms
+- Added Activity page to Teams console
+- Added button to verify/unverify user's e-mail address in the console
+- Added Docker log limits to `docker-compose.yaml`
+- Renamed `_APP_EXECUTOR_RUNTIME_NETWORK` environment variable to `OPEN_RUNTIMES_NETWORK`
+- Added Auth0 OAuth2 provider
+- Added Okta Oauth2 provider @tanay1337 in https://github.com/appwrite/appwrite/pull/3139
+
+## Bugs
+- Fixed issues with `min`, `max` and `default` values for float attributes
+- Fixed account created with Magic URL to set a new password
+- Fixed Database to respect `null` values
+- Fixed missing realtime events from the Users API
+- Fixed missing events when all sessions are deleted from the Users and Account API
+- Fixed dots in database attributes
+- Fixed renewal of SSL certificates
+- Fixed errors in the certificates workers
+- Fixed HTTPS redirect bug for non GET requests
+- Fixed search when a User is updated
+- Fixed aspect ratio bug in Avatars API
+- Fixed wrong `Fail to Warmup ...` error message in Executor
+- Fixed UI when file uploader is covered by jumpt to top button
+- Fixed bug that allowed Queries on failed indexes
+- Fixed UI when an alert with a lot text disappears too fast by increasing duration
+- Fixed issues with cache and case-sensivity on ID's
+- Fixed storage stats by upgrading to `BIGINT`
+- Fixed `storage.total` stats which now is a sum of `storage.files.total` and `storage.deployments.total`
+- Fixed Project logo preview
+- Fixed UI for missing icons in Collection attributes
+- Fixed UI to allow single-character custom ID's
+- Fixed array size validation in the Database Service
+- Fixed file preview when file extension is missing
+- Fixed `Open an Issue` link in the console
+- Fixed missing environment variables on Executor service
+- Fixed all endpoints that expect an Array in their params to have not more than 100 items
+- Added Executor host variables as a part of infrastructure configuration by @sjke in https://github.com/appwrite/appwrite/pull/3084
+- Added new tab/window for new release link by @Akshay-Rana-Gujjar in https://github.com/appwrite/appwrite/pull/3202
 
 # Version 0.13.4
 

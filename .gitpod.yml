@@ -2,9 +2,19 @@ image:
   file: .gitpod.Dockerfile
 
 tasks:
-  - init: docker-compose pull &&
-      docker-compose build &&
-      docker run --rm --interactive --tty --volume $PWD:/app composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts --prefer-dist
+  - name: Run Appwrite Docker Stack
+    init: |
+      docker-compose pull
+      docker-compose build
+    command: |
+      docker run --rm --interactive --tty \
+      --volume $PWD:/app \
+      composer update \
+      --ignore-platform-reqs \
+      --optimize-autoloader \
+      --no-plugins \
+      --no-scripts \
+      --prefer-dist
 
 ports:
   - port: 8080

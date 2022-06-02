@@ -10,7 +10,6 @@ use Tests\E2E\Scopes\SideClient;
 use Utopia\CLI\Console;
 use WebSocket\ConnectionException;
 
-
 class RealtimeCustomClientTest extends Scope
 {
     use RealtimeBase;
@@ -25,7 +24,7 @@ class RealtimeCustomClientTest extends Scope
 
         $headers =  [
             'origin' => 'http://localhost',
-            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session
         ];
 
         $client = $this->getWebsocket(['documents'], $headers);
@@ -240,7 +239,7 @@ class RealtimeCustomClientTest extends Scope
 
         $client = $this->getWebsocket(['account'], [
             'origin' => 'http://localhost',
-            'cookie' => 'a_session_'.$projectId.'=' . $session
+            'cookie' => 'a_session_' . $projectId . '=' . $session
         ]);
         $response = json_decode($client->receive(), true);
 
@@ -278,7 +277,12 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
-        $this->assertEquals('account.update.name', $response['data']['event']);
+        $this->assertContains("users.{$userId}.update.name", $response['data']['events']);
+        $this->assertContains("users.{$userId}.update", $response['data']['events']);
+        $this->assertContains("users.{$userId}", $response['data']['events']);
+        $this->assertContains("users.*.update.name", $response['data']['events']);
+        $this->assertContains("users.*.update", $response['data']['events']);
+        $this->assertContains("users.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
         $this->assertEquals($name, $response['data']['payload']['name']);
@@ -291,7 +295,7 @@ class RealtimeCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_'.$projectId.'=' . $session,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
         ]), [
             'password' => 'new-password',
             'oldPassword' => 'password',
@@ -307,7 +311,12 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
-        $this->assertEquals('account.update.password', $response['data']['event']);
+        $this->assertContains("users.{$userId}.update.password", $response['data']['events']);
+        $this->assertContains("users.{$userId}.update", $response['data']['events']);
+        $this->assertContains("users.{$userId}", $response['data']['events']);
+        $this->assertContains("users.*.update.password", $response['data']['events']);
+        $this->assertContains("users.*.update", $response['data']['events']);
+        $this->assertContains("users.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
         $this->assertEquals($name, $response['data']['payload']['name']);
@@ -319,7 +328,7 @@ class RealtimeCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_'.$projectId.'=' . $session,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
         ]), [
             'email' => 'torsten@appwrite.io',
             'password' => 'new-password',
@@ -335,23 +344,27 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
-        $this->assertEquals('account.update.email', $response['data']['event']);
+        $this->assertContains("users.{$userId}.update.email", $response['data']['events']);
+        $this->assertContains("users.{$userId}.update", $response['data']['events']);
+        $this->assertContains("users.{$userId}", $response['data']['events']);
+        $this->assertContains("users.*.update.email", $response['data']['events']);
+        $this->assertContains("users.*.update", $response['data']['events']);
+        $this->assertContains("users.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
-
         $this->assertEquals('torsten@appwrite.io', $response['data']['payload']['email']);
 
         /**
          * Test Account Verification Create
          */
-        $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
+        $verification = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_'.$projectId.'=' . $session,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
         ]), [
             'url' => 'http://localhost/verification',
         ]);
-
+        $verificationId = $verification['body']['$id'];
         $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
@@ -362,7 +375,16 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
-        $this->assertEquals('account.verification.create', $response['data']['event']);
+        $this->assertContains("users.{$userId}.verification.{$verificationId}.create", $response['data']['events']);
+        $this->assertContains("users.{$userId}.verification.{$verificationId}", $response['data']['events']);
+        $this->assertContains("users.{$userId}.verification.*.create", $response['data']['events']);
+        $this->assertContains("users.{$userId}.verification.*", $response['data']['events']);
+        $this->assertContains("users.{$userId}", $response['data']['events']);
+        $this->assertContains("users.*.verification.{$verificationId}.create", $response['data']['events']);
+        $this->assertContains("users.*.verification.{$verificationId}", $response['data']['events']);
+        $this->assertContains("users.*.verification.*.create", $response['data']['events']);
+        $this->assertContains("users.*.verification.*", $response['data']['events']);
+        $this->assertContains("users.*", $response['data']['events']);
 
         $lastEmail = $this->getLastEmail();
         $verification = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
@@ -370,11 +392,11 @@ class RealtimeCustomClientTest extends Scope
         /**
          * Test Account Verification Complete
          */
-        $response = $this->client->call(Client::METHOD_PUT, '/account/verification', array_merge([
+        $verification = $this->client->call(Client::METHOD_PUT, '/account/verification', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_'.$projectId.'=' . $session,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
         ]), [
             'userId' => $userId,
             'secret' => $verification,
@@ -390,8 +412,16 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
-        $this->assertEquals('account.verification.update', $response['data']['event']);
-
+        $this->assertContains("users.{$userId}.verification.{$verificationId}.update", $response['data']['events']);
+        $this->assertContains("users.{$userId}.verification.{$verificationId}", $response['data']['events']);
+        $this->assertContains("users.{$userId}.verification.*.update", $response['data']['events']);
+        $this->assertContains("users.{$userId}.verification.*", $response['data']['events']);
+        $this->assertContains("users.{$userId}", $response['data']['events']);
+        $this->assertContains("users.*.verification.{$verificationId}.update", $response['data']['events']);
+        $this->assertContains("users.*.verification.{$verificationId}", $response['data']['events']);
+        $this->assertContains("users.*.verification.*.update", $response['data']['events']);
+        $this->assertContains("users.*.verification.*", $response['data']['events']);
+        $this->assertContains("users.*", $response['data']['events']);
         /**
          * Test Acoount Prefs Update
          */
@@ -399,7 +429,7 @@ class RealtimeCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_'.$projectId.'=' . $session,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
         ]), [
             'prefs' => [
                 'prefKey1' => 'prefValue1',
@@ -417,7 +447,12 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
-        $this->assertEquals('account.update.prefs', $response['data']['event']);
+        $this->assertContains("users.{$userId}.update.prefs", $response['data']['events']);
+        $this->assertContains("users.{$userId}.update", $response['data']['events']);
+        $this->assertContains("users.{$userId}", $response['data']['events']);
+        $this->assertContains("users.*.update.prefs", $response['data']['events']);
+        $this->assertContains("users.*.update", $response['data']['events']);
+        $this->assertContains("users.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
         /**
@@ -432,7 +467,7 @@ class RealtimeCustomClientTest extends Scope
             'password' => 'new-password',
         ]);
 
-        $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$projectId];
+        $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $projectId];
         $sessionNewId = $response['body']['$id'];
 
         $response = json_decode($client->receive(), true);
@@ -445,17 +480,26 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
-        $this->assertEquals('account.sessions.create', $response['data']['event']);
+        $this->assertContains("users.{$userId}.sessions.{$sessionNewId}.create", $response['data']['events']);
+        $this->assertContains("users.{$userId}.sessions.{$sessionNewId}", $response['data']['events']);
+        $this->assertContains("users.{$userId}.sessions.*.create", $response['data']['events']);
+        $this->assertContains("users.{$userId}.sessions.*", $response['data']['events']);
+        $this->assertContains("users.{$userId}", $response['data']['events']);
+        $this->assertContains("users.*.sessions.{$sessionNewId}.create", $response['data']['events']);
+        $this->assertContains("users.*.sessions.{$sessionNewId}", $response['data']['events']);
+        $this->assertContains("users.*.sessions.*.create", $response['data']['events']);
+        $this->assertContains("users.*.sessions.*", $response['data']['events']);
+        $this->assertContains("users.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
         /**
          * Test Account Session Delete
          */
-        $this->client->call(Client::METHOD_DELETE, '/account/sessions/'.$sessionNewId, array_merge([
+        $this->client->call(Client::METHOD_DELETE, '/account/sessions/' . $sessionNewId, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_'.$projectId.'=' . $sessionNew,
+            'cookie' => 'a_session_' . $projectId . '=' . $sessionNew,
         ]));
 
         $response = json_decode($client->receive(), true);
@@ -468,13 +512,22 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
-        $this->assertEquals('account.sessions.delete', $response['data']['event']);
+        $this->assertContains("users.{$userId}.sessions.{$sessionNewId}.delete", $response['data']['events']);
+        $this->assertContains("users.{$userId}.sessions.{$sessionNewId}", $response['data']['events']);
+        $this->assertContains("users.{$userId}.sessions.*.delete", $response['data']['events']);
+        $this->assertContains("users.{$userId}.sessions.*", $response['data']['events']);
+        $this->assertContains("users.{$userId}", $response['data']['events']);
+        $this->assertContains("users.*.sessions.{$sessionNewId}.delete", $response['data']['events']);
+        $this->assertContains("users.*.sessions.{$sessionNewId}", $response['data']['events']);
+        $this->assertContains("users.*.sessions.*.delete", $response['data']['events']);
+        $this->assertContains("users.*.sessions.*", $response['data']['events']);
+        $this->assertContains("users.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
         /**
          * Test Account Create Recovery
          */
-        $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
+        $recovery = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -482,7 +535,7 @@ class RealtimeCustomClientTest extends Scope
             'email' => 'torsten@appwrite.io',
             'url' => 'http://localhost/recovery',
         ]);
-
+        $recoveryId = $recovery['body']['$id'];
         $response = json_decode($client->receive(), true);
 
         $lastEmail = $this->getLastEmail();
@@ -496,7 +549,16 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
-        $this->assertEquals('account.recovery.create', $response['data']['event']);
+        $this->assertContains("users.{$userId}.recovery.{$recoveryId}.create", $response['data']['events']);
+        $this->assertContains("users.{$userId}.recovery.{$recoveryId}", $response['data']['events']);
+        $this->assertContains("users.{$userId}.recovery.*.create", $response['data']['events']);
+        $this->assertContains("users.{$userId}.recovery.*", $response['data']['events']);
+        $this->assertContains("users.{$userId}", $response['data']['events']);
+        $this->assertContains("users.*.recovery.{$recoveryId}.create", $response['data']['events']);
+        $this->assertContains("users.*.recovery.{$recoveryId}", $response['data']['events']);
+        $this->assertContains("users.*.recovery.*.create", $response['data']['events']);
+        $this->assertContains("users.*.recovery.*", $response['data']['events']);
+        $this->assertContains("users.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
@@ -520,7 +582,16 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
-        $this->assertEquals('account.recovery.update', $response['data']['event']);
+        $this->assertContains("users.{$userId}.recovery.{$recoveryId}.update", $response['data']['events']);
+        $this->assertContains("users.{$userId}.recovery.{$recoveryId}", $response['data']['events']);
+        $this->assertContains("users.{$userId}.recovery.*.update", $response['data']['events']);
+        $this->assertContains("users.{$userId}.recovery.*", $response['data']['events']);
+        $this->assertContains("users.{$userId}", $response['data']['events']);
+        $this->assertContains("users.*.recovery.{$recoveryId}.update", $response['data']['events']);
+        $this->assertContains("users.*.recovery.{$recoveryId}", $response['data']['events']);
+        $this->assertContains("users.*.recovery.*.update", $response['data']['events']);
+        $this->assertContains("users.*.recovery.*", $response['data']['events']);
+        $this->assertContains("users.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
         $client->close();
@@ -534,7 +605,7 @@ class RealtimeCustomClientTest extends Scope
 
         $client = $this->getWebsocket(['documents', 'collections'], [
             'origin' => 'http://localhost',
-            'cookie' => 'a_session_'.$projectId.'=' . $session
+            'cookie' => 'a_session_' . $projectId . '=' . $session
         ]);
 
         $response = json_decode($client->receive(), true);
@@ -564,9 +635,9 @@ class RealtimeCustomClientTest extends Scope
             'permission' => 'document'
         ]);
 
-        $data = ['actorsId' => $actors['body']['$id']];
+        $actorsId = $actors['body']['$id'];
 
-        $name = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/attributes/string', array_merge([
+        $name = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actorsId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -587,7 +658,7 @@ class RealtimeCustomClientTest extends Scope
         /**
          * Test Document Create
          */
-        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/documents', array_merge([
+        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actorsId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -601,6 +672,8 @@ class RealtimeCustomClientTest extends Scope
 
         $response = json_decode($client->receive(), true);
 
+        $documentId = $document['body']['$id'];
+
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('event', $response['type']);
@@ -608,18 +681,25 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains('collections.' . $data['actorsId'] . '.documents.' . $document['body']['$id'], $response['data']['channels']);
-        $this->assertContains('collections.' . $actors['body']['$id'] . '.documents', $response['data']['channels']);
-        $this->assertEquals('database.documents.create', $response['data']['event']);
+        $this->assertContains('collections.' . $actorsId . '.documents.' . $documentId, $response['data']['channels']);
+        $this->assertContains('collections.' . $actorsId . '.documents', $response['data']['channels']);
+        $this->assertContains("collections.{$actorsId}.documents.{$documentId}.create", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.{$documentId}", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.*.create", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.*", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}", $response['data']['events']);
+        $this->assertContains("collections.*.documents.{$documentId}.create", $response['data']['events']);
+        $this->assertContains("collections.*.documents.{$documentId}", $response['data']['events']);
+        $this->assertContains("collections.*.documents.*.create", $response['data']['events']);
+        $this->assertContains("collections.*.documents.*", $response['data']['events']);
+        $this->assertContains("collections.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals($response['data']['payload']['name'], 'Chris Evans');
-
-        $data['documentId'] = $document['body']['$id'];
 
         /**
          * Test Document Update
          */
-        $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $data['actorsId'] . '/documents/' . $data['documentId'], array_merge([
+        $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $actorsId . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -640,9 +720,18 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains('collections.' . $data['actorsId'] . '.documents.' . $data['documentId'], $response['data']['channels']);
-        $this->assertContains('collections.' . $data['actorsId'] . '.documents', $response['data']['channels']);
-        $this->assertEquals('database.documents.update', $response['data']['event']);
+        $this->assertContains("collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
+        $this->assertContains("collections.{$actorsId}.documents", $response['data']['channels']);
+        $this->assertContains("collections.{$actorsId}.documents.{$documentId}.update", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.{$documentId}", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.*.update", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.*", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}", $response['data']['events']);
+        $this->assertContains("collections.*.documents.{$documentId}.update", $response['data']['events']);
+        $this->assertContains("collections.*.documents.{$documentId}", $response['data']['events']);
+        $this->assertContains("collections.*.documents.*.update", $response['data']['events']);
+        $this->assertContains("collections.*.documents.*", $response['data']['events']);
+        $this->assertContains("collections.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
         $this->assertEquals($response['data']['payload']['name'], 'Chris Evans 2');
@@ -650,7 +739,7 @@ class RealtimeCustomClientTest extends Scope
         /**
          * Test Document Delete
          */
-        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/documents', array_merge([
+        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actorsId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -664,7 +753,9 @@ class RealtimeCustomClientTest extends Scope
 
         $client->receive();
 
-        $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['actorsId'] . '/documents/' . $document['body']['$id'], array_merge([
+        $documentId = $document['body']['$id'];
+
+        $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $actorsId . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -678,9 +769,18 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains('collections.' . $data['actorsId'] . '.documents.' . $document['body']['$id'], $response['data']['channels']);
-        $this->assertContains('collections.' . $data['actorsId'] . '.documents', $response['data']['channels']);
-        $this->assertEquals('database.documents.delete', $response['data']['event']);
+        $this->assertContains("collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
+        $this->assertContains("collections.{$actorsId}.documents", $response['data']['channels']);
+        $this->assertContains("collections.{$actorsId}.documents.{$documentId}.delete", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.{$documentId}", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.*.delete", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.*", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}", $response['data']['events']);
+        $this->assertContains("collections.*.documents.{$documentId}.delete", $response['data']['events']);
+        $this->assertContains("collections.*.documents.{$documentId}", $response['data']['events']);
+        $this->assertContains("collections.*.documents.*.delete", $response['data']['events']);
+        $this->assertContains("collections.*.documents.*", $response['data']['events']);
+        $this->assertContains("collections.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals($response['data']['payload']['name'], 'Bradley Cooper');
 
@@ -695,7 +795,7 @@ class RealtimeCustomClientTest extends Scope
 
         $client = $this->getWebsocket(['documents', 'collections'], [
             'origin' => 'http://localhost',
-            'cookie' => 'a_session_'.$projectId.'=' . $session
+            'cookie' => 'a_session_' . $projectId . '=' . $session
         ]);
 
         $response = json_decode($client->receive(), true);
@@ -725,9 +825,9 @@ class RealtimeCustomClientTest extends Scope
             'permission' => 'collection'
         ]);
 
-        $data = ['actorsId' => $actors['body']['$id']];
+        $actorsId = $actors['body']['$id'];
 
-        $name = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/attributes/string', array_merge([
+        $name = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actorsId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -748,7 +848,7 @@ class RealtimeCustomClientTest extends Scope
         /**
          * Test Document Create
          */
-        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/documents', array_merge([
+        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actorsId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -760,6 +860,8 @@ class RealtimeCustomClientTest extends Scope
             'write' => [],
         ]);
 
+        $documentId = $document['body']['$id'];
+
         $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
@@ -769,18 +871,25 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains('collections.' . $data['actorsId'] . '.documents.' . $document['body']['$id'], $response['data']['channels']);
-        $this->assertContains('collections.' . $actors['body']['$id'] . '.documents', $response['data']['channels']);
-        $this->assertEquals('database.documents.create', $response['data']['event']);
+        $this->assertContains("collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
+        $this->assertContains("collections.{$actorsId}.documents", $response['data']['channels']);
+        $this->assertContains("collections.{$actorsId}.documents.{$documentId}.create", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.{$documentId}", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.*.create", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.*", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}", $response['data']['events']);
+        $this->assertContains("collections.*.documents.{$documentId}.create", $response['data']['events']);
+        $this->assertContains("collections.*.documents.{$documentId}", $response['data']['events']);
+        $this->assertContains("collections.*.documents.*.create", $response['data']['events']);
+        $this->assertContains("collections.*.documents.*", $response['data']['events']);
+        $this->assertContains("collections.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals($response['data']['payload']['name'], 'Chris Evans');
-
-        $data['documentId'] = $document['body']['$id'];
 
         /**
          * Test Document Update
          */
-        $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $data['actorsId'] . '/documents/' . $data['documentId'], array_merge([
+        $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $actorsId . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -800,9 +909,18 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains('collections.' . $data['actorsId'] . '.documents.' . $data['documentId'], $response['data']['channels']);
-        $this->assertContains('collections.' . $data['actorsId'] . '.documents', $response['data']['channels']);
-        $this->assertEquals('database.documents.update', $response['data']['event']);
+        $this->assertContains("collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
+        $this->assertContains("collections.{$actorsId}.documents", $response['data']['channels']);
+        $this->assertContains("collections.{$actorsId}.documents.{$documentId}.update", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.{$documentId}", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.*.update", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.*", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}", $response['data']['events']);
+        $this->assertContains("collections.*.documents.{$documentId}.update", $response['data']['events']);
+        $this->assertContains("collections.*.documents.{$documentId}", $response['data']['events']);
+        $this->assertContains("collections.*.documents.*.update", $response['data']['events']);
+        $this->assertContains("collections.*.documents.*", $response['data']['events']);
+        $this->assertContains("collections.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
         $this->assertEquals($response['data']['payload']['name'], 'Chris Evans 2');
@@ -810,7 +928,7 @@ class RealtimeCustomClientTest extends Scope
         /**
          * Test Document Delete
          */
-        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/documents', array_merge([
+        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actorsId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -822,9 +940,11 @@ class RealtimeCustomClientTest extends Scope
             'write' => [],
         ]);
 
+        $documentId = $document['body']['$id'];
+
         $client->receive();
 
-        $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['actorsId'] . '/documents/' . $document['body']['$id'], array_merge([
+        $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $actorsId . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -838,9 +958,18 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains('collections.' . $data['actorsId'] . '.documents.' . $document['body']['$id'], $response['data']['channels']);
-        $this->assertContains('collections.' . $data['actorsId'] . '.documents', $response['data']['channels']);
-        $this->assertEquals('database.documents.delete', $response['data']['event']);
+        $this->assertContains("collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
+        $this->assertContains("collections.{$actorsId}.documents", $response['data']['channels']);
+        $this->assertContains("collections.{$actorsId}.documents.{$documentId}.delete", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.{$documentId}", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.*.delete", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}.documents.*", $response['data']['events']);
+        $this->assertContains("collections.{$actorsId}", $response['data']['events']);
+        $this->assertContains("collections.*.documents.{$documentId}.delete", $response['data']['events']);
+        $this->assertContains("collections.*.documents.{$documentId}", $response['data']['events']);
+        $this->assertContains("collections.*.documents.*.delete", $response['data']['events']);
+        $this->assertContains("collections.*.documents.*", $response['data']['events']);
+        $this->assertContains("collections.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals($response['data']['payload']['name'], 'Bradley Cooper');
 
@@ -855,7 +984,7 @@ class RealtimeCustomClientTest extends Scope
 
         $client = $this->getWebsocket(['files'], [
             'origin' => 'http://localhost',
-            'cookie' => 'a_session_'.$projectId.'=' . $session
+            'cookie' => 'a_session_' . $projectId . '=' . $session
         ]);
         $response = json_decode($client->receive(), true);
 
@@ -883,11 +1012,12 @@ class RealtimeCustomClientTest extends Scope
             'permission' => 'bucket'
         ]);
 
-        $data = ['bucketId' => $bucket1['body']['$id']];
+        $bucketId = $bucket1['body']['$id'];
+
         /**
          * Test File Create
          */
-        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -896,6 +1026,8 @@ class RealtimeCustomClientTest extends Scope
             'read' => ['role:all'],
             'write' => ['role:all'],
         ]);
+
+        $fileId = $file['body']['$id'];
 
         $response = json_decode($client->receive(), true);
 
@@ -906,17 +1038,26 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
-        $this->assertContains('buckets.' . $data['bucketId'] . '.files.' . $file['body']['$id'], $response['data']['channels']);
-        $this->assertContains('buckets.' . $data['bucketId'] . '.files', $response['data']['channels']);
-        $this->assertEquals('storage.files.create', $response['data']['event']);
+        $this->assertContains("buckets.{$bucketId}.files.{$fileId}", $response['data']['channels']);
+        $this->assertContains("buckets.{$bucketId}.files", $response['data']['channels']);
+        $this->assertContains("buckets.{$bucketId}.files.{$fileId}.create", $response['data']['events']);
+        $this->assertContains("buckets.{$bucketId}.files.{$fileId}", $response['data']['events']);
+        $this->assertContains("buckets.{$bucketId}.files.*.create", $response['data']['events']);
+        $this->assertContains("buckets.{$bucketId}.files.*", $response['data']['events']);
+        $this->assertContains("buckets.{$bucketId}", $response['data']['events']);
+        $this->assertContains("buckets.*.files.{$fileId}.create", $response['data']['events']);
+        $this->assertContains("buckets.*.files.{$fileId}", $response['data']['events']);
+        $this->assertContains("buckets.*.files.*.create", $response['data']['events']);
+        $this->assertContains("buckets.*.files.*", $response['data']['events']);
+        $this->assertContains("buckets.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
-        $data['fileId'] = $file['body']['$id'];
+        $fileId = $file['body']['$id'];
 
         /**
          * Test File Update
          */
-        $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
+        $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -933,15 +1074,24 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
-        $this->assertContains('buckets.' . $data['bucketId'] . '.files.' . $file['body']['$id'], $response['data']['channels']);
-        $this->assertContains('buckets.' . $data['bucketId'] . '.files', $response['data']['channels']);
-        $this->assertEquals('storage.files.update', $response['data']['event']);
+        $this->assertContains("buckets.{$bucketId}.files.{$fileId}", $response['data']['channels']);
+        $this->assertContains("buckets.{$bucketId}.files", $response['data']['channels']);
+        $this->assertContains("buckets.{$bucketId}.files.{$fileId}.update", $response['data']['events']);
+        $this->assertContains("buckets.{$bucketId}.files.{$fileId}", $response['data']['events']);
+        $this->assertContains("buckets.{$bucketId}.files.*.update", $response['data']['events']);
+        $this->assertContains("buckets.{$bucketId}.files.*", $response['data']['events']);
+        $this->assertContains("buckets.{$bucketId}", $response['data']['events']);
+        $this->assertContains("buckets.*.files.{$fileId}.update", $response['data']['events']);
+        $this->assertContains("buckets.*.files.{$fileId}", $response['data']['events']);
+        $this->assertContains("buckets.*.files.*.update", $response['data']['events']);
+        $this->assertContains("buckets.*.files.*", $response['data']['events']);
+        $this->assertContains("buckets.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
         /**
          * Test File Delete
          */
-        $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
+        $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -955,9 +1105,18 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
-        $this->assertContains('buckets.' . $data['bucketId'] . '.files.' . $file['body']['$id'], $response['data']['channels']);
-        $this->assertContains('buckets.' . $data['bucketId'] . '.files', $response['data']['channels']);
-        $this->assertEquals('storage.files.delete', $response['data']['event']);
+        $this->assertContains("buckets.{$bucketId}.files.{$fileId}", $response['data']['channels']);
+        $this->assertContains("buckets.{$bucketId}.files", $response['data']['channels']);
+        $this->assertContains("buckets.{$bucketId}.files.{$fileId}.delete", $response['data']['events']);
+        $this->assertContains("buckets.{$bucketId}.files.{$fileId}", $response['data']['events']);
+        $this->assertContains("buckets.{$bucketId}.files.*.delete", $response['data']['events']);
+        $this->assertContains("buckets.{$bucketId}.files.*", $response['data']['events']);
+        $this->assertContains("buckets.{$bucketId}", $response['data']['events']);
+        $this->assertContains("buckets.*.files.{$fileId}.delete", $response['data']['events']);
+        $this->assertContains("buckets.*.files.{$fileId}", $response['data']['events']);
+        $this->assertContains("buckets.*.files.*.delete", $response['data']['events']);
+        $this->assertContains("buckets.*.files.*", $response['data']['events']);
+        $this->assertContains("buckets.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
         $client->close();
@@ -971,7 +1130,7 @@ class RealtimeCustomClientTest extends Scope
 
         $client = $this->getWebsocket(['executions'], [
             'origin' => 'http://localhost',
-            'cookie' => 'a_session_'.$projectId.'=' . $session
+            'cookie' => 'a_session_' . $projectId . '=' . $session
         ]);
 
         $response = json_decode($client->receive(), true);
@@ -1007,11 +1166,12 @@ class RealtimeCustomClientTest extends Scope
 
         $folder = 'timeout';
         $stderr = '';
-        $stdout= '';
-        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
-        Console::execute('cd '.realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
-        
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', array_merge([
+        $stdout = '';
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/{$folder}/code.tar.gz";
+
+        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1028,7 +1188,7 @@ class RealtimeCustomClientTest extends Scope
         // Wait for deployment to be built.
         sleep(5);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployments/'.$deploymentId, array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1037,7 +1197,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']['$id']);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), []);
@@ -1048,6 +1208,8 @@ class RealtimeCustomClientTest extends Scope
         $response = json_decode($client->receive(), true);
         $responseUpdate = json_decode($client->receive(), true);
 
+        $executionId = $execution['body']['$id'];
+
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('event', $response['type']);
@@ -1056,9 +1218,18 @@ class RealtimeCustomClientTest extends Scope
         $this->assertCount(4, $response['data']['channels']);
         $this->assertContains('console', $response['data']['channels']);
         $this->assertContains('executions', $response['data']['channels']);
-        $this->assertContains('executions.' . $execution['body']['$id'], $response['data']['channels']);
-        $this->assertContains('functions.' . $execution['body']['functionId'], $response['data']['channels']);
-        $this->assertEquals('functions.executions.create', $response['data']['event']);
+        $this->assertContains("executions.{$executionId}", $response['data']['channels']);
+        $this->assertContains("functions.{$functionId}", $response['data']['channels']);
+        $this->assertContains("functions.{$functionId}.executions.{$executionId}.create", $response['data']['events']);
+        $this->assertContains("functions.{$functionId}.executions.{$executionId}", $response['data']['events']);
+        $this->assertContains("functions.{$functionId}.executions.*.create", $response['data']['events']);
+        $this->assertContains("functions.{$functionId}.executions.*", $response['data']['events']);
+        $this->assertContains("functions.{$functionId}", $response['data']['events']);
+        $this->assertContains("functions.*.executions.{$executionId}.create", $response['data']['events']);
+        $this->assertContains("functions.*.executions.{$executionId}", $response['data']['events']);
+        $this->assertContains("functions.*.executions.*.create", $response['data']['events']);
+        $this->assertContains("functions.*.executions.*", $response['data']['events']);
+        $this->assertContains("functions.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
         $this->assertArrayHasKey('type', $responseUpdate);
@@ -1069,15 +1240,24 @@ class RealtimeCustomClientTest extends Scope
         $this->assertCount(4, $responseUpdate['data']['channels']);
         $this->assertContains('console', $responseUpdate['data']['channels']);
         $this->assertContains('executions', $responseUpdate['data']['channels']);
-        $this->assertContains('executions.' . $execution['body']['$id'], $responseUpdate['data']['channels']);
-        $this->assertContains('functions.' . $execution['body']['functionId'], $responseUpdate['data']['channels']);
-        $this->assertEquals('functions.executions.update', $responseUpdate['data']['event']);
+        $this->assertContains("executions.{$executionId}", $responseUpdate['data']['channels']);
+        $this->assertContains("functions.{$functionId}", $responseUpdate['data']['channels']);
+        $this->assertContains("functions.{$functionId}.executions.{$executionId}.update", $responseUpdate['data']['events']);
+        $this->assertContains("functions.{$functionId}.executions.{$executionId}", $responseUpdate['data']['events']);
+        $this->assertContains("functions.{$functionId}.executions.*.update", $responseUpdate['data']['events']);
+        $this->assertContains("functions.{$functionId}.executions.*", $responseUpdate['data']['events']);
+        $this->assertContains("functions.{$functionId}", $responseUpdate['data']['events']);
+        $this->assertContains("functions.*.executions.{$executionId}.update", $responseUpdate['data']['events']);
+        $this->assertContains("functions.*.executions.{$executionId}", $responseUpdate['data']['events']);
+        $this->assertContains("functions.*.executions.*.update", $responseUpdate['data']['events']);
+        $this->assertContains("functions.*.executions.*", $responseUpdate['data']['events']);
+        $this->assertContains("functions.*", $responseUpdate['data']['events']);
         $this->assertNotEmpty($responseUpdate['data']['payload']);
 
         $client->close();
 
-        // Cleanup : Delete function 
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
+        // Cleanup : Delete function
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1094,7 +1274,7 @@ class RealtimeCustomClientTest extends Scope
 
         $client = $this->getWebsocket(['teams'], [
             'origin' => 'http://localhost',
-            'cookie' => 'a_session_'.$projectId.'=' . $session
+            'cookie' => 'a_session_' . $projectId . '=' . $session
         ]);
 
         $response = json_decode($client->receive(), true);
@@ -1133,14 +1313,17 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(2, $response['data']['channels']);
         $this->assertContains('teams', $response['data']['channels']);
-        $this->assertContains('teams.' . $teamId, $response['data']['channels']);
-        $this->assertEquals('teams.create', $response['data']['event']);
+        $this->assertContains("teams.{$teamId}", $response['data']['channels']);
+        $this->assertContains("teams.{$teamId}.create", $response['data']['events']);
+        $this->assertContains("teams.{$teamId}", $response['data']['events']);
+        $this->assertContains("teams.*.create", $response['data']['events']);
+        $this->assertContains("teams.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
         /**
          * Test Team Update
          */
-        $team = $this->client->call(Client::METHOD_PUT, '/teams/'.$teamId, array_merge([
+        $team = $this->client->call(Client::METHOD_PUT, '/teams/' . $teamId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
@@ -1159,8 +1342,11 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(2, $response['data']['channels']);
         $this->assertContains('teams', $response['data']['channels']);
-        $this->assertContains('teams.' . $teamId, $response['data']['channels']);
-        $this->assertEquals('teams.update', $response['data']['event']);
+        $this->assertContains("teams.{$teamId}", $response['data']['channels']);
+        $this->assertContains("teams.{$teamId}.update", $response['data']['events']);
+        $this->assertContains("teams.{$teamId}", $response['data']['events']);
+        $this->assertContains("teams.*.update", $response['data']['events']);
+        $this->assertContains("teams.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
         $client->close();
@@ -1181,7 +1367,7 @@ class RealtimeCustomClientTest extends Scope
 
         $client = $this->getWebsocket(['memberships'], [
             'origin' => 'http://localhost',
-            'cookie' => 'a_session_'.$projectId.'='.$session
+            'cookie' => 'a_session_' . $projectId . '=' . $session
         ]);
 
         $response = json_decode($client->receive(), true);
@@ -1195,7 +1381,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']['user']);
         $this->assertEquals($user['$id'], $response['data']['user']['$id']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamId.'/memberships', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId . '/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -1206,7 +1392,7 @@ class RealtimeCustomClientTest extends Scope
          * Test Update Membership
          */
         $roles = ['admin', 'editor', 'uncle'];
-        $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamId.'/memberships/'.$membershipId, array_merge([
+        $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membershipId, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1223,8 +1409,17 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(2, $response['data']['channels']);
         $this->assertContains('memberships', $response['data']['channels']);
-        $this->assertContains('memberships.' . $membershipId, $response['data']['channels']);
-        $this->assertEquals('teams.memberships.update', $response['data']['event']);
+        $this->assertContains("memberships.{$membershipId}", $response['data']['channels']);
+        $this->assertContains("teams.{$teamId}.memberships.{$membershipId}.update", $response['data']['events']);
+        $this->assertContains("teams.{$teamId}.memberships.{$membershipId}", $response['data']['events']);
+        $this->assertContains("teams.{$teamId}.memberships.*.update", $response['data']['events']);
+        $this->assertContains("teams.{$teamId}.memberships.*", $response['data']['events']);
+        $this->assertContains("teams.{$teamId}", $response['data']['events']);
+        $this->assertContains("teams.*.memberships.{$membershipId}.update", $response['data']['events']);
+        $this->assertContains("teams.*.memberships.{$membershipId}", $response['data']['events']);
+        $this->assertContains("teams.*.memberships.*.update", $response['data']['events']);
+        $this->assertContains("teams.*.memberships.*", $response['data']['events']);
+        $this->assertContains("teams.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
         $client->close();

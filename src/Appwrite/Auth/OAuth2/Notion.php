@@ -9,32 +9,32 @@ class Notion extends OAuth2
     /**
      * @var string
      */
-    private $endpoint = 'https://api.notion.com/v1';
+    private string $endpoint = 'https://api.notion.com/v1';
 
     /**
      * @var string
      */
-    private $version = '2021-08-16';
+    private string $version = '2021-08-16';
 
     /**
      * @var array
      */
-    protected $user = [];
-    
-    /**
-     * @var array
-     */
-    protected $tokens = [];
+    protected array $user = [];
 
     /**
      * @var array
      */
-    protected $scopes = [];
+    protected array $tokens = [];
+
+    /**
+     * @var array
+     */
+    protected array $scopes = [];
 
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'notion';
     }
@@ -42,9 +42,9 @@ class Notion extends OAuth2
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return $this->endpoint . '/oauth/authorize?'. \http_build_query([
+        return $this->endpoint . '/oauth/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'response_type' => 'code',
@@ -60,7 +60,7 @@ class Notion extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $headers = ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)];
             $this->tokens = \json_decode($this->request(
                 'POST',
@@ -82,7 +82,7 @@ class Notion extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $headers = ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)];
         $this->tokens = \json_decode($this->request(
@@ -95,7 +95,7 @@ class Notion extends OAuth2
             ])
         ), true);
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -103,51 +103,55 @@ class Notion extends OAuth2
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $response = $this->getUser($accessToken);
 
-        if (isset($response['bot']['owner']['user']['id'])) {
-            return $response['bot']['owner']['user']['id'];
-        }
-
-        return '';
+        return $response['bot']['owner']['user']['id'] ?? '';
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
         $response = $this->getUser($accessToken);
 
-        if(isset($response['bot']['owner']['user']['person']['email'])){
-            return $response['bot']['owner']['user']['person']['email'];
-        }
-
-        return '';
+        return $response['bot']['owner']['user']['person']['email'] ?? '';
     }
 
     /**
-     * @param $accessToken
+     * Check if the OAuth email is verified
+     *
+     * If present, the email is verified. This was verfied through a manual Notion sign up process
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $email = $this->getUserEmail($accessToken);
+
+        return !empty($email);
+    }
+
+    /**
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserName(string $accessToken):string
+    public function getUserName(string $accessToken): string
     {
         $response = $this->getUser($accessToken);
 
-        if (isset($response['bot']['owner']['user']['name'])) {
-            return $response['bot']['owner']['user']['name'];
-        }
-
-        return '';
+        return $response['bot']['owner']['user']['name'] ?? '';
     }
 
     /**
@@ -155,11 +159,11 @@ class Notion extends OAuth2
      *
      * @return array
      */
-    protected function getUser(string $accessToken)
+    protected function getUser(string $accessToken): array
     {
         $headers = [
             'Notion-Version: ' . $this->version,
-            'Authorization: Bearer '.\urlencode($accessToken)
+            'Authorization: Bearer ' . \urlencode($accessToken)
         ];
 
         if (empty($this->user)) {

@@ -3,43 +3,41 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
-use Utopia\Exception;
 
 // Reference Material
 // https://dev.bitly.com/v4_documentation.html
 
 class Bitly extends OAuth2
 {
+    /**
+     * @var string
+     */
+    private string $endpoint = 'https://bitly.com/oauth/';
 
     /**
      * @var string
      */
-    private $endpoint = 'https://bitly.com/oauth/';
-
-    /**
-     * @var string
-     */
-    private $resourceEndpoint = 'https://api-ssl.bitly.com/';
+    private string $resourceEndpoint = 'https://api-ssl.bitly.com/';
 
     /**
      * @var array
      */
-    protected $scopes = [];
+    protected array $scopes = [];
 
     /**
      * @var array
      */
-    protected $user = [];
-    
+    protected array $user = [];
+
     /**
      * @var array
      */
-    protected $tokens = [];
+    protected array $tokens = [];
 
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'bitly';
     }
@@ -47,9 +45,9 @@ class Bitly extends OAuth2
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return $this->endpoint . 'authorize?'.
+        return $this->endpoint . 'authorize?' .
             \http_build_query([
                 'client_id' => $this->appID,
                 'redirect_uri' => $this->callback,
@@ -64,7 +62,7 @@ class Bitly extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $response = $this->request(
                 'POST',
                 $this->resourceEndpoint . 'oauth/access_token',
@@ -91,7 +89,7 @@ class Bitly extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $response = $this->request(
             'POST',
@@ -109,7 +107,7 @@ class Bitly extends OAuth2
         \parse_str($response, $output);
         $this->tokens = $output;
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -117,51 +115,61 @@ class Bitly extends OAuth2
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['login'])) {
-            return $user['login'];
-        }
-
-        return '';
+        return $user['login'] ?? '';
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
         if (isset($user['emails'])) {
-            return $user['emails'][0]['email'];
+            foreach ($user['emails'] as $email) {
+                if ($email['is_verified'] === true) {
+                    return $email['email'];
+                }
+            }
         }
 
         return '';
     }
 
     /**
-     * @param $accessToken
+     * Check if the OAuth email is verified
+     *
+     * @link https://dev.bitly.com/api-reference#getUser
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        return true;
+    }
+
+    /**
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserName(string $accessToken):string
+    public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['name'])) {
-            return $user['name'];
-        }
-
-        return '';
+        return $user['name'] ?? '';
     }
 
     /**
@@ -172,14 +180,13 @@ class Bitly extends OAuth2
     protected function getUser(string $accessToken)
     {
         $headers = [
-            'Authorization: Bearer '. \urlencode($accessToken),
+            'Authorization: Bearer ' . \urlencode($accessToken),
             "Accept: application/json"
         ];
 
         if (empty($this->user)) {
             $this->user = \json_decode($this->request('GET', $this->resourceEndpoint . "v4/user", $headers), true);
         }
-
 
         return $this->user;
     }

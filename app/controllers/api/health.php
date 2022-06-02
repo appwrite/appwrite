@@ -9,7 +9,7 @@ use Utopia\Database\Document;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
-use Utopia\Storage\Storage; 
+use Utopia\Storage\Storage;
 
 App::get('/v1/health')
     ->desc('Get HTTP')
@@ -68,9 +68,9 @@ App::get('/v1/health/db')
 
             // Run a small test to check the connection
             $statement = $db->prepare("SELECT 1;");
-    
+
             $statement->closeCursor();
-    
+
             $statement->execute();
         } catch (Exception $_e) {
             throw new Exception('Database is not available', 500, Exception::GENERAL_SERVER_ERROR);
@@ -141,7 +141,7 @@ App::get('/v1/health/time')
         \socket_connect($sock, $host, 123);
 
         /* Send request */
-        $msg = "\010".\str_repeat("\0", 47);
+        $msg = "\010" . \str_repeat("\0", 47);
 
         \socket_send($sock, $msg, \strlen($msg), 0);
 
@@ -206,23 +206,6 @@ App::get('/v1/health/queue/logs')
         $response->dynamic(new Document([ 'size' => Resque::size(Event::AUDITS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-App::get('/v1/health/queue/usage')
-    ->desc('Get Usage Queue')
-    ->groups(['api', 'health'])
-    ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueUsage')
-    ->label('sdk.description', '/docs/references/health/get-queue-usage.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->inject('response')
-    ->action(function (Response $response) {
-
-        $response->dynamic(new Document([ 'size' => Resque::size(Event::USAGE_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
-    }, ['response']);
-
 App::get('/v1/health/queue/certificates')
     ->desc('Get Certificates Queue')
     ->groups(['api', 'health'])
@@ -273,20 +256,22 @@ App::get('/v1/health/storage/local')
 
         $checkStart = \microtime(true);
 
-        foreach ([
+        foreach (
+            [
             'Uploads' => APP_STORAGE_UPLOADS,
             'Cache' => APP_STORAGE_CACHE,
             'Config' => APP_STORAGE_CONFIG,
             'Certs' => APP_STORAGE_CERTIFICATES
-        ] as $key => $volume) {
+            ] as $key => $volume
+        ) {
             $device = new Local($volume);
 
             if (!\is_readable($device->getRoot())) {
-                throw new Exception('Device '.$key.' dir is not readable', 500, Exception::GENERAL_SERVER_ERROR);
+                throw new Exception('Device ' . $key . ' dir is not readable', 500, Exception::GENERAL_SERVER_ERROR);
             }
 
             if (!\is_writable($device->getRoot())) {
-                throw new Exception('Device '.$key.' dir is not writable', 500, Exception::GENERAL_SERVER_ERROR);
+                throw new Exception('Device ' . $key . ' dir is not writable', 500, Exception::GENERAL_SERVER_ERROR);
             }
         }
 
@@ -321,13 +306,15 @@ App::get('/v1/health/anti-virus')
             $output['status'] = 'disabled';
             $output['version'] = '';
         } else {
-            $antivirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-                (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
+            $antivirus = new Network(
+                App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+                (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
+            );
 
             try {
                 $output['version'] = @$antivirus->version();
                 $output['status'] = (@$antivirus->ping()) ? 'pass' : 'fail';
-            } catch( \Exception $e) {
+            } catch (\Exception $e) {
                 throw new Exception('Antivirus is not available', 500, Exception::GENERAL_SERVER_ERROR);
             }
         }
@@ -355,7 +342,7 @@ App::get('/v1/health/stats') // Currently only used internally
         $response
             ->json([
                 'storage' => [
-                    'used' => Storage::human($deviceFiles->getDirectorySize($deviceFiles->getRoot().'/')),
+                    'used' => Storage::human($deviceFiles->getDirectorySize($deviceFiles->getRoot() . '/')),
                     'partitionTotal' => Storage::human($deviceFiles->getPartitionTotalSpace()),
                     'partitionFree' => Storage::human($deviceFiles->getPartitionFreeSpace()),
                 ],

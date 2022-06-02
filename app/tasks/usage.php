@@ -36,7 +36,7 @@ use Utopia\Database\Validator\Authorization;
  * database.collections.{collectionId}.documents.delete
  *
  * Storage
- * 
+ *
  * storage.buckets.create
  * storage.buckets.read
  * storage.buckets.update
@@ -285,7 +285,7 @@ $cli
                 try {
                     $attempts++;
                     $database = $client->selectDB('telegraf');
-                    if(in_array('telegraf', $client->listDatabases())) {
+                    if (in_array('telegraf', $client->listDatabases())) {
                         break; // leave the do-while if successful
                     }
                 } catch (\Throwable $th) {
@@ -386,7 +386,7 @@ $cli
              */
             $now = date('d-m-Y H:i:s', time());
             Console::info("[{$now}] Aggregating database counters.");
-            
+
             $latestProject = null;
             do { // Loop over all the projects
                 $attempts = 0;
@@ -418,27 +418,26 @@ $cli
 
                     // Get total storage
                     $dbForProject->setNamespace('_' . $projectId);
-                    $storageTotal = $dbForProject->sum('deployments', 'size');
+                    $deploymentsTotal = $dbForProject->sum('deployments', 'size');
 
                     $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
                     $id = \md5($time . '_30m_storage.deployments.total'); //Construct unique id for each metric using time, period and metric
                     $document = $dbForProject->getDocument('stats', $id);
                     try {
-
                         if ($document->isEmpty()) {
                             $dbForProject->createDocument('stats', new Document([
                                 '$id' => $id,
                                 'period' => '30m',
                                 'time' => $time,
                                 'metric' => 'storage.deployments.total',
-                                'value' => $storageTotal,
+                                'value' => $deploymentsTotal,
                                 'type' => 1,
                             ]));
                         } else {
                             $dbForProject->updateDocument(
                                 'stats',
                                 $document->getId(),
-                                $document->setAttribute('value', $storageTotal)
+                                $document->setAttribute('value', $deploymentsTotal)
                             );
                         }
                         $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
@@ -450,17 +449,17 @@ $cli
                                 'period' => '1d',
                                 'time' => $time,
                                 'metric' => 'storage.deployments.total',
-                                'value' => $storageTotal,
+                                'value' => $deploymentsTotal,
                                 'type' => 1,
                             ]));
                         } else {
                             $dbForProject->updateDocument(
                                 'stats',
                                 $document->getId(),
-                                $document->setAttribute('value', $storageTotal)
+                                $document->setAttribute('value', $deploymentsTotal)
                             );
                         }
-                    } catch(\Exception $e) {
+                    } catch (\Exception $e) {
                         Console::warning("Failed to save data for project {$projectId} and metric storage.deployments.total: {$e->getMessage()}");
                         Console::warning($e->getTraceAsString());
                     }
@@ -614,7 +613,7 @@ $cli
 
                                         // check if sum calculation is required
                                         $total = $subOptions['total'] ?? [];
-                                        if(empty($total)) {
+                                        if (empty($total)) {
                                             continue;
                                         }
 
@@ -639,8 +638,11 @@ $cli
                                                 'type' => 1,
                                             ]));
                                         } else {
-                                            $dbForProject->updateDocument('stats', $document->getId(),
-                                            $document->setAttribute('value', $total));
+                                            $dbForProject->updateDocument(
+                                                'stats',
+                                                $document->getId(),
+                                                $document->setAttribute('value', $total)
+                                            );
                                         }
 
                                         $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
@@ -656,10 +658,12 @@ $cli
                                                 'type' => 1,
                                             ]));
                                         } else {
-                                            $dbForProject->updateDocument('stats', $document->getId(),
-                                            $document->setAttribute('value', $total));
+                                            $dbForProject->updateDocument(
+                                                'stats',
+                                                $document->getId(),
+                                                $document->setAttribute('value', $total)
+                                            );
                                         }
-
                                     }
                                 }
                             } while (!empty($parents));
@@ -714,7 +718,7 @@ $cli
                             }
 
                             /**
-                             * Inserting project level sums for sub collections like storage.total
+                             * Inserting project level sums for sub collections like storage.files.total
                              */
                             foreach ($subCollectionTotals as $subCollection => $count) {
                                 $dbForProject->setNamespace("_{$projectId}");
@@ -734,8 +738,11 @@ $cli
                                         'type' => 1,
                                     ]));
                                 } else {
-                                    $dbForProject->updateDocument('stats', $document->getId(),
-                                    $document->setAttribute('value', $count));
+                                    $dbForProject->updateDocument(
+                                        'stats',
+                                        $document->getId(),
+                                        $document->setAttribute('value', $count)
+                                    );
                                 }
 
                                 $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
@@ -751,8 +758,55 @@ $cli
                                         'type' => 1,
                                     ]));
                                 } else {
-                                    $dbForProject->updateDocument('stats', $document->getId(),
-                                    $document->setAttribute('value', $count));
+                                    $dbForProject->updateDocument(
+                                        'stats',
+                                        $document->getId(),
+                                        $document->setAttribute('value', $count)
+                                    );
+                                }
+
+                                // aggregate storage.total = storage.files.total + storage.deployments.total
+                                if ($metricPrefix === 'storage' && $subCollection === 'files') {
+                                    $metric = 'storage.total';
+                                    $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
+                                    $id = \md5($time . '_30m_' . $metric); //Construct unique id for each metric using time, period and metric
+                                    $document = $dbForProject->getDocument('stats', $id);
+                                    if ($document->isEmpty()) {
+                                        $dbForProject->createDocument('stats', new Document([
+                                            '$id' => $id,
+                                            'time' => $time,
+                                            'period' => '30m',
+                                            'metric' => $metric,
+                                            'value' => $count + $deploymentsTotal,
+                                            'type' => 1,
+                                        ]));
+                                    } else {
+                                        $dbForProject->updateDocument(
+                                            'stats',
+                                            $document->getId(),
+                                            $document->setAttribute('value', $count + $deploymentsTotal)
+                                        );
+                                    }
+
+                                    $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
+                                    $id = \md5($time . '_1d_' . $metric); //Construct unique id for each metric using time, period and metric
+                                    $document = $dbForProject->getDocument('stats', $id);
+                                    if ($document->isEmpty()) {
+                                        $dbForProject->createDocument('stats', new Document([
+                                            '$id' => $id,
+                                            'time' => $time,
+                                            'period' => '1d',
+                                            'metric' => $metric,
+                                            'value' => $count + $deploymentsTotal,
+                                            'type' => 1,
+                                        ]));
+                                    } else {
+                                        $dbForProject->updateDocument(
+                                            'stats',
+                                            $document->getId(),
+                                            $document->setAttribute('value', $count + $deploymentsTotal)
+                                        );
+                                    }
                                 }
                             }
                         } catch (\Exception$e) {

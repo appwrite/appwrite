@@ -24,7 +24,7 @@ class Specification
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return $this->format->getName();
     }

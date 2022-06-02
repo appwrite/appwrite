@@ -8,9 +8,6 @@ use Utopia\Database\Validator\Authorization;
 use Appwrite\Resque\Worker;
 use Executor\Executor;
 use Utopia\Storage\Device\Local;
-use Utopia\Storage\Device\S3;
-use Utopia\Storage\Device\DOSpaces;
-use Utopia\Storage\Storage;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
@@ -19,6 +16,7 @@ use Utopia\Audit\Audit;
 require_once __DIR__ . '/../init.php';
 
 Authorization::disable();
+Authorization::setDefaultStatus(false);
 
 Console::title('Deletes V1 Worker');
 Console::success(APP_NAME . ' deletes worker v1 has started' . "\n");
@@ -30,7 +28,8 @@ class DeletesV1 extends Worker
      */
     protected $consoleDB = null;
 
-    public function getName(): string {
+    public function getName(): string
+    {
         return "deletes";
     }
 
@@ -40,7 +39,7 @@ class DeletesV1 extends Worker
 
     public function run(): void
     {
-        $projectId = $this->args['projectId'] ?? '';
+        $project = new Document($this->args['project'] ?? []);
         $type = $this->args['type'] ?? '';
 
         switch (strval($type)) {
@@ -49,25 +48,25 @@ class DeletesV1 extends Worker
 
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_COLLECTIONS:
-                        $this->deleteCollection($document, $projectId);
+                        $this->deleteCollection($document, $project->getId());
                         break;
                     case DELETE_TYPE_PROJECTS:
                         $this->deleteProject($document);
                         break;
                     case DELETE_TYPE_FUNCTIONS:
-                        $this->deleteFunction($document, $projectId);
+                        $this->deleteFunction($document, $project->getId());
                         break;
                     case DELETE_TYPE_DEPLOYMENTS:
-                        $this->deleteDeployment($document, $projectId);
+                        $this->deleteDeployment($document, $project->getId());
                         break;
                     case DELETE_TYPE_USERS:
-                        $this->deleteUser($document, $projectId);
+                        $this->deleteUser($document, $project->getId());
                         break;
                     case DELETE_TYPE_TEAMS:
-                        $this->deleteMemberships($document, $projectId);
+                        $this->deleteMemberships($document, $project->getId());
                         break;
                     case DELETE_TYPE_BUCKETS:
-                        $this->deleteBucket($document, $projectId);
+                        $this->deleteBucket($document, $project->getId());
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
@@ -80,15 +79,15 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_AUDIT:
-                $timestamp = $this->args['timestamp'] ?? 0;
-                $document = new Document($this->args['document'] ?? []);
+                $timestamp = $payload['timestamp'] ?? 0;
+                $document = new Document($payload['document'] ?? []);
 
                 if (!empty($timestamp)) {
                     $this->deleteAuditLogs($this->args['timestamp']);
                 }
 
                 if (!$document->isEmpty()) {
-                    $this->deleteAuditLogsByResource('document/' . $document->getId(), $projectId);
+                    $this->deleteAuditLogsByResource('document/' . $document->getId(), $project->getId());
                 }
 
                 break;
@@ -201,21 +200,14 @@ class DeletesV1 extends Worker
      */
     protected function deleteUser(Document $document, string $projectId): void
     {
-        /**
-         * DO NOT DELETE THE USER RECORD ITSELF. 
-         * WE RETAIN THE USER RECORD TO RESERVE THE USER ID AND ENSURE THAT THE USER ID IS NOT REUSED.
-         */
-        
         $userId = $document->getId();
-        $user = $this->getProjectDB($projectId)->getDocument('users', $userId);
 
         // Delete all sessions of this user from the sessions table and update the sessions field of the user record
         $this->deleteByGroup('sessions', [
             new Query('userId', Query::TYPE_EQUAL, [$userId])
         ], $this->getProjectDB($projectId));
-        
-        $user->setAttribute('sessions', []);
-        $updated = $this->getProjectDB($projectId)->updateDocument('users', $userId, $user);
+
+        $this->getProjectDB($projectId)->deleteCachedDocument('users', $userId);
 
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
@@ -226,12 +218,22 @@ class DeletesV1 extends Worker
                 $teamId = $document->getAttribute('teamId');
                 $team = $this->getProjectDB($projectId)->getDocument('teams', $teamId);
                 if (!$team->isEmpty()) {
-                    $team = $this->getProjectDB($projectId)->updateDocument('teams', $teamId, new Document(\array_merge($team->getArrayCopy(), [
-                        'total' => \max($team->getAttribute('total', 0) - 1, 0), // Ensure that total >= 0
-                    ])));
+                    $team = $this
+                        ->getProjectDB($projectId)
+                        ->updateDocument(
+                            'teams',
+                            $teamId,
+                            // Ensure that total >= 0
+                            $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0))
+                        );
                 }
             }
         });
+
+        // Delete tokens
+        $this->deleteByGroup('tokens', [
+            new Query('userId', Query::TYPE_EQUAL, [$userId])
+        ], $this->getProjectDB($projectId));
     }
 
     /**
@@ -344,7 +346,7 @@ class DeletesV1 extends Worker
          */
         Console::info("Deleting builds for function " . $functionId);
         $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
-         foreach ($deploymentIds as $deploymentId) {
+        foreach ($deploymentIds as $deploymentId) {
             $this->deleteByGroup('builds', [
                 new Query('deploymentId', Query::TYPE_EQUAL, [$deploymentId])
             ], $dbForProject, function (Document $document) use ($storageBuilds, $deploymentId) {
@@ -356,9 +358,9 @@ class DeletesV1 extends Worker
             });
         }
 
-        /** 
+        /**
          * Delete Executions
-         */ 
+         */
         Console::info("Deleting executions for function " . $functionId);
         $this->deleteByGroup('executions', [
             new Query('functionId', Query::TYPE_EQUAL, [$functionId])
@@ -376,7 +378,6 @@ class DeletesV1 extends Worker
                 Console::error($th->getMessage());
             }
         }
-
     }
 
     /**
@@ -470,7 +471,7 @@ class DeletesV1 extends Worker
             $chunk++;
 
             /** @var string[] $projectIds */
-            $projectIds = array_map(fn(Document $project) => $project->getId(), $projects);
+            $projectIds = array_map(fn (Document $project) => $project->getId(), $projects);
 
             $sum = count($projects);
 
@@ -522,15 +523,44 @@ class DeletesV1 extends Worker
     }
 
     /**
-     * @param Document $document certificates document 
+     * @param Document $document certificates document
      */
     protected function deleteCertificates(Document $document): void
     {
+        $consoleDB = $this->getConsoleDB();
+
+        // If domain has certificate generated
+        if (isset($document['certificateId'])) {
+            $domainUsingCertificate = $consoleDB->findOne('domains', [
+                new Query('certificateId', Query::TYPE_EQUAL, [$document['certificateId']])
+            ]);
+
+            if (!$domainUsingCertificate) {
+                $mainDomain = App::getEnv('_APP_DOMAIN_TARGET', '');
+                if ($mainDomain === $document->getAttribute('domain')) {
+                    $domainUsingCertificate = $mainDomain;
+                }
+            }
+
+            // If certificate is still used by some domain, mark we can't delete.
+            // Current domain should not be found, because we only have copy. Original domain is already deleted from database.
+            if ($domainUsingCertificate) {
+                Console::warning("Skipping certificate deletion, because a domain is still using it.");
+                return;
+            }
+        }
+
         $domain = $document->getAttribute('domain');
         $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
         $checkTraversal = realpath($directory) === $directory;
 
         if ($domain && $checkTraversal && is_dir($directory)) {
+            // Delete certificate document, so Appwrite is aware of change
+            if (isset($document['certificateId'])) {
+                $consoleDB->deleteDocument('certificates', $document['certificateId']);
+            }
+
+            // Delete files, so Traefik is aware of change
             array_map('unlink', glob($directory . '/*.*'));
             rmdir($directory);
             Console::info("Deleted certificate files for {$domain}");
@@ -544,27 +574,8 @@ class DeletesV1 extends Worker
         $dbForProject = $this->getProjectDB($projectId);
         $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
 
-        $device = new Local(APP_STORAGE_UPLOADS.'/app-'.$projectId);
-        
-        switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
-            case Storage::DEVICE_S3:
-                $s3AccessKey = App::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
-                $s3SecretKey = App::getEnv('_APP_STORAGE_S3_SECRET', '');
-                $s3Region = App::getEnv('_APP_STORAGE_S3_REGION', '');
-                $s3Bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
-                $s3Acl = 'private';
-                $device = new S3(APP_STORAGE_UPLOADS . '/app-' . $projectId, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
-                break;
-            case Storage::DEVICE_DO_SPACES:
-                $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
-                $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
-                $doSpacesRegion = App::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
-                $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
-                $doSpacesAcl = 'private';
-                $device = new DOSpaces(APP_STORAGE_UPLOADS . '/app-' . $projectId, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
-                break;
-        }
-        
+        $device = $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
+
         $device->deletePath($document->getId());
     }
 }

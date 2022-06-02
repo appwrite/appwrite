@@ -77,11 +77,17 @@ class StorageCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets',
-            array_merge([
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets',
+            array_merge(
+                [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()));
+                ],
+                $this->getHeaders()
+            )
+        );
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertEquals($id, $response['body']['buckets'][0]['$id']);
@@ -112,11 +118,17 @@ class StorageCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $id,
-            array_merge([
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $id,
+            array_merge(
+                [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()));
+                ],
+                $this->getHeaders()
+            )
+        );
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertEquals($id, $response['body']['$id']);
@@ -126,18 +138,30 @@ class StorageCustomServerTest extends Scope
          * Test for FAILURE
          */
 
-        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/empty',
-            array_merge([
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/empty',
+            array_merge(
+                [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()));
+                ],
+                $this->getHeaders()
+            )
+        );
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/id-is-really-long-id-is-really-long-id-is-really-long-id-is-really-long',
-            array_merge([
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/id-is-really-long-id-is-really-long-id-is-really-long-id-is-really-long',
+            array_merge(
+                [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()));
+                ],
+                $this->getHeaders()
+            )
+        );
         $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;
@@ -196,22 +220,33 @@ class StorageCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $id,
-            array_merge([
+        $response = $this->client->call(
+            Client::METHOD_DELETE,
+            '/storage/buckets/' . $id,
+            array_merge(
+                [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()));
+                ],
+                $this->getHeaders()
+            )
+        );
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEmpty($response['body']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $id,
-            array_merge([
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $id,
+            array_merge(
+                [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()));
+                ],
+                $this->getHeaders()
+            )
+        );
         $this->assertEquals(404, $response['headers']['status-code']);
 
         return $data;
     }
-
 }

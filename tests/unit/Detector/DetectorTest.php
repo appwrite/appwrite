@@ -50,5 +50,4 @@ class DetectorTest extends TestCase
             'deviceModel' => '',
         ]);
     }
-
 }

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Network\Validator;
 
+use Utopia\Validator\Hostname;
 use Utopia\Validator;
 
 class Origin extends Validator
@@ -94,8 +95,8 @@ class Origin extends Validator
             return 'Unsupported platform';
         }
 
-        return 'Invalid Origin. Register your new client ('.$this->host.') as a new '
-            .$this->platforms[$this->client].' platform on your project console dashboard';
+        return 'Invalid Origin. Register your new client (' . $this->host . ') as a new '
+            . $this->platforms[$this->client] . ' platform on your project console dashboard';
     }
 
     /**
@@ -122,11 +123,9 @@ class Origin extends Validator
             return true;
         }
 
-        if (\in_array($host, $this->clients)) {
-            return true;
-        }
+        $validator = new Hostname($this->clients);
 
-        return false;
+        return $validator->isValid($host);
     }
 
     /**

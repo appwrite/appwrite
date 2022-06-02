@@ -111,14 +111,14 @@
                                                 <button class="danger">Remove</button>
                                             </form>
 
-                                            <img src="" data-ls-attrs="src={{member|avatar}}" data-size="200" alt="User Avatar" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
+                                            <img src="" data-ls-attrs="src={{member.userName|avatar}}" data-size="200" alt="User Avatar" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
 
                                             <div class="margin-bottom-tiny">
-                                                <a data-ls-attrs="href=/console/users/user?id={{member.userId}}&project={{router.params.project}}"><span data-ls-bind="{{member.name}}"></span></a> &nbsp;&nbsp;
+                                                <a data-ls-attrs="href=/console/users/user?id={{member.userId}}&project={{router.params.project}}"><span data-ls-bind="{{member.userName}}"></span></a> &nbsp;&nbsp;
                                                 <span data-ls-if="1 == {{member.roles.length}}" class="text-fade tooltip" data-ls-bind="{{member.roles.length}} role" data-ls-attrs="data-tooltip={{member.roles|arraySentence}}"></span>
                                                 <span  data-ls-if="2 <= {{member.roles.length}}" class="text-fade tooltip" data-ls-bind="{{member.roles.length}} roles" data-ls-attrs="data-tooltip={{member.roles|arraySentence}}"></span>
                                             </div>
-                                            <small class="text-size-small text-fade" data-ls-bind="{{member.email}}"></small> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="text-danger text-size-small">Pending Approval</span>
+                                            <small class="text-size-small text-fade" data-ls-bind="{{member.userEmail}}"></small> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="text-danger text-size-small">Pending Approval</span>
                                         </li>
                                     </ul>
                                 </div>
@@ -137,12 +137,12 @@
                                     data-analytics-label="Create Team Membership"
                                     data-service="teams.createMembership"
                                     data-event="submit"
-                                    data-loading="Sending invitation, please wait..."
+                                    data-loading="Adding user, please wait..."
                                     data-success="alert,trigger,reset"
-                                    data-success-param-alert-text="Invitation sent successfully"
+                                    data-success-param-alert-text="User added successfully"
                                     data-success-param-trigger-events="teams.createMembership"
                                     data-failure="alert"
-                                    data-failure-param-alert-text="Failed to send invite"
+                                    data-failure-param-alert-text="Failed to add user"
                                     data-failure-param-alert-classname="error">
 
                                     <input name="teamId" id="team-teamId" type="hidden" data-ls-bind="{{team.$id}}">
@@ -233,7 +233,53 @@
                     </div>
                 </div>
             </li>
+            <li data-state="/console/users/teams/team/audit?id={{router.params.id}}&project={{router.params.project}}">
+                <h2>Activity</h2>
 
+                <div
+                    data-service="teams.listLogs"
+                    data-name="logs"
+                    data-param-team-id="{{router.params.id}}"
+                    data-event="load,logs-load">
+
+                    <div class="box margin-top margin-bottom" data-ls-if="{{logs.logs.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
+                        <h3 class="text-bold margin-bottom-no">No logs available.</h3>
+                    </div>
+
+                    <div class="box" data-ls-if="{{logs.logs.length}} !== 0" style="display: none">
+                        <table class="vertical small">
+                            <thead>
+                                <tr>
+                                    <th width="140">Date</th>
+                                    <th width="175">Event</th>
+                                    <th>Client</th>
+                                    <th width="90">Location</th>
+                                    <th width="90">IP</th>
+                                </tr>
+                            </thead>
+                            <tbody data-ls-loop="logs.logs" data-ls-as="log">
+                                <tr>
+                                    <td data-title="Date: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
+                                    <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
+                                    <td data-title="Client: ">
+                                        <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{log.clientCode|lowercase}} !== 'cli'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.clientCode|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
+                                        
+                                        <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{log.clientCode|lowercase}} === 'cli'" data-ls-attrs="src=/images/clients/terminal.png?buster=<?php echo APP_CACHE_BUSTER; ?>,title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
+                                        
+                                        <span data-ls-if="({{log.clientName}})" data-ls-bind="{{log.clientName}} {{log.clientVersion}} on {{log.model}} {{log.osName}} {{log.osVersion}}"></span>
+                                        <div data-ls-if="(!{{log.clientName}})" class="text-align-center text-fade">Unknown</div>
+                                    </td>
+                                    <td data-title="Location: ">
+                                        <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{log.countryCode}} !== '--'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
+                                        <span data-ls-bind="{{log.countryName}}"></span>
+                                    </td>
+                                    <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </li>
         </ul>
     </div>
 </div>

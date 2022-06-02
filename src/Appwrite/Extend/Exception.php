@@ -6,10 +6,10 @@ class Exception extends \Exception
 {
     /**
      * Error Codes
-     *  
-     * Naming the error types based on the following convention 
+     *
+     * Naming the error types based on the following convention
      * <ENTITY>_<ERROR_TYPE>
-     * 
+     *
      * Appwrite has the follwing entities:
      * - General
      * - Users
@@ -46,6 +46,7 @@ class Exception extends \Exception
     const GENERAL_ROUTE_NOT_FOUND           = 'general_route_not_found';
     const GENERAL_CURSOR_NOT_FOUND          = 'general_cursor_not_found';
     const GENERAL_SERVER_ERROR              = 'general_server_error';
+    const GENERAL_PROTOCOL_UNSUPPORTED       = 'general_protocol_unsupported';
 
     /** Users */
     const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
@@ -72,7 +73,7 @@ class Exception extends \Exception
     const TEAM_INVITE_NOT_FOUND             = 'team_invite_not_found';
     const TEAM_INVALID_SECRET               = 'team_invalid_secret';
     const TEAM_MEMBERSHIP_MISMATCH          = 'team_membership_mismatch';
-    const TEAM_INVITE_MISMATCH              = 'team_invite_mismatch'; 
+    const TEAM_INVITE_MISMATCH              = 'team_invite_mismatch';
 
     /** Membership */
     const MEMBERSHIP_NOT_FOUND              = 'membership_not_found';
@@ -115,7 +116,7 @@ class Exception extends \Exception
     const COLLECTION_NOT_FOUND              = 'collection_not_found';
     const COLLECTION_ALREADY_EXISTS         = 'collection_already_exists';
     const COLLECTION_LIMIT_EXCEEDED         = 'collection_limit_exceeded';
-    
+
     /** Documents */
     const DOCUMENT_NOT_FOUND                = 'document_not_found';
     const DOCUMENT_INVALID_STRUCTURE        = 'document_invalid_structure';
@@ -145,6 +146,7 @@ class Exception extends \Exception
     const PROJECT_INVALID_SUCCESS_URL       = 'project_invalid_success_url';
     const PROJECT_INVALID_FAILURE_URL       = 'project_invalid_failure_url';
     const PROJECT_MISSING_USER_ID           = 'project_missing_user_id';
+    const PROJECT_RESERVED_PROJECT          = 'project_reserved_project';
 
     /** Webhooks */
     const WEBHOOK_NOT_FOUND                 = 'webhook_not_found';
@@ -172,9 +174,9 @@ class Exception extends \Exception
 
     /**
      * Get the type of the exception.
-     * 
+     *
      * @return string
-     */ 
+     */
     public function getType(): string
     {
         return $this->type;
@@ -182,14 +184,13 @@ class Exception extends \Exception
 
     /**
      * Set the type of the exception.
-     * 
+     *
      * @param string $type
-     * 
+     *
      * @return void
      */
     public function setType(string $type): void
     {
         $this->type = $type;
     }
-
 }

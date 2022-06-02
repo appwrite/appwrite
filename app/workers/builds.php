@@ -1,7 +1,9 @@
 <?php
 
+use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
+use Appwrite\Utopia\Response\Model\Deployment;
 use Cron\CronExpression;
 use Executor\Executor;
 use Utopia\Database\Validator\Authorization;
@@ -11,43 +13,41 @@ use Utopia\Storage\Storage;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__ . '/../init.php';
 
 // Disable Auth since we already validate it in the API
 Authorization::disable();
 
 Console::title('Builds V1 Worker');
-Console::success(APP_NAME.' build worker v1 has started');
+Console::success(APP_NAME . ' build worker v1 has started');
 
 // TODO: Executor should return appropriate response codes.
 class BuildsV1 extends Worker
-{ 
-    /**
-     * @var Executor
-     */
-    private $executor = null;
+{
+    private ?Executor $executor = null;
 
-    public function getName(): string 
+    public function getName(): string
     {
         return "builds";
     }
 
-    public function init(): void {
+    public function init(): void
+    {
         $this->executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
     }
 
     public function run(): void
     {
         $type = $this->args['type'] ?? '';
-        $projectId = $this->args['projectId'] ?? '';
-        $functionId = $this->args['resourceId'] ?? '';
-        $deploymentId = $this->args['deploymentId'] ?? '';
-        
+        $project = new Document($this->args['project'] ?? []);
+        $resource = new Document($this->args['resource'] ?? []);
+        $deployment = new Document($this->args['deployment'] ?? []);
+
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
-                Console::info("Creating build for deployment: $deploymentId");
-                $this->buildDeployment($projectId, $functionId, $deploymentId);
+                Console::info('Creating build for deployment: ' . $deployment->getId());
+                $this->buildDeployment($project, $resource, $deployment);
                 break;
 
             default:
@@ -56,18 +56,16 @@ class BuildsV1 extends Worker
         }
     }
 
-    protected function buildDeployment(string $projectId, string $functionId, string $deploymentId) 
+    protected function buildDeployment(Document $project, Document $function, Document $deployment)
     {
-        $dbForProject = $this->getProjectDB($projectId);
-        $dbForConsole = $this->getConsoleDB();
-        $project = $dbForConsole->getDocument('projects', $projectId);
-        
-        $function = $dbForProject->getDocument('functions', $functionId);
+        $dbForProject = $this->getProjectDB($project->getId());
+
+        $function = $dbForProject->getDocument('functions', $function->getId());
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
 
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
         if ($deployment->isEmpty()) {
             throw new Exception('Deployment not found', 404);
         }
@@ -89,7 +87,7 @@ class BuildsV1 extends Worker
                 '$read' => [],
                 '$write' => [],
                 'startTime' => $startTime,
-                'deploymentId' => $deploymentId,
+                'deploymentId' => $deployment->getId(),
                 'status' => 'processing',
                 'outputPath' => '',
                 'runtime' => $function->getAttribute('runtime'),
@@ -101,7 +99,7 @@ class BuildsV1 extends Worker
                 'duration' => 0
             ]));
             $deployment->setAttribute('buildId', $buildId);
-            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
         } else {
             $build = $dbForProject->getDocument('builds', $buildId);
         }
@@ -110,12 +108,39 @@ class BuildsV1 extends Worker
         $build->setAttribute('status', 'building');
         $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
-        /** Send realtime event */
-        $target = Realtime::fromPayload('functions.deployments.update', $build, $project);
+        /** Trigger Webhook */
+        $deploymentModel = new Deployment();
+        $deploymentUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
+        $deploymentUpdate
+            ->setProject($project)
+            ->setEvent('functions.[functionId].deployments.[deploymentId].update')
+            ->setParam('functionId', $function->getId())
+            ->setParam('deploymentId', $deployment->getId())
+            ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())))
+            ->trigger();
+
+        /** Trigger Functions */
+        $deploymentUpdate
+            ->setClass(Event::FUNCTIONS_CLASS_NAME)
+            ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
+            ->trigger();
+
+        /** Trigger Realtime */
+        $allEvents = Event::generateEvents('functions.[functionId].deployments.[deploymentId].update', [
+            'functionId' => $function->getId(),
+            'deploymentId' => $deployment->getId()
+        ]);
+        $target = Realtime::fromPayload(
+            // Pass first, most verbose event pattern
+            event: $allEvents[0],
+            payload: $build,
+            project: $project
+        );
+
         Realtime::send(
             projectId: 'console',
             payload: $build->getArrayCopy(),
-            event: 'functions.deployments.update',
+            events: $allEvents,
             channels: $target['channels'],
             roles: $target['roles']
         );
@@ -126,13 +151,13 @@ class BuildsV1 extends Worker
 
         try {
             $response = $this->executor->createRuntime(
-                projectId: $projectId, 
-                deploymentId: $deploymentId, 
+                projectId: $project->getId(),
+                deploymentId: $deployment->getId(),
                 entrypoint: $deployment->getAttribute('entrypoint'),
                 source: $source,
-                destination: APP_STORAGE_BUILDS . "/app-$projectId",
-                vars: $vars, 
-                runtime: $key, 
+                destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
+                vars: $vars,
+                runtime: $key,
                 baseImage: $baseImage,
                 workdir: '/usr/code',
                 remove: true,
@@ -149,14 +174,14 @@ class BuildsV1 extends Worker
             $build->setAttribute('status', $response['status']);
             $build->setAttribute('outputPath', $response['outputPath']);
             $build->setAttribute('stderr', $response['stderr']);
-            $build->setAttribute('stdout', $response['stdout']);
+            $build->setAttribute('stdout', $response['response']);
 
             Console::success("Build id: $buildId created");
 
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
                 $function->setAttribute('deployment', $deployment->getId());
-                $function = $dbForProject->updateDocument('functions', $functionId, $function);
+                $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
             }
 
             /** Update function schedule */
@@ -164,8 +189,7 @@ class BuildsV1 extends Worker
             $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
             $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
             $function->setAttribute('scheduleNext', (int)$next);
-            $function = $dbForProject->updateDocument('functions', $functionId, $function);
-
+            $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
         } catch (\Throwable $th) {
             $endtime = \time();
             $build->setAttribute('endTime', $endtime);
@@ -176,19 +200,26 @@ class BuildsV1 extends Worker
         } finally {
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
-            /** 
-             * Send realtime Event 
+            /**
+             * Send realtime Event
              */
-            $target = Realtime::fromPayload('functions.deployments.update', $build, $project);
+            $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
+                event: $allEvents[0],
+                payload: $build,
+                project: $project
+            );
             Realtime::send(
                 projectId: 'console',
                 payload: $build->getArrayCopy(),
-                event: 'functions.deployments.update',
+                events: $allEvents,
                 channels: $target['channels'],
                 roles: $target['roles']
             );
         }
     }
 
-    public function shutdown(): void {}
+    public function shutdown(): void
+    {
+    }
 }
