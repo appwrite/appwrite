@@ -1,7 +1,5 @@
 <?php
 
-namespace Appwrite\Worker;
-
 use Appwrite\Event\Event;
 use Appwrite\Resque\Worker;
 use Utopia\Audit\Audit;
