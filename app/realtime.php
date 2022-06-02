@@ -94,6 +94,43 @@ $logError = function (Throwable $error, string $action) use ($register) {
 
 $server->error($logError);
 
+function getFilters(Database $database, string $projectId): array
+{
+    $database->setNamespace('_console');
+    $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
+    $filters = [];
+    if(!$project->isEmpty()) {
+
+        $secrets = $project->getAttribute('databaseSecrets');
+        
+        $filters['encrypt'] = [
+            'encode' => function($value) use($secrets) {
+                $version = array_key_last($secrets);
+                $key = $secrets[$version];
+                $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+                $tag = null;
+                return json_encode([
+                    'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+                    'method' => OpenSSL::CIPHER_AES_128_GCM,
+                    'iv' => \bin2hex($iv),
+                    'tag' => \bin2hex($tag ?? ''),
+                    'version' => $version,
+                ]);
+            },
+            'decode' => function($value) use($secrets) {
+                if(is_null($value)) {
+                    return null;
+                }
+                $value = json_decode($value, true);
+                $version = $value['version'];
+                $key = $secrets[$version];
+        
+                return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+            }
+        ];        
+    }
+    return $filters;
+}
 
 function getDatabase(Registry &$register, string $namespace)
 {
@@ -114,6 +151,15 @@ function getDatabase(Registry &$register, string $namespace)
             if (!$database->exists($database->getDefaultDatabase(), 'realtime')) {
                 throw new Exception('Collection not ready');
             }
+
+            $projectId = substr($namespace, 1);
+            if($projectId != 'console') {
+                $filters = getFilters($database, $projectId);
+                $database = new Database(new MariaDB($db), $cache, $filters);
+                $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+                $database->setNamespace($namespace);
+            }
+
             break; // leave loop if successful
         } catch (\Exception $e) {
             Console::warning("Database not ready. Retrying connection ({$attempts})...");
@@ -485,42 +531,10 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $projectId = $realtime->connections[$connection]['projectId'];
         if($projectId != 'console') {
-            $database->setNamespace('_console');
-            $project = $database->getDocument('projects', $projectId);
-            if(!$project->isEmpty()) {
-
-                $secrets = $project->getAttribute('databaseSecrets');
-                
-                $filters['encrypt'] = [
-                    'encode' => function($value) use($secrets) {
-                        $version = array_key_last($secrets);
-                        $key = $secrets[$version];
-                        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-                        $tag = null;
-                        return json_encode([
-                            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-                            'method' => OpenSSL::CIPHER_AES_128_GCM,
-                            'iv' => \bin2hex($iv),
-                            'tag' => \bin2hex($tag ?? ''),
-                            'version' => $version,
-                        ]);
-                    },
-                    'decode' => function($value) use($secrets) {
-                        if(is_null($value)) {
-                            return null;
-                        }
-                        $value = json_decode($value, true);
-                        $version = $value['version'];
-                        $key = $secrets[$version];
-                
-                        return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
-                    }
-                ];
-                
-                $database = new Database(new MariaDB($db), $cache, $filters);
-            }
+            $filters = getFilters($database, $projectId);
+            $database = new Database(new MariaDB($db), $cache, $filters);
+            $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         }
-        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $database->setNamespace("_{$projectId}");
 
         /*
