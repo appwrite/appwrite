@@ -81,8 +81,8 @@ abstract class Worker
         throw new Exception("Please implement shutdown method in worker");
     }
 
-    const DATABASE_PROJECT = 'project';
-    const DATABASE_CONSOLE = 'console';
+    public const DATABASE_PROJECT = 'project';
+    public const DATABASE_CONSOLE = 'console';
 
     /**
      * A wrapper around 'init' function with non-worker-specific code
