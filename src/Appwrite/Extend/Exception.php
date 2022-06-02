@@ -112,6 +112,10 @@ class Exception extends \Exception
     /** Execution */
     const EXECUTION_NOT_FOUND               = 'execution_not_found';
 
+    /** Databases */
+    const DATABASE_NOT_FOUND              = 'collection_not_found';
+    const DATABASE_ALREADY_EXISTS         = 'collection_already_exists';
+
     /** Collections */
     const COLLECTION_NOT_FOUND              = 'collection_not_found';
     const COLLECTION_ALREADY_EXISTS         = 'collection_already_exists';
