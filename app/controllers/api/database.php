@@ -38,6 +38,14 @@ use Appwrite\Event\Audit as EventAudit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Appwrite\Stats\Stats;
+use Utopia\Config\Config;
+
+//
+// 1. Create new endpoints /v1/database/databases
+// 2. modify existing endpoints as
+// → /v1/database/databases/:databaseId/collections
+// → /v1/database/databases/:databaseId/collections/:collectionId/documents
+//
 
 /**
  * Create attribute of varying type
@@ -52,7 +60,7 @@ use Appwrite\Stats\Stats;
  *
  * @return Document Newly created attribute document
  */
-function createAttribute(string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Event $events, Stats $usage): Document
+function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Event $events, Stats $usage): Document
 {
     $key = $attribute->getAttribute('key');
     $type = $attribute->getAttribute('type', '');
@@ -65,7 +73,14 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
     $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint 
     $default = $attribute->getAttribute('default');
 
-    $collection = $dbForProject->getDocument('collections', $collectionId);
+
+    $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+    if ($database->isEmpty()) {
+        throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+    }
+
+    $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
     if ($collection->isEmpty()) {
         throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
@@ -88,9 +103,9 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
 
     try {
         $attribute = new Document([
-            '$id' => $collectionId.'_'.$key,
+            '$id' => $databaseId.'_'.$collectionId.'_'.$key,
             'key' => $key,
-            'collectionId' => $collectionId,
+            'collectionId' => $databaseId .'_'. $collectionId,
             'type' => $type,
             'status' => 'processing', // processing, available, failed, deleting, stuck
             'size' => $size,
@@ -113,8 +128,8 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
         throw new Exception('Attribute limit exceeded', 400, Exception::ATTRIBUTE_LIMIT_EXCEEDED);
     }
 
-    $dbForProject->deleteCachedDocument('collections', $collectionId);
-    $dbForProject->deleteCachedCollection('collection_' . $collection->getInternalId());
+    $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
+    $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
 
     $usage->setParam('database.collections.update', 1);
 
@@ -131,7 +146,7 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
     ;
 
     $audits
-        ->setResource('collection/'.$collectionId)
+        ->setResource('database/'.$database.'/collection/'.$collectionId)
         ->setPayload($attribute->getArrayCopy())
     ;
 
@@ -140,18 +155,107 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
     return $attribute;
 };
 
-App::post('/v1/database/collections')
+App::post('/v1/databases')
+    ->desc('Create Database')
+    ->groups(['api', 'database'])
+    ->label('event', 'databases.[databaseId].create')
+    ->label('scope', 'databases.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'create')
+    ->label('sdk.description', '/docs/references/databases/create-database.md') // create this file later
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_DATABASE) // Model for database needs to be created
+    ->param('databaseId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('audits')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function ($databaseId, $name, $response, $dbForProject, $audits, $usage, $events) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForProject*/
+        /** @var Appwrite\Event\Audit $audits */
+        /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
+
+        $databaseId = $databaseId == 'unique()' ? $dbForProject->getId() : $databaseId;
+
+        try {
+            $dbForProject->createDocument('databases', new Document([
+                '$id' => $databaseId,
+                '$read' => $read ?? [], // Collection permissions for collection documents (based on permission model)
+                '$write' => $write ?? [], // Collection permissions for collection documents (based on permission model)
+                'dateCreated' => time(),
+                'dateUpdated' => time(),
+                'name' => $name,
+                'search' => implode(' ', [$databaseId, $name]),
+            ]));
+            $database = $dbForProject->getDocument('databases', $databaseId);
+
+            $collections = Config::getParam('collections', [])['collections'] ?? [];
+            if (empty($collections)) {
+                throw new Exception('Collections collection is not configured.', 500, Exception::GENERAL_SERVER_ERROR);
+            }
+
+            $attributes = [];
+            $indexes = [];
+
+            foreach ($collections['attributes'] as $attribute) {
+                $attributes[] = new Document([
+                    '$id' => $attribute['$id'],
+                    'type' => $attribute['type'],
+                    'size' => $attribute['size'],
+                    'required' => $attribute['required'],
+                    'signed' => $attribute['signed'],
+                    'array' => $attribute['array'],
+                    'filters' => $attribute['filters'],
+                    'default' => $attribute['default'] ?? null,
+                    'format' => $attribute['format'] ?? ''
+                ]);
+            }
+
+            foreach ($collections['indexes'] as $index) {
+                $indexes[] = new Document([
+                    '$id' => $index['$id'],
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]);
+            }
+            $dbForProject->createCollection('database_' . $database->getInternalId(), $attributes, $indexes);
+        } catch (DuplicateException $th) {
+            throw new Exception('Database already exists', 409, Exception::DATABASE_ALREADY_EXISTS);
+        }
+
+        $audits
+            ->setResource('database/'.$databaseId)
+            ->setPayload($database->getArrayCopy())
+        ;
+
+        $events->setParam('databaseId', $database->getId());
+        $usage->setParam('database.databases.create', 1);
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($database, Response::MODEL_DATABASE);
+    });
+
+App::post('/v1/databases/:databaseId/collections')
     ->desc('Create Collection')
     ->groups(['api', 'database'])
     ->label('event', 'collections.[collectionId].create')
     ->label('scope', 'collections.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createCollection')
     ->label('sdk.description', '/docs/references/database/create-collection.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
     ->param('permission', null, new WhiteList(['document', 'collection']), 'Specifies the permissions model used in this collection, which accepts either \'collection\' or \'document\'. For \'collection\' level permission, the permissions specified in read and write params are applied to all documents in the collection. For \'document\' level permissions, read and write permissions are specified in each document. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
@@ -162,17 +266,23 @@ App::post('/v1/database/collections')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $name, $permission, $read, $write, $response, $dbForProject, $audits, $usage, $events) {
+    ->action(function ($databaseId, $collectionId, $name, $permission, $read, $write, $response, $dbForProject, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject*/
         /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Event\Event $events */
 
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+
         $collectionId = $collectionId == 'unique()' ? $dbForProject->getId() : $collectionId;
 
         try {
-            $dbForProject->createDocument('collections', new Document([
+            $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
                 '$id' => $collectionId,
                 '$read' => $read ?? [], // Collection permissions for collection documents (based on permission model)
                 '$write' => $write ?? [], // Collection permissions for collection documents (based on permission model)
@@ -183,9 +293,9 @@ App::post('/v1/database/collections')
                 'name' => $name,
                 'search' => implode(' ', [$collectionId, $name]),
             ]));
-            $collection = $dbForProject->getDocument('collections', $collectionId);
+            $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
-            $dbForProject->createCollection('collection_' . $collection->getInternalId());
+            $dbForProject->createCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
         } catch (DuplicateException $th) {
             throw new Exception('Collection already exists', 409, Exception::COLLECTION_ALREADY_EXISTS);
         } catch (LimitException $th) {
@@ -193,10 +303,10 @@ App::post('/v1/database/collections')
         }
 
         $audits
-            ->setResource('collection/'.$collectionId)
+            ->setResource('database/'.$databaseId.'/collection/'.$collectionId)
             ->setPayload($collection->getArrayCopy())
         ;
-
+        
         $events->setParam('collectionId', $collection->getId());
         $usage->setParam('database.collections.create', 1);
 
@@ -204,17 +314,18 @@ App::post('/v1/database/collections')
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
-App::get('/v1/database/collections')
+App::get('/v1/databases/:databaseId/collections')
     ->desc('List Collections')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listCollections')
     ->label('sdk.description', '/docs/references/database/list-collections.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION_LIST)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Maximum number of collection to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
@@ -224,12 +335,18 @@ App::get('/v1/database/collections')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject, $usage) {
+    ->action(function ($databaseId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
 
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+
         if (!empty($cursor)) {
-            $cursorCollection = $dbForProject->getDocument('collections', $cursor);
+            $cursorCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $cursor);
 
             if ($cursorCollection->isEmpty()) {
                 throw new Exception("Collection '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
@@ -245,31 +362,37 @@ App::get('/v1/database/collections')
         $usage->setParam('database.collections.read', 1);
 
         $response->dynamic(new Document([
-            'collections' => $dbForProject->find('collections', $queries, $limit, $offset, [], [$orderType], $cursorCollection ?? null, $cursorDirection),
-            'total' => $dbForProject->count('collections', $queries, APP_LIMIT_COUNT),
+            'collections' => $dbForProject->find('database_' . $database->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorCollection ?? null, $cursorDirection),
+            'total' => $dbForProject->count('database_' . $database->getInternalId(), $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_COLLECTION_LIST);
     });
 
-App::get('/v1/database/collections/:collectionId')
+App::get('/v1/databases/:databaseId/collections/:collectionId')
     ->desc('Get Collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getCollection')
     ->label('sdk.description', '/docs/references/database/get-collection.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($collectionId, $response, $dbForProject, $usage) {
+    ->action(function ($databaseId, $collectionId, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
 
-        $collection = $dbForProject->getDocument('collections', $collectionId);
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
@@ -280,233 +403,18 @@ App::get('/v1/database/collections/:collectionId')
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
-App::get('/v1/database/usage')
-    ->desc('Get usage stats for the database')
-    ->groups(['api', 'database'])
-    ->label('scope', 'collections.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'database')
-    ->label('sdk.method', 'getUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_DATABASE)
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
-    ->inject('response')
-    ->inject('dbForProject')
-    ->action(function ($range, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Registry\Registry $register */
-
-        $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $periods = [
-                '24h' => [
-                    'period' => '30m',
-                    'limit' => 48,
-                ],
-                '7d' => [
-                    'period' => '1d',
-                    'limit' => 7,
-                ],
-                '30d' => [
-                    'period' => '1d',
-                    'limit' => 30,
-                ],
-                '90d' => [
-                    'period' => '1d',
-                    'limit' => 90,
-                ],
-            ];
-
-            $metrics = [
-                'database.documents.count',
-                'database.collections.count',
-                'database.collections.create',
-                'database.collections.read',
-                'database.collections.update',
-                'database.collections.delete',
-                'database.documents.create',
-                'database.documents.read',
-                'database.documents.update',
-                'database.documents.delete'
-            ];
-
-            $stats = [];
-
-            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
-                foreach ($metrics as $metric) {
-                    $limit = $periods[$range]['limit'];
-                    $period = $periods[$range]['period'];
-
-                    $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
-
-                    $stats[$metric] = [];
-                    foreach ($requestDocs as $requestDoc) {
-                        $stats[$metric][] = [
-                            'value' => $requestDoc->getAttribute('value'),
-                            'date' => $requestDoc->getAttribute('time'),
-                        ];
-                    }
-
-                    // backfill metrics with empty values for graphs
-                    $backfill = $limit - \count($requestDocs);
-                    while ($backfill > 0) {
-                        $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match($period) { // convert period to seconds for unix timestamp math
-                            '30m' => 1800,
-                            '1d' => 86400,
-                        };
-                        $stats[$metric][] = [
-                            'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
-                        ];
-                        $backfill--;
-                    }
-                    // TODO@kodumbeats explore performance if query is ordered by time ASC
-                    $stats[$metric] = array_reverse($stats[$metric]);
-                }
-            });
-
-            $usage = new Document([
-                'range' => $range,
-                'documentsCount' => $stats["database.documents.count"],
-                'collectionsCount' => $stats["database.collections.count"],
-                'documentsCreate' =>  $stats["database.documents.create"],
-                'documentsRead' =>  $stats["database.documents.read"],
-                'documentsUpdate' => $stats["database.documents.update"],
-                'documentsDelete' => $stats["database.documents.delete"],
-                'collectionsCreate' => $stats["database.collections.create"],
-                'collectionsRead' =>  $stats["database.collections.read"],
-                'collectionsUpdate' => $stats["database.collections.update"],
-                'collectionsDelete' => $stats["database.collections.delete"],
-            ]);
-        }
-
-        $response->dynamic($usage, Response::MODEL_USAGE_DATABASE);
-    });
-
-App::get('/v1/database/:collectionId/usage')
-    ->desc('Get usage stats for a collection')
-    ->groups(['api', 'database'])
-    ->label('scope', 'collections.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'database')
-    ->label('sdk.method', 'getCollectionUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_COLLECTION)
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
-    ->param('collectionId', '', new UID(), 'Collection ID.')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->action(function ($range, $collectionId, $response, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Registry\Registry $register */
-
-        $collectionDocument = $dbForProject->getDocument('collections', $collectionId);
-        $collection = $dbForProject->getCollection('collection_' . $collectionDocument->getInternalId());
-
-        if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
-        }
-
-        $usage = [];
-        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $periods = [
-                '24h' => [
-                    'period' => '30m',
-                    'limit' => 48,
-                ],
-                '7d' => [
-                    'period' => '1d',
-                    'limit' => 7,
-                ],
-                '30d' => [
-                    'period' => '1d',
-                    'limit' => 30,
-                ],
-                '90d' => [
-                    'period' => '1d',
-                    'limit' => 90,
-                ],
-            ];
-
-            $metrics = [
-                "database.collections.$collectionId.documents.count",
-                "database.collections.$collectionId.documents.create",
-                "database.collections.$collectionId.documents.read",
-                "database.collections.$collectionId.documents.update",
-                "database.collections.$collectionId.documents.delete",
-            ];
-
-            $stats = [];
-
-            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
-                foreach ($metrics as $metric) {
-                    $limit = $periods[$range]['limit'];
-                    $period = $periods[$range]['period'];
-
-                    $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
-
-                    $stats[$metric] = [];
-                    foreach ($requestDocs as $requestDoc) {
-                        $stats[$metric][] = [
-                            'value' => $requestDoc->getAttribute('value'),
-                            'date' => $requestDoc->getAttribute('time'),
-                        ];
-                    }
-
-                    // backfill metrics with empty values for graphs
-                    $backfill = $limit - \count($requestDocs);
-                    while ($backfill > 0) {
-                        $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match($period) { // convert period to seconds for unix timestamp math
-                            '30m' => 1800,
-                            '1d' => 86400,
-                        };
-                        $stats[$metric][] = [
-                            'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
-                        ];
-                        $backfill--;
-                    }
-                    $stats[$metric] = array_reverse($stats[$metric]);
-                }
-            });
-
-            $usage = new Document([
-                'range' => $range,
-                'documentsCount' => $stats["database.collections.$collectionId.documents.count"],
-                'documentsCreate' => $stats["database.collections.$collectionId.documents.create"],
-                'documentsRead' => $stats["database.collections.$collectionId.documents.read"],
-                'documentsUpdate' =>  $stats["database.collections.$collectionId.documents.update"],
-                'documentsDelete' =>  $stats["database.collections.$collectionId.documents.delete"]
-            ]);
-        }
-
-        $response->dynamic($usage, Response::MODEL_USAGE_COLLECTION);
-    });
-
-App::get('/v1/database/collections/:collectionId/logs')
+App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->desc('List Collection Logs')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listCollectionLogs')
     ->label('sdk.description', '/docs/references/database/get-collection-logs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
@@ -514,22 +422,27 @@ App::get('/v1/database/collections/:collectionId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($collectionId, $limit, $offset, $response, $dbForProject, $locale, $geodb) {
+    ->action(function ($databaseId, $collectionId, $limit, $offset, $response, $dbForProject, $locale, $geodb) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
 
-        $collectionDocument = $dbForProject->getDocument('collections', $collectionId);
-        $collection = $dbForProject->getCollection('collection_' . $collectionDocument->getInternalId());
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+        $collectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collectionDocument->getInternalId());
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
         $audit = new Audit($dbForProject);
-        $resource = 'collection/'.$collectionId;
+        $resource = 'database/'.$databaseId.'/collection/'.$collectionId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
         $output = [];
@@ -583,18 +496,20 @@ App::get('/v1/database/collections/:collectionId/logs')
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::put('/v1/database/collections/:collectionId')
+
+App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->desc('Update Collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
     ->label('event', 'collections.[collectionId].update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateCollection')
     ->label('sdk.description', '/docs/references/database/update-collection.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
     ->param('permission', null, new WhiteList(['document', 'collection']), 'Permissions type model to use for reading documents in this collection. You can use collection-level permission set once on the collection using the `read` and `write` params, or you can set document-level permission where each document read and write params will decide who has access to read and write to each document individually. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
@@ -606,14 +521,19 @@ App::put('/v1/database/collections/:collectionId')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $name, $permission, $read, $write, $enabled, $response, $dbForProject, $audits, $usage, $events) {
+    ->action(function ($databaseId, $collectionId, $name, $permission, $read, $write, $enabled, $response, $dbForProject, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Event\Event $events */
 
-        $collection = $dbForProject->getDocument('collections', $collectionId);
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
@@ -624,7 +544,7 @@ App::put('/v1/database/collections/:collectionId')
         $enabled ??= $collection->getAttribute('enabled', true);
 
         try {
-            $collection = $dbForProject->updateDocument('collections', $collectionId, $collection
+            $collection = $dbForProject->updateDocument('database_' . $database->getInternalId(), $collectionId, $collection
                 ->setAttribute('$write', $write)
                 ->setAttribute('$read', $read)
                 ->setAttribute('name', $name)
@@ -642,7 +562,7 @@ App::put('/v1/database/collections/:collectionId')
         }
 
         $audits
-            ->setResource('collection/'.$collectionId)
+            ->setResource('database/'.$databaseId.'/collection/'.$collectionId)
             ->setPayload($collection->getArrayCopy())
         ;
 
@@ -652,17 +572,18 @@ App::put('/v1/database/collections/:collectionId')
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
-App::delete('/v1/database/collections/:collectionId')
+App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->desc('Delete Collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
     ->label('event', 'collections.[collectionId].delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'deleteCollection')
     ->label('sdk.description', '/docs/references/database/delete-collection.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -670,7 +591,7 @@ App::delete('/v1/database/collections/:collectionId')
     ->inject('audits')
     ->inject('deletes')
     ->inject('usage')
-    ->action(function ($collectionId, $response, $dbForProject, $events, $audits, $deletes, $usage) {
+    ->action(function ($databaseId, $collectionId, $response, $dbForProject, $events, $audits, $deletes, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
@@ -678,17 +599,23 @@ App::delete('/v1/database/collections/:collectionId')
         /** @var Appwrite\Event\Delete $deletes */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $collection = $dbForProject->getDocument('collections', $collectionId);
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        if (!$dbForProject->deleteDocument('collections', $collectionId)) {
+        if (!$dbForProject->deleteDocument('database_' . $database->getInternalId(), $collectionId)) {
             throw new Exception('Failed to remove collection from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
-        $dbForProject->deleteCachedCollection('collection_' . $collection->getInternalId());
+        $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
@@ -701,7 +628,7 @@ App::delete('/v1/database/collections/:collectionId')
         ;
 
         $audits
-            ->setResource('collection/'.$collectionId)
+            ->setResource('database/'.$databaseId.'/collection/'.$collectionId)
             ->setPayload($collection->getArrayCopy())
         ;
 
@@ -710,18 +637,19 @@ App::delete('/v1/database/collections/:collectionId')
         $response->noContent();
     });
 
-App::post('/v1/database/collections/:collectionId/attributes/string')
+App::post('/v1/databases/collections/:collectionId/attributes/string')
     ->desc('Create String Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createStringAttribute')
     ->label('sdk.description', '/docs/references/database/create-string-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_STRING)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Range::TYPE_INTEGER), 'Attribute size for text attributes, in number of characters.')
@@ -734,7 +662,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $key, $size, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
+    ->action(function ($databaseId, $collectionId, $key, $size, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject*/
         /** @var Appwrite\Event\Database $database */
@@ -748,7 +676,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
             throw new Exception($validator->getDescription(), 400, Exception::ATTRIBUTE_VALUE_INVALID);
         }
 
-        $attribute = createAttribute($collectionId, new Document([
+        $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_STRING,
             'size' => $size,
@@ -760,18 +688,19 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
     });
 
-App::post('/v1/database/collections/:collectionId/attributes/email')
+App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email')
     ->desc('Create Email Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createEmailAttribute')
     ->label('sdk.description', '/docs/references/database/create-email-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_EMAIL)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
@@ -783,14 +712,14 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
+    ->action(function ($databaseId, $collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject*/
         /** @var Appwrite\Event\Database $database */
         /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $attribute = createAttribute($collectionId, new Document([
+        $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_STRING,
             'size' => 254,
@@ -803,18 +732,19 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
     });
 
-App::post('/v1/database/collections/:collectionId/attributes/enum')
+App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->desc('Create Enum Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createEnumAttribute')
     ->label('sdk.description', '/docs/references/database/create-attribute-enum.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_ENUM)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('elements', [], new ArrayList(new Text(1024), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each 1024 characters long.')
@@ -827,7 +757,7 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $key, $elements, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
+    ->action(function ($databaseId, $collectionId, $key, $elements, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject*/
         /** @var Appwrite\Event\Database $database */
@@ -850,7 +780,7 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
             throw new Exception('Default value not found in elements', 400, Exception::ATTRIBUTE_VALUE_INVALID);
         }
 
-        $attribute = createAttribute($collectionId, new Document([
+        $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_STRING,
             'size' => $size,
@@ -864,18 +794,19 @@ App::post('/v1/database/collections/:collectionId/attributes/enum')
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
     });
 
-App::post('/v1/database/collections/:collectionId/attributes/ip')
+App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->desc('Create IP Address Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createIpAttribute')
     ->label('sdk.description', '/docs/references/database/create-ip-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_IP)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
@@ -887,14 +818,14 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
+    ->action(function ($databaseId, $collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject*/
         /** @var Appwrite\Event\Database $database */
         /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $attribute = createAttribute($collectionId, new Document([
+        $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_STRING,
             'size' => 39,
@@ -907,18 +838,19 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
     });
 
-App::post('/v1/database/collections/:collectionId/attributes/url')
+App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->desc('Create URL Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createUrlAttribute')
     ->label('sdk.description', '/docs/references/database/create-url-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_URL)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
@@ -930,14 +862,14 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
+    ->action(function ($databaseId, $collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Event\Database $database */
         /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Event\Event $events */
 
-        $attribute = createAttribute($collectionId, new Document([
+        $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_STRING,
             'size' => 2000,
@@ -950,18 +882,19 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
     });
 
-App::post('/v1/database/collections/:collectionId/attributes/integer')
+App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/integer')
     ->desc('Create Integer Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createIntegerAttribute')
     ->label('sdk.description', '/docs/references/database/create-integer-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_INTEGER)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
@@ -975,7 +908,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $key, $required, $min, $max, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
+    ->action(function ($databaseId, $collectionId, $key, $required, $min, $max, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject*/
         /** @var Appwrite\Event\Database $database */
@@ -999,7 +932,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
 
         $size = $max > 2147483647 ? 8 : 4; // Automatically create BigInt depending on max value
 
-        $attribute = createAttribute($collectionId, new Document([
+        $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_INTEGER,
             'size' => $size,
@@ -1023,18 +956,19 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
     });
 
-App::post('/v1/database/collections/:collectionId/attributes/float')
+App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float')
     ->desc('Create Float Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createFloatAttribute')
     ->label('sdk.description', '/docs/references/database/create-float-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_FLOAT)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
@@ -1048,7 +982,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $required, $min, $max, $default, $array, $response, $dbForProject, $database, $audits, $events, $usage) {
+    ->action(function ($databaseId, $collectionId, $key, $required, $min, $max, $default, $array, $response, $dbForProject, $database, $audits, $events, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject*/
         /** @var Appwrite\Event\Database $database */
@@ -1075,7 +1009,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
             throw new Exception($validator->getDescription(), 400, Exception::ATTRIBUTE_VALUE_INVALID);
         }
 
-        $attribute = createAttribute($collectionId, new Document([
+        $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_FLOAT,
             'required' => $required,
@@ -1099,18 +1033,19 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_FLOAT);
     });
 
-App::post('/v1/database/collections/:collectionId/attributes/boolean')
+App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean')
     ->desc('Create Boolean Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createBooleanAttribute')
     ->label('sdk.description', '/docs/references/database/create-boolean-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_BOOLEAN)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
@@ -1122,7 +1057,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
+    ->action(function ($databaseId, $collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject*/
         /** @var Appwrite\Event\Database $database */
@@ -1130,7 +1065,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Event\Event $events */
 
-        $attribute = createAttribute($collectionId, new Document([
+        $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_BOOLEAN,
             'size' => 0,
@@ -1142,26 +1077,32 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
 
-App::get('/v1/database/collections/:collectionId/attributes')
+App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->desc('List Attributes')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listAttributes')
     ->label('sdk.description', '/docs/references/database/list-attributes.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_LIST)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($collectionId, $response, $dbForProject, $usage) {
+    ->action(function ($databaseId, $collectionId, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
 
-        $collection = $dbForProject->getDocument('collections', $collectionId);
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
@@ -1177,12 +1118,12 @@ App::get('/v1/database/collections/:collectionId/attributes')
         ]), Response::MODEL_ATTRIBUTE_LIST);
     });
 
-App::get('/v1/database/collections/:collectionId/attributes/:key')
+App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->desc('Get Attribute')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getAttribute')
     ->label('sdk.description', '/docs/references/database/get-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -1196,22 +1137,29 @@ App::get('/v1/database/collections/:collectionId/attributes/:key')
         Response::MODEL_ATTRIBUTE_URL,
         Response::MODEL_ATTRIBUTE_IP,
         Response::MODEL_ATTRIBUTE_STRING,])// needs to be last, since its condition would dominate any other string attribute
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $response, $dbForProject, $usage) {
+    ->action(function ($databaseId, $collectionId, $key, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
 
-        $collection = $dbForProject->getDocument('collections', $collectionId);
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attribute = $dbForProject->getDocument('attributes', $collectionId.'_'.$key);
+        $attribute = $dbForProject->getDocument('attributes', $databaseId.'_'.$collectionId.'_'.$key);
 
         if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
@@ -1240,17 +1188,18 @@ App::get('/v1/database/collections/:collectionId/attributes/:key')
         $response->dynamic($attribute, $model);
     });
 
-App::delete('/v1/database/collections/:collectionId/attributes/:key')
+App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->desc('Delete Attribute')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
     ->label('event', 'collections.[collectionId].attributes.[attributeId].delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'deleteAttribute')
     ->label('sdk.description', '/docs/references/database/delete-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->inject('response')
@@ -1259,7 +1208,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $response, $dbForProject, $database, $events, $audits, $usage) {
+    ->action(function ($databaseId, $collectionId, $key, $response, $dbForProject, $database, $events, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Database $database */
@@ -1267,13 +1216,18 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
         /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $collection = $dbForProject->getDocument('collections', $collectionId);
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attribute = $dbForProject->getDocument('attributes', $collectionId.'_'.$key);
+        $attribute = $dbForProject->getDocument('attributes', $databaseId.'_'.$collectionId.'_'.$key);
 
         if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
@@ -1284,8 +1238,8 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
             $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
         }
 
-        $dbForProject->deleteCachedDocument('collections', $collectionId);
-        $dbForProject->deleteCachedCollection('collection_' . $collection->getInternalId());
+        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
+        $dbForProject->deleteCachedCollection('database_' . $database->getInternalId().'_collection_' . $collection->getInternalId());
 
         $database
             ->setType(DATABASE_TYPE_DELETE_ATTRIBUTE)
@@ -1321,25 +1275,26 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
         ;
 
         $audits
-            ->setResource('collection/'.$collectionId)
+            ->setResource('database/'.$databaseId.'/collection/'.$collectionId)
             ->setPayload($attribute->getArrayCopy())
         ;
 
         $response->noContent();
     });
 
-App::post('/v1/database/collections/:collectionId/indexes')
+App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->desc('Create Index')
     ->groups(['api', 'database'])
     ->label('event', 'collections.[collectionId].indexes.[indexId].create')
     ->label('scope', 'collections.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createIndex')
     ->label('sdk.description', '/docs/references/database/create-index.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_INDEX)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->param('key', null, new Key(), 'Index Key.')
     ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE, Database::INDEX_SPATIAL, Database::INDEX_ARRAY]), 'Index type.')
@@ -1351,7 +1306,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($collectionId, $key, $type, $attributes, $orders, $response, $dbForProject, $database, $audits, $usage, $events) {
+    ->action(function ($databaseId, $collectionId, $key, $type, $attributes, $orders, $response, $dbForProject, $database, $audits, $usage, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Database $database */
@@ -1359,14 +1314,19 @@ App::post('/v1/database/collections/:collectionId/indexes')
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Event\Event $events */
 
-        $collection = $dbForProject->getDocument('collections', $collectionId);
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
         $count = $dbForProject->count('indexes', [
-            new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])
+            new Query('collectionId', Query::TYPE_EQUAL, [$databaseId.'_'.$collectionId])
         ], 61);
 
         $limit = 64 - MariaDB::getNumberOfDefaultIndexes();
@@ -1404,10 +1364,10 @@ App::post('/v1/database/collections/:collectionId/indexes')
 
         try {
             $index = $dbForProject->createDocument('indexes', new Document([
-                '$id' => $collectionId.'_'.$key,
+                '$id' => $databaseId.'_'.$collectionId.'_'.$key,
                 'key' => $key,
                 'status' => 'processing', // processing, available, failed, deleting, stuck
-                'collectionId' => $collectionId,
+                'collectionId' => $databaseId.'_'.$collectionId,
                 'type' => $type,
                 'attributes' => $attributes,
                 'lengths' => $lengths,
@@ -1417,7 +1377,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
             throw new Exception('Index already exists', 409, Exception::INDEX_ALREADY_EXISTS);
         }
 
-        $dbForProject->deleteCachedDocument('collections', $collectionId);
+        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
 
         $database
             ->setType(DATABASE_TYPE_CREATE_INDEX)
@@ -1434,7 +1394,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
         ;
 
         $audits
-            ->setResource('collection/'.$collection->getId())
+            ->setResource('database/'.$databaseId.'/collection/'.$collection->getId())
             ->setPayload($index->getArrayCopy())
         ;
 
@@ -1442,26 +1402,32 @@ App::post('/v1/database/collections/:collectionId/indexes')
         $response->dynamic($index, Response::MODEL_INDEX);
     });
 
-App::get('/v1/database/collections/:collectionId/indexes')
+App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->desc('List Indexes')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listIndexes')
     ->label('sdk.description', '/docs/references/database/list-indexes.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_INDEX_LIST)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($collectionId, $response, $dbForProject, $usage) {
+    ->action(function ($databaseId, $collectionId, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
 
-        $collection = $dbForProject->getDocument('collections', $collectionId);
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
@@ -1477,27 +1443,33 @@ App::get('/v1/database/collections/:collectionId/indexes')
         ]), Response::MODEL_INDEX_LIST);
     });
 
-App::get('/v1/database/collections/:collectionId/indexes/:key')
+App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->desc('Get Index')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getIndex')
     ->label('sdk.description', '/docs/references/database/get-index.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_INDEX)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->param('key', null, new Key(), 'Index Key.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $response, $dbForProject, $usage) {
+    ->action(function ($databaseId, $collectionId, $key, $response, $dbForProject, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
 
-        $collection = $dbForProject->getDocument('collections', $collectionId);
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
@@ -1513,7 +1485,7 @@ App::get('/v1/database/collections/:collectionId/indexes/:key')
         }
 
         $index = new Document([\array_merge($indexes[$indexIndex], [
-            'collectionId' => $collectionId,
+            'collectionId' => $databaseId.'_'.$collectionId,
         ])]);
 
         $usage->setParam('database.collections.read', 1);
@@ -1521,17 +1493,18 @@ App::get('/v1/database/collections/:collectionId/indexes/:key')
         $response->dynamic($index, Response::MODEL_INDEX);
     });
 
-App::delete('/v1/database/collections/:collectionId/indexes/:key')
+App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->desc('Delete Index')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
     ->label('event', 'collections.[collectionId].indexes.[indexId].delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'deleteIndex')
     ->label('sdk.description', '/docs/references/database/delete-index.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->param('key', '', new Key(), 'Index Key.')
     ->inject('response')
@@ -1540,7 +1513,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:key')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($collectionId, $key, $response, $dbForProject, $database, $events, $audits, $usage) {
+    ->action(function ($databaseId, $collectionId, $key, $response, $dbForProject, $database, $events, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Database $database */
@@ -1548,7 +1521,12 @@ App::delete('/v1/database/collections/:collectionId/indexes/:key')
         /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $collection = $dbForProject->getDocument('collections', $collectionId);
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
@@ -1565,7 +1543,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:key')
             $index = $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
         }
 
-        $dbForProject->deleteCachedDocument('collections', $collectionId);
+        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
 
         $database
             ->setType(DATABASE_TYPE_DELETE_INDEX)
@@ -1583,25 +1561,26 @@ App::delete('/v1/database/collections/:collectionId/indexes/:key')
         ;
 
         $audits
-            ->setResource('collection/'.$collection->getId())
+            ->setResource('database/'.$databaseId.'/collection/'.$collection->getId())
             ->setPayload($index->getArrayCopy())
         ;
 
         $response->noContent();
     });
 
-App::post('/v1/database/collections/:collectionId/documents')
+App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->desc('Create Document')
     ->groups(['api', 'database'])
     ->label('event', 'collections.[collectionId].documents.[documentId].create')
     ->label('scope', 'documents.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createDocument')
     ->label('sdk.description', '/docs/references/database/create-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('documentId', '', new CustomId(), 'Document ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection). Make sure to define attributes before creating documents.')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
@@ -1614,7 +1593,7 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->inject('usage')
     ->inject('events')
     ->inject('mode')
-    ->action(function ($documentId, $collectionId, $data, $read, $write, $response, $dbForProject, $user, $audits, $usage, $events, $mode) {
+    ->action(function ($databaseId, $documentId, $collectionId, $data, $read, $write, $response, $dbForProject, $user, $audits, $usage, $events, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Database\Document $user */
@@ -1623,6 +1602,11 @@ App::post('/v1/database/collections/:collectionId/documents')
         /** @var Appwrite\Event\Event $events */
         /** @var string $mode */
 
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data)) {
@@ -1638,7 +1622,7 @@ App::post('/v1/database/collections/:collectionId/documents')
          * 
          * @var Document $collection
          */
-        $collection = Authorization::skip(fn() => $dbForProject->getDocument('collections', $collectionId));
+        $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
             if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
@@ -1679,9 +1663,9 @@ App::post('/v1/database/collections/:collectionId/documents')
         try {
             if ($collection->getAttribute('permission') === 'collection') {
                 /** @var Document $document */
-                $document = Authorization::skip(fn() => $dbForProject->createDocument('collection_' . $collection->getInternalId(), new Document($data)));
+                $document = Authorization::skip(fn() => $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), new Document($data)));
             } else {
-                $document = $dbForProject->createDocument('collection_' . $collection->getInternalId(), new Document($data));
+                $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), new Document($data));
             }
             $document->setAttribute('$collection', $collectionId);
         }
@@ -1712,17 +1696,18 @@ App::post('/v1/database/collections/:collectionId/documents')
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
-App::get('/v1/database/collections/:collectionId/documents')
+App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->desc('List Documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listDocuments')
     ->label('sdk.description', '/docs/references/database/list-documents.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->param('queries', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/database#querying-documents). Maximum of 100 queries are allowed, each 128 characters long.', true) 
     ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response. By default will return maximum 25 results. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' results allowed per request.', true)
@@ -1735,18 +1720,23 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($collectionId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderAttributes, $orderTypes, $response, $dbForProject, $usage, $mode) {
+    ->action(function ($databaseId, $collectionId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderAttributes, $orderTypes, $response, $dbForProject, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Stats\Stats $usage */
         /** @var string $mode */
 
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
          *
          * @var Utopia\Database\Document $collection
          */
-        $collection = Authorization::skip(fn() => $dbForProject->getDocument('collections', $collectionId));
+        $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
             if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
@@ -1789,7 +1779,7 @@ App::get('/v1/database/collections/:collectionId/documents')
         $cursorDocument = null;
         if (!empty($cursor)) {
             $cursorDocument = $collection->getAttribute('permission') === 'collection'
-                ? Authorization::skip(fn () => $dbForProject->getDocument('collection_' . $collection->getInternalId(), $cursor))
+                ? Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor))
                 : $dbForProject->getDocument('collection_' . $collection->getInternalId(), $cursor);
 
             if ($cursorDocument->isEmpty()) {
@@ -1799,11 +1789,11 @@ App::get('/v1/database/collections/:collectionId/documents')
 
         if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document[] $documents */
-            $documents = Authorization::skip(fn() => $dbForProject->find('collection_' . $collection->getInternalId(), $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection));
-            $total = Authorization::skip(fn() => $dbForProject->count('collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT));
+            $documents = Authorization::skip(fn() => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection));
+            $total = Authorization::skip(fn() => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT));
         } else {
-            $documents = $dbForProject->find('collection_' . $collection->getInternalId(), $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
-            $total = $dbForProject->count('collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
+            $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
+            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
         }
 
         /**
@@ -1822,32 +1812,38 @@ App::get('/v1/database/collections/:collectionId/documents')
         ]), Response::MODEL_DOCUMENT_LIST);
     });
 
-App::get('/v1/database/collections/:collectionId/documents/:documentId')
+App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
     ->desc('Get Document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getDocument')
     ->label('sdk.description', '/docs/references/database/get-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($collectionId, $documentId, $response, $dbForProject, $usage, $mode) {
+    ->action(function ($databaseId, $collectionId, $documentId, $response, $dbForProject, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var string $mode */
 
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
          */
-        $collection = Authorization::skip(fn() => $dbForProject->getDocument('collections', $collectionId));
+        $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
             if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
@@ -1865,9 +1861,9 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
 
         if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document $document */
-            $document = Authorization::skip(fn() => $dbForProject->getDocument('collection_' . $collection->getInternalId(), $documentId));
+            $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
         } else {
-            $document = $dbForProject->getDocument('collection_' . $collection->getInternalId(), $documentId);
+            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
         }
 
         /**
@@ -1887,17 +1883,18 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
-App::get('/v1/database/collections/:collectionId/documents/:documentId/logs')
+App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/logs')
     ->desc('List Document Logs')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listDocumentLogs')
     ->label('sdk.description', '/docs/references/database/get-document-logs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('documentId', null, new UID(), 'Document ID.')
     ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
@@ -1906,20 +1903,25 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($collectionId, $documentId, $limit, $offset, $response, $dbForProject, $locale, $geodb) {
+    ->action(function ($databaseId, $collectionId, $documentId, $limit, $offset, $response, $dbForProject, $locale, $geodb) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
 
-        $collection = $dbForProject->getDocument('collections', $collectionId);
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $document = $dbForProject->getDocument('collection_' . $collection->getInternalId(), $documentId);
+        $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
 
         if ($document->isEmpty()) {
             throw new Exception('No document found', 404, Exception::DOCUMENT_NOT_FOUND);
@@ -1979,18 +1981,19 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId/logs')
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::patch('/v1/database/collections/:collectionId/documents/:documentId')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
     ->desc('Update Document')
     ->groups(['api', 'database'])
     ->label('event', 'collections.[collectionId].documents.[documentId].update')
     ->label('scope', 'documents.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateDocument')
     ->label('sdk.description', '/docs/references/database/update-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', null, new UID(), 'Collection ID.')
     ->param('documentId', null, new UID(), 'Document ID.')
     ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.')
@@ -2002,7 +2005,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->inject('usage')
     ->inject('events')
     ->inject('mode')
-    ->action(function ($collectionId, $documentId, $data, $read, $write, $response, $dbForProject, $audits, $usage, $events, $mode) {
+    ->action(function ($databaseId, $collectionId, $documentId, $data, $read, $write, $response, $dbForProject, $audits, $usage, $events, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Audit $audits */
@@ -2010,10 +2013,15 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         /** @var Appwrite\Event\Event $events */
         /** @var string $mode */
 
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
          */
-        $collection = Authorization::skip(fn() => $dbForProject->getDocument('collections', $collectionId));
+        $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
             if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
@@ -2028,9 +2036,9 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
                 throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
             }
 
-            $document = Authorization::skip(fn() => $dbForProject->getDocument('collection_' . $collection->getInternalId(), $documentId));
+            $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
         } else {
-            $document = $dbForProject->getDocument('collection_' . $collection->getInternalId(), $documentId);
+            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
         }
 
 
@@ -2078,9 +2086,9 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         try {
             if ($collection->getAttribute('permission') === 'collection') {
                 /** @var Document $document */
-                $document = Authorization::skip(fn() => $dbForProject->updateDocument('collection_' . $collection->getInternalId(), $document->getId(), new Document($data)));
+                $document = Authorization::skip(fn() => $dbForProject->updateDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document->getId(), new Document($data)));
             } else {
-                $document = $dbForProject->updateDocument('collection_' . $collection->getInternalId(), $document->getId(), new Document($data));
+                $document = $dbForProject->updateDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document->getId(), new Document($data));
             }
             /**
              * Reset $collection attribute to remove prefix.
@@ -2116,13 +2124,13 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
-App::delete('/v1/database/collections/:collectionId/documents/:documentId')
+App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
     ->desc('Delete Document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.write')
     ->label('event', 'collections.[collectionId].documents.[documentId].delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'database')
+    ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'deleteDocument')
     ->label('sdk.description', '/docs/references/database/delete-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
@@ -2136,7 +2144,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->inject('deletes')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($collectionId, $documentId, $response, $dbForProject, $events, $audits, $deletes, $usage, $mode) {
+    ->action(function ($databaseId, $collectionId, $documentId, $response, $dbForProject, $events, $audits, $deletes, $usage, $mode) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Event $events */
@@ -2145,10 +2153,15 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         /** @var Appwrite\Stats\Stats $usage */
         /** @var string $mode */
 
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
          */
-        $collection = Authorization::skip(fn() => $dbForProject->getDocument('collections', $collectionId));
+        $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
             if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
@@ -2166,7 +2179,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
 
         if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document $document */
-            $document = Authorization::skip(fn() => $dbForProject->getDocument('collection_' . $collection->getInternalId(), $documentId));
+            $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
         } else {
             $document = $dbForProject->getDocument('collection_' . $collection->getInternalId(), $documentId);
         }
@@ -2176,12 +2189,12 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         }
 
         if ($collection->getAttribute('permission') === 'collection') {
-            Authorization::skip(fn() => $dbForProject->deleteDocument('collection_' . $collection->getInternalId(), $documentId));
+            Authorization::skip(fn() => $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
         } else {
-            $dbForProject->deleteDocument('collection_' . $collection->getInternalId(), $documentId);
+            $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
         }
 
-        $dbForProject->deleteCachedDocument('collection_' . $collection->getInternalId(), $documentId);
+        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
 
         /**
          * Reset $collection attribute to remove prefix.
@@ -2212,3 +2225,221 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
 
         $response->noContent();
     });
+
+// Usage will need rework
+App::get('/v1/databases/:databaseId/collections/usage')
+->desc('Get usage stats for the database')
+->groups(['api', 'database'])
+->label('scope', 'collections.read')
+->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+->label('sdk.namespace', 'databases')
+->label('sdk.method', 'getUsage')
+->label('sdk.response.code', Response::STATUS_CODE_OK)
+->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+->label('sdk.response.model', Response::MODEL_USAGE_DATABASE)
+->param('databaseId', '', new UID(), 'Database ID.')
+->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+->inject('response')
+->inject('dbForProject')
+->action(function ($databaseId, $range, $response, $dbForProject) {
+    /** @var Appwrite\Utopia\Response $response */
+    /** @var Utopia\Database\Database $dbForConsole */
+    /** @var Utopia\Database\Database $dbForProject */
+    /** @var Utopia\Registry\Registry $register */
+
+    $usage = [];
+    if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        $periods = [
+            '24h' => [
+                'period' => '30m',
+                'limit' => 48,
+            ],
+            '7d' => [
+                'period' => '1d',
+                'limit' => 7,
+            ],
+            '30d' => [
+                'period' => '1d',
+                'limit' => 30,
+            ],
+            '90d' => [
+                'period' => '1d',
+                'limit' => 90,
+            ],
+        ];
+
+        $metrics = [
+            'database.documents.count',
+            'database.collections.count',
+            'database.collections.create',
+            'database.collections.read',
+            'database.collections.update',
+            'database.collections.delete',
+            'database.documents.create',
+            'database.documents.read',
+            'database.documents.update',
+            'database.documents.delete'
+        ];
+
+        $stats = [];
+
+        Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
+            foreach ($metrics as $metric) {
+                $limit = $periods[$range]['limit'];
+                $period = $periods[$range]['period'];
+
+                $requestDocs = $dbForProject->find('stats', [
+                    new Query('period', Query::TYPE_EQUAL, [$period]),
+                    new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+
+                $stats[$metric] = [];
+                foreach ($requestDocs as $requestDoc) {
+                    $stats[$metric][] = [
+                        'value' => $requestDoc->getAttribute('value'),
+                        'date' => $requestDoc->getAttribute('time'),
+                    ];
+                }
+
+                // backfill metrics with empty values for graphs
+                $backfill = $limit - \count($requestDocs);
+                while ($backfill > 0) {
+                    $last = $limit - $backfill - 1; // array index of last added metric
+                    $diff = match($period) { // convert period to seconds for unix timestamp math
+                        '30m' => 1800,
+                        '1d' => 86400,
+                    };
+                    $stats[$metric][] = [
+                        'value' => 0,
+                        'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                    ];
+                    $backfill--;
+                }
+                // TODO@kodumbeats explore performance if query is ordered by time ASC
+                $stats[$metric] = array_reverse($stats[$metric]);
+            }
+        });
+
+        $usage = new Document([
+            'range' => $range,
+            'documentsCount' => $stats["database.documents.count"],
+            'collectionsCount' => $stats["database.collections.count"],
+            'documentsCreate' =>  $stats["database.documents.create"],
+            'documentsRead' =>  $stats["database.documents.read"],
+            'documentsUpdate' => $stats["database.documents.update"],
+            'documentsDelete' => $stats["database.documents.delete"],
+            'collectionsCreate' => $stats["database.collections.create"],
+            'collectionsRead' =>  $stats["database.collections.read"],
+            'collectionsUpdate' => $stats["database.collections.update"],
+            'collectionsDelete' => $stats["database.collections.delete"],
+        ]);
+    }
+
+    $response->dynamic($usage, Response::MODEL_USAGE_DATABASE);
+});
+
+App::get('/v1/databases/:collectionId/usage')
+->desc('Get usage stats for a collection')
+->groups(['api', 'database'])
+->label('scope', 'collections.read')
+->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+->label('sdk.namespace', 'databases')
+->label('sdk.method', 'getCollectionUsage')
+->label('sdk.response.code', Response::STATUS_CODE_OK)
+->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+->label('sdk.response.model', Response::MODEL_USAGE_COLLECTION)
+->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+->param('collectionId', '', new UID(), 'Collection ID.')
+->inject('response')
+->inject('dbForProject')
+->action(function ($range, $collectionId, $response, $dbForProject) {
+    /** @var Appwrite\Utopia\Response $response */
+    /** @var Utopia\Database\Database $dbForProject */
+    /** @var Utopia\Registry\Registry $register */
+
+    $collectionDocument = $dbForProject->getDocument('collections', $collectionId);
+    $collection = $dbForProject->getCollection('collection_' . $collectionDocument->getInternalId());
+
+    if ($collection->isEmpty()) {
+        throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
+    }
+
+    $usage = [];
+    if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        $periods = [
+            '24h' => [
+                'period' => '30m',
+                'limit' => 48,
+            ],
+            '7d' => [
+                'period' => '1d',
+                'limit' => 7,
+            ],
+            '30d' => [
+                'period' => '1d',
+                'limit' => 30,
+            ],
+            '90d' => [
+                'period' => '1d',
+                'limit' => 90,
+            ],
+        ];
+
+        $metrics = [
+            "database.collections.$collectionId.documents.count",
+            "database.collections.$collectionId.documents.create",
+            "database.collections.$collectionId.documents.read",
+            "database.collections.$collectionId.documents.update",
+            "database.collections.$collectionId.documents.delete",
+        ];
+
+        $stats = [];
+
+        Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
+            foreach ($metrics as $metric) {
+                $limit = $periods[$range]['limit'];
+                $period = $periods[$range]['period'];
+
+                $requestDocs = $dbForProject->find('stats', [
+                    new Query('period', Query::TYPE_EQUAL, [$period]),
+                    new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+
+                $stats[$metric] = [];
+                foreach ($requestDocs as $requestDoc) {
+                    $stats[$metric][] = [
+                        'value' => $requestDoc->getAttribute('value'),
+                        'date' => $requestDoc->getAttribute('time'),
+                    ];
+                }
+
+                // backfill metrics with empty values for graphs
+                $backfill = $limit - \count($requestDocs);
+                while ($backfill > 0) {
+                    $last = $limit - $backfill - 1; // array index of last added metric
+                    $diff = match($period) { // convert period to seconds for unix timestamp math
+                        '30m' => 1800,
+                        '1d' => 86400,
+                    };
+                    $stats[$metric][] = [
+                        'value' => 0,
+                        'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                    ];
+                    $backfill--;
+                }
+                $stats[$metric] = array_reverse($stats[$metric]);
+            }
+        });
+
+        $usage = new Document([
+            'range' => $range,
+            'documentsCount' => $stats["database.collections.$collectionId.documents.count"],
+            'documentsCreate' => $stats["database.collections.$collectionId.documents.create"],
+            'documentsRead' => $stats["database.collections.$collectionId.documents.read"],
+            'documentsUpdate' =>  $stats["database.collections.$collectionId.documents.update"],
+            'documentsDelete' =>  $stats["database.collections.$collectionId.documents.delete"]
+        ]);
+    }
+
+    $response->dynamic($usage, Response::MODEL_USAGE_COLLECTION);
+});
