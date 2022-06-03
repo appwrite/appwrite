@@ -8,29 +8,29 @@ use Utopia\Database\Document;
 
 class Event
 {
-    const DATABASE_QUEUE_NAME = 'v1-database';
-    const DATABASE_CLASS_NAME = 'DatabaseV1';
+    public const DATABASE_QUEUE_NAME = 'v1-database';
+    public const DATABASE_CLASS_NAME = 'DatabaseV1';
 
-    const DELETE_QUEUE_NAME = 'v1-deletes';
-    const DELETE_CLASS_NAME = 'DeletesV1';
+    public const DELETE_QUEUE_NAME = 'v1-deletes';
+    public const DELETE_CLASS_NAME = 'DeletesV1';
 
-    const AUDITS_QUEUE_NAME = 'v1-audits';
-    const AUDITS_CLASS_NAME = 'AuditsV1';
+    public const AUDITS_QUEUE_NAME = 'v1-audits';
+    public const AUDITS_CLASS_NAME = 'AuditsV1';
 
-    const MAILS_QUEUE_NAME = 'v1-mails';
-    const MAILS_CLASS_NAME = 'MailsV1';
+    public const MAILS_QUEUE_NAME = 'v1-mails';
+    public const MAILS_CLASS_NAME = 'MailsV1';
 
-    const FUNCTIONS_QUEUE_NAME = 'v1-functions';
-    const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
+    public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
+    public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
 
-    const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
-    const WEBHOOK_CLASS_NAME = 'WebhooksV1';
+    public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
+    public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
 
-    const CERTIFICATES_QUEUE_NAME = 'v1-certificates';
-    const CERTIFICATES_CLASS_NAME = 'CertificatesV1';
+    public const CERTIFICATES_QUEUE_NAME = 'v1-certificates';
+    public const CERTIFICATES_CLASS_NAME = 'CertificatesV1';
 
-    const BUILDS_QUEUE_NAME = 'v1-builds';
-    const BUILDS_CLASS_NAME = 'BuildsV1';
+    public const BUILDS_QUEUE_NAME = 'v1-builds';
+    public const BUILDS_CLASS_NAME = 'BuildsV1';
 
     protected string $queue = '';
     protected string $class = '';
@@ -332,7 +332,7 @@ class Event
      * @return array
      * @throws \InvalidArgumentException
      */
-    static function generateEvents(string $pattern, array $params = []): array
+    public static function generateEvents(string $pattern, array $params = []): array
     {
         // $params = \array_filter($params, fn($param) => !\is_array($param));
         $paramKeys = \array_keys($params);

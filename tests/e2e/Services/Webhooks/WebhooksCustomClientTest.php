@@ -45,7 +45,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.create', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events'],);
+        $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);

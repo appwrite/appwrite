@@ -15,4 +15,8 @@
     <rule ref="PSR1.Files.SideEffects.FoundWithSymbols">
         <exclude-pattern>*</exclude-pattern>
     </rule>
+    <!-- Exclude namespace check for ./app directory -->
+    <rule ref="PSR1.Classes.ClassDeclaration.MissingNamespace">
+        <exclude-pattern>./app</exclude-pattern>
+    </rule>
 </ruleset>

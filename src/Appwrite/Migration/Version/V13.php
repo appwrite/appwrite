@@ -319,7 +319,7 @@ class V13 extends Migration
                             return 'buckets.*.' . implode('.', $parts);
                         case 'files':
                             return 'buckets.*.' . $second . '.*.' . implode('.', $parts);
-                    }
+                    } // intentional fallthrough
                 case 'database':
                     $second = array_shift($parts);
                     switch ($second) {
