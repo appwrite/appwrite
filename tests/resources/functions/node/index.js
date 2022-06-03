@@ -6,11 +6,11 @@
     'res' variable has:
         'send(text, status)' - function to return text response. Status code defaults to 200
         'json(obj, status)' - function to return JSON response. Status code defaults to 200
-    
+
     If an error is thrown, a response with code 500 will be returned.
 */
 
-module.exports = async (req, res) => {
+module.exports = async(req, res) => {
     res.json({
         'APPWRITE_FUNCTION_ID' : req.env.APPWRITE_FUNCTION_ID,
         'APPWRITE_FUNCTION_NAME' : req.env.APPWRITE_FUNCTION_NAME,

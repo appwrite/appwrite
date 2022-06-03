@@ -132,11 +132,11 @@ class Auth0 extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
+     *
      * @link https://auth0.com/docs/api/authentication?javascript#user-profile
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -180,7 +180,7 @@ class Auth0 extends OAuth2
 
     /**
      * Extracts the Client Secret from the JSON stored in appSecret
-     * 
+     *
      * @return string
      */
     protected function getClientSecret(): string
@@ -192,7 +192,7 @@ class Auth0 extends OAuth2
 
     /**
      * Extracts the Auth0 Domain from the JSON stored in appSecret
-     * 
+     *
      * @return string
      */
     protected function getAuth0Domain(): string
@@ -204,7 +204,7 @@ class Auth0 extends OAuth2
 
     /**
      * Decode the JSON stored in appSecret
-     * 
+     *
      * @return array
      */
     protected function getAppSecret(): array

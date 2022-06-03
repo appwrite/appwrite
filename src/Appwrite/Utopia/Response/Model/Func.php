@@ -106,7 +106,7 @@ class Func extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Function';
     }
@@ -116,27 +116,27 @@ class Func extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_FUNCTION;
     }
 
     /**
      * Filter Function
-     * 
+     *
      * Automatically converts a [] default to a stdClass, this is called while grabbing the document.
-     * 
+     *
      * @param Document $document
      * @return Document
      */
     public function filter(Document $document): Document
     {
         $vars = $document->getAttribute('vars');
-        if($vars instanceof Document) {
+        if ($vars instanceof Document) {
             $vars = $vars->getArrayCopy();
         }
 
-        if(is_array($vars) && empty($vars)) {
+        if (is_array($vars) && empty($vars)) {
             $document->setAttribute('vars', new stdClass());
         }
         return $document;

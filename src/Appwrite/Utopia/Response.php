@@ -92,7 +92,7 @@ class Response extends SwooleResponse
     const MODEL_USAGE_STORAGE = 'usageStorage';
     const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
     const MODEL_USAGE_PROJECT = 'usageProject';
-    
+
     // Database
     const MODEL_COLLECTION = 'collection';
     const MODEL_COLLECTION_LIST = 'collectionList';
@@ -111,7 +111,7 @@ class Response extends SwooleResponse
     const MODEL_ATTRIBUTE_EMAIL = 'attributeEmail';
     const MODEL_ATTRIBUTE_ENUM = 'attributeEnum';
     const MODEL_ATTRIBUTE_IP = 'attributeIp';
-    const MODEL_ATTRIBUTE_URL= 'attributeUrl';
+    const MODEL_ATTRIBUTE_URL = 'attributeUrl';
 
     // Users
     const MODEL_USER = 'user';
@@ -121,7 +121,7 @@ class Response extends SwooleResponse
     const MODEL_TOKEN = 'token';
     const MODEL_JWT = 'jwt';
     const MODEL_PREFERENCES = 'preferences';
-    
+
     // Storage
     const MODEL_FILE = 'file';
     const MODEL_FILE_LIST = 'fileList';
@@ -159,7 +159,7 @@ class Response extends SwooleResponse
     const MODEL_BUILD = 'build';
     const MODEL_BUILD_LIST = 'buildList';  // Not used anywhere yet
     const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
- 
+
     // Project
     const MODEL_PROJECT = 'project';
     const MODEL_PROJECT_LIST = 'projectList';
@@ -178,7 +178,7 @@ class Response extends SwooleResponse
     const MODEL_HEALTH_QUEUE = 'healthQueue';
     const MODEL_HEALTH_TIME = 'healthTime';
     const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
-    
+
     // Deprecated
     const MODEL_PERMISSIONS = 'permissions';
     const MODEL_RULE = 'rule';
@@ -329,7 +329,7 @@ class Response extends SwooleResponse
     public function getModel(string $key): Model
     {
         if (!isset($this->models[$key])) {
-            throw new Exception('Undefined model: '.$key);
+            throw new Exception('Undefined model: ' . $key);
         }
 
         return $this->models[$key];
@@ -392,13 +392,13 @@ class Response extends SwooleResponse
                 if (!is_null($rule['default'])) {
                     $document->setAttribute($key, $rule['default']);
                 } else {
-                    throw new Exception('Model '.$model->getName().' is missing response key: '.$key);
+                    throw new Exception('Model ' . $model->getName() . ' is missing response key: ' . $key);
                 }
             }
 
             if ($rule['array']) {
                 if (!is_array($data[$key])) {
-                    throw new Exception($key.' must be an array of type '.$rule['type']);
+                    throw new Exception($key . ' must be an array of type ' . $rule['type']);
                 }
 
                 foreach ($data[$key] as &$item) {
@@ -408,7 +408,7 @@ class Response extends SwooleResponse
                                 $condition = false;
                                 foreach ($this->getModel($type)->conditions as $attribute => $val) {
                                     $condition = $item->getAttribute($attribute) === $val;
-                                    if(!$condition) {
+                                    if (!$condition) {
                                         break;
                                     }
                                 }
@@ -422,7 +422,7 @@ class Response extends SwooleResponse
                         }
 
                         if (!array_key_exists($ruleType, $this->models)) {
-                            throw new Exception('Missing model for rule: '. $ruleType);
+                            throw new Exception('Missing model for rule: ' . $ruleType);
                         }
 
                         $item = $this->output($item, $ruleType);
@@ -465,7 +465,7 @@ class Response extends SwooleResponse
     /**
      * @return array
      */
-    public function getPayload():array
+    public function getPayload(): array
     {
         return $this->payload;
     }

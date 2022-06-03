@@ -43,7 +43,7 @@ return [
     'avatars' => [
         'key' => 'avatars',
         'name' => 'Avatars',
-        'subtitle'=> 'The Avatars service aims to help you complete everyday tasks related to your app image, icons, and avatars.',
+        'subtitle' => 'The Avatars service aims to help you complete everyday tasks related to your app image, icons, and avatars.',
         'description' => '/docs/services/avatars.md',
         'controller' => 'api/avatars.php',
         'sdk' => true,

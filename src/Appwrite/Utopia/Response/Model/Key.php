@@ -11,7 +11,7 @@ class Key extends Model
      * @var bool
      */
     protected $public = false;
-    
+
     public function __construct()
     {
         $this
@@ -26,6 +26,12 @@ class Key extends Model
                 'description' => 'Key name.',
                 'default' => '',
                 'example' => 'My API Key',
+            ])
+            ->addRule('expire', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Key expiration in Unix timestamp.',
+                'default' => 0,
+                'example' => '1653990687',
             ])
             ->addRule('scopes', [
                 'type' => self::TYPE_STRING,
@@ -48,7 +54,7 @@ class Key extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Key';
     }
@@ -58,7 +64,7 @@ class Key extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_KEY;
     }

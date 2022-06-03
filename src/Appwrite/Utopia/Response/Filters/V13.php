@@ -39,14 +39,16 @@ class V13 extends Filter
         return $parsedResponse;
     }
 
-    protected function parseExecution($content) {
+    protected function parseExecution($content)
+    {
         $content['stdout'] = $content['response'];
         unset($content['response']);
 
         return $content;
     }
 
-    protected function parseExecutionList($content) {
+    protected function parseExecutionList($content)
+    {
         $executions = $content['executions'];
         $parsedResponse = [];
         foreach ($executions as $document) {
@@ -56,14 +58,16 @@ class V13 extends Filter
         return $content;
     }
 
-    protected function parseProject($content) {
+    protected function parseProject($content)
+    {
         $content['providers'] = $content['authProviders'];
         unset($content['authProviders']);
 
         return $content;
     }
 
-    protected function parseProjectList($content) {
+    protected function parseProjectList($content)
+    {
         $projects = $content['projects'];
         $parsedResponse = [];
         foreach ($projects as $document) {
@@ -73,7 +77,8 @@ class V13 extends Filter
         return $content;
     }
 
-    protected function parseMembership($content) {
+    protected function parseMembership($content)
+    {
         $content['name'] = $content['userName'];
         unset($content['userName']);
 
@@ -85,7 +90,8 @@ class V13 extends Filter
         return $content;
     }
 
-    protected function parseMembershipList($content) {
+    protected function parseMembershipList($content)
+    {
         $memberships = $content['memberships'];
         $parsedResponse = [];
         foreach ($memberships as $document) {

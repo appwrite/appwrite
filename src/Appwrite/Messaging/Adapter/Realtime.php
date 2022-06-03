@@ -10,7 +10,7 @@ class Realtime extends Adapter
 {
     /**
      * Connection Tree
-     * 
+     *
      * [CONNECTION_ID] ->
      *      'projectId' -> [PROJECT_ID]
      *      'roles' -> [ROLE_x, ROLE_Y]
@@ -67,7 +67,7 @@ class Realtime extends Adapter
 
     /**
      * Removes Subscription.
-     * 
+     *
      * @param mixed $connection
      * @return void
      */
@@ -129,7 +129,9 @@ class Realtime extends Adapter
      */
     public static function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
     {
-        if (empty($channels) || empty($roles) || empty($projectId)) return;
+        if (empty($channels) || empty($roles) || empty($projectId)) {
+            return;
+        }
 
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
@@ -154,12 +156,12 @@ class Realtime extends Adapter
      * Identifies the receivers of all subscriptions, based on the permissions and event.
      *
      * Example of performance with an event with user:XXX permissions and with X users spread across 10 different channels:
-     *  - 0.014 ms (±6.88%) | 10 Connections / 100 Subscriptions 
-     *  - 0.070 ms (±3.71%) | 100 Connections / 1,000 Subscriptions 
+     *  - 0.014 ms (±6.88%) | 10 Connections / 100 Subscriptions
+     *  - 0.070 ms (±3.71%) | 100 Connections / 1,000 Subscriptions
      *  - 0.846 ms (±2.74%) | 1,000 Connections / 10,000 Subscriptions
      *  - 10.866 ms (±1.01%) | 10,000 Connections / 100,000 Subscriptions
      *  - 110.201 ms (±2.32%) | 100,000 Connections / 1,000,000 Subscriptions
-     *  - 1,121.328 ms (±0.84%) | 1,000,000 Connections / 10,000,000 Subscriptions 
+     *  - 1,121.328 ms (±0.84%) | 1,000,000 Connections / 10,000,000 Subscriptions
      *
      * @param array $event
      */
@@ -209,7 +211,7 @@ class Realtime extends Adapter
      * Also renames the account channel to account.USER_ID and removes all illegal account channel variations.
      * @param array $channels
      * @param string $userId
-     * @return array 
+     * @return array
      */
     public static function convertChannels(array $channels, string $userId): array
     {
@@ -238,7 +240,7 @@ class Realtime extends Adapter
      * @param string $event
      * @param Document $payload
      * @param Document|null $project
-     * @return array 
+     * @return array
      */
     public static function fromPayload(string $event, Document $payload, Document $project = null, Document $collection = null, Document $bucket = null): array
     {
