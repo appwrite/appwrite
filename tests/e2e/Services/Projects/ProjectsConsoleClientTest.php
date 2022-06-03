@@ -1260,10 +1260,10 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test',
             'scopes' => ['health.read'],
-            'expire' => time()+3600,
+            'expire' => time() + 3600,
         ]);
 
-        $response = $this->client->call(Client::METHOD_GET, '/health' , [
+        $response = $this->client->call(Client::METHOD_GET, '/health', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
             'x-appwrite-key' => $response['body']['secret']
@@ -1283,7 +1283,7 @@ class ProjectsConsoleClientTest extends Scope
             'expire' => 0,
         ]);
 
-        $response = $this->client->call(Client::METHOD_GET, '/health' , [
+        $response = $this->client->call(Client::METHOD_GET, '/health', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
             'x-appwrite-key' => $response['body']['secret']
@@ -1300,17 +1300,16 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test',
             'scopes' => ['health.read'],
-            'expire' => time()-3600,
+            'expire' => time() - 3600,
         ]);
 
-        $response = $this->client->call(Client::METHOD_GET, '/health' , [
+        $response = $this->client->call(Client::METHOD_GET, '/health', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
             'x-appwrite-key' => $response['body']['secret']
         ], []);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
     }
 
 
@@ -1328,7 +1327,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test Update',
             'scopes' => ['users.read', 'users.write', 'collections.read'],
-            'expire' => time()+360,
+            'expire' => time() + 360,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
