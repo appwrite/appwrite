@@ -68,6 +68,8 @@ trait ProjectCustom
                 'users.write',
                 'teams.read',
                 'teams.write',
+                'databases.read',
+                'databases.write',
                 'collections.read',
                 'collections.write',
                 'documents.read',

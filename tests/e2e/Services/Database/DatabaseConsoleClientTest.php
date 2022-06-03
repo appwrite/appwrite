@@ -14,10 +14,22 @@ class DatabaseConsoleClientTest extends Scope
 
     public function testCreateCollection(): array
     {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => 'unique()',
+            'name' => 'InvalidDocumentDatabase',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEquals('invalidDocumentDatabase', $database['body']['name']);
+
+        $databaseId = $database['body']['$id'];
         /**
          * Test for SUCCESS
          */
-        $movies = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -31,16 +43,17 @@ class DatabaseConsoleClientTest extends Scope
         $this->assertEquals($movies['headers']['status-code'], 201);
         $this->assertEquals($movies['body']['name'], 'Movies');
 
-        return ['moviesId' => $movies['body']['$id']];
+        return ['moviesId' => $movies['body']['$id'], 'databaseId' => $databaseId];
     }
 
     public function testGetDatabaseUsage()
     {
+        $databaseId = $data['databaseId'];
         /**
          * Test for FAILURE
          */
 
-        $response = $this->client->call(Client::METHOD_GET, '/database/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -53,7 +66,7 @@ class DatabaseConsoleClientTest extends Scope
          * Test for SUCCESS
          */
 
-        $response = $this->client->call(Client::METHOD_GET, '/database/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -81,11 +94,12 @@ class DatabaseConsoleClientTest extends Scope
      */
     public function testGetCollectionUsage(array $data)
     {
+        $databaseId = $data['databaseId'];
         /**
          * Test for FAILURE
          */
 
-        $response = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/' . $data['moviesId'] . '/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -94,7 +108,7 @@ class DatabaseConsoleClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 400);
 
-        $response = $this->client->call(Client::METHOD_GET, '/database/randomCollectionId/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/randomCollectionId/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -106,7 +120,7 @@ class DatabaseConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/' . $data['moviesId'] . '/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -128,10 +142,11 @@ class DatabaseConsoleClientTest extends Scope
      */
     public function testGetCollectionLogs(array $data)
     {
+        $databaseId = $data['databaseId'];
         /**
          * Test for SUCCESS
          */
-        $logs = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/logs', array_merge([
+        $logs = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -140,7 +155,7 @@ class DatabaseConsoleClientTest extends Scope
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
 
-        $logs = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/logs', array_merge([
+        $logs = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -152,7 +167,7 @@ class DatabaseConsoleClientTest extends Scope
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
         $this->assertIsNumeric($logs['body']['total']);
 
-        $logs = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/logs', array_merge([
+        $logs = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -163,7 +178,7 @@ class DatabaseConsoleClientTest extends Scope
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
 
-        $logs = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/logs', array_merge([
+        $logs = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [

@@ -74,13 +74,13 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $default = $attribute->getAttribute('default');
 
 
-    $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+    $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-    if ($database->isEmpty()) {
+    if ($db->isEmpty()) {
         throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
     }
 
-    $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+    $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
 
     if ($collection->isEmpty()) {
         throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
@@ -103,9 +103,9 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
     try {
         $attribute = new Document([
-            '$id' => $databaseId.'_'.$collectionId.'_'.$key,
+            '$id' => $db->getInternalId().'_'.$collectionId.'_'.$key,
             'key' => $key,
-            'collectionId' => $databaseId .'_'. $collectionId,
+            'collectionId' => $db->getInternalId() .'_'. $collectionId,
             'type' => $type,
             'status' => 'processing', // processing, available, failed, deleting, stuck
             'size' => $size,
@@ -128,13 +128,14 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         throw new Exception('Attribute limit exceeded', 400, Exception::ATTRIBUTE_LIMIT_EXCEEDED);
     }
 
-    $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
-    $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
+    $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
+    $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
 
     $usage->setParam('database.collections.update', 1);
 
     $database
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
+        ->setDatabase($db)
         ->setCollection($collection)
         ->setDocument($attribute)
     ;
@@ -146,7 +147,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     ;
 
     $audits
-        ->setResource('database/'.$database.'/collection/'.$collectionId)
+        ->setResource('database/'.$db->getId().'/collection/'.$collectionId)
         ->setPayload($attribute->getArrayCopy())
     ;
 
@@ -637,7 +638,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
         $response->noContent();
     });
 
-App::post('/v1/databases/collections/:collectionId/attributes/string')
+App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string')
     ->desc('Create String Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'collections.[collectionId].attributes.[attributeId].create')
@@ -1159,7 +1160,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attribute = $dbForProject->getDocument('attributes', $databaseId.'_'.$collectionId.'_'.$key);
+        $attribute = $dbForProject->getDocument('attributes', $database->getInternalId().'_'.$collectionId.'_'.$key);
 
         if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
@@ -1216,18 +1217,18 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($db->isEmpty()) {
             throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
         }
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attribute = $dbForProject->getDocument('attributes', $databaseId.'_'.$collectionId.'_'.$key);
+        $attribute = $dbForProject->getDocument('attributes', $db->getInternalId().'_'.$collectionId.'_'.$key);
 
         if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
@@ -1238,12 +1239,13 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
-        $dbForProject->deleteCachedCollection('database_' . $database->getInternalId().'_collection_' . $collection->getInternalId());
+        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
+        $dbForProject->deleteCachedCollection('database_' . $db->getInternalId().'_collection_' . $collection->getInternalId());
 
         $database
             ->setType(DATABASE_TYPE_DELETE_ATTRIBUTE)
             ->setCollection($collection)
+            ->setDatabase($db)
             ->setDocument($attribute)
         ;
 
@@ -1314,19 +1316,19 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Event\Event $events */
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($db->isEmpty()) {
             throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
         }
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
         $count = $dbForProject->count('indexes', [
-            new Query('collectionId', Query::TYPE_EQUAL, [$databaseId.'_'.$collectionId])
+            new Query('collectionId', Query::TYPE_EQUAL, [$db->getInternalId().'_'.$collectionId])
         ], 61);
 
         $limit = 64 - MariaDB::getNumberOfDefaultIndexes();
@@ -1364,10 +1366,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         try {
             $index = $dbForProject->createDocument('indexes', new Document([
-                '$id' => $databaseId.'_'.$collectionId.'_'.$key,
+                '$id' => $db->getInternalId().'_'.$collectionId.'_'.$key,
                 'key' => $key,
                 'status' => 'processing', // processing, available, failed, deleting, stuck
-                'collectionId' => $databaseId.'_'.$collectionId,
+                'collectionId' => $db->getInternalId() . '_' . $collectionId,
                 'type' => $type,
                 'attributes' => $attributes,
                 'lengths' => $lengths,
@@ -1377,10 +1379,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             throw new Exception('Index already exists', 409, Exception::INDEX_ALREADY_EXISTS);
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
+        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
 
         $database
             ->setType(DATABASE_TYPE_CREATE_INDEX)
+            ->setDatabase($db)
             ->setCollection($collection)
             ->setDocument($index)
         ;
@@ -1485,7 +1488,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         }
 
         $index = new Document([\array_merge($indexes[$indexIndex], [
-            'collectionId' => $databaseId.'_'.$collectionId,
+            'collectionId' => $database->getInternalId().'_'.$collectionId,
         ])]);
 
         $usage->setParam('database.collections.read', 1);
@@ -1521,18 +1524,18 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($db->isEmpty()) {
             throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
         }
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $index = $dbForProject->getDocument('indexes', $collectionId.'_'.$key);
+        $index = $dbForProject->getDocument('indexes', $db->getInternalId() . '_' . $collectionId.'_'.$key);
 
         if (empty($index->getId())) {
             throw new Exception('Index not found', 404, Exception::INDEX_NOT_FOUND);
@@ -1543,10 +1546,11 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             $index = $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
+        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
 
         $database
             ->setType(DATABASE_TYPE_DELETE_INDEX)
+            ->setDatabase($db)
             ->setCollection($collection)
             ->setDocument($index)
         ;

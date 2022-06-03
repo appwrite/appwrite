@@ -243,9 +243,10 @@ Database::addFilter('subQueryAttributes',
         return null;
     },
     function($value, Document $document, Database $database) {
+        $databaseId = str_replace('database_', '',$document->getAttribute('$collection'));
         return $database
             ->find('attributes', [
-                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('collectionId', Query::TYPE_EQUAL, [$databaseId . '_' . $document->getId()])
             ], $database->getAttributeLimit(), 0, []);
     }
 );
@@ -255,9 +256,10 @@ Database::addFilter('subQueryIndexes',
         return null;
     },
     function($value, Document $document, Database $database) {
+        $databaseId = str_replace('database_', '',$document->getAttribute('$collection'));
         return $database
             ->find('indexes', [
-                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('collectionId', Query::TYPE_EQUAL, [$databaseId . '_' . $document->getId()])
             ], 64, 0, []);
     }
 );

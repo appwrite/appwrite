@@ -16,10 +16,22 @@ class DatabaseCustomServerTest extends Scope
 
     public function testListCollections()
     {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => 'unique()',
+            'name' => 'invalidDocumentDatabase',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEquals('invalidDocumentDatabase', $database['body']['name']);
+
+        $databaseId = $database['body']['$id'];
         /**
          * Test for SUCCESS
          */
-        $test1 = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+        $test1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -31,7 +43,7 @@ class DatabaseCustomServerTest extends Scope
             'permission' => 'document'
         ]);
 
-        $test2 = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+        $test2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -43,7 +55,7 @@ class DatabaseCustomServerTest extends Scope
             'permission' => 'document'
         ]);
 
-        $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+        $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -56,7 +68,7 @@ class DatabaseCustomServerTest extends Scope
          * Test for Order
          */
         $base = array_reverse($collections['body']['collections']);
-        $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+        $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -70,12 +82,12 @@ class DatabaseCustomServerTest extends Scope
         /**
          * Test for After
          */
-        $base = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+        $base = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+        $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -85,7 +97,7 @@ class DatabaseCustomServerTest extends Scope
         $this->assertCount(1, $collections['body']['collections']);
         $this->assertEquals($base['body']['collections'][1]['$id'], $collections['body']['collections'][0]['$id']);
 
-        $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+        $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -98,12 +110,12 @@ class DatabaseCustomServerTest extends Scope
         /**
          * Test for Before
          */
-        $base = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+        $base = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+        $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -114,7 +126,7 @@ class DatabaseCustomServerTest extends Scope
         $this->assertCount(1, $collections['body']['collections']);
         $this->assertEquals($base['body']['collections'][0]['$id'], $collections['body']['collections'][0]['$id']);
 
-        $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+        $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -128,7 +140,7 @@ class DatabaseCustomServerTest extends Scope
         /**
          * Test for Search
          */
-        $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+        $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -138,7 +150,7 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals(1, $collections['body']['total']);
         $this->assertEquals('first', $collections['body']['collections'][0]['$id']);
 
-        $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+        $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -149,7 +161,7 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals('Test 1', $collections['body']['collections'][0]['name']);
         $this->assertEquals('Test 2', $collections['body']['collections'][1]['name']);
 
-        $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+        $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -161,7 +173,7 @@ class DatabaseCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -171,7 +183,7 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 400);
 
         // This collection already exists
-        $response = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -188,12 +200,24 @@ class DatabaseCustomServerTest extends Scope
 
     public function testDeleteAttribute(): array
     {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => 'unique()',
+            'name' => 'invalidDocumentDatabase',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEquals('invalidDocumentDatabase', $database['body']['name']);
+
+        $databaseId = $database['body']['$id'];
         /**
          * Test for SUCCESS
          */
 
         // Create collection
-        $actors = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -208,7 +232,7 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals($actors['headers']['status-code'], 201);
         $this->assertEquals($actors['body']['name'], 'Actors');
 
-        $firstName = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actors['body']['$id'] . '/attributes/string', array_merge([
+        $firstName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -218,7 +242,7 @@ class DatabaseCustomServerTest extends Scope
             'required' => true,
         ]);
 
-        $lastName = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actors['body']['$id'] . '/attributes/string', array_merge([
+        $lastName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -228,7 +252,7 @@ class DatabaseCustomServerTest extends Scope
             'required' => true,
         ]);
 
-        $unneeded = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actors['body']['$id'] . '/attributes/string', array_merge([
+        $unneeded = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -242,7 +266,7 @@ class DatabaseCustomServerTest extends Scope
         sleep(2);
 
         // Creating document to ensure cache is purged on schema change
-        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actors['body']['$id'] . '/documents', array_merge([
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -257,7 +281,7 @@ class DatabaseCustomServerTest extends Scope
             'write' => ['role:all'],
         ]);
 
-        $index = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actors['body']['$id'] . '/indexes', array_merge([
+        $index = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -272,7 +296,7 @@ class DatabaseCustomServerTest extends Scope
         // Wait for database worker to finish creating index
         sleep(2);
 
-        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $actors['body']['$id'], array_merge([
+        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -290,7 +314,7 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals($collection['body']['indexes'][0]['key'], $index['body']['key']);
 
         // Delete attribute
-        $attribute = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $actors ['body']['$id'] . '/attributes/' . $unneededId, array_merge([
+        $attribute = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $actors ['body']['$id'] . '/attributes/' . $unneededId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -301,7 +325,7 @@ class DatabaseCustomServerTest extends Scope
         sleep(2);
 
         // Check document to ensure cache is purged on schema change
-        $document = $this->client->call(Client::METHOD_GET, '/database/collections/' . $actors['body']['$id'] . '/documents/' . $document['body']['$id'], array_merge([
+        $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/documents/' . $document['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -309,7 +333,7 @@ class DatabaseCustomServerTest extends Scope
 
         $this->assertNotContains($unneededId, $document['body']);
 
-        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $actors['body']['$id'], array_merge([
+        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -324,6 +348,7 @@ class DatabaseCustomServerTest extends Scope
         return [
             'collectionId' => $actors['body']['$id'],
             'key' => $index['body']['key'],
+            'databaseId' => $databaseId
         ];
     }
 
@@ -332,7 +357,8 @@ class DatabaseCustomServerTest extends Scope
      */
     public function testDeleteIndex($data): array
     {
-        $index = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['collectionId'] . '/indexes/'. $data['key'], array_merge([
+        $databaseId = $data['databaseId'];
+        $index = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/indexes/'. $data['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -343,7 +369,7 @@ class DatabaseCustomServerTest extends Scope
         // Wait for database worker to finish deleting index
         sleep(2);
 
-        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['collectionId'], array_merge([
+        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['collectionId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -359,7 +385,8 @@ class DatabaseCustomServerTest extends Scope
      */
     public function testDeleteIndexOnDeleteAttribute($data)
     {
-        $attribute1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['collectionId'] . '/attributes/string', array_merge([
+        $databaseId = $data['databaseId'];
+        $attribute1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -369,7 +396,7 @@ class DatabaseCustomServerTest extends Scope
             'required' => true,
         ]);
 
-        $attribute2 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['collectionId'] . '/attributes/string', array_merge([
+        $attribute2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -386,7 +413,7 @@ class DatabaseCustomServerTest extends Scope
 
         sleep(2);
 
-        $index1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['collectionId'] . '/indexes', array_merge([
+        $index1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -397,7 +424,7 @@ class DatabaseCustomServerTest extends Scope
             'orders' => ['ASC', 'ASC'],
         ]);
 
-        $index2 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['collectionId'] . '/indexes', array_merge([
+        $index2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -415,7 +442,7 @@ class DatabaseCustomServerTest extends Scope
         sleep(2);
 
         // Expected behavior: deleting attribute2 will cause index2 to be dropped, and index1 rebuilt with a single key
-        $deleted = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['collectionId'] . '/attributes/'. $attribute2['body']['key'], array_merge([
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/attributes/'. $attribute2['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -426,7 +453,7 @@ class DatabaseCustomServerTest extends Scope
         // wait for database worker to complete
         sleep(2);
 
-        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['collectionId'], array_merge([
+        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['collectionId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -441,7 +468,7 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals($attribute1['body']['key'], $collection['body']['indexes'][0]['attributes'][0]);
 
         // Delete attribute
-        $deleted = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['collectionId'] . '/attributes/' . $attribute1['body']['key'], array_merge([
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/attributes/' . $attribute1['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -454,7 +481,19 @@ class DatabaseCustomServerTest extends Scope
 
     public function testCleanupDuplicateIndexOnDeleteAttribute()
     {
-        $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => 'unique()',
+            'name' => 'invalidDocumentDatabase',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEquals('invalidDocumentDatabase', $database['body']['name']);
+
+        $databaseId = $database['body']['$id'];
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -471,7 +510,7 @@ class DatabaseCustomServerTest extends Scope
 
         $collectionId = $collection['body']['$id'];
 
-        $attribute1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+        $attribute1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -481,7 +520,7 @@ class DatabaseCustomServerTest extends Scope
             'required' => true,
         ]);
 
-        $attribute2 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+        $attribute2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -498,7 +537,7 @@ class DatabaseCustomServerTest extends Scope
 
         sleep(2);
 
-        $index1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/indexes', array_merge([
+        $index1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -509,7 +548,7 @@ class DatabaseCustomServerTest extends Scope
             'orders' => ['ASC', 'ASC'],
         ]);
 
-        $index2 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/indexes', array_merge([
+        $index2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -527,7 +566,7 @@ class DatabaseCustomServerTest extends Scope
         sleep(2);
 
         // Expected behavior: deleting attribute1 would cause index1 to be a duplicate of index2 and automatically removed
-        $deleted = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $collectionId . '/attributes/'. $attribute1['body']['key'], array_merge([
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/'. $attribute1['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -538,7 +577,7 @@ class DatabaseCustomServerTest extends Scope
         // wait for database worker to complete
         sleep(2);
 
-        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
+        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -553,7 +592,7 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals($attribute2['body']['key'], $collection['body']['indexes'][0]['attributes'][0]);
 
         // Delete attribute
-        $deleted = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $collectionId . '/attributes/' . $attribute2['body']['key'], array_merge([
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $attribute2['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -567,10 +606,11 @@ class DatabaseCustomServerTest extends Scope
      */
     public function testDeleteCollection($data)
     {
+        $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
 
         // Add Documents to the collection
-        $document1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+        $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -583,7 +623,7 @@ class DatabaseCustomServerTest extends Scope
             'write' => ['user:'.$this->getUser()['$id']],
         ]);
 
-        $document2 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+        $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -613,7 +653,7 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals($document2['body']['lastName'], 'Jackson');
 
         // Delete the actors collection
-        $response = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $collectionId , array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId , array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -623,7 +663,7 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals($response['body'],"");
 
         // Try to get the collection and check if it has been deleted
-        $response = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId , array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId , array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()));
@@ -642,7 +682,7 @@ class DatabaseCustomServerTest extends Scope
     //
     // public function testAttributeCountLimit()
     // {
-    //     $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+    //     $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
     //         'content-type' => 'application/json',
     //         'x-appwrite-project' => $this->getProject()['$id'],
     //         'x-appwrite-key' => $this->getProject()['apiKey']
@@ -658,7 +698,7 @@ class DatabaseCustomServerTest extends Scope
 
     //     // load the collection up to the limit
     //     for ($i=0; $i < 1012; $i++) {
-    //         $attribute = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
+    //         $attribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/integer', array_merge([
     //             'content-type' => 'application/json',
     //             'x-appwrite-project' => $this->getProject()['$id'],
     //             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -672,7 +712,7 @@ class DatabaseCustomServerTest extends Scope
 
     //     sleep(30);
 
-    //     $tooMany = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
+    //     $tooMany = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/integer', array_merge([
     //         'content-type' => 'application/json',
     //         'x-appwrite-project' => $this->getProject()['$id'],
     //         'x-appwrite-key' => $this->getProject()['apiKey']
@@ -687,7 +727,19 @@ class DatabaseCustomServerTest extends Scope
 
     public function testAttributeRowWidthLimit()
     {
-        $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => 'unique()',
+            'name' => 'invalidDocumentDatabase',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEquals('invalidDocumentDatabase', $database['body']['name']);
+
+        $databaseId = $database['body']['$id'];
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -706,7 +758,7 @@ class DatabaseCustomServerTest extends Scope
 
         // Add wide string attributes to approach row width limit
         for ($i=0; $i < 15; $i++) {
-            $attribute = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+            $attribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
@@ -721,7 +773,7 @@ class DatabaseCustomServerTest extends Scope
 
         sleep(5);
 
-        $tooWide = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+        $tooWide = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -737,7 +789,19 @@ class DatabaseCustomServerTest extends Scope
 
     public function testIndexLimitException()
     {
-        $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => 'unique()',
+            'name' => 'invalidDocumentDatabase',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEquals('invalidDocumentDatabase', $database['body']['name']);
+
+        $databaseId = $database['body']['$id'];
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -757,7 +821,7 @@ class DatabaseCustomServerTest extends Scope
         // add unique attributes for indexing
         for ($i=0; $i < 64; $i++) {
             // $this->assertEquals(true, static::getDatabase()->createAttribute('indexLimit', "test{$i}", Database::VAR_STRING, 16, true));
-            $attribute = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+            $attribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
@@ -772,7 +836,7 @@ class DatabaseCustomServerTest extends Scope
 
         sleep(20);
 
-        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
+        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -794,7 +858,7 @@ class DatabaseCustomServerTest extends Scope
         // Add up to the limit, then check if the next index throws IndexLimitException
         for ($i=0; $i < 61; $i++) {
             // $this->assertEquals(true, static::getDatabase()->createIndex('indexLimit', "index{$i}", Database::INDEX_KEY, ["test{$i}"], [16]));
-            $index = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/indexes', array_merge([
+            $index = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/indexes', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
@@ -810,7 +874,7 @@ class DatabaseCustomServerTest extends Scope
 
         sleep(5);
 
-        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
+        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -823,7 +887,7 @@ class DatabaseCustomServerTest extends Scope
         $this->assertCount(64, $collection['body']['attributes']);
         $this->assertCount(61, $collection['body']['indexes']);
 
-        $tooMany = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/indexes', array_merge([
+        $tooMany = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -836,7 +900,7 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals(400, $tooMany['headers']['status-code']);
         $this->assertEquals('Index limit exceeded', $tooMany['body']['message']);
 
-        $collection = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $collectionId, array_merge([
+        $collection = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
