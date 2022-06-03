@@ -1784,7 +1784,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         if (!empty($cursor)) {
             $cursorDocument = $collection->getAttribute('permission') === 'collection'
                 ? Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor))
-                : $dbForProject->getDocument('collection_' . $collection->getInternalId(), $cursor);
+                : $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
@@ -2139,6 +2139,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->label('sdk.description', '/docs/references/database/delete-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document ID.')
     ->inject('response')
@@ -2185,7 +2186,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             /** @var Document $document */
             $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
         } else {
-            $document = $dbForProject->getDocument('collection_' . $collection->getInternalId(), $documentId);
+            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
         }
 
         if ($document->isEmpty()) {
