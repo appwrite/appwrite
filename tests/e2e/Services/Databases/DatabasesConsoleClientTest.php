@@ -20,7 +20,11 @@ class DatabasesConsoleClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'databaseId' => 'unique()',
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesConsoleClientTest.php
             'name' => 'invalidDocumentDatabase',
+=======
+            'name' => 'InvalidDocumentDatabase',
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseConsoleClientTest.php
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
         $this->assertEquals('invalidDocumentDatabase', $database['body']['name']);
@@ -46,6 +50,7 @@ class DatabasesConsoleClientTest extends Scope
         return ['moviesId' => $movies['body']['$id'], 'databaseId' => $databaseId];
     }
 
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesConsoleClientTest.php
     /**
      * @depends testCreateCollection
      */
@@ -62,6 +67,21 @@ class DatabasesConsoleClientTest extends Scope
     //     ], $this->getHeaders()), [
     //         'range' => '32h'
     //     ]);
+=======
+    public function testGetDatabaseUsage()
+    {
+        $databaseId = $data['databaseId'];
+        /**
+         * Test for FAILURE
+         */
+
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '32h'
+        ]);
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseConsoleClientTest.php
 
     //     $this->assertEquals($response['headers']['status-code'], 400);
 
@@ -69,12 +89,21 @@ class DatabasesConsoleClientTest extends Scope
     //      * Test for SUCCESS
     //      */
 
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesConsoleClientTest.php
     //     $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
     //         'content-type' => 'application/json',
     //         'x-appwrite-project' => $this->getProject()['$id']
     //     ], $this->getHeaders()), [
     //         'range' => '24h'
     //     ]);
+=======
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '24h'
+        ]);
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseConsoleClientTest.php
 
     //     $this->assertEquals($response['headers']['status-code'], 200);
     //     $this->assertEquals(count($response['body']), 11);
@@ -102,7 +131,11 @@ class DatabasesConsoleClientTest extends Scope
          * Test for FAILURE
          */
 
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesConsoleClientTest.php
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/usage', array_merge([
+=======
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/' . $data['moviesId'] . '/usage', array_merge([
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseConsoleClientTest.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -111,7 +144,11 @@ class DatabasesConsoleClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 400);
 
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesConsoleClientTest.php
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/randomCollectionId/usage', array_merge([
+=======
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/randomCollectionId/usage', array_merge([
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseConsoleClientTest.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -123,7 +160,11 @@ class DatabasesConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesConsoleClientTest.php
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/usage', array_merge([
+=======
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/' . $data['moviesId'] . '/usage', array_merge([
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseConsoleClientTest.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [

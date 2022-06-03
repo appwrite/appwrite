@@ -75,6 +75,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
 
 <<<<<<< HEAD:app/controllers/api/databases.php
+<<<<<<< HEAD:app/controllers/api/databases.php
     $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
     if ($db->isEmpty()) {
@@ -84,13 +85,20 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
 =======
     $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+=======
+    $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
-    if ($database->isEmpty()) {
+    if ($db->isEmpty()) {
         throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
     }
 
+<<<<<<< HEAD:app/controllers/api/databases.php
     $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 >>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
+=======
+    $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
     if ($collection->isEmpty()) {
         throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
@@ -114,6 +122,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     try {
         $attribute = new Document([
 <<<<<<< HEAD:app/controllers/api/databases.php
+<<<<<<< HEAD:app/controllers/api/databases.php
             '$id' => $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key,
             'key' => $key,
             'databaseInternalId' => $db->getInternalId(),
@@ -125,6 +134,11 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
             'key' => $key,
             'collectionId' => $databaseId .'_'. $collectionId,
 >>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
+=======
+            '$id' => $db->getInternalId().'_'.$collectionId.'_'.$key,
+            'key' => $key,
+            'collectionId' => $db->getInternalId() .'_'. $collectionId,
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
             'type' => $type,
             'status' => 'processing', // processing, available, failed, deleting, stuck
             'size' => $size,
@@ -146,12 +160,17 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     }
 
 <<<<<<< HEAD:app/controllers/api/databases.php
+<<<<<<< HEAD:app/controllers/api/databases.php
     $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
     $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
 =======
     $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
     $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
 >>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
+=======
+    $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
+    $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
     $usage
         ->setParam('databaseId', $databaseId)
@@ -174,10 +193,14 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
     $audits
 <<<<<<< HEAD:app/controllers/api/databases.php
+<<<<<<< HEAD:app/controllers/api/databases.php
         ->setResource('database/' . $db->getId() . '/collection/' . $collectionId)
 =======
         ->setResource('database/'.$database.'/collection/'.$collectionId)
 >>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
+=======
+        ->setResource('database/'.$db->getId().'/collection/'.$collectionId)
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
         ->setPayload($attribute->getArrayCopy())
     ;
 
@@ -1116,10 +1139,14 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
     });
 
 <<<<<<< HEAD:app/controllers/api/databases.php
+<<<<<<< HEAD:app/controllers/api/databases.php
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string')
 =======
 App::post('/v1/databases/collections/:collectionId/attributes/string')
 >>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
+=======
+App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string')
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
     ->desc('Create String Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
@@ -1683,10 +1710,14 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         }
 
 <<<<<<< HEAD:app/controllers/api/databases.php
+<<<<<<< HEAD:app/controllers/api/databases.php
         $attribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
 =======
         $attribute = $dbForProject->getDocument('attributes', $databaseId.'_'.$collectionId.'_'.$key);
 >>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
+=======
+        $attribute = $dbForProject->getDocument('attributes', $database->getInternalId().'_'.$collectionId.'_'.$key);
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
@@ -1755,23 +1786,31 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($db->isEmpty()) {
             throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
         }
+<<<<<<< HEAD:app/controllers/api/databases.php
         $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 >>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
+=======
+        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
 <<<<<<< HEAD:app/controllers/api/databases.php
+<<<<<<< HEAD:app/controllers/api/databases.php
         $attribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
 =======
         $attribute = $dbForProject->getDocument('attributes', $databaseId.'_'.$collectionId.'_'.$key);
 >>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
+=======
+        $attribute = $dbForProject->getDocument('attributes', $db->getInternalId().'_'.$collectionId.'_'.$key);
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
@@ -1783,12 +1822,17 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         }
 
 <<<<<<< HEAD:app/controllers/api/databases.php
+<<<<<<< HEAD:app/controllers/api/databases.php
         $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
         $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
 =======
         $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
         $dbForProject->deleteCachedCollection('database_' . $database->getInternalId().'_collection_' . $collection->getInternalId());
 >>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
+=======
+        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
+        $dbForProject->deleteCachedCollection('database_' . $db->getInternalId().'_collection_' . $collection->getInternalId());
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         $database
             ->setType(DATABASE_TYPE_DELETE_ATTRIBUTE)
@@ -1882,13 +1926,17 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         /** @var Appwrite\Stats\Stats $usage */
         /** @var Appwrite\Event\Event $events */
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($db->isEmpty()) {
             throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
         }
+<<<<<<< HEAD:app/controllers/api/databases.php
         $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 >>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
+=======
+        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
@@ -1896,11 +1944,15 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $count = $dbForProject->count('indexes', [
 <<<<<<< HEAD:app/controllers/api/databases.php
+<<<<<<< HEAD:app/controllers/api/databases.php
             new Query('collectionInternalId', Query::TYPE_EQUAL, [$collection->getInternalId()]),
             new Query('databaseInternalId', Query::TYPE_EQUAL, [$db->getInternalId()])
 =======
             new Query('collectionId', Query::TYPE_EQUAL, [$databaseId.'_'.$collectionId])
 >>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
+=======
+            new Query('collectionId', Query::TYPE_EQUAL, [$db->getInternalId().'_'.$collectionId])
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
         ], 61);
 
         $limit = 64 - MariaDB::getNumberOfDefaultIndexes();
@@ -1939,6 +1991,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         try {
             $index = $dbForProject->createDocument('indexes', new Document([
 <<<<<<< HEAD:app/controllers/api/databases.php
+<<<<<<< HEAD:app/controllers/api/databases.php
                 '$id' => $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key,
                 'key' => $key,
                 'status' => 'processing', // processing, available, failed, deleting, stuck
@@ -1952,6 +2005,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
                 'status' => 'processing', // processing, available, failed, deleting, stuck
                 'collectionId' => $databaseId.'_'.$collectionId,
 >>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
+=======
+                '$id' => $db->getInternalId().'_'.$collectionId.'_'.$key,
+                'key' => $key,
+                'status' => 'processing', // processing, available, failed, deleting, stuck
+                'collectionId' => $db->getInternalId() . '_' . $collectionId,
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
                 'type' => $type,
                 'attributes' => $attributes,
                 'lengths' => $lengths,
@@ -1962,10 +2021,14 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         }
 
 <<<<<<< HEAD:app/controllers/api/databases.php
+<<<<<<< HEAD:app/controllers/api/databases.php
         $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
 =======
         $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
 >>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
+=======
+        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         $database
             ->setType(DATABASE_TYPE_CREATE_INDEX)
@@ -2093,10 +2156,14 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
 
         $index = new Document([\array_merge($indexes[$indexIndex], [
 <<<<<<< HEAD:app/controllers/api/databases.php
+<<<<<<< HEAD:app/controllers/api/databases.php
             'collectionId' => $database->getInternalId() . '_' . $collectionId,
 =======
             'collectionId' => $databaseId.'_'.$collectionId,
 >>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
+=======
+            'collectionId' => $database->getInternalId().'_'.$collectionId,
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
         ])]);
 
         $usage
@@ -2144,19 +2211,27 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         /** @var Appwrite\Event\Audit $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($db->isEmpty()) {
             throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
         }
+<<<<<<< HEAD:app/controllers/api/databases.php
         $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 >>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
+=======
+        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
+<<<<<<< HEAD:app/controllers/api/databases.php
         $index = $dbForProject->getDocument('indexes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
+=======
+        $index = $dbForProject->getDocument('indexes', $db->getInternalId() . '_' . $collectionId.'_'.$key);
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         if (empty($index->getId())) {
             throw new Exception('Index not found', 404, Exception::INDEX_NOT_FOUND);
@@ -2168,10 +2243,14 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         }
 
 <<<<<<< HEAD:app/controllers/api/databases.php
+<<<<<<< HEAD:app/controllers/api/databases.php
         $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
 =======
         $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
 >>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
+=======
+        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         $database
             ->setType(DATABASE_TYPE_DELETE_INDEX)

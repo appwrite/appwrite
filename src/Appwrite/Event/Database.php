@@ -41,7 +41,11 @@ class Database extends Event
 
     /**
      * Set the database for this event
+<<<<<<< HEAD
      *
+=======
+     * 
+>>>>>>> 5f84a1799 (updating tests and fixing some bugs)
      * @param Document $database
      * @return self
      */
