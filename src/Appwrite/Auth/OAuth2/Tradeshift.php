@@ -9,8 +9,8 @@ use Appwrite\Auth\OAuth2;
 
 class Tradeshift extends OAuth2
 {
-    const TRADESHIFT_SANDBOX_API_DOMAIN = 'api-sandbox.tradeshift.com';
-    const TRADESHIFT_API_DOMAIN = 'api.tradeshift.com';
+    public const TRADESHIFT_SANDBOX_API_DOMAIN = 'api-sandbox.tradeshift.com';
+    public const TRADESHIFT_API_DOMAIN = 'api.tradeshift.com';
 
     private array $apiDomain = [
         'sandbox' => self::TRADESHIFT_SANDBOX_API_DOMAIN,

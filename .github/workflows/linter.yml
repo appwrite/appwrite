@@ -31,4 +31,4 @@ jobs:
         args: --profile --ignore-platform-reqs
 
     - name: Run Linter
-      run: ./vendor/bin/phpcs -p || true
+      run: ./vendor/bin/phpcs -p

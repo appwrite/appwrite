@@ -10,38 +10,38 @@ class Auth
     /**
      * User Roles.
      */
-    const USER_ROLE_ALL = 'all';
-    const USER_ROLE_GUEST = 'guest';
-    const USER_ROLE_MEMBER = 'member';
-    const USER_ROLE_ADMIN = 'admin';
-    const USER_ROLE_DEVELOPER = 'developer';
-    const USER_ROLE_OWNER = 'owner';
-    const USER_ROLE_APP = 'app';
-    const USER_ROLE_SYSTEM = 'system';
+    public const USER_ROLE_ALL = 'all';
+    public const USER_ROLE_GUEST = 'guest';
+    public const USER_ROLE_MEMBER = 'member';
+    public const USER_ROLE_ADMIN = 'admin';
+    public const USER_ROLE_DEVELOPER = 'developer';
+    public const USER_ROLE_OWNER = 'owner';
+    public const USER_ROLE_APP = 'app';
+    public const USER_ROLE_SYSTEM = 'system';
 
     /**
      * Token Types.
      */
-    const TOKEN_TYPE_LOGIN = 1; // Deprecated
-    const TOKEN_TYPE_VERIFICATION = 2;
-    const TOKEN_TYPE_RECOVERY = 3;
-    const TOKEN_TYPE_INVITE = 4;
-    const TOKEN_TYPE_MAGIC_URL = 5;
+    public const TOKEN_TYPE_LOGIN = 1; // Deprecated
+    public const TOKEN_TYPE_VERIFICATION = 2;
+    public const TOKEN_TYPE_RECOVERY = 3;
+    public const TOKEN_TYPE_INVITE = 4;
+    public const TOKEN_TYPE_MAGIC_URL = 5;
 
     /**
      * Session Providers.
      */
-    const SESSION_PROVIDER_EMAIL = 'email';
-    const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
-    const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
+    public const SESSION_PROVIDER_EMAIL = 'email';
+    public const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
+    public const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
 
     /**
      * Token Expiration times.
      */
-    const TOKEN_EXPIRATION_LOGIN_LONG = 31536000;      /* 1 year */
-    const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;         /* 1 hour */
-    const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
-    const TOKEN_EXPIRATION_CONFIRM = 3600 * 24 * 7;    /* 7 days */
+    public const TOKEN_EXPIRATION_LOGIN_LONG = 31536000;      /* 1 year */
+    public const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;         /* 1 hour */
+    public const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
+    public const TOKEN_EXPIRATION_CONFIRM = 3600 * 24 * 7;    /* 7 days */
 
     /**
      * @var string
