@@ -18,6 +18,7 @@ use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\Kotlin;
 use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Swift;
+use Appwrite\SDK\Language\SwiftClient;
 
 $cli
     ->task('sdks')
@@ -29,38 +30,38 @@ $cli
         $production = ($git) ? (Console::confirm('Type "Appwrite" to push code to production git repos') == 'Appwrite') : false;
         $message = ($git) ? Console::confirm('Please enter your commit message:') : '';
 
-        if(!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x'])) {
+        if (!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', 'latest'])) {
             throw new Exception('Unknown version given');
         }
 
-        foreach($platforms as $key => $platform) {
-            foreach($platform['languages'] as $language) {
-                if($selected !== $language['key'] && $selected !== '*') {
+        foreach ($platforms as $key => $platform) {
+            foreach ($platform['languages'] as $language) {
+                if ($selected !== $language['key'] && $selected !== '*') {
                     continue;
                 }
 
-                if(!$language['enabled']) {
-                    Console::warning($language['name'].' for '.$platform['name'] . ' is disabled');
+                if (!$language['enabled']) {
+                    Console::warning($language['name'] . ' for ' . $platform['name'] . ' is disabled');
                     continue;
                 }
 
-                Console::info('Fetching API Spec for '.$language['name'].' for '.$platform['name'] . ' (version: '.$version.')');
-                
-                $spec = file_get_contents(__DIR__.'/../config/specs/'.$version.'.'.$language['family'].'.json');
+                Console::info('Fetching API Spec for ' . $language['name'] . ' for ' . $platform['name'] . ' (version: ' . $version . ')');
+
+                $spec = file_get_contents(__DIR__ . '/../config/specs/swagger2-' . $version . '-' . $language['family'] . '.json');
 
                 $cover = 'https://appwrite.io/images/github.png';
-                $result = \realpath(__DIR__.'/..').'/sdks/'.$key.'-'.$language['key'];
-                $resultExamples = \realpath(__DIR__.'/../..').'/docs/examples/'.$version.'/'.$key.'-'.$language['key'];
-                $target = \realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
-                $readme = \realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/README.md');
+                $result = \realpath(__DIR__ . '/..') . '/sdks/' . $key . '-' . $language['key'];
+                $resultExamples = \realpath(__DIR__ . '/../..') . '/docs/examples/' . $version . '/' . $key . '-' . $language['key'];
+                $target = \realpath(__DIR__ . '/..') . '/sdks/git/' . $language['key'] . '/';
+                $readme = \realpath(__DIR__ . '/../../docs/sdks/' . $language['key'] . '/README.md');
                 $readme = ($readme) ? \file_get_contents($readme) : '';
-                $gettingStarted = \realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/GETTING_STARTED.md');
+                $gettingStarted = \realpath(__DIR__ . '/../../docs/sdks/' . $language['key'] . '/GETTING_STARTED.md');
                 $gettingStarted = ($gettingStarted) ? \file_get_contents($gettingStarted) : '';
-                $examples = \realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/EXAMPLES.md');
+                $examples = \realpath(__DIR__ . '/../../docs/sdks/' . $language['key'] . '/EXAMPLES.md');
                 $examples = ($examples) ? \file_get_contents($examples) : '';
-                $changelog = \realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/CHANGELOG.md');
+                $changelog = \realpath(__DIR__ . '/../../docs/sdks/' . $language['key'] . '/CHANGELOG.md');
                 $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
-                $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check [previous releases]('.$language['url'].'/releases).**';
+                $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check [previous releases](' . $language['url'] . '/releases).**';
                 $license = 'BSD-3-Clause';
                 $licenseContent = 'Copyright (c) ' . date('Y') . ' Appwrite (https://appwrite.io) and individual contributors.
 All rights reserved.
@@ -83,17 +84,24 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'cli':
                         $config = new CLI();
-                        $config->setComposerVendor('appwrite');
-                        $config->setComposerPackage('cli');
+                        $config->setNPMPackage('appwrite-cli');
                         $config->setExecutableName('appwrite');
-                        $config->setLogo("
+                        $config->setLogo(json_encode("
     _                            _ _           ___   __   _____ 
    /_\  _ __  _ ____      ___ __(_) |_ ___    / __\ / /   \_   \
-  //_\\| '_ \| '_ \ \ /\ / / '__| | __/ _ \  / /   / /     / /\/
+  //_\\\| '_ \| '_ \ \ /\ / / '__| | __/ _ \  / /   / /     / /\/
  /  _  \ |_) | |_) \ V  V /| |  | | ||  __/ / /___/ /___/\/ /_  
  \_/ \_/ .__/| .__/ \_/\_/ |_|  |_|\__\___| \____/\____/\____/  
-       |_|   |_|                                                  
- ");
+       |_|   |_|                                                
+
+"));
+                        $config->setLogoUnescaped("
+     _                            _ _           ___   __   _____ 
+    /_\  _ __  _ ____      ___ __(_) |_ ___    / __\ / /   \_   \
+   //_\\\| '_ \| '_ \ \ /\ / / '__| | __/ _ \  / /   / /     / /\/
+  /  _  \ |_) | |_) \ V  V /| |  | | ||  __/ / /___/ /___/\/ /_  
+  \_/ \_/ .__/| .__/ \_/\_/ |_|  |_|\__\___| \____/\____/\____/  
+        |_|   |_|                                                ");
                         break;
                     case 'php':
                         $config = new PHP();
@@ -104,7 +112,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Node();
                         $config->setNPMPackage('node-appwrite');
                         $config->setBowerPackage('appwrite');
-                        $warning = $warning."\n\n > This is the Node.js SDK for integrating with Appwrite from your Node.js server-side code.
+                        $warning = $warning . "\n\n > This is the Node.js SDK for integrating with Appwrite from your Node.js server-side code.
                             If you're looking to integrate from the browser, you should check [appwrite/sdk-for-web](https://github.com/appwrite/sdk-for-web)";
                         break;
                     case 'deno':
@@ -114,7 +122,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Python();
                         $config->setPipPackage('appwrite');
                         $license = 'BSD License'; // license edited due to classifiers in pypi
-                    break;
+                        break;
                     case 'ruby':
                         $config = new Ruby();
                         $config->setGemPackage('appwrite');
@@ -130,13 +138,17 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'dart':
                         $config = new Dart();
                         $config->setPackageName('dart_appwrite');
-                        $warning = $warning."\n\n > This is the Dart SDK for integrating with Appwrite from your Dart server-side code. If you're looking for the Flutter SDK you should check [appwrite/sdk-for-flutter](https://github.com/appwrite/sdk-for-flutter)";
+                        $warning = $warning . "\n\n > This is the Dart SDK for integrating with Appwrite from your Dart server-side code. If you're looking for the Flutter SDK you should check [appwrite/sdk-for-flutter](https://github.com/appwrite/sdk-for-flutter)";
                         break;
                     case 'go':
                         $config = new Go();
                         break;
                     case 'swift':
                         $config = new Swift();
+                        $warning = $warning . "\n\n > This is the Swift SDK for integrating with Appwrite from your Swift server-side code. If you're looking for the Apple SDK you should check [appwrite/sdk-for-apple](https://github.com/appwrite/sdk-for-apple)";
+                        break;
+                    case 'apple':
+                        $config = new SwiftClient();
                         break;
                     case 'dotnet':
                         $cover = '';
@@ -147,10 +159,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'kotlin':
                         $config = new Kotlin();
-                        $warning = $warning."\n\n > This is the Kotlin SDK for integrating with Appwrite from your Kotlin server-side code. If you're looking for the Android SDK you should check [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android)";
+                        $warning = $warning . "\n\n > This is the Kotlin SDK for integrating with Appwrite from your Kotlin server-side code. If you're looking for the Android SDK you should check [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android)";
                         break;
                     default:
-                        throw new Exception('Language "'.$language['key'].'" not supported');
+                        throw new Exception('Language "' . $language['key'] . '" not supported');
                         break;
                 }
 
@@ -175,7 +187,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setShareText('Appwrite is a backend as a service for building web or mobile apps')
                     ->setShareURL('http://appwrite.io')
                     ->setShareTags('JS,javascript,reactjs,angular,ios,android,serverless')
-                    ->setShareVia('appwrite_io')
+                    ->setShareVia('appwrite')
                     ->setWarning($warning)
                     ->setReadme($readme)
                     ->setGettingStarted($gettingStarted)
@@ -184,10 +196,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setTwitter(APP_SOCIAL_TWITTER_HANDLE)
                     ->setDiscord(APP_SOCIAL_DISCORD_CHANNEL, APP_SOCIAL_DISCORD)
                     ->setDefaultHeaders([
-                        'X-Appwrite-Response-Format' => '0.10.0',
-                    ])
-                ;
-                
+                        'X-Appwrite-Response-Format' => '0.14.0',
+                    ]);
+
                 try {
                     $sdk->generate($result);
                 } catch (Exception $exception) {
@@ -197,38 +208,45 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 }
 
                 $gitUrl = $language['gitUrl'];
-                
-                if(!$production) {
-                    $gitUrl = 'git@github.com:aw-tests/'.$language['gitRepoName'].'.git';
+                $gitBranch = $language['gitBranch'];
+
+
+                if (!$production) {
+                    $gitUrl = 'git@github.com:aw-tests/' . $language['gitRepoName'] . '.git';
                 }
-                
-                if($git && !empty($gitUrl)) {
-                    \exec('rm -rf '.$target.' && \
-                        mkdir -p '.$target.' && \
-                        cd '.$target.' && \
-                        git init --initial-branch=master && \
-                        git remote add origin '.$gitUrl.' && \
+
+                if ($git && !empty($gitUrl)) {
+                    \exec('rm -rf ' . $target . ' && \
+                        mkdir -p ' . $target . ' && \
+                        cd ' . $target . ' && \
+                        git init --initial-branch=' . $gitBranch . ' && \
+                        git remote add origin ' . $gitUrl . ' && \
                         git fetch && \
-                        git pull '.$gitUrl.' && \
-                        rm -rf '.$target.'/* && \
-                        cp -r '.$result.'/ '.$target.'/ && \
+                        git pull ' . $gitUrl . ' && \
+                        rm -rf ' . $target . '/* && \
+                        cp -r ' . $result . '/* ' . $target . '/ && \
                         git add . && \
-                        git commit -m "'.$message.'" && \
-                        git push -u origin master
+                        git commit -m "' . $message . '" && \
+                        git push -u origin ' . $gitBranch . '
                     ');
 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
 
-                    \exec('rm -rf '.$target);
+                    \exec('rm -rf ' . $target);
                     Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
                 }
 
                 $docDirectories = $language['docDirectories'] ?? [''];
+
+                if ($version === 'latest') {
+                    continue;
+                }
+
                 foreach ($docDirectories as $languageTitle => $path) {
-                    $languagePath = strtolower($languageTitle !== 0 ? '/'.$languageTitle : '');
+                    $languagePath = strtolower($languageTitle !== 0 ? '/' . $languageTitle : '');
                     \exec(
-                        'mkdir -p '.$resultExamples.$languagePath.' && \
-                        cp -r '.$result.'/docs/examples'.$languagePath.' '.$resultExamples
+                        'mkdir -p ' . $resultExamples . $languagePath . ' && \
+                        cp -r ' . $result . '/docs/examples' . $languagePath . ' ' . $resultExamples
                     );
                     Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
                 }

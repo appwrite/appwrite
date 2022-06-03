@@ -5,23 +5,37 @@ namespace Appwrite\Utopia;
 use Exception;
 use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Any;
+use Appwrite\Utopia\Response\Model\Attribute;
+use Appwrite\Utopia\Response\Model\AttributeList;
+use Appwrite\Utopia\Response\Model\AttributeString;
+use Appwrite\Utopia\Response\Model\AttributeInteger;
+use Appwrite\Utopia\Response\Model\AttributeFloat;
+use Appwrite\Utopia\Response\Model\AttributeBoolean;
+use Appwrite\Utopia\Response\Model\AttributeEmail;
+use Appwrite\Utopia\Response\Model\AttributeEnum;
+use Appwrite\Utopia\Response\Model\AttributeIP;
+use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
 use Appwrite\Utopia\Response\Model\Currency;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
+use Appwrite\Utopia\Response\Model\DocumentList;
 use Appwrite\Utopia\Response\Model\Domain;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
+use Appwrite\Utopia\Response\Model\Build;
 use Appwrite\Utopia\Response\Model\File;
+use Appwrite\Utopia\Response\Model\Bucket;
 use Appwrite\Utopia\Response\Model\Func;
+use Appwrite\Utopia\Response\Model\Index;
 use Appwrite\Utopia\Response\Model\JWT;
 use Appwrite\Utopia\Response\Model\Key;
 use Appwrite\Utopia\Response\Model\Language;
@@ -31,18 +45,30 @@ use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Log;
 use Appwrite\Utopia\Response\Model\Membership;
+use Appwrite\Utopia\Response\Model\Metric;
 use Appwrite\Utopia\Response\Model\Permissions;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Rule;
-use Appwrite\Utopia\Response\Model\Tag;
-use Appwrite\Utopia\Response\Model\Task;
+use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
+use Appwrite\Utopia\Response\Model\HealthAntivirus;
+use Appwrite\Utopia\Response\Model\HealthQueue;
+use Appwrite\Utopia\Response\Model\HealthStatus;
+use Appwrite\Utopia\Response\Model\HealthTime;
+use Appwrite\Utopia\Response\Model\HealthVersion;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
-use stdClass;
+use Appwrite\Utopia\Response\Model\Runtime;
+use Appwrite\Utopia\Response\Model\UsageBuckets;
+use Appwrite\Utopia\Response\Model\UsageCollection;
+use Appwrite\Utopia\Response\Model\UsageDatabase;
+use Appwrite\Utopia\Response\Model\UsageFunctions;
+use Appwrite\Utopia\Response\Model\UsageProject;
+use Appwrite\Utopia\Response\Model\UsageStorage;
+use Appwrite\Utopia\Response\Model\UsageUsers;
 
 /**
  * @method Response setStatusCode(int $code = 200)
@@ -50,79 +76,116 @@ use stdClass;
 class Response extends SwooleResponse
 {
     // General
-    const MODEL_NONE = 'none';
-    const MODEL_ANY = 'any';
-    const MODEL_LOG = 'log';
-    const MODEL_LOG_LIST = 'logList';
-    const MODEL_ERROR = 'error';
-    const MODEL_ERROR_DEV = 'errorDev';
-    const MODEL_BASE_LIST = 'baseList';
-    const MODEL_PERMISSIONS = 'permissions';
-    
+    public const MODEL_NONE = 'none';
+    public const MODEL_ANY = 'any';
+    public const MODEL_LOG = 'log';
+    public const MODEL_LOG_LIST = 'logList';
+    public const MODEL_ERROR = 'error';
+    public const MODEL_METRIC = 'metric';
+    public const MODEL_METRIC_LIST = 'metricList';
+    public const MODEL_ERROR_DEV = 'errorDev';
+    public const MODEL_BASE_LIST = 'baseList';
+    public const MODEL_USAGE_DATABASE = 'usageDatabase';
+    public const MODEL_USAGE_COLLECTION = 'usageCollection';
+    public const MODEL_USAGE_USERS = 'usageUsers';
+    public const MODEL_USAGE_BUCKETS = 'usageBuckets';
+    public const MODEL_USAGE_STORAGE = 'usageStorage';
+    public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
+    public const MODEL_USAGE_PROJECT = 'usageProject';
+
     // Database
-    const MODEL_COLLECTION = 'collection';
-    const MODEL_COLLECTION_LIST = 'collectionList';
-    const MODEL_RULE = 'rule';
-    const MODEL_DOCUMENT = 'document';
-    const MODEL_DOCUMENT_LIST = 'documentList';
+    public const MODEL_COLLECTION = 'collection';
+    public const MODEL_COLLECTION_LIST = 'collectionList';
+    public const MODEL_INDEX = 'index';
+    public const MODEL_INDEX_LIST = 'indexList';
+    public const MODEL_DOCUMENT = 'document';
+    public const MODEL_DOCUMENT_LIST = 'documentList';
+
+    // Database Attributes
+    public const MODEL_ATTRIBUTE = 'attribute';
+    public const MODEL_ATTRIBUTE_LIST = 'attributeList';
+    public const MODEL_ATTRIBUTE_STRING = 'attributeString';
+    public const MODEL_ATTRIBUTE_INTEGER = 'attributeInteger';
+    public const MODEL_ATTRIBUTE_FLOAT = 'attributeFloat';
+    public const MODEL_ATTRIBUTE_BOOLEAN = 'attributeBoolean';
+    public const MODEL_ATTRIBUTE_EMAIL = 'attributeEmail';
+    public const MODEL_ATTRIBUTE_ENUM = 'attributeEnum';
+    public const MODEL_ATTRIBUTE_IP = 'attributeIp';
+    public const MODEL_ATTRIBUTE_URL = 'attributeUrl';
 
     // Users
-    const MODEL_USER = 'user';
-    const MODEL_USER_LIST = 'userList';
-    const MODEL_SESSION = 'session';
-    const MODEL_SESSION_LIST = 'sessionList';
-    const MODEL_TOKEN = 'token';
-    const MODEL_JWT = 'jwt';
-    const MODEL_PREFERENCES = 'preferences';
-    
+    public const MODEL_USER = 'user';
+    public const MODEL_USER_LIST = 'userList';
+    public const MODEL_SESSION = 'session';
+    public const MODEL_SESSION_LIST = 'sessionList';
+    public const MODEL_TOKEN = 'token';
+    public const MODEL_JWT = 'jwt';
+    public const MODEL_PREFERENCES = 'preferences';
+
     // Storage
-    const MODEL_FILE = 'file';
-    const MODEL_FILE_LIST = 'fileList';
-    const MODEL_BUCKET = 'bucket'; // - Missing
+    public const MODEL_FILE = 'file';
+    public const MODEL_FILE_LIST = 'fileList';
+    public const MODEL_BUCKET = 'bucket';
+    public const MODEL_BUCKET_LIST = 'bucketList';
 
     // Locale
-    const MODEL_LOCALE = 'locale';
-    const MODEL_COUNTRY = 'country';
-    const MODEL_COUNTRY_LIST = 'countryList';
-    const MODEL_CONTINENT = 'continent';
-    const MODEL_CONTINENT_LIST = 'continentList';
-    const MODEL_CURRENCY = 'currency';
-    const MODEL_CURRENCY_LIST = 'currencyList';
-    const MODEL_LANGUAGE = 'language';
-    const MODEL_LANGUAGE_LIST = 'languageList';
-    const MODEL_PHONE = 'phone';
-    const MODEL_PHONE_LIST = 'phoneList';
+    public const MODEL_LOCALE = 'locale';
+    public const MODEL_COUNTRY = 'country';
+    public const MODEL_COUNTRY_LIST = 'countryList';
+    public const MODEL_CONTINENT = 'continent';
+    public const MODEL_CONTINENT_LIST = 'continentList';
+    public const MODEL_CURRENCY = 'currency';
+    public const MODEL_CURRENCY_LIST = 'currencyList';
+    public const MODEL_LANGUAGE = 'language';
+    public const MODEL_LANGUAGE_LIST = 'languageList';
+    public const MODEL_PHONE = 'phone';
+    public const MODEL_PHONE_LIST = 'phoneList';
 
     // Teams
-    const MODEL_TEAM = 'team';
-    const MODEL_TEAM_LIST = 'teamList';
-    const MODEL_MEMBERSHIP = 'membership';
-    const MODEL_MEMBERSHIP_LIST = 'membershipList';
+    public const MODEL_TEAM = 'team';
+    public const MODEL_TEAM_LIST = 'teamList';
+    public const MODEL_MEMBERSHIP = 'membership';
+    public const MODEL_MEMBERSHIP_LIST = 'membershipList';
 
     // Functions
-    const MODEL_FUNCTION = 'function';
-    const MODEL_FUNCTION_LIST = 'functionList';
-    const MODEL_TAG = 'tag';
-    const MODEL_TAG_LIST = 'tagList';
-    const MODEL_EXECUTION = 'execution';
-    const MODEL_EXECUTION_LIST = 'executionList';
-    
+    public const MODEL_FUNCTION = 'function';
+    public const MODEL_FUNCTION_LIST = 'functionList';
+    public const MODEL_RUNTIME = 'runtime';
+    public const MODEL_RUNTIME_LIST = 'runtimeList';
+    public const MODEL_DEPLOYMENT = 'deployment';
+    public const MODEL_DEPLOYMENT_LIST = 'deploymentList';
+    public const MODEL_EXECUTION = 'execution';
+    public const MODEL_EXECUTION_LIST = 'executionList';
+    public const MODEL_BUILD = 'build';
+    public const MODEL_BUILD_LIST = 'buildList';  // Not used anywhere yet
+    public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
+
     // Project
-    const MODEL_PROJECT = 'project';
-    const MODEL_PROJECT_LIST = 'projectList';
-    const MODEL_WEBHOOK = 'webhook';
-    const MODEL_WEBHOOK_LIST = 'webhookList';
-    const MODEL_KEY = 'key';
-    const MODEL_KEY_LIST = 'keyList';
-    const MODEL_TASK = 'task';
-    const MODEL_TASK_LIST = 'taskList';
-    const MODEL_PLATFORM = 'platform';
-    const MODEL_PLATFORM_LIST = 'platformList';
-    const MODEL_DOMAIN = 'domain';
-    const MODEL_DOMAIN_LIST = 'domainList';
-    
+    public const MODEL_PROJECT = 'project';
+    public const MODEL_PROJECT_LIST = 'projectList';
+    public const MODEL_WEBHOOK = 'webhook';
+    public const MODEL_WEBHOOK_LIST = 'webhookList';
+    public const MODEL_KEY = 'key';
+    public const MODEL_KEY_LIST = 'keyList';
+    public const MODEL_PLATFORM = 'platform';
+    public const MODEL_PLATFORM_LIST = 'platformList';
+    public const MODEL_DOMAIN = 'domain';
+    public const MODEL_DOMAIN_LIST = 'domainList';
+
+    // Health
+    public const MODEL_HEALTH_STATUS = 'healthStatus';
+    public const MODEL_HEALTH_VERSION = 'healthVersion';
+    public const MODEL_HEALTH_QUEUE = 'healthQueue';
+    public const MODEL_HEALTH_TIME = 'healthTime';
+    public const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
+
+    // Deprecated
+    public const MODEL_PERMISSIONS = 'permissions';
+    public const MODEL_RULE = 'rule';
+    public const MODEL_TASK = 'task';
+
     // Tests (keep last)
-    const MODEL_MOCK = 'mock';
+    public const MODEL_MOCK = 'mock';
 
     /**
      * @var Filter
@@ -136,7 +199,7 @@ class Response extends SwooleResponse
 
     /**
      * Response constructor.
-     * 
+     *
      * @param float $time
      */
     public function __construct(SwooleHTTPResponse $response)
@@ -148,21 +211,24 @@ class Response extends SwooleResponse
             ->setModel(new Error())
             ->setModel(new ErrorDev())
             // Lists
-            ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
             ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
+            ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
+            ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
             ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
             ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
-            ->setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG, false))
+            ->setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG))
             ->setModel(new BaseList('Files List', self::MODEL_FILE_LIST, 'files', self::MODEL_FILE))
+            ->setModel(new BaseList('Buckets List', self::MODEL_BUCKET_LIST, 'buckets', self::MODEL_BUCKET))
             ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
             ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
-            ->setModel(new BaseList('Tags List', self::MODEL_TAG_LIST, 'tags', self::MODEL_TAG))
+            ->setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
+            ->setModel(new BaseList('Deployments List', self::MODEL_DEPLOYMENT_LIST, 'deployments', self::MODEL_DEPLOYMENT))
             ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
+            ->setModel(new BaseList('Builds List', self::MODEL_BUILD_LIST, 'builds', self::MODEL_BUILD)) // Not used anywhere yet
             ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
             ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
-            ->setModel(new BaseList('Tasks List', self::MODEL_TASK_LIST, 'tasks', self::MODEL_TASK, true, false))
             ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
             ->setModel(new BaseList('Domains List', self::MODEL_DOMAIN_LIST, 'domains', self::MODEL_DOMAIN, true, false))
             ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
@@ -170,11 +236,21 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Languages List', self::MODEL_LANGUAGE_LIST, 'languages', self::MODEL_LANGUAGE))
             ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
+            ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             // Entities
-            ->setModel(new Permissions())
             ->setModel(new Collection())
+            ->setModel(new Attribute())
+            ->setModel(new AttributeList())
+            ->setModel(new AttributeString())
+            ->setModel(new AttributeInteger())
+            ->setModel(new AttributeFloat())
+            ->setModel(new AttributeBoolean())
+            ->setModel(new AttributeEmail())
+            ->setModel(new AttributeEnum())
+            ->setModel(new AttributeIP())
+            ->setModel(new AttributeURL())
+            ->setModel(new Index())
             ->setModel(new ModelDocument())
-            ->setModel(new Rule())
             ->setModel(new Log())
             ->setModel(new User())
             ->setModel(new Preferences())
@@ -183,15 +259,17 @@ class Response extends SwooleResponse
             ->setModel(new JWT())
             ->setModel(new Locale())
             ->setModel(new File())
+            ->setModel(new Bucket())
             ->setModel(new Team())
             ->setModel(new Membership())
             ->setModel(new Func())
-            ->setModel(new Tag())
+            ->setModel(new Runtime())
+            ->setModel(new Deployment())
             ->setModel(new Execution())
+            ->setModel(new Build())
             ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())
-            ->setModel(new Task())
             ->setModel(new Domain())
             ->setModel(new Platform())
             ->setModel(new Country())
@@ -199,6 +277,19 @@ class Response extends SwooleResponse
             ->setModel(new Language())
             ->setModel(new Currency())
             ->setModel(new Phone())
+            ->setModel(new HealthAntivirus())
+            ->setModel(new HealthQueue())
+            ->setModel(new HealthStatus())
+            ->setModel(new HealthTime())
+            ->setModel(new HealthVersion())
+            ->setModel(new Metric())
+            ->setModel(new UsageDatabase())
+            ->setModel(new UsageCollection())
+            ->setModel(new UsageUsers())
+            ->setModel(new UsageStorage())
+            ->setModel(new UsageBuckets())
+            ->setModel(new UsageFunctions())
+            ->setModel(new UsageProject())
             // Verification
             // Recovery
             // Tests (keep last)
@@ -211,7 +302,7 @@ class Response extends SwooleResponse
     /**
      * HTTP content types
      */
-    const CONTENT_TYPE_YAML = 'application/x-yaml';
+    public const CONTENT_TYPE_YAML = 'application/x-yaml';
 
     /**
      * List of defined output objects
@@ -220,7 +311,7 @@ class Response extends SwooleResponse
 
     /**
      * Set Model Object
-     * 
+     *
      * @return self
      */
     public function setModel(Model $instance)
@@ -232,13 +323,13 @@ class Response extends SwooleResponse
 
     /**
      * Get Model Object
-     * 
+     *
      * @return Model
      */
     public function getModel(string $key): Model
     {
         if (!isset($this->models[$key])) {
-            throw new Exception('Undefined model: '.$key);
+            throw new Exception('Undefined model: ' . $key);
         }
 
         return $this->models[$key];
@@ -246,7 +337,7 @@ class Response extends SwooleResponse
 
     /**
      * Get Models List
-     * 
+     *
      * @return Model[]
      */
     public function getModels(): array
@@ -257,10 +348,10 @@ class Response extends SwooleResponse
     /**
      * Validate response objects and outputs
      *  the response according to given format type
-     * 
+     *
      * @param Document $document
      * @param string $model
-     * 
+     *
      * return void
      */
     public function dynamic(Document $document, string $model): void
@@ -268,19 +359,19 @@ class Response extends SwooleResponse
         $output = $this->output($document, $model);
 
         // If filter is set, parse the output
-        if(self::isFilter()){
+        if (self::hasFilter()) {
             $output = self::getFilter()->parse($output, $model);
         }
 
-        $this->json(!empty($output) ? $output : new stdClass());
+        $this->json(!empty($output) ? $output : new \stdClass());
     }
 
     /**
      * Generate valid response object from document data
-     * 
+     *
      * @param Document $document
      * @param string $model
-     * 
+     *
      * return array
      */
     public function output(Document $document, string $model): array
@@ -289,36 +380,56 @@ class Response extends SwooleResponse
         $model      = $this->getModel($model);
         $output     = [];
 
+        $document = $model->filter($document);
+
         if ($model->isAny()) {
             $this->payload = $document->getArrayCopy();
             return $this->payload;
         }
 
         foreach ($model->getRules() as $key => $rule) {
-            if (!$document->isSet($key)) {
+            if (!$document->isSet($key) && $rule['require']) { // do not set attribute in response if not required
                 if (!is_null($rule['default'])) {
                     $document->setAttribute($key, $rule['default']);
                 } else {
-                    throw new Exception('Model '.$model->getName().' is missing response key: '.$key);
+                    throw new Exception('Model ' . $model->getName() . ' is missing response key: ' . $key);
                 }
             }
 
             if ($rule['array']) {
                 if (!is_array($data[$key])) {
-                    throw new Exception($key.' must be an array of type '.$rule['type']);
+                    throw new Exception($key . ' must be an array of type ' . $rule['type']);
                 }
 
                 foreach ($data[$key] as &$item) {
                     if ($item instanceof Document) {
-                        if (!array_key_exists($rule['type'], $this->models)) {
-                            throw new Exception('Missing model for rule: '. $rule['type']);
+                        if (\is_array($rule['type'])) {
+                            foreach ($rule['type'] as $type) {
+                                $condition = false;
+                                foreach ($this->getModel($type)->conditions as $attribute => $val) {
+                                    $condition = $item->getAttribute($attribute) === $val;
+                                    if (!$condition) {
+                                        break;
+                                    }
+                                }
+                                if ($condition) {
+                                    $ruleType = $type;
+                                    break;
+                                }
+                            }
+                        } else {
+                            $ruleType = $rule['type'];
                         }
 
-                        $item = $this->output($item, $rule['type']);
+                        if (!array_key_exists($ruleType, $this->models)) {
+                            throw new Exception('Missing model for rule: ' . $ruleType);
+                        }
+
+                        $item = $this->output($item, $ruleType);
                     }
                 }
             }
-            
+
             $output[$key] = $data[$key];
         }
 
@@ -354,7 +465,7 @@ class Response extends SwooleResponse
     /**
      * @return array
      */
-    public function getPayload():array
+    public function getPayload(): array
     {
         return $this->payload;
     }
@@ -362,32 +473,32 @@ class Response extends SwooleResponse
 
     /**
      * Function to set a response filter
-     * 
+     *
      * @param $filter the response filter to set
-     * 
+     *
      * @return void
      */
-    public static function setFilter(?Filter $filter) 
+    public static function setFilter(?Filter $filter)
     {
         self::$filter = $filter;
     }
 
     /**
      * Return the currently set filter
-     * 
+     *
      * @return Filter
      */
-    public static function getFilter(): ?Filter 
+    public static function getFilter(): ?Filter
     {
         return self::$filter;
     }
 
     /**
      * Check if a filter has been set
-     * 
+     *
      * @return bool
      */
-    public static function isFilter(): bool 
+    public static function hasFilter(): bool
     {
         return self::$filter != null;
     }

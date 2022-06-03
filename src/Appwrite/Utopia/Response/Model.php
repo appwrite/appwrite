@@ -2,13 +2,15 @@
 
 namespace Appwrite\Utopia\Response;
 
+use Utopia\Database\Document;
+
 abstract class Model
 {
-    const TYPE_STRING = 'string';
-    const TYPE_INTEGER = 'integer';
-    const TYPE_FLOAT = 'float';
-    const TYPE_BOOLEAN = 'boolean';
-    const TYPE_JSON = 'json';
+    public const TYPE_STRING = 'string';
+    public const TYPE_INTEGER = 'integer';
+    public const TYPE_FLOAT = 'double';
+    public const TYPE_BOOLEAN = 'boolean';
+    public const TYPE_JSON = 'json';
 
     /**
      * @var bool
@@ -31,22 +33,32 @@ abstract class Model
     protected $rules = [];
 
     /**
+     * Filter Document Structure
+     *
+     * @return Document
+     */
+    public function filter(Document $document): Document
+    {
+        return $document;
+    }
+
+    /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    abstract public function getName():string;
+    abstract public function getName(): string;
 
     /**
      * Get Collection
-     * 
+     *
      * @return string
      */
-    abstract public function getType():string;
+    abstract public function getType(): string;
 
     /**
      * Get Rules
-     * 
+     *
      * @return array
      */
     public function getRules(): array
@@ -56,6 +68,10 @@ abstract class Model
 
     /**
      * Add a New Rule
+     * If rule is an array of documents with varying models
+     *
+     * @param string $key
+     * @param array $options
      */
     protected function addRule(string $key, array $options): self
     {
@@ -65,7 +81,7 @@ abstract class Model
             'description' => '',
             'default' => null,
             'example' => '',
-            'array' => false,
+            'array' => false
         ], $options);
 
         return $this;
@@ -75,8 +91,8 @@ abstract class Model
     {
         $list = [];
 
-        foreach($this->rules as $key => $rule) {
-            if(isset($rule['require']) || $rule['require']) {
+        foreach ($this->rules as $key => $rule) {
+            if ($rule['require'] ?? false) {
                 $list[] = $key;
             }
         }
@@ -86,9 +102,9 @@ abstract class Model
 
     /**
      * Is None
-     * 
+     *
      * Use to check if response is empty
-     * 
+     *
      * @return bool
      */
     public function isNone(): bool
@@ -98,9 +114,9 @@ abstract class Model
 
     /**
      * Is Any
-     * 
+     *
      * Use to check if response is a wildcard
-     * 
+     *
      * @return bool
      */
     public function isAny(): bool
@@ -110,9 +126,9 @@ abstract class Model
 
     /**
      * Is Public
-     * 
+     *
      * Should this model be publicly available in docs and spec files?
-     * 
+     *
      * @return bool
      */
     public function isPublic(): bool

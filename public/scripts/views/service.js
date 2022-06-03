@@ -34,14 +34,20 @@
 
         alert: function(text, classname) {
           return function(alerts) {
-            alerts.add({ text: text, class: classname || "success" }, 3000);
+            alerts.add({ text: text, class: classname || "success" }, 6000);
           };
         },
 
         redirect: function(url) {
           return function(router) {
-            //router.change(url || "/");
-            window.location = url || "/";
+            /**
+             * Force page reload to /console to render the layout.
+             */
+            if (url === "/console") {
+              window.location = url;
+              return;
+            }
+            router.change(url || "/");
           };
         },
 
@@ -154,12 +160,12 @@
                   case 'document':
                     document[element.key] = element.default || {'$id': '', '$collection': '', '$permissions': {}};
                     break;
-                
+
                   default:
                     document[element.key] = null;
                     break;
                   }
-                  
+
                   if(element.array) {
                     document[element.key] = [];
                 }
@@ -373,6 +379,7 @@
             view.render(element);
           },
           function(exception) {
+            console.error(exception);
             if (loaderId !== null) {
               // Remove loader if needed
               alerts.remove(loaderId);
@@ -394,7 +401,9 @@
                   "failureParam" +
                     parsedFailure[i].charAt(0).toUpperCase() +
                     parsedFailure[i].slice(1),
-                  {}
+                    {
+                      text: exception.message ?? undefined
+                    }
                 )
               );
             }

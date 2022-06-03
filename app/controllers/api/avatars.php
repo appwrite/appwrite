@@ -1,5 +1,7 @@
 <?php
 
+use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\URL;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
@@ -8,42 +10,40 @@ use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Exception;
+use Utopia\Database\Document;
 use Utopia\Image\Image;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
-use Appwrite\Network\Validator\URL;
 use Utopia\Validator\WhiteList;
 
-$avatarCallback = function ($type, $code, $width, $height, $quality, $response) {
-    /** @var Appwrite\Utopia\Response $response */
+$avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response) {
 
     $code = \strtolower($code);
     $type = \strtolower($type);
     $set = Config::getParam('avatar-' . $type, []);
 
     if (empty($set)) {
-        throw new Exception('Avatar set not found', 404);
+        throw new Exception('Avatar set not found', 404, Exception::AVATAR_SET_NOT_FOUND);
     }
 
     if (!\array_key_exists($code, $set)) {
-        throw new Exception('Avatar not found', 404);
+        throw new Exception('Avatar not found', 404, Exception::AVATAR_NOT_FOUND);
     }
 
     if (!\extension_loaded('imagick')) {
-        throw new Exception('Imagick extension is missing', 500);
+        throw new Exception('Imagick extension is missing', 500, Exception::GENERAL_SERVER_ERROR);
     }
 
     $output = 'png';
     $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
-    $key = \md5('/v1/avatars/'.$type.'/:code-' . $code . $width . $height . $quality . $output);
+    $key = \md5('/v1/avatars/' . $type . '/:code-' . $code . $width . $height . $quality . $output);
     $path = $set[$code];
     $type = 'png';
 
     if (!\is_readable($path)) {
-        throw new Exception('File not readable in ' . $path, 500);
+        throw new Exception('File not readable in ' . $path, 500, Exception::GENERAL_SERVER_ERROR);
     }
 
     $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size
@@ -56,8 +56,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality, $response) 
             ->setContentType('image/png')
             ->addHeader('Expires', $date)
             ->addHeader('X-Appwrite-Cache', 'hit')
-            ->send($data)
-        ;
+            ->send($data);
     }
 
     $image = new Image(\file_get_contents($path));
@@ -95,9 +94,7 @@ App::get('/v1/avatars/credit-cards/:code')
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->inject('response')
-    ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
-        return $avatarCallback('credit-cards', $code, $width, $height, $quality, $response);
-    });
+    ->action(fn (string $code, int $width, int $height, int $quality, Response $response) =>  $avatarCallback('credit-cards', $code, $width, $height, $quality, $response));
 
 App::get('/v1/avatars/browsers/:code')
     ->desc('Get Browser Icon')
@@ -115,9 +112,7 @@ App::get('/v1/avatars/browsers/:code')
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->inject('response')
-    ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
-        return $avatarCallback('browsers', $code, $width, $height, $quality, $response);
-    });
+    ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('browsers', $code, $width, $height, $quality, $response));
 
 App::get('/v1/avatars/flags/:code')
     ->desc('Get Country Flag')
@@ -135,9 +130,7 @@ App::get('/v1/avatars/flags/:code')
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->inject('response')
-    ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
-        return $avatarCallback('flags', $code, $width, $height, $quality, $response);
-    });
+    ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('flags', $code, $width, $height, $quality, $response));
 
 App::get('/v1/avatars/image')
     ->desc('Get Image from URL')
@@ -150,12 +143,11 @@ App::get('/v1/avatars/image')
     ->label('sdk.description', '/docs/references/avatars/get-image.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE)
-    ->param('url', '', new URL(), 'Image URL which you want to crop.')
-    ->param('width', 400, new Range(0, 2000), 'Resize preview image width, Pass an integer between 0 to 2000.', true)
-    ->param('height', 400, new Range(0, 2000), 'Resize preview image height, Pass an integer between 0 to 2000.', true)
+    ->param('url', '', new URL(['http', 'https']), 'Image URL which you want to crop.')
+    ->param('width', 400, new Range(0, 2000), 'Resize preview image width, Pass an integer between 0 to 2000. Defaults to 400.', true)
+    ->param('height', 400, new Range(0, 2000), 'Resize preview image height, Pass an integer between 0 to 2000. Defaults to 400.', true)
     ->inject('response')
-    ->action(function ($url, $width, $height, $response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (string $url, int $width, int $height, Response $response) {
 
         $quality = 80;
         $output = 'png';
@@ -170,24 +162,23 @@ App::get('/v1/avatars/image')
                 ->setContentType('image/png')
                 ->addHeader('Expires', $date)
                 ->addHeader('X-Appwrite-Cache', 'hit')
-                ->send($data)
-            ;
+                ->send($data);
         }
 
         if (!\extension_loaded('imagick')) {
-            throw new Exception('Imagick extension is missing', 500);
+            throw new Exception('Imagick extension is missing', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $fetch = @\file_get_contents($url, false);
 
         if (!$fetch) {
-            throw new Exception('Image not found', 404);
+            throw new Exception('Image not found', 404, Exception::AVATAR_IMAGE_NOT_FOUND);
         }
 
         try {
             $image = new Image($fetch);
-        } catch (\Exception$exception) {
-            throw new Exception('Unable to parse image', 500);
+        } catch (\Exception $exception) {
+            throw new Exception('Unable to parse image', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $image->crop((int) $width, (int) $height);
@@ -203,7 +194,6 @@ App::get('/v1/avatars/image')
             ->addHeader('Expires', $date)
             ->addHeader('X-Appwrite-Cache', 'miss')
             ->send($data);
-        ;
 
         unset($image);
     });
@@ -219,10 +209,9 @@ App::get('/v1/avatars/favicon')
     ->label('sdk.description', '/docs/references/avatars/get-favicon.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE)
-    ->param('url', '', new URL(), 'Website URL which you want to fetch the favicon from.')
+    ->param('url', '', new URL(['http', 'https']), 'Website URL which you want to fetch the favicon from.')
     ->inject('response')
-    ->action(function ($url, $response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (string $url, Response $response) {
 
         $width = 56;
         $height = 56;
@@ -239,12 +228,11 @@ App::get('/v1/avatars/favicon')
                 ->setContentType('image/png')
                 ->addHeader('Expires', $date)
                 ->addHeader('X-Appwrite-Cache', 'hit')
-                ->send($data)
-            ;
+                ->send($data);
         }
 
         if (!\extension_loaded('imagick')) {
-            throw new Exception('Imagick extension is missing', 500);
+            throw new Exception('Imagick extension is missing', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $curl = \curl_init();
@@ -254,7 +242,8 @@ App::get('/v1/avatars/favicon')
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS => 3,
             CURLOPT_URL => $url,
-            CURLOPT_USERAGENT => \sprintf(APP_USERAGENT,
+            CURLOPT_USERAGENT => \sprintf(
+                APP_USERAGENT,
                 App::getEnv('_APP_VERSION', 'UNKNOWN'),
                 App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
             ),
@@ -265,7 +254,7 @@ App::get('/v1/avatars/favicon')
         \curl_close($curl);
 
         if (!$html) {
-            throw new Exception('Failed to fetch remote URL', 404);
+            throw new Exception('Failed to fetch remote URL', 404, Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
         $doc = new DOMDocument();
@@ -323,7 +312,7 @@ App::get('/v1/avatars/favicon')
             $data = @\file_get_contents($outputHref, false);
 
             if (empty($data) || (\mb_substr($data, 0, 5) === '<html') || \mb_substr($data, 0, 5) === '<!doc') {
-                throw new Exception('Favicon not found', 404);
+                throw new Exception('Favicon not found', 404, Exception::AVATAR_ICON_NOT_FOUND);
             }
 
             $cache->save($key, $data);
@@ -332,14 +321,13 @@ App::get('/v1/avatars/favicon')
                 ->setContentType('image/x-icon')
                 ->addHeader('Expires', $date)
                 ->addHeader('X-Appwrite-Cache', 'miss')
-                ->send($data)
-            ;
+                ->send($data);
         }
 
         $fetch = @\file_get_contents($outputHref, false);
 
         if (!$fetch) {
-            throw new Exception('Icon not found', 404);
+            throw new Exception('Icon not found', 404, Exception::AVATAR_ICON_NOT_FOUND);
         }
 
         $image = new Image($fetch);
@@ -373,12 +361,11 @@ App::get('/v1/avatars/qr')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
     ->param('text', '', new Text(512), 'Plain text to be converted to QR code image.')
-    ->param('size', 400, new Range(0, 1000), 'QR code size. Pass an integer between 0 to 1000. Defaults to 400.', true)
+    ->param('size', 400, new Range(1, 1000), 'QR code size. Pass an integer between 1 to 1000. Defaults to 400.', true)
     ->param('margin', 1, new Range(0, 10), 'Margin from edge. Pass an integer between 0 to 10. Defaults to 1.', true)
     ->param('download', false, new Boolean(true), 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
     ->inject('response')
-    ->action(function ($text, $size, $margin, $download, $response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (string $text, int $size, int $margin, bool $download, Response $response) {
 
         $download = ($download === '1' || $download === 'true' || $download === 1 || $download === true);
         $options = new QROptions([
@@ -400,8 +387,7 @@ App::get('/v1/avatars/qr')
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->send($image->output('png', 9))
-        ;
+            ->send($image->output('png', 9));
     });
 
 App::get('/v1/avatars/initials')
@@ -422,9 +408,7 @@ App::get('/v1/avatars/initials')
     ->param('background', '', new HexColor(), 'Changes background color. By default a random color will be picked and stay will persistent to the given name.', true)
     ->inject('response')
     ->inject('user')
-    ->action(function ($name, $width, $height, $color, $background, $response, $user) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
+    ->action(function (string $name, int $width, int $height, string $color, string $background, Response $response, Document $user) {
 
         $themes = [
             ['color' => '#27005e', 'background' => '#e1d2f6'], // VIOLET
@@ -443,6 +427,9 @@ App::get('/v1/avatars/initials')
 
         $name = (!empty($name)) ? $name : $user->getAttribute('name', $user->getAttribute('email', ''));
         $words = \explode(' ', \strtoupper($name));
+        // if there is no space, try to split by `_` underscore
+        $words = (count($words) == 1) ? \explode('_', \strtoupper($name)) : $words;
+
         $initials = null;
         $code = 0;
 
@@ -455,7 +442,6 @@ App::get('/v1/avatars/initials')
             }
         }
 
-        $length = \count($words);
         $rand = \substr($code, -1);
         $background = (!empty($background)) ? '#' . $background : $themes[$rand]['background'];
         $color = (!empty($color)) ? '#' . $color : $themes[$rand]['color'];
@@ -482,6 +468,5 @@ App::get('/v1/avatars/initials')
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->send($image->getImageBlob())
-        ;
+            ->send($image->getImageBlob());
     });

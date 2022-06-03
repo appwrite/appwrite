@@ -16,7 +16,7 @@ class ComposeTest extends TestCase
 
     public function setUp(): void
     {
-        $data = @file_get_contents(__DIR__.'/../../resources/docker/docker-compose.yml');
+        $data = @file_get_contents(__DIR__ . '/../../resources/docker/docker-compose.yml');
 
         if ($data === false) {
             throw new Exception('Failed to read compose file');
@@ -36,7 +36,7 @@ class ComposeTest extends TestCase
 
     public function testServices()
     {
-        $this->assertCount(16, $this->object->getServices());
+        $this->assertCount(17, $this->object->getServices());
         $this->assertEquals('appwrite-telegraf', $this->object->getService('telegraf')->getContainerName());
         $this->assertEquals('appwrite', $this->object->getService('appwrite')->getContainerName());
         $this->assertEquals('', $this->object->getService('appwrite')->getImageVersion());

@@ -46,11 +46,9 @@
             <hr />
 
             <footer>
-
                 <button type="submit" class="">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </footer>
         </form>
-
     </div>
     
     <div data-ui-modal class="modal width-medium box close" data-button-hide="on" data-open-event="open-update-email">
@@ -82,11 +80,9 @@
             <hr />
 
             <footer>
-
                 <button type="submit" class="">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </footer>
         </form>
-
     </div>
 
     <div data-ui-modal class="modal width-medium box close" data-button-hide="on" data-open-event="open-update-password">
@@ -118,11 +114,9 @@
             <hr />
 
             <footer>
-
                 <button type="submit" class="">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </footer>
         </form>
-
     </div>
 
     <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-json">
@@ -142,7 +136,7 @@
             <li data-state="/console/users/user?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Overview</h2>
 
-                <div data-ls-if="{{user.status}} === <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none" class="box padding-small danger margin-bottom-xxl text-align-center">
+                <div data-ls-if="{{user.status}} === false" style="display: none" class="box padding-small danger margin-bottom-xxl text-align-center">
                     This user account is blocked.
                 </div>
 
@@ -207,11 +201,11 @@
 
                         <div class="box danger margin-bottom">
                             <p>This is the area where you can delete this user.</p>
-                        
+
                             <p>By deleting this user you will lose all data associated with this user.</p>
-                        
+
                             <p>PLEASE NOTE: User deletion is irreversible.</p>
-                        
+
                             <form class="inline"
                                 data-analytics
                                 data-analytics-activity
@@ -230,7 +224,7 @@
                                 data-failure-param-alert-text="Failed to delete user"
                                 data-failure-param-alert-classname="error">
                                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                        
+
                                 <button class="danger reverse" type="submit">Delete User</button>
                             </form>
                         </div>
@@ -248,7 +242,53 @@
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
                         </ul>
 
-                        <div data-ls-if="{{user.status}} !== <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
+                        <div data-ls-if="{{user.emailVerification}} === false" style="display: none">
+                            <form name="users.updateVerification"  class="margin-bottom"
+                                data-analytics
+                                data-analytics-activity
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Update Verification Status"
+                                data-service="users.updateVerification"
+                                data-scope="sdk"
+                                data-event="submit"
+                                data-success="trigger,alert"
+                                data-success-param-alert-text="User verification status was updated successfully"
+                                data-success-param-trigger-events="users.update"
+                                data-failure="alert"
+                                data-failure-param-alert-text="Failed to update user verification status"
+                                data-failure-param-alert-classname="error"
+                            >
+                                <input type="hidden" disabled name="userId" data-ls-bind="{{user.$id}}">
+                                <input type="hidden" disabled name="emailVerification" value="true" data-cast-to="boolean">
+                                <button type="submit" class="dark fill">Verify Account</button>
+                            </form>
+                        </div>
+
+                        <div data-ls-if="{{user.emailVerification}} === true" style="display: none">
+                            <form name="users.updateVerification" class="margin-bottom"
+                                data-analytics
+                                data-analytics-activity
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Update Verification Status"
+                                data-service="users.updateVerification"
+                                data-scope="sdk"
+                                data-event="submit"
+                                data-success="trigger,alert"
+                                data-success-param-alert-text="User verification status was updated successfully"
+                                data-success-param-trigger-events="users.update"
+                                data-failure="alert"
+                                data-failure-param-alert-text="Failed to update user verification status"
+                                data-failure-param-alert-classname="error"
+                            >
+                                <input type="hidden" disabled name="userId" data-ls-bind="{{user.$id}}">
+                                <input type="hidden" disabled name="emailVerification" value="false" data-cast-to="boolean">
+                                <button type="submit" class="dark fill">Unverify Account</button>
+                            </form>
+                        </div>
+
+                        <div data-ls-if="{{user.status}} === true" style="display: none">
                             <form name="users.updateStatus" class="margin-bottom"
                                 data-analytics
                                 data-analytics-activity
@@ -265,11 +305,11 @@
                                 data-failure-param-alert-text="Failed to block user"
                                 data-failure-param-alert-classname="error">
 
-                                <button name="status" type="submit" class="danger fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" data-cast-to="integer">Block Account</button>
+                                <button name="status" type="submit" class="danger fill" value="false" data-cast-to="boolean">Block Account</button>
                             </form>
                         </div>
 
-                        <div data-ls-if="{{user.status}} === <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
+                        <div data-ls-if="{{user.status}} === false" style="display: none">
                             <form name="users.updateStatus" class="margin-bottom"
                                 data-analytics
                                 data-analytics-activity
@@ -286,8 +326,63 @@
                                 data-failure-param-alert-text="Failed to activate user"
                                 data-failure-param-alert-classname="error">
 
-                                <button name="status" type="submit" class="fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_ACTIVATED; ?>" data-cast-to="integer">Activate Account</button>
+                                <button name="status" type="submit" class="fill" value="true" data-cast-to="boolean">Activate Account</button>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            <li data-state="/console/users/user/memberships?id={{router.params.id}}&project={{router.params.project}}">
+                <h2>Memberships</h2>
+
+                <div
+                    data-service="users.getMemberships"
+                    data-name="memberships"
+                    data-param-user-id="{{router.params.id}}"
+                    data-event="load,users.update,teams.deleteMembership">
+
+                    <div class="box margin-top margin-bottom" data-ls-if="{{memberships.memberships.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
+                        <h3 class="text-bold margin-bottom-no">No memberships available.</h3>
+                    </div>
+
+                    <div data-ls-if="0 != {{memberships.total}}">
+                        <div class="margin-bottom-small margin-end-small text-align-end text-size-small margin-top-negative text-fade"><span data-ls-bind="{{memberships.total}}"></span> memberships found</div>
+
+                        <div class="box margin-bottom">
+                            <ul data-ls-loop="memberships.memberships" data-ls-as="membership" class="list">
+                                <li class="clear">
+                                    <form class="pull-end"
+                                        data-analytics
+                                        data-analytics-activity
+                                        data-analytics-event="submit"
+                                        data-analytics-category="console"
+                                        data-analytics-label="Delete Team Membership"
+                                        data-service="teams.deleteMembership"
+                                        data-event="submit"
+                                        data-success="alert,trigger"
+                                        data-confirm="Are you sure you want to remove that user from the team?"
+                                        data-success-param-alert-text="Member Removed Successfully"
+                                        data-success-param-trigger-events="teams.deleteMembership"
+                                        data-failure="alert"
+                                        data-failure-param-alert-text="Failed to Remove Member"
+                                        data-failure-param-alert-classname="error">
+
+                                        <input name="teamId" data-ls-attrs="id=leave-teamId-{{membership.teamId}}" type="hidden" data-ls-bind="{{membership.teamId}}">
+                                        <input name="membershipId" data-ls-attrs="id=leave-membershipId-{{membership.$id}}" type="hidden" data-ls-bind="{{membership.$id}}">
+
+                                        <button class="danger">Remove</button>
+                                    </form>
+                                    <div class="pull-start margin-end">
+                                        <img src="" data-ls-attrs="src={{membership.teamName|avatar}},alt={{membership.teamName}}" data-size="60" class="avatar margin-end pull-start" loading="lazy" width="60" height="60" />
+                                    </div>
+                                    <a data-ls-attrs="href=/console/users/teams/team?id={{membership.teamId}}&project={{router.params.project}}" data-ls-bind="{{membership.teamName}}"></a>
+                                    <div class="margin-top-small">
+                                        <span data-ls-if="1 == {{membership.roles.length}}" class="text-fade tooltip" data-ls-bind="{{membership.roles.length}} role" data-ls-attrs="data-tooltip={{membership.roles|arraySentence}}"></span>
+                                        <span  data-ls-if="2 <= {{membership.roles.length}}" class="text-fade tooltip" data-ls-bind="{{membership.roles.length}} roles" data-ls-attrs="data-tooltip={{membership.roles|arraySentence}}"></span>
+                                        <span data-ls-if="false === {{membership.confirm}}" class="text-danger text-size-small">Pending Approval</span>
+                                    </div>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -301,8 +396,8 @@
                     data-param-user-id="{{router.params.id}}"
                     data-event="load,users.update">
 
-                    <div data-ls-if="{{sessions.sessions.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
-                        No sessions available.
+                    <div class="box margin-top margin-bottom" data-ls-if="{{sessions.sessions.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
+                        <h3 class="text-bold margin-bottom-no">No sessions available.</h3>
                     </div>
 
                     <div data-ls-if="{{sessions.sessions.length}} !== 0" style="display: none">
@@ -329,7 +424,9 @@
                                         <button class="danger">Logout</button>
                                     </form>
                                     <div class="pull-start margin-end avatar-container">
-                                        <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{session.clientCode|lowercase}}?width=120&height=120&project={{env.PROJECT}},title={{session.clientName}},alt={{session.clientName}}" class="avatar" loading="lazy" width="60" height="60" />
+                                        <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{session.clientCode|lowercase}} !== 'cli'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{session.clientCode|lowercase}}?width=120&height=120&project={{env.PROJECT}},title={{session.clientName}},alt={{session.clientName}}" class="avatar" loading="lazy" width="60" height="60" />
+
+                                        <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{session.clientCode|lowercase}} === 'cli'" data-ls-attrs="src=/images/clients/terminal.png?buster=<?php echo APP_CACHE_BUSTER; ?>,title={{session.clientName}},alt={{session.clientName}}" class="avatar" loading="lazy" width="60" height="60" />
                                         
                                         <div data-ls-if="{{session.provider}} !== 'email'" class="corner">
                                             <img data-ls-attrs="src=/images/users/{{session.provider}}.png?buster=<?php echo APP_CACHE_BUSTER; ?>,title={{session.provider}},alt={{session.provider}}"  class="avatar xs" loading="lazy" width="30" height="30" />
@@ -339,7 +436,7 @@
                                     <span data-ls-bind="{{session.clientName}}"></span> <span data-ls-bind="{{session.clientVersion}}"></span> on <span data-ls-bind="{{session.deviceModel}}"></span> <span data-ls-bind="{{session.osName}}"></span> <span data-ls-bind="{{session.osVersion}}"></span>
 
                                     <div class="margin-top-small">
-                                        <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-if="{{session.countryCode}} !== '--'" data-ls-attrs="src={{env.API}}/avatars/flags/{{session.countryCode}}?width=120&height=120&project={{env.PROJECT}}" class="avatar xxs margin-end-small inline" />
+                                        <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{session.countryCode}} !== '--'" data-ls-attrs="src={{env.API}}/avatars/flags/{{session.countryCode}}?width=120&height=120&project={{env.PROJECT}}" class="avatar xxs margin-end-small inline" />
                                         <small data-ls-bind="{{session.ip}}"></small> / <small data-ls-bind="{{session.countryName}}"></small>
                                     </div>
                                 </li>
@@ -360,7 +457,7 @@
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to logout all sessions"
                             data-failure-param-alert-classname="error">
-                            
+
                             <button class="danger">Logout from all sessions</button>
                         </form>
                     </div>
@@ -376,8 +473,8 @@
                     data-param-user-id="{{router.params.id}}"
                     data-event="load,logs-load">
 
-                    <div data-ls-if="{{logs.logs.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
-                        No logs available.
+                    <div class="box margin-top margin-bottom" data-ls-if="{{logs.logs.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
+                        <h3 class="text-bold margin-bottom-no">No logs available.</h3>
                     </div>
 
                     <div class="box" data-ls-if="{{logs.logs.length}} !== 0" style="display: none">
@@ -396,12 +493,15 @@
                                     <td data-title="Date: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
                                     <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
                                     <td data-title="Client: ">
-                                        <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-if="({{log.clientCode}})" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.clientCode|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
+                                        <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{log.clientCode|lowercase}} !== 'cli'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.clientCode|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
+                                        
+                                        <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{log.clientCode|lowercase}} === 'cli'" data-ls-attrs="src=/images/clients/terminal.png?buster=<?php echo APP_CACHE_BUSTER; ?>,title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
+                                        
                                         <span data-ls-if="({{log.clientName}})" data-ls-bind="{{log.clientName}} {{log.clientVersion}} on {{log.model}} {{log.osName}} {{log.osVersion}}"></span>
                                         <div data-ls-if="(!{{log.clientName}})" class="text-align-center text-fade">Unknown</div>
                                     </td>
                                     <td data-title="Location: ">
-                                        <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-if="{{log.countryCode}} !== '--'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
+                                        <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{log.countryCode}} !== '--'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
                                         <span data-ls-bind="{{log.countryName}}"></span>
                                     </td>
                                     <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>

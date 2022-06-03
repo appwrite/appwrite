@@ -18,7 +18,7 @@ Create a new user and session:
 ```dart
 Account account = Account(client);
 
-Response user = await account.create(email: 'me@appwrite.io', password: 'password', name: 'My Name');
+Response user = await account.create(userId: '[USER_ID]', email: 'me@appwrite.io', password: 'password', name: 'My Name');
  
 Response session = await account.createSession(email: 'me@appwrite.io', password: 'password');
 
@@ -37,11 +37,19 @@ Upload File:
 ```dart
 Storage storage = Storage(client);
 
-MultipartFile file = MultipartFile.fromFile('./path-to-file/image.jpg', filename: 'image.jpg');
+late InputFile file;
+
+if(kIsWeb) {
+    file = InputFile(file: await MultipartFile.fromFile('file', './path-to-file/image.jpg', filename: 'image.jpg'));
+} else {
+    file = InputFile(path: './path-to-file/image.jpg', filename: 'image.jpg');
+}
 
 storage.createFile(
+    bucketId: '[BUCKET_ID]',
+    fileId: '[FILE_ID]', // use 'unique()' to automatically generate a unique ID
     file: file,
-    read: ['*'],
+    read: ['role:all'],
     write: []
 )
 .then((response) {

@@ -26,7 +26,7 @@ class Detector
 
     /**
      * Get OS info
-     * 
+     *
      * @return array
      */
     public function getOS(): array
@@ -42,12 +42,23 @@ class Detector
 
     /**
      * Get client info
-     * 
+     *
      * @return array
      */
     public function getClient(): array
     {
-        $client = $this->getDetector()->getClient();
+        if (strpos($this->userAgent, 'AppwriteCLI') !== false) {
+            $version = explode(' ', $this->userAgent)[0];
+            $version = explode('/', $version)[1];
+            $client = [
+                'type' => 'desktop',
+                'short_name' => 'cli',
+                'name' => 'Appwrite CLI',
+                'version' => $version
+            ];
+        } else {
+            $client = $this->getDetector()->getClient();
+        }
 
         return [
             'clientType' => (isset($client['type'])) ? $client['type'] : '',
@@ -61,7 +72,7 @@ class Detector
 
     /**
      * Get device info
-     * 
+     *
      * @return array
      */
     public function getDevice(): array
@@ -78,12 +89,24 @@ class Detector
      */
     protected function getDetector(): DeviceDetector
     {
-        if(!$this->detctor) {
+        if (!$this->detctor) {
             $this->detctor = new DeviceDetector($this->userAgent);
             $this->detctor->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
             $this->detctor->parse();
         }
 
         return $this->detctor;
+    }
+
+    /**
+     * Sets whether to skip bot detection.
+     * It is needed if we want bots to be processed as a simple clients. So we can detect if it is mobile client,
+     * or desktop, or enything else. By default all this information is not retrieved for the bots.
+     *
+     * @param bool $skip
+     */
+    public function skipBotDetection(bool $skip = true): void
+    {
+        $this->getDetector()->skipBotDetection($skip);
     }
 }

@@ -28,9 +28,9 @@ class Team extends Model
                 'default' => 0,
                 'example' => 1592981250,
             ])
-            ->addRule('sum', [ // TODO change key name?
+            ->addRule('total', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total sum of team members.',
+                'description' => 'Total number of team members.',
                 'default' => 0,
                 'example' => 7,
             ])
@@ -39,20 +39,20 @@ class Team extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Team';
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_TEAM;
     }

@@ -19,6 +19,7 @@ Create a new user:
 Users users = Users(client);
 
 Response result = await users.create(
+    userId: '[USER_ID]',
     email: 'email@example.com',
     password: 'password',
 );
@@ -40,11 +41,13 @@ Upload File:
 ```dart
 Storage storage = Storage(client);
 
-MultipartFile file = MultipartFile.fromFile('./path-to-file/image.jpg', filename: 'image.jpg');
+InputFile file = InputFile(path: './path-to-file/image.jpg', filename: 'image.jpg');
 
 storage.createFile(
+    bucketId: '[BUCKET_ID]',
+    fileId: '[FILE_ID]', // use 'unique()' to automatically generate a unique ID
     file: file,
-    read: ['*'],
+    read: ['role:all'],
     write: []
 )
 .then((response) {

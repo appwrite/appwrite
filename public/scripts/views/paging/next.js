@@ -12,11 +12,11 @@
 
         paths = paths.concat(expression.getPaths());
 
-        let sum = parseInt(expression.parse(element.dataset["sum"]) || "0");
+        let total = parseInt(expression.parse(element.dataset["total"]) || "0");
 
         paths = paths.concat(expression.getPaths());
 
-        if (offset + limit >= sum) {
+        if (offset + limit >= total) {
           element.disabled = true;
         } else {
           element.disabled = false;

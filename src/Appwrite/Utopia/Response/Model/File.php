@@ -16,12 +16,25 @@ class File extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('$permissions', [
-                'type' => Response::MODEL_PERMISSIONS,
-                'description' => 'File permissions.',
-                'default' => new \stdClass,
-                'example' => new \stdClass,
-                'array' => false,
+            ->addRule('bucketId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Bucket ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('$read', [
+                'type' => self::TYPE_STRING,
+                'description' => 'File read permissions.',
+                'default' => [],
+                'example' => 'role:all',
+                'array' => true,
+            ])
+            ->addRule('$write', [
+                'type' => self::TYPE_STRING,
+                'description' => 'File write permissions.',
+                'default' => [],
+                'example' => 'user:608f9da25e7e1',
+                'array' => true,
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
@@ -53,25 +66,37 @@ class File extends Model
                 'default' => 0,
                 'example' => 17890,
             ])
+            ->addRule('chunksTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of chunks available',
+                'default' => 0,
+                'example' => 17890,
+            ])
+            ->addRule('chunksUploaded', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of chunks uploaded',
+                'default' => 0,
+                'example' => 17890,
+            ])
         ;
     }
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'File';
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_FILE;
     }

@@ -25,7 +25,7 @@ document.addEventListener("account.create", function () {
 
   let promise = sdk.account.createSession(form.email, form.password);
 
-  container.set("serviceForm", {}, true, true); // Remove sensetive data when not needed
+  container.set("serviceForm", {}, true, true); // Remove sensitive data when not needed
 
   promise.then(function () {
     var subscribe = document.getElementById('newsletter').checked;
@@ -57,15 +57,42 @@ window.addEventListener("load", async () => {
   const realtime = window.ls.container.get('realtime');
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
   let current = {};
-  window.ls.container.get('console').subscribe('project', event => {
-    for (let project in event.payload) {
-      current[project] = event.payload[project] ?? 0;
+  window.ls.container.get('console').subscribe(['project', 'console'], response => {
+    if (response.events.includes('stats.connections')) {
+      for (let project in response.payload) {
+        current[project] = response.payload[project] ?? 0;
+      }
+
+      return;
+    }
+
+    if (response.events.includes('collections.*.attributes.*')) {
+      document.dispatchEvent(new CustomEvent('database.createAttribute'));
+
+      return;
+    }
+
+    if (response.events.includes('collections.*.indexes.*')) {
+      document.dispatchEvent(new CustomEvent('database.createIndex'));
+
+      return;
+    }
+
+    if (response.events.includes('functions.*.deployments.*')) {
+      document.dispatchEvent(new CustomEvent('functions.createDeployment'));
+
+      return;
+    }
+
+    if (response.events.includes('functions.*.executions.*')) {
+      document.dispatchEvent(new CustomEvent('functions.createExecution'));
+
+      return;
     }
   });
 
   while (true) {
     let newHistory = {};
-    let createdHistory = false;
     for (const project in current) {
       let history = realtime?.history ?? {};
 
@@ -123,3 +150,18 @@ window.addEventListener("load", async () => {
   }
 });
 
+/**
+ * Method to add attribute for the UI on array attributes.
+ * 
+ * Needs to be global - since client side routing will break it.
+ * @param {*} doc 
+ * @param {*} key 
+ * @returns 
+ */
+function addAttribute(doc, key) {
+  if (!Array.isArray(doc[key])) {
+      doc[key] = [];
+  }
+  doc[key].push(null);
+  return doc;
+}

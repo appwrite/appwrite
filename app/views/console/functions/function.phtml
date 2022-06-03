@@ -1,14 +1,38 @@
 <?php
 $fileLimit = $this->getParam('fileLimit', 0);
 $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
-$events = array_keys($this->getParam('events', []));
+$events = $this->getParam('events', []);
 $timeout = $this->getParam('timeout', 900);
-$usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
+$usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
+$patterns = [];
+
+foreach ($events as $name => $event) {
+    $patterns[] = $name;
+    foreach ($event as $key => $value) {
+        if (!\str_starts_with($key, '$')) {
+            if (!($value['$resource'] ?? false)) {
+                $patterns[] = "{$name}.{$key}";
+            } else {
+                $patterns[] = $key;
+                foreach ($value as $key2 => $value2) {
+                    if (!\str_starts_with($key2, '$')) {
+                        if (!($value2['$resource'] ?? false)) {
+                            $patterns[] = "{$key}.{$key2}";
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+sort($patterns);
+
 ?>
 <div
     data-service="functions.get"
     data-name="project-function"
-    data-event="load,functions.update,functions.createTag,functions.updateTag,functions.deleteTag"
+    data-event="load,functions.update,functions.createDeployment,functions.updateDeployment,functions.deleteDeployment,functions.retryBuild"
     data-param-function-id="{{router.params.id}}"
     data-success="trigger"
     data-success-param-trigger-events="functions.get">
@@ -23,8 +47,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
     </div>
 
     <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-json">
-        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
-        
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
         <h2>JSON View</h2>
 
         <div class="margin-bottom">
@@ -37,9 +61,9 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/functions/function?id={{router.params.id}}&project={{router.params.project}}">
-                
+
                 <h2>Overview</h2>
-                
+
                 <div class="row responsive margin-top-negative">
                     <div class="col span-8 margin-bottom">
                         <label>&nbsp;</label>
@@ -50,77 +74,124 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                                 <p class="text-fade margin-bottom-small" data-ls-bind="{{project-function.runtime|runtimeName}} {{project-function.runtime|runtimeVersion}}">
                                 </p>
-                                <div data-ls-if="{{project-function.tag}} !== ''" class="margin-top">
+                                <div data-ls-if="{{project-function.deployment}} !== ''" class="margin-top">
                                     <button data-ls-ui-trigger="execute-now">Execute Now</button> &nbsp; <a data-ls-attrs="href=/console/functions/function/logs?id={{router.params.id}}&project={{router.params.project}}" class="button reverse" style="vertical-align: top;">View Logs</a>
                                 </div>
                             </div>
                         </div>
 
                         <div class="margin-bottom"
-                            data-service="functions.listTags"
+                            data-service="functions.listDeployments"
                             data-scope="sdk"
-                            data-event="load,functions.createTag,functions.deleteTag,functions.updateTag"
-                            data-name="project-function-tags"
+                            data-event="load,functions.createDeployment,functions.deleteDeployment,functions.updateDeployment,functions.retryBuild"
+                            data-name="project-function-deployments"
                             data-param-function-id="{{router.params.id}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                             data-param-offset=""
                             data-param-order-type="DESC"
                             data-success="trigger"
-                            data-success-param-trigger-events="functions.listTags">
+                            data-success-param-trigger-events="functions.listDeployments">
 
-                            <h3>Tags <span class="text-fade text-size-small pull-end margin-top-small" data-ls-bind="{{project-function-tags.sum}} tags found"></span></h3>
+                            <h3>Deployments <span class="text-fade text-size-small pull-end margin-top-small" data-ls-bind="{{project-function-deployments.total}} deployments found"></span></h3>
 
-                            <div data-ls-if="0 == {{project-function-tags.tags.length}} || undefined == {{project-function-tags.tags.length}}" class="box margin-top margin-bottom">
-                                <h3 class="margin-bottom-small text-bold">No Tags Found</h3>
+                            <div data-ls-if="0 == {{project-function-deployments.deployments.length}} || undefined == {{project-function-deployments.deployments.length}}" class="box margin-top margin-bottom">
+                                <h3 class="margin-bottom-small text-bold">No Deployments Found</h3>
 
-                                <p class="margin-bottom-no">You haven't deployed any tags for your function yet.</p>
+                                <p class="margin-bottom-no">You haven't deployed any deployments for your function yet.</p>
                             </div>
 
-                            <div data-ls-if="(0 != {{project-function-tags.tags.length}}) && (undefined !== {{project-function-tags.tags.length}})">
+                            <div data-ls-if="(0 != {{project-function-deployments.deployments.length}}) && (undefined !== {{project-function-deployments.deployments.length}})">
                                 <div class="box margin-bottom">
-                                    <ul data-ls-loop="project-function-tags.tags" data-ls-as="tag" class="list">
+                                    <ul data-ls-loop="project-function-deployments.deployments" data-ls-as="deployment" class="list">
                                         <li class="clear">
-                                            <form data-ls-if="{{tag.$id}} !== {{project-function.tag}}" name="functions.updateTag" class="pull-end"
+                                            <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-stderr-{{deployment.$id}}">
+                                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                                <h2>Build Error Log</h2>
+
+                                                <div class="margin-bottom">
+                                                    <input type="hidden" data-ls-bind="{{deployment.buildStderr}}" data-forms-code="bash" data-lang="bash" data-lang-label="Bash" />
+                                                </div>
+
+                                                <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                            </div>
+                                            <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-stdout-{{deployment.$id}}">
+                                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                                <h2>Build Log</h2>
+
+                                                <div class="margin-bottom">
+                                                    <input type="hidden" data-ls-bind="{{deployment.buildStdout}}" data-forms-code="bash" data-lang="bash" data-lang-label="Bash" />
+                                                </div>
+
+                                                <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                            </div>
+                                            <form data-ls-if="({{deployment.$id}} !== {{project-function.deployment}} && {{deployment.status}} == 'ready')" name="functions.updateDeployment" class="pull-end"
                                                 data-analytics
                                                 data-analytics-activity
                                                 data-analytics-event="submit"
                                                 data-analytics-category="console"
                                                 data-analytics-label="Create Function Execution"
-                                                data-service="functions.updateTag"
+                                                data-service="functions.updateDeployment"
                                                 data-event="submit"
                                                 data-param-function-id="{{router.params.id}}"
                                                 data-success="alert,trigger"
-                                                data-success-param-alert-text="Tag updated successfully"
-                                                data-success-param-trigger-events="functions.updateTag"
+                                                data-success-param-alert-text="Deployment updated successfully"
+                                                data-success-param-trigger-events="functions.updateDeployment"
                                                 data-failure="alert"
-                                                data-failure-param-alert-text="Failed to update tag"
+                                                data-failure-param-alert-text="Failed to update deployment"
                                                 data-failure-param-alert-classname="error">
-                                                <input type="hidden" name="tag" data-ls-bind="{{tag.$id}}">
+                                                <input type="hidden" name="deploymentId" data-ls-bind="{{deployment.$id}}">
                                                 <button>Activate</button>
                                             </form>
-    
-                                            <b data-ls-bind="{{tag.$id}}"></b> &nbsp;
-                                            <span class="text-fade" data-ls-bind="{{tag.command}}"></span>
+                                            <form data-ls-if="({{deployment.$id}} !== {{project-function.deployment}} && {{deployment.status}} == 'failed')" name="functions.retryBuild" class="pull-end"
+                                                data-analytics
+                                                data-analytics-activity
+                                                data-analytics-event="submit"
+                                                data-analytics-category="console"
+                                                data-analytics-label="Retry Build"
+                                                data-service="functions.retryBuild"
+                                                data-event="submit"
+                                                data-success="alert,trigger"
+                                                data-success-param-alert-text="Build started successfully"
+                                                data-success-param-trigger-events="functions.retryBuild"
+                                                data-failure="alert"
+                                                data-failure-param-alert-text="Failed to retry build"
+                                                data-failure-param-alert-classname="error">
+                                                <input type="hidden" name="buildId" data-ls-bind="{{deployment.buildId}}">
+                                                <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}">
+                                                <input type="hidden" name="deploymentId" data-ls-bind="{{deployment.$id}}">
+                                                <button>Retry Build</button>
+                                            </form>
+   
+                                            <b data-ls-bind="{{deployment.$id}}"></b> &nbsp;
+                                            <span class="text-fade" data-ls-bind="{{deployment.entrypoint}}"></span>
                                             <div class="text-size-small margin-top-small clear">
-                                                <span class="pull-start" data-ls-bind="Created {{tag.dateCreated|timeSince}} &nbsp; | &nbsp; {{tag.size|humanFileSize}}{{tag.size|humanFileUnit}}"></span>
+                                                <span data-ls-if="{{deployment.status}} == 'failed'" style="color: var(--config-color-danger)" class="pull-start" data-ls-bind="{{deployment.status}}"></span>
+                                                <span data-ls-if="{{deployment.status}} == 'ready'" style="color: var(--config-color-success)" class="pull-start" data-ls-bind="{{deployment.status}}"></span>
+                                                <span data-ls-if="{{deployment.status}} == 'processing' || {{deployment.status}} == 'building'" style="color: var(--config-color-info)" class="pull-start" data-ls-bind="{{deployment.status}}"></span>
+                                                <span class="pull-start" data-ls-bind="&nbsp; | &nbsp; Created {{deployment.dateCreated|timeSince}} &nbsp; | &nbsp; {{deployment.size|humanFileSize}}{{deployment.size|humanFileUnit}}"></span>
 
-                                                <form data-ls-if="{{tag.$id}} !== {{project-function.tag}}" name="functions.deleteTag" class="pull-start"
+                                                <span data-ls-if="{{deployment.status}} == 'failed'">&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-stderr-{{deployment.$id}}">Logs</button></span>
+                                                <span data-ls-if="{{deployment.status}} == 'ready'">&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-stdout-{{deployment.$id}}">Logs</button></span>
+
+                                                <form data-ls-if="{{deployment.$id}} !== {{project-function.deployment}}" name="functions.deleteDeployment" class="pull-start"
                                                     data-analytics
                                                     data-analytics-activity
                                                     data-analytics-event="submit"
                                                     data-analytics-category="console"
-                                                    data-analytics-label="Delete Function Tag"
-                                                    data-service="functions.deleteTag"
+                                                    data-analytics-label="Delete Function Deployment"
+                                                    data-service="functions.deleteDeployment"
                                                     data-event="submit"
                                                     data-param-function-id="{{router.params.id}}"
-                                                    data-confirm="Are you sure you want to delete this function tag?"
+                                                    data-confirm="Are you sure you want to delete this function deployment?"
                                                     data-success="alert,trigger"
-                                                    data-success-param-alert-text="Function tag deleted successfully"
-                                                    data-success-param-trigger-events="functions.deleteTag"
+                                                    data-success-param-alert-text="Function deployment deleted successfully"
+                                                    data-success-param-trigger-events="functions.deleteDeployment"
                                                     data-failure="alert"
-                                                    data-failure-param-alert-text="Failed to delete function tag"
+                                                    data-failure-param-alert-text="Failed to delete function deployment"
                                                     data-failure-param-alert-classname="error">
-                                                    <input type="hidden" name="tagId" data-ls-bind="{{tag.$id}}" />
+                                                    <input type="hidden" name="deploymentId" data-ls-bind="{{deployment.$id}}" />
 
                                                     &nbsp; | &nbsp;<button type="submit" class="link text-danger text-size-small">Delete</button>
                                                 </form>
@@ -132,38 +203,38 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                         </div>
 
                         <div class="pull-start">
-                            <button data-ls-ui-trigger="deploy-tag">Deploy Tag</button>
+                            <button data-ls-ui-trigger="create-deployment">Create Deployment</button>
                         </div>
 
                         <div class="pull-end paging">
                             <form
-                                data-service="functions.listTags"
+                                data-service="functions.listDeployments"
                                 data-event="submit"
                                 data-param-function-id="{{router.params.id}}"
                                 data-param-search="{{router.params.search}}"
                                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                                 data-param-order-type="DESC"
                                 data-scope="sdk"
-                                data-name="project-function-tags"
+                                data-name="project-function-deployments"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-function-tags.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-function-deployments.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                             </form>
 
-                            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-tags.sum|pageTotal}}"></span>
+                            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-deployments.total|pageTotal}}"></span>
 
                             <form
-                                data-service="functions.listTags"
+                                data-service="functions.listDeployments"
                                 data-event="submit"
                                 data-param-function-id="{{router.params.id}}"
                                 data-param-search="{{router.params.search}}"
                                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                                 data-param-order-type="DESC"
                                 data-scope="sdk"
-                                data-name="project-function-tags"
+                                data-name="project-function-deployments"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-function-tags.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-function-deployments.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                             </form>
                         </div>
                     </div>
@@ -202,9 +273,9 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     </div>
                 </div>
             </li>
-            <?php if($usageStatsEnabled): ?>
+            <?php if ($usageStatsEnabled): ?>
             <li data-state="/console/functions/function/monitors?id={{router.params.id}}&project={{router.params.project}}">
-                
+
                 <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
                     data-service="functions.getUsage"
                     data-event="submit"
@@ -238,53 +309,53 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                 <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
 
                 <h2>Monitors</h2>
-                
-                <div 
+
+                <div
                     data-service="functions.getUsage"
                     data-event="load"
                     data-name="usage"
                     data-param-function-id="{{router.params.id}}">
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Executions=usage.executions.data" data-height="140" />
+                            <div class="chart background-image-no border-no margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Executions=functionsExecutions" data-height="140" data-show-y-axis="true" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li>Executions <span data-ls-bind="({{usage.executions.total}})"></span></li>
+                        <li>Executions <span data-ls-bind="({{usage.functionsExecutions|statsGetLast|statsTotal}})"></span></li>
                     </ul>
 
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="CPU Time (seconds)=usage.compute.data" data-colors="orange" data-height="140" />
+                            <div class="chart background-image-no border-no margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="CPU Time (milliseconds)=functionsCompute" data-colors="orange" data-height="140" data-show-y-axis="true" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li class="orange">CPU Time <span data-ls-bind="({{usage.compute.total|seconds2hum}})"></span></li>
+                        <li class="orange">CPU Time <span data-ls-bind="({{usage.functionsCompute|statsGetLast|seconds2hum}})"></span></li>
                     </ul>
 
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="chart margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Failures=usage.failures.data" data-colors="red" data-height="140" />
+                            <div class="chart background-image-no border-no margin-bottom-no">
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Failures=functionsFailures" data-colors="red" data-height="140" data-show-y-axis="true" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li class="red">Errors <span data-ls-bind="({{usage.failures.total}})"></span></li>
+                        <li class="red">Errors <span data-ls-bind="({{usage.functionsFailures|statsGetLast|statsTotal}})"></span></li>
                     </ul>
                 </div>
             </li>
-            <?php endif; ?>
+            <?php endif;?>
             <li data-state="/console/functions/function/logs?id={{router.params.id}}&project={{router.params.project}}">
 
-                <div class="text-fade text-size-small pull-end margin-top" data-ls-bind="{{project-function-executions.sum}} executions found"></div>
+                <div class="text-fade text-size-small pull-end margin-top" data-ls-bind="{{project-function-executions.total}} executions found"></div>
 
                 <h2>Logs</h2>
 
@@ -326,7 +397,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                         </td>
                                         <td data-title="Status: ">
                                             <span data-ls-bind="{{execution.status}}"></span>
-                                            <span class="text-fade text-size-small" data-ls-if="{{execution.exitCode}} !== 0" data-ls-bind=" exit code: {{execution.exitCode}}"></span>
+                                            <span class="text-fade text-size-small" data-ls-if="{{execution.statusCode}} < 200 && {{execution.statusCode}} >= 300" data-ls-bind=" exit code: {{execution.statusCode}}"></span>
                                         </td>
                                         <td data-title="Trigger: ">
                                             <span data-ls-bind="{{execution.trigger}}"></span>
@@ -337,7 +408,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                         </td>
                                         <td data-title="">
                                             <div data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="">
-                                                
+
                                                 <button class="desktops-only pull-end link margin-start text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Errors</button>
                                                 <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Output</button>
 
@@ -349,12 +420,11 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                                                     <h1>STDOUT</h1>
 
-                                                    <div class="margin-bottom ide" data-ls-if="({{execution.stdout.length}})">
-                                                        <pre data-ls-bind="{{execution.stdout}}"></pre>
-                                                        <!-- <input type="hidden" data-ls-bind="{{execution.stdout}}" data-forms-code="bash" /> -->
+                                                    <div class="margin-bottom ide" data-ls-if="({{execution.response.length}})">
+                                                        <pre data-ls-bind="{{execution.response}}"></pre>
                                                     </div>
 
-                                                    <div class="margin-bottom" data-ls-if="(!{{execution.stdout.length}})">
+                                                    <div class="margin-bottom" data-ls-if="(!{{execution.response.length}})">
                                                         <p>No output was logged.</p>
                                                     </div>
                                                 </div>
@@ -392,10 +462,10 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                 data-name="project-function-executions"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-function-executions.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-function-executions.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                             </form>
 
-                            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-executions.sum|pageTotal}}"></span>
+                            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-executions.total|pageTotal}}"></span>
 
                             <form
                                 data-service="functions.listExecutions"
@@ -408,7 +478,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                 data-name="project-function-executions"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-function-executions.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-function-executions.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                             </form>
                         </div>
                     </div>
@@ -422,7 +492,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     </div>
                 </div>
             </li>
-            <li data-state="/console/functions/function/settings?id={{router.params.id}}&project={{router.params.project}}">
+            <li data-state="/console/functions/function/settings?id={{router.params.id}}&project={{router.params.project}}" x-data="events">
                 <h2>Settings</h2>
 
                 <div class="row responsive margin-top-negative">
@@ -452,41 +522,38 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                     <input name="name" id="function-name" type="text" autocomplete="off" data-ls-bind="{{project-function.name}}" data-forms-text-direction required placeholder="Function Name" maxlength="128" />
 
                                     <label for="execute">Execute Access <span class="tooltip small" data-tooltip="Choose who can execute this function using the client API."><i class="icon-info-circled"></i></span> <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
-                                    <input type="hidden" id="execute" name="execute" data-forms-tags data-cast-to="json" data-ls-bind="{{project-function.$permissions.execute}}" placeholder="User ID, Team ID or Role" />
-                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+                                    <input type="hidden" id="execute" name="execute" data-forms-tags data-cast-to="json" data-ls-bind="{{project-function.execute}}" placeholder="User ID, Team ID or Role" />
+                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
 
                                     <label for="timeout">Timeout (seconds) <span class="tooltip small" data-tooltip="Limit the execution time of your function."><i class="icon-info-circled"></i></span></label>
                                     <input name="timeout" id="function-timeout" type="number" autocomplete="off" data-ls-bind="{{project-function.timeout}}" min="1" max="<?php echo $this->escape($timeout); ?>" data-cast-to="integer" />
                                     <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Max value is <?php echo $this->escape(number_format($timeout)); ?> seconds (<?php echo $this->escape((int) ($timeout / 60)); ?> minutes)</div>
                                 </section>
 
-                                <section class="margin-bottom" data-forms-select-all>
-                                    <label for="events" class="margin-bottom">Events <span class="tooltip small" data-tooltip="Choose which events should trigger this function."><i class="icon-info-circled"></i></span></label>
-                                    <div class="row responsive thin margin-top-small">
-                                        <?php foreach ($events as $i => $event) : ?>
-                                            <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $event; ?>">
-                                                <input type="checkbox" name="events" data-ls-bind="{{project-function.events}}" id="<?php echo $event; ?>" value="<?php echo $event; ?>" />
-                                                &nbsp;
-                                                <label class="inline" for="<?php echo $event; ?>"><?php echo $event; ?></label>
+                                <section class="margin-bottom-small" data-ls-attrs="x-init=load({{project-function.events}})">
+                                    <label class="margin-bottom-small">Events <span class="tooltip small" data-tooltip="Set events that will trigger your function."><i class="icon-info-circled"></i></span></label>
+                                    <div>
+                                        <template x-for="event in Array.from(events)">
+                                            <div class="row events responsive thin margin-bottom-small">
+                                                <div class="col span-12 margin-bottom-small">
+                                                    <span class="text" x-text="event"></span>
+                                                    <span class="action" @click="removeEvent(event)">
+                                                        <i class="icon-trash"></i>
+                                                    </span>
+                                                </div>
+                                                <input name="events" data-cast-to="array" type="hidden" :value="event"></input>
                                             </div>
-                                            <?php if (($i + 1) % 2 === 0) : ?>
-                                            </div>
-                                            <div class="row responsive thin">
-                                            <?php endif; ?>
-
-                                        <?php endforeach; ?>
+                                        </template>
                                     </div>
+                                    <button class="margin-end margin-bottom-small reverse" type="button" @click="showModal($refs.modal_function)">Add Event</button>
                                 </section>
 
                                 <label for="schedule">Schedule (CRON Syntax) <span class="tooltip small" data-tooltip="Set a CRON schedule to trigger this function."><i class="icon-info-circled"></i></span></label>
                                 <input type="text" id="function-schedule" class="full-width" name="schedule" autocomplete="off" data-ls-bind="{{project-function.schedule}}" placeholder="* * * * *" />
                                 <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Leave blank for no schedule</div>
 
-                                <h3 class="margin-bottom-small">Variables <span class="tooltip small" data-tooltip="Set variables or secret keys that will be passed as env vars to your function at runtime."><i class="icon-info-circled"></i></span></h3>
-
+                                <label class="margin-bottom-small">Variables <span class="tooltip small" data-tooltip="Set variables or secret keys that will be passed as env vars to your function at runtime."><i class="icon-info-circled"></i></span></label>
                                 <div data-ls-if="(!{{project-function.vars.length}})">
-                                    <hr class="margin-bottom margin-top-no" />
-
                                     <fieldset name="vars" data-cast-to="object">
                                         <div data-ls-loop="project-function.vars" data-ls-as="var" id="project-vars" style="visibility: visible;">
                                             <div class="margin-bottom-small">
@@ -495,7 +562,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                                         <input type="hidden" data-forms-key-value data-ls-attrs="name={{$index}}" data-ls-bind="{{var}}" />
                                                     </div>
                                                     <div class="col span-2">
-                                                        <button type="button" data-remove class="reverse danger round pull-end"><i class="icon-cancel"></i></button>
+                                                        <button type="button" data-remove class="close pull-end is-margin-top-10"><i class="icon-trash"></i></button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -503,19 +570,19 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                                         <div data-forms-clone="" data-target="project-vars" data-label="Add Variable" data-first="0">
                                             <div class="margin-bottom-small">
-                                                <div data-forms-remove class="row thin margin-bottom-small">
+                                                <div data-forms-remove class="row thin">
                                                     <div class="col span-10">
-                                                        <input type="hidden" name="" data-forms-key-value />
+                                                        <input type="hidden" data-ls-attrs="data-forms-key-value"/>
                                                     </div>
                                                     <div class="col span-2">
-                                                        <button type="button" data-remove class="reverse danger round pull-end"><i class="icon-cancel"></i></button>
+                                                        <button type="button" data-remove class="close pull-end is-margin-top-10"><i class="icon-trash"></i></button>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </fieldset>
-                                    <hr class="margin-bottom margin-top-small" />
                                 </div>
+                                <hr class="margin-bottom margin-top-small" />
 
                                 <button>Update</button>
                             </div>
@@ -555,6 +622,41 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                         </form>
                     </div>
                 </div>
+                <div x-ref="modal_function" data-ui-modal class="modal box close width-small height-small" data-button-hide="on">
+                    <div>
+                        <form @submit.prevent="addEvent($refs.modal_function)">
+                            <label for="event">
+                                Event
+                            </label>
+                            <select id="event" x-model="selected" @change="setEvent()">
+                                <option value="" selected>Select event</option>
+                                <?php foreach ($patterns as $event) : ?>
+                                    <option value="<?php echo $event; ?>"><?php echo $event; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div x-show="hasResource">
+                                <label x-text="resourceName + ' (optional)'" for="resource"></label>
+                                <input id="resource" type="text" :placeholder="resourceName" x-model="resource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
+                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard</div>
+                            </div>
+                            <div x-show="hasSubResource">
+                                <label x-text="subResourceName + ' (optional)'" for="subResource"></label>
+                                <input id="subResource" type="text" :placeholder="subResourceName" x-model="subResource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
+                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard</div>
+                            </div>
+                            <div x-show="hasAttribute">
+                                <label for="attribute">Add Attribute (optional)</label>
+                                <select id="attribute" x-model="attribute">
+                                    <option value="*">Select attribute</option>
+                                    <template x-for="attr in attributes">
+                                        <option :value="attr" x-text="attr"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <button x-show="selected" type="submit">Add Event</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                        </form>
+                    </div>
+                </div>
             </li>
         </ul>
     </div>
@@ -563,7 +665,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 <div data-ui-modal class="modal close box sticky-footer" data-button-hide="on" data-open-event="execute-now">
     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
     <h1 class="margin-bottom">Execute Function</h1>
-    <form data-ls-if="{{project-function.tag}} !== ''" name="functions.createExecution" class="margin-top"
+    <form data-ls-if="{{project-function.deployment}} !== ''" name="functions.createExecution" class="margin-top"
         data-analytics
         data-analytics-activity
         data-analytics-event="submit"
@@ -585,10 +687,10 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         <button type="submit" style="vertical-align: top;">Execute Now</button>
      </form>
 </div>
-<div data-ui-modal class="modal close box sticky-footer" data-button-hide="on" data-open-event="deploy-tag">
+<div data-ui-modal class="modal close box sticky-footer" data-button-hide="on" data-open-event="create-deployment">
     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-    <h1 class="margin-bottom-xl">Deploy a New Tag</h1>
+    <h1 class="margin-bottom-xl">Create a New Deployment</h1>
 
     <ul class="phases padding margin-top-negative-small" data-ui-phases>
         <li>
@@ -597,22 +699,24 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
             <p><b>Unix</b></p>
 
             <div class="margin-bottom">
-                <textarea type="hidden" data-ls-bind="appwrite functions createTag \
+                <textarea type="hidden" data-ls-bind="appwrite functions createDeployment \
     --functionId={{project-function.$id}} \
-    --command='mycommand' \
-    --code='/myrepo/myfunction'" data-forms-code="bash" data-lang="bash" data-lang-label="Bash"></textarea>
+    --activate=true \
+    --entrypoint='scriptFile' \
+    --code='.'" data-forms-code="bash" data-lang="bash" data-lang-label="Bash"></textarea>
             </div>
 
             <p><b>PowerShell</b></p>
 
             <div class="margin-bottom">
-                <textarea type="hidden" data-ls-bind="appwrite functions createTag `
+                <textarea type="hidden" data-ls-bind="appwrite functions createDeployment `
     --functionId={{project-function.$id}} `
-    --command='mycommand' `
-    --code='/myrepo/myfunction'" data-forms-code="powershell" data-lang="powershell" data-lang-label="PowerShell"></textarea>
+    --activate=true `
+    --entrypoint='scriptFile' `
+    --code='.'" data-forms-code="powershell" data-lang="powershell" data-lang-label="PowerShell"></textarea>
             </div>
 
-            <p>Learn more about <a href="https://appwrite.io/docs/server/functions#functionsCreateTag" target="_blank">creating tags</a>, installing and using the <a href="https://appwrite.io/docs/command-line" target="_blank">Appwrite CLI</a>.</p>
+            <p>Learn more about <a href="https://appwrite.io/docs/server/functions#functionsCreateDeployment" target="_blank">creating deployments</a>, installing and using the <a href="https://appwrite.io/docs/command-line" target="_blank">Appwrite CLI</a>.</p>
         </li>
         <li>
             <h2 style="display: none">Manual</h2>
@@ -621,25 +725,27 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                 data-analytics-activity
                 data-analytics-event="submit"
                 data-analytics-category="console"
-                data-analytics-label="Create Function Tag"
-                data-service="functions.createTag"
+                data-analytics-label="Create Function Deployment"
+                data-service="functions.createDeployment"
                 data-scope="sdk"
                 data-event="submit"
                 data-success="alert,trigger,reset"
-                data-success-param-alert-text="Created function tag successfully"
-                data-success-param-trigger-events="functions.createTag"
+                data-success-param-alert-text="Created function deployment successfully"
+                data-success-param-trigger-events="functions.createDeployment"
                 data-failure="alert"
-                data-failure-param-alert-text="Failed to create function tag"
+                data-failure-param-alert-text="Failed to create function deployment"
                 data-failure-param-alert-classname="error">
-                
+
                 <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}" />
 
-                <label for="tag-command">Command</label>
-                <input type="text" id="tag-command" name="command" required autocomplete="off" class="margin-bottom" placeholder="node main.js" />
+                <label for="deployment-entrypoint">Entrypoint</label>
+                <input type="text" id="deployment-entrypoint" name="entrypoint" required autocomplete="off" class="margin-bottom" placeholder="main.js" />
 
-                <label for="tag-code">Gzipped Code (tar.gz file)</label>
-                <input type="file" name="code" id="tag-code" size="1" required accept="application/x-gzip,.gz">
-                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom-large">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
+                <label for="deployment-code">Gzipped Code (tar.gz file)</label>
+                <input type="file" name="code" id="deployment-code" size="1" required accept="application/x-gzip,.gz">
+                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
+
+                <label for="deployment-activate" class="margin-bottom-large"><input type="checkbox" class="margin-start-small" id="deployment-activate" name="activate" /> Activate Deployment after build</label>
 
                 <footer>
                     <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
@@ -649,5 +755,5 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
     </ul>
 
 
-    
+
 </div>

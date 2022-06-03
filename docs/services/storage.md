@@ -1,5 +1,9 @@
 The Storage service allows you to manage your project files. Using the Storage service, you can upload, view, download, and query all your project files.
 
-Each file in the service is granted with read and write permissions to manage who has access to view or edit it. You can also learn more about how to manage your [resources permissions](/docs/permissions).
+Files are managed using buckets. Storage buckets are similar to Collections we have in our [Database](/docs/database) service. The difference is, buckets also provide more power to decide what kinds of files, what sizes you want to allow in that bucket, whether or not to encrypt the files, scan with antivirus and more.
+
+Using Appwrite permissions architecture, you can assign read or write access to each bucket or file in your project for either a specific user, team, user role, or even grant it with public access (`role:all`). You can learn more about [how Appwrite handles permissions and access control](/docs/permissions).
 
 The preview endpoint allows you to generate preview images for your files. Using the preview endpoint, you can also manipulate the resulting image so that it will fit perfectly inside your app in terms of dimensions, file size, and style. The preview endpoint also allows you to change the resulting image file format for better compression or image quality for better delivery over the network.
+
+The maximum file size allowed for file upload is controlled by the `_APP_STORAGE_LIMIT` environment variable, which defaults to 30 MB. See [Environment Variables](/docs/environment-variables#storage) for more information.

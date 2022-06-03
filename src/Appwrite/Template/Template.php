@@ -2,27 +2,25 @@
 
 namespace Appwrite\Template;
 
+use Appwrite\Utopia\View;
 use Exception;
-use Utopia\View;
-
 
 class Template extends View
 {
-
     /**
      * @var string
      */
-    protected string $content = ''; 
+    protected string $content = '';
 
     /**
      * fromFile
      *
      * Creates a new Template() from the file at $path
-     * 
+     *
      * @param string $path
      *
      * @return self
-     * 
+     *
      */
     public static function fromFile(string $path): self
     {
@@ -38,11 +36,11 @@ class Template extends View
      * fromString
      *
      * Creates a new Template() using a raw string
-     * 
+     *
      * @param string $content
      *
      * @return self
-     * 
+     *
      */
     public static function fromString(string $content): self
     {
@@ -65,7 +63,7 @@ class Template extends View
      *
      * @throws Exception
      */
-    public function render($minify = true)
+    public function render($minify = true): string
     {
         if ($this->rendered) { // Don't render any template
             return '';
@@ -73,10 +71,10 @@ class Template extends View
 
         if (\is_readable($this->path)) {
             $template = \file_get_contents($this->path); // Include template file
-        } else if (!empty($this->content)) {
+        } elseif (!empty($this->content)) {
             $template = $this->print($this->content, self::FILTER_NL2P);
         } else {
-            throw new Exception('"'.$this->path.'" template is not readable or not found');
+            throw new Exception('"' . $this->path . '" template is not readable or not found');
         }
 
         // First replace the variables inside the params. Then replace the variables in the template
@@ -111,20 +109,20 @@ class Template extends View
      */
     public static function unParseURL(array $url)
     {
-        $scheme = isset($url['scheme']) ? $url['scheme'].'://' : '';
+        $scheme = isset($url['scheme']) ? $url['scheme'] . '://' : '';
         $host = isset($url['host']) ? $url['host'] : '';
-        $port = isset($url['port']) ? ':'.$url['port'] : '';
+        $port = isset($url['port']) ? ':' . $url['port'] : '';
 
         $user = isset($url['user']) ? $url['user'] : '';
-        $pass = isset($url['pass']) ? ':'.$url['pass']  : '';
+        $pass = isset($url['pass']) ? ':' . $url['pass'] : '';
         $pass = ($user || $pass) ? "$pass@" : '';
 
         $path = isset($url['path']) ? $url['path'] : '';
-        $query = isset($url['query']) && !empty($url['query']) ? '?'.$url['query'] : '';
+        $query = isset($url['query']) && !empty($url['query']) ? '?' . $url['query'] : '';
 
-        $fragment = isset($url['fragment']) ? '#'.$url['fragment'] : '';
+        $fragment = isset($url['fragment']) ? '#' . $url['fragment'] : '';
 
-        return $scheme.$user.$pass.$host.$port.$path.$query.$fragment;
+        return $scheme . $user . $pass . $host . $port . $path . $query . $fragment;
     }
 
     /**
@@ -150,9 +148,9 @@ class Template extends View
 
     /**
      * From Camel Case
-     * 
+     *
      * @var string $input
-     * 
+     *
      * @return string
      */
     public static function fromCamelCaseToSnake($input): string
@@ -168,14 +166,13 @@ class Template extends View
 
     /**
      * From Camel Case to Dash Case
-     * 
+     *
      * @var string $input
-     * 
+     *
      * @return string
      */
     public static function fromCamelCaseToDash($input): string
     {
         return \str_replace([' ', '_'], '-', \strtolower(\preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1-', $input)));
     }
-
 }

@@ -54,7 +54,7 @@ class Env
 
     /**
      * Get All Vars
-     * 
+     *
      * @return array
      */
     public function list(): array
@@ -70,7 +70,7 @@ class Env
         $output = '';
 
         foreach ($this->vars as $key => $value) {
-            $output .= $key.'='.$value."\n";
+            $output .= $key . '=' . $value . "\n";
         }
 
         return $output;

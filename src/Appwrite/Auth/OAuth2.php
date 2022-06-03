@@ -7,27 +7,27 @@ abstract class OAuth2
     /**
      * @var string
      */
-    protected $appID;
+    protected string $appID;
 
     /**
      * @var string
      */
-    protected $appSecret;
+    protected string $appSecret;
 
     /**
      * @var string
      */
-    protected $callback;
+    protected string $callback;
 
     /**
      * @var array
      */
-    protected $state;
+    protected array $state;
 
     /**
      * @var array
      */
-    protected $scopes;
+    protected array $scopes;
 
     /**
      * OAuth2 constructor.
@@ -52,63 +52,108 @@ abstract class OAuth2
     /**
      * @return string
      */
-    abstract public function getName():string;
+    abstract public function getName(): string;
 
     /**
      * @return string
      */
-    abstract public function getLoginURL():string;
+    abstract public function getLoginURL(): string;
 
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    abstract public function getAccessToken(string $code):string;
+    abstract protected function getTokens(string $code): array;
 
     /**
-     * @param $accessToken
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    abstract public function refreshTokens(string $refreshToken): array;
+
+    /**
+     * @param string $accessToken
      *
      * @return string
      */
-    abstract public function getUserID(string $accessToken):string;
+    abstract public function getUserEmail(string $accessToken): string;
 
     /**
-     * @param $accessToken
+     * Check if the OAuth email is verified
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    abstract public function isEmailVerified(string $accessToken): bool;
+
+    /**
+     * @param string $accessToken
      *
      * @return string
      */
-    abstract public function getUserEmail(string $accessToken):string;
-
-    /**
-     * @param $accessToken
-     *
-     * @return string
-     */
-    abstract public function getUserName(string $accessToken):string;
+    abstract public function getUserName(string $accessToken): string;
 
     /**
      * @param $scope
      *
      * @return $this
      */
-    protected function addScope(string $scope):OAuth2
+    protected function addScope(string $scope): OAuth2
     {
         // Add a scope to the scopes array if it isn't already present
         if (!\in_array($scope, $this->scopes)) {
             $this->scopes[] = $scope;
         }
+
         return $this;
     }
 
     /**
      * @return array
      */
-    protected function getScopes():array
+    protected function getScopes(): array
     {
         return $this->scopes;
     }
 
+    /**
+     * @param string $code
+     *
+     * @return string
+     */
+    public function getAccessToken(string $code): string
+    {
+        $tokens = $this->getTokens($code);
+
+        return $tokens['access_token'] ?? '';
+    }
+
+    /**
+     * @param string $code
+     *
+     * @return string
+     */
+    public function getRefreshToken(string $code): string
+    {
+        $tokens = $this->getTokens($code);
+
+        return $tokens['refresh_token'] ?? '';
+    }
+
+    /**
+     * @param string $code
+     *
+     * @return string
+     */
+    public function getAccessTokenExpiry(string $code): string
+    {
+        $tokens = $this->getTokens($code);
+
+        return $tokens['expires_in'] ?? '';
+    }
 
     // The parseState function was designed specifically for Amazon OAuth2 Adapter to override.
     // The response from Amazon is html encoded and hence it needs to be html_decoded before
@@ -131,7 +176,7 @@ abstract class OAuth2
      *
      * @return string
      */
-    protected function request(string $method, string $url = '', array $headers = [], string $payload = ''):string
+    protected function request(string $method, string $url = '', array $headers = [], string $payload = ''): string
     {
         $ch = \curl_init($url);
 
@@ -144,7 +189,7 @@ abstract class OAuth2
             \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         }
 
-        $headers[] = 'Content-length: '.\strlen($payload);
+        $headers[] = 'Content-length: ' . \strlen($payload);
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         // Send the request & save response to $response
