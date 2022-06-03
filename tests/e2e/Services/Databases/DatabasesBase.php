@@ -246,12 +246,18 @@ trait DatabasesBase
         $collectionId = $collection['body']['$id'];
 
 <<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
         $attributesPath = "/databases/" . $databaseId . "/collections/{$collectionId}/attributes";
 
         $string = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
 =======
         $string = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
 >>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseBase.php
+=======
+        $attributesPath = "/databases/" . $databaseId . "/collections/{$collectionId}/attributes";
+
+        $string = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
+>>>>>>> aa3c60893 (server side tests are now passing):tests/e2e/Services/Database/DatabaseBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -263,10 +269,14 @@ trait DatabasesBase
         ]);
 
 <<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
         $email = $this->client->call(Client::METHOD_POST, $attributesPath . '/email', array_merge([
 =======
         $email = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/email', array_merge([
 >>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseBase.php
+=======
+        $email = $this->client->call(Client::METHOD_POST, $attributesPath . '/email', array_merge([
+>>>>>>> aa3c60893 (server side tests are now passing):tests/e2e/Services/Database/DatabaseBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -277,10 +287,14 @@ trait DatabasesBase
         ]);
 
 <<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
         $enum = $this->client->call(Client::METHOD_POST, $attributesPath . '/enum', array_merge([
 =======
         $enum = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/enum', array_merge([
 >>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseBase.php
+=======
+        $enum = $this->client->call(Client::METHOD_POST, $attributesPath . '/enum', array_merge([
+>>>>>>> aa3c60893 (server side tests are now passing):tests/e2e/Services/Database/DatabaseBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -292,10 +306,14 @@ trait DatabasesBase
         ]);
 
 <<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
         $ip = $this->client->call(Client::METHOD_POST, $attributesPath . '/ip', array_merge([
 =======
         $ip = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/ip', array_merge([
 >>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseBase.php
+=======
+        $ip = $this->client->call(Client::METHOD_POST, $attributesPath . '/ip', array_merge([
+>>>>>>> aa3c60893 (server side tests are now passing):tests/e2e/Services/Database/DatabaseBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -306,10 +324,14 @@ trait DatabasesBase
         ]);
 
 <<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
         $url = $this->client->call(Client::METHOD_POST, $attributesPath . '/url', array_merge([
 =======
         $url = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/url', array_merge([
 >>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseBase.php
+=======
+        $url = $this->client->call(Client::METHOD_POST, $attributesPath . '/url', array_merge([
+>>>>>>> aa3c60893 (server side tests are now passing):tests/e2e/Services/Database/DatabaseBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -320,10 +342,14 @@ trait DatabasesBase
         ]);
 
 <<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
         $integer = $this->client->call(Client::METHOD_POST, $attributesPath . '/integer', array_merge([
 =======
         $integer = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/integer', array_merge([
 >>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseBase.php
+=======
+        $integer = $this->client->call(Client::METHOD_POST, $attributesPath . '/integer', array_merge([
+>>>>>>> aa3c60893 (server side tests are now passing):tests/e2e/Services/Database/DatabaseBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -336,10 +362,14 @@ trait DatabasesBase
         ]);
 
 <<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
         $float = $this->client->call(Client::METHOD_POST, $attributesPath . '/float', array_merge([
 =======
         $float = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/float', array_merge([
 >>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseBase.php
+=======
+        $float = $this->client->call(Client::METHOD_POST, $attributesPath . '/float', array_merge([
+>>>>>>> aa3c60893 (server side tests are now passing):tests/e2e/Services/Database/DatabaseBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -352,10 +382,14 @@ trait DatabasesBase
         ]);
 
 <<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
         $boolean = $this->client->call(Client::METHOD_POST, $attributesPath . '/boolean', array_merge([
 =======
         $boolean = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/boolean', array_merge([
 >>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseBase.php
+=======
+        $boolean = $this->client->call(Client::METHOD_POST, $attributesPath . '/boolean', array_merge([
+>>>>>>> aa3c60893 (server side tests are now passing):tests/e2e/Services/Database/DatabaseBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -436,80 +470,112 @@ trait DatabasesBase
         sleep(30);
 
 <<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
         $stringResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $string['body']['key'], array_merge([
 =======
         $stringResponse = $this->client->call(Client::METHOD_GET, "/databases/' . $databaseId . '/collections/{$collectionId}/attributes/{$string['body']['key']}",array_merge([
 >>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseBase.php
+=======
+        $stringResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $string['body']['key'],array_merge([
+>>>>>>> aa3c60893 (server side tests are now passing):tests/e2e/Services/Database/DatabaseBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
 <<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
         $emailResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $email['body']['key'], array_merge([
 =======
         $emailResponse = $this->client->call(Client::METHOD_GET, "/databases/' . $databaseId . '/collections/{$collectionId}/attributes/{$email['body']['key']}",array_merge([
 >>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseBase.php
+=======
+        $emailResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $email['body']['key'],array_merge([
+>>>>>>> aa3c60893 (server side tests are now passing):tests/e2e/Services/Database/DatabaseBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
 <<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
         $enumResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $enum['body']['key'], array_merge([
 =======
         $enumResponse = $this->client->call(Client::METHOD_GET, "/databases/' . $databaseId . '/collections/{$collectionId}/attributes/{$enum['body']['key']}",array_merge([
 >>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseBase.php
+=======
+        $enumResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $enum['body']['key'],array_merge([
+>>>>>>> aa3c60893 (server side tests are now passing):tests/e2e/Services/Database/DatabaseBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
 <<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
         $ipResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $ip['body']['key'], array_merge([
 =======
         $ipResponse = $this->client->call(Client::METHOD_GET, "/databases/' . $databaseId . '/collections/{$collectionId}/attributes/{$ip['body']['key']}",array_merge([
 >>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseBase.php
+=======
+        $ipResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $ip['body']['key'],array_merge([
+>>>>>>> aa3c60893 (server side tests are now passing):tests/e2e/Services/Database/DatabaseBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
 <<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
         $urlResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $url['body']['key'], array_merge([
 =======
         $urlResponse = $this->client->call(Client::METHOD_GET, "/databases/' . $databaseId . '/collections/{$collectionId}/attributes/{$url['body']['key']}",array_merge([
 >>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseBase.php
+=======
+        $urlResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $url['body']['key'],array_merge([
+>>>>>>> aa3c60893 (server side tests are now passing):tests/e2e/Services/Database/DatabaseBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
 <<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
         $integerResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $integer['body']['key'], array_merge([
 =======
         $integerResponse = $this->client->call(Client::METHOD_GET, "/databases/' . $databaseId . '/collections/{$collectionId}/attributes/{$integer['body']['key']}",array_merge([
 >>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseBase.php
+=======
+        $integerResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $integer['body']['key'],array_merge([
+>>>>>>> aa3c60893 (server side tests are now passing):tests/e2e/Services/Database/DatabaseBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
 <<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
         $floatResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $float['body']['key'], array_merge([
 =======
         $floatResponse = $this->client->call(Client::METHOD_GET, "/databases/' . $databaseId . '/collections/{$collectionId}/attributes/{$float['body']['key']}",array_merge([
 >>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseBase.php
+=======
+        $floatResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $float['body']['key'],array_merge([
+>>>>>>> aa3c60893 (server side tests are now passing):tests/e2e/Services/Database/DatabaseBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
 <<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
         $booleanResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $boolean['body']['key'], array_merge([
 =======
         $booleanResponse = $this->client->call(Client::METHOD_GET, "/databases/' . $databaseId . '/collections/{$collectionId}/attributes/{$boolean['body']['key']}",array_merge([
 >>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseBase.php
+=======
+        $booleanResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $boolean['body']['key'],array_merge([
+>>>>>>> aa3c60893 (server side tests are now passing):tests/e2e/Services/Database/DatabaseBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1505,10 +1571,14 @@ trait DatabasesBase
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
 <<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
+<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesBase.php
         $this->assertEquals('InvalidDocumentDatabase', $database['body']['name']);
 =======
         $this->assertEquals('invalidDocumentDatabase', $database['body']['name']);
 >>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseBase.php
+=======
+        $this->assertEquals('InvalidDocumentDatabase', $database['body']['name']);
+>>>>>>> aa3c60893 (server side tests are now passing):tests/e2e/Services/Database/DatabaseBase.php
 
         $databaseId = $database['body']['$id'];
         $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([

@@ -2506,10 +2506,14 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $cursorDocument = $collection->getAttribute('permission') === 'collection'
                 ? Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor))
 <<<<<<< HEAD:app/controllers/api/databases.php
+<<<<<<< HEAD:app/controllers/api/databases.php
                 : $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor);
 =======
                 : $dbForProject->getDocument('collection_' . $collection->getInternalId(), $cursor);
 >>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
+=======
+                : $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor);
+>>>>>>> aa3c60893 (server side tests are now passing):app/controllers/api/database.php
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
