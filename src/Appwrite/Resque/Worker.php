@@ -267,7 +267,7 @@ abstract class Worker
      * @param string $root path of the device
      * @return Device
      */
-    public function getDevice($root): Device
+    public static function getDevice($root): Device
     {
         switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
             case Storage::DEVICE_LOCAL:
