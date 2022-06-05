@@ -41,21 +41,8 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Appwrite\Stats\Stats;
 use Utopia\Config\Config;
-<<<<<<< HEAD:app/controllers/api/databases.php
 use MaxMind\Db\Reader;
-=======
 
-<<<<<<< HEAD:app/controllers/api/databases.php
-//
-// 1. Create new endpoints /v1/database/databases
-// 2. modify existing endpoints as
-// → /v1/database/databases/:databaseId/collections
-// → /v1/database/databases/:databaseId/collections/:collectionId/documents
-//
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-
-=======
->>>>>>> 14a4f4efd (databases api):app/controllers/api/database.php
 /**
  * Create attribute of varying type
  *
@@ -77,8 +64,6 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $default = $attribute->getAttribute('default');
 
 
-<<<<<<< HEAD:app/controllers/api/databases.php
-<<<<<<< HEAD:app/controllers/api/databases.php
     $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
     if ($db->isEmpty()) {
@@ -86,22 +71,6 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     }
 
     $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
-=======
-    $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-=======
-    $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
-
-    if ($db->isEmpty()) {
-        throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
-    }
-
-<<<<<<< HEAD:app/controllers/api/databases.php
-    $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-=======
-    $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
     if ($collection->isEmpty()) {
         throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
@@ -124,24 +93,12 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
     try {
         $attribute = new Document([
-<<<<<<< HEAD:app/controllers/api/databases.php
-<<<<<<< HEAD:app/controllers/api/databases.php
             '$id' => $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key,
             'key' => $key,
             'databaseInternalId' => $db->getInternalId(),
             'databaseId' => $db->getInternalId(),
             'collectionInternalId' => $collection->getInternalId(),
             'collectionId' => $collectionId,
-=======
-            '$id' => $databaseId.'_'.$collectionId.'_'.$key,
-            'key' => $key,
-            'collectionId' => $databaseId .'_'. $collectionId,
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-=======
-            '$id' => $db->getInternalId().'_'.$collectionId.'_'.$key,
-            'key' => $key,
-            'collectionId' => $db->getInternalId() .'_'. $collectionId,
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
             'type' => $type,
             'status' => 'processing', // processing, available, failed, deleting, stuck
             'size' => $size,
@@ -162,18 +119,8 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         throw new Exception('Attribute limit exceeded', 400, Exception::ATTRIBUTE_LIMIT_EXCEEDED);
     }
 
-<<<<<<< HEAD:app/controllers/api/databases.php
-<<<<<<< HEAD:app/controllers/api/databases.php
     $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
     $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
-=======
-    $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
-    $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-=======
-    $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
-    $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
     $usage
         ->setParam('databaseId', $databaseId)
@@ -195,15 +142,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     ;
 
     $audits
-<<<<<<< HEAD:app/controllers/api/databases.php
-<<<<<<< HEAD:app/controllers/api/databases.php
         ->setResource('database/' . $db->getId() . '/collection/' . $collectionId)
-=======
-        ->setResource('database/'.$database.'/collection/'.$collectionId)
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-=======
-        ->setResource('database/'.$db->getId().'/collection/'.$collectionId)
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
         ->setPayload($attribute->getArrayCopy())
     ;
 
@@ -214,8 +153,6 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
 App::post('/v1/databases')
     ->desc('Create Database')
-<<<<<<< HEAD:app/controllers/api/databases.php
-=======
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].create')
     ->label('scope', 'databases.write')
@@ -233,383 +170,6 @@ App::post('/v1/databases')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($databaseId, $name, $response, $dbForProject, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
-
-        $databaseId = $databaseId == 'unique()' ? $dbForProject->getId() : $databaseId;
-
-        try {
-            $dbForProject->createDocument('databases', new Document([
-                '$id' => $databaseId,
-                '$read' => $read ?? [], // Collection permissions for collection documents (based on permission model)
-                '$write' => $write ?? [], // Collection permissions for collection documents (based on permission model)
-                'dateCreated' => time(),
-                'dateUpdated' => time(),
-                'name' => $name,
-                'search' => implode(' ', [$databaseId, $name]),
-            ]));
-            $database = $dbForProject->getDocument('databases', $databaseId);
-
-            $collections = Config::getParam('collections', [])['collections'] ?? [];
-            if (empty($collections)) {
-                throw new Exception('Collections collection is not configured.', 500, Exception::GENERAL_SERVER_ERROR);
-            }
-
-            $attributes = [];
-            $indexes = [];
-
-            foreach ($collections['attributes'] as $attribute) {
-                $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
-                    'type' => $attribute['type'],
-                    'size' => $attribute['size'],
-                    'required' => $attribute['required'],
-                    'signed' => $attribute['signed'],
-                    'array' => $attribute['array'],
-                    'filters' => $attribute['filters'],
-                    'default' => $attribute['default'] ?? null,
-                    'format' => $attribute['format'] ?? ''
-                ]);
-            }
-
-            foreach ($collections['indexes'] as $index) {
-                $indexes[] = new Document([
-                    '$id' => $index['$id'],
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
-                ]);
-            }
-            $dbForProject->createCollection('database_' . $database->getInternalId(), $attributes, $indexes);
-        } catch (DuplicateException $th) {
-            throw new Exception('Database already exists', 409, Exception::DATABASE_ALREADY_EXISTS);
-        }
-
-        $audits
-            ->setResource('database/'.$databaseId)
-            ->setPayload($database->getArrayCopy())
-        ;
-
-        $events->setParam('databaseId', $database->getId());
-        $usage->setParam('database.databases.create', 1);
-
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($database, Response::MODEL_DATABASE);
-    });
-
-App::get('/v1/databases')
-    ->desc('List Databases')
-    ->groups(['api', 'database'])
-    ->label('scope', 'databases.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'list')
-    ->label('sdk.description', '/docs/references/database/list.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_COLLECTION_LIST)
-    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of collection to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursor', '', new UID(), 'ID of the collection used as the starting point for the query, excluding the collection itself. Should be used for efficient pagination when working with large sets of data.', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-
-        if (!empty($cursor)) {
-            $cursorCollection = $dbForProject->getDocument('databases', $cursor);
-
-            if ($cursorCollection->isEmpty()) {
-                throw new Exception("Collection '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
-            }
-        }
-
-        $queries = [];
-
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
-        }
-
-        $usage->setParam('database.read', 1);
-
-        $response->dynamic(new Document([
-            'databases' => $dbForProject->find('databases', $queries, $limit, $offset, [], [$orderType], $cursorCollection ?? null, $cursorDirection),
-            'total' => $dbForProject->count('databases', $queries, APP_LIMIT_COUNT),
-        ]), Response::MODEL_DATABASE_LIST);
-    });
-
-App::get('/v1/databases/:databaseId')
-    ->desc('Get Database')
-    ->groups(['api', 'database'])
-    ->label('scope', 'databases.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'get')
-    ->label('sdk.description', '/docs/references/database/get.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_COLLECTION)
-    ->param('databaseId', '', new UID(), 'Database ID.')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function ($databaseId, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-
-        $database =  $dbForProject->getDocument('databases', $databaseId);
-
-        if ($database->isEmpty()) {
-            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
-        }
-
-        $usage->setParam('databases.read', 1);
-
-        $response->dynamic($database, Response::MODEL_DATABASE);
-    });
-
-App::get('/v1/databases/:databaseId/logs')
-    ->desc('List Collection Logs')
-    ->groups(['api', 'database'])
-    ->label('scope', 'collections.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'listCollectionLogs')
-    ->label('sdk.description', '/docs/references/database/get-collection-logs.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
-    ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('locale')
-    ->inject('geodb')
-    ->action(function ($databaseId, $limit, $offset, $response, $dbForProject, $locale, $geodb) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
-
-        $database = $dbForProject->getDocument('databases', $databaseId);
-
-        if ($database->isEmpty()) {
-            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
-        }
-
-        $audit = new Audit($dbForProject);
-        $resource = 'database/'.$databaseId;
-        $logs = $audit->getLogsByResource($resource, $limit, $offset);
-
-        $output = [];
-
-        foreach ($logs as $i => &$log) {
-            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
-
-            $detector = new Detector($log['userAgent']);
-            $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-
-            $os = $detector->getOS();
-            $client = $detector->getClient();
-            $device = $detector->getDevice();
-
-            $output[$i] = new Document([
-                'event' => $log['event'],
-                'userId' => $log['userId'],
-                'userEmail' => $log['data']['userEmail'] ?? null,
-                'userName' => $log['data']['userName'] ?? null,
-                'mode' => $log['data']['mode'] ?? null,
-                'ip' => $log['ip'],
-                'time' => $log['time'],
-                'osCode' => $os['osCode'],
-                'osName' => $os['osName'],
-                'osVersion' => $os['osVersion'],
-                'clientType' => $client['clientType'],
-                'clientCode' => $client['clientCode'],
-                'clientName' => $client['clientName'],
-                'clientVersion' => $client['clientVersion'],
-                'clientEngine' => $client['clientEngine'],
-                'clientEngineVersion' => $client['clientEngineVersion'],
-                'deviceName' => $device['deviceName'],
-                'deviceBrand' => $device['deviceBrand'],
-                'deviceModel' => $device['deviceModel']
-            ]);
-
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
-        }
-
-        $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
-            'logs' => $output,
-        ]), Response::MODEL_LOG_LIST);
-    });
-
-
-App::put('/v1/databases/:databaseId')
-    ->desc('Update Database')
-    ->groups(['api', 'database'])
-    ->label('scope', 'databases.write')
-    ->label('event', 'databases.[databaseId].update')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'update')
-    ->label('sdk.description', '/docs/references/database/update.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_COLLECTION)
-    ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
-    ->inject('dbForProject')
-    ->inject('audits')
-    ->inject('usage')
-    ->inject('events')
-    ->action(function ($databaseId, $name, $response, $dbForProject, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
-
-        $database =  $dbForProject->getDocument('databases', $databaseId);
-
-        if ($database->isEmpty()) {
-            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
-        }
-
-        try {
-            $database = $dbForProject->updateDocument('databases', $databaseId, $database
-                ->setAttribute('name', $name)
-                ->setAttribute('dateUpdated', time())
-                ->setAttribute('search', implode(' ', [$databaseId, $name]))
-            );
-        }
-        catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-        }
-        catch (StructureException $exception) {
-            throw new Exception('Bad structure. '.$exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
-        }
-
-        $audits
-            ->setResource('database/'.$databaseId)
-            ->setPayload($database->getArrayCopy())
-        ;
-
-        $usage->setParam('databases.update', 1);
-        $events->setParam('collectionId', $database->getId());
-
-        $response->dynamic($database, Response::MODEL_DATABASE);
-    });
-
-App::delete('/v1/databases/:databaseId')
-    ->desc('Delete Database')
-    ->groups(['api', 'database'])
-    ->label('scope', 'databases.write')
-    ->label('event', 'collections.[collectionId].delete')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'delete')
-    ->label('sdk.description', '/docs/references/database/delete.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('databaseId', '', new UID(), 'Database ID.')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('events')
-    ->inject('audits')
-    ->inject('deletes')
-    ->inject('usage')
-    ->action(function ($databaseId, $response, $dbForProject, $events, $audits, $deletes, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Delete $deletes */
-        /** @var Appwrite\Stats\Stats $usage */
-
-        $database = $dbForProject->getDocument('databases', $databaseId);
-
-        if ($database->isEmpty()) {
-            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
-        }
-
-        if (!$dbForProject->deleteDocument('databases', $databaseId)) {
-            throw new Exception('Failed to remove collection from DB', 500, Exception::GENERAL_SERVER_ERROR);
-        }
-
-        $dbForProject->deleteCachedCollection('databases' . $database->getInternalId());
-
-        $deletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($database)
-        ;
-
-        $events
-            ->setParam('databaseId', $database->getId())
-            ->setPayload($response->output($database, Response::MODEL_DATABASE))
-        ;
-
-        $audits
-            ->setResource('database/'.$databaseId)
-            ->setPayload($database->getArrayCopy())
-        ;
-
-        $usage->setParam('database.delete', 1);
-
-        $response->noContent();
-    });
-
-App::post('/v1/databases/:databaseId/collections')
-    ->desc('Create Collection')
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-    ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].create')
-    ->label('scope', 'databases.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-<<<<<<< HEAD:app/controllers/api/databases.php
-    ->label('sdk.method', 'create')
-    ->label('sdk.description', '/docs/references/databases/create-database.md') // create this file later
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DATABASE) // Model for database needs to be created
-    ->param('databaseId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-=======
-    ->label('sdk.method', 'createCollection')
-    ->label('sdk.description', '/docs/references/database/create-collection.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_COLLECTION)
-    ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-    ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('audits')
-    ->inject('usage')
-    ->inject('events')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $name, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
 
         $databaseId = $databaseId == 'unique()' ? $dbForProject->getId() : $databaseId;
@@ -617,36 +177,9 @@ App::post('/v1/databases/:databaseId/collections')
         try {
             $dbForProject->createDocument('databases', new Document([
                 '$id' => $databaseId,
-=======
-    ->action(function ($databaseId, $collectionId, $name, $permission, $read, $write, $response, $dbForProject, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
-
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-
-        if ($database->isEmpty()) {
-            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
-        }
-
-        $collectionId = $collectionId == 'unique()' ? $dbForProject->getId() : $collectionId;
-
-        try {
-            $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
-                '$id' => $collectionId,
-                '$read' => $read ?? [], // Collection permissions for collection documents (based on permission model)
-                '$write' => $write ?? [], // Collection permissions for collection documents (based on permission model)
-                'permission' => $permission, // Permissions model type (document vs collection)
-                'dateCreated' => time(),
-                'dateUpdated' => time(),
-                'enabled' => true,
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
                 'name' => $name,
                 'search' => implode(' ', [$databaseId, $name]),
             ]));
-<<<<<<< HEAD:app/controllers/api/databases.php
             $database = $dbForProject->getDocument('databases', $databaseId);
 
             $collections = Config::getParam('collections', [])['collections'] ?? [];
@@ -681,58 +214,33 @@ App::post('/v1/databases/:databaseId/collections')
                 ]);
             }
             $dbForProject->createCollection('database_' . $database->getInternalId(), $attributes, $indexes);
-=======
-            $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
-
-            $dbForProject->createCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
         } catch (DuplicateException $th) {
             throw new Exception('Database already exists', 409, Exception::DATABASE_ALREADY_EXISTS);
         }
 
         $audits
-<<<<<<< HEAD:app/controllers/api/databases.php
             ->setResource('database/' . $databaseId)
             ->setPayload($database->getArrayCopy())
         ;
 
         $events->setParam('databaseId', $database->getId());
         $usage->setParam('databases.create', 1);
-=======
-            ->setResource('database/'.$databaseId.'/collection/'.$collectionId)
-            ->setPayload($collection->getArrayCopy())
-        ;
-        
-        $events->setParam('collectionId', $collection->getId());
-        $usage->setParam('database.collections.create', 1);
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($database, Response::MODEL_DATABASE);
     });
 
-<<<<<<< HEAD:app/controllers/api/databases.php
 App::get('/v1/databases')
     ->desc('List Databases')
-=======
-App::get('/v1/databases/:databaseId/collections')
-    ->desc('List Collections')
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
     ->groups(['api', 'database'])
     ->label('scope', 'databases.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->label('sdk.method', 'list')
     ->label('sdk.description', '/docs/references/databases/list.md')
-=======
-    ->label('sdk.method', 'listCollections')
-    ->label('sdk.description', '/docs/references/database/list-collections.md')
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION_LIST)
-    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Maximum number of collection to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
@@ -742,22 +250,9 @@ App::get('/v1/databases/:databaseId/collections')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
-=======
-    ->action(function ($databaseId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-
-        if ($database->isEmpty()) {
-            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
-        }
 
         if (!empty($cursor)) {
-<<<<<<< HEAD:app/controllers/api/databases.php
             $cursorDocument = $dbForProject->getDocument('databases', $cursor);
 
             if ($cursorDocument->isEmpty()) {
@@ -1087,8 +582,6 @@ App::get('/v1/databases/:databaseId/collections')
         }
 
         if (!empty($cursor)) {
-=======
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
             $cursorCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $cursor);
 
             if ($cursorCollection->isEmpty()) {
@@ -1128,13 +621,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Stats $usage) {
-=======
-    ->action(function ($databaseId, $collectionId, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1173,16 +660,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, int $limit, int $offset, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
-=======
-    ->action(function ($databaseId, $collectionId, $limit, $offset, $response, $dbForProject, $locale, $geodb) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1197,11 +675,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
         }
 
         $audit = new Audit($dbForProject);
-<<<<<<< HEAD:app/controllers/api/databases.php
         $resource = 'database/' . $databaseId . '/collection/' . $collectionId;
-=======
-        $resource = 'database/'.$databaseId.'/collection/'.$collectionId;
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
         $output = [];
@@ -1280,16 +754,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $name, string $permission, ?array $read, ?array $write, bool $enabled, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
-=======
-    ->action(function ($databaseId, $collectionId, $name, $permission, $read, $write, $enabled, $response, $dbForProject, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1321,11 +786,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
         }
 
         $audits
-<<<<<<< HEAD:app/controllers/api/databases.php
             ->setResource('database/' . $databaseId . '/collection/' . $collectionId)
-=======
-            ->setResource('database/'.$databaseId.'/collection/'.$collectionId)
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
             ->setPayload($collection->getArrayCopy())
         ;
 
@@ -1360,17 +821,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('audits')
     ->inject('deletes')
     ->inject('usage')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Event $events, EventAudit $audits, Delete $deletes, Stats $usage) {
-=======
-    ->action(function ($databaseId, $collectionId, $response, $dbForProject, $events, $audits, $deletes, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Delete $deletes */
-        /** @var Appwrite\Stats\Stats $usage */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1403,11 +854,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
         ;
 
         $audits
-<<<<<<< HEAD:app/controllers/api/databases.php
             ->setResource('database/' . $databaseId . '/collection/' . $collectionId)
-=======
-            ->setResource('database/'.$databaseId.'/collection/'.$collectionId)
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
             ->setPayload($collection->getArrayCopy())
         ;
 
@@ -1418,15 +865,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
         $response->noContent();
     });
 
-<<<<<<< HEAD:app/controllers/api/databases.php
-<<<<<<< HEAD:app/controllers/api/databases.php
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string')
-=======
-App::post('/v1/databases/collections/:collectionId/attributes/string')
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-=======
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string')
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
     ->desc('Create String Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
@@ -1451,17 +890,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
-=======
-    ->action(function ($databaseId, $collectionId, $key, $size, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         // Ensure attribute default is within required size
         $validator = new Text($size);
@@ -1505,16 +934,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
-=======
-    ->action(function ($databaseId, $collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1554,17 +974,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
-=======
-    ->action(function ($databaseId, $collectionId, $key, $elements, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         // use length of longest string as attribute size
         $size = 0;
@@ -1618,16 +1028,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
-=======
-    ->action(function ($databaseId, $collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1666,16 +1067,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
-=======
-    ->action(function ($databaseId, $collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1716,17 +1108,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
-=======
-    ->action(function ($databaseId, $collectionId, $key, $required, $min, $max, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? PHP_INT_MIN : \intval($min);
@@ -1794,17 +1176,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Event $events, Stats $usage) {
-=======
-    ->action(function ($databaseId, $collectionId, $key, $required, $min, $max, $default, $array, $response, $dbForProject, $database, $audits, $events, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? -PHP_FLOAT_MAX : \floatval($min);
@@ -1873,17 +1245,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
-=======
-    ->action(function ($databaseId, $collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1913,13 +1275,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Stats $usage) {
-=======
-    ->action(function ($databaseId, $collectionId, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1969,13 +1325,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, Stats $usage) {
-=======
-    ->action(function ($databaseId, $collectionId, $key, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1989,15 +1339,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-<<<<<<< HEAD:app/controllers/api/databases.php
-<<<<<<< HEAD:app/controllers/api/databases.php
         $attribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
-=======
-        $attribute = $dbForProject->getDocument('attributes', $databaseId.'_'.$collectionId.'_'.$key);
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-=======
-        $attribute = $dbForProject->getDocument('attributes', $database->getInternalId().'_'.$collectionId.'_'.$key);
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
@@ -2048,7 +1390,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $database, Event $events, EventAudit $audits, Stats $usage) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -2057,40 +1398,12 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
         }
         $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
-=======
-    ->action(function ($databaseId, $collectionId, $key, $response, $dbForProject, $database, $events, $audits, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-
-        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-
-        if ($db->isEmpty()) {
-            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
-        }
-<<<<<<< HEAD:app/controllers/api/databases.php
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-=======
-        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-<<<<<<< HEAD:app/controllers/api/databases.php
-<<<<<<< HEAD:app/controllers/api/databases.php
         $attribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
-=======
-        $attribute = $dbForProject->getDocument('attributes', $databaseId.'_'.$collectionId.'_'.$key);
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-=======
-        $attribute = $dbForProject->getDocument('attributes', $db->getInternalId().'_'.$collectionId.'_'.$key);
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
@@ -2101,18 +1414,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
         }
 
-<<<<<<< HEAD:app/controllers/api/databases.php
-<<<<<<< HEAD:app/controllers/api/databases.php
         $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
         $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
-=======
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
-        $dbForProject->deleteCachedCollection('database_' . $database->getInternalId().'_collection_' . $collection->getInternalId());
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-=======
-        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
-        $dbForProject->deleteCachedCollection('database_' . $db->getInternalId().'_collection_' . $collection->getInternalId());
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         $database
             ->setType(DATABASE_TYPE_DELETE_ATTRIBUTE)
@@ -2153,11 +1456,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         ;
 
         $audits
-<<<<<<< HEAD:app/controllers/api/databases.php
             ->setResource('database/' . $databaseId . '/collection/' . $collectionId)
-=======
-            ->setResource('database/'.$databaseId.'/collection/'.$collectionId)
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
             ->setPayload($attribute->getArrayCopy())
         ;
 
@@ -2188,7 +1487,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -2197,42 +1495,14 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
         }
         $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
-=======
-    ->action(function ($databaseId, $collectionId, $key, $type, $attributes, $orders, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
-
-        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-
-        if ($db->isEmpty()) {
-            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
-        }
-<<<<<<< HEAD:app/controllers/api/databases.php
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-=======
-        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
         $count = $dbForProject->count('indexes', [
-<<<<<<< HEAD:app/controllers/api/databases.php
-<<<<<<< HEAD:app/controllers/api/databases.php
             new Query('collectionInternalId', Query::TYPE_EQUAL, [$collection->getInternalId()]),
             new Query('databaseInternalId', Query::TYPE_EQUAL, [$db->getInternalId()])
-=======
-            new Query('collectionId', Query::TYPE_EQUAL, [$databaseId.'_'.$collectionId])
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-=======
-            new Query('collectionId', Query::TYPE_EQUAL, [$db->getInternalId().'_'.$collectionId])
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
         ], 61);
 
         $limit = 64 - MariaDB::getNumberOfDefaultIndexes();
@@ -2270,8 +1540,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         try {
             $index = $dbForProject->createDocument('indexes', new Document([
-<<<<<<< HEAD:app/controllers/api/databases.php
-<<<<<<< HEAD:app/controllers/api/databases.php
                 '$id' => $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key,
                 'key' => $key,
                 'status' => 'processing', // processing, available, failed, deleting, stuck
@@ -2279,18 +1547,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
                 'databaseId' => $databaseId,
                 'collectionInternalId' => $collection->getInternalId(),
                 'collectionId' => $collectionId,
-=======
-                '$id' => $databaseId.'_'.$collectionId.'_'.$key,
-                'key' => $key,
-                'status' => 'processing', // processing, available, failed, deleting, stuck
-                'collectionId' => $databaseId.'_'.$collectionId,
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-=======
-                '$id' => $db->getInternalId().'_'.$collectionId.'_'.$key,
-                'key' => $key,
-                'status' => 'processing', // processing, available, failed, deleting, stuck
-                'collectionId' => $db->getInternalId() . '_' . $collectionId,
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
                 'type' => $type,
                 'attributes' => $attributes,
                 'lengths' => $lengths,
@@ -2300,15 +1556,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             throw new Exception('Index already exists', 409, Exception::INDEX_ALREADY_EXISTS);
         }
 
-<<<<<<< HEAD:app/controllers/api/databases.php
-<<<<<<< HEAD:app/controllers/api/databases.php
         $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
-=======
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-=======
-        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         $database
             ->setType(DATABASE_TYPE_CREATE_INDEX)
@@ -2330,11 +1578,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         ;
 
         $audits
-<<<<<<< HEAD:app/controllers/api/databases.php
             ->setResource('database/' . $databaseId . '/collection/' . $collection->getId())
-=======
-            ->setResource('database/'.$databaseId.'/collection/'.$collection->getId())
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
             ->setPayload($index->getArrayCopy())
         ;
 
@@ -2358,13 +1602,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Stats $usage) {
-=======
-    ->action(function ($databaseId, $collectionId, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2406,13 +1644,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, Stats $usage) {
-=======
-    ->action(function ($databaseId, $collectionId, $key, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2435,15 +1667,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         }
 
         $index = new Document([\array_merge($indexes[$indexIndex], [
-<<<<<<< HEAD:app/controllers/api/databases.php
-<<<<<<< HEAD:app/controllers/api/databases.php
             'collectionId' => $database->getInternalId() . '_' . $collectionId,
-=======
-            'collectionId' => $databaseId.'_'.$collectionId,
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-=======
-            'collectionId' => $database->getInternalId().'_'.$collectionId,
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
         ])]);
 
         $usage
@@ -2473,7 +1697,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $database, Event $events, EventAudit $audits, Stats $usage) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -2482,36 +1705,12 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
         }
         $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
-=======
-    ->action(function ($databaseId, $collectionId, $key, $response, $dbForProject, $database, $events, $audits, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-
-        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-
-        if ($db->isEmpty()) {
-            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
-        }
-<<<<<<< HEAD:app/controllers/api/databases.php
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-=======
-        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-<<<<<<< HEAD:app/controllers/api/databases.php
         $index = $dbForProject->getDocument('indexes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
-=======
-        $index = $dbForProject->getDocument('indexes', $db->getInternalId() . '_' . $collectionId.'_'.$key);
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         if (empty($index->getId())) {
             throw new Exception('Index not found', 404, Exception::INDEX_NOT_FOUND);
@@ -2522,15 +1721,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             $index = $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
         }
 
-<<<<<<< HEAD:app/controllers/api/databases.php
-<<<<<<< HEAD:app/controllers/api/databases.php
         $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
-=======
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-=======
-        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):app/controllers/api/database.php
 
         $database
             ->setType(DATABASE_TYPE_DELETE_INDEX)
@@ -2553,11 +1744,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         ;
 
         $audits
-<<<<<<< HEAD:app/controllers/api/databases.php
             ->setResource('database/' . $databaseId . '/collection/' . $collection->getId())
-=======
-            ->setResource('database/'.$databaseId.'/collection/'.$collection->getId())
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
             ->setPayload($index->getArrayCopy())
         ;
 
@@ -2589,18 +1776,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('usage')
     ->inject('events')
     ->inject('mode')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $read, ?array $write, Response $response, Database $dbForProject, Document $user, EventAudit $audits, Stats $usage, Event $events, string $mode) {
-=======
-    ->action(function ($databaseId, $documentId, $collectionId, $data, $read, $write, $response, $dbForProject, $user, $audits, $usage, $events, $mode) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Database\Document $user */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
-        /** @var string $mode */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2721,15 +1897,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, array $queries, int $limit, int $offset, string $cursor, string $cursorDirection, array $orderAttributes, array $orderTypes, Response $response, Database $dbForProject, Stats $usage, string $mode) {
-=======
-    ->action(function ($databaseId, $collectionId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderAttributes, $orderTypes, $response, $dbForProject, $usage, $mode) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var string $mode */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2785,15 +1953,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         if (!empty($cursor)) {
             $cursorDocument = $collection->getAttribute('permission') === 'collection'
                 ? Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor))
-<<<<<<< HEAD:app/controllers/api/databases.php
-<<<<<<< HEAD:app/controllers/api/databases.php
                 : $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor);
-=======
-                : $dbForProject->getDocument('collection_' . $collection->getInternalId(), $cursor);
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
-=======
-                : $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor);
->>>>>>> aa3c60893 (server side tests are now passing):app/controllers/api/database.php
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
@@ -2844,14 +2004,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, Stats $usage, string $mode) {
-=======
-    ->action(function ($databaseId, $collectionId, $documentId, $response, $dbForProject, $usage, $mode) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var string $mode */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2922,16 +2075,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $documentId, int $limit, int $offset, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
-=======
-    ->action(function ($databaseId, $collectionId, $documentId, $limit, $offset, $response, $dbForProject, $locale, $geodb) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -3028,17 +2172,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->inject('usage')
     ->inject('events')
     ->inject('mode')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $read, ?array $write, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events, string $mode) {
-=======
-    ->action(function ($databaseId, $collectionId, $documentId, $data, $read, $write, $response, $dbForProject, $audits, $usage, $events, $mode) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
-        /** @var string $mode */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -3172,18 +2306,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->inject('deletes')
     ->inject('usage')
     ->inject('mode')
-<<<<<<< HEAD:app/controllers/api/databases.php
     ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, Event $events, EventAudit $audits, Delete $deletes, Stats $usage, string $mode) {
-=======
-    ->action(function ($databaseId, $collectionId, $documentId, $response, $dbForProject, $events, $audits, $deletes, $usage, $mode) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Delete $deletes */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var string $mode */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -3261,12 +2384,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         $response->noContent();
     });
 
-<<<<<<< HEAD:app/controllers/api/databases.php
 App::get('/v1/databases/usage')
-=======
-// Usage will need rework
-App::get('/v1/databases/:databaseId/collections/usage')
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 ->desc('Get usage stats for the database')
 ->groups(['api', 'database'])
 ->label('scope', 'collections.read')
@@ -3275,7 +2393,6 @@ App::get('/v1/databases/:databaseId/collections/usage')
 ->label('sdk.method', 'getUsage')
 ->label('sdk.response.code', Response::STATUS_CODE_OK)
 ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-<<<<<<< HEAD:app/controllers/api/databases.php
 ->label('sdk.response.model', Response::MODEL_USAGE_DATABASES)
 ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), '`Date range.', true)
 ->inject('response')
@@ -3398,18 +2515,6 @@ App::get('/v1/databases/:databaseId/usage')
 ->inject('response')
 ->inject('dbForProject')
 ->action(function (string $databaseId, string $range, Response $response, Database $dbForProject) {
-=======
-->label('sdk.response.model', Response::MODEL_USAGE_DATABASE)
-->param('databaseId', '', new UID(), 'Database ID.')
-->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
-->inject('response')
-->inject('dbForProject')
-->action(function ($databaseId, $range, $response, $dbForProject) {
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\Database\Database $dbForConsole */
-    /** @var Utopia\Database\Database $dbForProject */
-    /** @var Utopia\Registry\Registry $register */
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
     $usage = [];
     if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
@@ -3433,7 +2538,6 @@ App::get('/v1/databases/:databaseId/usage')
         ];
 
         $metrics = [
-<<<<<<< HEAD:app/controllers/api/databases.php
             'databases.' . $databaseId . '.documents.count',
             'databases.' . $databaseId . '.collections.count',
             'databases.' . $databaseId . '.collections.create',
@@ -3444,27 +2548,11 @@ App::get('/v1/databases/:databaseId/usage')
             'databases.' . $databaseId . '.documents.read',
             'databases.' . $databaseId . '.documents.update',
             'databases.' . $databaseId . '.documents.delete'
-=======
-            'database.documents.count',
-            'database.collections.count',
-            'database.collections.create',
-            'database.collections.read',
-            'database.collections.update',
-            'database.collections.delete',
-            'database.documents.create',
-            'database.documents.read',
-            'database.documents.update',
-            'database.documents.delete'
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
         ];
 
         $stats = [];
 
-<<<<<<< HEAD:app/controllers/api/databases.php
         Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-=======
-        Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
             foreach ($metrics as $metric) {
                 $limit = $periods[$range]['limit'];
                 $period = $periods[$range]['period'];
@@ -3486,11 +2574,7 @@ App::get('/v1/databases/:databaseId/usage')
                 $backfill = $limit - \count($requestDocs);
                 while ($backfill > 0) {
                     $last = $limit - $backfill - 1; // array index of last added metric
-<<<<<<< HEAD:app/controllers/api/databases.php
                     $diff = match ($period) { // convert period to seconds for unix timestamp math
-=======
-                    $diff = match($period) { // convert period to seconds for unix timestamp math
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
                         '30m' => 1800,
                         '1d' => 86400,
                     };
@@ -3507,7 +2591,6 @@ App::get('/v1/databases/:databaseId/usage')
 
         $usage = new Document([
             'range' => $range,
-<<<<<<< HEAD:app/controllers/api/databases.php
             'documentsCount' => $stats["databases.{$databaseId}.documents.count"],
             'collectionsCount' => $stats["databases.{$databaseId}.collections.count"],
             'documentsCreate' =>  $stats["databases.{$databaseId}.documents.create"],
@@ -3518,29 +2601,13 @@ App::get('/v1/databases/:databaseId/usage')
             'collectionsRead' =>  $stats["databases.{$databaseId}.collections.read"],
             'collectionsUpdate' => $stats["databases.{$databaseId}.collections.update"],
             'collectionsDelete' => $stats["databases.{$databaseId}.collections.delete"],
-=======
-            'documentsCount' => $stats["database.documents.count"],
-            'collectionsCount' => $stats["database.collections.count"],
-            'documentsCreate' =>  $stats["database.documents.create"],
-            'documentsRead' =>  $stats["database.documents.read"],
-            'documentsUpdate' => $stats["database.documents.update"],
-            'documentsDelete' => $stats["database.documents.delete"],
-            'collectionsCreate' => $stats["database.collections.create"],
-            'collectionsRead' =>  $stats["database.collections.read"],
-            'collectionsUpdate' => $stats["database.collections.update"],
-            'collectionsDelete' => $stats["database.collections.delete"],
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
         ]);
     }
 
     $response->dynamic($usage, Response::MODEL_USAGE_DATABASE);
 });
 
-<<<<<<< HEAD:app/controllers/api/databases.php
 App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
-=======
-App::get('/v1/databases/:collectionId/usage')
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 ->desc('Get usage stats for a collection')
 ->groups(['api', 'database'])
 ->label('scope', 'collections.read')
@@ -3550,41 +2617,24 @@ App::get('/v1/databases/:collectionId/usage')
 ->label('sdk.response.code', Response::STATUS_CODE_OK)
 ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
 ->label('sdk.response.model', Response::MODEL_USAGE_COLLECTION)
-<<<<<<< HEAD:app/controllers/api/databases.php
 ->param('databaseId', '', new UID(), 'Database ID.')
-=======
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
 ->param('collectionId', '', new UID(), 'Collection ID.')
 ->inject('response')
 ->inject('dbForProject')
-<<<<<<< HEAD:app/controllers/api/databases.php
 ->action(function (string $databaseId, string $range, string $collectionId, Response $response, Database $dbForProject) {
 
     $database = $dbForProject->getDocument('databases', $databaseId);
 
     $collectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
     $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collectionDocument->getInternalId());
-=======
-->action(function ($range, $collectionId, $response, $dbForProject) {
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\Database\Database $dbForProject */
-    /** @var Utopia\Registry\Registry $register */
-
-    $collectionDocument = $dbForProject->getDocument('collections', $collectionId);
-    $collection = $dbForProject->getCollection('collection_' . $collectionDocument->getInternalId());
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
 
     if ($collection->isEmpty()) {
         throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
     }
 
     $usage = [];
-<<<<<<< HEAD:app/controllers/api/databases.php
     if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-=======
-    if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
         $periods = [
             '24h' => [
                 'period' => '30m',
@@ -3605,28 +2655,16 @@ App::get('/v1/databases/:collectionId/usage')
         ];
 
         $metrics = [
-<<<<<<< HEAD:app/controllers/api/databases.php
             "databases.{$databaseId}.collections.{$collectionId}.documents.count",
             "databases.{$databaseId}.collections.{$collectionId}.documents.create",
             "databases.{$databaseId}.collections.{$collectionId}.documents.read",
             "databases.{$databaseId}.collections.{$collectionId}.documents.update",
             "databases.{$databaseId}.collections.{$collectionId}.documents.delete",
-=======
-            "database.collections.$collectionId.documents.count",
-            "database.collections.$collectionId.documents.create",
-            "database.collections.$collectionId.documents.read",
-            "database.collections.$collectionId.documents.update",
-            "database.collections.$collectionId.documents.delete",
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
         ];
 
         $stats = [];
 
-<<<<<<< HEAD:app/controllers/api/databases.php
         Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-=======
-        Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
             foreach ($metrics as $metric) {
                 $limit = $periods[$range]['limit'];
                 $period = $periods[$range]['period'];
@@ -3648,11 +2686,7 @@ App::get('/v1/databases/:collectionId/usage')
                 $backfill = $limit - \count($requestDocs);
                 while ($backfill > 0) {
                     $last = $limit - $backfill - 1; // array index of last added metric
-<<<<<<< HEAD:app/controllers/api/databases.php
                     $diff = match ($period) { // convert period to seconds for unix timestamp math
-=======
-                    $diff = match($period) { // convert period to seconds for unix timestamp math
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
                         '30m' => 1800,
                         '1d' => 86400,
                     };
@@ -3668,19 +2702,11 @@ App::get('/v1/databases/:collectionId/usage')
 
         $usage = new Document([
             'range' => $range,
-<<<<<<< HEAD:app/controllers/api/databases.php
             'documentsCount' => $stats["databases.{$databaseId}.collections.{$collectionId}.documents.count"],
             'documentsCreate' => $stats["databases.{$databaseId}.collections.{$collectionId}.documents.create"],
             'documentsRead' => $stats["databases.{$databaseId}.collections.{$collectionId}.documents.read"],
             'documentsUpdate' =>  $stats["databases.{$databaseId}.collections.{$collectionId}.documents.update"],
             'documentsDelete' =>  $stats["databases.{$databaseId}.collections.{$collectionId}.documents.delete"]
-=======
-            'documentsCount' => $stats["database.collections.$collectionId.documents.count"],
-            'documentsCreate' => $stats["database.collections.$collectionId.documents.create"],
-            'documentsRead' => $stats["database.collections.$collectionId.documents.read"],
-            'documentsUpdate' =>  $stats["database.collections.$collectionId.documents.update"],
-            'documentsDelete' =>  $stats["database.collections.$collectionId.documents.delete"]
->>>>>>> 0562d92f5 (database service update):app/controllers/api/database.php
         ]);
     }
 

@@ -16,16 +16,11 @@ class DatabasesCustomServerTest extends Scope
 
     public function testListDatabases()
     {
-<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesCustomServerTest.php
         $test1 = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
-=======
-        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseCustomServerTest.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesCustomServerTest.php
             'databaseId' => 'first',
             'name' => 'Test 1',
         ]);
@@ -248,18 +243,6 @@ class DatabasesCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-=======
-            'databaseId' => 'unique()',
-            'name' => 'invalidDocumentDatabase',
-        ]);
-        $this->assertEquals(201, $database['headers']['status-code']);
-        $this->assertEquals('invalidDocumentDatabase', $database['body']['name']);
-
-        $databaseId = $database['body']['$id'];
-        /**
-         * Test for SUCCESS
-         */
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseCustomServerTest.php
         $test1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -587,11 +570,7 @@ class DatabasesCustomServerTest extends Scope
     public function testDeleteIndex($data): array
     {
         $databaseId = $data['databaseId'];
-<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesCustomServerTest.php
         $index = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/indexes/' . $data['key'], array_merge([
-=======
-        $index = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/indexes/'. $data['key'], array_merge([
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseCustomServerTest.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -675,11 +654,7 @@ class DatabasesCustomServerTest extends Scope
         sleep(2);
 
         // Expected behavior: deleting attribute2 will cause index2 to be dropped, and index1 rebuilt with a single key
-<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesCustomServerTest.php
         $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/attributes/' . $attribute2['body']['key'], array_merge([
-=======
-        $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/attributes/'. $attribute2['body']['key'], array_merge([
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseCustomServerTest.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -803,11 +778,7 @@ class DatabasesCustomServerTest extends Scope
         sleep(2);
 
         // Expected behavior: deleting attribute1 would cause index1 to be a duplicate of index2 and automatically removed
-<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesCustomServerTest.php
         $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $attribute1['body']['key'], array_merge([
-=======
-        $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/'. $attribute1['body']['key'], array_merge([
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseCustomServerTest.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -894,11 +865,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals($document2['body']['lastName'], 'Jackson');
 
         // Delete the actors collection
-<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesCustomServerTest.php
         $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
-=======
-        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId , array_merge([
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseCustomServerTest.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -908,11 +875,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals($response['body'], "");
 
         // Try to get the collection and check if it has been deleted
-<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesCustomServerTest.php
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
-=======
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId , array_merge([
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseCustomServerTest.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()));
@@ -1006,11 +969,7 @@ class DatabasesCustomServerTest extends Scope
         $collectionId = $collection['body']['$id'];
 
         // Add wide string attributes to approach row width limit
-<<<<<<< HEAD:tests/e2e/Services/Databases/DatabasesCustomServerTest.php
         for ($i = 0; $i < 15; $i++) {
-=======
-        for ($i=0; $i < 15; $i++) {
->>>>>>> 5f84a1799 (updating tests and fixing some bugs):tests/e2e/Services/Database/DatabaseCustomServerTest.php
             $attribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],

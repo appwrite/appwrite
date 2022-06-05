@@ -262,20 +262,12 @@ Database::addFilter(
     function (mixed $value) {
         return null;
     },
-<<<<<<< HEAD
     function (mixed $value, Document $document, Database $database) {
         $databaseId = str_replace('database_', '', $document->getAttribute('$collection'));
         return $database
             ->find('attributes', [
                 new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()]),
                 new Query('databaseInternalId', Query::TYPE_EQUAL, [$document->getAttribute('databaseInternalId')])
-=======
-    function($value, Document $document, Database $database) {
-        $databaseId = str_replace('database_', '',$document->getAttribute('$collection'));
-        return $database
-            ->find('attributes', [
-                new Query('collectionId', Query::TYPE_EQUAL, [$databaseId . '_' . $document->getId()])
->>>>>>> 5f84a1799 (updating tests and fixing some bugs)
             ], $database->getAttributeLimit(), 0, []);
     }
 );
@@ -285,7 +277,6 @@ Database::addFilter(
     function (mixed $value) {
         return null;
     },
-<<<<<<< HEAD
     function (mixed $value, Document $document, Database $database) {
         $databaseId = str_replace('database_', '', $document->getAttribute('$collection'));
         return $database
@@ -293,14 +284,6 @@ Database::addFilter(
                 new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()]),
                 new Query('databaseInternalId', Query::TYPE_EQUAL, [$document->getAttribute('databaseInternalId')])
             ], 64);
-=======
-    function($value, Document $document, Database $database) {
-        $databaseId = str_replace('database_', '',$document->getAttribute('$collection'));
-        return $database
-            ->find('indexes', [
-                new Query('collectionId', Query::TYPE_EQUAL, [$databaseId . '_' . $document->getId()])
-            ], 64, 0, []);
->>>>>>> 5f84a1799 (updating tests and fixing some bugs)
     }
 );
 
