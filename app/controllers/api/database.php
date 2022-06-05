@@ -40,13 +40,6 @@ use Appwrite\Event\Event;
 use Appwrite\Stats\Stats;
 use Utopia\Config\Config;
 
-//
-// 1. Create new endpoints /v1/database/databases
-// 2. modify existing endpoints as
-// → /v1/database/databases/:databaseId/collections
-// → /v1/database/databases/:databaseId/collections/:collectionId/documents
-//
-
 /**
  * Create attribute of varying type
  *
@@ -242,6 +235,283 @@ App::post('/v1/databases')
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($database, Response::MODEL_DATABASE);
+    });
+
+App::get('/v1/databases')
+    ->desc('List Databases')
+    ->groups(['api', 'database'])
+    ->label('scope', 'databases.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'list')
+    ->label('sdk.description', '/docs/references/database/list.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_COLLECTION_LIST)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of collection to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('cursor', '', new UID(), 'ID of the collection used as the starting point for the query, excluding the collection itself. Should be used for efficient pagination when working with large sets of data.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
+    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject, $usage) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForProject */
+
+        if (!empty($cursor)) {
+            $cursorCollection = $dbForProject->getDocument('databases', $cursor);
+
+            if ($cursorCollection->isEmpty()) {
+                throw new Exception("Collection '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+            }
+        }
+
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
+
+        $usage->setParam('database.read', 1);
+
+        $response->dynamic(new Document([
+            'databases' => $dbForProject->find('databases', $queries, $limit, $offset, [], [$orderType], $cursorCollection ?? null, $cursorDirection),
+            'total' => $dbForProject->count('databases', $queries, APP_LIMIT_COUNT),
+        ]), Response::MODEL_DATABASE_LIST);
+    });
+
+App::get('/v1/databases/:databaseId')
+    ->desc('Get Database')
+    ->groups(['api', 'database'])
+    ->label('scope', 'databases.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'get')
+    ->label('sdk.description', '/docs/references/database/get.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_COLLECTION)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->action(function ($databaseId, $response, $dbForProject, $usage) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForProject */
+
+        $database =  $dbForProject->getDocument('databases', $databaseId);
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+
+        $usage->setParam('databases.read', 1);
+
+        $response->dynamic($database, Response::MODEL_DATABASE);
+    });
+
+App::get('/v1/databases/:databaseId/logs')
+    ->desc('List Collection Logs')
+    ->groups(['api', 'database'])
+    ->label('scope', 'collections.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'listCollectionLogs')
+    ->label('sdk.description', '/docs/references/database/get-collection-logs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('locale')
+    ->inject('geodb')
+    ->action(function ($databaseId, $limit, $offset, $response, $dbForProject, $locale, $geodb) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Document $project */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var Utopia\Locale\Locale $locale */
+        /** @var MaxMind\Db\Reader $geodb */
+
+        $database = $dbForProject->getDocument('databases', $databaseId);
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+
+        $audit = new Audit($dbForProject);
+        $resource = 'database/'.$databaseId;
+        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+
+        $output = [];
+
+        foreach ($logs as $i => &$log) {
+            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+
+            $detector = new Detector($log['userAgent']);
+            $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+            $os = $detector->getOS();
+            $client = $detector->getClient();
+            $device = $detector->getDevice();
+
+            $output[$i] = new Document([
+                'event' => $log['event'],
+                'userId' => $log['userId'],
+                'userEmail' => $log['data']['userEmail'] ?? null,
+                'userName' => $log['data']['userName'] ?? null,
+                'mode' => $log['data']['mode'] ?? null,
+                'ip' => $log['ip'],
+                'time' => $log['time'],
+                'osCode' => $os['osCode'],
+                'osName' => $os['osName'],
+                'osVersion' => $os['osVersion'],
+                'clientType' => $client['clientType'],
+                'clientCode' => $client['clientCode'],
+                'clientName' => $client['clientName'],
+                'clientVersion' => $client['clientVersion'],
+                'clientEngine' => $client['clientEngine'],
+                'clientEngineVersion' => $client['clientEngineVersion'],
+                'deviceName' => $device['deviceName'],
+                'deviceBrand' => $device['deviceBrand'],
+                'deviceModel' => $device['deviceModel']
+            ]);
+
+            $record = $geodb->get($log['ip']);
+
+            if ($record) {
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+            } else {
+                $output[$i]['countryCode'] = '--';
+                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
+            }
+        }
+
+        $response->dynamic(new Document([
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
+        ]), Response::MODEL_LOG_LIST);
+    });
+
+
+App::put('/v1/databases/:databaseId')
+    ->desc('Update Database')
+    ->groups(['api', 'database'])
+    ->label('scope', 'databases.write')
+    ->label('event', 'databases.[databaseId].update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'update')
+    ->label('sdk.description', '/docs/references/database/update.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_COLLECTION)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
+    ->inject('dbForProject')
+    ->inject('audits')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function ($databaseId, $name, $response, $dbForProject, $audits, $usage, $events) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var Appwrite\Event\Audit $audits */
+        /** @var Appwrite\Stats\Stats $usage */
+        /** @var Appwrite\Event\Event $events */
+
+        $database =  $dbForProject->getDocument('databases', $databaseId);
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+
+        try {
+            $database = $dbForProject->updateDocument('databases', $databaseId, $database
+                ->setAttribute('name', $name)
+                ->setAttribute('dateUpdated', time())
+                ->setAttribute('search', implode(' ', [$databaseId, $name]))
+            );
+        }
+        catch (AuthorizationException $exception) {
+            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
+        }
+        catch (StructureException $exception) {
+            throw new Exception('Bad structure. '.$exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
+        }
+
+        $audits
+            ->setResource('database/'.$databaseId)
+            ->setPayload($database->getArrayCopy())
+        ;
+
+        $usage->setParam('databases.update', 1);
+        $events->setParam('collectionId', $database->getId());
+
+        $response->dynamic($database, Response::MODEL_DATABASE);
+    });
+
+App::delete('/v1/databases/:databaseId')
+    ->desc('Delete Database')
+    ->groups(['api', 'database'])
+    ->label('scope', 'databases.write')
+    ->label('event', 'collections.[collectionId].delete')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'delete')
+    ->label('sdk.description', '/docs/references/database/delete.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->inject('audits')
+    ->inject('deletes')
+    ->inject('usage')
+    ->action(function ($databaseId, $response, $dbForProject, $events, $audits, $deletes, $usage) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForProject */
+        /** @var Appwrite\Event\Event $events */
+        /** @var Appwrite\Event\Audit $audits */
+        /** @var Appwrite\Event\Delete $deletes */
+        /** @var Appwrite\Stats\Stats $usage */
+
+        $database = $dbForProject->getDocument('databases', $databaseId);
+
+        if ($database->isEmpty()) {
+            throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
+        }
+
+        if (!$dbForProject->deleteDocument('databases', $databaseId)) {
+            throw new Exception('Failed to remove collection from DB', 500, Exception::GENERAL_SERVER_ERROR);
+        }
+
+        $dbForProject->deleteCachedCollection('databases' . $database->getInternalId());
+
+        $deletes
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($database)
+        ;
+
+        $events
+            ->setParam('databaseId', $database->getId())
+            ->setPayload($response->output($database, Response::MODEL_DATABASE))
+        ;
+
+        $audits
+            ->setResource('database/'.$databaseId)
+            ->setPayload($database->getArrayCopy())
+        ;
+
+        $usage->setParam('database.delete', 1);
+
+        $response->noContent();
     });
 
 App::post('/v1/databases/:databaseId/collections')
