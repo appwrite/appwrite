@@ -92,9 +92,9 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
     try {
         $attribute = new Document([
-            '$id' => $db->getInternalId().'_'.$collectionId.'_'.$key,
+            '$id' => $db->getInternalId() . '_' . $collectionId . '_' . $key,
             'key' => $key,
-            'collectionId' => $db->getInternalId() .'_'. $collectionId,
+            'collectionId' => $db->getInternalId() . '_' . $collectionId,
             'type' => $type,
             'status' => 'processing', // processing, available, failed, deleting, stuck
             'size' => $size,
@@ -134,7 +134,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     ;
 
     $audits
-        ->setResource('database/'.$db->getId().'/collection/'.$collectionId)
+        ->setResource('database/' . $db->getId() . '/collection/' . $collectionId)
         ->setPayload($attribute->getArrayCopy())
     ;
 
@@ -215,7 +215,7 @@ App::post('/v1/databases')
         }
 
         $audits
-            ->setResource('database/'.$databaseId)
+            ->setResource('database/' . $databaseId)
             ->setPayload($database->getArrayCopy())
         ;
 
@@ -325,7 +325,7 @@ App::get('/v1/databases/:databaseId/logs')
         }
 
         $audit = new Audit($dbForProject);
-        $resource = 'database/'.$databaseId;
+        $resource = 'database/' . $databaseId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
         foreach ($logs as $i => &$log) {
             $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
@@ -407,18 +407,15 @@ App::put('/v1/databases/:databaseId')
             $database = $dbForProject->updateDocument('databases', $databaseId, $database
                 ->setAttribute('name', $name)
                 ->setAttribute('dateUpdated', time())
-                ->setAttribute('search', implode(' ', [$databaseId, $name]))
-            );
-        }
-        catch (AuthorizationException $exception) {
+                ->setAttribute('search', implode(' ', [$databaseId, $name])));
+        } catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-        }
-        catch (StructureException $exception) {
-            throw new Exception('Bad structure. '.$exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
+        } catch (StructureException $exception) {
+            throw new Exception('Bad structure. ' . $exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
         }
 
         $audits
-            ->setResource('database/'.$databaseId)
+            ->setResource('database/' . $databaseId)
             ->setPayload($database->getArrayCopy())
         ;
 
@@ -471,7 +468,7 @@ App::delete('/v1/databases/:databaseId')
         ;
 
         $audits
-            ->setResource('database/'.$databaseId)
+            ->setResource('database/' . $databaseId)
             ->setPayload($database->getArrayCopy())
         ;
 
@@ -535,10 +532,10 @@ App::post('/v1/databases/:databaseId/collections')
         }
 
         $audits
-            ->setResource('database/'.$databaseId.'/collection/'.$collectionId)
+            ->setResource('database/' . $databaseId . '/collection/' . $collectionId)
             ->setPayload($collection->getArrayCopy())
         ;
-        
+
         $events->setParam('collectionId', $collection->getId());
         $usage->setParam('database.collections.create', 1);
 
@@ -665,7 +662,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
         }
 
         $audit = new Audit($dbForProject);
-        $resource = 'database/'.$databaseId.'/collection/'.$collectionId;
+        $resource = 'database/' . $databaseId . '/collection/' . $collectionId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
         $output = [];
@@ -705,8 +702,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -782,7 +779,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
         }
 
         $audits
-            ->setResource('database/'.$databaseId.'/collection/'.$collectionId)
+            ->setResource('database/' . $databaseId . '/collection/' . $collectionId)
             ->setPayload($collection->getArrayCopy())
         ;
 
@@ -842,7 +839,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
         ;
 
         $audits
-            ->setResource('database/'.$databaseId.'/collection/'.$collectionId)
+            ->setResource('database/' . $databaseId . '/collection/' . $collectionId)
             ->setPayload($collection->getArrayCopy())
         ;
 
@@ -1323,7 +1320,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attribute = $dbForProject->getDocument('attributes', $database->getInternalId().'_'.$collectionId.'_'.$key);
+        $attribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $collectionId . '_' . $key);
 
         if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
@@ -1385,7 +1382,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attribute = $dbForProject->getDocument('attributes', $db->getInternalId().'_'.$collectionId.'_'.$key);
+        $attribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $collectionId . '_' . $key);
 
         if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
@@ -1397,7 +1394,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         }
 
         $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
-        $dbForProject->deleteCachedCollection('database_' . $db->getInternalId().'_collection_' . $collection->getInternalId());
+        $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
 
         $database
             ->setType(DATABASE_TYPE_DELETE_ATTRIBUTE)
@@ -1434,7 +1431,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         ;
 
         $audits
-            ->setResource('database/'.$databaseId.'/collection/'.$collectionId)
+            ->setResource('database/' . $databaseId . '/collection/' . $collectionId)
             ->setPayload($attribute->getArrayCopy())
         ;
 
@@ -1479,7 +1476,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         }
 
         $count = $dbForProject->count('indexes', [
-            new Query('collectionId', Query::TYPE_EQUAL, [$db->getInternalId().'_'.$collectionId])
+            new Query('collectionId', Query::TYPE_EQUAL, [$db->getInternalId() . '_' . $collectionId])
         ], 61);
 
         $limit = 64 - MariaDB::getNumberOfDefaultIndexes();
@@ -1517,7 +1514,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         try {
             $index = $dbForProject->createDocument('indexes', new Document([
-                '$id' => $db->getInternalId().'_'.$collectionId.'_'.$key,
+                '$id' => $db->getInternalId() . '_' . $collectionId . '_' . $key,
                 'key' => $key,
                 'status' => 'processing', // processing, available, failed, deleting, stuck
                 'collectionId' => $db->getInternalId() . '_' . $collectionId,
@@ -1548,7 +1545,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         ;
 
         $audits
-            ->setResource('database/'.$databaseId.'/collection/'.$collection->getId())
+            ->setResource('database/' . $databaseId . '/collection/' . $collection->getId())
             ->setPayload($index->getArrayCopy())
         ;
 
@@ -1635,7 +1632,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         }
 
         $index = new Document([\array_merge($indexes[$indexIndex], [
-            'collectionId' => $database->getInternalId().'_'.$collectionId,
+            'collectionId' => $database->getInternalId() . '_' . $collectionId,
         ])]);
 
         $usage->setParam('database.collections.read', 1);
@@ -1676,7 +1673,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $index = $dbForProject->getDocument('indexes', $db->getInternalId() . '_' . $collectionId.'_'.$key);
+        $index = $dbForProject->getDocument('indexes', $db->getInternalId() . '_' . $collectionId . '_' . $key);
 
         if (empty($index->getId())) {
             throw new Exception('Index not found', 404, Exception::INDEX_NOT_FOUND);
@@ -1706,7 +1703,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         ;
 
         $audits
-            ->setResource('database/'.$databaseId.'/collection/'.$collection->getId())
+            ->setResource('database/' . $databaseId . '/collection/' . $collection->getId())
             ->setPayload($index->getArrayCopy())
         ;
 
@@ -2388,7 +2385,7 @@ App::get('/v1/databases/:databaseId/collections/usage')
 
         $stats = [];
 
-        Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
+        Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $limit = $periods[$range]['limit'];
                 $period = $periods[$range]['period'];
@@ -2410,7 +2407,7 @@ App::get('/v1/databases/:databaseId/collections/usage')
                 $backfill = $limit - \count($requestDocs);
                 while ($backfill > 0) {
                     $last = $limit - $backfill - 1; // array index of last added metric
-                    $diff = match($period) { // convert period to seconds for unix timestamp math
+                    $diff = match ($period) { // convert period to seconds for unix timestamp math
                         '30m' => 1800,
                         '1d' => 86400,
                     };
@@ -2467,7 +2464,7 @@ App::get('/v1/databases/:collectionId/usage')
     }
 
     $usage = [];
-    if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+    if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
         $periods = [
             '24h' => [
                 'period' => '30m',
@@ -2497,7 +2494,7 @@ App::get('/v1/databases/:collectionId/usage')
 
         $stats = [];
 
-        Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
+        Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $limit = $periods[$range]['limit'];
                 $period = $periods[$range]['period'];
@@ -2519,7 +2516,7 @@ App::get('/v1/databases/:collectionId/usage')
                 $backfill = $limit - \count($requestDocs);
                 while ($backfill > 0) {
                     $last = $limit - $backfill - 1; // array index of last added metric
-                    $diff = match($period) { // convert period to seconds for unix timestamp math
+                    $diff = match ($period) { // convert period to seconds for unix timestamp math
                         '30m' => 1800,
                         '1d' => 86400,
                     };
