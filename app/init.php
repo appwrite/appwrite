@@ -253,8 +253,8 @@ Database::addFilter(
     function (mixed $value) {
         return null;
     },
-    function(mixed $value, Document $document, Database $database) {
-        $databaseId = str_replace('database_', '',$document->getAttribute('$collection'));
+    function (mixed $value, Document $document, Database $database) {
+        $databaseId = str_replace('database_', '', $document->getAttribute('$collection'));
         return $database
             ->find('attributes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$databaseId . '_' . $document->getId()])
@@ -267,8 +267,8 @@ Database::addFilter(
     function (mixed $value) {
         return null;
     },
-    function(mixed $value, Document $document, Database $database) {
-        $databaseId = str_replace('database_', '',$document->getAttribute('$collection'));
+    function (mixed $value, Document $document, Database $database) {
+        $databaseId = str_replace('database_', '', $document->getAttribute('$collection'));
         return $database
             ->find('indexes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$databaseId . '_' . $document->getId()])

@@ -7,7 +7,7 @@ use Utopia\Database\Database;
 
 trait DatabaseBase
 {
-    public function testCreateDatabase():array
+    public function testCreateDatabase(): array
     {
         /**
          * Test for SUCCESS
@@ -31,7 +31,7 @@ trait DatabaseBase
     /**
      * @depends testCreateDatabase
      */
-    public function testCreateCollection(array $data):array
+    public function testCreateCollection(array $data): array
     {
         $databaseId = $data['databaseId'];
         /**
@@ -198,7 +198,7 @@ trait DatabaseBase
     public function testAttributeResponseModels(array $data): array
     {
         $databaseId = $data['databaseId'];
-        $collection= $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -373,49 +373,49 @@ trait DatabaseBase
         // wait for database worker to create attributes
         sleep(30);
 
-        $stringResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $string['body']['key'],array_merge([
+        $stringResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $string['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $emailResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $email['body']['key'],array_merge([
+        $emailResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $email['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $enumResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $enum['body']['key'],array_merge([
+        $enumResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $enum['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $ipResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $ip['body']['key'],array_merge([
+        $ipResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $ip['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $urlResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $url['body']['key'],array_merge([
+        $urlResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $url['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $integerResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $integer['body']['key'],array_merge([
+        $integerResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $integer['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $floatResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $float['body']['key'],array_merge([
+        $floatResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $float['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $booleanResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $boolean['body']['key'],array_merge([
+        $booleanResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $boolean['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
