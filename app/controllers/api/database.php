@@ -446,7 +446,7 @@ App::delete('/v1/databases/:databaseId')
     ->inject('audits')
     ->inject('deletes')
     ->inject('usage')
-    ->action(function (string $databaseId, Response $response, Database $dbForProject, Event $events, Audit $audits, Delete $deletes, Stats $usage) {
+    ->action(function (string $databaseId, Response $response, Database $dbForProject, Event $events, EventAudit $audits, Delete $deletes, Stats $usage) {
 
         $database = $dbForProject->getDocument('databases', $databaseId);
 
