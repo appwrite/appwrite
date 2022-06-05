@@ -14,6 +14,196 @@ class DatabaseCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
+    public function testListDatabases()
+    {
+        $test1 = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => 'first',
+            'name' => 'Test 1',
+        ]);
+        $this->assertEquals(201, $test1['headers']['status-code']);
+        $this->assertEquals('Test 1', $test1['body']['name']);
+
+        $test2 = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => 'second',
+            'name' => 'Test 2',
+        ]);
+        $this->assertEquals(201, $test2['headers']['status-code']);
+        $this->assertEquals('Test 2', $test2['body']['name']);
+
+        $databases = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(2, $databases['body']['total']);
+        $this->assertEquals($test1['body']['$id'], $databases['body']['databases'][0]['$id']);
+        $this->assertEquals($test2['body']['$id'], $databases['body']['databases'][1]['$id']);
+
+        /**
+         * Test for Order
+         */
+        $base = array_reverse($databases['body']['databases']);
+        $databases = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'orderType' => 'DESC'
+        ]);
+
+        $this->assertEquals(2, $databases['body']['total']);
+        $this->assertEquals($base[0]['$id'], $databases['body']['databases'][0]['$id']);
+        $this->assertEquals($base[1]['$id'], $databases['body']['databases'][1]['$id']);
+
+        /**
+         * Test for After
+         */
+        $base = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $databases = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => $base['body']['databases'][0]['$id']
+        ]);
+
+        $this->assertCount(1, $databases['body']['databases']);
+        $this->assertEquals($base['body']['databases'][1]['$id'], $databases['body']['databases'][0]['$id']);
+
+        $databases = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => $base['body']['databases'][1]['$id']
+        ]);
+
+        $this->assertCount(0, $databases['body']['databases']);
+        $this->assertEmpty($databases['body']['databases']);
+
+        /**
+         * Test for Before
+         */
+        $base = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $databases = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => $base['body']['databases'][1]['$id'],
+            'cursorDirection' => Database::CURSOR_BEFORE
+        ]);
+
+        $this->assertCount(1, $databases['body']['databases']);
+        $this->assertEquals($base['body']['databases'][0]['$id'], $databases['body']['databases'][0]['$id']);
+
+        $databases = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => $base['body']['databases'][0]['$id'],
+            'cursorDirection' => Database::CURSOR_BEFORE
+        ]);
+
+        $this->assertCount(0, $databases['body']['databases']);
+        $this->assertEmpty($databases['body']['databases']);
+
+        /**
+         * Test for Search
+         */
+        $databases = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'first'
+        ]);
+
+        $this->assertEquals(1, $databases['body']['total']);
+        $this->assertEquals('first', $databases['body']['databases'][0]['$id']);
+
+        $databases = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'Test'
+        ]);
+        
+        $this->assertEquals(2, $databases['body']['total']);
+        $this->assertEquals('Test 1', $databases['body']['databases'][0]['name']);
+        $this->assertEquals('Test 2', $databases['body']['databases'][1]['name']);
+
+        $databases = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'Nonexistent'
+        ]);
+        
+        $this->assertEquals(0, $databases['body']['total']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'cursor' => 'unknown',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // This collection already exists
+        $response = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Test 1',
+            'databaseId' => 'first',
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        return ['databaseId' => $test1['body']['$id']];
+    }
+
+    /**
+     * @depends testListDatabases
+     */
+    public function testDeleteDatabase($data)
+    {
+        $databaseId = $data['databaseId'];
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEquals("", $response['body']);
+
+        // Try to get the collection and check if it has been deleted
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
     public function testListCollections()
     {
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
