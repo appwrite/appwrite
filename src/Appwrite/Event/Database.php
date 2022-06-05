@@ -32,7 +32,7 @@ class Database extends Event
 
     /**
      * Returns the set type for the database event.
-     * @return string 
+     * @return string
      */
     public function getType(): string
     {

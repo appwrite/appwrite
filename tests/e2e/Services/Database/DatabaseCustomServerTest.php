@@ -346,7 +346,7 @@ class DatabaseCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'search' => 'Test'
         ]);
-        
+
         $this->assertEquals(2, $collections['body']['total']);
         $this->assertEquals('Test 1', $collections['body']['collections'][0]['name']);
         $this->assertEquals('Test 2', $collections['body']['collections'][1]['name']);
@@ -357,7 +357,7 @@ class DatabaseCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'search' => 'Nonexistent'
         ]);
-        
+
         $this->assertEquals(0, $collections['body']['total']);
 
         /**
@@ -490,7 +490,7 @@ class DatabaseCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), []); 
+        ]), []);
 
         $unneededId = $unneeded['body']['key'];
 
@@ -527,7 +527,7 @@ class DatabaseCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), []); 
+        ]), []);
 
         $this->assertEquals($collection['headers']['status-code'], 200);
         $this->assertIsArray($collection['body']['attributes']);
@@ -809,8 +809,8 @@ class DatabaseCustomServerTest extends Scope
                 'firstName' => 'Tom',
                 'lastName' => 'Holland',
             ],
-            'read' => ['user:'.$this->getUser()['$id']],
-            'write' => ['user:'.$this->getUser()['$id']],
+            'read' => ['user:' . $this->getUser()['$id']],
+            'write' => ['user:' . $this->getUser()['$id']],
         ]);
 
         $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -822,8 +822,8 @@ class DatabaseCustomServerTest extends Scope
                 'firstName' => 'Samuel',
                 'lastName' => 'Jackson',
             ],
-            'read' => ['user:'.$this->getUser()['$id']],
-            'write' => ['user:'.$this->getUser()['$id']],
+            'read' => ['user:' . $this->getUser()['$id']],
+            'write' => ['user:' . $this->getUser()['$id']],
         ]);
 
         $this->assertEquals($document1['headers']['status-code'], 201);
@@ -850,7 +850,7 @@ class DatabaseCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals($response['headers']['status-code'], 204);
-        $this->assertEquals($response['body'],"");
+        $this->assertEquals($response['body'], "");
 
         // Try to get the collection and check if it has been deleted
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId , array_merge([
@@ -1009,7 +1009,7 @@ class DatabaseCustomServerTest extends Scope
         $collectionId = $collection['body']['$id'];
 
         // add unique attributes for indexing
-        for ($i=0; $i < 64; $i++) {
+        for ($i = 0; $i < 64; $i++) {
             // $this->assertEquals(true, static::getDatabase()->createAttribute('indexLimit', "test{$i}", Database::VAR_STRING, 16, true));
             $attribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
                 'content-type' => 'application/json',
@@ -1046,7 +1046,7 @@ class DatabaseCustomServerTest extends Scope
         // testing for indexLimit = 64
         // MariaDB, MySQL, and MongoDB create 3 indexes per new collection
         // Add up to the limit, then check if the next index throws IndexLimitException
-        for ($i=0; $i < 61; $i++) {
+        for ($i = 0; $i < 61; $i++) {
             // $this->assertEquals(true, static::getDatabase()->createIndex('indexLimit', "index{$i}", Database::INDEX_KEY, ["test{$i}"], [16]));
             $index = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/indexes', array_merge([
                 'content-type' => 'application/json',

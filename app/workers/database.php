@@ -7,10 +7,10 @@ use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__ . '/../init.php';
 
 Console::title('Database V1 Worker');
-Console::success(APP_NAME.' database worker v1 has started'."\n");
+Console::success(APP_NAME . ' database worker v1 has started' . "\n");
 
 class DatabaseV1 extends Worker
 {
@@ -28,11 +28,11 @@ class DatabaseV1 extends Worker
         $document = new Document($this->args['document'] ?? []);
         $database = new Document($this->args['database'] ?? []);
 
-        if($collection->isEmpty()) {
+        if ($collection->isEmpty()) {
             throw new Exception('Missing collection');
         }
 
-        if($document->isEmpty()) {
+        if ($document->isEmpty()) {
             throw new Exception('Missing document');
         }
 
@@ -51,9 +51,9 @@ class DatabaseV1 extends Worker
                 break;
 
             default:
-                Console::error('No database operation for type: '.$type);
+                Console::error('No database operation for type: ' . $type);
                 break;
-            }
+        }
 
             Authorization::reset();
     }
@@ -197,7 +197,7 @@ class DatabaseV1 extends Worker
 
             if ($found !== false) {
                 // If found, remove entry from attributes, lengths, and orders
-                // array_values wraps array_diff to reindex array keys 
+                // array_values wraps array_diff to reindex array keys
                 // when found attribute is removed from array
                 $attributes = \array_values(\array_diff($attributes, [$attributes[$found]]));
                 $lengths = \array_values(\array_diff($lengths, [$lengths[$found]]));
@@ -215,7 +215,8 @@ class DatabaseV1 extends Worker
                     // Check if an index exists with the same attributes and orders
                     $exists = false;
                     foreach ($indexes as $existing) {
-                        if ($existing->getAttribute('key') !== $index->getAttribute('key') // Ignore itself
+                        if (
+                            $existing->getAttribute('key') !== $index->getAttribute('key') // Ignore itself
                             && $existing->getAttribute('attributes') === $index->getAttribute('attributes')
                             && $existing->getAttribute('orders') === $index->getAttribute('orders')
                         ) {

@@ -1,6 +1,7 @@
 <?php
 
 use Utopia\App;
+use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
 use Utopia\Validator\Boolean;
@@ -25,6 +26,7 @@ use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Locale\Locale;
 use Appwrite\Auth\Auth;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
@@ -39,17 +41,11 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Appwrite\Stats\Stats;
 use Utopia\Config\Config;
+use MaxMind\Db\Reader;
 
 /**
  * Create attribute of varying type
  *
- * @param string $collectionId
- * @param Utopia\Database\Document $attribute
- * @param Appwrite\Utopia\Response $response
- * @param Utopia\Database\Database $dbForProject
- * @param Appwrite\Event\Database $database
- * @param Appwrite\Event\Audit $audits
- * @param Appwrite\Stats\Stats $usage
  *
  * @return Document Newly created attribute document
  */
@@ -59,11 +55,11 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $type = $attribute->getAttribute('type', '');
     $size = $attribute->getAttribute('size', 0);
     $required = $attribute->getAttribute('required', true);
-    $signed = $attribute->getAttribute('signed', true); // integers are signed by default 
+    $signed = $attribute->getAttribute('signed', true); // integers are signed by default
     $array = $attribute->getAttribute('array', false);
     $format = $attribute->getAttribute('format', '');
     $formatOptions = $attribute->getAttribute('formatOptions', []);
-    $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint 
+    $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint
     $default = $attribute->getAttribute('default');
 
 
@@ -113,11 +109,9 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
         $dbForProject->checkAttribute($collection, $attribute);
         $attribute = $dbForProject->createDocument('attributes', $attribute);
-    }
-    catch (DuplicateException $exception) {
+    } catch (DuplicateException $exception) {
         throw new Exception('Attribute already exists', 409, Exception::ATTRIBUTE_ALREADY_EXISTS);
-    }
-    catch (LimitException $exception) {
+    } catch (LimitException $exception) {
         throw new Exception('Attribute limit exceeded', 400, Exception::ATTRIBUTE_LIMIT_EXCEEDED);
     }
 
@@ -147,7 +141,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
     return $attribute;
-};
+}
 
 App::post('/v1/databases')
     ->desc('Create Database')
@@ -168,12 +162,7 @@ App::post('/v1/databases')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($databaseId, $name, $response, $dbForProject, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $databaseId, string $name, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
 
         $databaseId = $databaseId == 'unique()' ? $dbForProject->getId() : $databaseId;
 
@@ -257,9 +246,7 @@ App::get('/v1/databases')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
 
         if (!empty($cursor)) {
             $cursorCollection = $dbForProject->getDocument('databases', $cursor);
@@ -298,9 +285,7 @@ App::get('/v1/databases/:databaseId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($databaseId, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $databaseId, Response $response, Database $dbForProject, Stats $usage) {
 
         $database =  $dbForProject->getDocument('databases', $databaseId);
 
@@ -331,12 +316,7 @@ App::get('/v1/databases/:databaseId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($databaseId, $limit, $offset, $response, $dbForProject, $locale, $geodb) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
+    ->action(function (string $databaseId, int $limit, int $offset, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $database = $dbForProject->getDocument('databases', $databaseId);
 
@@ -347,9 +327,6 @@ App::get('/v1/databases/:databaseId/logs')
         $audit = new Audit($dbForProject);
         $resource = 'database/'.$databaseId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
-
-        $output = [];
-
         foreach ($logs as $i => &$log) {
             $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
 
@@ -385,8 +362,8 @@ App::get('/v1/databases/:databaseId/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -418,12 +395,7 @@ App::put('/v1/databases/:databaseId')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($databaseId, $name, $response, $dbForProject, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $databaseId, string $name, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
 
         $database =  $dbForProject->getDocument('databases', $databaseId);
 
@@ -474,13 +446,7 @@ App::delete('/v1/databases/:databaseId')
     ->inject('audits')
     ->inject('deletes')
     ->inject('usage')
-    ->action(function ($databaseId, $response, $dbForProject, $events, $audits, $deletes, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Delete $deletes */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $databaseId, Response $response, Database $dbForProject, Event $events, Audit $audits, Delete $deletes, Stats $usage) {
 
         $database = $dbForProject->getDocument('databases', $databaseId);
 
@@ -537,12 +503,7 @@ App::post('/v1/databases/:databaseId/collections')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($databaseId, $collectionId, $name, $permission, $read, $write, $response, $dbForProject, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $databaseId, string $collectionId, string $name, ?string $permission, ?array $read, ?array $write, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -606,9 +567,7 @@ App::get('/v1/databases/:databaseId/collections')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($databaseId, $search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $databaseId, string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -654,9 +613,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($databaseId, $collectionId, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Stats $usage) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -693,12 +650,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($databaseId, $collectionId, $limit, $offset, $response, $dbForProject, $locale, $geodb) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
+    ->action(function (string $databaseId, string $collectionId, int $limit, int $offset, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -792,7 +744,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($databaseId, $collectionId, $name, $permission, $read, $write, $enabled, $response, $dbForProject, $audits, $usage, $events) {
+    ->action(function (string $databaseId, string $collectionId, string $name, string $permission, ?array $read, ?array $write, bool $enabled, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForProject */
         /** @var Appwrite\Event\Audit $audits */
@@ -822,14 +774,11 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
                 ->setAttribute('permission', $permission)
                 ->setAttribute('dateUpdated', time())
                 ->setAttribute('enabled', $enabled)
-                ->setAttribute('search', implode(' ', [$collectionId, $name]))
-            );
-        }
-        catch (AuthorizationException $exception) {
+                ->setAttribute('search', implode(' ', [$collectionId, $name])));
+        } catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-        }
-        catch (StructureException $exception) {
-            throw new Exception('Bad structure. '.$exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
+        } catch (StructureException $exception) {
+            throw new Exception('Bad structure. ' . $exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
         }
 
         $audits
@@ -862,13 +811,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('audits')
     ->inject('deletes')
     ->inject('usage')
-    ->action(function ($databaseId, $collectionId, $response, $dbForProject, $events, $audits, $deletes, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Delete $deletes */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Event $events, EventAudit $audits, Delete $deletes, Stats $usage) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -933,13 +876,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($databaseId, $collectionId, $key, $size, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         // Ensure attribute default is within required size
         $validator = new Text($size);
@@ -983,12 +920,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($databaseId, $collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1028,13 +960,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($databaseId, $collectionId, $key, $elements, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         // use length of longest string as attribute size
         $size = 0;
@@ -1042,7 +968,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
             $length = \strlen($element);
             if ($length === 0) {
                 throw new Exception('Each enum element must not be empty', 400, Exception::ATTRIBUTE_VALUE_INVALID);
-
             }
             $size = ($length > $size) ? $length : $size;
         }
@@ -1089,12 +1014,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($databaseId, $collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1133,12 +1053,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($databaseId, $collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1179,13 +1094,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($databaseId, $collectionId, $key, $required, $min, $max, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? PHP_INT_MIN : \intval($min);
@@ -1253,13 +1162,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($databaseId, $collectionId, $key, $required, $min, $max, $default, $array, $response, $dbForProject, $database, $audits, $events, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Event $events, Stats $usage) {
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? -PHP_FLOAT_MAX : \floatval($min);
@@ -1328,13 +1231,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($databaseId, $collectionId, $key, $required, $default, $array, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject*/
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1364,9 +1261,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($databaseId, $collectionId, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Stats $usage) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1414,9 +1309,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($databaseId, $collectionId, $key, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, Stats $usage) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1440,11 +1333,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         $type = $attribute->getAttribute('type');
         $format = $attribute->getAttribute('format');
 
-        $model = match($type) {
+        $model = match ($type) {
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
-            Database::VAR_STRING => match($format) {
+            Database::VAR_STRING => match ($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,
                 APP_DATABASE_ATTRIBUTE_ENUM => Response::MODEL_ATTRIBUTE_ENUM,
                 APP_DATABASE_ATTRIBUTE_IP => Response::MODEL_ATTRIBUTE_IP,
@@ -1479,13 +1372,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($databaseId, $collectionId, $key, $response, $dbForProject, $database, $events, $audits, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $database, Event $events, EventAudit $audits, Stats $usage) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1525,11 +1412,11 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         $type = $attribute->getAttribute('type');
         $format = $attribute->getAttribute('format');
 
-        $model = match($type) {
+        $model = match ($type) {
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
-            Database::VAR_STRING => match($format) {
+            Database::VAR_STRING => match ($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,
                 APP_DATABASE_ATTRIBUTE_ENUM => Response::MODEL_ATTRIBUTE_ENUM,
                 APP_DATABASE_ATTRIBUTE_IP => Response::MODEL_ATTRIBUTE_IP,
@@ -1578,13 +1465,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($databaseId, $collectionId, $key, $type, $attributes, $orders, $response, $dbForProject, $database, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1627,7 +1508,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
             // ensure attribute is available
             if ($attributeStatus !== 'available') {
-                throw new Exception ('Attribute not available: ' . $oldAttributes[$attributeIndex]['key'], 400, Exception::ATTRIBUTE_NOT_AVAILABLE);
+                throw new Exception('Attribute not available: ' . $oldAttributes[$attributeIndex]['key'], 400, Exception::ATTRIBUTE_NOT_AVAILABLE);
             }
 
             // set attribute size as index length only for strings
@@ -1691,9 +1572,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($databaseId, $collectionId, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Stats $usage) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1733,9 +1612,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($databaseId, $collectionId, $key, $response, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, Stats $usage) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1786,13 +1663,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($databaseId, $collectionId, $key, $response, $dbForProject, $database, $events, $audits, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Database $database */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $database, Event $events, EventAudit $audits, Stats $usage) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1867,14 +1738,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('usage')
     ->inject('events')
     ->inject('mode')
-    ->action(function ($databaseId, $documentId, $collectionId, $data, $read, $write, $response, $dbForProject, $user, $audits, $usage, $events, $mode) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Database\Document $user */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
-        /** @var string $mode */
+    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $read, ?array $write, Response $response, Database $dbForProject, Document $user, EventAudit $audits, Stats $usage, Event $events, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1893,7 +1757,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         /**
          * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
-         * 
+         *
          * @var Document $collection
          */
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
@@ -1914,8 +1778,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $data['$collection'] = $collection->getId(); // Adding this param to make API easier for developers
         $data['$id'] = $documentId == 'unique()' ? $dbForProject->getId() : $documentId;
-        $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
-        $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
+        $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; //  By default set read permissions for user
+        $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? []; //  By default set write permissions for user
 
         // Users can only add their roles to documents, API keys and Admin users can add any
         $roles = Authorization::getRoles();
@@ -1923,13 +1787,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach ($data['$read'] as $read) {
                 if (!Authorization::isRole($read)) {
-                    // TODO: Isn't this a 401: Unauthorized Error ? 
-                    throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::USER_UNAUTHORIZED);
+                    // TODO: Isn't this a 401: Unauthorized Error ?
+                    throw new Exception('Read permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
                 }
             }
             foreach ($data['$write'] as $write) {
                 if (!Authorization::isRole($write)) {
-                    throw new Exception('Write permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::USER_UNAUTHORIZED);
+                    throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
                 }
             }
         }
@@ -1942,11 +1806,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), new Document($data));
             }
             $document->setAttribute('$collection', $collectionId);
-        }
-        catch (StructureException $exception) {
+        } catch (StructureException $exception) {
             throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
-        }
-        catch (DuplicateException $exception) {
+        } catch (DuplicateException $exception) {
             throw new Exception('Document already exists', 409, Exception::DOCUMENT_ALREADY_EXISTS);
         }
 
@@ -1962,7 +1824,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         ;
 
         $audits
-            ->setResource('document/'.$document->getId())
+            ->setResource('document/' . $document->getId())
             ->setPayload($document->getArrayCopy())
         ;
 
@@ -1983,7 +1845,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('queries', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/database#querying-documents). Maximum of 100 queries are allowed, each 128 characters long.', true) 
+    ->param('queries', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/database#querying-documents). Maximum of 100 queries are allowed, each 128 characters long.', true)
     ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response. By default will return maximum 25 results. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the document used as the starting point for the query, excluding the document itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
@@ -1994,11 +1856,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($databaseId, $collectionId, $queries, $limit, $offset, $cursor, $cursorDirection, $orderAttributes, $orderTypes, $response, $dbForProject, $usage, $mode) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var string $mode */
+    ->action(function (string $databaseId, string $collectionId, array $queries, int $limit, int $offset, string $cursor, string $cursorDirection, array $orderAttributes, array $orderTypes, Response $response, Database $dbForProject, Stats $usage, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2036,13 +1894,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             return $query;
         }, $queries);
 
-        if(!empty($orderAttributes)) {
+        if (!empty($orderAttributes)) {
             $validator = new OrderAttributes($collection->getAttribute('attributes', []), $collection->getAttribute('indexes', []), true);
             if (!$validator->isValid($orderAttributes)) {
                 throw new Exception($validator->getDescription(), 400, Exception::GENERAL_QUERY_INVALID);
             }
         }
-        
+
         if (!empty($queries)) {
             $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []), true);
             if (!$validator->isValid($queries)) {
@@ -2104,10 +1962,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($databaseId, $collectionId, $documentId, $response, $dbForProject, $usage, $mode) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var string $mode */
+    ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, Stats $usage, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2177,12 +2032,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($databaseId, $collectionId, $documentId, $limit, $offset, $response, $dbForProject, $locale, $geodb) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
+    ->action(function (string $databaseId, string $collectionId, string $documentId, int $limit, int $offset, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2202,7 +2052,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         $audit = new Audit($dbForProject);
-        $resource = 'document/'.$document->getId();
+        $resource = 'document/' . $document->getId();
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
         $output = [];
@@ -2242,8 +2092,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -2279,13 +2129,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->inject('usage')
     ->inject('events')
     ->inject('mode')
-    ->action(function ($databaseId, $collectionId, $documentId, $data, $read, $write, $response, $dbForProject, $audits, $usage, $events, $mode) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
-        /** @var string $mode */
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $read, ?array $write, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2341,14 +2185,14 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $roles = Authorization::getRoles();
 
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
-            if(!is_null($read)) {
+            if (!is_null($read)) {
                 foreach ($data['$read'] as $read) {
                     if (!Authorization::isRole($read)) {
-                        throw new Exception('Read permissions must be one of: ('.\implode(', ', $roles).')', 400, Exception::USER_UNAUTHORIZED);
+                        throw new Exception('Read permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
                     }
                 }
             }
-            if(!is_null($write)) {
+            if (!is_null($write)) {
                 foreach ($data['$write'] as $write) {
                     if (!Authorization::isRole($write)) {
                         throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
@@ -2368,14 +2212,11 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
              * Reset $collection attribute to remove prefix.
              */
             $document->setAttribute('$collection', $collectionId);
-        }
-        catch (AuthorizationException $exception) {
+        } catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-        }
-        catch (DuplicateException $exception) {
+        } catch (DuplicateException $exception) {
             throw new Exception('Document already exists', 409, Exception::DOCUMENT_ALREADY_EXISTS);
-        }
-        catch (StructureException $exception) {
+        } catch (StructureException $exception) {
             throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
         }
 
@@ -2391,7 +2232,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         ;
 
         $audits
-            ->setResource('document/'.$document->getId())
+            ->setResource('document/' . $document->getId())
             ->setPayload($document->getArrayCopy())
         ;
 
@@ -2419,14 +2260,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->inject('deletes')
     ->inject('usage')
     ->inject('mode')
-    ->action(function ($databaseId, $collectionId, $documentId, $response, $dbForProject, $events, $audits, $deletes, $usage, $mode) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Delete $deletes */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var string $mode */
+    ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, Event $events, EventAudit $audits, Delete $deletes, Stats $usage, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2494,7 +2328,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         ;
 
         $audits
-            ->setResource('document/'.$document->getId())
+            ->setResource('document/' . $document->getId())
             ->setPayload($document->getArrayCopy())
         ;
 
@@ -2516,11 +2350,7 @@ App::get('/v1/databases/:databaseId/collections/usage')
 ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
 ->inject('response')
 ->inject('dbForProject')
-->action(function ($databaseId, $range, $response, $dbForProject) {
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\Database\Database $dbForConsole */
-    /** @var Utopia\Database\Database $dbForProject */
-    /** @var Utopia\Registry\Registry $register */
+->action(function (string $databaseId, string $range, Response $response, Database $dbForProject) {
 
     $usage = [];
     if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
@@ -2627,10 +2457,7 @@ App::get('/v1/databases/:collectionId/usage')
 ->param('collectionId', '', new UID(), 'Collection ID.')
 ->inject('response')
 ->inject('dbForProject')
-->action(function ($range, $collectionId, $response, $dbForProject) {
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\Database\Database $dbForProject */
-    /** @var Utopia\Registry\Registry $register */
+->action(function (string $range, string $collectionId, Response $response, Database $dbForProject) {
 
     $collectionDocument = $dbForProject->getDocument('collections', $collectionId);
     $collection = $dbForProject->getCollection('collection_' . $collectionDocument->getInternalId());

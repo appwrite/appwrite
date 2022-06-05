@@ -102,7 +102,9 @@ abstract class Migration
         Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
         foreach ($this->collections as $collection) {
-            if ($collection['$collection'] !== Database::METADATA) return;
+            if ($collection['$collection'] !== Database::METADATA) {
+                return;
+            }
             $sum = 0;
             $nextDocument = null;
             $collectionCount = $this->projectDB->count($collection['$id']);

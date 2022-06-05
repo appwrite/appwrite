@@ -35,20 +35,20 @@ class AttributeString extends Attribute
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'AttributeString';
     }
 
     /**
      * Get Type
-     * 
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_ATTRIBUTE_STRING;
     }

@@ -4,22 +4,30 @@ use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Detector\Detector;
+use Appwrite\Event\Event;
+use Appwrite\Event\Mail;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Host;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Stats\Stats;
 use Appwrite\Template\Template;
 use Appwrite\URL\URL as URLParser;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use MaxMind\Db\Reader;
 use Utopia\App;
-use Utopia\Audit\Audit;
+use Appwrite\Event\Audit;
+use Utopia\Audit\Audit as EventAudit;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Locale\Locale;
 use Appwrite\Extend\Exception;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
@@ -55,14 +63,7 @@ App::post('/v1/account')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($userId, $email, $password, $name, $request, $response, $project, $dbForProject, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -117,7 +118,7 @@ App::post('/v1/account')
         Authorization::setRole('role:' . Auth::USER_ROLE_MEMBER);
 
         $audits
-            ->setResource('user/'.$user->getId())
+            ->setResource('user/' . $user->getId())
             ->setUser($user)
         ;
 
@@ -153,22 +154,13 @@ App::post('/v1/account/sessions')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($email, $password, $request, $response, $dbForProject, $locale, $geodb, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $email, string $password, Request $request, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audits, Stats $usage, Event $events) {
 
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
         $profile = $dbForProject->findOne('users', [
-            new Query('email', Query::TYPE_EQUAL, [$email])]
-        );
+            new Query('email', Query::TYPE_EQUAL, [$email])]);
 
         if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
             throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS); // Wrong password or username
@@ -193,20 +185,22 @@ App::post('/v1/account/sessions')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-            ], $detector->getOS(), $detector->getClient(), $detector->getDevice()
+            ],
+            $detector->getOS(),
+            $detector->getClient(),
+            $detector->getDevice()
         ));
 
         Authorization::setRole('user:' . $profile->getId());
 
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$read', ['user:' . $profile->getId()])
-            ->setAttribute('$write', ['user:' . $profile->getId()])
-        );
+            ->setAttribute('$write', ['user:' . $profile->getId()]));
 
         $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $audits
-            ->setResource('user/'.$profile->getId())
+            ->setResource('user/' . $profile->getId())
             ->setUser($profile)
         ;
 
@@ -222,7 +216,7 @@ App::post('/v1/account/sessions')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
-        $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+        $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
@@ -257,22 +251,19 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->label('sdk.methodType', 'webAuth')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('providers'), function($node) {return (!$node['mock']);}))).'.')
-    ->param('success', '', function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
-    ->param('failure', '', function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('providers'), fn($node) => (!$node['mock'])))) . '.')
+    ->param('success', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('failure', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('scopes', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each 128 characters long.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->action(function ($provider, $success, $failure, $scopes, $request, $response, $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
+    ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
 
         $protocol = $request->getProtocol();
-        $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
-        $appId = $project->getAttribute('authProviders', [])[$provider.'Appid'] ?? '';
-        $appSecret = $project->getAttribute('authProviders', [])[$provider.'Secret'] ?? '{}';
+        $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
+        $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
             $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
@@ -283,17 +274,17 @@ App::get('/v1/account/sessions/oauth2/:provider')
             throw new Exception('This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.', 412, Exception::PROJECT_PROVIDER_DISABLED);
         }
 
-        $className = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
+        $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
         if (!\class_exists($className)) {
             throw new Exception('Provider is not supported', 501, Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        if(empty($success)) {
+        if (empty($success)) {
             $success = $protocol . '://' . $request->getHostname() . $oauthDefaultSuccess;
         }
 
-        if(empty($failure)) {
+        if (empty($failure)) {
             $failure = $protocol . '://' . $request->getHostname() . $oauthDefaultFailure;
         }
 
@@ -317,9 +308,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->param('state', '', new Text(2048), 'Login state params.', true)
     ->inject('request')
     ->inject('response')
-    ->action(function ($projectId, $provider, $code, $state, $request, $response) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (string $projectId, string $provider, string $code, string $state, Request $request, Response $response) {
 
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
@@ -344,9 +333,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->param('state', '', new Text(2048), 'Login state params.', true)
     ->inject('request')
     ->inject('response')
-    ->action(function ($projectId, $provider, $code, $state, $request, $response) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (string $projectId, string $provider, string $code, string $state, Request $request, Response $response) {
 
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
@@ -379,23 +366,14 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $dbForProject, $geodb, $audits, $events, $usage) use ($oauthDefaultSuccess) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var MaxMind\Db\Reader $geodb */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $provider, string $code, string $state, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Audit $audits, Event $events, Stats $usage) use ($oauthDefaultSuccess) {
 
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $validateURL = new URL();
-        $appId = $project->getAttribute('authProviders', [])[$provider.'Appid'] ?? '';
-        $appSecret = $project->getAttribute('authProviders', [])[$provider.'Secret'] ?? '{}';
+        $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
+        $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
             $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
@@ -431,7 +409,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $state['failure'] = null;
 
         $accessToken = $oauth2->getAccessToken($code);
-        $refreshToken =$oauth2->getRefreshToken($code);
+        $refreshToken = $oauth2->getRefreshToken($code);
         $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
 
         if (empty($accessToken)) {
@@ -457,7 +435,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         if ($current) { // Delete current session of new one.
             $currentDocument = $dbForProject->getDocument('sessions', $current);
-            if(!$currentDocument->isEmpty()) {
+            if (!$currentDocument->isEmpty()) {
                 $dbForProject->deleteDocument('sessions', $currentDocument->getId());
                 $dbForProject->deleteCachedDocument('users', $user->getId());
             }
@@ -478,8 +456,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $isVerified = $oauth2->isEmailVerified($accessToken);
 
             $user = $dbForProject->findOne('users', [
-                new Query('email', Query::TYPE_EQUAL, [$email])]
-            );
+                new Query('email', Query::TYPE_EQUAL, [$email])]);
 
             if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -561,20 +538,19 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$read', ['user:' . $user->getId()])
-            ->setAttribute('$write', ['user:' . $user->getId()])
-        );
+            ->setAttribute('$write', ['user:' . $user->getId()]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $audits
-            ->setResource('user/'.$user->getId())
+            ->setResource('user/' . $user->getId())
             ->setUser($user)
         ;
 
         $usage
             ->setParam('users.sessions.create', 1)
             ->setParam('projectId', $project->getId())
-            ->setParam('provider', 'oauth2-'.$provider)
+            ->setParam('provider', 'oauth2-' . $provider)
         ;
 
         $events
@@ -625,7 +601,7 @@ App::post('/v1/account/sessions/magic-url')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
-    ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -634,17 +610,9 @@ App::post('/v1/account/sessions/magic-url')
     ->inject('audits')
     ->inject('events')
     ->inject('mails')
-    ->action(function ($userId, $email, $url, $request, $response, $project, $dbForProject, $locale, $audits, $events, $mails) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Mail $mails */
+    ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $project, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Mail $mails) {
 
-        if(empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
         }
 
@@ -700,17 +668,16 @@ App::post('/v1/account/sessions/magic-url')
             'ip' => $request->getIP(),
         ]);
 
-        Authorization::setRole('user:'.$user->getId());
+        Authorization::setRole('user:' . $user->getId());
 
         $token = $dbForProject->createDocument('tokens', $token
-            ->setAttribute('$read', ['user:'.$user->getId()])
-            ->setAttribute('$write', ['user:'.$user->getId()])
-        );
+            ->setAttribute('$read', ['user:' . $user->getId()])
+            ->setAttribute('$write', ['user:' . $user->getId()]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        if(empty($url)) {
-            $url = $request->getProtocol().'://'.$request->getHostname().'/auth/magic-url';
+        if (empty($url)) {
+            $url = $request->getProtocol() . '://' . $request->getHostname() . '/auth/magic-url';
         }
 
         $url = Template::parseURL($url);
@@ -736,7 +703,7 @@ App::post('/v1/account/sessions/magic-url')
         $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $loginSecret : '');
 
         $audits
-            ->setResource('user/'.$user->getId())
+            ->setResource('user/' . $user->getId())
             ->setUser($user)
         ;
 
@@ -769,16 +736,7 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('geodb')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($userId, $secret, $request, $response, $dbForProject, $locale, $geodb, $audits, $events) {
-        /** @var string $userId */
-        /** @var string $secret */
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $userId, string $secret, Request $request, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audits, Event $events) {
 
         $user = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
@@ -816,8 +774,7 @@ App::put('/v1/account/sessions/magic-url')
 
         $session = $dbForProject->createDocument('sessions', $session
                 ->setAttribute('$read', ['user:' . $user->getId()])
-                ->setAttribute('$write', ['user:' . $user->getId()])
-        );
+                ->setAttribute('$write', ['user:' . $user->getId()]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
@@ -838,7 +795,7 @@ App::put('/v1/account/sessions/magic-url')
             throw new Exception('Failed saving user to DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
-        $audits->setResource('user/'.$user->getId());
+        $audits->setResource('user/' . $user->getId());
 
         $events
             ->setParam('userId', $user->getId())
@@ -852,12 +809,12 @@ App::put('/v1/account/sessions/magic-url')
         $protocol = $request->getProtocol();
 
         $response
-            ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
-        $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+        $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
@@ -892,17 +849,7 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($request, $response, $locale, $user, $project, $dbForProject, $geodb, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var MaxMind\Db\Reader $geodb */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Stats\Stats $events */
+    ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Audit $audits, Stats $usage, Event $events) {
 
         $protocol = $request->getProtocol();
 
@@ -970,12 +917,11 @@ App::post('/v1/account/sessions/anonymous')
 
         $session = $dbForProject->createDocument('sessions', $session
                 ->setAttribute('$read', ['user:' . $user->getId()])
-                ->setAttribute('$write', ['user:' . $user->getId()])
-        );
+                ->setAttribute('$write', ['user:' . $user->getId()]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        $audits->setResource('user/'.$user->getId());
+        $audits->setResource('user/' . $user->getId());
 
         $usage
             ->setParam('users.sessions.create', 1)
@@ -997,7 +943,7 @@ App::post('/v1/account/sessions/anonymous')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
-        $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+        $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
@@ -1024,10 +970,7 @@ App::post('/v1/account/jwt')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->action(function ($response, $user, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (Response $response, Document $user, Database $dbForProject) {
 
 
         $sessions = $user->getAttribute('sessions', []);
@@ -1070,10 +1013,7 @@ App::get('/v1/account')
     ->inject('response')
     ->inject('user')
     ->inject('usage')
-    ->action(function ($response, $user, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (Response $response, Document $user, Stats $usage) {
 
         $usage->setParam('users.read', 1);
 
@@ -1094,10 +1034,7 @@ App::get('/v1/account/prefs')
     ->inject('response')
     ->inject('user')
     ->inject('usage')
-    ->action(function ($response, $user, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (Response $response, Document $user, Stats $usage) {
 
         $prefs = $user->getAttribute('prefs', new \stdClass());
 
@@ -1121,17 +1058,13 @@ App::get('/v1/account/sessions')
     ->inject('user')
     ->inject('locale')
     ->inject('usage')
-    ->action(function ($response, $user, $locale, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (Response $response, Document $user, Locale $locale, Stats $usage) {
 
         $sessions = $user->getAttribute('sessions', []);
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
-            $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+            $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
@@ -1166,16 +1099,9 @@ App::get('/v1/account/logs')
     ->inject('geodb')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($limit, $offset, $response, $user, $locale, $geodb, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (int $limit, int $offset, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject, Stats $usage) {
 
-        $audit = new Audit($dbForProject);
+        $audit = new EventAudit($dbForProject);
 
         $logs = $audit->getLogsByUser($user->getId(), $limit, $offset);
 
@@ -1197,13 +1123,12 @@ App::get('/v1/account/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
             }
-
         }
 
         $usage->setParam('users.read', 1);
@@ -1231,12 +1156,7 @@ App::get('/v1/account/sessions/:sessionId')
     ->inject('locale')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function ($sessionId, $response, $user, $locale, $dbForProject, $usage) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Database $dbForProject, Stats $usage) {
 
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
@@ -1245,7 +1165,7 @@ App::get('/v1/account/sessions/:sessionId')
 
         foreach ($sessions as $session) {/** @var Document $session */
             if ($sessionId == $session->getId()) {
-                $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+                $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
@@ -1280,21 +1200,14 @@ App::patch('/v1/account/name')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($name, $response, $user, $dbForProject, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Stats\Stats $events */
+    ->action(function (string $name, Response $response, Document $user, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user
             ->setAttribute('name', $name)
-            ->setAttribute('search', implode(' ', [$user->getId(), $name, $user->getAttribute('email')]))
-        );
+            ->setAttribute('search', implode(' ', [$user->getId(), $name, $user->getAttribute('email')])));
 
         $audits
-            ->setResource('user/'.$user->getId())
+            ->setResource('user/' . $user->getId())
             ->setUser($user)
         ;
 
@@ -1324,13 +1237,7 @@ App::patch('/v1/account/password')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($password, $oldPassword, $response, $user, $dbForProject, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Stats\Stats $events */
+    ->action(function (string $password, string $oldPassword, Response $response, Document $user, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
 
         // Check old password only if its an existing user.
         if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
@@ -1346,7 +1253,7 @@ App::patch('/v1/account/password')
         );
 
         $audits
-            ->setResource('user/'.$user->getId())
+            ->setResource('user/' . $user->getId())
             ->setUser($user)
         ;
 
@@ -1376,13 +1283,7 @@ App::patch('/v1/account/email')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($email, $password, $response, $user, $dbForProject, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Stats\Stats $events */
+    ->action(function (string $email, string $password, Response $response, Document $user, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
 
         $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
 
@@ -1405,14 +1306,13 @@ App::patch('/v1/account/email')
                 ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password) : $user->getAttribute('password', ''))
                 ->setAttribute('email', $email)
                 ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
-                ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name'), $user->getAttribute('email')]))
-            );
-        } catch(Duplicate $th) {
+                ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name'), $user->getAttribute('email')])));
+        } catch (Duplicate $th) {
             throw new Exception('Email already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
         $audits
-            ->setResource('user/'.$user->getId())
+            ->setResource('user/' . $user->getId())
             ->setUser($user)
         ;
 
@@ -1441,17 +1341,11 @@ App::patch('/v1/account/prefs')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($prefs, $response, $user, $dbForProject, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (array $prefs, Response $response, Document $user, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
 
-        $audits->setResource('user/'.$user->getId());
+        $audits->setResource('user/' . $user->getId());
         $usage->setParam('users.update', 1);
         $events->setParam('userId', $user->getId());
 
@@ -1477,14 +1371,7 @@ App::patch('/v1/account/status')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($request, $response, $user, $dbForProject, $audits, $events, $usage) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Audit $audits, Event $events, Stats $usage) {
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', false));
 
@@ -1526,15 +1413,7 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($sessionId, $request, $response, $user, $dbForProject, $locale, $audits, $events, $usage) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Stats $usage) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
@@ -1556,7 +1435,7 @@ App::delete('/v1/account/sessions/:sessionId')
                 if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                     $session
                         ->setAttribute('current', true)
-                        ->setAttribute('countryName', $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
+                        ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
                     ;
 
                     if (!Config::getParam('domainVerification')) {
@@ -1570,7 +1449,7 @@ App::delete('/v1/account/sessions/:sessionId')
                         ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
                     ;
                 }
-                
+
                 $dbForProject->deleteCachedDocument('users', $user->getId());
 
                 $events
@@ -1613,17 +1492,7 @@ App::patch('/v1/account/sessions/:sessionId')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($sessionId, $request, $response, $user, $dbForProject, $project, $locale, $audits, $events, $usage) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var boolean $force */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Audit $audits, Event $events, Stats $usage) {
 
         $sessionId = ($sessionId === 'current')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
@@ -1633,7 +1502,6 @@ App::patch('/v1/account/sessions/:sessionId')
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
             if ($sessionId == $session->getId()) {
-
                 // Comment below would skip re-generation if token is still valid
                 // We decided to not include this because developer can get expiration date from the session
                 // I kept code in comment because it might become relevant in the future
@@ -1646,10 +1514,10 @@ App::patch('/v1/account/sessions/:sessionId')
                 $provider = $session->getAttribute('provider');
                 $refreshToken = $session->getAttribute('providerRefreshToken');
 
-                $appId = $project->getAttribute('authProviders', [])[$provider.'Appid'] ?? '';
-                $appSecret = $project->getAttribute('authProviders', [])[$provider.'Secret'] ?? '{}';
+                $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
+                $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
 
-                $className = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
+                $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
                 if (!\class_exists($className)) {
                     throw new Exception('Provider is not supported', 501, Exception::PROJECT_PROVIDER_UNSUPPORTED);
@@ -1709,15 +1577,7 @@ App::delete('/v1/account/sessions')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($request, $response, $user, $dbForProject, $locale, $audits, $events, $usage) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Stats $usage) {
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
@@ -1733,7 +1593,7 @@ App::delete('/v1/account/sessions')
 
             $session
                 ->setAttribute('current', false)
-                ->setAttribute('countryName', $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
+                ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
             ;
 
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) {
@@ -1780,7 +1640,7 @@ App::post('/v1/account/recovery')
     ->label('abuse-limit', 10)
     ->label('abuse-key', ['url:{url},email:{param-email}', 'ip:{ip}'])
     ->param('email', '', new Email(), 'User email.')
-    ->param('url', '', function ($clients) {return new Host($clients);}, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
+    ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -1790,18 +1650,9 @@ App::post('/v1/account/recovery')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function ($email, $url, $request, $response, $dbForProject, $project, $locale, $mails, $audits, $events, $usage) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Event\Mail $mails */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $email, string $url, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Mail $mails, Audit $audits, Event $events, Stats $usage) {
 
-        if(empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
         }
 
@@ -1839,9 +1690,8 @@ App::post('/v1/account/recovery')
         Authorization::setRole('user:' . $profile->getId());
 
         $recovery = $dbForProject->createDocument('tokens', $recovery
-            ->setAttribute('$read', ['user:'.$profile->getId()])
-            ->setAttribute('$write', ['user:'.$profile->getId()])
-        );
+            ->setAttribute('$read', ['user:' . $profile->getId()])
+            ->setAttribute('$write', ['user:' . $profile->getId()]));
 
         $dbForProject->deleteCachedDocument('users', $profile->getId());
 
@@ -1901,12 +1751,7 @@ App::put('/v1/account/recovery')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($userId, $secret, $password, $passwordAgain, $response, $dbForProject, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $userId, string $secret, string $password, string $passwordAgain, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
 
         if ($password !== $passwordAgain) {
             throw new Exception('Passwords must match', 400, Exception::USER_PASSWORD_MISMATCH);
@@ -1930,8 +1775,7 @@ App::put('/v1/account/recovery')
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
                 ->setAttribute('password', Auth::passwordHash($password))
                 ->setAttribute('passwordUpdate', \time())
-                ->setAttribute('emailVerification', true)
-        );
+                ->setAttribute('emailVerification', true));
 
         $recoveryDocument = $dbForProject->getDocument('tokens', $recovery);
 
@@ -1968,7 +1812,7 @@ App::post('/v1/account/verification')
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
-    ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
+    ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -1979,19 +1823,9 @@ App::post('/v1/account/verification')
     ->inject('events')
     ->inject('mails')
     ->inject('usage')
-    ->action(function ($url, $request, $response, $project, $user, $dbForProject, $locale, $audits, $events, $mails, $usage) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Event\Event $events */
-        /** @var Appwrite\Event\Mail $mails */
-        /** @var Appwrite\Stats\Stats $usage */
+    ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Mail $mails, Stats $usage) {
 
-        if(empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
         }
 
@@ -2016,9 +1850,8 @@ App::post('/v1/account/verification')
         Authorization::setRole('user:' . $user->getId());
 
         $verification = $dbForProject->createDocument('tokens', $verification
-            ->setAttribute('$read', ['user:'.$user->getId()])
-            ->setAttribute('$write', ['user:'.$user->getId()])
-        );
+            ->setAttribute('$read', ['user:' . $user->getId()])
+            ->setAttribute('$write', ['user:' . $user->getId()]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
@@ -2076,13 +1909,7 @@ App::put('/v1/account/verification')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function ($userId, $secret, $response, $user, $dbForProject, $audits, $usage, $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
+    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
 
         $profile = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 

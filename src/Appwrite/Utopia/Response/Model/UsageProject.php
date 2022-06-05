@@ -20,70 +20,70 @@ class UsageProject extends Model
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for number of requests.',
                 'default' => [],
-                'example' => new \stdClass,
-                'array' => true 
+                'example' => new \stdClass(),
+                'array' => true
             ])
             ->addRule('network', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for consumed bandwidth.',
                 'default' => [],
-                'example' => new \stdClass,
-                'array' => true 
+                'example' => new \stdClass(),
+                'array' => true
             ])
             ->addRule('functions', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for function executions.',
                 'default' => [],
-                'example' => new \stdClass,
-                'array' => true 
+                'example' => new \stdClass(),
+                'array' => true
             ])
             ->addRule('documents', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for number of documents.',
                 'default' => [],
-                'example' => new \stdClass,
-                'array' => true 
+                'example' => new \stdClass(),
+                'array' => true
             ])
             ->addRule('collections', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for number of collections.',
                 'default' => [],
-                'example' => new \stdClass,
-                'array' => true 
+                'example' => new \stdClass(),
+                'array' => true
             ])
             ->addRule('users', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for number of users.',
                 'default' => [],
-                'example' => new \stdClass,
-                'array' => true 
+                'example' => new \stdClass(),
+                'array' => true
             ])
             ->addRule('storage', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for the occupied storage size (in bytes).',
                 'default' => [],
-                'example' => new \stdClass,
-                'array' => true 
+                'example' => new \stdClass(),
+                'array' => true
             ])
         ;
     }
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'UsageProject';
     }
 
     /**
      * Get Type
-     * 
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_USAGE_PROJECT;
     }

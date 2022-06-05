@@ -173,7 +173,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
         $this->assertStringContainsString('collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('collections.*.delete', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("collections.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events'],);
+        $this->assertStringContainsString("collections.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("collections.{$id}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
@@ -220,7 +220,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.create', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events'],);
+        $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
@@ -402,7 +402,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
 
         /**
-         * Test for FAILURE 
+         * Test for FAILURE
          */
 
         return [
@@ -542,7 +542,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
 
         /**
-         * Test for FAILURE 
+         * Test for FAILURE
          */
 
         return $data;
@@ -610,14 +610,14 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
 
         /**
-         * Test for FAILURE 
+         * Test for FAILURE
          */
 
         return $data;
     }
 
     /**
-     * @depends testExecutions 
+     * @depends testExecutions
      */
     public function testDeleteDeployment($data): array
     {
