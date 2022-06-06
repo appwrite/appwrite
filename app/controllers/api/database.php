@@ -1992,8 +1992,8 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
-        if (empty($data)) {
-            throw new Exception('Missing payload', 400);
+        if (empty($data) && empty($read) && empty($write)) {
+            throw new Exception('Missing payload or read/write permissions', 400);
         }
  
         if (!\is_array($data)) {
