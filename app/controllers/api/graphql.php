@@ -1,7 +1,5 @@
 <?php
 
-use Utopia\App;
-
 /**
  * TODO:
  *  1. Map all objects, object-params, object-fields
@@ -12,12 +10,15 @@ use Utopia\App;
  *  6. Write tests!
  */
 
+use Appwrite\Extend\Exception;
+use Utopia\App;
+
 App::post('/v1/graphql')
     ->desc('GraphQL Endpoint')
     ->groups(['api', 'graphql'])
     ->label('scope', 'public')
     ->action(
         function () {
-            throw new Exception('GraphQL support is coming soon!', 502);
+            throw new Exception('GraphQL support is coming soon!', 502, Exception::GENERAL_SERVER_ERROR);
         }
     );

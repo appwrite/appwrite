@@ -16,6 +16,12 @@ class File extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('bucketId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Bucket ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
             ->addRule('$read', [
                 'type' => self::TYPE_STRING,
                 'description' => 'File read permissions.',
@@ -60,6 +66,18 @@ class File extends Model
                 'default' => 0,
                 'example' => 17890,
             ])
+            ->addRule('chunksTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of chunks available',
+                'default' => 0,
+                'example' => 17890,
+            ])
+            ->addRule('chunksUploaded', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of chunks uploaded',
+                'default' => 0,
+                'example' => 17890,
+            ])
         ;
     }
 
@@ -68,7 +86,7 @@ class File extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'File';
     }
@@ -78,7 +96,7 @@ class File extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_FILE;
     }

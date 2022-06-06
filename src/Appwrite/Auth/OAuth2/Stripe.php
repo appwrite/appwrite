@@ -10,38 +10,37 @@ class Stripe extends OAuth2
     /**
      * @var array
      */
-    protected $user = [];
-    
+    protected array $user = [];
+
     /**
      * @var array
      */
-    protected $tokens = [];
+    protected array $tokens = [];
 
     /**
      * @var string
      */
-    protected $stripeAccountId = '';
+    protected string $stripeAccountId = '';
 
     /**
      * @var array
      */
-    protected $scopes = [
+    protected array $scopes = [
         'read_write',
     ];
 
-    /** 
-     * @return string
+    /**
+     * @var array
      */
-
-    protected $grantType = [
-      'authorize' => 'authorization_code',
-      'refresh' => 'refresh_token',
+    protected array $grantType = [
+        'authorize' => 'authorization_code',
+        'refresh' => 'refresh_token',
     ];
 
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'stripe';
     }
@@ -49,9 +48,9 @@ class Stripe extends OAuth2
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return 'https://connect.stripe.com/oauth/authorize?'. \http_build_query([
+        return 'https://connect.stripe.com/oauth/authorize?' . \http_build_query([
             'response_type' => 'code', // The only option at the moment is "code."
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
@@ -67,7 +66,7 @@ class Stripe extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
                 'https://connect.stripe.com/oauth/token',
@@ -89,7 +88,7 @@ class Stripe extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
             'POST',
@@ -101,7 +100,7 @@ class Stripe extends OAuth2
             ])
         ), true);
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -110,51 +109,59 @@ class Stripe extends OAuth2
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
-        }
-
-        return '';
+        return $user['id'] ?? '';
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-        
-        if(empty($user)) {
-          return '';
+
+        if (empty($user)) {
+            return '';
         }
 
         return $user['email'] ?? '';
     }
 
     /**
-     * @param $accessToken
+     * Check if the OAuth email is verified
+     *
+     * If present, the email is verified. This was verfied through a manual Stripe sign up process
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $email = $this->getUserEmail($accessToken);
+
+        return !empty($email);
+    }
+
+    /**
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserName(string $accessToken):string
+    public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['name'])) {
-            return $user['name'];
-        }
-
-        return '';
+        return $user['name'] ?? '';
     }
 
     /**
@@ -166,15 +173,13 @@ class Stripe extends OAuth2
     {
         if (empty($this->user) && !empty($this->stripeAccountId)) {
             $this->user = \json_decode(
-              $this->request(
-                'GET', 
-                'https://api.stripe.com/v1/accounts/' . $this->stripeAccountId, 
-                ['Authorization: Bearer '.\urlencode($accessToken)]
-              ), 
-              true
+                $this->request(
+                    'GET',
+                    'https://api.stripe.com/v1/accounts/' . $this->stripeAccountId,
+                    ['Authorization: Bearer ' . \urlencode($accessToken)]
+                ),
+                true
             );
-
-            
         }
 
         return $this->user;

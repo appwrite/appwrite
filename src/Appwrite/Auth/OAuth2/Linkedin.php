@@ -9,17 +9,17 @@ class Linkedin extends OAuth2
     /**
      * @var array
      */
-    protected $user = [];
-    
-    /**
-     * @var array
-     */
-    protected $tokens = [];
+    protected array $user = [];
 
     /**
      * @var array
      */
-    protected $scopes = [
+    protected array $tokens = [];
+
+    /**
+     * @var array
+     */
+    protected array $scopes = [
         'r_liteprofile',
         'r_emailaddress',
     ];
@@ -40,7 +40,7 @@ class Linkedin extends OAuth2
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'linkedin';
     }
@@ -48,15 +48,15 @@ class Linkedin extends OAuth2
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return 'https://www.linkedin.com/oauth/v2/authorization?'.\http_build_query([
-                'response_type' => 'code',
-                'client_id' => $this->appID,
-                'redirect_uri' => $this->callback,
-                'scope' => \implode(' ', $this->getScopes()),
-                'state' => \json_encode($this->state),
-            ]);
+        return 'https://www.linkedin.com/oauth/v2/authorization?' . \http_build_query([
+            'response_type' => 'code',
+            'client_id' => $this->appID,
+            'redirect_uri' => $this->callback,
+            'scope' => \implode(' ', $this->getScopes()),
+            'state' => \json_encode($this->state),
+        ]);
     }
 
     /**
@@ -66,7 +66,7 @@ class Linkedin extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
                 'https://www.linkedin.com/oauth/v2/accessToken',
@@ -89,7 +89,7 @@ class Linkedin extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
             'POST',
@@ -104,7 +104,7 @@ class Linkedin extends OAuth2
             ])
         ), true);
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -112,48 +112,51 @@ class Linkedin extends OAuth2
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
-        }
-
-        return '';
+        return $user['id'] ?? '';
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
-        $email = \json_decode($this->request('GET', 'https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))', ['Authorization: Bearer '.\urlencode($accessToken)]), true);
+        $email = \json_decode($this->request('GET', 'https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))', ['Authorization: Bearer ' . \urlencode($accessToken)]), true);
 
-        if (
-            isset($email['elements']) &&
-            isset($email['elements'][0]) &&
-            isset($email['elements'][0]['handle~']) &&
-            isset($email['elements'][0]['handle~']['emailAddress'])
-        ) {
-            return $email['elements'][0]['handle~']['emailAddress'];
-        }
-
-        return '';
+        return $email['elements'][0]['handle~']['emailAddress'] ?? '';
     }
 
     /**
-     * @param $accessToken
+     * Check if the OAuth email is verified
+     *
+     * If present, the email is verified. This was verfied through a manual Linkedin sign up process
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $email = $this->getUserEmail($accessToken);
+
+        return !empty($email);
+    }
+
+    /**
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserName(string $accessToken):string
+    public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
         $name = '';
@@ -163,7 +166,7 @@ class Linkedin extends OAuth2
         }
 
         if (isset($user['localizedLastName'])) {
-            $name = (empty($name)) ? $user['localizedLastName'] : $name.' '.$user['localizedLastName'];
+            $name = (empty($name)) ? $user['localizedLastName'] : $name . ' ' . $user['localizedLastName'];
         }
 
         return $name;
@@ -177,7 +180,7 @@ class Linkedin extends OAuth2
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', 'https://api.linkedin.com/v2/me', ['Authorization: Bearer '.\urlencode($accessToken)]), true);
+            $this->user = \json_decode($this->request('GET', 'https://api.linkedin.com/v2/me', ['Authorization: Bearer ' . \urlencode($accessToken)]), true);
         }
 
         return $this->user;

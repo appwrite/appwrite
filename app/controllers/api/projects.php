@@ -2,8 +2,12 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
+use Appwrite\Event\Certificate;
+use Appwrite\Event\Delete;
+use Appwrite\Event\Validator\Event;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
+use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
@@ -17,19 +21,19 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
-use Utopia\Exception;
+use Utopia\Registry\Registry;
+use Appwrite\Extend\Exception;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Integer;
+use Utopia\Validator\Hostname;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-App::init(function ($project) {
-    /** @var Utopia\Database\Document $project */
+App::init(function (Document $project) {
 
     if ($project->getId() !== 'console') {
-        throw new Exception('Access to this API is forbidden.', 401);
+        throw new Exception('Access to this API is forbidden.', 401, Exception::GENERAL_ACCESS_FORBIDDEN);
     }
 }, ['project'], 'projects');
 
@@ -58,15 +62,12 @@ App::post('/v1/projects')
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('dbForProject')
-    ->action(function ($projectId, $name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForProject) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Utopia\Database\Database $dbForProject */
+    ->action(function (string $projectId, string $name, string $teamId, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Database $dbForProject) {
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
         }
 
         $auth = Config::getParam('auth', []);
@@ -76,6 +77,9 @@ App::post('/v1/projects')
         }
 
         $projectId = ($projectId == 'unique()') ? $dbForConsole->getId() : $projectId;
+        if ($projectId === 'console') {
+            throw new Exception("'console' is a reserved project.", 400, Exception::PROJECT_RESERVED_PROJECT);
+        }
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId == 'unique()' ? $dbForConsole->getId() : $projectId,
             '$read' => ['team:' . $teamId],
@@ -94,17 +98,17 @@ App::post('/v1/projects')
             'legalTaxId' => $legalTaxId,
             'services' => new stdClass(),
             'platforms' => null,
-            'providers' => [],
+            'authProviders' => [],
             'webhooks' => null,
             'keys' => null,
             'domains' => null,
             'auths' => $auths,
             'search' => implode(' ', [$projectId, $name]),
         ]));
+        /** @var array $collections */
+        $collections = Config::getParam('collections', []);
 
-        $collections = Config::getParam('collections', []); /** @var array $collections */
-
-        $dbForProject->setNamespace('_project_' . $project->getId());
+        $dbForProject->setNamespace("_{$project->getId()}");
         $dbForProject->create('appwrite');
 
         $audit = new Audit($dbForProject);
@@ -114,6 +118,9 @@ App::post('/v1/projects')
         $adapter->setup();
 
         foreach ($collections as $key => $collection) {
+            if (($collection['$collection'] ?? '') !== Database::METADATA) {
+                continue;
+            }
             $attributes = [];
             $indexes = [];
 
@@ -126,6 +133,8 @@ App::post('/v1/projects')
                     'signed' => $attribute['signed'],
                     'array' => $attribute['array'],
                     'filters' => $attribute['filters'],
+                    'default' => $attribute['default'] ?? null,
+                    'format' => $attribute['format'] ?? ''
                 ]);
             }
 
@@ -164,15 +173,13 @@ App::get('/v1/projects')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($search, $limit, $offset, $cursor, $cursorDirection, $orderType, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForConsole) {
 
         if (!empty($cursor)) {
             $cursorProject = $dbForConsole->getDocument('projects', $cursor);
 
             if ($cursorProject->isEmpty()) {
-                throw new Exception("Project '{$cursor}' for the 'cursor' value not found.", 400);
+                throw new Exception("Project '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
 
@@ -183,11 +190,11 @@ App::get('/v1/projects')
         }
 
         $results = $dbForConsole->find('projects', $queries, $limit, $offset, [], [$orderType], $cursorProject ?? null, $cursorDirection);
-        $sum = $dbForConsole->count('projects', $queries, APP_LIMIT_COUNT);
+        $total = $dbForConsole->count('projects', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'projects' => $results,
-            'sum' => $sum,
+            'total' => $total,
         ]), Response::MODEL_PROJECT_LIST);
     });
 
@@ -204,14 +211,12 @@ App::get('/v1/projects/:projectId')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -233,16 +238,12 @@ App::get('/v1/projects/:projectId/usage')
     ->inject('dbForConsole')
     ->inject('dbForProject')
     ->inject('register')
-    ->action(function ($projectId, $range, $response, $dbForConsole, $dbForProject, $register) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Registry\Registry $register */
+    ->action(function (string $projectId, string $range, Response $response, Database $dbForConsole, Database $dbForProject, Registry $register) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $usage = [];
@@ -266,7 +267,7 @@ App::get('/v1/projects/:projectId/usage')
                 ],
             ];
 
-            $dbForProject->setNamespace('_project_' . $projectId);
+            $dbForProject->setNamespace("_{$projectId}");
 
             $metrics = [
                 'requests',
@@ -280,7 +281,7 @@ App::get('/v1/projects/:projectId/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
+            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
@@ -302,7 +303,7 @@ App::get('/v1/projects/:projectId/usage')
                     $backfill = $limit - \count($requestDocs);
                     while ($backfill > 0) {
                         $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                        $diff = match ($period) { // convert period to seconds for unix timestamp math
                             '30m' => 1800,
                             '1d' => 86400,
                         };
@@ -354,14 +355,12 @@ App::patch('/v1/projects/:projectId')
     ->param('legalTaxId', '', new Text(256), 'Project legal tax ID. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $name, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
@@ -375,8 +374,7 @@ App::patch('/v1/projects/:projectId')
                 ->setAttribute('legalCity', $legalCity)
                 ->setAttribute('legalAddress', $legalAddress)
                 ->setAttribute('legalTaxId', $legalTaxId)
-                ->setAttribute('search', implode(' ', [$projectId, $name]))
-        );
+                ->setAttribute('search', implode(' ', [$projectId, $name])));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -392,19 +390,16 @@ App::patch('/v1/projects/:projectId/service')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), function ($element) {return $element['optional'];})), true), 'Service name.')
+    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional'])), true), 'Service name.')
     ->param('status', null, new Boolean(), 'Service status.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $service, $status, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Boolean $status */
+    ->action(function (string $projectId, string $service, bool $status, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $services = $project->getAttribute('services', []);
@@ -431,21 +426,19 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->param('secret', '', new text(512), 'Provider secret key. Max length: 512 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $provider, $appId, $secret, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $provider, string $appId, string $secret, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
-        $providers = $project->getAttribute('providers', []);
+        $providers = $project->getAttribute('authProviders', []);
         $providers[$provider . 'Appid'] = $appId;
         $providers[$provider . 'Secret'] = $secret;
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('providers', $providers));
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('authProviders', $providers));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -464,22 +457,19 @@ App::patch('/v1/projects/:projectId/auth/limit')
     ->param('limit', false, new Range(0, APP_LIMIT_USERS), 'Set the max number of users allowed in this project. Use 0 for unlimited.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $limit, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, int $limit, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $auths = $project->getAttribute('auths', []);
         $auths['limit'] = $limit;
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('auths', $auths)
-        );
+            ->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -499,9 +489,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
     ->param('status', false, new Boolean(true), 'Set the status of this auth method.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $method, $status, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $method, bool $status, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
         $auth = Config::getParam('auth')[$method] ?? [];
@@ -509,7 +497,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
         $status = ($status === '1' || $status === 'true' || $status === 1 || $status === true);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $auths = $project->getAttribute('auths', []);
@@ -535,33 +523,29 @@ App::delete('/v1/projects/:projectId')
     ->inject('user')
     ->inject('dbForConsole')
     ->inject('deletes')
-    ->action(function ($projectId, $password, $response, $user, $dbForConsole, $deletes) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $user */
-        /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Appwrite\Event\Event $deletes */
+    ->action(function (string $projectId, string $password, Response $response, Document $user, Database $dbForConsole, Delete $deletes) {
 
         if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
-            throw new Exception('Invalid credentials', 401);
+            throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS);
         }
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $deletes
-            ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $project)
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($project)
         ;
 
         if (!$dbForConsole->deleteDocument('teams', $project->getAttribute('teamId', null))) {
-            throw new Exception('Failed to remove project team from DB', 500);
+            throw new Exception('Failed to remove project team from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         if (!$dbForConsole->deleteDocument('projects', $projectId)) {
-            throw new Exception('Failed to remove project from DB', 500);
+            throw new Exception('Failed to remove project from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $response->noContent();
@@ -581,24 +565,22 @@ App::post('/v1/projects/:projectId/webhooks')
     ->label('sdk.response.model', Response::MODEL_WEBHOOK)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
-    ->param('events', null, new ArrayList(new WhiteList(array_keys(Config::getParam('events'), true), true)), 'Events list.')
+    ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
-        $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
+        $security = (bool) filter_var($security, FILTER_VALIDATE_BOOLEAN);
 
         $webhook = new Document([
             '$id' => $dbForConsole->getId(),
@@ -634,23 +616,21 @@ App::get('/v1/projects/:projectId/webhooks')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $webhooks = $dbForConsole->find('webhooks', [
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
-        ]);
+        ], 5000);
 
         $response->dynamic(new Document([
             'webhooks' => $webhooks,
-            'sum' => count($webhooks),
+            'total' => count($webhooks),
         ]), Response::MODEL_WEBHOOK_LIST);
     });
 
@@ -668,14 +648,12 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('webhookId', null, new UID(), 'Webhook unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $webhookId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
@@ -684,7 +662,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
-            throw new Exception('Webhook not found', 404);
+            throw new Exception('Webhook not found', 404, Exception::WEBHOOK_NOT_FOUND);
         }
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
@@ -703,21 +681,19 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('webhookId', null, new UID(), 'Webhook unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
-    ->param('events', null, new ArrayList(new WhiteList(array_keys(Config::getParam('events'), true), true)), 'Events list.')
+    ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
@@ -728,7 +704,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
-            throw new Exception('Webhook not found', 404);
+            throw new Exception('Webhook not found', 404, Exception::WEBHOOK_NOT_FOUND);
         }
 
         $webhook
@@ -760,14 +736,12 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('webhookId', null, new UID(), 'Webhook unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $webhookId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
@@ -775,8 +749,8 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
         ]);
 
-        if($webhook === false || $webhook->isEmpty()) {
-            throw new Exception('Webhook not found', 404);
+        if ($webhook === false || $webhook->isEmpty()) {
+            throw new Exception('Webhook not found', 404, Exception::WEBHOOK_NOT_FOUND);
         }
 
         $dbForConsole->deleteDocument('webhooks', $webhook->getId());
@@ -800,17 +774,15 @@ App::post('/v1/projects/:projectId/keys')
     ->label('sdk.response.model', Response::MODEL_KEY)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true)), 'Key scopes list.')
+    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $name, $scopes, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $name, array $scopes, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $key = new Document([
@@ -844,14 +816,12 @@ App::get('/v1/projects/:projectId/keys')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $keys = $dbForConsole->find('keys', [
@@ -860,7 +830,7 @@ App::get('/v1/projects/:projectId/keys')
 
         $response->dynamic(new Document([
             'keys' => $keys,
-            'sum' => count($keys),
+            'total' => count($keys),
         ]), Response::MODEL_KEY_LIST);
     });
 
@@ -878,14 +848,12 @@ App::get('/v1/projects/:projectId/keys/:keyId')
     ->param('keyId', null, new UID(), 'Key unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $keyId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $keyId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $key = $dbForConsole->findOne('keys', [
@@ -894,7 +862,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
         ]);
 
         if ($key === false || $key->isEmpty()) {
-            throw new Exception('Key not found', 404);
+            throw new Exception('Key not found', 404, Exception::KEY_NOT_FOUND);
         }
 
         $response->dynamic($key, Response::MODEL_KEY);
@@ -913,17 +881,15 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('keyId', null, new UID(), 'Key unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true)), 'Key scopes list')
+    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $keyId, $name, $scopes, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $keyId, string $name, array $scopes, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $key = $dbForConsole->findOne('keys', [
@@ -932,7 +898,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         ]);
 
         if ($key === false || $key->isEmpty()) {
-            throw new Exception('Key not found', 404);
+            throw new Exception('Key not found', 404, Exception::KEY_NOT_FOUND);
         }
 
         $key
@@ -960,14 +926,12 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
     ->param('keyId', null, new UID(), 'Key unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $keyId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $keyId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $key = $dbForConsole->findOne('keys', [
@@ -975,8 +939,8 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
         ]);
 
-        if($key === false || $key->isEmpty()) {
-            throw new Exception('Key not found', 404);
+        if ($key === false || $key->isEmpty()) {
+            throw new Exception('Key not found', 404, Exception::KEY_NOT_FOUND);
         }
 
         $dbForConsole->deleteDocument('keys', $key->getId());
@@ -999,21 +963,18 @@ App::post('/v1/projects/:projectId/platforms')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PLATFORM)
     ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('type', null, new WhiteList(['web', 'flutter-ios', 'flutter-android', 'flutter-linux', 'flutter-macos', 'flutter-windows', 'apple-ios', 'apple-macos', 'apple-watchos', 'apple-tvos', 'android', 'unity'], true), 'Platform type.')
+    ->param('type', null, new WhiteList([Origin::CLIENT_TYPE_WEB, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_LINUX, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_APPLE_IOS, Origin::CLIENT_TYPE_APPLE_MACOS,  Origin::CLIENT_TYPE_APPLE_WATCHOS, Origin::CLIENT_TYPE_APPLE_TVOS, Origin::CLIENT_TYPE_ANDROID, Origin::CLIENT_TYPE_UNITY], true), 'Platform type.')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
-    ->param('hostname', '', new Text(256), 'Platform client hostname. Max length: 256 chars.', true)
+    ->param('hostname', '', new Hostname(), 'Platform client hostname. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $type, $name, $key, $store, $hostname, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
-
+    ->action(function (string $projectId, string $type, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForConsole) {
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $platform = new Document([
@@ -1051,14 +1012,12 @@ App::get('/v1/projects/:projectId/platforms')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $platforms = $dbForConsole->find('platforms', [
@@ -1067,7 +1026,7 @@ App::get('/v1/projects/:projectId/platforms')
 
         $response->dynamic(new Document([
             'platforms' => $platforms,
-            'sum' => count($platforms),
+            'total' => count($platforms),
         ]), Response::MODEL_PLATFORM_LIST);
     });
 
@@ -1085,14 +1044,12 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
     ->param('platformId', null, new UID(), 'Platform unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $platformId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $platformId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $platform = $dbForConsole->findOne('platforms', [
@@ -1101,7 +1058,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
         ]);
 
         if ($platform === false || $platform->isEmpty()) {
-            throw new Exception('Platform not found', 404);
+            throw new Exception('Platform not found', 404, Exception::PLATFORM_NOT_FOUND);
         }
 
         $response->dynamic($platform, Response::MODEL_PLATFORM);
@@ -1122,17 +1079,14 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for android or bundle ID for iOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
-    ->param('hostname', '', new Text(256), 'Platform client URL. Max length: 256 chars.', true)
+    ->param('hostname', '', new Hostname(), 'Platform client URL. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $platformId, $name, $key, $store, $hostname, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
-
+    ->action(function (string $projectId, string $platformId, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForConsole) {
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $platform = $dbForConsole->findOne('platforms', [
@@ -1141,7 +1095,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         ]);
 
         if ($platform === false || $platform->isEmpty()) {
-            throw new Exception('Platform not found', 404);
+            throw new Exception('Platform not found', 404, Exception::PLATFORM_NOT_FOUND);
         }
 
         $platform
@@ -1172,14 +1126,12 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->param('platformId', null, new UID(), 'Platform unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $platformId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $platformId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $platform = $dbForConsole->findOne('platforms', [
@@ -1188,7 +1140,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
         ]);
 
         if ($platform === false || $platform->isEmpty()) {
-            throw new Exception('Platform not found', 404);
+            throw new Exception('Platform not found', 404, Exception::PLATFORM_NOT_FOUND);
         }
 
         $dbForConsole->deleteDocument('platforms', $platformId);
@@ -1214,14 +1166,12 @@ App::post('/v1/projects/:projectId/domains')
     ->param('domain', null, new DomainValidator(), 'Domain name.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $domain, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $domain, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $document = $dbForConsole->findOne('domains', [
@@ -1230,13 +1180,13 @@ App::post('/v1/projects/:projectId/domains')
         ]);
 
         if ($document && !$document->isEmpty()) {
-            throw new Exception('Domain already exists', 409);
+            throw new Exception('Domain already exists', 409, Exception::DOMAIN_ALREADY_EXISTS);
         }
 
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.', 500);
+            throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $domain = new Domain($domain);
@@ -1275,14 +1225,12 @@ App::get('/v1/projects/:projectId/domains')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $domains = $dbForConsole->find('domains', [
@@ -1291,7 +1239,7 @@ App::get('/v1/projects/:projectId/domains')
 
         $response->dynamic(new Document([
             'domains' => $domains,
-            'sum' => count($domains),
+            'total' => count($domains),
         ]), Response::MODEL_DOMAIN_LIST);
     });
 
@@ -1309,14 +1257,12 @@ App::get('/v1/projects/:projectId/domains/:domainId')
     ->param('domainId', null, new UID(), 'Domain unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $domainId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $domain = $dbForConsole->findOne('domains', [
@@ -1325,7 +1271,7 @@ App::get('/v1/projects/:projectId/domains/:domainId')
         ]);
 
         if ($domain === false || $domain->isEmpty()) {
-            throw new Exception('Domain not found', 404);
+            throw new Exception('Domain not found', 404, Exception::DOMAIN_NOT_FOUND);
         }
 
         $response->dynamic($domain, Response::MODEL_DOMAIN);
@@ -1345,14 +1291,12 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->param('domainId', null, new UID(), 'Domain unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $domainId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $domain = $dbForConsole->findOne('domains', [
@@ -1361,13 +1305,13 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         ]);
 
         if ($domain === false || $domain->isEmpty()) {
-            throw new Exception('Domain not found', 404);
+            throw new Exception('Domain not found', 404, Exception::DOMAIN_NOT_FOUND);
         }
 
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.', 500);
+            throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         if ($domain->getAttribute('verification') === true) {
@@ -1377,7 +1321,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $validator = new CNAME($target->get()); // Verify Domain with DNS records
 
         if (!$validator->isValid($domain->getAttribute('domain', ''))) {
-            throw new Exception('Failed to verify domain', 401);
+            throw new Exception('Failed to verify domain', 401, Exception::DOMAIN_VERIFICATION_FAILED);
         }
 
 
@@ -1385,10 +1329,10 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         // Issue a TLS certificate when domain is verified
-        Resque::enqueue('v1-certificates', 'CertificatesV1', [
-            'document' => $domain->getArrayCopy(),
-            'domain' => $domain->getAttribute('domain'),
-        ]);
+        $event = new Certificate();
+        $event
+            ->setDomain($domain)
+            ->trigger();
 
         $response->dynamic($domain, Response::MODEL_DOMAIN);
     });
@@ -1407,14 +1351,12 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('deletes')
-    ->action(function ($projectId, $domainId, $response, $dbForConsole, $deletes) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
+    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole, Delete $deletes) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $domain = $dbForConsole->findOne('domains', [
@@ -1423,7 +1365,7 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
         ]);
 
         if ($domain === false || $domain->isEmpty()) {
-            throw new Exception('Domain not found', 404);
+            throw new Exception('Domain not found', 404, Exception::DOMAIN_NOT_FOUND);
         }
 
         $dbForConsole->deleteDocument('domains', $domain->getId());
@@ -1431,9 +1373,8 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $deletes
-            ->setParam('type', DELETE_TYPE_CERTIFICATES)
-            ->setParam('document', $domain)
-        ;
+            ->setType(DELETE_TYPE_CERTIFICATES)
+            ->setDocument($domain);
 
         $response->noContent();
     });

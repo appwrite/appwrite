@@ -48,7 +48,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(2, $collections['body']['sum']);
+        $this->assertEquals(2, $collections['body']['total']);
         $this->assertEquals($test1['body']['$id'], $collections['body']['collections'][0]['$id']);
         $this->assertEquals($test2['body']['$id'], $collections['body']['collections'][1]['$id']);
 
@@ -63,7 +63,7 @@ class DatabaseCustomServerTest extends Scope
             'orderType' => 'DESC'
         ]);
 
-        $this->assertEquals(2, $collections['body']['sum']);
+        $this->assertEquals(2, $collections['body']['total']);
         $this->assertEquals($base[0]['$id'], $collections['body']['collections'][0]['$id']);
         $this->assertEquals($base[1]['$id'], $collections['body']['collections'][1]['$id']);
 
@@ -135,7 +135,7 @@ class DatabaseCustomServerTest extends Scope
             'search' => 'first'
         ]);
 
-        $this->assertEquals(1, $collections['body']['sum']);
+        $this->assertEquals(1, $collections['body']['total']);
         $this->assertEquals('first', $collections['body']['collections'][0]['$id']);
 
         $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
@@ -144,8 +144,8 @@ class DatabaseCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'search' => 'Test'
         ]);
-        
-        $this->assertEquals(2, $collections['body']['sum']);
+
+        $this->assertEquals(2, $collections['body']['total']);
         $this->assertEquals('Test 1', $collections['body']['collections'][0]['name']);
         $this->assertEquals('Test 2', $collections['body']['collections'][1]['name']);
 
@@ -155,8 +155,8 @@ class DatabaseCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'search' => 'Nonexistent'
         ]);
-        
-        $this->assertEquals(0, $collections['body']['sum']);
+
+        $this->assertEquals(0, $collections['body']['total']);
 
         /**
          * Test for FAILURE
@@ -276,7 +276,7 @@ class DatabaseCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), []); 
+        ]), []);
 
         $unneededId = $unneeded['body']['key'];
 
@@ -313,7 +313,7 @@ class DatabaseCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), []); 
+        ]), []);
 
         $this->assertEquals($collection['headers']['status-code'], 200);
         $this->assertIsArray($collection['body']['attributes']);
@@ -332,7 +332,7 @@ class DatabaseCustomServerTest extends Scope
      */
     public function testDeleteIndex($data): array
     {
-        $index = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['collectionId'] . '/indexes/'. $data['key'], array_merge([
+        $index = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['collectionId'] . '/indexes/' . $data['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -415,7 +415,7 @@ class DatabaseCustomServerTest extends Scope
         sleep(2);
 
         // Expected behavior: deleting attribute2 will cause index2 to be dropped, and index1 rebuilt with a single key
-        $deleted = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['collectionId'] . '/attributes/'. $attribute2['body']['key'], array_merge([
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['collectionId'] . '/attributes/' . $attribute2['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -527,7 +527,7 @@ class DatabaseCustomServerTest extends Scope
         sleep(2);
 
         // Expected behavior: deleting attribute1 would cause index1 to be a duplicate of index2 and automatically removed
-        $deleted = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $collectionId . '/attributes/'. $attribute1['body']['key'], array_merge([
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $collectionId . '/attributes/' . $attribute1['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -579,8 +579,8 @@ class DatabaseCustomServerTest extends Scope
                 'firstName' => 'Tom',
                 'lastName' => 'Holland',
             ],
-            'read' => ['user:'.$this->getUser()['$id']],
-            'write' => ['user:'.$this->getUser()['$id']],
+            'read' => ['user:' . $this->getUser()['$id']],
+            'write' => ['user:' . $this->getUser()['$id']],
         ]);
 
         $document2 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
@@ -592,8 +592,8 @@ class DatabaseCustomServerTest extends Scope
                 'firstName' => 'Samuel',
                 'lastName' => 'Jackson',
             ],
-            'read' => ['user:'.$this->getUser()['$id']],
-            'write' => ['user:'.$this->getUser()['$id']],
+            'read' => ['user:' . $this->getUser()['$id']],
+            'write' => ['user:' . $this->getUser()['$id']],
         ]);
 
         $this->assertEquals($document1['headers']['status-code'], 201);
@@ -613,17 +613,17 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals($document2['body']['lastName'], 'Jackson');
 
         // Delete the actors collection
-        $response = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $collectionId , array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], $this->getHeaders()));
 
         $this->assertEquals($response['headers']['status-code'], 204);
-        $this->assertEquals($response['body'],"");
+        $this->assertEquals($response['body'], "");
 
         // Try to get the collection and check if it has been deleted
-        $response = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId , array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()));
@@ -705,7 +705,7 @@ class DatabaseCustomServerTest extends Scope
         $collectionId = $collection['body']['$id'];
 
         // Add wide string attributes to approach row width limit
-        for ($i=0; $i < 15; $i++) {
+        for ($i = 0; $i < 15; $i++) {
             $attribute = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -755,7 +755,7 @@ class DatabaseCustomServerTest extends Scope
         $collectionId = $collection['body']['$id'];
 
         // add unique attributes for indexing
-        for ($i=0; $i < 64; $i++) {
+        for ($i = 0; $i < 64; $i++) {
             // $this->assertEquals(true, static::getDatabase()->createAttribute('indexLimit', "test{$i}", Database::VAR_STRING, 16, true));
             $attribute = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
                 'content-type' => 'application/json',
@@ -792,7 +792,7 @@ class DatabaseCustomServerTest extends Scope
         // testing for indexLimit = 64
         // MariaDB, MySQL, and MongoDB create 3 indexes per new collection
         // Add up to the limit, then check if the next index throws IndexLimitException
-        for ($i=0; $i < 61; $i++) {
+        for ($i = 0; $i < 61; $i++) {
             // $this->assertEquals(true, static::getDatabase()->createIndex('indexLimit', "index{$i}", Database::INDEX_KEY, ["test{$i}"], [16]));
             $index = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/indexes', array_merge([
                 'content-type' => 'application/json',

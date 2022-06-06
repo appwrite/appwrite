@@ -74,7 +74,7 @@ class Template extends View
         } elseif (!empty($this->content)) {
             $template = $this->print($this->content, self::FILTER_NL2P);
         } else {
-            throw new Exception('"'.$this->path.'" template is not readable or not found');
+            throw new Exception('"' . $this->path . '" template is not readable or not found');
         }
 
         // First replace the variables inside the params. Then replace the variables in the template
@@ -109,20 +109,20 @@ class Template extends View
      */
     public static function unParseURL(array $url)
     {
-        $scheme = isset($url['scheme']) ? $url['scheme'].'://' : '';
+        $scheme = isset($url['scheme']) ? $url['scheme'] . '://' : '';
         $host = isset($url['host']) ? $url['host'] : '';
-        $port = isset($url['port']) ? ':'.$url['port'] : '';
+        $port = isset($url['port']) ? ':' . $url['port'] : '';
 
         $user = isset($url['user']) ? $url['user'] : '';
-        $pass = isset($url['pass']) ? ':'.$url['pass'] : '';
+        $pass = isset($url['pass']) ? ':' . $url['pass'] : '';
         $pass = ($user || $pass) ? "$pass@" : '';
 
         $path = isset($url['path']) ? $url['path'] : '';
-        $query = isset($url['query']) && !empty($url['query']) ? '?'.$url['query'] : '';
+        $query = isset($url['query']) && !empty($url['query']) ? '?' . $url['query'] : '';
 
-        $fragment = isset($url['fragment']) ? '#'.$url['fragment'] : '';
+        $fragment = isset($url['fragment']) ? '#' . $url['fragment'] : '';
 
-        return $scheme.$user.$pass.$host.$port.$path.$query.$fragment;
+        return $scheme . $user . $pass . $host . $port . $path . $query . $fragment;
     }
 
     /**

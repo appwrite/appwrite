@@ -47,15 +47,15 @@ class Execution extends Model
                 'default' => '',
                 'example' => 'processing',
             ])
-            ->addRule('exitCode', [
+            ->addRule('statusCode', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'The script exit code.',
+                'description' => 'The script status code.',
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('stdout', [
+            ->addRule('response', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The script stdout output string. Logs the last 4,000 characters of the execution stdout output.',
+                'description' => 'The script response output string. Logs the last 4,000 characters of the execution response output.',
                 'default' => '',
                 'example' => '',
             ])
@@ -79,7 +79,7 @@ class Execution extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Execution';
     }
@@ -89,7 +89,7 @@ class Execution extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_EXECUTION;
     }

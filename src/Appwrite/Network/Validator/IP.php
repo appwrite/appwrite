@@ -66,7 +66,7 @@ class IP extends Validator
                 if (\filter_var($value, FILTER_VALIDATE_IP)) {
                     return true;
                 }
-            break;
+                break;
 
             case self::V4:
                 if (\filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {

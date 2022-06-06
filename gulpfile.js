@@ -33,6 +33,8 @@ const configApp = {
         'public/scripts/routes.js',
         'public/scripts/filters.js',
         'public/scripts/app.js',
+        'public/scripts/upload-modal.js',
+        'public/scripts/events.js',
 
         'public/scripts/views/service.js',
 

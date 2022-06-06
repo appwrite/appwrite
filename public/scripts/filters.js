@@ -183,7 +183,7 @@ window.ls.filter
 
     return $value[$value.length - 1].value;
   })
-  .add("statsGetSum", function ($value) {
+  .add("statsGetTotal", function ($value) {
     if (!$value || $value.length < 1) {
       return 0;
     }

@@ -14,7 +14,8 @@ class TeamsConsoleClientTest extends Scope
     use ProjectConsole;
     use SideClient;
 
-    public function testRequestHeader() {
+    public function testRequestHeader()
+    {
         /**
          * Test without header
          */

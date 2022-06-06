@@ -7,7 +7,7 @@ use Utopia\Database\Database;
 
 trait UsersBase
 {
-    public function testCreateUser():array
+    public function testCreateUser(): array
     {
         /**
          * Test for SUCCESS
@@ -24,9 +24,9 @@ trait UsersBase
 
         // Test empty prefs is object not array
         $bodyString = $user['body'];
-        $prefs = substr($bodyString, strpos($bodyString, '"prefs":')+8,2);
+        $prefs = substr($bodyString, strpos($bodyString, '"prefs":') + 8, 2);
         $this->assertEquals('{}', $prefs);
-        
+
         $body = json_decode($bodyString, true);
 
         $this->assertEquals($user['headers']['status-code'], 201);
@@ -125,6 +125,18 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'search' => 'cristiano.ronaldo@manchester-united.co.uk'
+        ]);
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['$id'], $data['userId']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'search' => 'cristiano.ronaldo'
         ]);
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -149,14 +161,28 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'search' => 'manchester-united.co.uk'
+            'search' => 'united.co.uk'
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
         $this->assertIsArray($response['body']['users']);
-        $this->assertIsInt($response['body']['sum']);
-        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertCount(1, $response['body']['users']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'man'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertIsArray($response['body']);
+        $this->assertIsArray($response['body']['users']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertEquals(1, $response['body']['total']);
         $this->assertCount(1, $response['body']['users']);
 
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
@@ -165,6 +191,7 @@ trait UsersBase
         ], $this->getHeaders()), [
             'search' => $data['userId']
         ]);
+
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
@@ -187,7 +214,7 @@ trait UsersBase
     /**
      * @depends testCreateUser
      */
-    public function testGetUser(array $data):array
+    public function testGetUser(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -219,8 +246,8 @@ trait UsersBase
         $this->assertEquals($users['headers']['status-code'], 200);
         $this->assertIsArray($users['body']);
         $this->assertIsArray($users['body']['users']);
-        $this->assertIsInt($users['body']['sum']);
-        $this->assertGreaterThan(0, $users['body']['sum']);
+        $this->assertIsInt($users['body']['total']);
+        $this->assertGreaterThan(0, $users['body']['total']);
 
         return $data;
     }
@@ -228,7 +255,7 @@ trait UsersBase
     /**
      * @depends testGetUser
      */
-    public function testUpdateUserName(array $data):array
+    public function testUpdateUserName(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -255,9 +282,47 @@ trait UsersBase
     }
 
     /**
+     * @depends testUpdateUserName
+     */
+    public function testUpdateUserNameSearch($data): void
+    {
+        $id = $data['userId'] ?? '';
+        $newName = 'Updated name';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $newName
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['$id'], $id);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $id
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['$id'], $id);
+    }
+
+    /**
      * @depends testGetUser
      */
-    public function testUpdateUserEmail(array $data):array
+    public function testUpdateUserEmail(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -286,7 +351,45 @@ trait UsersBase
     /**
      * @depends testUpdateUserEmail
      */
-    public function testUpdateUserPassword(array $data):array
+    public function testUpdateUserEmailSearch($data): void
+    {
+        $id = $data['userId'] ?? '';
+        $newEmail = '"users.service@updated.com"';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $newEmail
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['$id'], $id);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $id
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['$id'], $id);
+    }
+
+    /**
+     * @depends testUpdateUserEmail
+     */
+    public function testUpdateUserPassword(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -317,7 +420,7 @@ trait UsersBase
     /**
      * @depends testGetUser
      */
-    public function testUpdateUserStatus(array $data):array
+    public function testUpdateUserStatus(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -346,7 +449,7 @@ trait UsersBase
     /**
      * @depends testGetUser
      */
-    public function testUpdateEmailVerification(array $data):array
+    public function testUpdateEmailVerification(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -375,12 +478,12 @@ trait UsersBase
     /**
      * @depends testGetUser
      */
-    public function testUpdateAndGetUserPrefs(array $data):array
+    public function testUpdateAndGetUserPrefs(array $data): array
     {
         /**
          * Test for SUCCESS
          */
-        $user = $this->client->call(Client::METHOD_PATCH, '/users/'.$data['userId'].'/prefs', array_merge([
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/prefs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -394,7 +497,7 @@ trait UsersBase
         $this->assertEquals($user['body']['funcKey1'], 'funcValue1');
         $this->assertEquals($user['body']['funcKey2'], 'funcValue2');
 
-        $user = $this->client->call(Client::METHOD_GET, '/users/'.$data['userId'].'/prefs', array_merge([
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/prefs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -443,7 +546,7 @@ trait UsersBase
 
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']['logs']);
-        $this->assertIsNumeric($logs['body']['sum']);
+        $this->assertIsNumeric($logs['body']['total']);
 
         $logs = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
             'content-type' => 'application/json',
@@ -455,7 +558,7 @@ trait UsersBase
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
-        $this->assertIsNumeric($logs['body']['sum']);
+        $this->assertIsNumeric($logs['body']['total']);
 
         $logs = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
             'content-type' => 'application/json',
@@ -466,7 +569,7 @@ trait UsersBase
 
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']['logs']);
-        $this->assertIsNumeric($logs['body']['sum']);
+        $this->assertIsNumeric($logs['body']['total']);
 
         $logs = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
             'content-type' => 'application/json',
@@ -479,13 +582,13 @@ trait UsersBase
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
-        $this->assertIsNumeric($logs['body']['sum']);
+        $this->assertIsNumeric($logs['body']['total']);
     }
 
     /**
      * @depends testGetUser
      */
-    public function testDeleteUser(array $data):array
+    public function testDeleteUser(array $data): array
     {
         /**
          * Test for SUCCESS

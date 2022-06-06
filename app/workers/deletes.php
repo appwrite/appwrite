@@ -1,10 +1,12 @@
 <?php
 
+use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Appwrite\Resque\Worker;
+use Executor\Executor;
 use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -12,6 +14,9 @@ use Utopia\CLI\Console;
 use Utopia\Audit\Audit;
 
 require_once __DIR__ . '/../init.php';
+
+Authorization::disable();
+Authorization::setDefaultStatus(false);
 
 Console::title('Deletes V1 Worker');
 Console::success(APP_NAME . ' deletes worker v1 has started' . "\n");
@@ -23,7 +28,8 @@ class DeletesV1 extends Worker
      */
     protected $consoleDB = null;
 
-    public function getName(): string {
+    public function getName(): string
+    {
         return "deletes";
     }
 
@@ -33,7 +39,7 @@ class DeletesV1 extends Worker
 
     public function run(): void
     {
-        $projectId = $this->args['projectId'] ?? '';
+        $project = new Document($this->args['project'] ?? []);
         $type = $this->args['type'] ?? '';
 
         switch (strval($type)) {
@@ -42,19 +48,25 @@ class DeletesV1 extends Worker
 
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_COLLECTIONS:
-                        $this->deleteCollection($document, $projectId);
+                        $this->deleteCollection($document, $project->getId());
                         break;
                     case DELETE_TYPE_PROJECTS:
                         $this->deleteProject($document);
                         break;
                     case DELETE_TYPE_FUNCTIONS:
-                        $this->deleteFunction($document, $projectId);
+                        $this->deleteFunction($document, $project->getId());
+                        break;
+                    case DELETE_TYPE_DEPLOYMENTS:
+                        $this->deleteDeployment($document, $project->getId());
                         break;
                     case DELETE_TYPE_USERS:
-                        $this->deleteUser($document, $projectId);
+                        $this->deleteUser($document, $project->getId());
                         break;
                     case DELETE_TYPE_TEAMS:
-                        $this->deleteMemberships($document, $projectId);
+                        $this->deleteMemberships($document, $project->getId());
+                        break;
+                    case DELETE_TYPE_BUCKETS:
+                        $this->deleteBucket($document, $project->getId());
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
@@ -67,15 +79,15 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_AUDIT:
-                $timestamp = $this->args['timestamp'] ?? 0;
-                $document = new Document($this->args['document'] ?? []);
+                $timestamp = $payload['timestamp'] ?? 0;
+                $document = new Document($payload['document'] ?? []);
 
                 if (!empty($timestamp)) {
                     $this->deleteAuditLogs($this->args['timestamp']);
                 }
 
                 if (!$document->isEmpty()) {
-                    $this->deleteAuditLogsByResource('document/' . $document->getId(), $projectId);
+                    $this->deleteAuditLogsByResource('document/' . $document->getId(), $project->getId());
                 }
 
                 break;
@@ -116,7 +128,7 @@ class DeletesV1 extends Worker
 
         $dbForProject = $this->getProjectDB($projectId);
 
-        $dbForProject->deleteCollection('collection_' . $collectionId);
+        $dbForProject->deleteCollection('collection_' . $document->getInternalId());
 
         $this->deleteByGroup('attributes', [
             new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])
@@ -188,21 +200,14 @@ class DeletesV1 extends Worker
      */
     protected function deleteUser(Document $document, string $projectId): void
     {
-        /**
-         * DO NOT DELETE THE USER RECORD ITSELF. 
-         * WE RETAIN THE USER RECORD TO RESERVE THE USER ID AND ENSURE THAT THE USER ID IS NOT REUSED.
-         */
-        
         $userId = $document->getId();
-        $user = $this->getProjectDB($projectId)->getDocument('users', $userId);
 
         // Delete all sessions of this user from the sessions table and update the sessions field of the user record
         $this->deleteByGroup('sessions', [
             new Query('userId', Query::TYPE_EQUAL, [$userId])
         ], $this->getProjectDB($projectId));
-        
-        $user->setAttribute('sessions', []);
-        $updated = Authorization::skip(fn() => $this->getProjectDB($projectId)->updateDocument('users', $userId, $user));
+
+        $this->getProjectDB($projectId)->deleteCachedDocument('users', $userId);
 
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
@@ -213,12 +218,22 @@ class DeletesV1 extends Worker
                 $teamId = $document->getAttribute('teamId');
                 $team = $this->getProjectDB($projectId)->getDocument('teams', $teamId);
                 if (!$team->isEmpty()) {
-                    $team = $this->getProjectDB($projectId)->updateDocument('teams', $teamId, new Document(\array_merge($team->getArrayCopy(), [
-                        'sum' => \max($team->getAttribute('sum', 0) - 1, 0), // Ensure that sum >= 0
-                    ])));
+                    $team = $this
+                        ->getProjectDB($projectId)
+                        ->updateDocument(
+                            'teams',
+                            $teamId,
+                            // Ensure that total >= 0
+                            $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0))
+                        );
                 }
             }
         });
+
+        // Delete tokens
+        $this->deleteByGroup('tokens', [
+            new Query('userId', Query::TYPE_EQUAL, [$userId])
+        ], $this->getProjectDB($projectId));
     }
 
     /**
@@ -307,24 +322,110 @@ class DeletesV1 extends Worker
     protected function deleteFunction(Document $document, string $projectId): void
     {
         $dbForProject = $this->getProjectDB($projectId);
-        $device = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+        $functionId = $document->getId();
 
-        // Delete Tags
-        $this->deleteByGroup('tags', [
-            new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
-        ], $dbForProject, function (Document $document) use ($device) {
-
-            if ($device->delete($document->getAttribute('path', ''))) {
-                Console::success('Delete code tag: ' . $document->getAttribute('path', ''));
+        /**
+         * Delete Deployments
+         */
+        Console::info("Deleting deployments for function " . $functionId);
+        $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+        $deploymentIds = [];
+        $this->deleteByGroup('deployments', [
+            new Query('resourceId', Query::TYPE_EQUAL, [$functionId])
+        ], $dbForProject, function (Document $document) use ($storageFunctions, &$deploymentIds) {
+            $deploymentIds[] = $document->getId();
+            if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
+                Console::success('Deleted deployment files: ' . $document->getAttribute('path', ''));
             } else {
-                Console::error('Failed to delete code tag: ' . $document->getAttribute('path', ''));
+                Console::error('Failed to delete deployment files: ' . $document->getAttribute('path', ''));
             }
         });
 
-        // Delete Executions
+        /**
+         * Delete builds
+         */
+        Console::info("Deleting builds for function " . $functionId);
+        $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
+        foreach ($deploymentIds as $deploymentId) {
+            $this->deleteByGroup('builds', [
+                new Query('deploymentId', Query::TYPE_EQUAL, [$deploymentId])
+            ], $dbForProject, function (Document $document) use ($storageBuilds, $deploymentId) {
+                if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
+                    Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
+                } else {
+                    Console::error('Failed to delete build files: ' . $document->getAttribute('outputPath', ''));
+                }
+            });
+        }
+
+        /**
+         * Delete Executions
+         */
+        Console::info("Deleting executions for function " . $functionId);
         $this->deleteByGroup('executions', [
-            new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
+            new Query('functionId', Query::TYPE_EQUAL, [$functionId])
         ], $dbForProject);
+
+        /**
+         * Request executor to delete all deployment containers
+         */
+        Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
+        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        foreach ($deploymentIds as $deploymentId) {
+            try {
+                $executor->deleteRuntime($projectId, $deploymentId);
+            } catch (Throwable $th) {
+                Console::error($th->getMessage());
+            }
+        }
+    }
+
+    /**
+     * @param Document $document deployment document
+     * @param string $projectId
+     */
+    protected function deleteDeployment(Document $document, string $projectId): void
+    {
+        $dbForProject = $this->getProjectDB($projectId);
+        $deploymentId = $document->getId();
+        $functionId = $document->getAttribute('resourceId');
+
+        /**
+         * Delete deployment files
+         */
+        Console::info("Deleting deployment files for deployment " . $deploymentId);
+        $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+        if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
+            Console::success('Deleted deployment files: ' . $document->getAttribute('path', ''));
+        } else {
+            Console::error('Failed to delete deployment files: ' . $document->getAttribute('path', ''));
+        }
+
+        /**
+         * Delete builds
+         */
+        Console::info("Deleting builds for deployment " . $deploymentId);
+        $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
+        $this->deleteByGroup('builds', [
+            new Query('deploymentId', Query::TYPE_EQUAL, [$deploymentId])
+        ], $dbForProject, function (Document $document) use ($storageBuilds) {
+            if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
+                Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
+            } else {
+                Console::error('Failed to delete build files: ' . $document->getAttribute('outputPath', ''));
+            }
+        });
+
+        /**
+         * Request executor to delete the deployment container
+         */
+        Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
+        try {
+            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+            $executor->deleteRuntime($projectId, $deploymentId);
+        } catch (Throwable $th) {
+            Console::error($th->getMessage());
+        }
     }
 
 
@@ -337,8 +438,6 @@ class DeletesV1 extends Worker
      */
     protected function deleteById(Document $document, Database $database, callable $callback = null): bool
     {
-        Authorization::disable();
-
         if ($database->deleteDocument($document->getCollection(), $document->getId())) {
             Console::success('Deleted document "' . $document->getId() . '" successfully');
 
@@ -351,8 +450,6 @@ class DeletesV1 extends Worker
             Console::error('Failed to delete document: ' . $document->getId());
             return false;
         }
-
-        Authorization::reset();
     }
 
     /**
@@ -369,14 +466,12 @@ class DeletesV1 extends Worker
         $executionStart = \microtime(true);
 
         while ($sum === $limit) {
-            Authorization::disable();
             $projects = $this->getConsoleDB()->find('projects', [], $limit, ($chunk * $limit));
-            Authorization::reset();
 
             $chunk++;
 
             /** @var string[] $projectIds */
-            $projectIds = array_map(fn(Document $project) => $project->getId(), $projects);
+            $projectIds = array_map(fn (Document $project) => $project->getId(), $projects);
 
             $sum = count($projects);
 
@@ -410,11 +505,7 @@ class DeletesV1 extends Worker
         while ($sum === $limit) {
             $chunk++;
 
-            Authorization::disable();
-
             $results = $database->find($collection, $queries, $limit, 0);
-
-            Authorization::reset();
 
             $sum = count($results);
 
@@ -432,20 +523,59 @@ class DeletesV1 extends Worker
     }
 
     /**
-     * @param Document $document certificates document 
+     * @param Document $document certificates document
      */
     protected function deleteCertificates(Document $document): void
     {
+        $consoleDB = $this->getConsoleDB();
+
+        // If domain has certificate generated
+        if (isset($document['certificateId'])) {
+            $domainUsingCertificate = $consoleDB->findOne('domains', [
+                new Query('certificateId', Query::TYPE_EQUAL, [$document['certificateId']])
+            ]);
+
+            if (!$domainUsingCertificate) {
+                $mainDomain = App::getEnv('_APP_DOMAIN_TARGET', '');
+                if ($mainDomain === $document->getAttribute('domain')) {
+                    $domainUsingCertificate = $mainDomain;
+                }
+            }
+
+            // If certificate is still used by some domain, mark we can't delete.
+            // Current domain should not be found, because we only have copy. Original domain is already deleted from database.
+            if ($domainUsingCertificate) {
+                Console::warning("Skipping certificate deletion, because a domain is still using it.");
+                return;
+            }
+        }
+
         $domain = $document->getAttribute('domain');
         $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
         $checkTraversal = realpath($directory) === $directory;
 
         if ($domain && $checkTraversal && is_dir($directory)) {
+            // Delete certificate document, so Appwrite is aware of change
+            if (isset($document['certificateId'])) {
+                $consoleDB->deleteDocument('certificates', $document['certificateId']);
+            }
+
+            // Delete files, so Traefik is aware of change
             array_map('unlink', glob($directory . '/*.*'));
             rmdir($directory);
             Console::info("Deleted certificate files for {$domain}");
         } else {
             Console::info("No certificate files found for {$domain}");
         }
+    }
+
+    protected function deleteBucket(Document $document, string $projectId)
+    {
+        $dbForProject = $this->getProjectDB($projectId);
+        $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
+
+        $device = $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
+
+        $device->deletePath($document->getId());
     }
 }

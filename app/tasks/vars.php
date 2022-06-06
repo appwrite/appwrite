@@ -13,13 +13,13 @@ $cli
         $config = Config::getParam('variables', []);
         $vars = [];
 
-        foreach($config as $category) {
-            foreach($category['variables'] ?? [] as $var) {
+        foreach ($config as $category) {
+            foreach ($category['variables'] ?? [] as $var) {
                 $vars[] = $var;
             }
         }
 
         foreach ($vars as $key => $value) {
-            Console::log('- '.$value['name'].'='.App::getEnv($value['name'], ''));
+            Console::log('- ' . $value['name'] . '=' . App::getEnv($value['name'], ''));
         }
     });

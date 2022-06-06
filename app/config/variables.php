@@ -176,6 +176,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_WORKER_PER_CORE',
+                'description' => 'Internal Worker per core for the API, Realtime and Executor containers. Can be configured to optimize performance.',
+                'introduction' => '0.13.0',
+                'default' => 6,
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],
@@ -386,9 +395,18 @@ return [
         'variables' => [
             [
                 'name' => '_APP_STORAGE_LIMIT',
-                'description' => 'Maximum file size allowed for file upload. The default value is 10MB limitation. You should pass your size limit value in bytes.',
+                'description' => 'Maximum file size allowed for file upload. The default value is 30MB. You should pass your size limit value in bytes.',
                 'introduction' => '0.7.0',
-                'default' => '10000000',
+                'default' => '30000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_STORAGE_PREVIEW_LIMIT',
+                'description' => 'Maximum file size allowed for file image preview. The default value is 20MB. You should pass your size limit value in bytes.',
+                'introduction' => '0.13.4',
+                'default' => '20000000',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -420,6 +438,174 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_STORAGE_DEVICE',
+                'description' => 'Select default storage device. The default value is \'Local\'. List of supported adapters are \'Local\', \'S3\', \'DOSpaces\', \'Backblaze\', \'Linode\' and \'Wasabi\'.',
+                'introduction' => '0.13.0',
+                'default' => 'Local',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_S3_ACCESS_KEY',
+                'description' => 'AWS S3 storage access key. Required when the storage adapter is set to S3. You can get your access key from your AWS console',
+                'introduction' => '0.13.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_S3_SECRET',
+                'description' => 'AWS S3 storage secret key. Required when the storage adapter is set to S3. You can get your secret key from your AWS console.',
+                'introduction' => '0.13.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_S3_REGION',
+                'description' => 'AWS S3 storage region. Required when storage adapter is set to S3. You can find your region info for your bucket from AWS console.',
+                'introduction' => '0.13.0',
+                'default' => 'us-east-1',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_S3_BUCKET',
+                'description' => 'AWS S3 storage bucket. Required when storage adapter is set to S3. You can create buckets in your AWS console.',
+                'introduction' => '0.13.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_DO_SPACES_ACCESS_KEY',
+                'description' => 'DigitalOcean spaces access key. Required when the storage adapter is set to DOSpaces. You can get your access key from your DigitalOcean console.',
+                'introduction' => '0.13.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_DO_SPACES_SECRET',
+                'description' => 'DigitalOcean spaces secret key. Required when the storage adapter is set to DOSpaces. You can get your secret key from your DigitalOcean console.',
+                'introduction' => '0.13.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_DO_SPACES_REGION',
+                'description' => 'DigitalOcean spaces region. Required when storage adapter is set to DOSpaces. You can find your region info for your space from DigitalOcean console.',
+                'introduction' => '0.13.0',
+                'default' => 'us-east-1',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_DO_SPACES_BUCKET',
+                'description' => 'DigitalOcean spaces bucket. Required when storage adapter is set to DOSpaces. You can create spaces in your DigitalOcean console.',
+                'introduction' => '0.13.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_BACKBLAZE_ACCESS_KEY',
+                'description' => 'Backblaze access key. Required when the storage adapter is set to Backblaze. Your Backblaze keyID will be your access key. You can get your keyID from your Backblaze console.',
+                'introduction' => '0.14.2',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_BACKBLAZE_SECRET',
+                'description' => 'Backblaze secret key. Required when the storage adapter is set to Backblaze. Your Backblaze applicationKey will be your secret key. You can get your applicationKey from your Backblaze console.',
+                'introduction' => '0.14.2',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_BACKBLAZE_REGION',
+                'description' => 'Backblaze region. Required when storage adapter is set to Backblaze. You can find your region info from your Backblaze console.',
+                'introduction' => '0.14.2',
+                'default' => 'us-west-004',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_BACKBLAZE_BUCKET',
+                'description' => 'Backblaze bucket. Required when storage adapter is set to Backblaze. You can create your bucket from your Backblaze console.',
+                'introduction' => '0.14.2',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_LINODE_ACCESS_KEY',
+                'description' => 'Linode object storage access key. Required when the storage adapter is set to Linode. You can get your access key from your Linode console.',
+                'introduction' => '0.14.2',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_LINODE_SECRET',
+                'description' => 'Linode object storage secret key. Required when the storage adapter is set to Linode. You can get your secret key from your Linode console.',
+                'introduction' => '0.14.2',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_LINODE_REGION',
+                'description' => 'Linode object storage region. Required when storage adapter is set to Linode. You can find your region info from your Linode console.',
+                'introduction' => '0.14.2',
+                'default' => 'eu-central-1',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_LINODE_BUCKET',
+                'description' => 'Linode object storage bucket. Required when storage adapter is set to Linode. You can create buckets in your Linode console.',
+                'introduction' => '0.14.2',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_WASABI_ACCESS_KEY',
+                'description' => 'Wasabi access key. Required when the storage adapter is set to Wasabi. You can get your access key from your Wasabi console.',
+                'introduction' => '0.14.2',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_WASABI_SECRET',
+                'description' => 'Wasabi secret key. Required when the storage adapter is set to Wasabi. You can get your secret key from your Wasabi console.',
+                'introduction' => '0.14.2',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_WASABI_REGION',
+                'description' => 'Wasabi region. Required when storage adapter is set to Wasabi. You can find your region info from your Wasabi console.',
+                'introduction' => '0.14.2',
+                'default' => 'eu-central-1',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_WASABI_BUCKET',
+                'description' => 'Wasabi bucket. Required when storage adapter is set to Wasabi. You can create buckets in your Wasabi console.',
+                'introduction' => '0.14.2',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
         ],
     ],
     [
@@ -427,9 +613,27 @@ return [
         'description' => '',
         'variables' => [
             [
+                'name' => '_APP_FUNCTIONS_SIZE_LIMIT',
+                'description' => 'The maximum size deployment in bytes. The default value is 30MB.',
+                'introduction' => '0.13.0',
+                'default' => '30000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_FUNCTIONS_TIMEOUT',
                 'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds.',
                 'introduction' => '0.7.0',
+                'default' => '900',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_BUILD_TIMEOUT',
+                'description' => 'The maximum number of seconds allowed as a timeout value when building a new function. The default value is 900 seconds.',
+                'introduction' => '0.13.0',
                 'default' => '900',
                 'required' => false,
                 'question' => '',
@@ -448,7 +652,7 @@ return [
                 'name' => '_APP_FUNCTIONS_CPUS',
                 'description' => 'The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty, CPU limit will be disabled.',
                 'introduction' => '0.7.0',
-                'default' => '',
+                'default' => '0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -457,7 +661,7 @@ return [
                 'name' => '_APP_FUNCTIONS_MEMORY',
                 'description' => 'The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, memory limit will be disabled.',
                 'introduction' => '0.7.0',
-                'default' => '256',
+                'default' => '0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -466,7 +670,7 @@ return [
                 'name' => '_APP_FUNCTIONS_MEMORY_SWAP',
                 'description' => 'The maximum amount of swap memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, swap memory limit will be disabled.',
                 'introduction' => '0.7.0',
-                'default' => '256',
+                'default' => '0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -475,7 +679,34 @@ return [
                 'name' => '_APP_FUNCTIONS_RUNTIMES',
                 'description' => "This option allows you to limit the available environments for cloud functions. This option is very useful for low-cost servers to safe disk space.\n\nTo enable/activate this option, pass a list of allowed environments separated by a comma.\n\nCurrently, supported environments are: " . \implode(', ', \array_keys(Config::getParam('runtimes'))),
                 'introduction' => '0.8.0',
-                'default' => 'node-16.0,php-8.0,python-3.9,ruby-3.0,java-16.0',
+                'default' => 'node-16.0,php-8.0,python-3.9,ruby-3.0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EXECUTOR_SECRET',
+                'description' => 'The secret key used by Appwrite to communicate with the function executor. Make sure to change this!',
+                'introduction' => '0.13.0',
+                'default' => 'your-secret-key',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EXECUTOR_HOST',
+                'description' => 'The host used by Appwrite to communicate with the function executor!',
+                'introduction' => '0.13.0',
+                'default' => 'http://appwrite-executor/v1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EXECUTOR_RUNTIME_NETWORK',
+                'description' => 'Deprecated with 0.14.0, use \'OPEN_RUNTIMES_NETWORK\' instead!',
+                'introduction' => '0.13.0',
+                'default' => 'appwrite_runtimes',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -484,7 +715,16 @@ return [
                 'name' => '_APP_FUNCTIONS_ENVS',
                 'description' => 'Deprecated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead!',
                 'introduction' => '0.7.0',
-                'default' => 'node-16.0,php-7.4,python-3.9,ruby-3.0,java-16.0',
+                'default' => 'node-16.0,php-7.4,python-3.9,ruby-3.0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_INACTIVE_THRESHOLD',
+                'description' => 'The minimum time a function can be inactive before it\'s container is shutdown and put to sleep. The default value is 60 seconds',
+                'introduction' => '0.13.0',
+                'default' => '60',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -516,48 +756,57 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
-        ],
-        [
-            'category' => 'Maintenance',
-            'description' => '',
-            'variables' => [
-                [
-                    'name' => '_APP_MAINTENANCE_INTERVAL',
-                    'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
-                    'introduction' => '0.7.0',
-                    'default' => '86400',
-                    'required' => false,
-                    'question' => '',
-                    'filter' => ''
-                ],
-                [
-                    'name' => '_APP_MAINTENANCE_RETENTION_EXECUTION',
-                    'description' => 'The maximum duration (in seconds) upto which to retain execution logs. The default value is 1209600 seconds (14 days).',
-                    'introduction' => '0.7.0',
-                    'default' => '1209600',
-                    'required' => false,
-                    'question' => '',
-                    'filter' => ''
-                ],
-                [
-                    'name' => '_APP_MAINTENANCE_RETENTION_AUDIT',
-                    'description' => 'IThe maximum duration (in seconds) upto which to retain audit logs. The default value is 1209600 seconds (14 days).',
-                    'introduction' => '0.7.0',
-                    'default' => '1209600',
-                    'required' => false,
-                    'question' => '',
-                    'filter' => ''
-                ],
-                [
-                    'name' => '_APP_MAINTENANCE_RETENTION_ABUSE',
-                    'description' => 'The maximum duration (in seconds) upto which to retain abuse logs. The default value is 86400 seconds (1 day).',
-                    'introduction' => '0.7.0',
-                    'default' => '86400',
-                    'required' => false,
-                    'question' => '',
-                    'filter' => ''
-                ]
+            [
+                'name' => 'OPEN_RUNTIMES_NETWORK',
+                'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
+                'introduction' => '0.13.0',
+                'default' => 'appwrite_runtimes',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ],
+        ],
+    ],
+    [
+        'category' => 'Maintenance',
+        'description' => '',
+        'variables' => [
+            [
+                'name' => '_APP_MAINTENANCE_INTERVAL',
+                'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
+                'introduction' => '0.7.0',
+                'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_EXECUTION',
+                'description' => 'The maximum duration (in seconds) upto which to retain execution logs. The default value is 1209600 seconds (14 days).',
+                'introduction' => '0.7.0',
+                'default' => '1209600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_AUDIT',
+                'description' => 'IThe maximum duration (in seconds) upto which to retain audit logs. The default value is 1209600 seconds (14 days).',
+                'introduction' => '0.7.0',
+                'default' => '1209600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_ABUSE',
+                'description' => 'The maximum duration (in seconds) upto which to retain abuse logs. The default value is 86400 seconds (1 day).',
+                'introduction' => '0.7.0',
+                'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ]
         ],
     ],
 ];

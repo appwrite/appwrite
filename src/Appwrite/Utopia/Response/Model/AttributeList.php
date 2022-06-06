@@ -11,9 +11,9 @@ class AttributeList extends Model
     public function __construct()
     {
         $this
-            ->addRule('sum', [
+            ->addRule('total', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total sum of items in the list.',
+                'description' => 'Total number of attributes in the given collection.',
                 'default' => 0,
                 'example' => 5,
             ])
@@ -40,7 +40,7 @@ class AttributeList extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Attributes List';
     }
@@ -50,7 +50,7 @@ class AttributeList extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_ATTRIBUTE_LIST;
     }

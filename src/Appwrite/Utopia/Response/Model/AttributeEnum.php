@@ -12,6 +12,18 @@ class AttributeEnum extends Attribute
         parent::__construct();
 
         $this
+            ->addRule('key', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Attribute Key.',
+                'default' => '',
+                'example' => 'status',
+            ])
+            ->addRule('type', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Attribute type.',
+                'default' => '',
+                'example' => 'string',
+            ])
             ->addRule('elements', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Array of elements in enumerated type.',
@@ -49,7 +61,7 @@ class AttributeEnum extends Attribute
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'AttributeEnum';
     }
@@ -59,7 +71,7 @@ class AttributeEnum extends Attribute
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_ATTRIBUTE_ENUM;
     }

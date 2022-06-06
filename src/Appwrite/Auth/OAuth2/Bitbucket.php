@@ -12,17 +12,17 @@ class Bitbucket extends OAuth2
     /**
      * @var array
      */
-    protected $user = [];
-    
-    /**
-     * @var array
-     */
-    protected $tokens = [];
+    protected array $user = [];
 
     /**
      * @var array
      */
-    protected $scopes = [];
+    protected array $tokens = [];
+
+    /**
+     * @var array
+     */
+    protected array $scopes = [];
 
     /**
      * @return string
@@ -37,12 +37,12 @@ class Bitbucket extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://bitbucket.org/site/oauth2/authorize?'.\http_build_query([
-                'response_type' => 'code',
-                'client_id' => $this->appID,
-                'scope' => \implode(' ', $this->getScopes()),
-                'state' => \json_encode($this->state),
-            ]);
+        return 'https://bitbucket.org/site/oauth2/authorize?' . \http_build_query([
+            'response_type' => 'code',
+            'client_id' => $this->appID,
+            'scope' => \implode(' ', $this->getScopes()),
+            'state' => \json_encode($this->state),
+        ]);
     }
 
     /**
@@ -52,7 +52,7 @@ class Bitbucket extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             // Required as per Bitbucket Spec.
             $headers = ['Content-Type: application/x-www-form-urlencoded'];
             $this->tokens = \json_decode($this->request(
@@ -76,7 +76,7 @@ class Bitbucket extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $headers = ['Content-Type: application/x-www-form-urlencoded'];
         $this->tokens = \json_decode($this->request(
@@ -91,7 +91,7 @@ class Bitbucket extends OAuth2
             ])
         ), true);
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -107,11 +107,7 @@ class Bitbucket extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['uuid'])) {
-            return $user['uuid'];
-        }
-
-        return '';
+        return $user['uuid'] ?? '';
     }
 
     /**
@@ -123,11 +119,25 @@ class Bitbucket extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['email'])) {
-            return $user['email'];
+        return $user['email'] ?? '';
+    }
+
+    /**
+     * Check if the OAuth email is verified
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $user = $this->getUser($accessToken);
+
+        if ($user['is_confirmed'] ?? false) {
+            return true;
         }
 
-        return '';
+        return false;
     }
 
     /**
@@ -139,11 +149,7 @@ class Bitbucket extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['display_name'])) {
-            return $user['display_name'];
-        }
-
-        return '';
+        return $user['display_name'] ?? '';
     }
 
     /**
@@ -154,11 +160,20 @@ class Bitbucket extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://api.bitbucket.org/2.0/user?access_token='.\urlencode($accessToken));
+            $user = $this->request('GET', 'https://api.bitbucket.org/2.0/user?access_token=' . \urlencode($accessToken));
             $this->user = \json_decode($user, true);
 
-            $email = $this->request('GET', 'https://api.bitbucket.org/2.0/user/emails?access_token='.\urlencode($accessToken));
-            $this->user['email'] = \json_decode($email, true)['values'][0]['email'];
+            $emails = $this->request('GET', 'https://api.bitbucket.org/2.0/user/emails?access_token=' . \urlencode($accessToken));
+            $emails = \json_decode($emails, true);
+            if (isset($emails['values'])) {
+                foreach ($emails['values'] as $email) {
+                    if ($email['is_confirmed']) {
+                        $this->user['email'] = $email['email'];
+                        $this->user['is_confirmed'] = $email['is_confirmed'];
+                        break;
+                    }
+                }
+            }
         }
         return $this->user;
     }

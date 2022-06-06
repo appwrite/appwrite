@@ -2,12 +2,11 @@
 
 use Utopia\App;
 use Utopia\Config\Config;
+use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Request;
+use Appwrite\Utopia\View;
 
-App::init(function ($utopia, $request, $response, $layout) {
-    /** @var Utopia\App $utopia */
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Appwrite\Utopia\View $layout */
+App::init(function (App $utopia, Request $request, Response $response, View $layout) {
 
     /* AJAX check  */
     if (!empty($request->getQuery('version', ''))) {
@@ -48,10 +47,10 @@ App::init(function ($utopia, $request, $response, $layout) {
 
     $route = $utopia->match($request);
 
-    $route->label('error', __DIR__.'/../../views/general/error.phtml');
+    $route->label('error', __DIR__ . '/../../views/general/error.phtml');
 
     $scope = $route->getLabel('scope', '');
-    
+
     $layout
         ->setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'))
         ->setParam('isDev', App::isDevelopment())
