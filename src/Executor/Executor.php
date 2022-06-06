@@ -4,7 +4,7 @@ namespace Executor;
 
 use Exception;
 use Utopia\App;
-use Utopia\CLI\Console;
+use Swoole\Table;
 
 class Executor
 {
@@ -19,6 +19,7 @@ class Executor
     const METHOD_TRACE = 'TRACE';
 
     private $endpoint;
+    private $runtimeQueue;
 
     private $selfSigned = false;
 
@@ -32,6 +33,9 @@ class Executor
             throw new Exception('Unsupported endpoint');
         }
         $this->endpoint = $endpoint;
+        $this->runtimeQueue = new Table(1024);
+        $this->runtimeQueue->column('id', Table::TYPE_STRING, 128);
+        $this->runtimeQueue->column('state', Table::TYPE_STRING, 128);
     }
 
     /**
@@ -82,6 +86,11 @@ class Executor
             'remove' => $remove,
             'commands' => $commands
         ];
+
+        $this->runtimeQueue->set($params['runtimeId'], [
+            'id' => $params['runtimeId'],
+            'state' => 'pending'
+        ]);
 
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
@@ -174,6 +183,16 @@ class Executor
                     case $status < 400:
                         return $response['body'];
                     case $status === 404:
+                        if ($this->runtimeQueue->get($params['runtimeId'])) {
+                            if ($this->runtimeQueue->get($params['runtimeId'])['state'] === 'pending') {
+                                sleep(1);
+                                continue 2;
+                            }
+                        }
+                        $this->runtimeQueue->set($params['runtimeId'], [
+                            'id' => $params['runtimeId'],
+                            'state' => 'pending'
+                        ]);
                         $response = $this->createRuntime(
                             deploymentId: $deploymentId,
                             projectId: $projectId,
